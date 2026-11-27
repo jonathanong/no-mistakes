@@ -2,10 +2,10 @@
 use super::{compile, finding, Options};
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::{SqlObligationVerdict, SqlVerdictStatus};
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use rayon::prelude::*;
 use std::path::Path;
 
@@ -56,7 +56,10 @@ pub(crate) fn check(
             let Some(file) = facts.ts.get(path) else {
                 anyhow::bail!("{rule_id}: prepared facts are missing for {rel}");
             };
-            let calls = file.sql_identifier_syntax.calls_for(&application_key);
+            let calls = file
+                .postgres()
+                .sql_identifier_syntax
+                .calls_for(&application_key);
             let calls = if let Some(calls) = calls {
                 calls
             } else if file.parse_error.is_some() || file.ts.parse_error.is_some() {

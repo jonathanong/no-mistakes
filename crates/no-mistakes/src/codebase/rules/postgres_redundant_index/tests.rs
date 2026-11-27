@@ -262,7 +262,7 @@ fn missing_overlay_source_is_unanalyzable() {
     longer.line = 2;
     longer.source_order = 1;
     let mut facts = crate::codebase::check_facts::CheckFactMap::default();
-    facts.postgres.schema.insert(
+    facts.postgres_mut().schema.insert(
         path.clone(),
         Ok(std::sync::Arc::new(
             crate::codebase::postgres::SqlSchemaFileFacts {

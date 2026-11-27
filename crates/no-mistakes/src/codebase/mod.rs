@@ -21,6 +21,7 @@ pub(crate) mod playwright_facts;
 pub(crate) mod playwright_hooks;
 pub mod pnpm_lock;
 pub mod postgres;
+pub(crate) mod postgres_analysis;
 pub mod queries;
 pub mod rules;
 pub(crate) mod shell_heredoc;

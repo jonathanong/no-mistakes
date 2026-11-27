@@ -4,11 +4,16 @@ use super::*;
 fn returned_conditional_requires_every_arm_and_keeps_failed_source_demand() {
     let (mut files, root) = prepared();
     let path = root.join("returned-conditional.mts");
-    let heads = files[&path].query_annotation_heads.as_ref().unwrap();
+    let heads = files[&path]
+        .postgres()
+        .query_annotation_heads
+        .as_ref()
+        .unwrap();
     assert_eq!(heads.pending_returned_params.len(), 1);
     assert_eq!(heads.pending_returned_params[0].imports.len(), 2);
     let span = heads.pending_returned_params[0].span;
     assert!(files[&root.join("literal-helper.mts")]
+        .postgres()
         .query_annotation_heads
         .as_ref()
         .unwrap()
@@ -18,7 +23,11 @@ fn returned_conditional_requires_every_arm_and_keeps_failed_source_demand() {
     super::super::super::project(&mut files, resolver);
     let file = &files[&path];
     assert_eq!(
-        file.query_annotation_heads.as_ref().unwrap().calls[&span],
+        file.postgres()
+            .query_annotation_heads
+            .as_ref()
+            .unwrap()
+            .calls[&span],
         super::super::super::HeadProof::Unproven
     );
     assert_eq!(
@@ -33,6 +42,7 @@ fn unresolved_returned_conditional_imports_abstain_without_source_failures() {
     let (mut files, root) = prepared();
     let path = root.join("returned-conditional.mts");
     let span = files[&path]
+        .postgres()
         .query_annotation_heads
         .as_ref()
         .unwrap()
@@ -41,7 +51,11 @@ fn unresolved_returned_conditional_imports_abstain_without_source_failures() {
     super::super::super::project(&mut files, |_, _| None);
     let file = &files[&path];
     assert_eq!(
-        file.query_annotation_heads.as_ref().unwrap().calls[&span],
+        file.postgres()
+            .query_annotation_heads
+            .as_ref()
+            .unwrap()
+            .calls[&span],
         super::super::super::HeadProof::Unproven
     );
     assert!(failures(file, 0).is_empty());
@@ -53,6 +67,7 @@ fn returned_builder_and_async_append_effect_failures_reach_executor_demands() {
     let returned = &files[&root.join("returned.mts")];
     assert_eq!(
         returned
+            .postgres()
             .query_annotation_heads
             .as_ref()
             .unwrap()
@@ -62,12 +77,14 @@ fn returned_builder_and_async_append_effect_failures_reach_executor_demands() {
     );
     let factory = &files[&root.join("async-factory.mts")];
     assert!(factory
+        .postgres()
         .query_annotation_heads
         .as_ref()
         .unwrap()
         .exported_async_returns
         .contains_key("factory"));
     let caller = files[&root.join("async-effects.mts")]
+        .postgres()
         .query_annotation_heads
         .as_ref()
         .unwrap();

@@ -53,7 +53,7 @@ fn actual_root_consultations_survive_unknown_cache_and_do_not_poison_other_roots
         for name in ["direct", "cached-entry", "reexport", "healthy", "unused"] {
             let path = broken.with_file_name(format!("{name}.mts"));
             let file = &files[&path];
-            for (options, _) in &file.query_annotation {
+            for (options, _) in &file.postgres().query_annotation {
                 let key = SqlSourceKey::profile(SqlProjection::AnnotationMax, options);
                 let failures = file
                     .sql_source_prerequisites
@@ -66,7 +66,7 @@ fn actual_root_consultations_survive_unknown_cache_and_do_not_poison_other_roots
             }
         }
         let healthy = &files[&broken.with_file_name("healthy.mts")];
-        assert!(healthy.query_annotation[0]
+        assert!(healthy.postgres().query_annotation[0]
             .1
             .calls
             .values()
@@ -89,7 +89,10 @@ fn recovered_fatal_helper_is_still_a_failed_consulted_source() {
     let resolve = resolver(&files);
     project(&mut files, resolve);
     let entry = &files[&origin.with_file_name("entry.mts")];
-    let key = SqlSourceKey::profile(SqlProjection::AnnotationMax, &entry.query_annotation[0].0);
+    let key = SqlSourceKey::profile(
+        SqlProjection::AnnotationMax,
+        &entry.postgres().query_annotation[0].0,
+    );
     assert!(entry
         .sql_source_prerequisites
         .failures(&key)

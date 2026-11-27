@@ -81,23 +81,18 @@ impl SharedCheckContext {
         crate::codebase::rules::require_storybook_stories::configure_effort_plan(
             config, &mut plan,
         )?;
-        crate::codebase::postgres::assign_prepared_embedded_sql_options(config, &mut plan)?;
-        crate::codebase::postgres::configure_executor_warnings(&root, config, &mut plan)?;
-        plan.postgres_schema_catalog_paths =
-            crate::codebase::postgres::configured_schema_catalog_paths(
-                config,
-                crate::codebase::postgres::SCHEMA_CATALOG_RULE_IDS,
-            )?;
+        let postgres = crate::codebase::postgres_analysis::hooks();
+        (postgres.configure_profiles)(&root, config, &mut plan)?;
         plan.query_annotation_catalog = Some(std::sync::Arc::clone(&prepared.tsconfig_catalog));
-        plan.production_import_paths =
-            (crate::codebase::package_analysis::hooks().production_import_files)(
-                &root,
-                config,
-                prepared.visible_paths.paths_for(&root).as_ref(),
-            )?;
+        plan.production_import_paths = (crate::codebase::package_analysis::hooks()
+            .production_import_files)(
+            &root,
+            config,
+            prepared.visible_paths.paths_for(&root).as_ref(),
+        )?;
         plan.graph.imports |= !plan.production_import_paths.is_empty();
         configure_scopes((&session, &root), &prepared, config, &mut plan)?;
-        crate::codebase::postgres::configure_prepared_postgres_plan(&root, config, &mut plan)?;
+        (postgres.configure_plan)(&root, config, &mut plan)?;
         let prepare_runner_configs = if deadlines {
             crate::integration_tests::prepare_runner_configs_with_deadline_evidence
         } else {

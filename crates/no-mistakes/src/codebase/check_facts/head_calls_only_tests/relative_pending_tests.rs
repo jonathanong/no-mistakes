@@ -58,12 +58,17 @@ fn collect(mixed: bool) -> (Vec<HeadProof>, Vec<u32>, u64) {
     });
     let file = facts.ts.get(&query).expect("query prepared");
     let embedded = &file
+        .postgres()
         .embedded_sql
         .iter()
         .find(|(options, _)| options.import_specifier == "@example/db")
         .unwrap()
         .1;
-    let heads = file.query_annotation_heads.as_ref().expect("low heads");
+    let heads = file
+        .postgres()
+        .query_annotation_heads
+        .as_ref()
+        .expect("low heads");
     let proofs = embedded
         .call_spans
         .iter()

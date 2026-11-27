@@ -71,7 +71,10 @@ fn resolve(files: &FileIdMap<CheckFileFacts>) -> impl Fn(&str, &Path) -> Option<
 }
 
 fn failures(file: &CheckFileFacts, index: usize) -> BTreeSet<PathBuf> {
-    let key = SqlSourceKey::profile(SqlProjection::AnnotationHeads, &file.embedded_sql[index].0);
+    let key = SqlSourceKey::profile(
+        SqlProjection::AnnotationHeads,
+        &file.postgres().embedded_sql[index].0,
+    );
     file.sql_source_prerequisites
         .failures(&key)
         .cloned()
@@ -83,6 +86,7 @@ fn direct_namespace_async_and_callback_sources_keep_exact_profile_and_primary_de
     let (mut files, root) = prepared();
     for name in ["direct", "namespace", "async", "callback"] {
         let heads = files[&root.join(format!("{name}.mts"))]
+            .postgres()
             .query_annotation_heads
             .as_ref()
             .unwrap();
@@ -106,6 +110,7 @@ fn direct_namespace_async_and_callback_sources_keep_exact_profile_and_primary_de
         let file = &files[&root.join(format!("{name}.mts"))];
         assert!(failures(file, 0).is_empty(), "unneeded source in {name}");
         assert!(file
+            .postgres()
             .query_annotation_heads
             .as_ref()
             .unwrap()
@@ -119,20 +124,21 @@ fn direct_namespace_async_and_callback_sources_keep_exact_profile_and_primary_de
 fn effect_prerequisite_maps_to_its_executor_and_pending_calls_keep_candidate_profile() {
     let (mut files, root) = prepared();
     let effect = &files[&root.join("effect.mts")];
-    let heads = effect.query_annotation_heads.as_ref().unwrap();
+    let heads = effect.postgres().query_annotation_heads.as_ref().unwrap();
     assert!(!heads.pending_effects.is_empty());
     assert!(heads
         .conditional_effects
         .iter()
         .any(|condition| { !condition.required.is_empty() && !condition.spans.is_empty() }));
     let pending = &files[&root.join("pending.mts")];
-    assert!(pending.embedded_sql[0].1.call_spans.is_empty());
-    assert!(!pending.embedded_sql[0]
+    assert!(pending.postgres().embedded_sql[0].1.call_spans.is_empty());
+    assert!(!pending.postgres().embedded_sql[0]
         .1
         .pending_relative
         .call_spans
         .is_empty());
     assert!(!pending
+        .postgres()
         .query_annotation_heads
         .as_ref()
         .unwrap()

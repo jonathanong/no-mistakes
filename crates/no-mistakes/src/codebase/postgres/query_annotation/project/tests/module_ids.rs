@@ -31,7 +31,7 @@ fn prepared_profiles_and_root_evaluators_share_one_catalog_without_changing_find
             .find(|(path, _)| path.ends_with(name))
             .unwrap()
             .1;
-        let calls = &file.query_annotation[0].1.calls;
+        let calls = &file.postgres().query_annotation[0].1.calls;
         assert_eq!(calls.len(), 1);
         assert_eq!(calls.values().next().unwrap().as_deref(), Some(expected));
         assert!(crate::codebase::postgres::sql_requires_query_annotation(

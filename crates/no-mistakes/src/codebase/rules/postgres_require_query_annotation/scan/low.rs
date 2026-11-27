@@ -1,5 +1,4 @@
 use super::{CompiledOptions, RULE_ID};
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     EmbeddedSqlKind, SqlEvidenceKind, SqlObligationVerdict, SqlVerdictStatus,
@@ -9,6 +8,7 @@ use crate::codebase::rules::{
 };
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::path::{Path, PathBuf};
 
 const REWRITE: &str = "use a leading literal at the executor call, query(\"/* name */ \" + sql), or one local const initialized with that leading literal and passed directly: const statement = \"/* name */ \" + sql; query(statement); any tagged template with that literal head also qualifies in either position";
@@ -33,7 +33,7 @@ pub(super) fn scan(
         let heads = prepared
             .ts
             .get(path)
-            .and_then(|file| file.query_annotation_heads.as_deref());
+            .and_then(|file| file.postgres().query_annotation_heads.as_deref());
         if let Some(observer) = observer {
             observer.increment("postgres.annotation.low.calls", file.calls.len() as u64);
         }

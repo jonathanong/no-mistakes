@@ -7,8 +7,8 @@ const ANNOTATED: &str = "/* name */ SELECT 1";
 fn projected_call(events: Vec<Value>) -> Option<Option<String>> {
     let mut files = prepared_fixture("helper-tracing-event-prerequisites", &["sink"]);
     let path = files.keys().next().unwrap().clone();
-    let profile = files[&path].query_annotation[0].0.clone();
-    let span = files[&path].embedded_sql[0].1.call_spans[0];
+    let profile = files[&path].postgres().query_annotation[0].0.clone();
+    let span = files[&path].postgres().embedded_sql[0].1.call_spans[0];
     let events = ExecutionEvents::from([(
         (path.clone(), span),
         events.into_iter().map(|value| (false, value)).collect(),
@@ -22,7 +22,7 @@ fn projected_call(events: Vec<Value>) -> Option<Option<String>> {
         projection,
         &mut Default::default(),
     );
-    let facts = &files[&path].query_annotation[0].1;
+    let facts = &files[&path].postgres().query_annotation[0].1;
     facts.calls.get(&span).cloned()
 }
 

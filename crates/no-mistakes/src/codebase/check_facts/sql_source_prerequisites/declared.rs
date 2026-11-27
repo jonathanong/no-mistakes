@@ -1,5 +1,5 @@
 use super::{SqlProjection, SqlSourceKey, SqlSourcePrerequisites};
-use crate::codebase::{check_facts::CheckFactPlan, postgres::EmbeddedSqlOptions};
+use crate::codebase::{check_facts::CheckFactPlan, postgres_analysis::options::EmbeddedSqlOptions};
 use std::path::Path;
 
 pub(crate) fn planned_low_applications(
@@ -65,9 +65,10 @@ pub(crate) fn with_failed_source(
     root: &Path,
     path: &Path,
     plan: &CheckFactPlan,
-    mut facts: super::CheckFileFacts,
-) -> super::CheckFileFacts {
+    mut facts: crate::codebase::check_facts::CheckFileFacts,
+) -> crate::codebase::check_facts::CheckFileFacts {
     facts.sql_source_prerequisites = SqlSourcePrerequisites::failed_source(root, path, plan);
-    facts.sql_identifier_syntax.low_applications = planned_low_applications(root, path, plan);
+    facts.postgres_file =
+        (crate::codebase::postgres_analysis::hooks().failed_source)(root, path, plan);
     facts
 }

@@ -29,7 +29,16 @@ fn abrupt_proofs_require_complete_acyclic_models_within_the_work_budget() {
             None,
         );
         CheckFileFacts {
-            sql_identifier_syntax: collect(program, &ts, &source, std::slice::from_ref(&profile)),
+            postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                sql_identifier_syntax: collect(
+                    program,
+                    &ts,
+                    &source,
+                    std::slice::from_ref(&profile),
+                ),
+                ..Default::default()
+            }
+            .into_payload(),
             ts: Arc::new(ts),
             ..Default::default()
         }
@@ -59,7 +68,12 @@ fn abrupt_proofs_require_complete_acyclic_models_within_the_work_budget() {
         assert!(!catalog.selected_sql(&missing, None));
         assert!(!catalog.throw_has_no_selected_sql(&missing, pure, &mut Vec::new(), &mut 0));
     }
-    let models = &mut files.get_mut(&path).unwrap().sql_identifier_syntax.recovery;
+    let models = &mut files
+        .get_mut(&path)
+        .unwrap()
+        .postgres_mut()
+        .sql_identifier_syntax
+        .recovery;
     let callable = models
         .calls
         .iter()

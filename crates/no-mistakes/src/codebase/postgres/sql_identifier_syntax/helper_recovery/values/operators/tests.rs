@@ -44,7 +44,11 @@ fn prepared(name: &str) -> (PathBuf, String, FileIdMap<CheckFileFacts>) {
         );
         CheckFileFacts {
             ts: Arc::new(ts),
-            sql_identifier_syntax: syntax,
+            postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                sql_identifier_syntax: syntax,
+                ..Default::default()
+            }
+            .into_payload(),
             ..Default::default()
         }
     })
@@ -67,6 +71,7 @@ fn closed_operator_values_preserve_sql_and_decline_unknown_coercion() {
     for call in &files
         .get(&path)
         .unwrap()
+        .postgres()
         .sql_identifier_syntax
         .recovery
         .calls
@@ -114,6 +119,7 @@ fn concatenation_exhaustion_cannot_publish_a_complete_sql_value() {
     let call = files
         .get(&path)
         .unwrap()
+        .postgres()
         .sql_identifier_syntax
         .recovery
         .calls
@@ -143,7 +149,12 @@ fn concatenation_exhaustion_cannot_publish_a_complete_sql_value() {
 #[test]
 fn helper_returned_sql_is_not_fresh_when_an_incoming_statement_can_alias_it() {
     let (path, source, files) = prepared("alias-boundary.mts");
-    let profile = files.get(&path).unwrap().sql_identifier_syntax.profiles[0]
+    let profile = files
+        .get(&path)
+        .unwrap()
+        .postgres()
+        .sql_identifier_syntax
+        .profiles[0]
         .0
         .clone();
     let catalog = PreparedCatalog {
@@ -152,7 +163,12 @@ fn helper_returned_sql_is_not_fresh_when_an_incoming_statement_can_alias_it() {
         profile: Some(&profile),
         resolve: &|_, _| None,
     };
-    let models = &files.get(&path).unwrap().sql_identifier_syntax.recovery;
+    let models = &files
+        .get(&path)
+        .unwrap()
+        .postgres()
+        .sql_identifier_syntax
+        .recovery;
     let mut checked = 0;
     for call in &models.calls {
         let raw = &source[call.span.0 as usize..call.span.1 as usize];

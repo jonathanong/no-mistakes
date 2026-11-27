@@ -30,12 +30,13 @@ fn async_native_origins_require_all_prepared_effects_and_exact_await_consumption
         });
         let file = facts.ts.get(&paths[0]).unwrap();
         if efforts == ["max"] {
-            max_calls = Some(format!("{:?}", file.embedded_sql[0].1.calls));
-            assert!(file.query_annotation_heads.is_none());
+            max_calls = Some(format!("{:?}", file.postgres().embedded_sql[0].1.calls));
+            assert!(file.postgres().query_annotation_heads.is_none());
             assert!(facts
                 .ts
                 .get(&paths[1])
                 .unwrap()
+                .postgres()
                 .query_annotation_heads
                 .is_none());
             assert!(!observer
@@ -51,11 +52,11 @@ fn async_native_origins_require_all_prepared_effects_and_exact_await_consumption
         if efforts == ["low", "max"] {
             assert_eq!(
                 max_calls.as_ref(),
-                Some(&format!("{:?}", file.embedded_sql[0].1.calls))
+                Some(&format!("{:?}", file.postgres().embedded_sql[0].1.calls))
             );
         }
-        let heads = file.query_annotation_heads.as_ref().unwrap();
-        let proofs = file.embedded_sql[0]
+        let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
+        let proofs = file.postgres().embedded_sql[0]
             .1
             .call_spans
             .iter()
@@ -75,9 +76,9 @@ fn async_native_origins_require_all_prepared_effects_and_exact_await_consumption
             .all(|proof| *proof == Some(HeadProof::Unproven)));
         for index in [4, 6, 8, 9] {
             let gap = facts.ts.get(&paths[index]).unwrap();
-            let spans = &gap.embedded_sql[0].1.call_spans;
+            let spans = &gap.postgres().embedded_sql[0].1.call_spans;
             assert_eq!(spans.len(), 1, "{}", paths[index].display());
-            let heads = gap.query_annotation_heads.as_ref().unwrap();
+            let heads = gap.postgres().query_annotation_heads.as_ref().unwrap();
             assert!(
                 spans
                     .iter()
@@ -92,8 +93,8 @@ fn async_native_origins_require_all_prepared_effects_and_exact_await_consumption
             low = Some(proofs);
         }
         if efforts == ["low"] {
-            assert!(file.query_annotation.is_empty());
-            assert!(file.embedded_sql[0]
+            assert!(file.postgres().query_annotation.is_empty());
+            assert!(file.postgres().embedded_sql[0]
                 .1
                 .calls
                 .iter()

@@ -19,8 +19,12 @@ fn finite_comment_heads_share_prepared_facts_without_sql_composition() {
         if efforts == ["max"] {
             continue;
         }
-        let heads = file.query_annotation_heads.as_ref().expect("low heads");
-        let proofs = file.embedded_sql[0]
+        let heads = file
+            .postgres()
+            .query_annotation_heads
+            .as_ref()
+            .expect("low heads");
+        let proofs = file.postgres().embedded_sql[0]
             .1
             .call_spans
             .iter()
@@ -40,7 +44,7 @@ fn finite_comment_heads_share_prepared_facts_without_sql_composition() {
         }
         low_proofs = Some(proofs);
         if efforts == ["low"] {
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert_eq!(
                 observer
                     .snapshot()
@@ -69,7 +73,7 @@ fn indexed_finite_domains_preserve_prepared_low_heads_and_max_raw_facts() {
             collect_check_facts(root, vec![query.clone()], plan(root, &config(&efforts)))
         });
         let file = facts.ts.get(&query).unwrap();
-        let embedded = &file.embedded_sql[0].1;
+        let embedded = &file.postgres().embedded_sql[0].1;
         let work = observer.snapshot().work;
         if efforts == ["max"] {
             max_calls = Some(format!("{:?}", embedded.calls));
@@ -82,7 +86,7 @@ fn indexed_finite_domains_preserve_prepared_low_heads_and_max_raw_facts() {
             continue;
         }
         assert_eq!(embedded.call_spans.len(), 64);
-        let heads = file.query_annotation_heads.as_ref().unwrap();
+        let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
         let decisions = embedded
             .call_spans
             .iter()
@@ -104,7 +108,7 @@ fn indexed_finite_domains_preserve_prepared_low_heads_and_max_raw_facts() {
             Some(2)
         );
         if efforts == ["low"] {
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert_eq!(
                 work.get("postgres.sql.variants_composed")
                     .copied()

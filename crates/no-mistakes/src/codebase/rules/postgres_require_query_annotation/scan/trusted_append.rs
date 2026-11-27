@@ -13,6 +13,6 @@ pub(super) fn accepts(
         && facts
             .ts
             .get(path)
-            .and_then(|file| file.query_annotation_heads.as_deref())
+            .and_then(|file| file.postgres().query_annotation_heads.as_deref())
             .is_some_and(|heads| heads.accepts_trusted_append(span))
 }

@@ -4,6 +4,7 @@
 
 pub(crate) use no_mistakes_postgres_sql::annotation;
 mod catalog;
+pub(crate) mod check_analysis;
 mod collect;
 pub(crate) use no_mistakes_postgres_sql::conflict;
 pub(crate) mod executor_detachment;

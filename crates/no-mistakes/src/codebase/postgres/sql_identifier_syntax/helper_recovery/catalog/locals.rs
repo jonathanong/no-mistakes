@@ -13,6 +13,7 @@ impl PreparedCatalog<'_> {
             &self
                 .files
                 .get(file)?
+                .postgres()
                 .sql_identifier_syntax
                 .recovery
                 .locals
@@ -45,7 +46,12 @@ impl PreparedCatalog<'_> {
         stack: &mut Vec<usize>,
     ) -> Option<()> {
         let module = self.module(file)?;
-        let models = &self.files.get(file)?.sql_identifier_syntax.recovery;
+        let models = &self
+            .files
+            .get(file)?
+            .postgres()
+            .sql_identifier_syntax
+            .recovery;
         if models.dynamic_scope {
             return None;
         }

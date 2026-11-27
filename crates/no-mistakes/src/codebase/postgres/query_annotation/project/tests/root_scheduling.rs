@@ -123,7 +123,8 @@ fn singleton_scheduling_preserves_serial_events_and_complete_projections() {
                     .map(|(path, file)| {
                         (
                             path.clone(),
-                            file.query_annotation
+                            file.postgres()
+                                .query_annotation
                                 .iter()
                                 .map(|(options, facts)| (options.clone(), facts.calls.clone()))
                                 .collect::<Vec<_>>(),

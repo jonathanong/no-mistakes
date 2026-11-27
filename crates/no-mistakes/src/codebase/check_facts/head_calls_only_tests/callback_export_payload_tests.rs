@@ -15,8 +15,8 @@ fn callback_payloads_reject_runtime_exports_but_keep_private_shadowed_bindings()
             collect_check_facts(root, paths.to_vec(), plan(root, &config(&efforts)))
         });
         let file = facts.ts.get(&paths[0]).unwrap();
-        let heads = file.query_annotation_heads.as_ref().unwrap();
-        let decisions = file.embedded_sql[0]
+        let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
+        let decisions = file.postgres().embedded_sql[0]
             .1
             .call_spans
             .iter()
@@ -27,7 +27,7 @@ fn callback_payloads_reject_runtime_exports_but_keep_private_shadowed_bindings()
             assert_eq!(&decisions, low);
         } else {
             low = Some(decisions);
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert_eq!(
                 observer
                     .snapshot()

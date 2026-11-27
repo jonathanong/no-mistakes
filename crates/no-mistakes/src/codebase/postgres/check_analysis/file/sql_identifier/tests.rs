@@ -1,0 +1,342 @@
+use super::*;
+use crate::codebase::check_facts::{file_program_with_discovery, CheckFactVariant};
+use crate::codebase::postgres::sql_identifier_syntax::plan::SqlIdentifierScan;
+use crate::codebase::postgres_analysis::identifier_plan::selected;
+use crate::config::v2::schema::EffectTargetConfig;
+
+#[test]
+fn typed_executor_demand_is_profiled_and_path_scoped() {
+    let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
+        .join("effort-low");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let rule = config.rule_applications("postgres-no-unbounded-sql-identifier")[0];
+    let typed = [EffectTargetConfig {
+        module: "@example/postgres".into(),
+        export: "QueryExecutor".into(),
+        category: None,
+    }];
+    let selected = SqlIdentifierScan::new(&root, &config, rule, 0, &["src/query.ts".into()], &[])
+        .unwrap()
+        .with_typed_executor_types(&typed);
+    let untyped =
+        SqlIdentifierScan::new(&root, &config, rule, 1, &["src/selection.ts".into()], &[]).unwrap();
+    let profile = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let other_profile = EmbeddedSqlOptions::configured("@unrelated/db", &[]);
+    let unmatched_profile = EmbeddedSqlOptions::configured("@unused/db", &[]);
+    let no_identity_profile = EmbeddedSqlOptions::configured("@no-types/db", &[]);
+    let mut plan = CheckFactPlan::default();
+    plan.sql_identifier_profiles
+        .insert(profile.clone(), vec![selected.clone(), untyped]);
+    plan.sql_identifier_profiles
+        .insert(other_profile.clone(), vec![selected.clone()]);
+    let unmatched =
+        SqlIdentifierScan::new(&root, &config, rule, 3, &["src/excluded.ts".into()], &[])
+            .unwrap()
+            .with_typed_executor_types(&typed);
+    plan.sql_identifier_profiles
+        .insert(unmatched_profile, vec![unmatched]);
+    plan.sql_identifier_profiles.insert(
+        no_identity_profile,
+        vec![
+            SqlIdentifierScan::new(&root, &config, rule, 2, &["src/query.ts".into()], &[]).unwrap(),
+        ],
+    );
+
+    let query = typed_executor_types_by_profile(&root, &root.join("src/query.ts"), &plan);
+    assert_eq!(query.len(), 2);
+    assert_eq!(query[0].0, profile);
+    assert_eq!(query[1].0, other_profile);
+    assert!(query.iter().all(|(_, types)| types == &typed));
+    assert!(
+        typed_executor_types_by_profile(&root, &root.join("src/selection.ts"), &plan).is_empty()
+    );
+}
+
+#[test]
+fn typed_executor_demand_sorts_and_deduplicates_module_export_identity() {
+    let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
+        .join("effort-low");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let rule = config.rule_applications("postgres-no-unbounded-sql-identifier")[0];
+    let duplicate = EffectTargetConfig {
+        module: "@example/postgres".into(),
+        export: "QueryExecutor".into(),
+        category: None,
+    };
+    let another = EffectTargetConfig {
+        module: "@example/pg".into(),
+        export: "Executor".into(),
+        category: None,
+    };
+    let scan = |index| {
+        SqlIdentifierScan::new(&root, &config, rule, index, &["src/query.ts".into()], &[]).unwrap()
+    };
+    let profile = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let mut plan = CheckFactPlan::default();
+    plan.sql_identifier_profiles.insert(
+        profile.clone(),
+        vec![
+            scan(0).with_typed_executor_types(&[another.clone(), duplicate.clone()]),
+            scan(1).with_typed_executor_types(std::slice::from_ref(&duplicate)),
+        ],
+    );
+
+    let demands = typed_executor_types_by_profile(&root, &root.join("src/query.ts"), &plan);
+    assert_eq!(demands.len(), 1);
+    assert_eq!(demands[0].0, profile);
+    assert_eq!(
+        demands[0].1,
+        [another, duplicate].into_iter().collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn declared_factory_demand_is_profiled_and_file_scoped() {
+    let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
+        .join("effort-low");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let rule = config.rule_applications("postgres-no-unbounded-sql-identifier")[0];
+    let factory = EffectTargetConfig {
+        module: "../db/index".into(),
+        export: "beginTransaction".into(),
+        category: None,
+    };
+    let matching = SqlIdentifierScan::new(&root, &config, rule, 0, &["src/query.ts".into()], &[])
+        .unwrap()
+        .with_declared_factories(&[factory.clone(), factory.clone()]);
+    let excluded =
+        SqlIdentifierScan::new(&root, &config, rule, 1, &["src/other.ts".into()], &[]).unwrap();
+    let profile = EmbeddedSqlOptions::configured("@example/db", &[])
+        .with_scoped_executors(&["beginTransaction".into()], &[]);
+    let mut plan = CheckFactPlan::default();
+    plan.sql_identifier_profiles
+        .insert(profile.clone(), vec![matching, excluded]);
+    assert_eq!(
+        declared_factories_by_profile(&root, &root.join("src/query.ts"), &plan),
+        vec![(profile, vec![factory])]
+    );
+    assert!(declared_factories_by_profile(&root, &root.join("src/other.ts"), &plan).is_empty());
+}
+
+#[test]
+fn factory_identity_order_is_deterministic_across_overlapping_applications() {
+    let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
+        .join("effort-low");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let rule = config.rule_applications("postgres-no-unbounded-sql-identifier")[0];
+    let identity = |module: &str, export: &str| EffectTargetConfig {
+        module: module.into(),
+        export: export.into(),
+        category: None,
+    };
+    let first = identity("./a", "begin");
+    let second = identity("./a", "transaction");
+    let third = identity("./z", "begin");
+    let scan = |index, identities: &[EffectTargetConfig]| {
+        SqlIdentifierScan::new(&root, &config, rule, index, &["src/query.ts".into()], &[])
+            .unwrap()
+            .with_declared_factories(identities)
+    };
+    let profile = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let mut plan = CheckFactPlan::default();
+    plan.sql_identifier_profiles.insert(
+        profile.clone(),
+        vec![
+            scan(0, &[third.clone(), second.clone(), first.clone()]),
+            scan(1, std::slice::from_ref(&second)),
+        ],
+    );
+    assert_eq!(
+        declared_factories_by_profile(&root, &root.join("src/query.ts"), &plan),
+        vec![(profile, vec![first, second, third])]
+    );
+    assert!(!selected(&root, &root.join("src/excluded.ts"), &plan));
+    assert!(!policy_selected(
+        &root,
+        &root.join("src/excluded.ts"),
+        &plan
+    ));
+}
+
+#[test]
+fn optional_executor_declarations_preserve_direct_calls_and_empty_scope() {
+    use crate::codebase::ts_source::facts::{
+        collect_file_facts_from_program, TsFactContext, TsFactPlan,
+    };
+    let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
+        .join("effort-low");
+    let path = root.join("src/query.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let rule = config.rule_applications("postgres-no-unbounded-sql-identifier")[0];
+    let profile = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let identity = EffectTargetConfig {
+        module: "@unrelated/db".into(),
+        export: "Executor".into(),
+        category: None,
+    };
+    crate::ast::with_program(&path, &source, |program, source| {
+        let ts = collect_file_facts_from_program(
+            &path,
+            TsFactPlan {
+                imports: true,
+                module_bindings: true,
+                ..Default::default()
+            },
+            &TsFactContext::default(),
+            source,
+            program,
+            None,
+            None,
+        );
+        let empty = collect(
+            &root,
+            &path,
+            source,
+            program,
+            &ts,
+            &CheckFactPlan::default(),
+        );
+        assert!(empty.profiles.is_empty());
+        let mut outputs = Vec::new();
+        for kind in ["plain", "typed", "factory"] {
+            let scan =
+                SqlIdentifierScan::new(&root, &config, rule, 0, &["src/query.ts".into()], &[])
+                    .unwrap();
+            let scan = match kind {
+                "typed" => scan.with_typed_executor_types(std::slice::from_ref(&identity)),
+                "factory" => scan.with_declared_factories(std::slice::from_ref(&identity)),
+                _ => scan,
+            };
+            let mut plan = CheckFactPlan::default();
+            plan.sql_identifier_profiles
+                .insert(profile.clone(), vec![scan]);
+            let facts = collect(&root, &path, source, program, &ts, &plan);
+            assert_eq!(facts.profiles.len(), 1);
+            assert!(!facts.profiles[0].1.is_empty());
+            outputs.push(format!("{:?}", facts.profiles));
+        }
+        assert_eq!(outputs[0], outputs[1]);
+        assert_eq!(outputs[0], outputs[2]);
+    })
+    .unwrap();
+}
+
+#[test]
+fn mixed_effort_reuses_one_scoped_collection_per_profile() {
+    use crate::diagnostics::{with_observer, InvocationObserver};
+    use std::sync::Arc;
+    let root = crate::test_support::rule_fixture_root("postgres-required-predicates")
+        .join("nullable-executors");
+    let path = root.join("direct.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let config = crate::config::v2::load_v2_config(&root, Some(&root.join("low.yml"))).unwrap();
+    let rule = config.rule_applications("postgres-required-predicates")[0];
+    let profile = EmbeddedSqlOptions::configured("db-lib", &[])
+        .with_scoped_executors(&[], &["PoolClient".into(), "Pool".into()]);
+    let scan = SqlIdentifierScan::new(&root, &config, rule, 0, &["direct.ts".into()], &[]).unwrap();
+    let plan = CheckFactPlan {
+        embedded_sql: true,
+        embedded_sql_options: vec![profile.clone()],
+        sql_identifier_profiles: [(profile, vec![scan])].into(),
+        ..Default::default()
+    };
+    let observer = InvocationObserver::new(true);
+    crate::ast::with_program(&path, &source, |program, _| {
+        let variant = CheckFactVariant {
+            root: &root,
+            plan: &plan,
+            playwright: None,
+            collect_tests: false,
+        };
+        let file = with_observer(Some(Arc::clone(&observer)), || {
+            file_program_with_discovery(&variant, &path, &source, program, None)
+        });
+        assert_eq!(file.postgres().embedded_sql[0].1.calls.len(), 3);
+        let calls = &file.postgres().sql_identifier_syntax.profiles[0].1;
+        assert_eq!(calls.len(), 3);
+        assert!(calls
+            .iter()
+            .all(|call| matches!(call.input, sql_identifier_syntax::Input::Sql { .. })));
+    })
+    .unwrap();
+    assert_eq!(observer.snapshot().work["postgres.scoped.collections"], 1);
+}
+
+#[test]
+fn low_scoped_preflight_skips_files_without_types_or_delayed_bindings() {
+    use crate::diagnostics::{with_observer, InvocationObserver};
+    use std::sync::Arc;
+    let root = crate::test_support::rule_fixture_root("postgres-required-predicates")
+        .join("nullable-executors");
+    let config = crate::config::v2::load_v2_config(&root, Some(&root.join("low.yml"))).unwrap();
+    let rule = config.rule_applications("postgres-required-predicates")[0];
+    for (path, profile, expected) in [
+        (
+            root.join("direct.ts"),
+            EmbeddedSqlOptions::configured("db-lib", &[]),
+            0,
+        ),
+        (
+            crate::test_support::rule_fixture_root("postgres-require-query-annotation")
+                .join("delayed-try-receivers/no-keyword.mts"),
+            EmbeddedSqlOptions::configured("pg", &[])
+                .with_scoped_executors(&[], &["PoolClient".into()]),
+            1,
+        ),
+    ] {
+        let source = std::fs::read_to_string(&path).unwrap();
+        let fixture_root = path.parent().unwrap();
+        let scan = SqlIdentifierScan::new(fixture_root, &config, rule, 0, &[], &[]).unwrap();
+        let plan = CheckFactPlan {
+            sql_identifier_profiles: [(profile, vec![scan])].into(),
+            ..Default::default()
+        };
+        let observer = InvocationObserver::new(true);
+        crate::ast::with_program(&path, &source, |program, _| {
+            let variant = CheckFactVariant {
+                root: fixture_root,
+                plan: &plan,
+                playwright: None,
+                collect_tests: false,
+            };
+            let file = with_observer(Some(Arc::clone(&observer)), || {
+                file_program_with_discovery(&variant, &path, &source, program, None)
+            });
+            assert_eq!(
+                file.postgres().sql_identifier_syntax.profiles[0].1.len(),
+                expected
+            );
+        })
+        .unwrap();
+        assert_eq!(
+            observer
+                .snapshot()
+                .work
+                .get("postgres.scoped.collections")
+                .copied()
+                .unwrap_or_default(),
+            0
+        );
+    }
+}
+
+fn collect(
+    root: &Path,
+    path: &Path,
+    source: &str,
+    program: &Program<'_>,
+    ts: &TsFileFacts,
+    plan: &CheckFactPlan,
+) -> sql_identifier_syntax::FileFacts {
+    collect_with_scopes(
+        root,
+        path,
+        source,
+        program,
+        ts,
+        plan,
+        &mut Default::default(),
+    )
+    .unwrap_or_default()
+}

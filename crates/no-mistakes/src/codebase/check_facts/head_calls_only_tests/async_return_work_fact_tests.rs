@@ -94,6 +94,7 @@ fn async_export_aliases_memoize_positive_and_negative_owner_censuses() {
         .ts
         .get(&caller)
         .unwrap()
+        .postgres()
         .query_annotation_heads
         .as_ref()
         .unwrap();
@@ -102,7 +103,7 @@ fn async_export_aliases_memoize_positive_and_negative_owner_censuses() {
         .iter()
         .filter(|(span, _)| {
             // Match only confirmed executor spans, excluding the awaited factory calls.
-            facts.ts.get(&caller).unwrap().embedded_sql[0]
+            facts.ts.get(&caller).unwrap().postgres().embedded_sql[0]
                 .1
                 .call_spans
                 .contains(span)

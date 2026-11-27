@@ -106,7 +106,11 @@ fn irrelevant_arguments_keep_skeletons_and_references_without_full_ir() {
             path.clone(),
             CheckFileFacts {
                 ts: Arc::new(ts),
-                sql_identifier_syntax: facts,
+                postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                    sql_identifier_syntax: facts,
+                    ..Default::default()
+                }
+                .into_payload(),
                 ..Default::default()
             },
         );

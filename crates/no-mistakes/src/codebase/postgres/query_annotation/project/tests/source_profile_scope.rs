@@ -18,16 +18,22 @@ fn failed_reexport_provider_keeps_its_declared_profile_catalog_membership() {
             } else {
                 "@app/db"
             };
-            file.query_annotation
+            let postgres = file.postgres_mut();
+            postgres
+                .query_annotation
                 .retain(|(profile, _)| profile.import_specifier == wanted);
-            file.embedded_sql
+            postgres
+                .embedded_sql
                 .retain(|(profile, _)| profile.import_specifier == wanted);
         }
         Arc::make_mut(&mut files.get_mut(&origin).unwrap().ts).fatal_parse_error = true;
         let resolve = resolver(&files);
         project(&mut files, resolve);
         let entry = &files[&origin.with_file_name("entry.mts")];
-        let key = SqlSourceKey::profile(SqlProjection::AnnotationMax, &entry.query_annotation[0].0);
+        let key = SqlSourceKey::profile(
+            SqlProjection::AnnotationMax,
+            &entry.postgres().query_annotation[0].0,
+        );
         assert_eq!(
             entry
                 .sql_source_prerequisites

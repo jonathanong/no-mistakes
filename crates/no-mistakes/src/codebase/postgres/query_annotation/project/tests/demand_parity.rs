@@ -97,7 +97,8 @@ fn actual_executor_seeds_preserve_every_legacy_event_and_both_public_projections
                     .map(|(path, file)| {
                         (
                             path.clone(),
-                            file.query_annotation
+                            file.postgres()
+                                .query_annotation
                                 .iter()
                                 .map(|(options, facts)| (options.clone(), facts.calls.clone()))
                                 .collect::<Vec<_>>(),

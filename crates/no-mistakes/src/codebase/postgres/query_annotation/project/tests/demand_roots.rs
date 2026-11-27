@@ -24,8 +24,9 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
         ],
     );
     for (_, file) in &mut files {
-        file.query_annotation.truncate(1);
-        file.embedded_sql.truncate(1);
+        let postgres = file.postgres_mut();
+        postgres.query_annotation.truncate(1);
+        postgres.embedded_sql.truncate(1);
     }
     let candidates = files.keys().cloned().collect::<BTreeSet<_>>();
     let resolve = |specifier: &str, from: &std::path::Path| {
@@ -39,8 +40,13 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
                 path.clone(),
                 super::super::File {
                     module: Arc::new(super::super::Module::new(Arc::clone(&file.ts))),
-                    facts: &file.query_annotation[0].1,
-                    executors: file.embedded_sql[0].1.call_spans.iter().copied().collect(),
+                    facts: &file.postgres().query_annotation[0].1,
+                    executors: file.postgres().embedded_sql[0]
+                        .1
+                        .call_spans
+                        .iter()
+                        .copied()
+                        .collect(),
                 },
             )
         })
@@ -88,7 +94,7 @@ fn demand_prunes_unrelated_modules_and_cycles_but_keeps_contextual_callers() {
     let start = source.find("query(sql)").unwrap() as u32;
     // Executor-free importers must supply their contextual unannotated SQL.
     assert_eq!(
-        executor.query_annotation[0].1.calls[&(start, start + 10)].as_deref(),
+        executor.postgres().query_annotation[0].1.calls[&(start, start + 10)].as_deref(),
         Some("SELECT 1")
     );
 }

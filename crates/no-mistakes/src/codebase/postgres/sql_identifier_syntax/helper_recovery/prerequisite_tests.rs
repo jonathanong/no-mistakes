@@ -33,7 +33,11 @@ fn load(path: &Path, profiles: &[EmbeddedSqlOptions]) -> CheckFileFacts {
         let sql_identifier_syntax = collect_sql_syntax(program, &ts, &source, profiles);
         CheckFileFacts {
             ts: Arc::new(ts),
-            sql_identifier_syntax,
+            postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                sql_identifier_syntax,
+                ..Default::default()
+            }
+            .into_payload(),
             ..Default::default()
         }
     })
@@ -71,7 +75,7 @@ fn low_helper_failures_are_scoped_to_resolved_application_inputs() {
         &excluded_helper,
     ] {
         let mut facts = load(path, &profiles);
-        facts.sql_identifier_syntax.low_applications = if path == &failed_query {
+        facts.postgres_mut().sql_identifier_syntax.low_applications = if path == &failed_query {
             vec![
                 (profile.clone(), "postgres-no-offset".into(), 0),
                 (other_profile.clone(), "postgres-no-offset".into(), 2),

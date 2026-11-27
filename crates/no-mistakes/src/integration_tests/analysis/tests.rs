@@ -371,9 +371,9 @@ fn disabled_integration_collects_no_discovery_work() {
         assert!(facts.nextjs_caching_low.is_none());
         assert!(facts.storybook.is_none());
         assert!(facts.server_route_client_boundary.is_none());
-        assert!(facts.embedded_sql.is_empty());
-        assert!(facts.query_annotation.is_empty());
-        assert!(facts.query_annotation_heads.is_none());
+        assert!(facts.postgres().embedded_sql.is_empty());
+        assert!(facts.postgres().query_annotation.is_empty());
+        assert!(facts.postgres().query_annotation_heads.is_none());
         assert!(facts.ts.imports.is_empty());
         assert!(facts.ts.function_calls.is_empty());
         assert!(facts.ts.call_sites.is_empty());

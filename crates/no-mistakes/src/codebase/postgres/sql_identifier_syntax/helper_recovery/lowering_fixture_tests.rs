@@ -40,7 +40,11 @@ fn assert_recovery_mode(name: &str, expected: &[(&str, Option<&str>)], partial: 
         let syntax = super::super::tests::collect(program, &ts, &source, &[profile]);
         CheckFileFacts {
             ts: Arc::new(ts),
-            sql_identifier_syntax: syntax,
+            postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                sql_identifier_syntax: syntax,
+                ..Default::default()
+            }
+            .into_payload(),
             ..Default::default()
         }
     })
@@ -53,7 +57,7 @@ fn assert_recovery_mode(name: &str, expected: &[(&str, Option<&str>)], partial: 
         profile: None,
         resolve: &|_, _| None,
     };
-    let calls = &files[&path].sql_identifier_syntax.recovery.calls;
+    let calls = &files[&path].postgres().sql_identifier_syntax.recovery.calls;
     assert_eq!(
         calls
             .iter()

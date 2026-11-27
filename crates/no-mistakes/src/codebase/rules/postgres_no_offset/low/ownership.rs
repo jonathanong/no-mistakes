@@ -33,7 +33,7 @@ impl<'a> Owners<'a> {
             let Some(file) = facts.ts.get(path) else {
                 continue;
             };
-            let Some(calls) = file.sql_identifier_syntax.calls_for(application) else {
+            let Some(calls) = file.postgres().sql_identifier_syntax.calls_for(application) else {
                 continue;
             };
             let source = sources.read_source_path(path)?;
@@ -59,6 +59,7 @@ impl<'a> Owners<'a> {
                     }
                     Input::Recovered(_)
                         if file
+                            .postgres()
                             .sql_identifier_syntax
                             .recovery
                             .sinks

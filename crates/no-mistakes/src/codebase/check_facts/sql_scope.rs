@@ -103,13 +103,9 @@ pub(super) fn collect(
         support |= results.iter().any(|result| {
             result.1.iter().zip(&result.2).any(|(variant, facts)| {
                 variant.request == id
-                    && facts.as_ref().is_some_and(|facts| {
-                        facts.embedded_sql.iter().any(|(_, facts)| {
-                            !facts.pending_imported.is_empty()
-                                || !facts.imported_lock_helpers.is_empty()
-                                || !facts.pending_relative.candidates.is_empty()
-                        })
-                    })
+                    && facts.as_ref().is_some_and(
+                        crate::codebase::postgres_analysis::hooks().needs_import_support,
+                    )
             })
         });
         for result in results.iter().filter(|_| support) {

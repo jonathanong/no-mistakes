@@ -3,17 +3,15 @@ use super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use std::path::Path;
 use std::sync::Arc;
-mod embedded_sql;
 mod plan;
 mod prepared_program;
 pub(crate) mod production_imports;
 mod program;
 mod program_walk;
-mod sql_identifier;
 mod variants;
 pub(super) use plan::should_store_source;
 use plan::{requires_parse, ts_source};
-pub(crate) use program::collect_file_facts_from_program_with_discovery;
+pub(crate) use program::{collect_file_facts_from_program_with_discovery, collect_with_postgres};
 pub(crate) use variants::{
     collect_file_fact_variants_from_source_with_session, collect_file_fact_variants_with_session,
     CheckFactVariant,

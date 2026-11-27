@@ -61,6 +61,7 @@ impl PreparedDisableDirectives {
                         let mut comments = Vec::new();
                         if let Some(file) = facts.ts.get(path) {
                             for key in file
+                                .postgres()
                                 .sql_identifier_syntax
                                 .application_keys()
                                 .iter()

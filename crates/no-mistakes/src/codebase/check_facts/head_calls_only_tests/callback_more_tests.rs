@@ -34,8 +34,8 @@ fn async_and_local_source_callbacks_keep_low_heads_under_mixed_demand() {
             collect_check_facts(root, paths.clone(), plan(root, &config))
         });
         let file = facts.ts.get(&caller).unwrap();
-        let heads = file.query_annotation_heads.as_ref().unwrap();
-        let proofs = file.embedded_sql[0]
+        let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
+        let proofs = file.postgres().embedded_sql[0]
             .1
             .call_spans
             .iter()
@@ -45,9 +45,10 @@ fn async_and_local_source_callbacks_keep_low_heads_under_mixed_demand() {
         assert_eq!(&proofs[..2], &[Some(HeadProof::Literal); 2]);
         assert_eq!(&proofs[2..], &[Some(HeadProof::Unproven); 10]);
         let unstable = facts.ts.get(&reassigned).unwrap();
-        let span = unstable.embedded_sql[0].1.call_spans[0];
+        let span = unstable.postgres().embedded_sql[0].1.call_spans[0];
         assert_eq!(
             unstable
+                .postgres()
                 .query_annotation_heads
                 .as_ref()
                 .unwrap()
@@ -57,9 +58,10 @@ fn async_and_local_source_callbacks_keep_low_heads_under_mixed_demand() {
         );
         for path in &unresolved {
             let file = facts.ts.get(path).unwrap();
-            let span = file.embedded_sql[0].1.call_spans[0];
+            let span = file.postgres().embedded_sql[0].1.call_spans[0];
             assert_eq!(
-                file.query_annotation_heads
+                file.postgres()
+                    .query_annotation_heads
                     .as_ref()
                     .unwrap()
                     .calls
@@ -73,8 +75,8 @@ fn async_and_local_source_callbacks_keep_low_heads_under_mixed_demand() {
             assert_eq!(&proofs, prior);
         } else {
             prior = Some(proofs);
-            assert!(file.query_annotation.is_empty());
-            assert!(file.embedded_sql[0]
+            assert!(file.postgres().query_annotation.is_empty());
+            assert!(file.postgres().embedded_sql[0]
                 .1
                 .calls
                 .iter()
@@ -114,9 +116,13 @@ fn ordinary_executor_read_skips_callback_payload_indexes() {
             collect_check_facts(root, vec![path.clone()], plan(root, &config(&["low"])))
         });
         let file = facts.ts.get(&path).unwrap();
-        let heads = file.query_annotation_heads.as_ref().unwrap();
-        assert_eq!(file.embedded_sql[0].1.call_spans.len(), 1, "{name}");
-        let span = file.embedded_sql[0].1.call_spans[0];
+        let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
+        assert_eq!(
+            file.postgres().embedded_sql[0].1.call_spans.len(),
+            1,
+            "{name}"
+        );
+        let span = file.postgres().embedded_sql[0].1.call_spans[0];
         assert_eq!(heads.calls[&span], HeadProof::Literal, "{name}");
         let work = observer.snapshot().work;
         for key in [

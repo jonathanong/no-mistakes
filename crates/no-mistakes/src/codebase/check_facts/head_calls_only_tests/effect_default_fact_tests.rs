@@ -21,8 +21,12 @@ fn inert_later_defaults_keep_prepared_low_heads_without_evaluator_work() {
             )
         });
         let file = facts.ts.get(&query).expect("prepared caller");
-        let heads = file.query_annotation_heads.as_ref().expect("low heads");
-        let proofs = file.embedded_sql[0]
+        let heads = file
+            .postgres()
+            .query_annotation_heads
+            .as_ref()
+            .expect("low heads");
+        let proofs = file.postgres().embedded_sql[0]
             .1
             .call_spans
             .iter()
@@ -39,7 +43,7 @@ fn inert_later_defaults_keep_prepared_low_heads_without_evaluator_work() {
             prior = Some(proofs);
         }
         if efforts == ["low"] {
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert_eq!(
                 observer
                     .snapshot()

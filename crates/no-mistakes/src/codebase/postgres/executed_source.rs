@@ -124,7 +124,7 @@ pub(crate) fn extract_executed_postgres_sql_with_imports_and_session(
         let facts = files
             .get(Path::new(&source.file_name))
             .expect("supplied source");
-        let embedded = &facts.embedded_sql[0].1;
+        let embedded = &facts.postgres().embedded_sql[0].1;
         undeclared.extend(embedded.undeclared_executor_types.iter());
         for (index, call) in embedded.calls.iter().enumerate() {
             let mut statements_for_call = project_calls(&source.file_name, vec![call.clone()]);

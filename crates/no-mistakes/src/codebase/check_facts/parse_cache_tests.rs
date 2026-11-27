@@ -66,8 +66,8 @@ fn embedded_and_helper_projection_share_the_single_ts_parse() {
         assert_eq!(counts.get(&path), Some(&1), "{counts:#?}");
         let file = facts.ts.get(&path).unwrap();
         assert!(file.symbols.is_some());
-        assert_eq!(file.embedded_sql.len(), 1);
-        assert_eq!(file.query_annotation.len(), 1);
+        assert_eq!(file.postgres().embedded_sql.len(), 1);
+        assert_eq!(file.postgres().query_annotation.len(), 1);
     }
 }
 
@@ -128,14 +128,15 @@ fn annotation_projects_only_its_profile_without_losing_imported_helper_calls() {
     );
     let helper = normalize_path(&root.join("src/helper.mts"));
     let helper_facts = facts.ts.get(&helper).unwrap();
-    assert_eq!(helper_facts.embedded_sql.len(), 2);
-    assert_eq!(helper_facts.query_annotation.len(), 1);
+    assert_eq!(helper_facts.postgres().embedded_sql.len(), 2);
+    assert_eq!(helper_facts.postgres().query_annotation.len(), 1);
     assert_eq!(
-        helper_facts.query_annotation[0].0.executor_names,
+        helper_facts.postgres().query_annotation[0].0.executor_names,
         ["query", "read", "write"]
     );
-    let annotation_profile = &helper_facts.query_annotation[0].0;
+    let annotation_profile = &helper_facts.postgres().query_annotation[0].0;
     let call_span = helper_facts
+        .postgres()
         .embedded_sql
         .iter()
         .find(|(profile, _)| profile == annotation_profile)
@@ -177,20 +178,21 @@ fn low_heads_and_executor_projection_share_one_parse_without_evaluation() {
 
     let file = facts.ts.get(&path).expect("parsed file facts");
     assert!(file.ts.module_bindings.is_some());
-    assert_eq!(file.embedded_sql.len(), 1);
-    assert_eq!(file.embedded_sql[0].0, profile);
-    assert!(!file.embedded_sql[0].1.call_spans.is_empty());
+    assert_eq!(file.postgres().embedded_sql.len(), 1);
+    assert_eq!(file.postgres().embedded_sql[0].0, profile);
+    assert!(!file.postgres().embedded_sql[0].1.call_spans.is_empty());
     let heads = file
+        .postgres()
         .query_annotation_heads
         .as_ref()
         .expect("low-head projection");
-    assert!(file.embedded_sql[0]
+    assert!(file.postgres().embedded_sql[0]
         .1
         .call_spans
         .iter()
         .any(|span| heads.accepts(*span)));
     assert!(
-        file.query_annotation.is_empty(),
+        file.postgres().query_annotation.is_empty(),
         "helper evaluator is skipped"
     );
 }

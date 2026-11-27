@@ -87,6 +87,7 @@ fn targets_and_indexes_are_shared_across_profiles_and_parallel_evaluators() {
         let call = "query(provide())";
         let start = source.find(call).unwrap() as u32;
         let facts = &file
+            .postgres()
             .query_annotation
             .iter()
             .find(|(options, _)| options.import_specifier == "@app/db")
@@ -102,7 +103,7 @@ fn targets_and_indexes_are_shared_across_profiles_and_parallel_evaluators() {
         .find(|(path, _)| path.ends_with("helper-tracing-target-reuse/entry.mts"))
         .unwrap();
     let source = file.source.as_deref().unwrap();
-    for (options, facts) in &file.query_annotation {
+    for (options, facts) in &file.postgres().query_annotation {
         let executor = if options.import_specifier == "@app/db" {
             "query"
         } else {
@@ -163,7 +164,7 @@ fn targets_do_not_escape_their_resolver_projection() {
         candidates.contains(&target).then_some(target)
     });
     assert_eq!(
-        files[&entry].query_annotation[0].1.calls[&span].as_deref(),
+        files[&entry].postgres().query_annotation[0].1.calls[&span].as_deref(),
         Some("/* safe */ SELECT 1")
     );
     let observer = InvocationObserver::new(true);
@@ -178,5 +179,8 @@ fn targets_do_not_escape_their_resolver_projection() {
         candidates.len() as u64
     );
     assert!(Arc::ptr_eq(&syntax, &files[&entry].ts));
-    assert_eq!(files[&entry].query_annotation[0].1.calls[&span], None);
+    assert_eq!(
+        files[&entry].postgres().query_annotation[0].1.calls[&span],
+        None
+    );
 }

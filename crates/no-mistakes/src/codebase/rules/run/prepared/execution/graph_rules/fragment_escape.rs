@@ -29,8 +29,9 @@ pub(super) fn collect(
                             shared.graph_file_universe(),
                         )
                     });
-                let report =
-                    crate::perf_trace::rule("analysis.rules.postgres-sql-fragment-escape", || {
+                let report = crate::perf_trace::rule(
+                    "analysis.rules.postgres()-sql-fragment-escape",
+                    || {
                         fragment_escape::check_with_graph(
                             root,
                             config,
@@ -39,7 +40,8 @@ pub(super) fn collect(
                             request.sources,
                             resolution.as_ref(),
                         )
-                    })?;
+                    },
+                )?;
                 if let Some(session) = session {
                     for gap in report.gaps {
                         session.record_check_failure(gap);

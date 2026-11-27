@@ -33,12 +33,16 @@ fn prepared() -> FileIdMap<CheckFileFacts> {
                 None,
             );
             CheckFileFacts {
-                sql_identifier_syntax: super::super::tests::collect(
-                    program,
-                    &ts,
-                    &source,
-                    &[profile()],
-                ),
+                postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                    sql_identifier_syntax: super::super::tests::collect(
+                        program,
+                        &ts,
+                        &source,
+                        &[profile()],
+                    ),
+                    ..Default::default()
+                }
+                .into_payload(),
                 ts: Arc::new(ts),
                 ..Default::default()
             }
@@ -65,7 +69,7 @@ fn finite_switch_requires_source_proven_abrupt_default_and_literal_arms() {
     };
     let source = std::fs::read_to_string(&path).unwrap();
     let mut checked = 0;
-    for call in &files[&path].sql_identifier_syntax.recovery.calls {
+    for call in &files[&path].postgres().sql_identifier_syntax.recovery.calls {
         let raw = &source[call.span.0 as usize..call.span.1 as usize];
         if !raw.starts_with("read(") {
             continue;

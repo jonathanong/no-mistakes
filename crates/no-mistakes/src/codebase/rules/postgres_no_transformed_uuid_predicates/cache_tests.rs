@@ -48,7 +48,10 @@ fn mixed_max_application_initializes_low_cache_without_parsing_literals_again() 
         .insert("effort".into(), "max".into());
     cfg.rules.push(max);
     let (cfg, files, sources, facts) = prepare("embedded.ts", cfg);
-    assert!(facts.ts.values().any(|file| !file.embedded_sql.is_empty()));
+    assert!(facts
+        .ts
+        .values()
+        .any(|file| !file.postgres().embedded_sql.is_empty()));
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let findings = crate::diagnostics::with_observer(Some(observer.clone()), || {
         check_with_files_sources_and_facts(&fixture(), &cfg, &files, &sources, &facts).unwrap()
@@ -56,6 +59,7 @@ fn mixed_max_application_initializes_low_cache_without_parsing_literals_again() 
     assert_eq!(findings.len(), 3, "{findings:#?}");
     assert_eq!(
         facts.ts[&fixture().join("embedded.ts")]
+            .postgres()
             .sql_identifier_syntax
             .transformed_literals
             .get()

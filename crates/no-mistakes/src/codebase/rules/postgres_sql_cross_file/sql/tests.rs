@@ -141,15 +141,19 @@ fn sql_calls_skip_missing_projections_and_http_query_collisions() {
         path.clone(),
         CheckFileFacts {
             ts: Arc::new(TsFileFacts::default()),
-            embedded_sql: vec![(
-                opts.embedded.clone(),
-                embedded(
-                    path.clone(),
-                    vec![EmbeddedSqlCall::default()],
-                    vec![(1, 8)],
-                    vec![(0, 10)],
-                ),
-            )],
+            postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                embedded_sql: vec![(
+                    opts.embedded.clone(),
+                    embedded(
+                        path.clone(),
+                        vec![EmbeddedSqlCall::default()],
+                        vec![(1, 8)],
+                        vec![(0, 10)],
+                    ),
+                )],
+                ..Default::default()
+            }
+            .into_payload(),
             ..Default::default()
         }
         .into(),

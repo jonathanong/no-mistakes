@@ -43,7 +43,7 @@ fn helper_outside_configured_roots_stays_unresolved_with_source_in_inventory() {
         .with_fresh_sql_verdicts();
         let findings =
             check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts).unwrap();
-        let outside = &facts.ts[&files[2]].sql_identifier_syntax;
+        let outside = &facts.ts[&files[2]].postgres().sql_identifier_syntax;
         assert!(
             !outside
                 .application_keys()
@@ -53,6 +53,7 @@ fn helper_outside_configured_roots_stays_unresolved_with_source_in_inventory() {
         );
         if config_name == "mixed.yml" {
             let test_profile = &facts.ts[&files[0]]
+                .postgres()
                 .sql_identifier_syntax
                 .application_keys()
                 .into_iter()
@@ -146,7 +147,7 @@ fn bounded_helpers_keep_definite_mutations_and_residual_uncertainty() {
     };
     let (low, facts) = run("low.yml");
     assert!(
-        facts.postgres.embedded.is_empty(),
+        facts.postgres().embedded.is_empty(),
         "low ran max embedded extraction"
     );
     let (max, _) = run("max.yml");

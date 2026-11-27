@@ -19,7 +19,7 @@ fn configure_scopes(
         prepared.visible_paths.source_store_for(root).as_ref(),
         plan,
     )?;
-    crate::codebase::postgres::configure_lock_inventory_helper_call_sites(
+    (crate::codebase::postgres_analysis::hooks().configure_helper_scope)(
         root,
         config,
         &prepared.visible_paths,

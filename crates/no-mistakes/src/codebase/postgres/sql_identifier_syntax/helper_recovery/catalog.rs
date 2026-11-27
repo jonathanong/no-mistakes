@@ -20,10 +20,12 @@ pub(super) struct PreparedCatalog<'a> {
 impl PreparedCatalog<'_> {
     fn module(&self, file: &Path) -> Option<&TypeScriptModuleFacts> {
         let facts = self.files.get(file)?;
-        if self
-            .application
-            .is_some_and(|key| !facts.sql_identifier_syntax.includes_application(key))
-        {
+        if self.application.is_some_and(|key| {
+            !facts
+                .postgres()
+                .sql_identifier_syntax
+                .includes_application(key)
+        }) {
             return None;
         }
         if facts.parse_error.is_some()
@@ -54,7 +56,12 @@ impl PreparedCatalog<'_> {
         id: usize,
     ) -> Option<(&super::FileModels, &[Option<usize>])> {
         let key = self.resolve_binding(file, id, &mut Vec::new(), true)?;
-        let receiver = &self.files.get(&key.file)?.sql_identifier_syntax.recovery;
+        let receiver = &self
+            .files
+            .get(&key.file)?
+            .postgres()
+            .sql_identifier_syntax
+            .recovery;
         let parameters = receiver.signatures.get(&key.callable)?;
         (!receiver.dynamic_scope).then_some((receiver, parameters.as_slice()))
     }
@@ -66,7 +73,7 @@ impl PreparedCatalog<'_> {
         signatures: bool,
     ) -> Option<Key> {
         let facts = self.files.get(file)?;
-        let models = &facts.sql_identifier_syntax.recovery;
+        let models = &facts.postgres().sql_identifier_syntax.recovery;
         if models.writes.contains(&id) {
             return None;
         }
@@ -145,6 +152,7 @@ impl Catalog for PreparedCatalog<'_> {
         self.module(&key.file)?;
         self.files
             .get(&key.file)?
+            .postgres()
             .sql_identifier_syntax
             .recovery
             .functions
@@ -156,6 +164,7 @@ impl Catalog for PreparedCatalog<'_> {
             .and_then(|profile| {
                 self.files
                     .get(from)?
+                    .postgres()
                     .sql_identifier_syntax
                     .recovery
                     .executors
@@ -166,7 +175,7 @@ impl Catalog for PreparedCatalog<'_> {
     fn factory(&self, from: &Path, binding: usize) -> bool {
         self.module(from).is_some()
             && self.files.get(from).is_some_and(|file| {
-                let models = &file.sql_identifier_syntax.recovery;
+                let models = &file.postgres().sql_identifier_syntax.recovery;
                 !models.dynamic_scope
                     && !models.writes.contains(&binding)
                     && self.profile.is_some_and(|profile| {

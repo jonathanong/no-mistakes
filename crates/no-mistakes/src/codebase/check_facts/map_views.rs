@@ -14,7 +14,7 @@ macro_rules! record_view_composition {
 mod composition_metrics_tests;
 
 impl CheckFactMap {
-    pub(super) fn view_with_supplemental(
+    pub(crate) fn view_with_supplemental(
         &self,
         supplemental: &Self,
         graph_files: Vec<PathBuf>,
@@ -82,9 +82,7 @@ impl CheckFactMap {
         let mut graph_plan = self.graph_plan;
         graph_plan.include(supplemental.graph_plan);
         let unproven_member_query_sql =
-            crate::codebase::check_facts::relative_scope::count_unproven_member_queries(
-                ts.values().map(|facts| facts.as_ref()),
-            );
+            (crate::codebase::postgres_analysis::hooks().count_unproven)(&ts);
         let queue_paths = match (&self.queue_paths, &supplemental.queue_paths) {
             (Some(left), Some(right)) => Some(merge(true, left, true, right)),
             (Some(scope), None) | (None, Some(scope)) => Some(scope.clone()),
@@ -113,7 +111,7 @@ impl CheckFactMap {
                 &self.companion_import_plans,
                 &supplemental.companion_import_plans,
             ),
-            postgres: self.postgres.clone(),
+            postgres_payload: self.postgres_payload.clone(),
             files: self.files.clone(),
             integration_route_links: self.integration_route_links.clone(),
             graph_files,
@@ -130,7 +128,6 @@ impl CheckFactMap {
             playwright_routes_cache: Arc::clone(&self.playwright_routes_cache),
             app_text_targets_cache: Arc::clone(&self.app_text_targets_cache),
             route_reachable_files_cache: Arc::clone(&self.route_reachable_files_cache),
-            postgres_schema_catalogs: self.postgres_schema_catalogs.clone(),
             stats: self.stats,
             unproven_member_query_sql,
         }

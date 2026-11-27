@@ -1,9 +1,9 @@
 use super::{analysis_policy::AnalysisDiagnostics, path_filter::GlobMatcher};
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::{CheckFactMap, CheckFactPlan};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig, Unanalyzable};
 use anyhow::{bail, Result};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde::Deserialize;
 use std::{
     collections::BTreeSet,
@@ -122,7 +122,7 @@ pub fn diagnostics_with_files_sources_and_facts(
         let mut unanalyzable = Vec::new();
         for path in &selected {
             let file = relative_slash_path(root, path);
-            let file_facts = facts.postgres.explain_write_rollback(path)?;
+            let file_facts = facts.postgres().explain_write_rollback(path)?;
             for plan in &file_facts.writes {
                 let line = plan.location.line as usize;
                 let column = plan.location.column;

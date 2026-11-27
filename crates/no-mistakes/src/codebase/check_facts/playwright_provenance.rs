@@ -59,7 +59,7 @@ pub(super) fn project(
         .iter()
         .cloned()
         .collect::<PathSet>();
-    let workspace = super::relative_scope::workspace_for(session.session, root, sources);
+    let workspace = super::workspace_setup::workspace_for(session.session, root, sources);
     let fallback;
     let catalog = match plan.query_annotation_catalog.as_deref() {
         Some(catalog) => catalog,

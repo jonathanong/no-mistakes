@@ -17,7 +17,7 @@ fn second_argument_local_effects_keep_prepared_heads_without_evaluation() {
             collect_check_facts(root, vec![query.clone()], plan(root, &config(&efforts)))
         });
         let file = facts.ts.get(&query).expect("prepared query");
-        let calls = format!("{:?}", file.embedded_sql[0].1.calls);
+        let calls = format!("{:?}", file.postgres().embedded_sql[0].1.calls);
         if efforts == ["max"] {
             max_calls = Some(calls);
             continue;
@@ -27,8 +27,12 @@ fn second_argument_local_effects_keep_prepared_heads_without_evaluation() {
         if efforts == ["low", "max"] {
             assert_eq!(max_calls.as_ref(), Some(&calls));
         }
-        let heads = file.query_annotation_heads.as_ref().expect("low heads");
-        let spans = &file.embedded_sql[0].1.call_spans;
+        let heads = file
+            .postgres()
+            .query_annotation_heads
+            .as_ref()
+            .expect("low heads");
+        let spans = &file.postgres().embedded_sql[0].1.call_spans;
         let proofs = spans
             .iter()
             .map(|span| heads.calls.get(span).copied())
@@ -47,7 +51,7 @@ fn second_argument_local_effects_keep_prepared_heads_without_evaluation() {
         }
         prior = Some(proofs);
         if efforts == ["low"] {
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert_eq!(
                 observer
                     .snapshot()

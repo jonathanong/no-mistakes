@@ -88,7 +88,7 @@ fn profile() -> EmbeddedSqlOptions {
 fn policy_context_shares_parsing_and_preserves_raw_sql_default_access() {
     let (facts, _) = prepare(false);
     let path = root().join("src/query.mts");
-    assert!(facts.ts[&path].embedded_sql.is_empty());
+    assert!(facts.ts[&path].postgres().embedded_sql.is_empty());
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let (first, second) = crate::diagnostics::with_observer(Some(Arc::clone(&observer)), || {
         let explicit = facts
@@ -283,10 +283,25 @@ fn existing_low_policies_keep_the_original_single_cache_shape() {
     let (facts, _) = prepare_mode(false, Policies::LegacyOnly);
     let path = root().join("src/query.mts");
     let file = &facts.ts[&path];
-    assert!(file.sql_identifier_syntax.policy_projection.get().is_none());
+    assert!(file
+        .postgres()
+        .sql_identifier_syntax
+        .policy_projection
+        .get()
+        .is_none());
     assert!(!super::super::literal_projection::recovered_statements(file).is_empty());
-    assert!(file.sql_identifier_syntax.recovered_raw.get().is_none());
-    assert!(file.sql_identifier_syntax.policy_direct.get().is_none());
+    assert!(file
+        .postgres()
+        .sql_identifier_syntax
+        .recovered_raw
+        .get()
+        .is_none());
+    assert!(file
+        .postgres()
+        .sql_identifier_syntax
+        .policy_direct
+        .get()
+        .is_none());
 }
 
 #[test]

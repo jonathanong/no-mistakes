@@ -21,15 +21,20 @@ fn namespace_helper_heads_use_only_prepared_exact_export_bindings() {
             )
         });
         let file = facts.ts.get(&query).expect("prepared query");
-        let embedded = &file.embedded_sql[0].1;
+        let embedded = &file.postgres().embedded_sql[0].1;
         if efforts == ["max"] {
             assert!(file
+                .postgres()
                 .query_annotation_heads
                 .as_ref()
                 .is_none_or(|heads| heads.pending_namespaces.is_empty()));
             continue;
         }
-        let heads = file.query_annotation_heads.as_ref().expect("low heads");
+        let heads = file
+            .postgres()
+            .query_annotation_heads
+            .as_ref()
+            .expect("low heads");
         let proofs = embedded
             .call_spans
             .iter()
@@ -57,7 +62,7 @@ fn namespace_helper_heads_use_only_prepared_exact_export_bindings() {
         }
         low_proofs = Some(proofs);
         if efforts == ["low"] {
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             let work = observer.snapshot().work;
             assert_eq!(
                 work.get("postgres.sql.variants_composed")
@@ -67,7 +72,8 @@ fn namespace_helper_heads_use_only_prepared_exact_export_bindings() {
             );
             assert_eq!(work["postgres.annotation.namespace_index_builds"], 1);
             assert!(
-                file.query_annotation_heads
+                file.postgres()
+                    .query_annotation_heads
                     .as_ref()
                     .unwrap()
                     .pending_namespaces
@@ -99,7 +105,7 @@ fn namespace_helper_heads_use_only_prepared_exact_export_bindings() {
             );
             assert_eq!(
                 work["postgres.annotation.namespace_helper_arguments_scanned"],
-                file.embedded_sql[0].1.call_spans.len() as u64
+                file.postgres().embedded_sql[0].1.call_spans.len() as u64
             );
         }
     }

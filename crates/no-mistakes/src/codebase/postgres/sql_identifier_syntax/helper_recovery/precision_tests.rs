@@ -21,6 +21,7 @@ fn boolean_short_branches_are_constrained_and_inherited_members_are_unknown() {
     for call in &files
         .get(&path)
         .unwrap()
+        .postgres()
         .sql_identifier_syntax
         .recovery
         .calls
@@ -65,7 +66,12 @@ fn executor_identity_members_and_unknown_binding_patterns_keep_evidence_and_unce
         resolve: &|_, _| None,
     };
     let source = std::fs::read_to_string(&path).unwrap();
-    let models = &files.get(&path).unwrap().sql_identifier_syntax.recovery;
+    let models = &files
+        .get(&path)
+        .unwrap()
+        .postgres()
+        .sql_identifier_syntax
+        .recovery;
     let mut checked = 0;
     for call in &models.calls {
         let raw = &source[call.span.0 as usize..call.span.1 as usize];

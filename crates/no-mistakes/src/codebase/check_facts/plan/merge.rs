@@ -41,7 +41,7 @@ impl CheckFactPlan {
             .extend(other.postgres_executor_warning_scans.iter().cloned());
         self.imports |= other.imports;
         self.query_annotation_heads |= other.query_annotation_heads;
-        crate::codebase::postgres::sql_identifier_syntax::plan::merge(
+        crate::codebase::postgres_analysis::identifier_plan::merge(
             &mut self.sql_identifier_profiles,
             other.sql_identifier_profiles,
         );

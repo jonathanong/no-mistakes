@@ -35,7 +35,7 @@ pub(super) fn files(
         POSTGRES_EXPLAIN_WRITE_ROLLBACK => match facts {
             Some(facts) => candidates
                 .iter()
-                .filter(|path| facts.postgres.explain_write_rollback.contains_key(*path))
+                .filter(|path| facts.postgres().explain_write_rollback.contains_key(*path))
                 .cloned()
                 .collect(),
             None => {

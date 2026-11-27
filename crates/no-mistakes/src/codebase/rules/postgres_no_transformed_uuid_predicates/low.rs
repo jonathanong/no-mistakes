@@ -42,7 +42,11 @@ pub(super) fn scan(
                 RULE_ID,
                 index,
             );
-        let Some(calls) = file.sql_identifier_syntax.calls_for(&application) else {
+        let Some(calls) = file
+            .postgres()
+            .sql_identifier_syntax
+            .calls_for(&application)
+        else {
             if file.parse_error.is_some() || file.ts.parse_error.is_some() {
                 continue;
             }

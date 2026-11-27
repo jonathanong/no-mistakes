@@ -10,7 +10,8 @@ pub(crate) struct Literal {
 }
 pub(crate) type Literals = BTreeMap<(EmbeddedSqlOptions, Span), Option<Literal>>;
 pub(crate) fn selected(file: &CheckFileFacts, profile: &EmbeddedSqlOptions) -> bool {
-    file.sql_identifier_syntax
+    file.postgres()
+        .sql_identifier_syntax
         .low_applications
         .iter()
         .any(|(candidate, rule, _)| candidate == profile && super::supports(rule))
@@ -22,9 +23,9 @@ pub(crate) fn literals<'a>(
     path: &Path,
     source: &str,
 ) -> &'a Literals {
-    file.sql_identifier_syntax.policy_direct.get_or_init(|| {
+    file.postgres_for_policy().sql_identifier_syntax.policy_direct.get_or_init(|| {
         let mut prepared = BTreeMap::new();
-        for (profile, embedded) in &file.embedded_sql {
+        for (profile, embedded) in &file.postgres().embedded_sql {
             if !selected(file, profile) { continue; }
             let Ok(statements) = facts.postgres_statements(path, Some(profile)) else { continue; };
             let versions = embedded.calls.iter().zip(&embedded.call_spans)
@@ -37,7 +38,7 @@ pub(crate) fn literals<'a>(
             }
         }
         let mut out = BTreeMap::new();
-        for (profile, calls) in &file.sql_identifier_syntax.profiles {
+        for (profile, calls) in &file.postgres().sql_identifier_syntax.profiles {
             if !selected(file, profile) { continue; }
             for call in calls {
                 let Input::Sql { text, source_span, holes, parameterized, .. } = &call.input else { continue; };
@@ -70,7 +71,8 @@ pub(crate) fn literals<'a>(
 }
 
 pub(crate) fn probe_demand(file: &CheckFileFacts) -> bool {
-    file.sql_identifier_syntax
+    file.postgres()
+        .sql_identifier_syntax
         .low_applications
         .iter()
         .any(|(_, rule, _)| rule == "postgres-required-predicates")
