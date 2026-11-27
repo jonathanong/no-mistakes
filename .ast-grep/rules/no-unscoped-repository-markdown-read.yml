@@ -19,6 +19,7 @@ rule:
               any:
                 - pattern: let $ROOT = repo_root();
                 - pattern: let $ROOT = repository_root();
+                - pattern: let $ROOT = $CONSTRUCTOR(env!("CARGO_MANIFEST_DIR")).join("../..");
               stopBy: end
     - pattern: std::fs::read_to_string($PATH)
     - pattern: fs::read_to_string($PATH)
@@ -30,11 +31,13 @@ rule:
         - matches: unscoped-markdown
         - inside:
             kind: macro_invocation
-            regex: '^(?:::)?(?:std::|core::)?include_(?:str|bytes)!'
+            regex: '^(?:::)?(?:std::|core::)?include_(?:str|bytes)\s*!'
             stopBy: end
-    - pattern: PathBuf::from(env!("CARGO_MANIFEST_DIR")).join($PATH)
-    - pattern: Path::new(env!("CARGO_MANIFEST_DIR")).join($PATH)
+    - pattern: $CONSTRUCTOR(env!("CARGO_MANIFEST_DIR")).join($PATH)
+    - pattern: $CONSTRUCTOR(env!("CARGO_MANIFEST_DIR")).join("../..").join($PATH)
 constraints:
+  CONSTRUCTOR:
+    regex: '^(?:::)?(?:std::path::)?(?:PathBuf::from|Path::new)$'
   PATH:
     matches: unscoped-markdown
 utils:
