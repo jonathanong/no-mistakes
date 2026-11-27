@@ -33,6 +33,10 @@ element should not be a selector target.
 return <button data-pw="">Save</button>;
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`playwright-naming-convention`](playwright-naming-convention.md) validates

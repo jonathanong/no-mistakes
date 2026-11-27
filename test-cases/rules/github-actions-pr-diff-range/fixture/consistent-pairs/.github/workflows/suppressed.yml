@@ -1,0 +1,16 @@
+name: suppressed
+on: pull_request
+jobs:
+  suppressed_mismatch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # no-mistakes-disable-next-line github-actions-pr-diff-range
+      - run: git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.sha }}
+  suppressed_unanalyzable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.custom_ref }}
+      - run: git diff --name-only HEAD^1 HEAD # no-mistakes-disable-line github-actions-pr-diff-range
