@@ -258,7 +258,7 @@ workflow can avoid subprocess overhead.
 ### Agent plugin
 
 This repository ships plugins for Claude Code and Codex through the
-[`harness-plugins`](https://github.com/jonathanong/harness-plugins) marketplace. The
+[`ratchet-stack`](https://github.com/jongleberry/ratchet-stack) marketplace. The
 `no-mistakes` plugin ships the [packaged agent skill](plugins/no-mistakes/skills/no-mistakes/SKILL.md),
 which calls the `no-mistakes` CLI, so the CLI must be on `PATH` (for example
 `npm install --global no-mistakes`).
@@ -271,14 +271,14 @@ rollout, observability, native apps), each loaded only when that topic comes up.
 
 ```sh
 # Claude Code
-claude plugin marketplace add jonathanong/harness-plugins
-claude plugin install no-mistakes@harness-plugins
-claude plugin install no-mistakes-rules@harness-plugins
+claude plugin marketplace add jongleberry/ratchet-stack
+claude plugin install no-mistakes@ratchet-stack
+claude plugin install no-mistakes-rules@ratchet-stack
 
 # Codex
-codex plugin marketplace add jonathanong/harness-plugins --ref main
-codex plugin add no-mistakes@harness-plugins
-codex plugin add no-mistakes-rules@harness-plugins
+codex plugin marketplace add jongleberry/ratchet-stack --ref main
+codex plugin add no-mistakes@ratchet-stack
+codex plugin add no-mistakes-rules@ratchet-stack
 ```
 
 If you added the old `no-mistakes` marketplace, migrate. Claude Code uninstalls a
@@ -286,17 +286,35 @@ marketplace's plugins when it is removed, so reinstall both plugins afterward:
 
 ```sh
 claude plugin marketplace remove no-mistakes
-claude plugin marketplace add jonathanong/harness-plugins
-claude plugin install no-mistakes@harness-plugins
-claude plugin install no-mistakes-rules@harness-plugins
+claude plugin marketplace add jongleberry/ratchet-stack
+claude plugin install no-mistakes@ratchet-stack
+claude plugin install no-mistakes-rules@ratchet-stack
 
 codex plugin remove no-mistakes@no-mistakes
 codex plugin remove no-mistakes-rules@no-mistakes
 codex plugin marketplace remove no-mistakes
-codex plugin marketplace add jonathanong/harness-plugins --ref main
-codex plugin add no-mistakes@harness-plugins
-codex plugin add no-mistakes-rules@harness-plugins
+codex plugin marketplace add jongleberry/ratchet-stack --ref main
+codex plugin add no-mistakes@ratchet-stack
+codex plugin add no-mistakes-rules@ratchet-stack
 ```
+
+If you added the former `harness-plugins` marketplace, remove its plugins and
+marketplace after adding `ratchet-stack`, so the old copies of the skills do not
+load alongside the new ones:
+
+```sh
+claude plugin marketplace remove harness-plugins
+codex plugin remove no-mistakes@harness-plugins
+codex plugin remove jong-skills@harness-plugins
+codex plugin remove no-mistakes-rules@harness-plugins
+codex plugin marketplace remove harness-plugins
+```
+
+Claude Code uninstalls a marketplace's plugins when you remove it, and Codex may keep
+them enabled, so remove each plugin before its marketplace. Reinstall any
+other plugin you had from `harness-plugins`; see the
+[`ratchet-stack` README](https://github.com/jongleberry/ratchet-stack#readme) for
+the current plugins.
 
 ### Example recipes
 
@@ -356,9 +374,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Harness Ecosystem
 
-This is part of the following harness ecosystem:
-
-- [auto-harness](https://github.com/jonathanong/auto-harness) - non-interactive agent CLI orchestration across sandboxes
-- [agent-blackboard](https://github.com/jonathanong/agent-blackboard) - session-scoped telemetry for autonomous agents
-- [pr-shepherd](https://github.com/jonathanong/pr-shepherd) - autonomous pull request shepherd
-- [no-mistakes](https://github.com/jongleberry/no-mistakes) - deterministic AST-based codebase intelligence, test selection, and linting for agents
+no-mistakes is part of [ratchet-stack](https://github.com/jongleberry/ratchet-stack), a set of plugins and tools for autonomous coding agents.
