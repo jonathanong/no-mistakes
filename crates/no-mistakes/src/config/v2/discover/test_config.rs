@@ -41,7 +41,14 @@ fn validate_sources(sources: &[RouteCoverageSource], base: &ConfigPath) -> Resul
                 format!("{field} must not be empty"),
             ));
         }
-        validate_paths(&source.include, &path.key("include"))?;
+        validate_paths(&source.include, &path.clone().key("include"))?;
+        if let Some((index, route)) = source.first_noncanonical_route() {
+            let field = path.key("routes").index(index);
+            return Err(field_error(
+                field.clone(),
+                format!("{field} requires an exact canonical route identifier: {route}"),
+            ));
+        }
     }
     Ok(())
 }

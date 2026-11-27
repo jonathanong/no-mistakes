@@ -108,6 +108,10 @@ fn invalid_runner_infra_and_changes_configuration_exits_two_at_load() {
             "4481-app.yml",
             "tests.playwright.apps.example.routeCoverageSources[0].include[0]",
         ),
+        (
+            "route-coverage-noncanonical.yml",
+            "tests.playwright.routeCoverageSources[0].routes[1] requires an exact canonical route identifier: /api/*",
+        ),
         ("4483.yml", "infra.terraform.test.testGlobs[0]"),
         ("4484.yml", "infra.terraform.test.match"),
         ("4484-shared-module.yml", "infra.terraform.test.testRoot"),

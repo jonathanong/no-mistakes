@@ -35,11 +35,8 @@ pub(crate) fn validate(sources: &[RouteCoverageSource]) -> anyhow::Result<()> {
             source.empty_required_field().is_none(),
             "routeCoverageSources requires project, include, routes, and helpers"
         );
-        for route in &source.routes {
-            anyhow::ensure!(
-                route.starts_with('/')
-                    && !route.contains(['*', '[', ']', '{', '}', '?', '#'])
-                    && !route.starts_with("//"),
+        if let Some((_, route)) = source.first_noncanonical_route() {
+            anyhow::bail!(
                 "routeCoverageSources.routes requires exact canonical route identifiers: {route}"
             );
         }

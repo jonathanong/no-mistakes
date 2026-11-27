@@ -25,6 +25,18 @@ impl RouteCoverageSource {
         .into_iter()
         .find_map(|(field, empty)| empty.then_some(field))
     }
+
+    pub(crate) fn first_noncanonical_route(&self) -> Option<(usize, &str)> {
+        self.routes
+            .iter()
+            .map(String::as_str)
+            .enumerate()
+            .find(|(_, route)| {
+                !route.starts_with('/')
+                    || route.starts_with("//")
+                    || route.contains(['*', '[', ']', '{', '}', '?', '#'])
+            })
+    }
 }
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, Eq, Hash, Ord, PartialEq, PartialOrd)]

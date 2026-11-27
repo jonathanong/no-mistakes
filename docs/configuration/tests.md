@@ -130,12 +130,11 @@ matrix and known narrower surfaces.
 `gradle [-p <package>] test --tests`, `mix test <path>`, or `dart test` / `dart pub --directory <package> run test` targets. Untraceable source under those
 roots falls back to discovered tests in the owning package, module, or app.
 
-## Upgrade from configurations with ignored keys
+## Unsupported Vitest keys
 
-Older versions silently ignored the Vitest spellings below. Update them before
-running commands against the configuration.
+Configuration loading rejects these keys. Use the supported fields below.
 
-| Previously ignored key | Supported configuration |
+| Unsupported key | Supported configuration |
 | --- | --- |
 | `tests.vitest.config` | Put the path or list of paths in `tests.vitest.configs`. |
 | `tests.vitest.suites` | Put each suite under `tests.vitest.projects.<name>` and use the suite name as the mapping key. |
