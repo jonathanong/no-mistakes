@@ -65,10 +65,12 @@ default storage. Unrecognized procedural forms remain explicit. UTF-8 offsets ar
 with exclusive span ends. See [the source API](https://github.com/jongleberry/no-mistakes/blob/main/docs/postgres-source-api.md)
 for exported types, structural index identity, and grammar boundaries.
 Literal PL/pgSQL `EXECUTE` source occurrences in supported `DO` bodies expose
-statement `kind: "literalExecute"` and a `PostgresSqlLiteralExecute` payload,
-except inside `FOR`, `WHILE`, `FOREACH`, or a bare `LOOP`. There the command
-stays a visible occurrence, produces a diagnostic, and keeps the block
-incomplete, with no typed statement projection.
+statement `kind: "literalExecute"` and a `PostgresSqlLiteralExecute` payload
+when no unsupported modifier remains, except inside `FOR`, `WHILE`,
+`FOREACH`, or a bare `LOOP`. There the command stays a visible occurrence,
+produces a diagnostic, and keeps the block incomplete, with no typed
+statement projection. An unsupported modifier, including unquoted `INTO`,
+is statement kind `other`.
 Dollar-quoted (`bodyEncoding: "dollarQuoted"`), standard single-quoted
 (`singleQuoted`, doubled quotes), and PostgreSQL `E` escape strings
 (`escapedString`) are decoded by the prepared tokenizer and parsed through the

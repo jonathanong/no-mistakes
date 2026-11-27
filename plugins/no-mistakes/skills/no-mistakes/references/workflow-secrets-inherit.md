@@ -31,8 +31,10 @@ a local callee plus every required input to be mapped. When both options are
 on, that inherit finding is emitted once. A remote call that sets
 `secrets: inherit` reports that finding and returns without an unanalyzable
 diagnostic, so `options.unanalyzable` does not cover unchecked remote inputs
-on that call. Other unverifiable calls follow `options.unanalyzable`
-(`advise` by default). `false` reports nothing for that option.
+on that call. Other unverifiable calls follow `options.unanalyzable`:
+`report`, `advise` (the default), or `ignore`. `ignore` omits those
+diagnostics. `requireExplicitWorkflowCallBindings: false` reports nothing
+for that option.
 
 See the [configuration reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/configuration/workflow-topology-policy-secrets-inherit.md)
 and [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/workflow-topology-policy.md).
