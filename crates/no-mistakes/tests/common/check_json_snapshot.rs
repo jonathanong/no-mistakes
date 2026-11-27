@@ -91,17 +91,6 @@ pub fn assert_saved_fixture_report(
     assert_saved_fixture_checked(name, cases, envs, false, args, &mut |_| {})
 }
 
-/// Same reports as [`assert_saved_fixture_report`], after `prepare` edits the document.
-pub fn assert_saved_fixture_report_prepared(
-    name: &str,
-    cases: &[(&str, PathBuf, PathBuf)],
-    envs: &[(&str, &str)],
-    args: &[&str],
-    prepare: &mut dyn FnMut(&mut Value),
-) -> Value {
-    assert_saved_fixture_checked(name, cases, envs, false, args, prepare)
-}
-
 /// Like `assert_saved_fixture`, with extra environment for the child only
 /// (for example an empty `PATH` so an external tool is deterministically absent).
 pub fn assert_saved_fixture_with_env(

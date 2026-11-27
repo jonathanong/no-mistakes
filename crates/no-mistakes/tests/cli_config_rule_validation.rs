@@ -1,5 +1,5 @@
 use super::check_json_snapshot::{
-    assert_saved_fixture_report, assert_saved_fixture_report_prepared, rules_path,
+    assert_saved_fixture_checked, assert_saved_fixture_report, rules_path,
 };
 use no_mistakes::codebase::rules::rule_ids::configurable_rule_ids;
 use serde_yaml::Value;
@@ -51,10 +51,11 @@ fn invalid_rule_configuration_aborts_before_analysis() {
         ),
         ("fragment", root.join("fragment"), PathBuf::new()),
     ];
-    let result = assert_saved_fixture_report_prepared(
+    let result = assert_saved_fixture_checked(
         "invalid_rule_configuration",
         &cases,
         &[],
+        false,
         &[],
         &mut redact_invalid_declared_dependency_tails,
     );
