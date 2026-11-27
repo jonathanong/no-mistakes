@@ -13,7 +13,27 @@ fn rust_no_inline_allows_json_matches_snapshot() {
         ("namespaced_allow", "unit", "namespaced-allow.yml"),
         ("invalid", "unit", "invalid.yml"),
         ("disable_file", "unit", "disable-file.yml"),
+        (
+            "disable_file_with_control",
+            "disable-file-with-control",
+            "repository.yml",
+        ),
         ("suppressions", "suppressions", "repository.yml"),
+        (
+            "unanalyzable_report",
+            "unanalyzable",
+            "unanalyzable-report.yml",
+        ),
+        (
+            "unanalyzable_advise",
+            "unanalyzable",
+            "unanalyzable-advise.yml",
+        ),
+        (
+            "unanalyzable_ignore",
+            "unanalyzable",
+            "unanalyzable-ignore.yml",
+        ),
         ("excludes", "excludes", "excludes.yml"),
         ("relative_roots", "roots", "roots-sub.yml"),
         // roots/tests.rs has an allow attribute and must stay out of the report.

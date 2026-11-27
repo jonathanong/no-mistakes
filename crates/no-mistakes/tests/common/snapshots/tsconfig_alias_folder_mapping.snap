@@ -26,6 +26,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_file_with_control": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tsconfig.control.json",
+          "line": 4,
+          "message": "tsconfig.control.json: @agents/control targets backend/agents/control.ts, which does not exist on disk",
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/control\": [\"backend/agents/control.ts\"]"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "disable_line": {
     "exitCode": 1,
     "report": {
@@ -41,6 +61,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "tsconfig.json: @agents/control targets backend/agents/control.ts, which does not exist on disk",
           "rule": "tsconfig-alias-folder-mapping",
           "sourceLine": "\"@agents/control\": [\"backend/agents/control.ts\"]"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disable_next_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "tsconfig.json",
+          "line": 6,
+          "message": "tsconfig.json: @agents/sms must target backend/agents/sms, not backend/legacy/sms",
+          "rule": "tsconfig-alias-folder-mapping",
+          "sourceLine": "\"@agents/sms\": [\"backend/legacy/sms\"]"
         }
       ],
       "warnings": []
