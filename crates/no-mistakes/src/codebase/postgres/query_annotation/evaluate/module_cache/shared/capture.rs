@@ -27,7 +27,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         env: Environment,
     ) -> Option<SharedCaptureGuard> {
         let shared = self.modules.shared.as_ref()?;
-        if !shared.eligible.contains(&module_id) || shared.entries.contains_key(&module_id) {
+        if !shared.eligible.contains(&module_id)
+            || shared.entries.contains_key(&module_id)
+            || shared.untrusted_array_intrinsics != self.untrusted_array_intrinsics
+        {
             return None;
         }
         Some(SharedCaptureGuard {

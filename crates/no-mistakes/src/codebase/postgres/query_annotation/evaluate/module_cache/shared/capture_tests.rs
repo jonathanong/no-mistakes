@@ -53,13 +53,14 @@ fn is_clean_shared_init_rejects_every_mutated_state_condition() {
     let resolve = |_: &str, _: &std::path::Path| None;
 
     for case in 0..7 {
+        let started_untrusted = case == 6;
         let shared = Arc::new(SharedInit {
-            untrusted_array_intrinsics: false,
+            untrusted_array_intrinsics: started_untrusted,
             eligible: [target_id].into_iter().collect(),
             direct_deps: FxHashMap::default(),
             entries: dashmap::DashMap::new(),
         });
-        let mut eval = evaluator::new(&files, resolve, case == 6);
+        let mut eval = evaluator::new(&files, resolve, started_untrusted);
         eval.modules.shared = Some(Arc::clone(&shared));
         let env = eval.environment_scope(Scope::default());
         let guard = eval.begin_shared_capture(target_id, env).unwrap();
@@ -90,6 +91,26 @@ fn is_clean_shared_init_rejects_every_mutated_state_condition() {
             "case {case} must mark target Impure"
         );
     }
+}
+
+#[test]
+fn begin_shared_capture_skips_when_untrusted_mode_differs() {
+    let target = PathBuf::from("target.mts");
+    let facts = QueryAnnotationFileFacts::default();
+    let (ids, files) = empty_files(std::slice::from_ref(&target), &facts);
+    let target_id = ids.id(&target);
+    let resolve = |_: &str, _: &std::path::Path| None;
+    let shared = Arc::new(SharedInit {
+        untrusted_array_intrinsics: false,
+        eligible: [target_id].into_iter().collect(),
+        direct_deps: FxHashMap::default(),
+        entries: dashmap::DashMap::new(),
+    });
+    let mut eval = evaluator::new(&files, resolve, true);
+    eval.modules.shared = Some(Arc::clone(&shared));
+    let env = eval.environment_scope(Scope::default());
+    assert!(eval.begin_shared_capture(target_id, env).is_none());
+    assert!(shared.entries.get(&target_id).is_none());
 }
 
 #[test]
