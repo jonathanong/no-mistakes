@@ -2,6 +2,71 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "const-registry-edge-syntax": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/edges.ts",
+          "line": 33,
+          "message": "Dynamic CSP policy expression in src/edges.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void [\"connect-src\", \"'self'\", ...foo.bar].join(\" \");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "line": 34,
+          "message": "Dynamic CSP policy expression in src/edges.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void [\"connect-src 'self'\", , \"img-src 'self'\"].join(\"; \");",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "line": 37,
+          "message": "Dynamic CSP policy expression in src/edges.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "setHeader(\"Content-Security-Policy\", `connect-src 'self' ${unknownIdent}`);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "line": 39,
+          "message": "Dynamic CSP policy expression in src/edges.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "export const groupedPolicy = [\"connect-src\", \"'self'\", ...grouped].join(\" \");",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "const-registry-edges": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/page.tsx",
+          "line": 6,
+          "message": "Origin 'https://unlisted.example.net' used for connect-src is not allowed by CSP in src/policy.ts. Add 'https://unlisted.example.net' to connect-src in src/policy.ts or remove the third-party origin.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "void fetch(\"https://unlisted.example.net/v1/items\");"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "const-registry-imported": {
     "exitCode": 1,
     "report": {
@@ -17,6 +82,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Origin 'https://unlisted.example.net' used for connect-src is not allowed by CSP in src/imported-csp.ts. Add 'https://unlisted.example.net' to connect-src in src/imported-csp.ts or remove the third-party origin.",
           "rule": "csp-allowed-origins",
           "sourceLine": "void fetch(\"https://unlisted.example.net/v1/items\");"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "const-registry-missing-module": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/missing-policy.ts",
+          "line": 5,
+          "message": "Dynamic CSP policy expression in src/missing-policy.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "export const extra = `connect-src 'self' ${EXTRA_ORIGINS.join(\" \")}`;",
+          "target": "unanalyzable"
         }
       ],
       "warnings": []

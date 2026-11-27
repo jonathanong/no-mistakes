@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: csp-allowed-origins
+    scope: repository
+    include:
+      - src/missing-policy.ts
+    options:
+      cspFiles:
+        - src/missing-policy.ts
+      selfOrigins:
+        - https://app.example.com
+      unanalyzable: report
