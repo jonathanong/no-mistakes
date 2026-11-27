@@ -124,6 +124,12 @@ case: it cannot show the skill helps. Where it also loaded, it shows the
 skill does no harm; `postgresql-write-advisory-lock` and both coverage-floor
 cases did not load at all in this run, so they show neither.
 
+The `testing-rules` description changed after this run to name test runner
+config. Its single-arm screen
+([T1](HISTORY.md#2026-11-26--testing-rules-config-candidate-t1-kept))
+loaded `testing-rules` on 14/18 `testing` attempts and on both coverage-floor
+cases 3/3; the `testing` rows above are the old description's.
+
 Readings: the skill helps on `github-actions-write-persist-credentials`,
 `postgresql-review-narrow-view-lookup`, `queue-write-bounded-sweep`,
 `queue-write-self-requeue`, `testing-review-real-email-fixture` and
