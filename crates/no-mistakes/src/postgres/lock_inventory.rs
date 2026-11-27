@@ -22,11 +22,9 @@ pub(super) fn run(args: LockInventoryArgs) -> Result<ExitCode> {
         },
     )?;
     println!("{}", serde_json::to_string_pretty(&report)?);
-    Ok(
-        if report.added.is_empty() && report.removed.is_empty() && report.unanalyzed.is_empty() {
-            ExitCode::SUCCESS
-        } else {
-            ExitCode::from(1)
-        },
-    )
+    Ok(if report.is_clean() {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(1)
+    })
 }

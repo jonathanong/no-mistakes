@@ -1,11 +1,14 @@
-use super::{LockInventoryBaseline, LockInventoryBaselineSite, LockInventoryReport, RULE_ID};
+use super::{LockInventoryBaseline, LockInventoryBaselineSite, RULE_ID};
 use crate::codebase::postgres::normalize_schema_catalog_path;
 use crate::codebase::ts_source::{is_portably_absolute_path, JsonLoadError, SourceStore};
 use anyhow::{anyhow, ensure, Context, Result};
 use serde::Deserialize;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
+
+mod compare;
+pub(super) use compare::compare;
 
 const VERSION: u32 = 1;
 
@@ -100,37 +103,28 @@ fn validate(baseline: &LockInventoryBaseline) -> Result<()> {
             site.file
         );
     }
+    let mut unanalyzed_keys = BTreeSet::new();
+    for entry in &baseline.unanalyzed {
+        ensure!(
+            !entry.file.is_empty() && !entry.reason.is_empty(),
+            "empty baseline unanalyzed identity"
+        );
+        ensure!(
+            entry.count > 0,
+            "baseline unanalyzed count must be positive ({}, {})",
+            entry.file,
+            entry.reason
+        );
+        ensure!(
+            unanalyzed_keys.insert((entry.file.as_str(), entry.reason.as_str())),
+            "duplicate baseline unanalyzed entry {} ({})",
+            entry.file,
+            entry.reason
+        );
+    }
     Ok(())
 }
 
-pub(super) fn compare(report: &mut LockInventoryReport, baseline: Option<&LockInventoryBaseline>) {
-    let previous: BTreeMap<_, _> = baseline
-        .into_iter()
-        .flat_map(|baseline| &baseline.sites)
-        .map(|site| (identity(site), site))
-        .collect();
-    let mut current = BTreeSet::new();
-    for site in &report.sites {
-        let entry = (
-            site.file.as_str(),
-            site.category.as_str(),
-            site.key.as_str(),
-        );
-        if !previous.contains_key(&entry) {
-            report.added.push(site.clone());
-        }
-        current.insert(entry);
-    }
-    if report.unanalyzed.is_empty() {
-        report.removed.extend(
-            previous
-                .into_iter()
-                .filter(|(key, _)| !current.contains(key))
-                .map(|(_, entry)| entry.clone()),
-        );
-    }
-}
-
-fn identity(site: &LockInventoryBaselineSite) -> (&str, &str, &str) {
+pub(super) fn identity(site: &LockInventoryBaselineSite) -> (&str, &str, &str) {
     (&site.file, &site.category, &site.key)
 }

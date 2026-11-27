@@ -1,0 +1,220 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "clean": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "default-false": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/broken.sql",
+          "line": 2,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT FROM ???;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/orders/repo.ts",
+          "line": 4,
+          "message": "new PostgreSQL lock site (for-update, a0a24b607c1a723810f319a5a7e0f3ae#1). Remove the lock or record the reviewed site in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "void query(\"SELECT id FROM orders WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "for-update"
+        },
+        {
+          "file": "src/orders/repo.ts",
+          "line": 5,
+          "message": "incomplete PostgreSQL lock inventory (executor SQL could not be resolved). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "return query(dynamicSql);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default-omitted": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/broken.sql",
+          "line": 2,
+          "message": "incomplete PostgreSQL lock inventory (SQL could not be parsed completely). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT FROM ???;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/orders/repo.ts",
+          "line": 4,
+          "message": "new PostgreSQL lock site (for-update, a0a24b607c1a723810f319a5a7e0f3ae#1). Remove the lock or record the reviewed site in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "void query(\"SELECT id FROM orders WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "for-update"
+        },
+        {
+          "file": "src/orders/repo.ts",
+          "line": 5,
+          "message": "incomplete PostgreSQL lock inventory (executor SQL could not be resolved). Make the configured SQL or helper call statically analyzable",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "return query(dynamicSql);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "grew-and-removed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/orders/repo.ts",
+          "line": 4,
+          "message": "unanalyzed PostgreSQL lock inputs grew (executor SQL could not be resolved: 2 current, 1 baselined). Make the configured SQL or helper call statically analyzable or record the reviewed count in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "void query(replacementSql);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "resolved-added": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/orders/repo.ts",
+          "line": 5,
+          "message": "new PostgreSQL lock site (for-share, 0f414ea4bdac1c8e19b725372d575a9b#1). Remove the lock or record the reviewed site in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "void query(\"SELECT id FROM accounts WHERE id = $1 FOR SHARE\", [id]);",
+          "target": "for-share"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shrunk": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "baseline.json",
+          "line": 1,
+          "message": "stale PostgreSQL lock baseline contains 1 removed site(s) and 1 fewer unanalyzed input(s). Run `no-mistakes postgres lock-inventory --write-baseline` after resolving any new sites",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "{",
+          "target": "stale-baseline"
+        },
+        {
+          "file": "migrations/broken.sql",
+          "line": 1,
+          "message": "new PostgreSQL lock site (for-share, 6389383da622bf5649828ee33ac015a1#1). Remove the lock or record the reviewed site in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM jobs FOR SHARE;",
+          "target": "for-share"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "shrunk-unanalyzed-only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "baseline.json",
+          "line": 1,
+          "message": "stale PostgreSQL lock baseline contains 1 fewer unanalyzed input(s). Run `no-mistakes postgres lock-inventory --write-baseline` after resolving any new sites",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "{",
+          "target": "stale-baseline"
+        },
+        {
+          "file": "migrations/broken.sql",
+          "line": 1,
+          "message": "new PostgreSQL lock site (for-share, 6389383da622bf5649828ee33ac015a1#1). Remove the lock or record the reviewed site in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM jobs FOR SHARE;",
+          "target": "for-share"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzed-grew": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/billing/worker.ts",
+          "line": 4,
+          "message": "unanalyzed PostgreSQL lock inputs grew (executor SQL could not be resolved: 1 current, 0 baselined). Make the configured SQL or helper call statically analyzable or record the reviewed count in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "return query(assembledSql);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/orders/repo.ts",
+          "line": 5,
+          "message": "unanalyzed PostgreSQL lock inputs grew (executor SQL could not be resolved: 2 current, 1 baselined). Make the configured SQL or helper call statically analyzable or record the reviewed count in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "void query(dynamicSql);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

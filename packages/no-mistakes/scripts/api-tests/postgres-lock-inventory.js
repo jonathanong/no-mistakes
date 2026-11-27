@@ -13,9 +13,12 @@ test("PostgreSQL lock inventory DTOs and async facade are public", () => {
 
   for (const name of [
     "PostgresLockInventoryOptions",
+    "PostgresLockInventoryRuleOptions",
     "LockInventorySite",
     "UnanalyzedLockSite",
     "LockInventoryBaselineSite",
+    "LockInventoryBaselineUnanalyzed",
+    "LockInventoryUnanalyzedDelta",
     "LockInventoryBaseline",
     "LockInventoryReport",
   ]) {
@@ -25,12 +28,21 @@ test("PostgreSQL lock inventory DTOs and async facade are public", () => {
     "root?: string;",
     "config?: string;",
     "writeBaseline?: boolean;",
+    "baselineUnanalyzed?: boolean;",
     "sites: LockInventorySite[];",
     "counts: Record<string, number>;",
     "unanalyzed: UnanalyzedLockSite[];",
+    "unanalyzedByReason: Record<string, number>;",
+    "unanalyzedByDirectory: Record<string, number>;",
     "baselineFile: string;",
+    "baselineUnanalyzed: boolean;",
     "added: LockInventorySite[];",
     "removed: LockInventoryBaselineSite[];",
+    "unanalyzedAdded: LockInventoryUnanalyzedDelta[];",
+    "unanalyzedRemoved: LockInventoryUnanalyzedDelta[];",
+    "unanalyzed?: LockInventoryBaselineUnanalyzed[];",
+    "baselineCount: number;",
+    "currentCount: number;",
     "baselineUpdated: boolean;",
   ]) {
     assert.ok(declarations.includes(field), `missing public field ${field}`);
@@ -52,10 +64,17 @@ test("PostgreSQL lock inventory forwards options asynchronously and supports dia
   const report = {
     sites: [{ key: "stable-key", file: "src/query.ts", line: 4, category: "row-update" }],
     counts: { "row-update": 1 },
-    unanalyzed: [],
+    unanalyzed: [
+      { file: "src/orders/repo.ts", line: 9, reason: "executor SQL could not be resolved" },
+    ],
+    unanalyzedByReason: { "executor SQL could not be resolved": 1 },
+    unanalyzedByDirectory: { "src/orders": 1 },
     baselineFile: ".no-mistakes/postgres-locks.json",
+    baselineUnanalyzed: true,
     added: [],
     removed: [],
+    unanalyzedAdded: [],
+    unanalyzedRemoved: [],
     baselineUpdated: true,
   };
   const requests = [];

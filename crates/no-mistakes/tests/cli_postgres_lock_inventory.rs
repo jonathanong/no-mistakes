@@ -212,3 +212,46 @@ fn inventory_preserves_existing_rule_locations_check_json_snapshot() {
     assert!(!before.is_empty());
     assert_eq!(before, existing("with_inventory"));
 }
+
+#[test]
+fn postgres_lock_inventory_baseline_unanalyzed_check_json_snapshot() {
+    let base = rules_path("postgres-lock-inventory", "fixture", "baseline-unanalyzed");
+    let mut cases = [
+        "clean",
+        "unanalyzed-grew",
+        "resolved-added",
+        "shrunk",
+        "shrunk-unanalyzed-only",
+        "grew-and-removed",
+    ]
+    .map(|name| {
+        let root = base.join(name);
+        (name, root.clone(), root.join(".no-mistakes.yml"))
+    })
+    .to_vec();
+    let parity = base.join("default-off-parity");
+    cases.push((
+        "default-omitted",
+        parity.clone(),
+        parity.join("default-omitted.yml"),
+    ));
+    cases.push((
+        "default-false",
+        parity.clone(),
+        parity.join("default-false.yml"),
+    ));
+    let reports = assert_saved_fixture_report(
+        "postgres_lock_inventory_baseline_unanalyzed",
+        &cases,
+        &[],
+        &[],
+    );
+    assert_eq!(reports["clean"]["exitCode"], 0);
+    assert_eq!(reports["clean"]["report"]["rules"], serde_json::json!([]));
+    assert_eq!(reports["unanalyzed-grew"]["exitCode"], 1);
+    assert_eq!(reports["resolved-added"]["exitCode"], 1);
+    assert_eq!(reports["shrunk"]["exitCode"], 1);
+    assert_eq!(reports["shrunk-unanalyzed-only"]["exitCode"], 1);
+    assert_eq!(reports["grew-and-removed"]["exitCode"], 1);
+    assert_eq!(reports["default-false"], reports["default-omitted"]);
+}

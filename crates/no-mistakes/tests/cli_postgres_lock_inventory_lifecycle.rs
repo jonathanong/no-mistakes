@@ -75,3 +75,95 @@ fn lock_inventory_cli_matches_public_library() {
     .unwrap();
     assert_eq!(cli, serde_json::to_value(library).unwrap());
 }
+
+#[test]
+fn inventory_baseline_unanalyzed_ratchets_both_sites_and_unresolved_inputs() {
+    let variants = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-lock-inventory/baseline-unanalyzed-variants");
+    let fixture = saved_fixture::materialize("postgres-lock-inventory", "baseline-unanalyzed");
+    let root = fixture.path();
+
+    let initial_read = inventory(root, false);
+    assert_eq!(initial_read.status.code(), Some(1));
+    let before: Value = serde_json::from_slice(&initial_read.stdout).unwrap();
+    assert_eq!(before["baselineUnanalyzed"], true);
+    assert_eq!(
+        before["unanalyzedByReason"]["executor SQL could not be resolved"],
+        3
+    );
+    assert_eq!(
+        before["unanalyzedByReason"]["SQL could not be parsed completely"],
+        1
+    );
+    assert_eq!(before["unanalyzedByDirectory"]["src/orders"], 2);
+    assert_eq!(before["unanalyzedByDirectory"]["src/billing"], 1);
+    assert_eq!(before["unanalyzedByDirectory"]["migrations"], 1);
+
+    let written = inventory(root, true);
+    assert!(
+        written.status.success(),
+        "{}",
+        String::from_utf8_lossy(&written.stderr)
+    );
+    let wrote: Value = serde_json::from_slice(&written.stdout).unwrap();
+    assert_eq!(wrote["baselineUpdated"], true);
+    assert_eq!(wrote["added"], serde_json::json!([]));
+    assert_eq!(wrote["unanalyzedAdded"], serde_json::json!([]));
+    let baseline_v1: Value =
+        serde_json::from_slice(&std::fs::read(root.join("baseline.json")).unwrap()).unwrap();
+    assert_eq!(baseline_v1["version"], 1);
+    assert_eq!(baseline_v1["sites"].as_array().unwrap().len(), 2);
+    assert_eq!(baseline_v1["unanalyzed"].as_array().unwrap().len(), 3);
+
+    let clean = inventory(root, false);
+    assert!(clean.status.success());
+
+    let orders = root.join("src/orders/repo.ts");
+    let baseline_bytes = std::fs::read(root.join("baseline.json")).unwrap();
+    for variant in [
+        "orders-grew.ts",
+        "orders-added-lock.ts",
+        "orders-swapped-to-unresolved.ts",
+    ] {
+        std::fs::copy(variants.join(variant), &orders).unwrap();
+        assert_eq!(inventory(root, false).status.code(), Some(1), "{variant}");
+        let refused = inventory(root, true);
+        assert!(!refused.status.success(), "{variant}");
+        assert!(
+            String::from_utf8_lossy(&refused.stderr).contains("only go down"),
+            "{variant}"
+        );
+        assert_eq!(
+            std::fs::read(root.join("baseline.json")).unwrap(),
+            baseline_bytes,
+            "{variant}"
+        );
+    }
+
+    std::fs::copy(variants.join("orders-shrunk.ts"), &orders).unwrap();
+    let shrunk_read = inventory(root, false);
+    assert_eq!(shrunk_read.status.code(), Some(1));
+    let shrunk_json: Value = serde_json::from_slice(&shrunk_read.stdout).unwrap();
+    assert_eq!(shrunk_json["unanalyzedRemoved"][0]["baselineCount"], 2);
+    assert_eq!(shrunk_json["unanalyzedRemoved"][0]["currentCount"], 1);
+    assert!(inventory(root, true).status.success());
+    assert!(inventory(root, false).status.success());
+
+    std::fs::copy(variants.join("orders-removed-lock.ts"), &orders).unwrap();
+    let removed_read = inventory(root, false);
+    assert_eq!(removed_read.status.code(), Some(1));
+    let removed_json: Value = serde_json::from_slice(&removed_read.stdout).unwrap();
+    assert_eq!(removed_json["removed"].as_array().unwrap().len(), 1);
+    assert_eq!(removed_json["unanalyzedAdded"], serde_json::json!([]));
+    assert!(inventory(root, true).status.success());
+    assert!(inventory(root, false).status.success());
+
+    std::fs::remove_file(root.join("migrations/broken.sql")).unwrap();
+    assert_eq!(inventory(root, false).status.code(), Some(1));
+    assert!(inventory(root, true).status.success());
+    let pruned: Value =
+        serde_json::from_slice(&std::fs::read(root.join("baseline.json")).unwrap()).unwrap();
+    assert_eq!(pruned["sites"].as_array().unwrap().len(), 1);
+    assert_eq!(pruned["unanalyzed"].as_array().unwrap().len(), 2);
+    assert!(inventory(root, false).status.success());
+}

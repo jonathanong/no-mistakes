@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: postgres-lock-inventory
+    scope: repository
+    options:
+      baselineFile: unanalyzed-zero.json
+      baselineUnanalyzed: true
+      importSpecifier: "@example/db"
+      executorNames: [query]

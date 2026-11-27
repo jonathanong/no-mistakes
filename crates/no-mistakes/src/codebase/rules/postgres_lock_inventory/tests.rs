@@ -46,6 +46,7 @@ fn baseline(report: &LockInventoryReport) -> LockInventoryBaseline {
                 key: site.key.clone(),
             })
             .collect(),
+        unanalyzed: Vec::new(),
     }
 }
 
@@ -88,7 +89,7 @@ fn substitutes_by_identity_and_defers_removals_when_incomplete() {
     assert_eq!(before.counts, replaced.counts);
     assert_eq!(replaced.added.len(), 1);
     assert_eq!(replaced.removed.len(), 1);
-    assert_eq!(report_findings(replaced).len(), 2);
+    assert_eq!(findings::report_findings(replaced).len(), 2);
 
     let mut incomplete = report("incomplete", &["queries.ts"]);
     incomplete.added.clear();
@@ -323,4 +324,54 @@ fn cached_baseline_read_failure_keeps_its_io_cause() {
         panic!("expected the cached I/O error: {error:#}");
     };
     assert!(std::sync::Arc::ptr_eq(cause, &io));
+}
+
+#[test]
+fn baseline_unanalyzed_ratchets_counts_and_default_mode_prunes_stale_entries() {
+    let mut initial = report("incomplete", &["queries.ts"]);
+    initial.baseline_unanalyzed = true;
+    initial.added.clear();
+    let saved = LockInventoryBaseline {
+        version: 1,
+        sites: initial
+            .sites
+            .iter()
+            .map(|site| LockInventoryBaselineSite {
+                file: site.file.clone(),
+                category: site.category.clone(),
+                key: site.key.clone(),
+            })
+            .collect(),
+        unanalyzed: initial.unanalyzed_baseline_entries(),
+    };
+    baseline::compare(&mut initial, Some(&saved));
+    assert!(initial.is_clean());
+    assert!(findings::report_findings(initial).is_empty());
+
+    let mut default_clean = report("before", &["locks.sql"]);
+    default_clean.added.clear();
+    let stale_default = LockInventoryBaseline {
+        version: 1,
+        sites: default_clean
+            .sites
+            .iter()
+            .map(|site| LockInventoryBaselineSite {
+                file: site.file.clone(),
+                category: site.category.clone(),
+                key: site.key.clone(),
+            })
+            .collect(),
+        unanalyzed: vec![LockInventoryBaselineUnanalyzed {
+            file: "queries.ts".into(),
+            reason: "executor SQL could not be resolved".into(),
+            count: 2,
+        }],
+    };
+    baseline::compare(&mut default_clean, Some(&stale_default));
+    assert!(!default_clean.is_clean());
+    assert_eq!(default_clean.unanalyzed_removed.len(), 1);
+    let stale_findings = findings::report_findings(default_clean);
+    assert_eq!(stale_findings.len(), 1);
+    assert_eq!(stale_findings[0].target.as_deref(), Some("stale-baseline"));
+    assert!(stale_findings[0].message.contains("2 fewer unanalyzed"));
 }

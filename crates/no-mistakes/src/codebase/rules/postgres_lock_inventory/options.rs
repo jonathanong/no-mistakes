@@ -26,6 +26,7 @@ pub(in crate::codebase::rules) struct Options {
     trusted_sql_tags: Vec<TrustedSqlTag>,
     #[serde(alias = "baseline")]
     baseline_file: Option<String>,
+    baseline_unanalyzed: bool,
     helpers: Vec<String>,
 }
 
@@ -34,6 +35,7 @@ pub(in crate::codebase::rules) struct CompiledOptions {
     pub(super) schema: PostgresSchemaOptions,
     pub(super) embedded: EmbeddedSqlOptions,
     pub(super) baseline_file: String,
+    pub(super) baseline_unanalyzed: bool,
     helpers: BTreeSet<String>,
     folded_sql_helpers: BTreeSet<String>,
 }
@@ -75,6 +77,7 @@ impl CompiledOptions {
             },
             embedded,
             baseline_file: baseline_file.to_string_lossy().replace('\\', "/"),
+            baseline_unanalyzed: opts.baseline_unanalyzed,
             helpers,
             folded_sql_helpers,
         })

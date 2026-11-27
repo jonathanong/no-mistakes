@@ -344,6 +344,9 @@ fn postgres_lock_inventory_has_rule_command_and_node_documentation() {
     ] {
         let page = read(&root.join(path));
         assert!(page.contains("baseline"), "{path}");
+        assert!(page.contains("baselineUnanalyzed"), "{path}");
+        assert!(page.contains("unanalyzedByReason"), "{path}");
+        assert!(page.contains("unanalyzedByDirectory"), "{path}");
         assert!(page.contains("unresolved"), "{path}");
     }
     assert!(read(&root.join("docs/node-api.md")).contains("postgresLockInventory"));

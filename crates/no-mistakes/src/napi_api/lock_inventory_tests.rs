@@ -118,3 +118,51 @@ fn lock_inventory_napi_and_check_reports_match_library_results() {
         assert_eq!(aggregate["reports"][0]["result"], standalone, "{name}");
     }
 }
+
+#[test]
+fn lock_inventory_napi_matches_library_for_baseline_unanalyzed_mode() {
+    for name in [
+        "clean",
+        "unanalyzed-grew",
+        "resolved-added",
+        "shrunk",
+        "shrunk-unanalyzed-only",
+        "grew-and-removed",
+    ] {
+        let root = fixture("baseline-unanalyzed").join(name);
+        let options = json!({ "root": root, "config": ".no-mistakes.yml" });
+        let library = crate::postgres_lock_inventory::run(
+            &crate::postgres_lock_inventory::PostgresLockInventoryOptions {
+                root: root.clone(),
+                config: Some(PathBuf::from(".no-mistakes.yml")),
+                write_baseline: false,
+            },
+        )
+        .unwrap();
+        let napi = super::postgres_lock_inventory_json_impl(options.clone()).unwrap();
+        assert_eq!(
+            parse_json(&napi),
+            serde_json::to_value(&library).unwrap(),
+            "{name}"
+        );
+        assert!(library.baseline_unanalyzed, "{name}");
+        let standalone = parse_json(
+            &super::check_json_impl(crate::napi_api::options::test_json_arg(options.to_string()))
+                .unwrap(),
+        );
+        let aggregate = parse_json(
+            &super::analyze_project::analyze_project_json_impl(
+                crate::napi_api::options::test_json_arg(
+                    json!({
+                        "root": root,
+                        "config": ".no-mistakes.yml",
+                        "reports": [{ "type": "check" }]
+                    })
+                    .to_string(),
+                ),
+            )
+            .unwrap(),
+        );
+        assert_eq!(aggregate["reports"][0]["result"], standalone, "{name}");
+    }
+}
