@@ -48,6 +48,10 @@ export function SaveButton({
 - `selectorAttributes` lists attributes treated as test IDs. It defaults to
   `["data-testid", "data-pw"]`.
 
+## Limits
+
+A test-id expression wrapped in `as`, `satisfies`, `!`, or parentheses is still that expression. `"btn" as const` is a literal default. `const { testId = "btn" } = props!` is a literal default taken from the props parameter.
+
 ## Fix
 
 Give the passed-through prop a literal default, or use a literal test-id value

@@ -6,23 +6,33 @@ const {
   recordObjectPatternBindings,
   staticImportSource,
 } = require("./async-target-bindings");
-const { literalString } = require("./module-mock-helpers");
+const { requireFact } = require("./module-binding");
+const { createStaticName } = require("./playwright-test-timeout-name");
 const HOOKS = new Set(["beforeAll", "beforeEach", "afterAll", "afterEach"]);
 const CHAINS = new Set(["only", "skip", "fixme", "fail", "describe", "parallel", "serial"]);
 
+function sameApiRoot(left, right) {
+  if (!left || !right || left.kind !== right.kind) return false;
+  if (JSON.stringify(left.path) !== JSON.stringify(right.path)) return false;
+  if (left.root === right.root) return true;
+  return typeof left.source === "string" && left.source === right.source;
+}
+
 function createBindings(context, modules, exportRoles = {}, calls = []) {
   const active = new Set();
+  const name = createStaticName(context);
   function callback(node, seen = new Set(), allowPartial = false) {
     node = unwrapExpression(node);
     if (isFunction(node)) return node;
+    const callee = unwrapExpression(node?.callee);
     if (
       node?.type === "CallExpression" &&
-      node.callee.type === "MemberExpression" &&
-      member(node.callee) === "bind"
+      callee?.type === "MemberExpression" &&
+      member(callee) === "bind"
     ) {
       const partial =
         node.arguments.length > 1 || node.arguments.some((arg) => arg.type === "SpreadElement");
-      return partial && !allowPartial ? null : callback(node.callee.object, seen, allowPartial);
+      return partial && !allowPartial ? null : callback(callee.object, seen, allowPartial);
     }
     if (node?.type !== "Identifier") return null;
     const variable = resolveVariable(node, context),
@@ -40,29 +50,6 @@ function createBindings(context, modules, exportRoles = {}, calls = []) {
         call.arguments.some((arg) => callback(arg) === fn) && registration(resolve(call.callee)),
     );
   }
-  function name(node, seen = new Set()) {
-    node = unwrapExpression(node);
-    // for-of, for-in, and pattern bindings have no initializer.
-    if (!node) return null;
-    const literal = literalString(node);
-    if (literal !== null) return literal;
-    if (node.type === "BinaryExpression" && node.operator === "+") {
-      const left = name(node.left, seen),
-        right = name(node.right, seen);
-      return left === null || right === null ? null : left + right;
-    }
-    if (node.type !== "Identifier") return null;
-    const variable = resolveVariable(node, context),
-      def = variable?.defs[0];
-    if (
-      seen.has(variable) ||
-      def?.type !== "Variable" ||
-      def.parent.kind !== "const" ||
-      isReassigned(node, context)
-    )
-      return null;
-    return name(def.node.init, new Set([...seen, variable]));
-  }
   const member = (node) => (node.computed ? name(node.property) : node.property.name);
   function property(owner, key) {
     if (!owner) return null;
@@ -75,14 +62,19 @@ function createBindings(context, modules, exportRoles = {}, calls = []) {
       if (role === "assertion" || role === "ordinary") return null;
       if (role === "opaque") return { kind: "opaque", root: owner.root };
       if (key === "test" || (key === "default" && owner.source === "@playwright/test"))
-        return { kind: "test", root: owner.root, path: [] };
+        return { kind: "test", root: owner.root, path: [], source: owner.source };
       if (key === "defineConfig" || key === "mergeTests") return { kind: key, root: owner.root };
       return owner.source !== "@playwright/test" ? { kind: "opaque", root: owner.root } : null;
     }
     if (owner.kind === "test") return { kind: "method", owner, key };
     if (owner.kind === "method" && CHAINS.has(owner.key))
       return property(
-        { kind: "test", root: owner.owner.root, path: [...owner.owner.path, owner.key] },
+        {
+          kind: "test",
+          root: owner.owner.root,
+          path: [...owner.owner.path, owner.key],
+          source: owner.owner.source,
+        },
         key,
       );
     if (owner.kind === "info" && (key === "setTimeout" || key === "slow" || key === null))
@@ -100,16 +92,17 @@ function createBindings(context, modules, exportRoles = {}, calls = []) {
     if (!node) return null;
     if (node.type === "MemberExpression") return property(resolve(node.object), member(node));
     if (node.type === "CallExpression") {
+      const required = requireFact(node, context);
+      if (required?.status === "namespace" && modules.has(required.source)) {
+        return { kind: "namespace", root: node, source: required.source };
+      }
+      if (required?.status === "opaque") return { kind: "opaque", root: node };
       const callee = unwrapExpression(node.callee);
-      if (callee.type === "MemberExpression" && member(callee) === "bind") {
+      if (callee?.type === "MemberExpression" && member(callee) === "bind") {
         const target = resolve(callee.object),
           receiver = resolve(node.arguments[0]);
         if (target?.kind !== "method") return null;
-        if (
-          receiver?.kind !== target.owner.kind ||
-          receiver.root !== target.owner.root ||
-          JSON.stringify(receiver.path) !== JSON.stringify(target.owner.path)
-        )
+        if (!sameApiRoot(receiver, target.owner))
           return {
             kind: "partial",
             target,
@@ -155,7 +148,7 @@ function createBindings(context, modules, exportRoles = {}, calls = []) {
             : exportRoles[source]?.[key];
         if (role === "assertion" || role === "ordinary") return null;
         if (role === "opaque") return { kind: "opaque", root: variable };
-        if (key === "test") return { kind: "test", root: variable, path: [] };
+        if (key === "test") return { kind: "test", root: variable, path: [], source };
         if (key === "defineConfig" || key === "mergeTests") return { kind: key, root: variable };
         if (source !== "@playwright/test") return { kind: "opaque", root: variable };
       }

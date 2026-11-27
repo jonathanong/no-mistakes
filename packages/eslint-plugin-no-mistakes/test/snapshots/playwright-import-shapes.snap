@@ -1,0 +1,2641 @@
+{
+  "eslint": [
+    {
+      "file": "src/assertion-before-require.ts",
+      "findings": [
+        {
+          "column": 19,
+          "endColumn": 61,
+          "endLine": 3,
+          "file": "src/assertion-before-require.ts",
+          "line": 3,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion before the Playwright require is still checked",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-branches.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 50,
+          "endLine": 11,
+          "file": "e2e/assertion-branches.spec.ts",
+          "line": 11,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 14,
+          "file": "e2e/assertion-branches.spec.ts",
+          "line": 14,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 47,
+          "endLine": 20,
+          "file": "e2e/assertion-branches.spec.ts",
+          "line": 20,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion binding branches",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-imports.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 47,
+          "endLine": 4,
+          "file": "e2e/assertion-imports.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 39,
+          "endLine": 7,
+          "file": "e2e/assertion-imports.spec.ts",
+          "line": 7,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 47,
+          "endLine": 10,
+          "file": "e2e/assertion-imports.spec.ts",
+          "line": 10,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 13,
+          "file": "e2e/assertion-imports.spec.ts",
+          "line": 13,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion CommonJS and import-equals (#4356)",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-aliases.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 42,
+          "endLine": 5,
+          "file": "e2e/assertion-aliases.spec.ts",
+          "line": 5,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 42,
+          "endLine": 8,
+          "file": "e2e/assertion-aliases.spec.ts",
+          "line": 8,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 12,
+          "file": "e2e/assertion-aliases.spec.ts",
+          "line": 12,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion configure, soft, and factory aliases",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-other-package.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "e2e/assertion-other-package.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion expect imported from another package",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-members.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 50,
+          "endLine": 10,
+          "file": "e2e/assertion-members.spec.ts",
+          "line": 10,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 13,
+          "file": "e2e/assertion-members.spec.ts",
+          "line": 13,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion member and package roots",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-soft.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "e2e/assertion-soft.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 52,
+          "endLine": 7,
+          "file": "e2e/assertion-soft.spec.ts",
+          "line": 7,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 58,
+          "endLine": 8,
+          "file": "e2e/assertion-soft.spec.ts",
+          "line": 8,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion soft chains on CommonJS bindings",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-quiet.spec.ts",
+      "findings": [],
+      "name": "assertion traced-away and reassigned expect",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-wrappers.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 5,
+          "file": "e2e/assertion-wrappers.spec.ts",
+          "line": 5,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 53,
+          "endLine": 6,
+          "file": "e2e/assertion-wrappers.spec.ts",
+          "line": 6,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 54,
+          "endLine": 7,
+          "file": "e2e/assertion-wrappers.spec.ts",
+          "line": 7,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 57,
+          "endLine": 8,
+          "file": "e2e/assertion-wrappers.spec.ts",
+          "line": 8,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 45,
+          "endLine": 9,
+          "file": "e2e/assertion-wrappers.spec.ts",
+          "line": 9,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 53,
+          "endLine": 10,
+          "file": "e2e/assertion-wrappers.spec.ts",
+          "line": 10,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion TypeScript wrappers (#4371)",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-ignore.spec.ts",
+      "findings": [],
+      "name": "assertion unanalyzable ignore",
+      "options": {
+        "unanalyzable": "ignore"
+      },
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-opaque.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 39,
+          "endLine": 5,
+          "file": "e2e/assertion-opaque.spec.ts",
+          "line": 5,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 8,
+          "file": "e2e/assertion-opaque.spec.ts",
+          "line": 8,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion unresolved expect (#4578)",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/member-dynamic.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 5,
+          "file": "src/member-dynamic.ts",
+          "line": 5,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "dynamic member require admits an unanalyzable matcher",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/member-dynamic-ignore.ts",
+      "findings": [],
+      "name": "dynamic member require stays quiet when unanalyzable is ignore",
+      "options": {
+        "unanalyzable": "ignore"
+      },
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/member-require-local.ts",
+      "findings": [],
+      "name": "local require named require stays quiet",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/member-require.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "src/member-require.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "member require of expect admits the file",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-relative-alias.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 7,
+          "file": "e2e/assertion-relative-alias.spec.ts",
+          "line": 7,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "relative expect alias follows both names",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-relative-expect.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "e2e/assertion-relative-expect.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "relative import named expect keeps the cap check",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-relative-require.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "e2e/assertion-relative-require.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "relative require named expect keeps the cap check",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/defaults.tsx",
+      "findings": [
+        {
+          "column": 18,
+          "endColumn": 34,
+          "endLine": 2,
+          "file": "src/defaults.tsx",
+          "line": 2,
+          "message": "Test ID prop passthrough must have a literal default.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/playwright-defaults",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 44,
+          "endLine": 5,
+          "file": "src/defaults.tsx",
+          "line": 5,
+          "message": "Test ID prop passthrough must have a literal default.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/playwright-defaults",
+          "severity": 2
+        }
+      ],
+      "name": "defaulted test ids through wrappers (#4368)",
+      "options": null,
+      "rule": "playwright-defaults"
+    },
+    {
+      "file": "e2e/hoisted-cjs-default.spec.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 12,
+          "endLine": 6,
+          "file": "e2e/hoisted-cjs-default.spec.ts",
+          "line": 6,
+          "message": "`token` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "name": "CommonJS default binding beforeAll reads a hoisted token",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-default-alias.spec.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 12,
+          "endLine": 6,
+          "file": "e2e/hoisted-default-alias.spec.ts",
+          "line": 6,
+          "message": "`token` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 12,
+          "endLine": 10,
+          "file": "e2e/hoisted-default-alias.spec.ts",
+          "line": 10,
+          "message": "`token` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "name": "default-import alias beforeAll reads a hoisted token",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-opaque-suppressed.spec.ts",
+      "findings": [],
+      "name": "file directive suppresses an opaque beforeAll",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-imports.spec.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 13,
+          "endLine": 4,
+          "file": "e2e/hoisted-imports.spec.ts",
+          "line": 4,
+          "message": "`tokenA` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 13,
+          "endLine": 10,
+          "file": "e2e/hoisted-imports.spec.ts",
+          "line": 10,
+          "message": "`tokenB` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 13,
+          "endLine": 16,
+          "file": "e2e/hoisted-imports.spec.ts",
+          "line": 16,
+          "message": "`tokenC` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "name": "hoisted CommonJS and import-equals (#4362)",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "src/hoisted-require.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 12,
+          "endLine": 4,
+          "file": "src/hoisted-require.ts",
+          "line": 4,
+          "message": "`token` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "name": "hoisted require outside e2e (#4362)",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-wrappers.spec.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 17,
+          "endLine": 5,
+          "file": "e2e/hoisted-wrappers.spec.ts",
+          "line": 5,
+          "message": "`s0` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 17,
+          "endLine": 9,
+          "file": "e2e/hoisted-wrappers.spec.ts",
+          "line": 9,
+          "message": "`s1` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 17,
+          "endLine": 13,
+          "file": "e2e/hoisted-wrappers.spec.ts",
+          "line": 13,
+          "message": "`s2` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 17,
+          "endLine": 17,
+          "file": "e2e/hoisted-wrappers.spec.ts",
+          "line": 17,
+          "message": "`s3` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "name": "hoisted wrappers and shielded test callback (#4398)",
+      "options": {
+        "tokenFactories": [
+          "randomSuffix"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-aliases.spec.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 13,
+          "endLine": 5,
+          "file": "e2e/hoisted-aliases.spec.ts",
+          "line": 5,
+          "message": "`tokenA` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 13,
+          "endLine": 10,
+          "file": "e2e/hoisted-aliases.spec.ts",
+          "line": 10,
+          "message": "`tokenB` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "name": "it and describe beforeAll read a hoisted token",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-opaque.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 7,
+          "file": "e2e/hoisted-opaque.spec.ts",
+          "line": 5,
+          "message": "Cannot tell whether this beforeAll is Playwright's hook. Import or require @playwright/test with a static name so hoisted tokens can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "name": "opaque beforeAll is unanalyzable",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-opaque-quiet.spec.ts",
+      "findings": [],
+      "name": "opaque beforeAll that does not read a token stays quiet",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-opaque-write.spec.ts",
+      "findings": [],
+      "name": "opaque beforeAll that only writes a token stays quiet",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-opaque-local.spec.ts",
+      "findings": [],
+      "name": "token minted inside an opaque beforeAll stays quiet",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "src/scroll-equals.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 26,
+          "endLine": 5,
+          "file": "src/scroll-equals.ts",
+          "line": 5,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "name": "raw scroll import-equals outside e2e (#4364)",
+      "options": null,
+      "rule": "playwright-no-raw-scroll-pagination"
+    },
+    {
+      "file": "src/scroll-require.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 26,
+          "endLine": 5,
+          "file": "src/scroll-require.ts",
+          "line": 5,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "name": "raw scroll require outside e2e (#4364)",
+      "options": null,
+      "rule": "playwright-no-raw-scroll-pagination"
+    },
+    {
+      "file": "e2e/scroll-wrappers.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 9,
+          "file": "e2e/scroll-wrappers.spec.ts",
+          "line": 9,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 10,
+          "file": "e2e/scroll-wrappers.spec.ts",
+          "line": 10,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 68,
+          "endLine": 11,
+          "file": "e2e/scroll-wrappers.spec.ts",
+          "line": 11,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "sentinelScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 68,
+          "endLine": 12,
+          "file": "e2e/scroll-wrappers.spec.ts",
+          "line": 12,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "sentinelScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "name": "scroll and sentinel wrappers (#4401)",
+      "options": {
+        "sentinelTestIds": [
+          "feed-sentinel"
+        ]
+      },
+      "rule": "playwright-no-raw-scroll-pagination"
+    },
+    {
+      "file": "src/scroll-statement.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 26,
+          "endLine": 5,
+          "file": "src/scroll-statement.ts",
+          "line": 5,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "name": "side-effect require admits the file",
+      "options": null,
+      "rule": "playwright-no-raw-scroll-pagination"
+    },
+    {
+      "file": "swallowed.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 39,
+          "endLine": 3,
+          "file": "swallowed.ts",
+          "line": 3,
+          "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+          "messageId": "swallowed",
+          "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 51,
+          "endLine": 4,
+          "file": "swallowed.ts",
+          "line": 4,
+          "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+          "messageId": "swallowed",
+          "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 51,
+          "endLine": 5,
+          "file": "swallowed.ts",
+          "line": 5,
+          "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden().",
+          "messageId": "swallowed",
+          "ruleId": "no-mistakes/playwright-no-swallowed-visibility",
+          "severity": 2
+        }
+      ],
+      "name": "swallowed visibility computed keys (#4489)",
+      "options": null,
+      "rule": "playwright-no-swallowed-visibility"
+    },
+    {
+      "file": "src/interactive-dynamic.tsx",
+      "findings": [
+        {
+          "column": 29,
+          "endColumn": 35,
+          "endLine": 6,
+          "file": "src/interactive-dynamic.tsx",
+          "line": 6,
+          "message": "Cannot tell whether this component is a configured interactive component. Import it with a static name.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "dynamic member of a default import stays opaque",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ]
+      },
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-imports.tsx",
+      "findings": [
+        {
+          "column": 25,
+          "endColumn": 32,
+          "endLine": 2,
+          "file": "src/interactive-imports.tsx",
+          "line": 2,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 32,
+          "endLine": 6,
+          "file": "src/interactive-imports.tsx",
+          "line": 6,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 32,
+          "endLine": 10,
+          "file": "src/interactive-imports.tsx",
+          "line": 10,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 32,
+          "endLine": 13,
+          "file": "src/interactive-imports.tsx",
+          "line": 13,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "interactive CommonJS and string imports (#4369)",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ]
+      },
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-intrinsic.tsx",
+      "findings": [
+        {
+          "column": 26,
+          "endColumn": 32,
+          "endLine": 5,
+          "file": "src/interactive-intrinsic.tsx",
+          "line": 5,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "intrinsic tag is not an opaque component",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ]
+      },
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-member-name.tsx",
+      "findings": [
+        {
+          "column": 29,
+          "endColumn": 33,
+          "endLine": 5,
+          "file": "src/interactive-member-name.tsx",
+          "line": 5,
+          "message": "Cannot tell whether this component is a configured interactive component. Import it with a static name.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "member property is not its own binding",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ]
+      },
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-unconfigured.tsx",
+      "findings": [],
+      "name": "opaque component with no interactiveComponents stays quiet",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-opaque.tsx",
+      "findings": [
+        {
+          "column": 29,
+          "endColumn": 36,
+          "endLine": 4,
+          "file": "src/interactive-opaque.tsx",
+          "line": 4,
+          "message": "Cannot tell whether this component is a configured interactive component. Import it with a static name.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "opaque interactive component",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ]
+      },
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-ignore.tsx",
+      "findings": [],
+      "name": "opaque interactive component ignored",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ],
+        "unanalyzable": "ignore"
+      },
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-member.tsx",
+      "findings": [
+        {
+          "column": 29,
+          "endColumn": 38,
+          "endLine": 4,
+          "file": "src/interactive-member.tsx",
+          "line": 4,
+          "message": "Cannot tell whether this component is a configured interactive component. Import it with a static name.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "opaque JSX member root",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ]
+      },
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-redeclare.tsx",
+      "findings": [
+        {
+          "column": 11,
+          "endColumn": 17,
+          "endLine": 5,
+          "file": "src/interactive-redeclare.tsx",
+          "line": 5,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "redeclared component is still interactive",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ]
+      },
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "e2e/selector-calls.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 4,
+          "file": "e2e/selector-calls.spec.ts",
+          "line": 4,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 32,
+          "endLine": 5,
+          "file": "e2e/selector-calls.spec.ts",
+          "line": 5,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 35,
+          "endLine": 7,
+          "file": "e2e/selector-calls.spec.ts",
+          "line": 7,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        }
+      ],
+      "name": "locator call, apply, and sequence callee",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-plain.ts",
+      "findings": [],
+      "name": "locator outside a Playwright file stays quiet",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-before-require.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 24,
+          "endLine": 4,
+          "file": "src/selector-before-require.ts",
+          "line": 4,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        }
+      ],
+      "name": "selector before a CommonJS Playwright require",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-equals.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 30,
+          "endLine": 4,
+          "file": "src/selector-equals.ts",
+          "line": 4,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        }
+      ],
+      "name": "selector import-equals outside e2e (#4366)",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-require.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 30,
+          "endLine": 4,
+          "file": "src/selector-require.ts",
+          "line": 4,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        }
+      ],
+      "name": "selector require outside e2e (#4366)",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-statement.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 3,
+          "file": "src/selector-statement.ts",
+          "line": 3,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        }
+      ],
+      "name": "side-effect require admits selector checks",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "playwright.config.ts",
+      "findings": [],
+      "name": "defineConfig satisfies stays under the cap (#4377)",
+      "options": {
+        "configFiles": [
+          "playwright.config.ts"
+        ],
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-dynamic-finding.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 4,
+          "file": "e2e/test-timeout-dynamic-finding.spec.ts",
+          "line": 4,
+          "message": "Playwright admitted registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "dynamic require is unknown when unknownValues is finding",
+      "options": {
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-dynamic-ignore.spec.ts",
+      "findings": [],
+      "name": "dynamic require stays quiet when unknownValues is ignore",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-shapes.spec.ts",
+      "findings": [
+        {
+          "column": 21,
+          "endColumn": 28,
+          "endLine": 7,
+          "file": "e2e/test-timeout-shapes.spec.ts",
+          "line": 7,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 27,
+          "endLine": 13,
+          "file": "e2e/test-timeout-shapes.spec.ts",
+          "line": 13,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 21,
+          "endLine": 17,
+          "file": "e2e/test-timeout-shapes.spec.ts",
+          "line": 17,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "extend, namespace member, and info pattern",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-named-bind.spec.ts",
+      "findings": [
+        {
+          "column": 56,
+          "endColumn": 61,
+          "endLine": 3,
+          "file": "e2e/test-timeout-named-bind.spec.ts",
+          "line": 3,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "named import bind matches a require of the same test",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-packages.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 37,
+          "endLine": 6,
+          "file": "e2e/test-timeout-packages.spec.ts",
+          "line": 6,
+          "message": "Playwright partially bound framework deadline cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 7,
+          "file": "e2e/test-timeout-packages.spec.ts",
+          "line": 7,
+          "message": "Playwright admitted registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 9,
+          "endLine": 8,
+          "file": "e2e/test-timeout-packages.spec.ts",
+          "line": 8,
+          "message": "Playwright admitted registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "registration package and partial bind",
+      "options": {
+        "registrationPackages": [
+          "my-kit"
+        ],
+        "unknownValues": "finding"
+      },
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-rebind.spec.ts",
+      "findings": [
+        {
+          "column": 84,
+          "endColumn": 91,
+          "endLine": 1,
+          "file": "e2e/test-timeout-rebind.spec.ts",
+          "line": 1,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "repeated require is the same setTimeout receiver",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-require.spec.ts",
+      "findings": [
+        {
+          "column": 20,
+          "endColumn": 27,
+          "endLine": 2,
+          "file": "e2e/test-timeout-require.spec.ts",
+          "line": 2,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 21,
+          "endLine": 5,
+          "file": "e2e/test-timeout-require.spec.ts",
+          "line": 5,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 27,
+          "endLine": 8,
+          "file": "e2e/test-timeout-require.spec.ts",
+          "line": 8,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "test timeout CommonJS and import-equals (#4357)",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-wrappers.spec.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 5,
+          "file": "e2e/test-timeout-wrappers.spec.ts",
+          "line": 5,
+          "message": "Playwright slow effective timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 9,
+          "file": "e2e/test-timeout-wrappers.spec.ts",
+          "line": 9,
+          "message": "Playwright slow effective timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 21,
+          "endColumn": 26,
+          "endLine": 14,
+          "file": "e2e/test-timeout-wrappers.spec.ts",
+          "line": 14,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "test timeout wrappers and satisfies sibling (#4377)",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-ban.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 12,
+          "endLine": 5,
+          "file": "e2e/test-timeout-ban.spec.ts",
+          "line": 5,
+          "message": "Playwright slow effective timeout overrides the project deadline. Remove the override and keep the deadline in project configuration.",
+          "messageId": "override",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "wrapped test.slow(false) is not an override",
+      "options": {
+        "banOverrides": true
+      },
+      "rule": "playwright-test-timeout-cap"
+    }
+  ],
+  "oxlint": [
+    {
+      "file": "src/assertion-before-require.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 19,
+          "file": "src/assertion-before-require.ts",
+          "line": 3,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        }
+      ],
+      "name": "assertion before the Playwright require is still checked",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-branches.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-branches.spec.ts",
+          "line": 11,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-branches.spec.ts",
+          "line": 14,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-branches.spec.ts",
+          "line": 20,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked."
+        }
+      ],
+      "name": "assertion binding branches",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-imports.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-imports.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-imports.spec.ts",
+          "line": 7,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-imports.spec.ts",
+          "line": 10,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-imports.spec.ts",
+          "line": 13,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        }
+      ],
+      "name": "assertion CommonJS and import-equals (#4356)",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-aliases.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-aliases.spec.ts",
+          "line": 5,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-aliases.spec.ts",
+          "line": 8,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-aliases.spec.ts",
+          "line": 12,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked."
+        }
+      ],
+      "name": "assertion configure, soft, and factory aliases",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-other-package.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-other-package.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        }
+      ],
+      "name": "assertion expect imported from another package",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-members.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-members.spec.ts",
+          "line": 10,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-members.spec.ts",
+          "line": 13,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked."
+        }
+      ],
+      "name": "assertion member and package roots",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-soft.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-soft.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-soft.spec.ts",
+          "line": 7,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-soft.spec.ts",
+          "line": 8,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        }
+      ],
+      "name": "assertion soft chains on CommonJS bindings",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-quiet.spec.ts",
+      "findings": [],
+      "name": "assertion traced-away and reassigned expect",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-wrappers.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-wrappers.spec.ts",
+          "line": 5,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-wrappers.spec.ts",
+          "line": 6,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-wrappers.spec.ts",
+          "line": 7,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-wrappers.spec.ts",
+          "line": 8,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-wrappers.spec.ts",
+          "line": 9,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-wrappers.spec.ts",
+          "line": 10,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        }
+      ],
+      "name": "assertion TypeScript wrappers (#4371)",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-ignore.spec.ts",
+      "findings": [],
+      "name": "assertion unanalyzable ignore",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-opaque.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-opaque.spec.ts",
+          "line": 5,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-opaque.spec.ts",
+          "line": 8,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked."
+        }
+      ],
+      "name": "assertion unresolved expect (#4578)",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/member-dynamic.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "src/member-dynamic.ts",
+          "line": 5,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked."
+        }
+      ],
+      "name": "dynamic member require admits an unanalyzable matcher",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/member-dynamic-ignore.ts",
+      "findings": [],
+      "name": "dynamic member require stays quiet when unanalyzable is ignore",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/member-require-local.ts",
+      "findings": [],
+      "name": "local require named require stays quiet",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/member-require.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "src/member-require.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        }
+      ],
+      "name": "member require of expect admits the file",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-relative-alias.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-relative-alias.spec.ts",
+          "line": 7,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked."
+        }
+      ],
+      "name": "relative expect alias follows both names",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-relative-expect.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-relative-expect.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        }
+      ],
+      "name": "relative import named expect keeps the cap check",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-relative-require.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-relative-require.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        }
+      ],
+      "name": "relative require named expect keeps the cap check",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/defaults.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-defaults)",
+          "column": 18,
+          "file": "src/defaults.tsx",
+          "line": 2,
+          "message": "Test ID prop passthrough must have a literal default."
+        },
+        {
+          "code": "no-mistakes(playwright-defaults)",
+          "column": 18,
+          "file": "src/defaults.tsx",
+          "line": 5,
+          "message": "Test ID prop passthrough must have a literal default."
+        }
+      ],
+      "name": "defaulted test ids through wrappers (#4368)",
+      "options": null,
+      "rule": "playwright-defaults"
+    },
+    {
+      "file": "e2e/hoisted-cjs-default.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 7,
+          "file": "e2e/hoisted-cjs-default.spec.ts",
+          "line": 6,
+          "message": "`token` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead."
+        }
+      ],
+      "name": "CommonJS default binding beforeAll reads a hoisted token",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-default-alias.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 7,
+          "file": "e2e/hoisted-default-alias.spec.ts",
+          "line": 6,
+          "message": "`token` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead."
+        },
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 7,
+          "file": "e2e/hoisted-default-alias.spec.ts",
+          "line": 10,
+          "message": "`token` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead."
+        }
+      ],
+      "name": "default-import alias beforeAll reads a hoisted token",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-opaque-suppressed.spec.ts",
+      "findings": [],
+      "name": "file directive suppresses an opaque beforeAll",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-imports.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 7,
+          "file": "e2e/hoisted-imports.spec.ts",
+          "line": 4,
+          "message": "`tokenA` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead."
+        },
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 7,
+          "file": "e2e/hoisted-imports.spec.ts",
+          "line": 10,
+          "message": "`tokenB` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead."
+        },
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 7,
+          "file": "e2e/hoisted-imports.spec.ts",
+          "line": 16,
+          "message": "`tokenC` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead."
+        }
+      ],
+      "name": "hoisted CommonJS and import-equals (#4362)",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "src/hoisted-require.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 7,
+          "file": "src/hoisted-require.ts",
+          "line": 4,
+          "message": "`token` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead."
+        }
+      ],
+      "name": "hoisted require outside e2e (#4362)",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-wrappers.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 15,
+          "file": "e2e/hoisted-wrappers.spec.ts",
+          "line": 5,
+          "message": "`s0` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead."
+        },
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 15,
+          "file": "e2e/hoisted-wrappers.spec.ts",
+          "line": 9,
+          "message": "`s1` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead."
+        },
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 15,
+          "file": "e2e/hoisted-wrappers.spec.ts",
+          "line": 13,
+          "message": "`s2` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead."
+        },
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 15,
+          "file": "e2e/hoisted-wrappers.spec.ts",
+          "line": 17,
+          "message": "`s3` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead."
+        }
+      ],
+      "name": "hoisted wrappers and shielded test callback (#4398)",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-aliases.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 7,
+          "file": "e2e/hoisted-aliases.spec.ts",
+          "line": 5,
+          "message": "`tokenA` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead."
+        },
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 7,
+          "file": "e2e/hoisted-aliases.spec.ts",
+          "line": 10,
+          "message": "`tokenB` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead."
+        }
+      ],
+      "name": "it and describe beforeAll read a hoisted token",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-opaque.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 1,
+          "file": "e2e/hoisted-opaque.spec.ts",
+          "line": 5,
+          "message": "Cannot tell whether this beforeAll is Playwright's hook. Import or require @playwright/test with a static name so hoisted tokens can be checked."
+        }
+      ],
+      "name": "opaque beforeAll is unanalyzable",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-opaque-quiet.spec.ts",
+      "findings": [],
+      "name": "opaque beforeAll that does not read a token stays quiet",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-opaque-write.spec.ts",
+      "findings": [],
+      "name": "opaque beforeAll that only writes a token stays quiet",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-opaque-local.spec.ts",
+      "findings": [],
+      "name": "token minted inside an opaque beforeAll stays quiet",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "src/scroll-equals.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-raw-scroll-pagination)",
+          "column": 3,
+          "file": "src/scroll-equals.ts",
+          "line": 5,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call."
+        }
+      ],
+      "name": "raw scroll import-equals outside e2e (#4364)",
+      "options": null,
+      "rule": "playwright-no-raw-scroll-pagination"
+    },
+    {
+      "file": "src/scroll-require.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-raw-scroll-pagination)",
+          "column": 3,
+          "file": "src/scroll-require.ts",
+          "line": 5,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call."
+        }
+      ],
+      "name": "raw scroll require outside e2e (#4364)",
+      "options": null,
+      "rule": "playwright-no-raw-scroll-pagination"
+    },
+    {
+      "file": "e2e/scroll-wrappers.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-raw-scroll-pagination)",
+          "column": 1,
+          "file": "e2e/scroll-wrappers.spec.ts",
+          "line": 9,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call."
+        },
+        {
+          "code": "no-mistakes(playwright-no-raw-scroll-pagination)",
+          "column": 1,
+          "file": "e2e/scroll-wrappers.spec.ts",
+          "line": 10,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call."
+        },
+        {
+          "code": "no-mistakes(playwright-no-raw-scroll-pagination)",
+          "column": 1,
+          "file": "e2e/scroll-wrappers.spec.ts",
+          "line": 11,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call."
+        },
+        {
+          "code": "no-mistakes(playwright-no-raw-scroll-pagination)",
+          "column": 1,
+          "file": "e2e/scroll-wrappers.spec.ts",
+          "line": 12,
+          "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call."
+        }
+      ],
+      "name": "scroll and sentinel wrappers (#4401)",
+      "options": null,
+      "rule": "playwright-no-raw-scroll-pagination"
+    },
+    {
+      "file": "src/scroll-statement.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-raw-scroll-pagination)",
+          "column": 3,
+          "file": "src/scroll-statement.ts",
+          "line": 5,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call."
+        }
+      ],
+      "name": "side-effect require admits the file",
+      "options": null,
+      "rule": "playwright-no-raw-scroll-pagination"
+    },
+    {
+      "file": "swallowed.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-swallowed-visibility)",
+          "column": 1,
+          "file": "swallowed.ts",
+          "line": 3,
+          "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden()."
+        },
+        {
+          "code": "no-mistakes(playwright-no-swallowed-visibility)",
+          "column": 1,
+          "file": "swallowed.ts",
+          "line": 4,
+          "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden()."
+        },
+        {
+          "code": "no-mistakes(playwright-no-swallowed-visibility)",
+          "column": 1,
+          "file": "swallowed.ts",
+          "line": 5,
+          "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden()."
+        }
+      ],
+      "name": "swallowed visibility computed keys (#4489)",
+      "options": null,
+      "rule": "playwright-no-swallowed-visibility"
+    },
+    {
+      "file": "src/interactive-dynamic.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 29,
+          "file": "src/interactive-dynamic.tsx",
+          "line": 6,
+          "message": "Cannot tell whether this component is a configured interactive component. Import it with a static name."
+        }
+      ],
+      "name": "dynamic member of a default import stays opaque",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-imports.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 25,
+          "file": "src/interactive-imports.tsx",
+          "line": 2,
+          "message": "Interactive elements should have a test ID."
+        },
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 25,
+          "file": "src/interactive-imports.tsx",
+          "line": 6,
+          "message": "Interactive elements should have a test ID."
+        },
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 25,
+          "file": "src/interactive-imports.tsx",
+          "line": 10,
+          "message": "Interactive elements should have a test ID."
+        },
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 25,
+          "file": "src/interactive-imports.tsx",
+          "line": 13,
+          "message": "Interactive elements should have a test ID."
+        }
+      ],
+      "name": "interactive CommonJS and string imports (#4369)",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-intrinsic.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 26,
+          "file": "src/interactive-intrinsic.tsx",
+          "line": 5,
+          "message": "Interactive elements should have a test ID."
+        }
+      ],
+      "name": "intrinsic tag is not an opaque component",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-member-name.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 29,
+          "file": "src/interactive-member-name.tsx",
+          "line": 5,
+          "message": "Cannot tell whether this component is a configured interactive component. Import it with a static name."
+        }
+      ],
+      "name": "member property is not its own binding",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-unconfigured.tsx",
+      "findings": [],
+      "name": "opaque component with no interactiveComponents stays quiet",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-opaque.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 29,
+          "file": "src/interactive-opaque.tsx",
+          "line": 4,
+          "message": "Cannot tell whether this component is a configured interactive component. Import it with a static name."
+        }
+      ],
+      "name": "opaque interactive component",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-ignore.tsx",
+      "findings": [],
+      "name": "opaque interactive component ignored",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-member.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 29,
+          "file": "src/interactive-member.tsx",
+          "line": 4,
+          "message": "Cannot tell whether this component is a configured interactive component. Import it with a static name."
+        }
+      ],
+      "name": "opaque JSX member root",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-redeclare.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 11,
+          "file": "src/interactive-redeclare.tsx",
+          "line": 5,
+          "message": "Interactive elements should have a test ID."
+        }
+      ],
+      "name": "redeclared component is still interactive",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "e2e/selector-calls.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "e2e/selector-calls.spec.ts",
+          "line": 4,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        },
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "e2e/selector-calls.spec.ts",
+          "line": 5,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        },
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "e2e/selector-calls.spec.ts",
+          "line": 7,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        }
+      ],
+      "name": "locator call, apply, and sequence callee",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-plain.ts",
+      "findings": [],
+      "name": "locator outside a Playwright file stays quiet",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-before-require.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 3,
+          "file": "src/selector-before-require.ts",
+          "line": 4,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        }
+      ],
+      "name": "selector before a CommonJS Playwright require",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-equals.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 10,
+          "file": "src/selector-equals.ts",
+          "line": 4,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        }
+      ],
+      "name": "selector import-equals outside e2e (#4366)",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-require.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 10,
+          "file": "src/selector-require.ts",
+          "line": 4,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        }
+      ],
+      "name": "selector require outside e2e (#4366)",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-statement.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 1,
+          "file": "src/selector-statement.ts",
+          "line": 3,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        }
+      ],
+      "name": "side-effect require admits selector checks",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "playwright.config.ts",
+      "findings": [],
+      "name": "defineConfig satisfies stays under the cap (#4377)",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-dynamic-finding.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 1,
+          "file": "e2e/test-timeout-dynamic-finding.spec.ts",
+          "line": 4,
+          "message": "Playwright admitted registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+        }
+      ],
+      "name": "dynamic require is unknown when unknownValues is finding",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-dynamic-ignore.spec.ts",
+      "findings": [],
+      "name": "dynamic require stays quiet when unknownValues is ignore",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-shapes.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 21,
+          "file": "e2e/test-timeout-shapes.spec.ts",
+          "line": 7,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 20,
+          "file": "e2e/test-timeout-shapes.spec.ts",
+          "line": 13,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 14,
+          "file": "e2e/test-timeout-shapes.spec.ts",
+          "line": 17,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        }
+      ],
+      "name": "extend, namespace member, and info pattern",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-named-bind.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 56,
+          "file": "e2e/test-timeout-named-bind.spec.ts",
+          "line": 3,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        }
+      ],
+      "name": "named import bind matches a require of the same test",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-packages.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 1,
+          "file": "e2e/test-timeout-packages.spec.ts",
+          "line": 6,
+          "message": "Playwright partially bound framework deadline cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 1,
+          "file": "e2e/test-timeout-packages.spec.ts",
+          "line": 7,
+          "message": "Playwright admitted registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 1,
+          "file": "e2e/test-timeout-packages.spec.ts",
+          "line": 8,
+          "message": "Playwright admitted registrar carrier cannot be resolved against 30000 ms; keep admitted timeout carriers explicit."
+        }
+      ],
+      "name": "registration package and partial bind",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-rebind.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 84,
+          "file": "e2e/test-timeout-rebind.spec.ts",
+          "line": 1,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        }
+      ],
+      "name": "repeated require is the same setTimeout receiver",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-require.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 20,
+          "file": "e2e/test-timeout-require.spec.ts",
+          "line": 2,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 14,
+          "file": "e2e/test-timeout-require.spec.ts",
+          "line": 5,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 20,
+          "file": "e2e/test-timeout-require.spec.ts",
+          "line": 8,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        }
+      ],
+      "name": "test timeout CommonJS and import-equals (#4357)",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-wrappers.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 3,
+          "file": "e2e/test-timeout-wrappers.spec.ts",
+          "line": 5,
+          "message": "Playwright slow effective timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 3,
+          "file": "e2e/test-timeout-wrappers.spec.ts",
+          "line": 9,
+          "message": "Playwright slow effective timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        },
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 21,
+          "file": "e2e/test-timeout-wrappers.spec.ts",
+          "line": 14,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        }
+      ],
+      "name": "test timeout wrappers and satisfies sibling (#4377)",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-ban.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 1,
+          "file": "e2e/test-timeout-ban.spec.ts",
+          "line": 5,
+          "message": "Playwright slow effective timeout overrides the project deadline. Remove the override and keep the deadline in project configuration."
+        }
+      ],
+      "name": "wrapped test.slow(false) is not an override",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    }
+  ]
+}

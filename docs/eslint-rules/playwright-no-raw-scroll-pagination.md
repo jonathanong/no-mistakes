@@ -151,6 +151,8 @@ request fires. Start the request wait before scrolling, as in the allowed
 
 ## Limits
 
+`require("@playwright/test")` and `import pw = require("@playwright/test")` admit the file outside an `e2e/` path. `(window as Window).scrollTo`, a sentinel id wrapped in `as const`, and `(locator.scrollIntoViewIfNeeded as any)()` are the same calls. Sentinel calls report `sentinelScroll`.
+
 For raw scrolls and cursor waits, a string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A destructured `window` member counts only when that property is `scroll`, `scrollBy`, or `scrollTo`. `url.searchParams.has.call(url.searchParams, "cursor")` and `url.searchParams.get.apply(url.searchParams, ["after"])` still see the cursor argument. A computed identifier key is not a static name. A parameter named `waitForRequest` or `waitForResponse`, including a single-write alias of that parameter, does not establish a Playwright cursor wait.
 
 Sentinel checks run on Playwright paths and files that import

@@ -1,6 +1,6 @@
 "use strict";
 
-const { unwrapTransparentParent } = require("./async-ast");
+const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { logicalCall } = require("./logical-call");
 const { literalString } = require("./module-mock-helpers");
 
@@ -19,7 +19,7 @@ function staticPropertyName(node) {
 }
 
 function calleeName(node) {
-  while (node?.type === "ChainExpression") node = node.expression;
+  node = unwrapExpression(node);
   if (node?.type === "Identifier") return node.name;
   if (node?.type === "MemberExpression") {
     if (node.computed && node.property?.type === "Identifier") return null;
@@ -40,7 +40,7 @@ function importSpecifierName(node) {
 }
 
 function isKnownTestCallee(callee, testCallees = TEST_CALLEES, namespaces = new Set()) {
-  while (callee?.type === "ChainExpression") callee = callee.expression;
+  callee = unwrapExpression(callee);
   if (callee?.type === "SequenceExpression" && callee.expressions.length > 0) {
     return isKnownTestCallee(callee.expressions.at(-1), testCallees, namespaces);
   }
@@ -76,8 +76,9 @@ function isKnownTestCallee(callee, testCallees = TEST_CALLEES, namespaces = new 
 }
 
 function isTestExtendCall(node, testCallees = TEST_CALLEES, namespaces) {
+  node = unwrapExpression(node);
   if (node?.type !== "CallExpression") return false;
-  const callee = node.callee;
+  const callee = unwrapExpression(node.callee);
   if (callee?.type !== "MemberExpression") return false;
   return (
     propertyName(callee.property) === "extend" &&
@@ -91,9 +92,9 @@ function isTestCall(node, testCallees = TEST_CALLEES, namespaces) {
 }
 
 function setupHook(callee) {
-  while (callee?.type === "ChainExpression") callee = callee.expression;
+  callee = unwrapExpression(callee);
   if (callee?.type === "SequenceExpression" && callee.expressions?.length) {
-    callee = callee.expressions.at(-1);
+    callee = unwrapExpression(callee.expressions.at(-1));
   }
   if (callee?.type === "MemberExpression" && !callee.computed) {
     const forwarded = staticPropertyName(callee.property);
@@ -110,8 +111,7 @@ function setupCallbackKind(node, testCallees = TEST_CALLEES, namespaces = new Se
   if (name === "afterAll") return "once";
   if (callee?.type !== "MemberExpression") return null;
   if (callee.computed && callee.property?.type === "Identifier") return null;
-  const object =
-    callee.object?.type === "ChainExpression" ? callee.object.expression : callee.object;
+  const object = unwrapExpression(callee.object);
   const objectName = object?.type === "Identifier" ? object.name : name;
   if (!testCallees.has(objectName) && !namespaces.has(objectName)) return null;
   const prop = propertyName(callee.property);

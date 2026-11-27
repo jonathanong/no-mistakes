@@ -1,7 +1,9 @@
 "use strict";
 
-const { rule } = require("../helpers");
+const { literalString, rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { unwrapExpression } = require("./async-ast");
+const { admitsPlaywrightModule } = require("./module-binding");
 const { childNodes } = require("./test-no-shared-state-helpers");
 const { invokedCall, memberName, methodFromCallee } = require("./playwright-static-call");
 const { isSentinelScrollCall } = require("./playwright-sentinel-scroll");
@@ -46,8 +48,7 @@ function searchParamsAccessorCall(node) {
   if (object?.type !== "MemberExpression" || !SEARCH_PARAMS_ACCESSORS.has(memberName(object))) {
     return null;
   }
-  let receiver = object.object;
-  while (receiver?.type === "ChainExpression") receiver = receiver.expression;
+  let receiver = unwrapExpression(object.object);
   if (receiver?.type !== "MemberExpression" || memberName(receiver) !== "searchParams") return null;
   return invoked;
 }
@@ -115,11 +116,7 @@ function collectLiteralStrings(node, results) {
 // interpolation-free template literal (`` `cursor` ``) is just as statically knowable as a plain
 // string literal — only a template with actual `${...}` interpolation is genuinely dynamic.
 function staticStringValue(node) {
-  if (node?.type === "Literal" && typeof node.value === "string") return node.value;
-  if (node?.type === "TemplateLiteral" && node.expressions.length === 0) {
-    return node.quasis[0].value.raw;
-  }
-  return null;
+  return literalString(node);
 }
 
 function collectSearchParamsAccessorArgs(node, results) {
@@ -190,7 +187,16 @@ module.exports = rule(
 
     return {
       ImportDeclaration(node) {
-        if (node.source.value === "@playwright/test") isPlaywrightFile = true;
+        if (admitsPlaywrightModule(node, context)) isPlaywrightFile = true;
+      },
+      TSImportEqualsDeclaration(node) {
+        if (admitsPlaywrightModule(node, context)) isPlaywrightFile = true;
+      },
+      VariableDeclarator(node) {
+        if (admitsPlaywrightModule(node, context)) isPlaywrightFile = true;
+      },
+      ExpressionStatement(node) {
+        if (admitsPlaywrightModule(node, context)) isPlaywrightFile = true;
       },
       CallExpression(node) {
         const wait = isCursorWaitCall(node, context);

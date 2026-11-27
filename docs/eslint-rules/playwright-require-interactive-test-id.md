@@ -42,6 +42,17 @@ selector-presence behavior. Use `playwright-literals` to validate their values.
   to `["asChild"]`; an explicit list replaces that default, and `[]` disables
   slot recognition. Shorthand props and statically truthy literals enable slot
   mode; false, null, zero, empty strings, and dynamic expressions do not.
+- `unanalyzable` is `finding` or `ignore`. It defaults to `finding`. A JSX tag
+  whose component is a dynamic member of a `require` or import reports
+  `unanalyzable` when the element is not otherwise interactive and has no
+  selector. `<UI.Action />` does too when `UI` is `require(componentPackage)`.
+  `const Action = UI[componentName]` after `import UI from "./ui"` reports
+  `unanalyzable` as well. A lowercase or hyphenated tag such as `<main />` is
+  intrinsic, so a binding of that name does not make the tag unanalyzable.
+  When `interactiveComponents` is missing or empty, an opaque component stays
+  quiet: no configured name could match, so the missing binding cannot change
+  the result.
+  `<UI.Card />` does not look up the property name `Card` as its own binding.
 
 The slot example above uses the default slot prop and selector attributes:
 
@@ -85,7 +96,7 @@ any parent spread to establish that selector. A child spread may override an
 inherited ID, so the child remains checked unless it carries its own selector.
 Dynamic slot expressions are not evaluated or followed through variables.
 
-A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A nested component that reuses an imported local name is that local component, not the import. `const Alias = Save` is the import only when that `Save` binding is the import, so `function Wrapper(Save) { const Alias = Save; return <Alias />; }` is not `SaveButton`. A computed identifier key is not a static name.
+A string or expression-free template key, optional chaining, one `const` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A nested component that reuses an imported local name is that local component, not the import. `const Alias = Save` is the import only when that `Save` binding is the import, so `function Wrapper(Save) { const Alias = Save; return <Alias />; }` is not `SaveButton`. A computed identifier key is not a static name. `const { Button: Action } = require("./ui")`, `const Action = UI.Button` after `require("./ui")` or `import UI = require("./ui")`, and `import { "Button" as Action }` are that configured component. `as`, `satisfies`, `!`, and instantiation expressions on the alias are transparent, and a `role` value wrapped the same way is still that role.
 
 Another file's re-export is not visible here.
 

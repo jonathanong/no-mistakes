@@ -135,7 +135,7 @@ function isStaticString(node) {
 }
 
 function selectorValueNode(attribute) {
-  const expression = jsxAttributeExpression(attribute);
+  const expression = unwrapExpression(jsxAttributeExpression(attribute));
   return expression && expression.type !== "JSXEmptyExpression" ? expression : null;
 }
 

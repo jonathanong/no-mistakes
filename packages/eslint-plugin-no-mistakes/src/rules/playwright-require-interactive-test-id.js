@@ -9,6 +9,7 @@ const {
   selectorAttributes,
 } = require("../helpers");
 const {
+  componentBinding,
   isInteractiveElement,
   jsxCandidateNames,
   mappedImport,
@@ -16,6 +17,7 @@ const {
   rememberAlias,
   rememberImport,
 } = require("./playwright-interactive-names");
+const { reportUnanalyzable } = require("./module-binding");
 const {
   childKeepsSelector,
   hasSlotProp,
@@ -34,6 +36,7 @@ module.exports = rule(
           selectorAttributes: { type: "array", items: { type: "string" } },
           interactiveComponents: { type: "array", items: { type: "string" } },
           slotProps: { type: "array", items: { type: "string" } },
+          unanalyzable: { enum: ["finding", "ignore"] },
         },
         additionalProperties: false,
       },
@@ -41,6 +44,8 @@ module.exports = rule(
     messages: {
       missing: "Interactive elements should have a test ID.",
       slot: "Use a literal test ID on this slot parent, after any spreads, so its child inherits a stable selector.",
+      unanalyzable:
+        "Cannot tell whether this component is a configured interactive component. Import it with a static name.",
     },
   },
   (context) => {
@@ -48,22 +53,34 @@ module.exports = rule(
     const attrs = selectorAttributes(opts);
     const interactiveComponents = compileMatchers(opts.interactiveComponents);
     const slotProps = opts.slotProps ?? ["asChild"];
+    const surfaceOpaque = reportUnanalyzable(opts);
     const importedNames = new Map();
     const openings = new WeakMap();
     const suppressed = ruleSuppression(context, "playwright-require-interactive-test-id");
     function elementNames(node) {
-      return jsxCandidateNames(node.name).flatMap((name) => {
+      let opaque = false;
+      const component = isComponentTag(node.name);
+      const names = jsxCandidateNames(node.name).flatMap((name) => {
+        if (
+          component &&
+          node.name.type === "JSXIdentifier" &&
+          componentBinding(name, node, context)?.status === "opaque"
+        ) {
+          opaque = true;
+        }
         const imported = mappedImport(name, node, context, importedNames);
         return imported && imported !== name ? [name, imported] : [name];
       });
+      const root = jsxRootName(node.name);
+      if (component && root && componentBinding(root, node, context)?.status === "opaque")
+        opaque = true;
+      return { names, opaque };
     }
     function openingInfo(node) {
       if (!openings.has(node)) {
-        const names = elementNames(node);
+        const { names, opaque } = elementNames(node);
         // Intrinsic JSX tags cannot merge props onto a child, even if configured.
-        const component =
-          node.name.type === "JSXMemberExpression" ||
-          (node.name.type === "JSXIdentifier" && !/^[a-z]|-/.test(node.name.name));
+        const component = isComponentTag(node.name);
         const enabled =
           component &&
           hasSlotProp(node, slotProps) &&
@@ -71,6 +88,7 @@ module.exports = rule(
         // Reuse the parent's child/prop facts instead of rescanning wide sibling lists.
         openings.set(node, {
           names,
+          opaque,
           slot: enabled
             ? {
                 selectors: literalSelectors(node, attrs),
@@ -98,7 +116,7 @@ module.exports = rule(
         rememberAlias(node, importedNames, context);
       },
       JSXOpeningElement(node) {
-        const { names, slot } = openingInfo(node);
+        const { names, opaque, slot } = openingInfo(node);
         if (slot) {
           if (slot.selectors.length === 0 && !suppressed(node))
             context.report({ node: node.name, messageId: "slot" });
@@ -107,11 +125,11 @@ module.exports = rule(
         const hasSelector = node.attributes.some((attr) =>
           isSelectorAttribute(attributeName(attr), attrs),
         );
-        if (
-          hasSelector ||
-          !isInteractiveElement(names, node.attributes, interactiveComponents) ||
-          coveredByParent(node)
-        ) {
+        if (hasSelector || coveredByParent(node)) return;
+        if (!isInteractiveElement(names, node.attributes, interactiveComponents)) {
+          if (opaque && surfaceOpaque && interactiveComponents.length > 0 && !suppressed(node)) {
+            context.report({ node: node.name, messageId: "unanalyzable" });
+          }
           return;
         }
         const hidden = suppressed(node);
@@ -123,6 +141,19 @@ module.exports = rule(
     };
   },
 );
+
+function isComponentTag(name) {
+  return (
+    name?.type === "JSXMemberExpression" ||
+    (name?.type === "JSXIdentifier" && !/^[a-z]|-/.test(name.name))
+  );
+}
+
+function jsxRootName(name) {
+  let current = name;
+  while (current?.type === "JSXMemberExpression") current = current.object;
+  return current?.type === "JSXIdentifier" ? current.name : null;
+}
 
 function compileMatchers(values) {
   if (!Array.isArray(values)) return [];

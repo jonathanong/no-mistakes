@@ -2,14 +2,15 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
-const { resolveAlias } = require("./playwright-static-call-alias");
+const { unwrapExpression } = require("./async-ast");
+const { isReassigned } = require("./async-target-bindings");
+const { importSpecifierName } = require("./async-target-sources");
 const {
-  invokedCall,
-  memberName,
-  methodFromCallee,
-  patternKey,
-  variableFor,
-} = require("./playwright-static-call");
+  admitsPlaywrightModule,
+  reportUnanalyzable,
+  resolveModuleBinding,
+} = require("./module-binding");
+const { invokedCall, memberName, patternKey, variableFor } = require("./playwright-static-call");
 
 const DEFAULT_MAX_TIMEOUT_MS = 10000;
 const TIMEOUT_MATCHERS = new Set([
@@ -47,56 +48,72 @@ function isPlaywrightPath(filename) {
   return PLAYWRIGHT_PATH_PATTERN.test(filename.replace(/\\/g, "/"));
 }
 
-function isPlaywrightNamespace(node, context, seen = new Set()) {
-  while (node?.type === "ChainExpression") node = node.expression;
-  if (node?.type !== "Identifier") return false;
-  const variable = variableFor(node, context);
-  if (!variable || seen.has(variable) || variable.defs?.length !== 1) return false;
-  const def = variable.defs[0];
-  if (
-    def.type === "ImportBinding" &&
-    def.node?.type === "ImportNamespaceSpecifier" &&
-    def.parent?.source?.value === "@playwright/test"
-  ) {
-    return true;
+function isUnreadSource(source) {
+  return (
+    typeof source === "string" &&
+    (source.startsWith(".") || source.startsWith("/") || source.startsWith("file:"))
+  );
+}
+
+function expectFact(fact) {
+  if (!fact) return null;
+  if (fact.status === "opaque") return "opaque";
+  if (fact.source === "@playwright/test") {
+    if (fact.status === "namespace") return false;
+    return fact.exported === "expect";
   }
-  const alias = resolveAlias(node, context, seen);
-  if (alias?.init?.type !== "Identifier") return false;
-  return isPlaywrightNamespace(alias.init, context, seen);
+  // Another package falls through so a local name of expect still counts.
+  if (!isUnreadSource(fact.source)) return null;
+  // Exported name expect falls through to the local-name check below.
+  if (fact.status === "export" && fact.exported === "expect") return null;
+  return "opaque";
+}
+
+function followAlias(node, context, expectNames, seen) {
+  const variable = variableFor(node, context);
+  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  if (!def || def.type !== "Variable" || !def.node?.init || seen.has(variable)) return null;
+  if (isReassigned(node, context)) return null;
+  seen.add(variable);
+  return expectRoot(def.node.init, context, expectNames, seen);
 }
 
 function expectRoot(node, context, expectNames, seen = new Set()) {
-  while (node?.type === "ChainExpression") node = node.expression;
+  node = unwrapExpression(node);
+  if (!node) return false;
   if (node.type === "CallExpression") return expectRoot(node.callee, context, expectNames, seen);
   if (node.type === "MemberExpression") {
-    if (memberName(node) === "expect") return isPlaywrightNamespace(node.object, context);
+    const fact = expectFact(resolveModuleBinding(node, context, new Set()));
+    if (fact !== null && fact !== false) return fact;
+    if (memberName(node) === "expect") return namespaceExpect(node.object, context);
     return expectRoot(node.object, context, expectNames, seen);
   }
   if (node.type !== "Identifier") return false;
+  const resolved = resolveModuleBinding(node, context, new Set());
+  const fact = expectFact(resolved);
+  if (fact !== null && fact !== false) return fact;
+  if (fact === false) return false;
+  if (!resolved) {
+    const followed = followAlias(node, context, expectNames, seen);
+    if (followed !== null) return followed;
+  }
   const variable = variableFor(node, context);
-  if (variable && seen.has(variable)) return false;
-  if (expectNames.has(node.name) || node.name === "expect") {
-    if (!variable || variable.defs.length === 0) return true;
-    const def = variable.defs[0];
-    if (def.type === "ImportBinding") return true;
-    const alias = resolveAlias(node, context, seen);
-    if (alias?.kind === "init") return expectRoot(alias.init, context, expectNames, seen);
-    if (alias?.kind === "key") {
-      return alias.key === "expect" && isPlaywrightNamespace(alias.declarator.init, context);
-    }
-    return false;
-  }
-  const alias = resolveAlias(node, context, seen);
-  if (alias?.kind === "key") {
-    return alias.key === "expect" && isPlaywrightNamespace(alias.declarator.init, context);
-  }
-  if (alias?.kind === "init") return expectRoot(alias.init, context, expectNames, seen);
-  if (variable) seen.add(variable);
-  return methodFromCallee(node, context, seen) === "expect";
+  const named = expectNames.has(node.name) || node.name === "expect";
+  if (!named) return false;
+  if (!variable || variable.defs.length === 0) return true;
+  if (variable.defs[0]?.type === "ImportBinding") return true;
+  return resolved?.status === "export" && resolved.exported === "expect";
+}
+
+function namespaceExpect(node, context) {
+  const fact = resolveModuleBinding(node, context, new Set());
+  if (fact?.status === "opaque" || (fact && isUnreadSource(fact.source))) return "opaque";
+  return fact?.status === "namespace" && fact.source === "@playwright/test";
 }
 
 function numericLiteral(node) {
-  return node?.type === "Literal" && typeof node.value === "number" ? node.value : null;
+  const target = unwrapExpression(node);
+  return target?.type === "Literal" && typeof target.value === "number" ? target.value : null;
 }
 
 function propertyName(node) {
@@ -112,47 +129,72 @@ module.exports = Object.assign(
       schema: [
         {
           type: "object",
-          properties: { max: { type: "number" } },
+          properties: {
+            max: { type: "number" },
+            unanalyzable: { enum: ["finding", "ignore"] },
+          },
           additionalProperties: false,
         },
       ],
       messages: {
         timeout:
           "Assertion timeout must not exceed {{max}} ms. Increase the test timeout or fix the slow condition instead.",
+        unanalyzable:
+          "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
       },
     },
     (context) => {
       const suppressed = ruleSuppression(context, "playwright-assertion-timeout-cap");
-      const max = context.options[0]?.max ?? DEFAULT_MAX_TIMEOUT_MS;
+      const option = context.options[0] ?? {};
+      const max = option.max ?? DEFAULT_MAX_TIMEOUT_MS;
+      const surfaceOpaque = reportUnanalyzable(option);
       let isPlaywrightFile = isPlaywrightPath(context.filename);
       const expectNames = new Set(["expect"]);
+      const pending = [];
+      function admit(node) {
+        if (admitsPlaywrightModule(node, context)) isPlaywrightFile = true;
+      }
+      function checkAssertion(node) {
+        if (suppressed(node)) return;
+        const invoked = invokedCall(node);
+        if (!invoked || invoked.callee?.type !== "MemberExpression") return;
+        const method = memberName(invoked.callee);
+        if (!TIMEOUT_MATCHERS.has(method)) return;
+        const root = expectRoot(invoked.callee.object, context, expectNames);
+        const options = unwrapExpression(invoked.arguments.at(-1));
+        const timeout =
+          options?.type === "ObjectExpression"
+            ? options.properties.find(
+                (property) => property.type === "Property" && patternKey(property) === "timeout",
+              )
+            : undefined;
+        if (root === "opaque") {
+          if (surfaceOpaque && timeout) context.report({ node, messageId: "unanalyzable" });
+          return;
+        }
+        if (!root || !timeout) return;
+        if (numericLiteral(timeout.value) > max) {
+          context.report({ node, messageId: "timeout", data: { max } });
+        }
+      }
       return {
         ImportDeclaration(node) {
+          admit(node);
           if (node.source.value !== "@playwright/test") return;
-          isPlaywrightFile = true;
           for (const specifier of node.specifiers) {
-            if (specifier.type !== "ImportSpecifier") continue;
-            const imported =
-              specifier.imported?.type === "Identifier" ? specifier.imported.name : null;
-            if (imported === "expect" && specifier.local?.name)
-              expectNames.add(specifier.local.name);
+            if (specifier.type !== "ImportSpecifier" || !specifier.local?.name) continue;
+            if (importSpecifierName(specifier) === "expect") expectNames.add(specifier.local.name);
           }
         },
+        TSImportEqualsDeclaration: admit,
+        VariableDeclarator: admit,
+        ExpressionStatement: admit,
         CallExpression(node) {
-          if (!isPlaywrightFile || suppressed(node)) return;
-          const invoked = invokedCall(node);
-          if (!invoked || invoked.callee?.type !== "MemberExpression") return;
-          const method = memberName(invoked.callee);
-          if (!TIMEOUT_MATCHERS.has(method)) return;
-          if (!expectRoot(invoked.callee.object, context, expectNames)) return;
-          const options = invoked.arguments.at(-1);
-          if (options?.type !== "ObjectExpression") return;
-          const timeout = options.properties.find(
-            (property) => property.type === "Property" && patternKey(property) === "timeout",
-          );
-          if (numericLiteral(timeout?.value) > max) {
-            context.report({ node, messageId: "timeout", data: { max } });
-          }
+          pending.push(node);
+        },
+        "Program:exit"() {
+          if (!isPlaywrightFile) return;
+          for (const node of pending) checkAssertion(node);
         },
       };
     },

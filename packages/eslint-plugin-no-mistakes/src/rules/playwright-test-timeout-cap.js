@@ -1,7 +1,11 @@
 "use strict";
 const { rule, options } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
-const { findContainingFunction, isUnconditionalBeforeReturn } = require("./async-ast");
+const {
+  findContainingFunction,
+  isTransparentExpression,
+  isUnconditionalBeforeReturn,
+} = require("./async-ast");
 const { createEvaluator } = require("./vitest-timeout-values");
 const { staticImportSource } = require("./async-target-bindings");
 const { createBindings } = require("./playwright-test-timeout-bindings");
@@ -57,9 +61,14 @@ module.exports = rule(require("./playwright-timeout-meta"), (context) => {
         const api = bindings.resolve(node.callee);
         if (api?.kind !== "method") return false;
         if (bindings.hooks.has(api.key) || api.key === "use" || api.key === null) return true;
-        const fn = findContainingFunction(node),
-          parentApi =
-            fn?.parent?.type === "CallExpression" ? bindings.resolve(fn.parent.callee) : null;
+        const fn = findContainingFunction(node);
+        let registrationNode = fn?.parent;
+        while (isTransparentExpression(registrationNode))
+          registrationNode = registrationNode.parent;
+        const parentApi =
+          registrationNode?.type === "CallExpression"
+            ? bindings.resolve(registrationNode.callee)
+            : null;
         return (
           api.key === "slow" &&
           (!fn || parentApi?.key === "describe" || parentApi?.owner?.path?.includes("describe"))

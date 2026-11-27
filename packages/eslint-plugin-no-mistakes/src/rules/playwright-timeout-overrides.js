@@ -1,5 +1,5 @@
 "use strict";
-const { unwrapExpression, isFunction } = require("./async-ast");
+const { unwrapExpression, isFunction, isTransparentExpression } = require("./async-ast");
 const { resolveVariable, isReassigned } = require("./async-target-bindings");
 
 const TIMEOUT_KEYS = new Set(["setTimeout", "slow"]);
@@ -26,7 +26,7 @@ function createOverrideBan(context, option, bindings, evaluate, slowCondition, r
   }
   function isCallee(node) {
     let current = node;
-    while (current.parent?.type === "ChainExpression") current = current.parent;
+    while (isTransparentExpression(current.parent)) current = current.parent;
     return current.parent?.type === "CallExpression" && current.parent.callee === current;
   }
   function isTimeoutBinding(node) {

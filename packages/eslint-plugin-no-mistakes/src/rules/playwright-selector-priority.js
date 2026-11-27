@@ -2,6 +2,7 @@
 
 const { literalString, rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { admitsPlaywrightModule } = require("./module-binding");
 const { invokedCall, methodFromCallee } = require("./playwright-static-call");
 
 const HEADING_TAGS = new Set(["h1", "h2", "h3", "h4", "h5", "h6"]);
@@ -52,25 +53,40 @@ module.exports = rule(
   (context) => {
     const suppressed = ruleSuppression(context, "playwright-selector-priority");
     let isPlaywrightFile = isPlaywrightPath(context.filename);
+    const calls = [];
+    function checkLocator(node) {
+      const invoked = invokedCall(node);
+      if (!invoked || methodFromCallee(invoked.callee, context) !== "locator") return;
+      const argument = invoked.arguments[0];
+      const selector = argument && literalString(argument)?.trim();
+      if (!selector || isAllowedSelector(selector) || suppressed(node)) return;
+      if (/^\.[a-zA-Z_-]/.test(selector) || selector.startsWith("#")) {
+        context.report({ node, messageId: "semantic" });
+      } else if (HEADING_TAGS.has(selector.toLowerCase())) {
+        context.report({ node, messageId: "heading" });
+      } else if (selector === "text" || selector.startsWith("text=")) {
+        context.report({ node, messageId: "text" });
+      }
+    }
     return {
       ImportDeclaration(node) {
-        if (node.source.value === "@playwright/test") isPlaywrightFile = true;
+        if (admitsPlaywrightModule(node, context)) isPlaywrightFile = true;
+      },
+      TSImportEqualsDeclaration(node) {
+        if (admitsPlaywrightModule(node, context)) isPlaywrightFile = true;
+      },
+      VariableDeclarator(node) {
+        if (admitsPlaywrightModule(node, context)) isPlaywrightFile = true;
+      },
+      ExpressionStatement(node) {
+        if (admitsPlaywrightModule(node, context)) isPlaywrightFile = true;
       },
       CallExpression(node) {
+        calls.push(node);
+      },
+      "Program:exit"() {
         if (!isPlaywrightFile) return;
-        const invoked = invokedCall(node);
-        if (!invoked || methodFromCallee(invoked.callee, context) !== "locator") return;
-        const argument = invoked.arguments[0];
-        const selector = argument && literalString(argument)?.trim();
-        if (!selector || isAllowedSelector(selector)) return;
-        if (suppressed(node)) return;
-        if (/^\.[a-zA-Z_-]/.test(selector) || selector.startsWith("#")) {
-          context.report({ node, messageId: "semantic" });
-        } else if (HEADING_TAGS.has(selector.toLowerCase())) {
-          context.report({ node, messageId: "heading" });
-        } else if (selector === "text" || selector.startsWith("text=")) {
-          context.report({ node, messageId: "text" });
-        }
+        for (const node of calls) checkLocator(node);
       },
     };
   },
