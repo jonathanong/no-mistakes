@@ -31,18 +31,26 @@ test("standalone downloads retry failures within the original total budget", () 
   assert.equal(job["continue-on-error"] ?? false, false);
 });
 
-test("each standalone upload contains the shared provenance and only its own archive", () => {
-  const uploads = workflow.jobs["standalone-build"].steps.filter((step) =>
-    step.uses?.startsWith("actions/upload-artifact@"),
+test("each standalone producer publishes its own archive under the consumer's shard name", () => {
+  const producer = workflow.jobs["standalone-build"];
+  assert.deepEqual(producer.strategy.matrix.shard, [1, 2, 3]);
+  const build = producer.steps.find(
+    ({ name }) => name === "Build standalone library without a CLI",
   );
-  assert.deepEqual(
-    uploads.map((step) => [step.with.name, step.with.path.trim().split("\n")]),
-    [1, 2, 3].map((shard) => [
-      `standalone-library-${shard}`,
-      [
-        "target/standalone-bundle/build.json",
-        `target/standalone-bundle/standalone-${shard - 1}.tar.zst`,
-      ],
-    ]),
+  assert.equal(build.env.STANDALONE_SHARD, "${{ matrix.shard }}");
+  assert.match(
+    build.run,
+    /standalone-shards\.cjs build target\/standalone-bundle "\$STANDALONE_SHARD"/,
   );
+  const uploads = producer.steps.filter(({ uses }) => uses?.startsWith("actions/upload-artifact@"));
+  assert.equal(uploads.length, 1);
+  assert.equal(uploads[0].with.name, "standalone-library-${{ matrix.shard }}");
+  assert.equal(uploads[0].with.path, "target/standalone-bundle/");
+  assert.equal(uploads[0].with["if-no-files-found"], "error");
+  const cache = producer.steps.find(({ id }) => id === "standalone-lib-workspace-cache");
+  const save = producer.steps.find(({ name }) => name === "Save verified workspace artifacts");
+  assert.match(save.if, /github\.ref == 'refs\/heads\/main'/);
+  assert.doesNotMatch(save.if, /matrix\.shard/);
+  for (const key of [cache.with.key, ...cache.with["restore-keys"].trim().split("\n")])
+    assert.ok(key.includes("-shard-${{ matrix.shard }}-"));
 });

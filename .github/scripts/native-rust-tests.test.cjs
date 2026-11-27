@@ -173,17 +173,17 @@ test("native workflow keeps independent runtime and Rust archive builds", () => 
   );
   assert.match(api, /needs: \[changes, native-build\]/);
   assert.match(api, /native-api-shards.cjs \$\{\{ matrix.shard \}\} \$\{\{ matrix.total \}\}/);
-  for (const [consumer, macosCount] of [
-    [`${rust}\n${job("native-rust-tests-macos")}`, 1],
+  for (const [consumer, windowsCount] of [
+    [`${rust}\n${job("native-rust-tests-macos")}`, 2],
     [`${api}\n${job("native-api-tests-macos")}`, 1],
   ]) {
     const rows = [
       ...consumer.matchAll(/- os:\s+(\S+)\s+target:\s+(\S+)\s+shard:\s+(\d+)\s+total:\s+(\d+)/g),
     ];
-    assert.equal(rows.length, 6 + macosCount);
+    assert.equal(rows.length, windowsCount + 1);
     for (const [os, target, count] of [
-      ["windows-2025", "x86_64-pc-windows-msvc", 6],
-      ["macos-15", "aarch64-apple-darwin", macosCount],
+      ["windows-2025", "x86_64-pc-windows-msvc", windowsCount],
+      ["macos-15", "aarch64-apple-darwin", 1],
     ]) {
       const selected = rows.filter((row) => row[1] === os);
       assert.deepEqual(

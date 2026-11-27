@@ -12,7 +12,7 @@ function escape(name) {
   return name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function partition(inventory, index, count, platform = process.platform) {
+function partition(inventory, index, count) {
   if (!Number.isInteger(index) || !Number.isInteger(count) || index < 1 || count < index)
     throw new Error("native API shard must satisfy 1 <= shard <= count");
   if (
@@ -30,10 +30,6 @@ function partition(inventory, index, count, platform = process.platform) {
   const files = [...new Set(selectedRows.map((row) => row.file))];
   if (!names.length) throw new Error("native API shard has no collected tests");
   const pattern = `^(?:${names.map((name) => name.split(" > ").map(escape).join("(?: > | )")).join("|")})$`;
-  const argumentBudget = platform === "win32" ? 24000 : 120000;
-  const argumentSize = platform === "win32" ? pattern.length : Buffer.byteLength(pattern);
-  if (argumentSize > argumentBudget)
-    throw new Error("native API shard pattern exceeds argument budget; increase shard count");
   return { pattern, names, files, total: inventory.length };
 }
 
@@ -46,6 +42,13 @@ function selectRunFiles(files, selectedFiles) {
     matched.add(resolved);
   }
   return matched.size ? files.filter((file) => matched.has(file)) : files;
+}
+
+function readShardTestPattern() {
+  const { pattern } = JSON.parse(fs.readFileSync("target/native-api-shard.json", "utf8"));
+  if (typeof pattern !== "string" || pattern.length === 0)
+    throw new Error("native API shard plan requires a test filter");
+  return new RegExp(pattern);
 }
 
 function run(
@@ -93,7 +96,8 @@ function run(
   invoke([
     "run",
     ...runFiles,
-    `--testNamePattern=${plan.pattern}`,
+    "--config",
+    path.join(__dirname, "vitest-native-api.config.cjs"),
     "--reporter=default",
     "--reporter=json",
     "--outputFile.json=target/native-api-tests.json",
@@ -113,4 +117,4 @@ if (require.main === module) {
     process.exitCode = error.status || 1;
   }
 }
-module.exports = { key, partition, run };
+module.exports = { key, partition, readShardTestPattern, run };

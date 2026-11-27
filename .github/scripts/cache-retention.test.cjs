@@ -465,7 +465,7 @@ test("pnpm keeps the largest compatible main snapshot with deterministic date an
   );
 });
 
-test("budget eviction preserves the newest main macOS harness and evicts other workspaces in access order", () => {
+test("budget eviction includes the retired macOS harness in workspace access order", () => {
   const versions = JSON.parse(
     readFileSync(path.join(root, "test-cases/cache-retention/workspace-budget.json"), "utf8"),
   );
@@ -479,24 +479,44 @@ test("budget eviction preserves the newest main macOS harness and evicts other w
       [71, "budget-workspace"],
       [72, "budget-workspace"],
       [77, "superseded native-test-harness-workspace-v2-aarch64-apple-darwin"],
+      [78, "budget-workspace"],
     ],
   );
-  assert.equal(result.after, 8 * 1024 ** 3);
+  assert.equal(result.after, 7.5 * 1024 ** 3);
   assert.equal(result.withinBudget, true);
   const keptIds = result.kept.map((cache) => cache.id);
-  assert.deepEqual(keptIds, [73, 76, 78, 79]);
+  assert.deepEqual(keptIds, [73, 76, 79]);
   assert.deepEqual(plan([...versions].reverse(), fixture.states).remove, result.remove);
   const excess = plan(versions, fixture.states, 4 * 1024 ** 3);
   assert.deepEqual(
     excess.remove.map((cache) => cache.id),
-    [71, 72, 73, 77, 79],
+    [71, 72, 73, 77, 78, 79],
   );
-  assert.equal(excess.after, 5.5 * 1024 ** 3);
+  assert.equal(excess.after, 5 * 1024 ** 3);
   assert.equal(excess.withinBudget, false);
   assert.match(summary(excess), /Budget remains exceeded/);
-  assert.match(summary(excess), /4 budget-workspace evictions/);
+  assert.match(summary(excess), /5 budget-workspace evictions/);
   const active = plan([...versions, ...fixture.benchmarks], fixture.states, 0);
   assert.ok(!active.remove.some((cache) => [21, 22, 23].includes(cache.id)));
+});
+
+test("parallel standalone caches are distinct and macOS dependency generations are bounded", () => {
+  const caches = require("../../test-cases/cache-retention/parallel-standalone-macos-dependencies.json");
+  const result = plan(caches, {});
+  assert.deepEqual(
+    result.kept.map(({ id }) => id),
+    [91, 92, 93, 95],
+  );
+  assert.deepEqual(
+    result.remove.map(({ id, reason }) => [id, reason]),
+    [
+      [90, "superseded standalone-lib-workspace-v2-Linux-X64-shard-1"],
+      [94, "superseded dependencies:native-rust-tests-macos"],
+    ],
+  );
+  assert.ok(
+    plan(caches, {}, 0).remove.some(({ id, reason }) => id === 95 && reason === "budget-workspace"),
+  );
 });
 
 test("release caches and superseded populated pnpm lockfiles are pruned per target and runtime", () => {

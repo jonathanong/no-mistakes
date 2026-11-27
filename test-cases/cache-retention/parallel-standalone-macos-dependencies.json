@@ -1,0 +1,50 @@
+[
+  {
+    "id": 90,
+    "key": "standalone-lib-workspace-v2-Linux-X64-shard-1-previous",
+    "size_in_bytes": 536870912,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-01T00:00:00Z",
+    "last_accessed_at": "2026-11-01T00:00:00Z"
+  },
+  {
+    "id": 91,
+    "key": "standalone-lib-workspace-v2-Linux-X64-shard-1-current",
+    "size_in_bytes": 536870912,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-02T00:00:00Z",
+    "last_accessed_at": "2026-11-02T00:00:00Z"
+  },
+  {
+    "id": 92,
+    "key": "standalone-lib-workspace-v2-Linux-X64-shard-2-current",
+    "size_in_bytes": 536870912,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-02T00:00:00Z",
+    "last_accessed_at": "2026-11-02T00:00:00Z"
+  },
+  {
+    "id": 93,
+    "key": "standalone-lib-workspace-v2-Linux-X64-shard-3-current",
+    "size_in_bytes": 536870912,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-02T00:00:00Z",
+    "last_accessed_at": "2026-11-02T00:00:00Z"
+  },
+  {
+    "id": 94,
+    "key": "v0-rust-native-rust-tests-v1-aarch64-apple-darwin-Darwin-arm64-aaabbbcc-eeefffdd",
+    "size_in_bytes": 536870912,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-01T00:00:00Z",
+    "last_accessed_at": "2026-11-01T00:00:00Z"
+  },
+  {
+    "id": 95,
+    "key": "v0-rust-native-rust-tests-v1-aarch64-apple-darwin-Darwin-arm64-bbbbcccc-fffeeecc",
+    "size_in_bytes": 536870912,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-02T00:00:00Z",
+    "last_accessed_at": "2026-11-02T00:00:00Z"
+  }
+]

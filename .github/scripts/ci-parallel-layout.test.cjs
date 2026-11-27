@@ -146,9 +146,8 @@ test("JavaScript shards merge coverage under the normal unchanged threshold conf
     /--config \.github\/scripts\/vitest-shard.config.cjs --shard=/,
   );
   const shards = job("javascript-shards");
-  assert.ok(
-    shards.includes("fromJSON(github.event_name == 'pull_request' && '[1,2]' || '[1,2,3,4]')"),
-  );
+  assert.match(shards, /shard: \[1, 2\]/);
+  assert.match(shards, /--shard=\$\{\{ matrix\.shard \}\}\/2/);
   assert.match(shards, /reporter=blob/);
   assert.match(job("quality-links"), /name: Documentation links/);
   assert.match(job("javascript-shards"), /runs-on: ubuntu-latest/);
@@ -169,12 +168,7 @@ test("documentation tests cannot delay coverage archive consumers", () => {
 });
 
 test("native workspace caches preserve content-verified compiler inputs as one artifact", () => {
-  for (const id of [
-    "native-build",
-    "native-api-tests-macos",
-    "native-test-build",
-    "native-rust-tests-macos",
-  ]) {
+  for (const id of ["native-build", "native-api-tests-macos", "native-test-build"]) {
     const body = job(id);
     assert.match(body, /shared-key: cargo-registry-v1/);
     assert.match(body, /cache-targets: false/);

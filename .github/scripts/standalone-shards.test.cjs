@@ -178,26 +178,25 @@ test("a preselected compile shard is rejected", () =>
     assert.equal(existsSync(path.join(bundle, "build.json")), false);
   }));
 
-test("the three bounded build steps publish only after every archive exists", () =>
-  scenario(({ bundle, invoke }) => {
-    for (const index of ["1", "2", "3"]) {
-      const result = invoke(["build", bundle, index]);
+test("each independent build writes one archive and a provenance manifest its consumer can use", () =>
+  scenario(({ workspace, bundle, invoke }) => {
+    for (const index of [1, 2, 3]) {
+      const isolatedBundle = `${bundle}-${index}`;
+      const result = invoke(["build", isolatedBundle, String(index)]);
       assert.equal(result.status, 0, result.stderr);
-      const shard = Number(index) - 1;
-      assert.equal(
-        readFileSync(path.join(bundle, `standalone-${shard}.tar.zst.shard`), "utf8").trim(),
-        String(shard),
-      );
-      assert.equal(existsSync(path.join(bundle, "build.json")), index === "3");
+      assert.deepEqual(JSON.parse(readFileSync(path.join(isolatedBundle, "build.json"), "utf8")), {
+        sha: "fixture-source",
+        workspace,
+      });
+      for (const shard of [1, 2, 3]) {
+        assert.equal(
+          existsSync(path.join(isolatedBundle, `standalone-${shard - 1}.tar.zst`)),
+          index === shard,
+        );
+      }
+      const consumed = invoke(["run", isolatedBundle, String(index), "3"]);
+      assert.equal(consumed.status, 0, consumed.stderr);
     }
-  }));
-
-test("the final build step rejects missing earlier archives", () =>
-  scenario(({ bundle, invoke }) => {
-    const result = invoke(["build", bundle, "3"]);
-    assert.equal(result.status, 1);
-    assert.match(result.stderr, /requires all three archives/);
-    assert.equal(existsSync(path.join(bundle, "build.json")), false);
   }));
 
 test("PR jobs build and run exactly one library slice without an archive", () =>

@@ -19,7 +19,6 @@ const producers = [
   "native-build",
   "native-api-tests-macos",
   "native-test-build",
-  "native-rust-tests-macos",
   "standalone-build",
   "rust-coverage-build",
 ];
@@ -72,8 +71,8 @@ test("all large workspace snapshots restore on PRs but save only successful main
   assert.doesNotMatch(workflow, /uses: actions\/cache@[a-f0-9]{40}/);
 });
 
-test("macOS snapshots prefer CGU64, then fall back across manifest changes", () => {
-  for (const name of ["native-api-tests-macos", "native-rust-tests-macos"]) {
+test("the macOS runtime snapshot prefers CGU64, then falls back across manifest changes", () => {
+  for (const name of ["native-api-tests-macos"]) {
     const restore = steps(job(name)).find((step) => /uses: actions\/cache\/restore@/.test(step));
     assert.match(restore, /key: [^\n]+-cgu64-\$\{\{ hashFiles\('crates\/\*\*\/\*\.rs'\) \}\}/);
     const fallback = restore
@@ -86,6 +85,25 @@ test("macOS snapshots prefer CGU64, then fall back across manifest changes", () 
     assert.match(fallback[1], /matrix.target.*cachekey.*env.RUSTFLAGS/);
     assert.match(fallback[0], /hashFiles\('Cargo.toml'/);
   }
+});
+
+test("macOS Rust tests use a best-effort dependency cache and retain inventory after testing", () => {
+  const { steps } = YAML.parse(workflow).jobs["native-rust-tests-macos"];
+  assert.ok(steps.every(({ uses }) => !uses?.startsWith("actions/cache/")));
+  const cache = steps.find(({ name }) => name === "Cache Cargo dependencies");
+  assert.match(cache.uses, /^Swatinem\/rust-cache@/);
+  assert.equal(cache["continue-on-error"], true);
+  assert.equal(cache["timeout-minutes"], 3);
+  assert.equal(cache.with["shared-key"], "native-rust-tests-v1-aarch64-apple-darwin");
+  assert.equal(cache.with["cache-targets"], true);
+  assert.equal(cache.with["cache-workspace-crates"], false);
+  const run = steps.find(({ id }) => id === "native-rust-tests");
+  const inventory = steps.find(
+    ({ name }) => name === "Retain native Rust case execution inventory",
+  );
+  assert.ok(steps.indexOf(cache) < steps.indexOf(run));
+  assert.ok(steps.indexOf(run) < steps.indexOf(inventory));
+  assert.match(inventory.if, /steps\.native-rust-tests\.outcome != 'skipped'/);
 });
 
 test("dependency caches are main-only, dependency-only and shared across compatible Linux roles", () => {
@@ -117,7 +135,6 @@ test("dependency caches are main-only, dependency-only and shared across compati
     "native-build",
     "native-api-tests-macos",
     "native-test-build",
-    "native-rust-tests-macos",
     "rust-coverage-build",
     "standalone-build",
   ]) {
