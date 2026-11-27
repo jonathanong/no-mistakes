@@ -1,0 +1,59 @@
+id: no-unscoped-repository-markdown-read
+language: Rust
+severity: error
+message: >-
+  Keep repository Markdown inputs inside the Rust input folders documented in
+  docs/development/ci-builds.md. Use a saved fixture for test data and the
+  source policy job for checks on other repository Markdown.
+rule:
+  any:
+    - pattern: read_root($PATH)
+    - pattern: repo_root().join($PATH)
+    - pattern: repository_root().join($PATH)
+    - all:
+        - pattern: $ROOT.join($PATH)
+        - inside:
+            kind: function_item
+            stopBy: end
+            has:
+              any:
+                - pattern: let $ROOT = repo_root();
+                - pattern: let $ROOT = repository_root();
+                - pattern: let $ROOT = $CONSTRUCTOR(env!("CARGO_MANIFEST_DIR")).join("../..");
+              stopBy: end
+    - pattern: std::fs::read_to_string($PATH)
+    - pattern: fs::read_to_string($PATH)
+    - pattern: std::fs::read($PATH)
+    - pattern: fs::read($PATH)
+    - pattern: read_to_string($PATH)
+    - pattern: read($PATH)
+    - all:
+        - matches: unscoped-markdown
+        - inside:
+            kind: macro_invocation
+            regex: '^(?:::)?(?:std::|core::)?include_(?:str|bytes)\s*!'
+            stopBy: end
+    - pattern: $CONSTRUCTOR(env!("CARGO_MANIFEST_DIR")).join($PATH)
+    - pattern: $CONSTRUCTOR(env!("CARGO_MANIFEST_DIR")).join("../..").join($PATH)
+constraints:
+  CONSTRUCTOR:
+    regex: '^(?:::)?(?:std::path::)?(?:PathBuf::from|Path::new)$'
+  PATH:
+    matches: unscoped-markdown
+utils:
+  unscoped-markdown:
+    all:
+      - any:
+          - kind: string_literal
+          - kind: raw_string_literal
+      - regex: '(?i)\.(?:mdx?|markdown)"#*$'
+      - not:
+          all:
+            - regex: '^(?:r#*)?"/?(?:\.\.?/)*(?:docs/|plugins/no-mistakes/skills/|plugins/no-mistakes-rules/skills/github-actions-rules/|crates/|fixtures/|test-cases/)'
+            - not:
+                regex: '^(?:r#*)?"/?(?:\.\.?/)*[^./"][^"]*/\.\./'
+files:
+  - "**/*.rs"
+ignores:
+  - "**/fixtures/**"
+  - "**/test-cases/**"

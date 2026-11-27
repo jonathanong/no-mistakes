@@ -3,6 +3,7 @@ const { readFileSync } = require("node:fs");
 const { spawnSync } = require("node:child_process");
 const path = require("node:path");
 const { test } = require("node:test");
+const { parse } = require("yaml");
 const { rustRequired, triggersRust } = require("./rust-pr-scope.cjs");
 const workflow = readFileSync(path.join(__dirname, "../workflows/ci.yml"), "utf8");
 const job = (name) => workflow.split(`\n  ${name}:\n`)[1].split(/\n  [a-z][a-z-]*:\n/)[0];
@@ -11,7 +12,18 @@ for (const file of [
   "packages/eslint-plugin-no-mistakes/src/rules/example.js",
   "test-cases/eslint-snippets/fixture/example.ts",
   "plugins/no-mistakes-rules/skills/example/SKILL.md",
-  "docs/eslint-rules/example.md",
+  "README.md",
+  "CONTRIBUTING.md",
+  "AGENTS.md",
+  "evals/AGENTS.md",
+  "evals/prompt.markdown",
+  "packages/no-mistakes/README.md",
+  "plugins/another-plugin/guide.MDX",
+  "plugins/no-mistakes-rules/skills/react-rules/SKILL.md",
+  "docs-sibling/example.md",
+  ".cargo/README.md",
+  "cspell.config.yaml",
+  ".lycheeignore",
 ]) {
   test(`independent lint input skips Rust: ${file}`, () => assert.equal(triggersRust(file), false));
 }
@@ -25,9 +37,14 @@ for (const file of [
   ".github/scripts/example.cjs",
   "packages/no-mistakes/index.js",
   "docs/rules/example.md",
+  "docs/example.markdown",
   "docs/node-api.md",
   "plugins/no-mistakes/skills/no-mistakes/SKILL.md",
-  "README.md",
+  "plugins/no-mistakes-rules/skills/github-actions-rules/SKILL.md",
+  "crates/AGENTS.md",
+  "docs/eslint-rules/example.md",
+  "fixtures/check/example.md",
+  "test-cases/eslint-snippets/fixture/example.md",
   "test-cases/eslint-snippets/Cargo.toml",
   "packages/eslint-plugin-no-mistakes/build.rs",
   "packages/eslint-plugin-no-mistakes/.cargo/config.toml",
@@ -36,9 +53,27 @@ for (const file of [
 ]) {
   test(`Rust or unknown input runs Rust: ${file}`, () => assert.equal(triggersRust(file), true));
 }
+test("the AST guard and the Rust readers share the selector's Markdown input folders", () => {
+  const inputs = readFileSync(path.join(__dirname, "rust-markdown-inputs.txt"), "utf8")
+    .trim()
+    .split(/\r?\n/);
+  const rule = parse(
+    readFileSync(
+      path.join(__dirname, "../../.ast-grep/rules/no-unscoped-repository-markdown-read.yml"),
+      "utf8",
+    ),
+  );
+  const allowed = rule.utils["unscoped-markdown"].all.find(({ not }) => not).not.all[0].regex;
+  const prefixes = allowed.match(/\(\?:([^()]+)\)$/)[1].split("|");
+  assert.deepEqual(prefixes.sort(), [...inputs].sort());
+  for (const directory of inputs) assert.equal(triggersRust(`${directory}example.md`), true);
+});
+
 test("empty, mixed, deleted and renamed inputs stay conservative", () => {
   assert.equal(rustRequired([]), true);
-  assert.equal(rustRequired([{ path: "docs/eslint-rules/example.md", status: "D" }]), false);
+  assert.equal(rustRequired([{ path: "README.md" }, { path: "cspell.config.yaml" }]), false);
+  assert.equal(rustRequired([{ path: "README.md", status: "D" }]), false);
+  assert.equal(rustRequired([{ path: "docs/eslint-rules/example.md", status: "D" }]), true);
   assert.equal(
     rustRequired([{ path: "docs/eslint-rules/example.md" }, { path: "Cargo.lock" }]),
     true,
@@ -93,6 +128,10 @@ test("scope metadata is PR-only, fail-closed, and artifact merges skip with thei
     /^    if: \$\{\{ !cancelled\(\) && needs.changes.outputs.rust == 'true' \}\}$/m,
   );
   assert.match(workflow, /node --test[^\n]*rust-pr-scope.test.cjs/);
+  assert.match(job("tests-gate"), /name: Tests with coverage\n/);
+  assert.match(job("tests-gate"), /if: \$\{\{ !cancelled\(\) \}\}/);
+  assert.match(job("ast-analysis"), /name: AST analysis\n/);
+  assert.doesNotMatch(job("ast-analysis"), /^    if:/m);
 });
 
 test("the coverage gate requires the standalone job for the current event", () => {

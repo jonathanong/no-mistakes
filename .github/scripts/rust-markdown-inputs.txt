@@ -1,0 +1,6 @@
+docs/
+plugins/no-mistakes/skills/
+plugins/no-mistakes-rules/skills/github-actions-rules/
+crates/
+fixtures/
+test-cases/

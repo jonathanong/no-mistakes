@@ -8,8 +8,8 @@
 Core check/evaluator optimizations must also follow [the crate rules](no-mistakes/AGENTS.md).
 ### Core architecture invariants
 
-- One pass per invocation: discover the file universe once, parse each TS/JS
-  file once for the requested `TsFactPlan`, and reuse `TsFactMap` everywhere.
+- Keep Rust repository Markdown inputs in the [CI input folders](../docs/development/ci-builds.md#rust-markdown-inputs).
+- Discover files once per invocation, parse TS/JS once for the requested `TsFactPlan`, and share `TsFactMap`.
 - In-memory only: use invocation-scoped fact maps, resolver/traversal caches,
   and dependency maps. No disk caches, daemons, databases, or cross-run state.
 - Canonical graph: project-level relationships belong in `DepGraph` as typed
