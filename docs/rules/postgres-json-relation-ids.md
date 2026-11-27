@@ -260,4 +260,4 @@ Repository `reportUnusedAllowEntries: report` makes these diagnostics fail;
 
 Source text, including standalone SQL, is decoded lossily. The rule skips
 a standalone SQL file that disappeared after selection and propagates
-other standalone SQL read errors. [Standalone SQL reading](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_json_relation_ids/scan.rs#L31-L39).
+other standalone SQL read errors. [Standalone SQL reading](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_json_relation_ids/scan.rs#L31-L39).

@@ -220,7 +220,7 @@ what it means depends on the export's kind:
   is part of the production API.
 - Default exports and exports whose kind cannot be determined: type-only
   importers follow `options.unanalyzable`: `report` by default, `advise`, or
-  `ignore`. [Unknown-consumer routing](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/production_exports_test_only/execution.rs#L92-L113).
+  `ignore`. [Unknown-consumer routing](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/production_exports_test_only/execution.rs#L92-L113).
 
 Reported (value export, type-only production reference, runtime test use):
 
@@ -298,7 +298,7 @@ Node loader findings.
   before matching. The rule follows named re-exports from an explicitly
   configured name, so listing a name on a barrel can establish a production
   consumer for the source export. Other names remain independently analyzed.
-  Forwarded exports themselves remain outside the candidate set. [Platform consumer lookup](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/production_exports_test_only/config.rs#L91-L112) and [candidate filtering](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/production_exports_test_only/execution.rs#L68-L87).
+  Forwarded exports themselves remain outside the candidate set. [Platform consumer lookup](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/production_exports_test_only/config.rs#L91-L112) and [candidate filtering](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/production_exports_test_only/execution.rs#L68-L87).
 - `unanalyzable`: shared `report` (default), `advise`, or `ignore` policy. Rule-level
   configuration overrides the repository policy.
 

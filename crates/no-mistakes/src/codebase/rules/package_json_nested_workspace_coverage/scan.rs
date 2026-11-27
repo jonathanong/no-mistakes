@@ -5,7 +5,6 @@ use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
-use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -15,14 +14,9 @@ pub(super) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| scan(root, &rule.try_rule_options()?, all_files, sources))
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::super::sort_findings(&mut findings);
-    Ok(findings)
+    super::super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        scan(root, &rule.try_rule_options()?, all_files, sources)
+    })
 }
 
 fn scan(
@@ -67,7 +61,7 @@ fn scan(
     for manifest in roots {
         check_manifest(&context, &manifest, &mut findings)?;
     }
-    findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
+    super::super::sort_findings::sort_by_file_and_message(&mut findings);
     Ok(findings)
 }
 

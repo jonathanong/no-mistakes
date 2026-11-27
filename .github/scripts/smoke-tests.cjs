@@ -12,16 +12,21 @@ const macos = {
   label: "macOS",
   rust: [
     {
+      package: "no-mistakes-invocation",
       selector: ["--test", "macos_invocation"],
       args: [],
       guards: [
         {
-          file: "crates/no-mistakes/Cargo.toml",
+          file: "crates/no-mistakes-invocation/Cargo.toml",
           text: 'name = "macos_invocation"\npath = "tests/macos_invocation.rs"',
         },
         {
-          file: "crates/no-mistakes/tests/macos_invocation.rs",
-          text: '#[path = "cli_invocation.rs"]\nmod cli_invocation;',
+          file: "crates/no-mistakes-invocation/tests/macos_invocation.rs",
+          text: '#[path = "../../no-mistakes/tests/cli_invocation.rs"]\nmod cli_invocation;',
+        },
+        {
+          file: "crates/no-mistakes-invocation/src/invocation/tests/blocked_fifo.rs",
+          text: "fn watchdog_stops_blocked_fifo_read_and_names_check_phase",
         },
         {
           file: "crates/no-mistakes/tests/cli_invocation.rs",

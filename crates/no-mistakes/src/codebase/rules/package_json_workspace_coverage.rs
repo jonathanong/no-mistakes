@@ -1,7 +1,6 @@
 use super::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use rayon::prelude::*;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -35,60 +34,53 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            let files =
-                super::selected_rule_files_with_sources(root, config, rule, all_files, sources)?;
-            let audit = super::allow_audit::AllowAudit::new_files(
-                root,
-                config,
-                rule,
-                Some(sources),
-                "allowlist",
-                opts.allowlist.len(),
-            );
-            let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
-            let mut findings = scan(root, &opts, &files, all_files, sources)?;
-            findings.retain(|finding| {
-                !audit.usage.suppress(opts.allowlist.iter().map(|entry| {
-                    finding.target.is_some() && normalize_relative_path(entry) == finding.file
-                }))
-            });
-            findings.extend(audit.finish_files(
-                |index| {
-                    let entry = normalize_relative_path(&opts.allowlist[index]);
-                    scope.exact(&entry)
-                        && entry.ends_with("/package.json")
-                        && sources.parse_json_path(&root.join(&entry)).is_ok()
-                        && patterns::path_under_package_roots(
-                            entry.trim_end_matches("/package.json"),
-                            &opts.package_roots,
-                        )
-                },
-                |index| {
-                    let file = normalize_relative_path(&opts.allowlist[index]);
-                    if file.ends_with("/package.json")
-                        && patterns::path_under_package_roots(
-                            file.trim_end_matches("/package.json"),
-                            &opts.package_roots,
-                        )
-                    {
-                        file
-                    } else {
-                        String::new()
-                    }
-                },
-                |index| opts.allowlist[index].clone(),
-            ));
-            Ok(findings)
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: Options = rule.try_rule_options()?;
+        let files =
+            super::selected_rule_files_with_sources(root, config, rule, all_files, sources)?;
+        let audit = super::allow_audit::AllowAudit::new_files(
+            root,
+            config,
+            rule,
+            Some(sources),
+            "allowlist",
+            opts.allowlist.len(),
+        );
+        let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
+        let mut findings = scan(root, &opts, &files, all_files, sources)?;
+        findings.retain(|finding| {
+            !audit.usage.suppress(opts.allowlist.iter().map(|entry| {
+                finding.target.is_some() && normalize_relative_path(entry) == finding.file
+            }))
+        });
+        findings.extend(audit.finish_files(
+            |index| {
+                let entry = normalize_relative_path(&opts.allowlist[index]);
+                scope.exact(&entry)
+                    && entry.ends_with("/package.json")
+                    && sources.parse_json_path(&root.join(&entry)).is_ok()
+                    && patterns::path_under_package_roots(
+                        entry.trim_end_matches("/package.json"),
+                        &opts.package_roots,
+                    )
+            },
+            |index| {
+                let file = normalize_relative_path(&opts.allowlist[index]);
+                if file.ends_with("/package.json")
+                    && patterns::path_under_package_roots(
+                        file.trim_end_matches("/package.json"),
+                        &opts.package_roots,
+                    )
+                {
+                    file
+                } else {
+                    String::new()
+                }
+            },
+            |index| opts.allowlist[index].clone(),
+        ));
+        Ok(findings)
+    })
 }
 
 fn scan(
@@ -121,7 +113,7 @@ fn scan(
             &covered_workspace_dirs,
         ));
     }
-    findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
+    super::sort_findings::sort_by_file_and_message(&mut findings);
     Ok(findings)
 }
 

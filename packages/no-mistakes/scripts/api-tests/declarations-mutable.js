@@ -5,7 +5,7 @@ test("mutable SQL registry configuration exposes effort and unanalyzable policy"
   assert.match(types, /export interface PostgresNoMutableSqlRegistryOptions/);
   assert.match(types, /effort\?: Effort;/);
   assert.match(types, /unanalyzable\?: Unanalyzable;/);
-  assert.match(types, /unanalyzableSql\?: Unanalyzable;/);
+  assert.match(types, /unanalyzableSql\?: PostgresLegacyUnanalyzableSql;/);
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export type \* from "\.\/postgres-mutable-sql-registry-types";/,

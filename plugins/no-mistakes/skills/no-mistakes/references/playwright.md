@@ -1,7 +1,7 @@
 # `playwright` command reference
 
 For explicitly scoped route tests in Vitest, configure
-[`tests.playwright.routeCoverageSources`](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/integration-route-coverage.md).
+[`tests.playwright.routeCoverageSources`](https://github.com/jongleberry/no-mistakes/blob/main/docs/configuration/integration-route-coverage.md).
 Use imported helper ownership, exact routes, and the real runner project.
 Do not add synthetic browser navigation or classify integration tests as
 Playwright tests to satisfy the route gate.
@@ -139,7 +139,7 @@ Set it when your Playwright config builds its options through a helper (e.g.
 statically readable; otherwise coverage falls back to `selectors.testIds`. Without
 either, `getByTestId`-based assertions against a non-`data-testid` attribute are
 reported as uncovered.
-Consult https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/tests.md
+Consult https://github.com/jongleberry/no-mistakes/blob/main/docs/configuration/tests.md
 for the full schema.
 
 ## Frontend app resolution

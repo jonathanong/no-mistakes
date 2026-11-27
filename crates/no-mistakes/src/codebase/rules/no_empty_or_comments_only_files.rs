@@ -87,7 +87,7 @@ fn scan(
         |index| opts.intentionally_empty[index].clone(),
         |index| opts.intentionally_empty[index].clone(),
     ));
-    findings.sort_by(|a, b| a.file.cmp(&b.file));
+    super::sort_findings::sort_by_file(&mut findings);
     Ok(findings)
 }
 

@@ -1,13 +1,13 @@
 [package]
 name = "no-mistakes"
-version = "0.109.123"
-edition = "2021"
-rust-version = "1.97"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
 # Explicit suites avoid statically linking the analyzer once per test source.
 autotests = false
-license = "MIT"
+license.workspace = true
 description = "Static analysis tools for codebase dependency and symbol queries"
-repository = "https://github.com/jonathanong/no-mistakes"
+repository.workspace = true
 
 [lints]
 workspace = true
@@ -18,9 +18,10 @@ crate-type = ["rlib"]
 [features]
 default = ["mermaid-validation"]
 mermaid-validation = ["dep:merman-analysis"]
-test-instrumentation = []
+test-instrumentation = ["no-mistakes-invocation/test-instrumentation"]
 
 [dependencies]
+no-mistakes-invocation.workspace = true
 htmlize = { version = "1.1", features = ["unescape"] }
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
@@ -146,9 +147,6 @@ path = "tests/suite_cli_test_plans.rs"
 name = "suite_contracts"
 path = "tests/suite_contracts.rs"
 
-[[test]]
-name = "macos_invocation"
-path = "tests/macos_invocation.rs"
 
 [[test]]
 name = "windows_invocation"

@@ -1,9 +1,20 @@
 pub(crate) fn generate_postgres_catalog_json_impl(
-    options: serde_json::Value,
+    mut input: serde_json::Value,
 ) -> napi::Result<String> {
-    let options =
-        options::parse_options_value::<crate::postgres_catalog::PostgresCatalogOptions>(options)?;
-    let catalog = crate::postgres_catalog::generate(&options).map_err(options::to_napi_error)?;
+    use crate::postgres_catalog::{generate, generate_to, PostgresCatalogOptions};
+    use std::path::PathBuf;
+
+    let output: Option<PathBuf> = input
+        .as_object_mut()
+        .and_then(|fields| fields.remove("output"))
+        .map(options::parse_options_value)
+        .transpose()?;
+    let options = options::parse_options_value::<PostgresCatalogOptions>(input)?;
+    let catalog = match output {
+        Some(path) => generate_to(&options, &path),
+        None => generate(&options),
+    }
+    .map_err(options::to_napi_error)?;
     Ok(catalog.to_string())
 }
 json_binding!(

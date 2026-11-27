@@ -1,0 +1,176 @@
+use super::holder::LockHolder;
+use super::{clock, InvocationError, InvocationErrorKind};
+use anyhow::{Context, Result};
+use directories::ProjectDirs;
+use std::fs::{File, OpenOptions, TryLockError};
+use std::path::{Path, PathBuf};
+use std::time::{Duration, Instant};
+
+const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(50);
+
+pub(super) fn lock_path() -> Result<PathBuf> {
+    lock_file_path(cfg!(test) || std::env::var_os("CARGO_BIN_EXE_no-mistakes").is_some())
+}
+
+pub(super) fn lock_file_path(isolate_per_process: bool) -> Result<PathBuf> {
+    // Unit-test helpers also spawn the current executable, without Cargo's
+    // integration-test binary variable. Both harnesses need process isolation
+    // from the user's lock and from parallel test subprocesses.
+    if isolate_per_process {
+        let directory = std::env::temp_dir().join("no-mistakes-test-locks");
+        create_lock_directory(&directory)?;
+        return Ok(directory.join(format!("{}.lock", std::process::id())));
+    }
+    let project_dirs = ProjectDirs::from("", "", "no-mistakes")
+        .context("could not determine the current user's invocation lock directory")?;
+    let directory = project_dirs
+        .runtime_dir()
+        .unwrap_or(project_dirs.cache_dir())
+        .to_path_buf();
+    create_lock_directory(&directory)?;
+    Ok(directory.join("invocation.lock"))
+}
+
+pub(super) fn create_lock_directory(directory: &Path) -> Result<()> {
+    std::fs::create_dir_all(directory).with_context(|| {
+        format!(
+            "creating no-mistakes invocation lock directory {}",
+            directory.display()
+        )
+    })
+}
+
+pub(super) fn acquire_lock(
+    path: &Path,
+    timeout: Option<Duration>,
+    fail_on_lock: bool,
+) -> Result<File> {
+    acquire_lock_from(path, timeout, fail_on_lock, None)
+}
+
+// Shared-budget callers anchor acquisition before opening the file. Ordinary
+// callers retain their existing wait-only clock and first-attempt semantics.
+pub(super) fn acquire_lock_from(
+    path: &Path,
+    timeout: Option<Duration>,
+    fail_on_lock: bool,
+    acquisition_started: Option<Instant>,
+) -> Result<File> {
+    let file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(path)
+        .with_context(|| format!("opening invocation lock {}", path.display()))?;
+    let started = acquisition_started.unwrap_or_else(clock::now);
+    let mut first_attempt = true;
+    let mut last_reported_secs = None;
+    loop {
+        if !first_attempt || acquisition_started.is_some() {
+            if let Some(timeout) = timeout.filter(|timeout| started.elapsed() >= *timeout) {
+                return Err(lock_timeout_error(timeout, path));
+            }
+        }
+        match classify_try_lock(file.try_lock(), path, fail_on_lock) {
+            TryLockOutcome::Acquired => {
+                // Diagnostic only: a failed record must not fail the invocation.
+                let _ = LockHolder::current().record(path);
+                return Ok(file);
+            }
+            TryLockOutcome::Failed(error) => return Err(error),
+            TryLockOutcome::Wait => {
+                report_lock_wait(path, started.elapsed(), &mut last_reported_secs);
+            }
+        }
+        first_attempt = false;
+
+        let sleep_for = match timeout {
+            Some(timeout) => timeout
+                .saturating_sub(started.elapsed())
+                .min(LOCK_POLL_INTERVAL),
+            None => LOCK_POLL_INTERVAL,
+        };
+        std::thread::sleep(sleep_for);
+    }
+}
+
+enum TryLockOutcome {
+    Acquired,
+    Wait,
+    Failed(anyhow::Error),
+}
+
+fn classify_try_lock(
+    result: Result<(), TryLockError>,
+    path: &Path,
+    fail_on_lock: bool,
+) -> TryLockOutcome {
+    match result {
+        Ok(()) => TryLockOutcome::Acquired,
+        Err(TryLockError::Error(error)) => TryLockOutcome::Failed(lock_error(path, error)),
+        Err(TryLockError::WouldBlock) if fail_on_lock => {
+            TryLockOutcome::Failed(lock_busy_error(path))
+        }
+        Err(TryLockError::WouldBlock) => TryLockOutcome::Wait,
+    }
+}
+
+fn report_lock_wait(path: &Path, elapsed: Duration, last_reported_secs: &mut Option<u64>) {
+    let secs = elapsed.as_secs();
+    if last_reported_secs.is_some_and(|previous| previous == secs) {
+        return;
+    }
+    *last_reported_secs = Some(secs);
+    let holder = match LockHolder::read(path) {
+        Some(holder) => holder.describe(),
+        None => "another no-mistakes invocation".to_string(),
+    };
+    crate::hooks::print_stderr(format_args!(
+        "waiting for lock held by {holder} for {secs}s"
+    ));
+}
+
+fn held_by(holder: &Option<LockHolder>) -> String {
+    match holder {
+        Some(holder) => format!(" (held by {})", holder.describe()),
+        None => String::new(),
+    }
+}
+
+fn lock_busy_error(path: &Path) -> anyhow::Error {
+    let holder = LockHolder::read(path);
+    InvocationError::new(
+        InvocationErrorKind::LockBusy,
+        format!(
+            "another no-mistakes invocation is already running{}",
+            held_by(&holder)
+        ),
+    )
+    .with_phase("invocation.lock")
+    .with_holder(holder)
+    .into()
+}
+
+fn lock_timeout_error(timeout: Duration, path: &Path) -> anyhow::Error {
+    let holder = LockHolder::read(path);
+    InvocationError::new(
+        InvocationErrorKind::LockTimeout,
+        format!(
+            "timed out after {} seconds waiting for another no-mistakes invocation{}",
+            timeout.as_secs(),
+            held_by(&holder)
+        ),
+    )
+    .with_phase("invocation.lock")
+    .with_holder(holder)
+    .into()
+}
+
+pub(super) fn lock_error(path: &Path, error: std::io::Error) -> anyhow::Error {
+    anyhow::Error::new(error).context(format!("locking invocation file {}", path.display()))
+}
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+#[path = "lock/tests.rs"]
+mod tests;

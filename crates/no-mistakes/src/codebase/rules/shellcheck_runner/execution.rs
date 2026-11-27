@@ -62,7 +62,7 @@ pub(crate) fn handle_shellcheck_result(
                 findings.extend(incomplete(root, &incomplete_files,
                     "ShellCheck did not complete with recognized diagnostics; run shellcheck manually and fix its execution before retrying"));
             }
-            findings.sort_by(|a, b| a.file.cmp(&b.file));
+            super::super::sort_findings::sort_by_file(&mut findings);
             Ok(findings)
         }
     }

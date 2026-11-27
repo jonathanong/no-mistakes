@@ -25,6 +25,12 @@ fn csharp_max_lines_per_file_json_matches_snapshot() {
                 "csharp-max-lines-per-file/fixture/suppression",
                 "../fail/.no-mistakes.yml",
             ),
+            // The file-length finding is anchored at line 1.
+            c(
+                "first_line_next_line_directive",
+                "csharp-max-lines-per-file/fixture/suppression-next-line",
+                "../fail/.no-mistakes.yml",
+            ),
             c("input_report", input, "csharp-max-lines-per-file.yml"),
             c(
                 "input_advise",

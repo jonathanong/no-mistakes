@@ -107,27 +107,19 @@ pub(crate) fn run_with_origin<O: serde::de::DeserializeOwned + Default>(
     enabled: impl Fn(&O) -> bool + Sync,
     scan: impl Fn(&Path, &O, &[PathBuf], &str) -> anyhow::Result<Vec<RuleFinding>> + Sync,
 ) -> anyhow::Result<Vec<RuleFinding>> {
-    use rayon::prelude::*;
-    let groups: anyhow::Result<Vec<_>> = config
-        .rule_applications(rule_id)
-        .into_par_iter()
-        .map(|rule| {
-            let options = rule.try_rule_options()?;
-            if !enabled(&options) {
-                return Ok(Vec::new());
-            }
-            let selected = super::selected_files::selected_rule_files(root, config, rule, files)?;
-            scan(
-                root,
-                &options,
-                &selected,
-                &config_file_for_rule(root, config, rule),
-            )
-        })
-        .collect();
-    let mut findings = groups?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::selected_files::run_parallel_rule_applications(config, rule_id, &|rule| {
+        let options = rule.try_rule_options()?;
+        if !enabled(&options) {
+            return Ok(Vec::new());
+        }
+        let selected = super::selected_files::selected_rule_files(root, config, rule, files)?;
+        scan(
+            root,
+            &options,
+            &selected,
+            &config_file_for_rule(root, config, rule),
+        )
+    })
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]

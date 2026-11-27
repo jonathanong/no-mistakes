@@ -7,8 +7,8 @@
     "email": "jonathanrichardong@gmail.com",
     "url": "https://github.com/jonathanong"
   },
-  "homepage": "https://github.com/jonathanong/no-mistakes",
-  "repository": "https://github.com/jonathanong/no-mistakes",
+  "homepage": "https://github.com/jongleberry/no-mistakes",
+  "repository": "https://github.com/jongleberry/no-mistakes",
   "license": "MIT",
   "keywords": [
     "static-analysis",
@@ -26,9 +26,9 @@
     "developerName": "Jonathan Ong",
     "category": "Coding",
     "capabilities": ["Interactive", "Read"],
-    "websiteURL": "https://github.com/jonathanong/no-mistakes",
-    "privacyPolicyURL": "https://github.com/jonathanong/no-mistakes",
-    "termsOfServiceURL": "https://github.com/jonathanong/no-mistakes",
+    "websiteURL": "https://github.com/jongleberry/no-mistakes",
+    "privacyPolicyURL": "https://github.com/jongleberry/no-mistakes",
+    "termsOfServiceURL": "https://github.com/jongleberry/no-mistakes",
     "defaultPrompt": [
       "Use no-mistakes to find every consumer of this symbol",
       "Which tests does this change need?",
