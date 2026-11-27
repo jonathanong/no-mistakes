@@ -98,10 +98,7 @@ function createReactNodeFacts(program, context) {
 
   for (const statement of program.body || []) {
     const declaration = topLevelDeclaration(statement);
-    if (
-      declaration.type !== "VariableDeclaration" ||
-      (declaration.kind !== "const" && declaration.kind !== "let")
-    ) {
+    if (declaration.type !== "VariableDeclaration") {
       continue;
     }
     for (const declarator of declaration.declarations || []) {
