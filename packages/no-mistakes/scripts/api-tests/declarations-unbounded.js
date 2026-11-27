@@ -15,7 +15,7 @@ test("unbounded SQL identifier options expose shared analysis policy", () => {
   assert.match(types, /importSpecifier\?: string;/);
   assert.match(types, /effort\?: Effort;/);
   assert.match(types, /unanalyzable\?: Unanalyzable;/);
-  assert.match(types, /unanalyzableSql\?: Unanalyzable;/);
+  assert.match(types, /unanalyzableSql\?: PostgresLegacyUnanalyzableSql;/);
   assert.match(types, /trustedSqlTags\?: \{ module: string; name: string \}\[\];/);
   assert.match(types, /finiteDomainAssertions\?: \{ name: string; argument: number \}\[\];/);
   assert.match(types, /export interface PostgresSqlIdentifierValidator/);

@@ -30,6 +30,11 @@ fn postgres_idempotent_insert_check_json_snapshot() {
             "fail-dynamic",
             "dynamic-ignore.yml",
         ),
+        (
+            "dynamic_insert_advised",
+            "fail-dynamic",
+            "dynamic-advise.yml",
+        ),
         ("embedded_insert", "fail-embedded", "embedded.yml"),
         (
             "embedded_scan_disabled",

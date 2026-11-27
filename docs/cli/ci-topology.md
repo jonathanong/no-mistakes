@@ -167,7 +167,9 @@ containing their jobs, typed edges, and lock nodes for every declared
 case-insensitively; a group containing an unresolved `${{ }}` expression
 gets its own lock per declaration).
 
-Node API: `ciTopology(options)`. The query index used to answer
+In Node, `ciTopology(options)` returns the topology JSON object and
+`ciTopology({ ...options, format: "mermaid" })` returns the diagram text.
+The Mermaid call rejects when the topology reports diagnostics. The query index used to answer
 "what does this job depend on" / "who calls this workflow" style questions
 (`createWorkflowTopologyIndex()`) is documented in
 [`docs/node-api.md`](../node-api.md) — it stays JS-only and is rebuilt from

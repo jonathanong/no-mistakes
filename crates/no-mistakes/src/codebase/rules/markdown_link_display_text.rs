@@ -71,25 +71,18 @@ pub(crate) fn check_with_files_sources_and_facts(
     all_files: &[PathBuf],
     facts: &super::markdown_facts::MarkdownFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
-                .cloned()
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan_with_facts(root, &opts, &files, facts)
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: Options = rule.try_rule_options()?;
+        let target_roots = super::target_roots(root, config, rule);
+        let skip = super::skip_dir_set(config);
+        let files: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
+            .cloned()
+            .collect();
+        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        scan_with_facts(root, &opts, &files, facts)
+    })
 }
 
 fn scan_with_facts(

@@ -11,7 +11,6 @@ use super::{
 };
 use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::Result;
-use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -69,35 +68,28 @@ pub(crate) fn check_with_files_from_snapshot_catalog_sources_and_workflows(
     sources: &crate::codebase::ts_source::SourceStore,
     workflows: Option<&crate::codebase::ci_workflows::ParsedWorkflowSet>,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| {
-            let opts: Options = rule.try_rule_options()?;
-            let roots = super::super::target_roots(root, config, rule);
-            let skip = super::super::skip_dir_set(config);
-            let files = all_files
-                .iter()
-                .filter(|p| super::super::file_allowed_by_roots_and_skip(root, &skip, p, &roots))
-                .cloned()
-                .collect::<Vec<_>>();
-            let files = super::super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(ScanInputs {
-                root,
-                config,
-                opts: &opts,
-                files: &files,
-                all_files,
-                snapshot,
-                catalog,
-                sources,
-                workflows,
-            })
+    super::super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: Options = rule.try_rule_options()?;
+        let roots = super::super::target_roots(root, config, rule);
+        let skip = super::super::skip_dir_set(config);
+        let files = all_files
+            .iter()
+            .filter(|p| super::super::file_allowed_by_roots_and_skip(root, &skip, p, &roots))
+            .cloned()
+            .collect::<Vec<_>>();
+        let files = super::super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        scan(ScanInputs {
+            root,
+            config,
+            opts: &opts,
+            files: &files,
+            all_files,
+            snapshot,
+            catalog,
+            sources,
+            workflows,
         })
-        .collect();
-    let mut findings = all?.into_iter().flatten().collect();
-    super::super::sort_findings(&mut findings);
-    Ok(findings)
+    })
 }
 pub(super) fn scan(inputs: ScanInputs<'_>) -> Result<Vec<RuleFinding>> {
     let ScanInputs {
@@ -159,7 +151,7 @@ pub(super) fn scan(inputs: ScanInputs<'_>) -> Result<Vec<RuleFinding>> {
             }
         }
     }
-    findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
+    super::super::sort_findings::sort_by_file_and_message(&mut findings);
     Ok(findings)
 }
 fn mapped_filters<'a>(
