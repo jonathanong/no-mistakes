@@ -46,8 +46,13 @@ function globalResolution(identifier, sourceCode, evalScopes) {
   }
   const variable = reference?.resolved;
   if (variable?.scope?.type === "global" && variable.defs.length === 0) return "global";
-  if (variable?.defs.length && variable.defs.every((def) => isUnreadModuleDef(def, sourceCode)))
+  if (
+    variable?.defs.length &&
+    !variable.references.some((reference) => reference.isWrite() && !reference.init) &&
+    variable.defs.every((def) => isUnreadModuleDef(def, sourceCode))
+  ) {
     return "module";
+  }
   return "local";
 }
 

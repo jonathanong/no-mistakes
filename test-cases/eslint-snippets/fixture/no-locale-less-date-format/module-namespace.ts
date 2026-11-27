@@ -1,6 +1,6 @@
 import * as Intl from "@example/intl";
 import IntlEquals = require("@example/intl");
-const IntlRequired = require("@example/intl");
+let IntlRequired = require("@example/intl");
 
 // no-mistakes-disable-next-line no-locale-less-date-format -- module is outside this file
 new Intl.DateTimeFormat();

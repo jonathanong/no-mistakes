@@ -8,3 +8,9 @@ function localFactory() {
   const Intl = require().Intl;
   Intl.DateTimeFormat();
 }
+
+function localReassignment() {
+  let Intl = require("@example/intl");
+  Intl = { DateTimeFormat() {} };
+  Intl.DateTimeFormat();
+}
