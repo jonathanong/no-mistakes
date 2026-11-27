@@ -13,6 +13,7 @@
 
 pub mod call_sites;
 pub mod dead_exports;
+pub(crate) mod lang_refs;
 pub mod exports_of;
 pub mod importers;
 pub mod resolve_check;

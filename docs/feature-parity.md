@@ -361,8 +361,10 @@ unproven. Recovered modifying SQL still requires statement-level classification.
 
 v1 is the Swift/.NET bar plus the named key feature for each stack: a module
 graph, `tests plan`, and either HTTP routes or queues. SwiftPM and NuGet
-dependency artifacts participate in semantic native test planning. Playwright, React,
-Next.js fetches, call-sites, dead-exports, other ecosystem lockfile diffs, and
+dependency artifacts participate in semantic native test planning. `symbols`,
+`call-sites`, and `dead-exports` answer from those language facts for Swift,
+.NET, Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and Dart.
+Playwright, React, Next.js fetches, other ecosystem lockfile diffs, and
 dedicated `no-mistakes python|go|rust|rails|php|java|kotlin|elixir|dart` CLIs are later work. Agents
 use `dependents --relationship <lang>` now and `tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart`
 when those stacks are configured. Other ecosystem lockfiles and dedicated
@@ -484,9 +486,12 @@ already show the non-TS pattern: language-specific edge kinds behind
 fast TS/JS-only reverse static-import scan; it does not walk language
 graphs. Use `dependents --relationship <lang>` for those.
 
-**Symbols.** Named declarations and who references them. TS/JS has `symbols`,
-`exports-of`, `dead-exports`, and `call-sites`. Swift and .NET collect
-declarations and references into facts and project them as `*-ref` edges.
+**Symbols.** Named declarations and who references them. TypeScript has
+`symbols`, `exports-of`, `dead-exports`, and `call-sites`. For Swift, .NET,
+Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and Dart, `symbols`,
+`call-sites`, and `dead-exports` answer from the same language reference facts
+that build the canonical graph. `exports-of` and `importers` stay TypeScript.
+Dedicated language CLIs are later work.
 
 **Test impact.** `tests plan`, `tests why`, `tests impact`, and
 `impacted-checks` must select native tests from changed files once the language
@@ -711,8 +716,9 @@ out of scope. Configure producer and consumer file globs through
 Rust v1 is a language frontend at the Swift/.NET bar: configured
 `tests.rust.packages` emit `rust-use` / `rust-mod` / `rust-package` edges,
 `tests plan cargo` selects crate tests, and static Axum / Actix / Rocket
-registrations emit `route` edges. Dedicated `no-mistakes rust` CLI, language
-`symbols` / `call-sites`, and `Cargo.lock` diffs are later work.
+registrations emit `route` edges. `symbols`, `call-sites`, and `dead-exports`
+answer from those rust-use facts. Dedicated `no-mistakes rust` CLI and
+`Cargo.lock` diffs are later work.
 
 | Feature          | TS/JS reference     | Rust equivalent                                                                                                                              |
 | ---------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1069,8 +1075,7 @@ ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
 `Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients besides
 Dart/Flutter `Uri.parse` / `http.*` literals, Laravel `Route::resource` /
 `Route::apiResource` `only`/`except`, nested dotted names, named arguments, and
-`Route::apiResources`, Kafka outside TS/Python literal shapes, language
-`symbols`/`call-sites`, and dedicated
+`Route::apiResources`, Kafka outside TS/Python literal shapes, and dedicated
 `no-mistakes python|go|rust|rails|php|java|kotlin|elixir|dart` CLIs.
 
 See [Architecture](architecture.md) for the one-pass session rules,

@@ -41,3 +41,17 @@ all runtime references or unsupported syntax were resolved. When `partial` is
 true, treat empty lists and zero counts as known results, not proof of absence.
 Human output prints the same warnings. `--format paths` retains the path list
 without diagnostics; use JSON before making decisions that depend on absence.
+
+## Language files
+
+For a configured Swift, .NET, Python, Go, Rust, Rails, PHP, Java, Kotlin,
+Elixir, or Dart declaration, `call-sites` lists proven references of that name.
+PHP rows are `use` sites. The query does not guess a dynamic call, a lowercase
+Python or Rust function call, or any name the extractor did not record. Each
+row has `referenceOnly: true`. `argCount`, `hasSpread`, and `args` stay present
+and empty, and they are not a proven zero-argument call. `caller` is omitted.
+One row is emitted per referencing file, at the first matching line, sorted by
+file then line. A name that is not a declaration errors. `partial` stays false
+when the configured files were scanned; the missing call shape is a documented
+limit, not a collection gap. There is no `--config` flag; the command reads
+the `.no-mistakes.yml` at `--root`.

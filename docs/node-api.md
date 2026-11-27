@@ -460,6 +460,13 @@ or arrays use the same contract-level unanalyzable policy in `check()` and
 remain failures. See
 [its Effort section](rules/declared-payload-compatibility.md#effort).
 
+`symbols`, `deadExports`, and `callSites` return the same JSON rows as the
+CLI for a configured Swift, .NET, Python, Go, Rust, Rails, PHP, Java, Kotlin,
+Elixir, or Dart file. Language call sites set `referenceOnly` and leave
+`argCount`, `hasSpread`, and `args` empty: the facts record names, not call
+shapes, so those empty fields are not a proven zero-argument call. `exportsOf`
+and `importers` stay TypeScript.
+
 | CLI                                        | Node API                                                                                                                                                                                                                                                                   |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dependencies`                             | `dependencies(options)`                                                                                                                                                                                                                                                    |

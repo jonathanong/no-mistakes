@@ -58,6 +58,7 @@ include!("builder_helpers.rs");
 include!("edge_lang_frontends.rs");
 include!("edge_lang_frontends_emit.rs");
 include!("edge_lang_domains.rs");
+include!("edge_lang_ref_query.rs");
 include!("edge_lang_queues.rs");
 #[cfg(feature = "test-instrumentation")]
 include!("edge_lang_frontends_bench.rs");
