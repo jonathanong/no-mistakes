@@ -91,8 +91,8 @@ win that holds outside that setup.
 **Run:** main `24768fa692` plus the gates commit; `evals/variants/nm-load-before/`, `python3 evals/generate.py
 --variant nm-load-before`, then `--eval-dir evals-variants/nm-load-before
 --ablation none --runs 3 -j 4`, one invocation per flow, all eleven flows,
-Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge `claude-opus-5-5`, 147
-attempts, zero errored and `partial: false` on every flow. Cost `$26.25`:
+Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge `claude-opus-5-5`, 159
+attempts, zero errored and `partial: false` on every flow. Cost `$26.26`:
 `$17.87` agent and `$8.39` judge. Reports outside git at
 `~/.cache/no-mistakes/evals/2026-11-26-skill-nm-load-before/<flow>.json`.
 Gates: [pre-registered](#2026-11-26--gates-for-the-no-mistakes-description-candidates-a-and-b).
