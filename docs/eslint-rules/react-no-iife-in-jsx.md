@@ -54,4 +54,3 @@ Directive-looking string literals do not.
 
 - [`react-no-nullish-react-node`](react-no-nullish-react-node.md) keeps JSX
   fallback behavior explicit.
-
