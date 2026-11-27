@@ -86,7 +86,7 @@ fn swift_files_outside_every_target_root_stay_unassigned() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/test-plan/swift-target-ownership/fixture");
     let outside = root.join("OutsideTarget.swift");
-    let facts = collect_swift_facts(&root, &[outside.clone()], &[".".to_string()]);
+    let facts = collect_swift_facts(&root, std::slice::from_ref(&outside), &[".".to_string()]);
 
     assert_eq!(facts.files[&outside].target, None);
     assert!(facts
