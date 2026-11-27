@@ -46,6 +46,19 @@ for (const [name, status, output, diagnosis] of [
     token,
   ],
   [
+    "GitHub branch protection",
+    1,
+    "remote: error: GH006: Protected branch update failed for refs/heads/main.\nremote: error: Changes must be made through a pull request.",
+    token,
+  ],
+  [
+    "protected branch hook",
+    1,
+    "!\tHEAD:refs/heads/main\t[remote rejected] (protected branch hook declined)",
+    token,
+  ],
+  ["fetch first outside main", 1, "!\tHEAD:refs/heads/other\t[rejected] (fetch first)"],
+  [
     "tag already exists",
     1,
     `!\tHEAD:refs/heads/main\t[rejected] (atomic push failed)\n${existingTag}`,
