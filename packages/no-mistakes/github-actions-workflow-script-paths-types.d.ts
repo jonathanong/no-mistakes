@@ -1,4 +1,4 @@
-import type { Unanalyzable } from "./resolve-config-types";
+import type { Unanalyzable } from "./traversal-types";
 
 export type GithubActionsPathFilterEvent = "push" | "pull_request" | "pull_request_target";
 

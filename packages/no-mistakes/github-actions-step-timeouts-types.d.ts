@@ -1,4 +1,4 @@
-import type { Unanalyzable } from "./resolve-config-types";
+import type { Unanalyzable } from "./traversal-types";
 
 export interface GithubActionsStepTimeoutsAllowEntry {
   /** Exact step selector formatted as `path#jobId#stepId` (or 1-based step index). */

@@ -717,6 +717,7 @@ test("GitHub Actions workflow script paths and step timeout caps export named op
   ]) {
     assert.ok(scriptPaths.includes(field), `missing ${field}`);
   }
+  assert.match(scriptPaths, /import type \{ Unanalyzable \} from "\.\/traversal-types";/);
   const stepTimeouts = readFileSync(
     join(packageRoot, "github-actions-step-timeouts-types.d.ts"),
     "utf8",
@@ -735,6 +736,7 @@ test("GitHub Actions workflow script paths and step timeout caps export named op
   ]) {
     assert.ok(stepTimeouts.includes(field), `missing ${field}`);
   }
+  assert.match(stepTimeouts, /import type \{ Unanalyzable \} from "\.\/traversal-types";/);
   const typesIndex = readFileSync(join(packageRoot, "types.d.ts"), "utf8");
   assert.match(typesIndex, /export type \* from "\.\/github-actions-workflow-script-paths-types";/);
   assert.match(typesIndex, /export type \* from "\.\/github-actions-step-timeouts-types";/);
