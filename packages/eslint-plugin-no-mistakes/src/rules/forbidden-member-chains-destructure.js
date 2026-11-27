@@ -1,6 +1,6 @@
 "use strict";
 
-const { matches, expressionInfo } = require("./forbidden-member-chains-match");
+const { disposition, expressionInfo, unwrap } = require("./forbidden-member-chains-match");
 
 function patternKey(prop) {
   const key = prop.key;
@@ -11,18 +11,31 @@ function patternKey(prop) {
   return null;
 }
 
+// A resolved const string or number is that segment. An identifier the rule
+// cannot read is a hole. Literal and other computed keys stay unproven.
+function patternSegment(prop, resolveName) {
+  if (!prop.computed) {
+    const name = patternKey(prop);
+    return name == null ? undefined : name;
+  }
+  const resolved = resolveName(prop.key);
+  if (typeof resolved === "string") return resolved;
+  if (unwrap(prop.key)?.type === "Identifier" && resolved == null) return null;
+  return undefined;
+}
+
 function objectPattern(node) {
   let current = node;
   while (current?.type === "AssignmentPattern") current = current.left;
   return current?.type === "ObjectPattern" ? current : null;
 }
 
-function destructureVisitors({ compiled, context, suppressed, info }) {
+function destructureVisitors({ compiled, context, suppressed, info, resolveName }) {
   // The outer pattern and a default can reach the same property and chain.
   // `const { panel: { open } = other.panel } = other` reports that pair once.
   const reported = new WeakMap();
 
-  function report(node, chain) {
+  function report(node, chain, kind) {
     if (suppressed(node)) return;
     let seen = reported.get(node);
     if (seen?.has(chain)) return;
@@ -31,21 +44,29 @@ function destructureVisitors({ compiled, context, suppressed, info }) {
       reported.set(node, seen);
     }
     seen.add(chain);
-    context.report({ node, messageId: "forbiddenChain", data: { message: chain.message } });
+    if (kind === "match") {
+      context.report({ node, messageId: "forbiddenChain", data: { message: chain.message } });
+      return;
+    }
+    context.report({
+      node,
+      messageId: "unanalyzable",
+      data: { path: chain.path, message: chain.message },
+    });
   }
 
-  // Computed keys are unproven, including string and numeric literals.
   // A chain already matched by an outer property is not reported again.
   function walk(pattern, chainInfo, blocked) {
     for (const prop of pattern.properties) {
-      if (prop.type !== "Property" || prop.computed) continue;
-      const name = patternKey(prop);
-      if (name == null) continue;
+      if (prop.type !== "Property") continue;
+      const name = patternSegment(prop, resolveName);
+      if (name === undefined) continue;
       const next = { segments: chainInfo.segments.concat(name), rooted: chainInfo.rooted };
       const blockedHere = new Set(blocked);
       for (const chain of compiled) {
-        if (blockedHere.has(chain) || !matches(next, chain)) continue;
-        report(prop, chain);
+        const kind = disposition(next, chain);
+        if (blockedHere.has(chain) || !kind) continue;
+        report(prop, chain, kind);
         blockedHere.add(chain);
       }
       const nested = objectPattern(prop.value);

@@ -357,6 +357,17 @@
         "severity": 2
       },
       {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 38,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+        "line": 38,
+        "message": "Cannot tell whether this member chain is `records.entry`. Use the entry helper.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
         "column": 9,
         "endColumn": 25,
         "endLine": 38,
@@ -736,6 +747,207 @@
         "line": 13,
         "message": "Use the entry helper.",
         "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "chains": [
+          {
+            "message": "Use the entry helper.",
+            "path": "records.entry"
+          },
+          {
+            "message": "Open the panel through the helper.",
+            "path": "*.panel.open"
+          },
+          {
+            "message": "Toggle the drawer through the helper.",
+            "path": [
+              "drawer",
+              "toggle"
+            ],
+            "receiver": "*"
+          },
+          {
+            "message": "Do not read the numeric slot.",
+            "path": "matrix.1"
+          },
+          {
+            "message": "Do not read the private slot.",
+            "path": "*.#slot"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 20,
+        "endLine": 2,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 2,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 14,
+        "endLine": 4,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 4,
+        "message": "Do not read the numeric slot.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 21,
+        "endLine": 6,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 6,
+        "message": "Cannot tell whether this member chain is `*.panel.open`. Open the panel through the helper.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 26,
+        "endLine": 7,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 7,
+        "message": "Cannot tell whether this member chain is `*.panel.open`. Open the panel through the helper.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 21,
+        "endLine": 10,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 10,
+        "message": "Cannot tell whether this member chain is `*.panel.open`. Open the panel through the helper.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 21,
+        "endLine": 13,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 13,
+        "message": "Cannot tell whether this member chain is `*.panel.open`. Open the panel through the helper.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 18,
+        "endLine": 15,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 15,
+        "message": "Cannot tell whether this member chain is `*.panel.open`. Open the panel through the helper.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 18,
+        "endLine": 16,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 16,
+        "message": "Cannot tell whether this member chain is `*.panel.open`. Open the panel through the helper.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 17,
+        "endLine": 17,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 17,
+        "message": "Cannot tell whether this member chain is `*.panel.open`. Open the panel through the helper.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 25,
+        "endLine": 18,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 18,
+        "message": "Cannot tell whether this member chain is `*.panel.open`. Open the panel through the helper.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 20,
+        "endLine": 19,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 19,
+        "message": "Cannot tell whether this member chain is `*.panel.open`. Open the panel through the helper.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 20,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 20,
+        "message": "Cannot tell whether this member chain is `*.panel.open`. Open the panel through the helper.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 25,
+        "endLine": 21,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 21,
+        "message": "Cannot tell whether this member chain is `*.panel.open`. Open the panel through the helper.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 24,
+        "endLine": 22,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 22,
+        "message": "Open the panel through the helper.",
+        "messageId": "forbiddenChain",
+        "ruleId": "no-mistakes/forbidden-member-chains",
+        "severity": 2
+      },
+      {
+        "column": 10,
+        "endColumn": 29,
+        "endLine": 24,
+        "file": "test-cases/eslint-snippets/fixture/forbidden-member-chains/computed-keys.ts",
+        "line": 24,
+        "message": "Cannot tell whether this member chain is `*.panel.open`. Open the panel through the helper.",
+        "messageId": "unanalyzable",
         "ruleId": "no-mistakes/forbidden-member-chains",
         "severity": 2
       }

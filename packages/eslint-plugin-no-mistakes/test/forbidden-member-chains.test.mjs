@@ -17,6 +17,7 @@ import {
   panel,
   priv,
   slot,
+  unanalyzable,
 } from "./forbidden-member-chains-helpers.mjs";
 describe(id, () => {
   it("snapshots static chain diagnostics across saved syntax shapes", async () => {
@@ -38,7 +39,13 @@ describe(id, () => {
           },
           {
             valid: [item("safe.mjs")],
-            invalid: ["unsafe.mjs", "markup.jsx", "nested.mjs", "wrappers.ts"].map(item),
+            invalid: [
+              "unsafe.mjs",
+              "markup.jsx",
+              "nested.mjs",
+              "wrappers.ts",
+              "computed-keys.ts",
+            ].map(item),
           },
         ),
       ),
@@ -78,6 +85,7 @@ describe(id, () => {
         [35, panel],
         [36, panel],
         [37, panel],
+        [38, unanalyzable("records.entry", entry)],
         [38, panel],
       ],
     );
@@ -92,7 +100,31 @@ describe(id, () => {
     );
   });
 
-  it("does not match strings, comments, JSX, unrelated paths, or dynamic keys", () => {
+  it("follows a const key and reports an unreadable key", () => {
+    const unknownPanel = unanalyzable("*.panel.open", panel);
+    assert.deepEqual(
+      hits(check("computed-keys.ts")).map(([line, , , message]) => [line, message]),
+      [
+        [2, panel],
+        [4, slot],
+        [6, unknownPanel],
+        [7, unknownPanel],
+        [10, unknownPanel],
+        [13, unknownPanel],
+        [15, unknownPanel],
+        [16, unknownPanel],
+        [17, unknownPanel],
+        [18, unknownPanel],
+        [19, unknownPanel],
+        [20, unknownPanel],
+        [21, unknownPanel],
+        [22, panel],
+        [24, unknownPanel],
+      ],
+    );
+  });
+
+  it("does not match strings, comments, JSX, unrelated paths, or a different static key", () => {
     assert.deepEqual(check("safe.mjs"), []);
     assert.deepEqual(hits(check("markup.jsx")), [[2, 1, 14, entry]]);
   });
@@ -239,6 +271,7 @@ describe(id, () => {
       "literal-name.mjs",
       "named.mjs",
       "markup.jsx",
+      "computed-keys.ts",
     ];
     const diagnostics = oxlintFiles(names);
     for (const name of names) {

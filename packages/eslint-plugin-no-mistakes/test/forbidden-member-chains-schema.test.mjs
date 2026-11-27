@@ -64,6 +64,18 @@ describe(`${id} schema`, () => {
     );
   });
 
+  it("rejects an unknown option key and still reports a valid chain", () => {
+    const chains = [{ path: "records.entry", message: entry }];
+    assert.throws(
+      () => check("named.mjs", { chains, notAnOption: true }),
+      /notAnOption|additional properties|schema/i,
+    );
+    assert.deepEqual(lineMessages(check("named.mjs", { chains })), [
+      [1, entry],
+      [3, entry],
+    ]);
+  });
+
   it("names the empty segment and how to fix the path", () => {
     assert.throws(() => accept("records..entry"), /empty segment at index 1 in 'records\.\.entry'/);
   });

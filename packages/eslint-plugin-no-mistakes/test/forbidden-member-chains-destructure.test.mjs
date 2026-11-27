@@ -8,6 +8,7 @@ import {
   oxlintFiles,
   panel,
   slot,
+  unanalyzable,
 } from "./forbidden-member-chains-helpers.mjs";
 
 describe("forbidden-member-chains destructure", () => {
@@ -23,6 +24,7 @@ describe("forbidden-member-chains destructure", () => {
       [24, entry],
       [27, entry],
       [31, entry],
+      [41, unanalyzable("*.panel.open", panel)],
       [48, panel],
       [54, drawer],
       [57, panel],
