@@ -11,6 +11,8 @@ pub(crate) use pipfile::{parse as parse_pipfile, parse_checked as parse_pipfile_
 pub(crate) use toml_lock::{parse as parse_toml, parse_checked as parse_toml_checked, TomlKind};
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod edge_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod source_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
