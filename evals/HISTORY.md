@@ -19,9 +19,58 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-26 — re-measure the SHOULD NOT wording
+
+Re-ran `rules-postgresql` on the PR #4617 head `41621a7c09`, which has the
+SHOULD NOT duplicate-lookup sentence and the narrow-view sentence with its
+per-row reason. Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge
+`claude-opus-5-5`, `runs: 3` per arm, `-j 4`. Zero errored attempts, `partial:
+false` on both invocations. No case, grader, or fixture changed since the
+earlier entry.
+
+- **Updated and without plugin:** `bash scripts/run-evals.sh --tag
+  rules-postgresql --runs 3 --ablation with-without -j 4 --no-publish
+  --no-scaffold --trust-plugin --keep-temp --max-cost-usd 12` (48 attempts;
+  `$4.33` agent + `$1.71` judge = `$6.04`).
+- **Base (`origin/main` rules, `2a69aee871`):** the same command with
+  `--eval-dir evals-variants/rules-control --ablation none --max-cost-usd 8`,
+  control generated from `origin/main`'s `postgresql-rules/SKILL.md` (24
+  attempts; `$2.89` agent + `$1.32` judge = `$4.21`).
+- Total `$10.25`. Reports are archived outside git at
+  `~/.cache/no-mistakes/evals/pr4617-rerun-2026-11-26/`.
+
+| Case | Base fired / content | Updated fired / content | Without plugin |
+| --- | --- | --- | --- |
+| `postgresql-exception-index-timeout` | 3/3, 3/3 | 3/3, 3/3 | 3/3 |
+| `postgresql-exception-view-uses-joined-columns` | 3/3, 3/3 | 3/3, 3/3 | 3/3 |
+| `postgresql-review-duplicate-row-lookup` | 3/3, 3/3 | 3/3, 3/3 | 3/3 |
+| `postgresql-review-long-identifier` | 3/3, 3/3 | 3/3, 3/3 | 3/3 |
+| `postgresql-review-narrow-view-lookup` | 3/3, 1/3 | 3/3, 3/3 | 1/3 |
+| `postgresql-review-parent-key-update` | 2/3, 3/3 | 2/3, 3/3 | 3/3 |
+| `postgresql-write-advisory-lock` | 3/3, 3/3 | 3/3, 3/3 | 0/3 |
+| `postgresql-write-offset-pagination` | 3/3, 3/3 | 3/3, 3/3 | 3/3 |
+| Total | 23/24, 22/24 | 23/24, 24/24 | 19/24 |
+
+**Failing attempts read.** The two base and two without-plugin failures on
+`review-narrow-view-lookup` approved the query and spent the review on
+first-page cursors, indexes, and soft-deleted authors; none mentioned the
+view's extra join, so the grader was right. The three without-plugin failures
+on `write-advisory-lock` used `pg_try_advisory_lock` (session level) with
+cleanup code, which the existing rule bans. The unfired `review-parent-key-update`
+attempts (one per arm) passed on content and need no action.
+
+**What it showed.** The new wording scored 24/24 against 22/24 for base and
+19/24 without the plugin. The only case that separates the new sentences from
+base is `review-narrow-view-lookup` (3/3 vs 1/3 base and 1/3 without); the
+earlier run had base at 2/3, so base is 3 of 6 pooled and the difference is
+suggestive, not resolved at this sample. `review-duplicate-row-lookup` is a
+ceiling case (3/3 without the plugin in both runs), so it supports neither the
+duplicate-lookup sentence nor its removal; that sentence rests on the extra
+probe per output row.
+
 ## 2026-11-26 — Duplicate-lookup rule downgraded to SHOULD NOT
 
-No new run. The duplicate-lookup sentence measured below was later changed from MUST NOT to SHOULD NOT. The only harm it names is another probe per output row, which depends on row count, and a second lookup of the same key can be deliberate. The narrow-view sentence gained the reason that the view's joins and subqueries still run for every output row. Those two sentences were not re-measured. The table in the next section is the earlier wording. Downgrading a MUST NOT needs no new evidence.
+No new run. The duplicate-lookup sentence measured below was later changed from MUST NOT to SHOULD NOT. The only harm it names is another probe per output row, which depends on row count, and a second lookup of the same key can be deliberate. The narrow-view sentence gained the reason that the view's joins and subqueries still run for every output row. Those two sentences were not re-measured here; [the re-run](#2026-11-26--re-measure-the-should-not-wording) did. The table in the next section is the earlier wording. Downgrading a MUST NOT needs no new evidence.
 
 ## 2026-11-26 — PostgreSQL duplicate row lookup and narrow view rules
 

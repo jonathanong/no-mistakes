@@ -365,38 +365,39 @@ narrow base-table reads through composite views:
   does not over-flag a query that reads the view's joined `org_name` and
   computed `team_count` columns.
 
-**Measured:** 2026-11-26 against base `ca2d93697c` (`origin/main`), Claude CLI
-2.1.332, agent `claude-sonnet-5-5`, judge `claude-opus-5-5`, `runs: 3`, `-j 4`,
-zero errored runs and `partial: false` on both invocations. Base ran
-`--eval-dir evals-variants/rules-control --tag rules-postgresql --ablation none`
-(24 attempts; `$2.81` agent + `$1.24` judge = `$4.06`). Updated ran
-`--tag rules-postgresql --ablation with-without` (48 attempts; `$4.51` agent +
-`$1.91` judge = `$6.42`). Raw reports are archived at
-`~/.cache/no-mistakes/evals/pg-skill-2026-11-26/`.
-
-| Case | Base fired | Base content | Updated fired | Updated content | Without plugin | Δ (updated vs without) | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `postgresql-exception-index-timeout` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 | ceiling |
-| `postgresql-exception-view-uses-joined-columns` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 | ceiling (no over-flag) |
-| `postgresql-review-duplicate-row-lookup` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 | ceiling |
-| `postgresql-review-long-identifier` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 | ceiling |
-| `postgresql-review-narrow-view-lookup` | 3/3 | 2/3 (0.67) | 3/3 | 3/3 (1.00) | 1/3 (0.33) | +0.67 | +1/3 vs base, +2/3 vs without |
-| `postgresql-review-parent-key-update` | 3/3 | 3/3 (1.00) | 2/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 | ceiling |
-| `postgresql-write-advisory-lock` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 1/3 (0.33) | +0.67 | +2/3 vs without |
-| `postgresql-write-offset-pagination` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 | ceiling |
-| **Total (`rules-postgresql`)** | **24/24** | **23/24** | **23/24** | **24/24** | **20/24** | **+0.17** | |
-
-At `n = 3` per case, a 1-attempt gap (`3/3` vs `2/3` on
-`review-narrow-view-lookup` between updated and base) is within small-sample
-variation; the ceiling cases confirm trigger fidelity and zero regressions or
-over-flagging. See
+**Measured:** 2026-11-26 (re-run) on `41621a7c09` (PR #4617
+head, the current SHOULD NOT wording), Claude CLI 2.1.332, agent
+`claude-sonnet-5-5`, judge `claude-opus-5-5`, `runs: 3` per arm, `-j 4`, zero
+errored attempts and `partial: false` on both invocations. "Base" is the
+`origin/main` rules (`2a69aee871`) run through `evals-variants/rules-control`
+with `--ablation none`: 24 attempts, `$2.89` agent + `$1.32` judge = `$4.21`.
+"Updated" and "without plugin" come from one `--ablation with-without`
+invocation: 48 attempts, `$4.33` agent + `$1.71` judge = `$6.04`. Raw reports
+are archived at `~/.cache/no-mistakes/evals/pr4617-rerun-2026-11-26/`. The
+earlier 2026-11-26 run measured the previous MUST NOT wording and is in
 [HISTORY.md](HISTORY.md#2026-11-26--postgresql-duplicate-row-lookup-and-narrow-view-rules).
 
-The duplicate-lookup rule was later downgraded from MUST NOT to SHOULD NOT, and
-the narrow-view rule now states that the view's joins and subqueries still run
-for every output row. That wording was not re-measured. This table is the
-2026-11-26 run against the earlier sentences.
-`review-duplicate-row-lookup` was already a ceiling in the without-plugin arm.
+| Case | Base fired | Base content | Updated fired | Updated content | Without plugin content | Notes |
+| --- | --- | --- | --- | --- | --- | --- |
+| `postgresql-exception-index-timeout` | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
+| `postgresql-exception-view-uses-joined-columns` | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | ceiling (no over-flag) |
+| `postgresql-review-duplicate-row-lookup` | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
+| `postgresql-review-long-identifier` | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
+| `postgresql-review-narrow-view-lookup` | 3/3 | 1/3 | 3/3 | 3/3 | 1/3 | +2/3 over both control arms; at `n = 3` suggestive, not resolved |
+| `postgresql-review-parent-key-update` | 2/3 | 3/3 | 2/3 | 3/3 | 3/3 | ceiling; the unfired attempts still passed |
+| `postgresql-write-advisory-lock` | 3/3 | 3/3 | 3/3 | 3/3 | 0/3 | rule text already on `origin/main`; Base equals Updated by design |
+| `postgresql-write-offset-pagination` | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
+| **Total** | **23/24** | **22/24** | **23/24** | **24/24** | **19/24** | |
+
+Only `review-narrow-view-lookup` can show the new narrow-view sentence working.
+Its base and without-plugin attempts (4 of 6 failed) approved the query and
+discussed cursors and indexes instead; all three updated attempts flagged the
+view and kept `deleted_at IS NULL`. The earlier run on the old wording scored
+base 2/3, updated 3/3, without 1/3, so base is 3 of 6 pooled and the gain over
+base is not resolved. `review-duplicate-row-lookup` is a ceiling case (3/3
+without the plugin, in both runs): the duplicate-lookup sentence is kept for
+the extra probe per output row, not for a measured gain. The advisory-lock row
+is the existing session-lock rule, not part of this change.
 
 ### Current trigger comparison
 
