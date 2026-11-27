@@ -1,0 +1,13 @@
+projects:
+  mixedCase:
+    postgres:
+      unanalyzableSql: Ignore
+  padded:
+    postgres:
+      unanalyzableSql: "fail "
+  empty:
+    postgres:
+      unanalyzableSql: ""
+  report:
+    postgres:
+      unanalyzableSql: report

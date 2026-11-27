@@ -35,12 +35,13 @@ fn findings_identify_rules_and_distinct_authored_entries() {
 }
 
 #[test]
-fn aliases_flow_multiline_duplicates_and_normalized_shapes_keep_authored_lines() {
+fn aliases_flow_multiline_and_normalized_shapes_keep_authored_lines() {
     assert_eq!(actual(&run("locations-shapes", None)), vec![
+        (2, "projects.shown.root: missing directory `missing-alias`"),
         (4, "projects.alias.root: missing directory `missing-alias`"),
         (5, "projects.flow.name[0].root: missing directory `missing-flow`"),
         (7, "projects.folded.root: missing directory `missing-folded`"),
-        (10, "projects.duplicate.root: missing directory `missing-last`"),
+        (10, "projects.path.root: missing directory `missing-last`"),
         (13, "tests.vitest.configs[0]: missing file `missing.config.ts`"),
         (19, "testPlan.vitest.fullSuiteTriggers.triggers[0].paths[0]: missing file `missing-trigger.ts`"),
         (25, "rules[1] (unique-exports).exclude[0]: glob `gone/**/*.ts` matches no tracked files"),

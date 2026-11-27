@@ -8,7 +8,6 @@ rules:
   - rule: test-email-domain-policy
     projects:
       - typed
-      - missing
     include:
       - fixtures/**
       - src/node_modules/foo/**

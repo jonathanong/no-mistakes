@@ -58,12 +58,11 @@ rules:
 The configured project root does not exist, so the rule reports
 `apps/missing` at the `root` entry's source line.
 
-## Unknown-key limitation
+## Unknown configuration keys
 
-Unknown top-level keys are accepted by the current loader and are not findings
-of this rule. The following active configuration loads successfully and reports
-nothing; `unknownKey` has no effect. This is a limitation, not a reporting
-counterexample:
+The loader rejects unknown top-level keys before the rule runs. This example
+reports `unknownKey` at its source line and exits with code 2. Remove the key
+or use a supported configuration setting.
 
 ```yaml
 # .no-mistakes.yml
@@ -72,6 +71,9 @@ rules:
   - rule: no-mistakes-config
     scope: repository
 ```
+
+Collection fields such as `rules` and `projects` require a list or mapping.
+Use `[]` for an empty list, `{}` for an empty mapping, or omit the field.
 
 ## Analysis
 
@@ -173,23 +175,6 @@ testPlan:
 
 ## Limitations
 
-YAML 1.1 merge keys (`<<: *anchor`) are not expanded when the config loader
-reads `.no-mistakes.yml`. `serde_yaml` leaves `<<` as a key, and the project
-mapping ignores that key. Schema path fields that the anchor would have
-supplied stay unset, so this rule never checks them against tracked files.
-Project `include` and `exclude` globs are the same kind of path field: they
-are resolved only after the loader has copied them onto the project.
-
-```yaml
-shared: &shared
-  root: apps/missing
-projects:
-  web:
-    <<: *shared
-```
-
-That file loads successfully. `projects.web.root` stays unset, and
-`apps/missing` is not reported as a missing directory.
-
-A bare alias is not this limit. `root: *alias` is expanded by the YAML parser,
-so the loaded path is checked like any other `root`.
+Write the fields of each project directly. The loader rejects YAML merge keys
+(`<<: *anchor`) in project mappings and unknown top-level key holders such as
+`shared`. You can use YAML aliases on declared fields.

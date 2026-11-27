@@ -17,6 +17,11 @@ fn project() -> ConfigPath {
 }
 
 #[test]
+fn paths_without_a_config_extension_have_no_locations() {
+    assert!(ConfigLocations::parse("projects: {}", Path::new("config")).is_none());
+}
+
+#[test]
 fn typed_paths_do_not_confuse_key_punctuation_with_structure() {
     let path = ConfigPath::default()
         .key("quoted.key")

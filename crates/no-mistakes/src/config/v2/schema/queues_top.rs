@@ -52,7 +52,7 @@ pub(super) fn validate_allow_paths(key: &str, patterns: &[String]) -> Result<(),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq, Eq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct QueuesTopLevelConfig {
     #[serde(
         default,

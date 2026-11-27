@@ -1,0 +1,8 @@
+projects:
+  example: {type: library, root: .}
+rules:
+  - rule: banned-paths
+    projects: [missing]
+    options:
+      bannedPaths:
+        - glob: example.ts

@@ -1,0 +1,6 @@
+projects:
+  example:
+    rewrites:
+      - source: /example
+        destination: /api/example
+        destinaton: /other

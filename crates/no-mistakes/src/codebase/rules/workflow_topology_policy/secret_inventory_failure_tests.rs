@@ -8,16 +8,41 @@ use std::sync::Arc;
 fn unknown_config_path_is_explicitly_incomplete() {
     let root = fixture("unused");
     let path = root.join(".no-mistakes.yml");
-    let config = crate::config::v2::load_v2_config(&root, Some(&path)).unwrap();
+    let mut config = crate::config::v2::load_v2_config(&root, Some(&path)).unwrap();
     let snapshot = VisiblePathSnapshot::new(&root);
     let sources = snapshot.source_store_for(&root);
     let inputs =
         PreparedWorkflowTopologyInputs::for_config(&root, &config, &snapshot, &sources).unwrap();
     let findings = check_prepared(&root, &config, None, &sources, &inputs, None).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(findings[0].file, ".");
-    assert_eq!(findings[0].line, 1);
-    assert!(findings[0]
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (
+                finding.file.as_str(),
+                finding.line,
+                finding.message.as_str()
+            ))
+            .collect::<Vec<_>>(),
+        vec![
+            (
+                ".no-mistakes.yml",
+                9,
+                "unused declared secret UNUSED_REPO in repository; remove its name or add a statically resolved reference",
+            ),
+            (
+                ".no-mistakes.yml",
+                12,
+                "unused declared secret UNUSED_ENV in Stage; remove its name or add a statically resolved reference",
+            ),
+        ]
+    );
+
+    config.config_provenance = Default::default();
+    let unknown = check_prepared(&root, &config, None, &sources, &inputs, None).unwrap();
+    assert_eq!(unknown.len(), 1, "{unknown:?}");
+    assert_eq!(unknown[0].file, ".");
+    assert_eq!(unknown[0].line, 1);
+    assert!(unknown[0]
         .message
         .contains("configuration path unavailable for unused declarations"));
 }

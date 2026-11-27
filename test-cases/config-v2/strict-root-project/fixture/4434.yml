@@ -1,0 +1,5 @@
+checks:
+  commands:
+    - name: example
+      command: ["example"]
+      include: ["[broken"]

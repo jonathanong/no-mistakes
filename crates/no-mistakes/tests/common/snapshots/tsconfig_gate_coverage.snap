@@ -1,5 +1,6 @@
 ---
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+assertion_line: 189
 ---
 {
   "activity_conditions": {
@@ -59,35 +60,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": ".no-mistakes.yml",
-          "line": 1,
-          "message": "allowProjects entries `./collision/tsconfig.json` and `collision/tsconfig.json` normalize to the same path `collision/tsconfig.json`",
-          "rule": "tsconfig-gate-coverage",
-          "sourceLine": "version: 2",
-          "target": "collision/tsconfig.json"
-        },
-        {
-          "file": ".no-mistakes.yml",
-          "line": 1,
-          "message": "allowProjects entry `../outside/tsconfig.json` must be a static repository-relative tsconfig path",
-          "rule": "tsconfig-gate-coverage",
-          "sourceLine": "version: 2",
-          "target": "../outside/tsconfig.json"
-        },
-        {
-          "file": ".no-mistakes.yml",
-          "line": 1,
+          "line": 13,
           "message": "allowProjects entry `allowed/tsconfig.json` must include a non-empty reason",
           "rule": "tsconfig-gate-coverage",
-          "sourceLine": "version: 2",
+          "sourceLine": "allowed/tsconfig.json: \"\"",
           "target": "allowed/tsconfig.json"
         },
         {
           "file": ".no-mistakes.yml",
-          "line": 1,
+          "line": 15,
+          "message": "allowProjects entry `../outside/tsconfig.json` must be a static repository-relative tsconfig path",
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "../outside/tsconfig.json: invalid path",
+          "target": "../outside/tsconfig.json"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "line": 16,
           "message": "allowProjects entry `docs/readme.json` is not a tsconfig path",
           "rule": "tsconfig-gate-coverage",
-          "sourceLine": "version: 2",
+          "sourceLine": "docs/readme.json: not a tsconfig",
           "target": "docs/readme.json"
+        },
+        {
+          "file": ".no-mistakes.yml",
+          "line": 18,
+          "message": "allowProjects entries `./collision/tsconfig.json` and `collision/tsconfig.json` normalize to the same path `collision/tsconfig.json`",
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "collision/tsconfig.json: second spelling",
+          "target": "collision/tsconfig.json"
         },
         {
           "file": "allowed/tsconfig.json",

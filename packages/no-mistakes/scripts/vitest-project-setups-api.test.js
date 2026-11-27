@@ -7,6 +7,10 @@ const root = join(
   __dirname,
   "../../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports-project-setups",
 );
+const selectedRoot = join(
+  __dirname,
+  "../../../test-cases/codebase-analysis/selected-vitest-excludes/fixture",
+);
 
 for (const config of [
   ".no-mistakes-a.yml",
@@ -19,7 +23,6 @@ for (const config of [
   ".no-mistakes-imported.yml",
   ".no-mistakes-scope.yml",
   ".no-mistakes-include.yml",
-  ".no-mistakes-missing-app-include.yml",
   ".no-mistakes-rule-exclude.yml",
 ]) {
   test(
@@ -28,11 +31,7 @@ for (const config of [
     async () => {
       const cjs = require("../index.js");
       const esm = await import("../index.mjs");
-      const fixture = join(
-        __dirname,
-        "../../../test-cases/codebase-analysis/selected-vitest-excludes/fixture",
-      );
-      const options = { root: fixture, config: join(fixture, config) };
+      const options = { root: selectedRoot, config: join(selectedRoot, config) };
       const report = await cjs.check(options);
       assert.deepEqual(await esm.check(options), report);
       assert.deepEqual(report.warnings, []);
@@ -45,11 +44,7 @@ for (const config of [
       // Project A's setup mock and exclusion cannot hide project B's execution.
       if (
         !onlyA &&
-        ![
-          ".no-mistakes-rule-exclude.yml",
-          ".no-mistakes-include.yml",
-          ".no-mistakes-missing-app-include.yml",
-        ].includes(config)
+        ![".no-mistakes-rule-exclude.yml", ".no-mistakes-include.yml"].includes(config)
       ) {
         expected.push(["shared/setup.test.mts", 3, "shared/real.mts"]);
       }
@@ -60,6 +55,29 @@ for (const config of [
       );
       const prepared = await cjs.analyzeProject({ ...options, reports: [{ type: "check" }] });
       assert.deepEqual(prepared.reports[0].result, report);
+    },
+  );
+}
+
+for (const [fixture, config] of [
+  [selectedRoot, ".no-mistakes-missing-app-include.yml"],
+  [root, ".no-mistakes-stale-app.yml"],
+]) {
+  test(
+    `compiled CJS and ESM reject undeclared resource projects: ${config}`,
+    { skip: !compiled },
+    async () => {
+      const cjs = require("../index.js");
+      const esm = await import("../index.mjs");
+      const options = { root: fixture, config: join(fixture, config) };
+      const problem = /rules\[0\]\.projects\[0\]: undeclared project `missing`/;
+      for (const api of [cjs, esm]) {
+        await assert.rejects(api.check(options), problem);
+        await assert.rejects(
+          api.analyzeProject({ ...options, reports: [{ type: "check" }] }),
+          problem,
+        );
+      }
     },
   );
 }
@@ -280,7 +298,6 @@ for (const [config, expected] of [
     ["other/uncovered.test.mts", "web/covered.test.mts", "web/genuine.test.mts"],
   ],
   [".no-mistakes-runner-playwright-only.yml", ["web/covered.test.mts"]],
-  [".no-mistakes-stale-app.yml", ["web/covered.test.mts"]],
   [".no-mistakes-cjs-helper.yml", ["other/uncovered.test.mts", "web/genuine.test.mts"]],
   [".no-mistakes-mixed-runners.yml", ["web/covered.test.mts"]],
   [".no-mistakes-disjoint-runners.yml", ["other/uncovered.test.mts"]],

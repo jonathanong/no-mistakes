@@ -100,12 +100,16 @@ projects:
 rule `options.sqlInclude`, `options.include`, and `schemaCatalogPath` are
 repository-relative. `importSpecifier` and `unanalyzableSql` are not paths.
 Project-level `postgres.unanalyzableSql` retains its existing SQL-specific
-name, value vocabulary, and inheritance behavior for PostgreSQL rules. The
+name and inheritance behavior for PostgreSQL rules. Config load accepts
+`report`, `advise`, `ignore`, and the legacy `fail` and empty string values.
+It checks policy names case-insensitively and ignores surrounding whitespace. The
 shared `unanalyzable` policy (`report`, `advise`, or `ignore`) is configured at
 the repository or rule-application level; it is separate from this legacy
 project setting.
+An explicit project `report` takes precedence over repository-level defaults for
+rules that use the inherited SQL policy.
 For [`postgres-grouping-not-aggregation`](../rules/postgres-grouping-not-aggregation.md),
-project `fail` maps to `advise`, matching shared/canonical `report` and rule-level
+project `report` and `fail` map to `advise`, matching shared `report` and rule-level
 legacy `fail`. The rule only suggests query rewrites and always emits
 non-failing advisories. Project `ignore` suppresses only SQL diagnostic advice;
 proven grouping advisories remain. A rule's canonical `options.unanalyzable`

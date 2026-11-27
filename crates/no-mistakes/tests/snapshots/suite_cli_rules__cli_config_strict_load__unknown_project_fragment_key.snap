@@ -1,0 +1,5 @@
+---
+source: crates/no-mistakes/tests/cli_config_strict_load.rs
+expression: stderr.trim()
+---
+error: <root>/.no-mistakes/projects/example.yml:3: projects.example.incldue: unknown field `incldue`, expected one of `type`, `root`, `include`, `exclude`, `routes`, `queues`, `trpc`, `rewrites`, `postgres`

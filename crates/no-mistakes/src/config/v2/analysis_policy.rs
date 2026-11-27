@@ -6,7 +6,7 @@ mod legacy;
 use legacy::legacy_policy;
 pub(super) use legacy::validate_inventory_policy;
 pub(crate) use legacy::validate_low_alias;
-pub(super) use legacy::{legacy_sql_options, sql_policy_rule};
+pub(super) use legacy::{legacy_sql_options, project_sql_policy, sql_policy_rule};
 mod fallback;
 pub use fallback::AnalysisFallback;
 
@@ -141,14 +141,7 @@ impl NoMistakesConfig {
             if (shared.is_some() || (!has_alias && inherited.is_some()) || grouping_advisory_alias)
                 && sql_policy_rule(&rule.rule)
             {
-                let value = match policy.unanalyzable {
-                    Unanalyzable::Report if rule.rule != "postgres-require-query-annotation" => {
-                        "fail"
-                    }
-                    Unanalyzable::Report => "report",
-                    Unanalyzable::Advise => "advise",
-                    Unanalyzable::Ignore => "ignore",
-                };
+                let value = canonical_sql_policy(&rule.rule, policy.unanalyzable);
                 if self.rules[index].options.is_null() {
                     self.rules[index].options = serde_yaml::Value::Mapping(Default::default());
                 }
@@ -156,6 +149,16 @@ impl NoMistakesConfig {
             }
         }
         Ok(())
+    }
+}
+
+pub(super) fn canonical_sql_policy(rule: &str, policy: Unanalyzable) -> &'static str {
+    match policy {
+        Unanalyzable::Report if rule == "postgres-grouping-not-aggregation" => "advise",
+        Unanalyzable::Report if rule == "postgres-require-query-annotation" => "report",
+        Unanalyzable::Report => "fail",
+        Unanalyzable::Advise => "advise",
+        Unanalyzable::Ignore => "ignore",
     }
 }
 

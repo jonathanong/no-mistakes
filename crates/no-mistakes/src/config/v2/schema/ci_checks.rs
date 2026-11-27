@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// Configuration for the `no-mistakes ci` workflow-graph commands.
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct CiConfig {
     /// Directories (relative to root) to scan for GitHub Actions workflow YAML.
     /// Defaults to `.github/workflows`.
@@ -23,7 +23,7 @@ impl Default for CiConfig {
 
 /// Configuration for the `no-mistakes impacted-checks` generic validation commands.
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct ChecksConfig {
     /// Glob-keyed validation commands (lint, typecheck, etc.).
     pub commands: Vec<CheckCommandDef>,
@@ -31,7 +31,7 @@ pub struct ChecksConfig {
 
 /// A single configured validation command mapped to file globs.
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct CheckCommandDef {
     /// Stable identifier used for dedupe and reporting (e.g. `eslint`, `tsc`).
     pub name: String,

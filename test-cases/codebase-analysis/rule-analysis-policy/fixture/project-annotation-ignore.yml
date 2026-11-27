@@ -1,0 +1,11 @@
+projects:
+  example:
+    root: .
+    include: ["src/*.mts"]
+    postgres:
+      unanalyzableSql: " IGNORE "
+      executors:
+        importSpecifier: "@example/db"
+rules:
+  - rule: postgres-require-query-annotation
+    projects: [example]

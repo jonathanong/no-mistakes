@@ -1,0 +1,4 @@
+projects:
+  example:
+    postgres:
+      unanalyzableSql: unknown-mode

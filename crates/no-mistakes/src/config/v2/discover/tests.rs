@@ -337,3 +337,128 @@ fn declared_config_rejects_invalid_rule_options() {
         .to_string();
     assert!(error.contains("bogusOption"), "{error}");
 }
+
+#[test]
+fn fragment_validation_drops_location_when_the_origin_is_unrecorded() {
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: "some-rule".to_string(),
+        projects: vec!["missing".to_string()],
+        ..RuleDef::default()
+    });
+    let missing = super::fragment_validation::validate(
+        &config,
+        &crate::config::v2::schema::ConfigProvenance::default(),
+        &[],
+        Path::new("config.yml"),
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(
+        missing.contains("undeclared project `missing`"),
+        "{missing}"
+    );
+
+    let mut provenance = crate::config::v2::schema::ConfigProvenance::default();
+    provenance.insert(
+        crate::config::source_locations::ConfigPath::default()
+            .key("rules")
+            .index(0)
+            .key("projects")
+            .index(0),
+        PathBuf::from("other.yml"),
+        crate::config::source_locations::ConfigPath::default(),
+    );
+    let elsewhere =
+        super::fragment_validation::validate(&config, &provenance, &[], Path::new("config.yml"))
+            .unwrap_err()
+            .to_string();
+    assert!(
+        elsewhere.contains("undeclared project `missing`"),
+        "{elsewhere}"
+    );
+
+    let mut unparsed_provenance = crate::config::v2::schema::ConfigProvenance::default();
+    unparsed_provenance.insert(
+        crate::config::source_locations::ConfigPath::default()
+            .key("rules")
+            .index(0)
+            .key("projects")
+            .index(0),
+        PathBuf::from("other"),
+        crate::config::source_locations::ConfigPath::default(),
+    );
+    let documents = [super::ConfigDocument {
+        path: PathBuf::from("other"),
+        section: None,
+        source: "rules: {}\n".to_string(),
+    }];
+    let unparsed = super::fragment_validation::validate(
+        &config,
+        &unparsed_provenance,
+        &documents,
+        Path::new("config.yml"),
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(
+        unparsed.contains("undeclared project `missing`"),
+        "{unparsed}"
+    );
+}
+
+#[test]
+fn fragment_finish_keeps_setup_files_when_provenance_is_missing() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.projects.insert(
+        "web".to_string(),
+        crate::config::v2::schema::TestProjectPolicy {
+            include: vec!["src/**".to_string()],
+            setup_files: vec!["setup.ts".to_string()],
+            ..crate::config::v2::schema::TestProjectPolicy::default()
+        },
+    );
+    super::fragment_validation::finish(Path::new("."), &mut config, &[], Path::new("config.yml"))
+        .unwrap();
+    let policy = &config.tests.vitest.projects["web"];
+    let recorded = policy
+        .setup_declaration_paths
+        .first()
+        .expect("setup file path");
+    assert!(recorded.ends_with("config.yml"), "{recorded:?}");
+    assert_eq!(policy.declaration_path.as_deref(), Some(recorded.as_path()));
+
+    let mut bare = NoMistakesConfig::default();
+    bare.tests.vitest.projects.insert(
+        "api".to_string(),
+        crate::config::v2::schema::TestProjectPolicy::default(),
+    );
+    super::fragment_validation::finish(Path::new("."), &mut bare, &[], Path::new("config.yml"))
+        .unwrap();
+    let bare_policy = &bare.tests.vitest.projects["api"];
+    assert!(bare_policy.setup_declaration_paths.is_empty());
+    assert!(bare_policy.declaration_path.is_none());
+}
+
+#[test]
+fn fragment_deserialize_ignores_provenance_for_another_file() {
+    let value: serde_yaml::Value = serde_yaml::from_str("rules: bad").unwrap();
+    let mut provenance = crate::config::v2::schema::ConfigProvenance::default();
+    provenance.insert(
+        crate::config::source_locations::ConfigPath::default().key("rules"),
+        PathBuf::from("other.yml"),
+        crate::config::source_locations::ConfigPath::default(),
+    );
+    let documents = [super::ConfigDocument {
+        path: PathBuf::from("root.yml"),
+        section: None,
+        source: "rules: bad\n".to_string(),
+    }];
+    let error = super::fragment_validation::deserialize(value, &provenance, &documents)
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.contains("failed to deserialize merged configuration"),
+        "{error}"
+    );
+}

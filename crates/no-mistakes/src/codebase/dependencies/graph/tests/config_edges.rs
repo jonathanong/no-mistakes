@@ -239,21 +239,12 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
 }
 
 #[test]
-fn project_route_def_collection_returns_empty_for_invalid_config_globs() {
+fn project_route_def_collection_rejects_invalid_config_globs() {
     let root =
         crate::codebase::ts_resolver::normalize_path(&fixture("graph-invalid-project-route-glob"));
-    let config_options = graph_config_options(&root).unwrap();
     let invalid_globs = vec!["backend/[".to_string()];
-    let fact_plan = effective_ts_fact_plan(
-        GraphBuildPlan {
-            routes: true,
-            ..GraphBuildPlan::default()
-        },
-        Some(&config_options),
-    );
 
-    assert!(config_options.project_route_globset.is_none());
-    assert!(!fact_plan.route_refs);
+    assert!(graph_config_options(&root).is_none());
     assert!(compile_project_route_globset(&invalid_globs).is_none());
 }
 

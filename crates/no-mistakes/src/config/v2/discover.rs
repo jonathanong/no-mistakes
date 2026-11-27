@@ -2,9 +2,8 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 use super::schema::NoMistakesConfig;
-use crate::config::{
-    find_automatic_config_path, find_automatic_config_path_from_visible, parse_config, resolve,
-};
+use crate::config::{find_automatic_config_path, find_automatic_config_path_from_visible, resolve};
+
 const V2_STEMS: &[&str] = &[".no-mistakes"];
 
 pub(crate) fn automatic_v2_config_paths(root: &Path) -> Vec<PathBuf> {
@@ -25,6 +24,7 @@ mod fragments;
 mod merge_values;
 mod named_entries;
 mod rule_options;
+mod strict_value;
 pub use declared::declared_config;
 mod sections;
 mod selection;
@@ -137,17 +137,19 @@ fn parse_v2_config(root: &Path, source: &str, path: &Path) -> Result<NoMistakesC
 }
 
 /// Parse and validate v2 config without emitting compatibility warnings.
+/// Historical config comparisons use this so one request does not print a
+/// warning for a revision that is not its active configuration.
 pub(crate) fn parse_v2_config_quiet(
     root: &Path,
     source: &str,
     path: &Path,
 ) -> Result<NoMistakesConfig> {
-    json_relation_map_keys::validate(source, path)?;
-    rule_keys::validate(source, path)?;
-    let mut config = parse_config::<NoMistakesConfig>(source, path)?;
-    validate_v2_config(&config, path).map_err(|error| path_globs::annotate(error, source, path))?;
-    finish_config(root, &mut config, path, [(path, source)])?;
-    Ok(config)
+    let document = ConfigDocument {
+        path: path.to_path_buf(),
+        section: None,
+        source: source.to_owned(),
+    };
+    parse_sources_quiet(root, &[document])
 }
 
 fn finish_config<'a>(

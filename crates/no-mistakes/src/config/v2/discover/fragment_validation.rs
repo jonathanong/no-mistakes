@@ -1,7 +1,10 @@
 use super::{ConfigDocument, NoMistakesConfig};
 use crate::config::source_locations::{ConfigLocations, ConfigPath};
 use anyhow::Result;
+use serde_yaml::{Mapping, Value};
 use std::path::Path;
+
+use super::strict_value::StrictValue;
 
 pub(super) fn validate_document(document: &ConfigDocument) -> Result<()> {
     if let Some(section) = &document.section {
@@ -18,22 +21,48 @@ pub(super) fn validate_document(document: &ConfigDocument) -> Result<()> {
     Ok(())
 }
 
-pub(super) fn finish(
-    root: &Path,
-    config: &mut NoMistakesConfig,
+pub(super) fn parse_document(document: &ConfigDocument) -> Result<Value> {
+    validate_document(document)?;
+    let mut value: Value = crate::config::parse_config(&document.source, &document.path)?;
+    if document.section.is_none() {
+        if value.is_null() {
+            crate::config::parse_config::<NoMistakesConfig>(&document.source, &document.path)?;
+            value = Value::Mapping(Mapping::new());
+        }
+        anyhow::ensure!(
+            value.is_mapping(),
+            "{}: configuration root must be a mapping",
+            document.path.display()
+        );
+    }
+    Ok(value)
+}
+
+pub(super) fn validate(
+    config: &NoMistakesConfig,
+    provenance: &super::super::schema::ConfigProvenance,
     documents: &[ConfigDocument],
     path: &Path,
 ) -> Result<()> {
     super::validate_v2_config(config, path).map_err(|error| {
         super::path_globs::annotate_with_origin(error, |key| {
-            let (path, local) = config.config_provenance.origin(key)?;
+            let (path, local) = provenance.origin(key)?;
             let doc = documents.iter().find(|doc| doc.path == path)?;
             let line = ConfigLocations::parse(&doc.source, path)?
                 .line(&local)
                 .unwrap_or(1);
             Some((path.to_path_buf(), line))
         })
-    })?;
+    })
+}
+
+pub(super) fn finish(
+    root: &Path,
+    config: &mut NoMistakesConfig,
+    documents: &[ConfigDocument],
+    path: &Path,
+) -> Result<()> {
+    validate(config, &config.config_provenance, documents, path)?;
     super::finish_config(
         root,
         config,
@@ -66,11 +95,11 @@ pub(super) fn finish(
 }
 
 pub(super) fn deserialize(
-    value: serde_yaml::Value,
+    value: Value,
     provenance: &super::super::schema::ConfigProvenance,
     documents: &[ConfigDocument],
 ) -> Result<NoMistakesConfig> {
-    serde_path_to_error::deserialize(value).map_err(|error| {
+    serde_path_to_error::deserialize(StrictValue(value)).map_err(|error| {
         let mut key = ConfigPath::default();
         for segment in error.path() {
             key = match segment {

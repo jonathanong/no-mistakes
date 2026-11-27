@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 /// or constructor names that belong to it; `functions` is a flat list applied
 /// when no category split is needed (reported as uncategorized).
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct EffectKindConfig {
     pub categories: BTreeMap<String, Vec<String>>,
     pub functions: Vec<String>,

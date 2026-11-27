@@ -106,8 +106,7 @@ test("compiled legacy policies preserve project inheritance", { skip: !compiled 
     ],
   );
   for (const api of [cjs, esm]) {
-    for (const config of ["project-fail.yml", "project-previously-ignored.yml"])
-      assert.deepEqual(await api.check({ root, config }), inherited);
+    assert.deepEqual(await api.check({ root, config: "project-fail.yml" }), inherited);
     await assert.rejects(api.check({ root, config: "opaque-legacy.yml" }), ({ message }) => {
       assert.match(message, /postgres-no-mutable-sql-registry: invalid options\.unanalyzableSql/);
       assert.match(
@@ -125,6 +124,7 @@ test("compiled checks reject unsupported effort", { skip: !compiled }, async () 
 });
 
 for (const config of [
+  "project-previously-ignored.yml",
   "shared-invalid-annotation.yml",
   "shared-invalid-sql.yml",
   "shared-invalid-common.yml",

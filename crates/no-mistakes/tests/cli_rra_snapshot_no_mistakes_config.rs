@@ -15,12 +15,6 @@ fn no_mistakes_config_json_matches_snapshot() {
                 pass.clone(),
                 rules_path(RULE, "configs", "pass.yml"),
             ),
-            // `<<: *shared` is not expanded, so apps/missing is not a project root.
-            (
-                "merge_key",
-                rules_path(RULE, "fixture", "merge-key"),
-                rules_path(RULE, "configs", "merge-key.yml"),
-            ),
             (
                 "repo_root_dot",
                 pass.clone(),

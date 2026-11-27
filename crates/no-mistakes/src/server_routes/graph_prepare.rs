@@ -16,9 +16,9 @@ pub fn prepare_analysis(
     let visible_paths = snapshot.paths_for(&root);
     let sources = snapshot.source_store_for(&root);
     let tsconfig = resolve_tsconfig(&root, tsconfig_path, &visible_paths, &sources)?;
-    let config =
-        crate::config::v2::load_v2_config_from_source_store(&root, None, &visible_paths, &sources)
-            .ok();
+    let config = Some(crate::config::v2::load_v2_config_from_source_store(
+        &root, None, &visible_paths, &sources,
+    )?);
     let extra_skip = config
         .as_ref()
         .map(|config| config.filesystem.skip_directories.as_slice())

@@ -1,7 +1,22 @@
 use super::*;
+use crate::config::source_locations::ConfigPath;
 
 pub(super) fn validate(config: &NoMistakesConfig) -> Result<()> {
     for (index, command) in config.checks.commands.iter().enumerate() {
+        for (field, patterns) in [("include", &command.include), ("exclude", &command.exclude)] {
+            path_globs::validate_globs(
+                patterns,
+                &format!("checks.commands[{index}].{field}"),
+                |pattern| {
+                    ConfigPath::default()
+                        .key("checks")
+                        .key("commands")
+                        .index(index)
+                        .key(field)
+                        .index(pattern)
+                },
+            )?;
+        }
         if command
             .command
             .first()

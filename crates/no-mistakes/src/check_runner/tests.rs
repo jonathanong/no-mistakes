@@ -314,7 +314,9 @@ fn run_all_surfaces_react_enabled_config_errors() {
         .err()
         .expect("expected react config error");
 
-    assert!(err.to_string().contains("failed to parse"));
+    let message = err.to_string();
+    assert!(message.contains(".no-mistakes.yml"), "{message}");
+    assert!(message.contains("reactTraits.assertNoFetch"), "{message}");
 }
 
 #[test]

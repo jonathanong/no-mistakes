@@ -74,7 +74,7 @@ impl Default for RuleDef {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct RuleTestTargets {
     pub dotnet: Vec<String>,
     pub vitest: Vec<String>,

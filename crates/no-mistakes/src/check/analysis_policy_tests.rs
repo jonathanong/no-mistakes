@@ -6,6 +6,10 @@ fn root() -> PathBuf {
         .join("../../test-cases/codebase-analysis/rule-analysis-policy/fixture")
 }
 fn report(config: &str, effort: Option<Effort>) -> check_runner::CheckResults {
+    try_report(config, effort).unwrap()
+}
+
+fn try_report(config: &str, effort: Option<Effort>) -> Result<check_runner::CheckResults> {
     check_runner::run_all_with_options(
         root(),
         Some(config.into()),
@@ -17,7 +21,6 @@ fn report(config: &str, effort: Option<Effort>) -> check_runner::CheckResults {
             include_sql_verdicts: false,
         },
     )
-    .unwrap()
 }
 
 #[test]
@@ -99,7 +102,7 @@ fn cli_effort_override_preserves_policy_exit_status_on_saved_sql() {
 }
 
 #[test]
-fn inherited_ignored_sql_aliases_preserve_both_cross_file_rule_reports() {
+fn supported_sql_aliases_preserve_inherited_cross_file_reports() {
     let baseline = report("project-no-policy.yml", None);
     let findings: Vec<_> = baseline
         .rules
@@ -114,13 +117,24 @@ fn inherited_ignored_sql_aliases_preserve_both_cross_file_rule_reports() {
         ]
     );
     let baseline = check_runner::json_value(&baseline);
-    for config in ["project-fail.yml", "project-previously-ignored.yml"] {
-        assert_eq!(
-            check_runner::json_value(&report(config, None)),
-            baseline,
-            "{config}"
-        );
-    }
+    assert_eq!(
+        check_runner::json_value(&report("project-fail.yml", None)),
+        baseline,
+        "project-fail.yml"
+    );
+}
+
+#[test]
+fn unknown_project_sql_policy_fails_at_load() {
+    let error = try_report("project-previously-ignored.yml", None)
+        .err()
+        .expect("expected invalid project SQL policy");
+    assert!(
+        error
+            .to_string()
+            .contains("projects.db.postgres.unanalyzableSql"),
+        "{error}"
+    );
 }
 
 #[test]

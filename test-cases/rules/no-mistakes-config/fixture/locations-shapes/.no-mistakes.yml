@@ -1,13 +1,13 @@
-shared: &missing missing-alias
 projects:
+  shown: {root: &missing missing-alias}
   alias:
     root: *missing
   "flow.name[0]": {root: "missing-flow"} # quotes and comments are syntax
   folded:
     root: >-
       missing-folded
-  duplicate: {root: ignored-first}
-  duplicate: {root: missing-last}
+
+  path: {root: missing-last}
 tests:
   vitest:
     configs: missing.config.ts

@@ -127,16 +127,6 @@ fn require_storybook_stories_json_matches_snapshot() {
                 fix("dynamic"),
                 cfg("stories-named-exports.yml"),
             ),
-            (
-                "unknown_project",
-                fix("missing"),
-                cfg("unknown-project.yml"),
-            ),
-            (
-                "missing_project",
-                fix("comments"),
-                cfg("missing-project.yml"),
-            ),
             ("allow_opt_outs", fix("missing"), cfg("allow-opt-outs.yml")),
             (
                 "generic_include",

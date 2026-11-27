@@ -1,6 +1,7 @@
 use anyhow::{bail, Result};
 use serde_yaml::{Mapping, Value};
 
+use super::super::analysis_policy::{canonical_sql_policy, project_sql_policy, sql_policy_rule};
 use super::super::schema::ProjectPostgresTrustedSqlTag;
 
 pub(super) fn ensure_mapping<'a>(options: &'a mut Value, rule: &str) -> Result<&'a mut Mapping> {
@@ -95,10 +96,10 @@ pub(super) fn contains_key(map: &Mapping, key: &str) -> bool {
 }
 
 pub(super) fn set_unanalyzable(map: &mut Mapping, rule: &str, value: &str) {
-    let value = if rule == "postgres-grouping-not-aggregation"
-        && value.trim().eq_ignore_ascii_case("fail")
-    {
-        "advise"
+    let value = if sql_policy_rule(rule) {
+        project_sql_policy(value)
+            .map(|policy| canonical_sql_policy(rule, policy))
+            .unwrap_or(value)
     } else {
         value
     };
