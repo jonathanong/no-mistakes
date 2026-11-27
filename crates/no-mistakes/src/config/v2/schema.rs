@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 mod applications;
 mod strict_rule_options;
-pub(crate) use strict_rule_options::OptionLocation;
+pub(crate) use strict_rule_options::{invalid_option, OptionLocation};
 mod postgres_column_checks;
 pub use postgres_column_checks::*;
 mod ci_checks;

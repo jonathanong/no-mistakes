@@ -1,6 +1,6 @@
 use crate::codebase::ts_source::is_portably_absolute_path;
 use crate::config::source_locations::ConfigPath;
-use crate::config::v2::schema::{OptionLocation, RuleDef};
+use crate::config::v2::schema::{invalid_option, RuleDef};
 use anyhow::Result;
 use serde::Deserialize;
 use std::path::{Component, Path};
@@ -120,10 +120,9 @@ fn path_error(
         Some(index) => path.index(index),
         None => path,
     };
-    OptionLocation::invalid(
+    invalid_option(
         rule,
         path,
         format_args!("expected {expected}, got {value:?}"),
     )
-    .into()
 }
