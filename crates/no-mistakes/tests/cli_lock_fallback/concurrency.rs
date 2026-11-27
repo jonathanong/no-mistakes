@@ -25,9 +25,10 @@ fn fallback_holder_worker() {
 fn concurrent_runs_serialize_on_the_fallback_lock() {
     let fixture = saved_fixture::materialize("invocation", "read-only-runtime");
     let root = fixture.path();
-    let _runtime = ReadOnlyRuntime::new(root);
+    let runtime = ReadOnlyRuntime::new(root);
     let mut holder = ManagedChild(
         isolated_command(Command::new(std::env::current_exe().unwrap()), root)
+            .env("XDG_RUNTIME_DIR", runtime.path())
             .args(["--exact", WORKER, "--quiet", "--nocapture"])
             .env(WORKER_ENV, "1")
             .stdin(Stdio::piped())
@@ -39,6 +40,7 @@ fn concurrent_runs_serialize_on_the_fallback_lock() {
     holder_ready.recv_timeout(Duration::from_secs(10)).unwrap();
 
     let output = cli(root)
+        .env("XDG_RUNTIME_DIR", runtime.path())
         .args(["lock", "status", "--format", "json"])
         .output()
         .unwrap();
@@ -48,6 +50,7 @@ fn concurrent_runs_serialize_on_the_fallback_lock() {
 
     let mut waiting = ManagedChild(
         cli(root)
+            .env("XDG_RUNTIME_DIR", runtime.path())
             .args(["check", "--root", root.join("repo").to_str().unwrap()])
             .args(["--format", "json", "--lock-timeout", "15"])
             .stdout(Stdio::piped())

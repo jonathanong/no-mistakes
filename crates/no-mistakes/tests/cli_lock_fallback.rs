@@ -1,30 +1,12 @@
 use crate::saved_fixture;
 use serde_json::Value;
-use std::io;
 use std::os::unix::fs::PermissionsExt;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::{Command, Output};
 
-struct ReadOnlyRuntime(PathBuf);
-
-impl ReadOnlyRuntime {
-    fn new(root: &Path) -> Self {
-        let runtime = root.join("runtime/no-mistakes");
-        set_mode(&runtime.join("invocation.lock"), 0o444);
-        set_mode(&runtime, 0o555);
-        Self(runtime)
-    }
-}
-
-impl Drop for ReadOnlyRuntime {
-    fn drop(&mut self) {
-        set_mode(&self.0, 0o700);
-    }
-}
-
-fn set_mode(path: &Path, mode: u32) {
-    std::fs::set_permissions(path, std::fs::Permissions::from_mode(mode)).unwrap();
-}
+#[path = "cli_lock_fallback/runtime.rs"]
+mod runtime;
+use runtime::{set_mode, ReadOnlyRuntime};
 
 fn isolated_command(mut command: Command, root: &Path) -> Command {
     command
@@ -60,33 +42,24 @@ fn fallback_warning(output: &Output) -> Value {
 fn read_only_runtime_keeps_check_and_plan_reports() {
     let fixture = saved_fixture::materialize("invocation", "read-only-runtime");
     let root = fixture.path();
-    let analyze = |args: &[&str]| {
+    let analyze = |args: &[&str], runtime: &Path| {
         cli(root)
+            .env("XDG_RUNTIME_DIR", runtime)
             .args(args)
             .args(["--root", root.join("repo").to_str().unwrap()])
             .args(["--format", "json", "--jobs", "1"])
             .output()
             .unwrap()
     };
-    let check = success_json(&analyze(&["check"]));
-    let plan = success_json(&analyze(&[
-        "tests",
-        "plan",
-        "vitest",
-        "--changed-file",
-        "message.ts",
-    ]));
+    let writable = root.join("runtime");
+    let check = success_json(&analyze(&["check"], &writable));
+    let plan = success_json(&analyze(
+        &["tests", "plan", "vitest", "--changed-file", "message.ts"],
+        &writable,
+    ));
 
     let runtime = ReadOnlyRuntime::new(root);
-    let denied = runtime.0.join("invocation.lock");
-    assert_eq!(
-        std::fs::OpenOptions::new()
-            .write(true)
-            .open(&denied)
-            .unwrap_err()
-            .kind(),
-        io::ErrorKind::PermissionDenied
-    );
+    let denied = runtime.path().join("no-mistakes/invocation.lock");
     for (args, baseline) in [
         (&["check"][..], check),
         (
@@ -94,7 +67,7 @@ fn read_only_runtime_keeps_check_and_plan_reports() {
             plan,
         ),
     ] {
-        let output = analyze(args);
+        let output = analyze(args, runtime.path());
         assert_eq!(success_json(&output), baseline);
         let warning = fallback_warning(&output);
         assert_eq!(warning["failed"][0]["path"], denied.to_str().unwrap());
@@ -106,6 +79,7 @@ fn read_only_runtime_keeps_check_and_plan_reports() {
         );
     }
     let status = cli(root)
+        .env("XDG_RUNTIME_DIR", runtime.path())
         .args(["lock", "status", "--format", "json"])
         .output()
         .unwrap();
@@ -121,9 +95,10 @@ fn read_only_runtime_keeps_check_and_plan_reports() {
 fn override_takes_precedence_and_unusable_cache_falls_back_to_private_temp() {
     let fixture = saved_fixture::materialize("invocation", "read-only-runtime");
     let root = fixture.path();
-    let _runtime = ReadOnlyRuntime::new(root);
+    let runtime = ReadOnlyRuntime::new(root);
     let status = |command: &mut Command| {
         command
+            .env("XDG_RUNTIME_DIR", runtime.path())
             .args(["lock", "status", "--format", "json"])
             .output()
             .unwrap()
