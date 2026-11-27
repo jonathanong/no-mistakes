@@ -24,3 +24,12 @@ export type { Kind };
 declare namespace Group {}
 export type { Group };
 export type { Missing as PublicMissingAlias };
+type MixedMissing = never;
+export { type LocalValue as MixedValue, MixedMissing };
+import { ImportedValue, OtherValue } from "./placeholder-values";
+type ImportedValue = never;
+type OtherValue = string;
+export type { ImportedValue, OtherValue };
+import { ImportedValue as ValueOnly } from "./placeholder-values";
+export { type LocalValue as MixedType, ValueOnly };
+export * from "./placeholder-values";

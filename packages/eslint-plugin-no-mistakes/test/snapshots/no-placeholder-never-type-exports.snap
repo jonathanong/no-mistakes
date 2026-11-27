@@ -130,6 +130,28 @@
         "messageId": "placeholder",
         "ruleId": "no-mistakes/no-placeholder-never-type-exports",
         "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 56,
+        "endLine": 28,
+        "file": "ts-object-recall/placeholder-types.ts",
+        "line": 28,
+        "message": "Do not export placeholder never types. Define the real type or remove the export.",
+        "messageId": "placeholder",
+        "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 43,
+        "endLine": 32,
+        "file": "ts-object-recall/placeholder-types.ts",
+        "line": 32,
+        "message": "Do not export placeholder never types. Define the real type or remove the export.",
+        "messageId": "placeholder",
+        "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+        "severity": 2
       }
     ],
     "name": "same-file never stays a placeholder and unread re-exports are unanalyzable",

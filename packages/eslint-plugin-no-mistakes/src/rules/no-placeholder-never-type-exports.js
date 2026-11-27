@@ -11,12 +11,18 @@ function declaredType(scope, name) {
   while (scope) {
     const definitions = scope.set.get(name)?.defs;
     if (definitions?.length) {
-      if (definitions.some((definition) => definition.type === "ImportBinding")) return undefined;
-      return definitions.some(
-        ({ node }) =>
-          node.type === "TSTypeAliasDeclaration" && node.typeAnnotation?.type === "TSNeverKeyword",
-      )
-        ? "never"
+      const localType = definitions.find(
+        (definition) => definition.isTypeDefinition && definition.type !== "ImportBinding",
+      );
+      if (localType) {
+        const { node } = localType;
+        return node.type === "TSTypeAliasDeclaration" &&
+          node.typeAnnotation?.type === "TSNeverKeyword"
+          ? "never"
+          : "other";
+      }
+      return definitions.some((definition) => definition.type === "ImportBinding")
+        ? undefined
         : "other";
     }
     scope = scope.upper;
@@ -56,10 +62,13 @@ module.exports = Object.assign(
             let never = false;
             let unread = false;
             for (const specifier of node.specifiers) {
-              if (node.exportKind !== "type" && specifier.exportKind !== "type") continue;
               const kind = declaredType(sourceCode.getScope(specifier), specifierName(specifier));
               if (kind === "never") never = true;
-              else if (kind !== "other") unread = true;
+              else if (
+                kind === undefined &&
+                (node.exportKind === "type" || specifier.exportKind === "type")
+              )
+                unread = true;
             }
             if (never) report(node, "placeholder");
             if (unread) report(node, "unanalyzable");
