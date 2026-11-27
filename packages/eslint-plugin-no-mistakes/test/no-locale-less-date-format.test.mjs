@@ -200,6 +200,43 @@ const cases = [
     options: { methods: [], constructors, unknownValues: "finding" },
     lines: [1, 2, 3, 4, 9],
   },
+  {
+    name: "imported constructor namespaces stay quiet until unknownValues is finding",
+    file: "module-namespace.ts",
+    options: {
+      methods: [],
+      constructors: [
+        "Intl.DateTimeFormat",
+        "IntlEquals.DateTimeFormat",
+        "IntlRequired.DateTimeFormat",
+      ],
+    },
+    lines: [],
+  },
+  {
+    name: "unknownValues finding reports an import, import equals require, and require as unanalyzable",
+    file: "module-namespace.ts",
+    options: {
+      methods: [],
+      constructors: [
+        "Intl.DateTimeFormat",
+        "IntlEquals.DateTimeFormat",
+        "IntlRequired.DateTimeFormat",
+      ],
+      unknownValues: "finding",
+    },
+    lines: [7, 11, 15],
+  },
+  {
+    name: "a proven local Intl object stays quiet when unknownValues is finding",
+    file: "local-intl-object.mjs",
+    options: {
+      methods: [],
+      constructors: ["Intl.DateTimeFormat"],
+      unknownValues: "finding",
+    },
+    lines: [],
+  },
 ];
 
 it("snapshots configured locale checks and scope boundaries", async () => {
@@ -214,6 +251,12 @@ it("snapshots configured locale checks and scope boundaries", async () => {
       findings.map((finding) => finding.line),
       item.name,
     ).toEqual(item.lines);
+    if (item.file === "module-namespace.ts" && item.lines.length) {
+      expect(
+        findings.map((finding) => finding.messageId),
+        item.name,
+      ).toEqual(item.lines.map(() => "unanalyzable"));
+    }
     return { ...item, file, findings, rule };
   });
   await expect(snapshotDocument(snapshotCases(results))).toMatchFileSnapshot(

@@ -5,6 +5,7 @@ const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { stableConstInitializer } = require("./async-target-bindings");
 const { literalString } = require("./logical-call");
+const { globalResolution, isDynamicScope } = require("./no-locale-less-date-format-bindings");
 
 const id = "no-locale-less-date-format";
 const DEFAULT_METHODS = ["toLocaleString", "toLocaleDateString", "toLocaleTimeString"];
@@ -40,20 +41,6 @@ function isImmediateResolvedOptionsCall(node, context) {
   return call.parent?.type === "CallExpression" && call.parent.callee === call;
 }
 
-function isDynamicScope(scope, evalScopes) {
-  return scope.type === "with" || scope.directCallToEvalScope || evalScopes.has(scope);
-}
-
-function globalResolution(identifier, sourceCode, evalScopes) {
-  let reference;
-  for (let scope = sourceCode.getScope(identifier); scope; scope = scope.upper) {
-    if (isDynamicScope(scope, evalScopes)) return "unknown";
-    reference ??= scope.references.find((item) => item.identifier === identifier);
-  }
-  const variable = reference?.resolved;
-  return variable?.scope?.type === "global" && variable.defs.length === 0 ? "global" : "local";
-}
-
 module.exports = rule(
   {
     type: "problem",
@@ -82,6 +69,8 @@ module.exports = rule(
         "Pass an explicit locale to {{method}} so formatting does not depend on the server or browser default locale.",
       unknownLocale:
         "Cannot statically prove {{method}} receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+      unanalyzable:
+        "Cannot tell whether {{method}} is the configured constructor. Its namespace is an import or require this file cannot read, so a missing locale is not proved.",
     },
   },
   (context) => {
@@ -176,6 +165,10 @@ module.exports = rule(
           const namespaceState = item.namespace
             ? globalResolution(item.namespace, sourceCode, evalScopes)
             : "global";
+          if (namespaceState === "module") {
+            if (reportUnknown) report(item.node, item.method, "unanalyzable");
+            continue;
+          }
           if (namespaceState === "local") continue;
           const undefinedState = item.undefinedIdentifier
             ? globalResolution(item.undefinedIdentifier, sourceCode, evalScopes)

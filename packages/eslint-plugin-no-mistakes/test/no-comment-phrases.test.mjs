@@ -4,7 +4,12 @@ import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import tsParser from "@typescript-eslint/parser";
-import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
+import {
+  pluginFindings,
+  snapshotCases,
+  snapshotDocument,
+  snapshotSuite,
+} from "./diagnostic-snapshot.mjs";
 import { fixture, lint, plugin, require, runOxlintAsync, __dirname } from "./helpers.mjs";
 
 const { ruleSuppression } = require("../src/rule-suppression");
@@ -326,6 +331,37 @@ describe(id, () => {
         .some((entry) => /Invalid comment phrase pattern/.test(entry.message)),
     );
   }, 30_000);
+
+  it("rejects an unknown option key and still reports a configured phrase", async () => {
+    const name = "placeholder-phrase.mjs";
+    const file = `${id}/${name}`;
+    const source = fixture(file);
+    const unknown = { patterns: [{ pattern: "placeholder" }], notAnOption: true };
+    assert.throws(() => check(name, ["error", unknown]), /notAnOption/);
+    const options = { patterns: [{ pattern: "placeholder" }] };
+    const findings = pluginFindings(source, id, options, file);
+    assert.deepEqual(
+      findings.map((finding) => finding.line),
+      [1],
+    );
+    assert.deepEqual(
+      findings.map((finding) => finding.messageId),
+      ["phrase"],
+    );
+    await expect(
+      snapshotDocument(
+        snapshotCases([
+          {
+            name: "unknown option is rejected before a valid phrase still reports",
+            file,
+            findings,
+            options,
+            rule: id,
+          },
+        ]),
+      ),
+    ).toMatchFileSnapshot("snapshots/no-comment-phrases-unknown-option.snap");
+  });
 
   it("exports an opt-in rule without an unsafe fix", () => {
     assert.ok(plugin.rules[id]);

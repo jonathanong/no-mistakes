@@ -26,11 +26,21 @@ This rule has no options.
 ## Limits
 
 This rule checks direct exported `never` declarations and explicit type exports
-of same-file `never` aliases. It does not resolve imported type definitions:
-`import type { Missing } from "./types"; export type { Missing };` cannot prove
-that `Missing` is `never`. Cross-file type re-exports and `export type * from
-"./types"` remain unresolved. Runtime call aliases, static member keys, and
-forwarding wrappers do not apply to this type-declaration check.
+of same-file `never` aliases. A same-file type alias or interface that is not
+`never` stays quiet. It does not read another module. These forms report
+`unanalyzable`, because the rule cannot tell whether the exported type is
+`never`:
+
+```ts
+export type { Missing } from "@example/types";
+export type * from "@example/types";
+import type { Missing } from "@example/types";
+export type { Missing };
+```
+
+`export type Local = never` remains the placeholder finding. Runtime call
+aliases, static member keys, and forwarding wrappers do not apply to this
+type-declaration check.
 
 ## Fix
 

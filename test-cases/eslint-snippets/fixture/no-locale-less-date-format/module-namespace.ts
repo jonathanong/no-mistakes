@@ -1,0 +1,15 @@
+import * as Intl from "@example/intl";
+import IntlEquals = require("@example/intl");
+const IntlRequired = require("@example/intl");
+
+// no-mistakes-disable-next-line no-locale-less-date-format -- module is outside this file
+new Intl.DateTimeFormat();
+new Intl.DateTimeFormat();
+
+// no-mistakes-disable-next-line no-locale-less-date-format -- module is outside this file
+new IntlEquals.DateTimeFormat();
+new IntlEquals.DateTimeFormat();
+
+// no-mistakes-disable-next-line no-locale-less-date-format -- module is outside this file
+new IntlRequired.DateTimeFormat();
+new IntlRequired.DateTimeFormat();
