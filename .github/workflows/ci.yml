@@ -1706,7 +1706,7 @@ jobs:
             target/native-api-tests-durations.csv
             target/native-api-tests-summary.md
 
-      - name: Install Rust
+      - name: Install Rust for CLI invocation tests
         id: cli-rust-toolchain
         if: ${{ !cancelled() && steps.native-cli.outcome == 'success' }}
         timeout-minutes: 5
@@ -1796,6 +1796,7 @@ jobs:
 
       - name: Install Rust
         id: native-rust-toolchain
+        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
         with:
@@ -1952,8 +1953,16 @@ jobs:
             target/native-api-tests-durations.csv
             target/native-api-tests-summary.md
 
+      - name: Install Rust for CLI invocation tests
+        id: cli-rust-toolchain
+        if: ${{ !cancelled() && steps.native-cli.outcome == 'success' && steps.build-artifact-source.outputs.reuse == 'true' }}
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: stable
+
       - name: Run platform CLI invocation tests
-        if: ${{ !cancelled() && steps.native-cli.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.native-cli.outcome == 'success' && (steps.build-artifact-source.outputs.reuse != 'true' || steps.cli-rust-toolchain.outcome == 'success') }}
         timeout-minutes: 5
         env:
           NO_MISTAKES_CLI_BIN: ${{ github.workspace }}/target/debug/no-mistakes

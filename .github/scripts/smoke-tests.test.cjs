@@ -168,7 +168,23 @@ test("native API jobs run the same CLI cases with the platform runtime on main a
       body.indexOf("Upload real N-API test durations") <
         body.indexOf("Run platform CLI invocation tests"),
     );
-    if (os === "windows") assert.match(step, /steps\.cli-rust-toolchain\.outcome == 'success'/);
+    const toolchain = body
+      .split("      - name: Install Rust for CLI invocation tests\n")[1]
+      .split("\n      - ")[0];
+    assert.ok(
+      body.indexOf("Upload real N-API test durations") <
+        body.indexOf("Install Rust for CLI invocation tests"),
+    );
+    assert.match(toolchain, /!cancelled\(\) && steps\.native-cli\.outcome == 'success'/);
+    assert.match(step, /steps\.cli-rust-toolchain\.outcome == 'success'/);
+    if (os === "macos") {
+      assert.match(
+        body,
+        /id: native-rust-toolchain\n +if: .*steps\.build-artifact-source\.outputs\.reuse != 'true'/,
+      );
+      assert.match(toolchain, /steps\.build-artifact-source\.outputs\.reuse == 'true'/);
+      assert.match(step, /steps\.build-artifact-source\.outputs\.reuse != 'true' \|\|/);
+    }
     assert.deepEqual(
       cliCargoCommands(os),
       cargoCommands(os).filter((args) => args.includes("cli_smoke")),
