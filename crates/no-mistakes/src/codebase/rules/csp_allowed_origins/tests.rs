@@ -497,3 +497,4 @@ fn covers_bare_arrays_binary_concat_and_expression_edge_cases() {
 
 mod dynamic_policies;
 mod option_validation;
+mod options_apply;
