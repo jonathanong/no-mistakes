@@ -132,10 +132,7 @@ enum Read {
 fn pull_request_read(step: &Step<'_>) -> Option<Read> {
     if let Some(index) = unguarded_pull_request_read(step.script) {
         return Some(Read::Script(
-            1 + step.script[..index]
-                .bytes()
-                .filter(|&b| b == b'\n')
-                .count(),
+            1 + step.script[..index].bytes().filter(|&b| b == b'\n').count(),
         ));
     }
     let guard = OnceCell::new();

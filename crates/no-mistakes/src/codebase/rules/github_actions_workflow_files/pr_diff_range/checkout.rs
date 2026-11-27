@@ -104,7 +104,11 @@ pub(super) fn job_effective_checkout(
             continue;
         };
         let next = next_checkout_state(state, step_map, pull, queue);
-        if next != state || get(step_map, "uses").and_then(Value::as_str).is_some_and(is_checkout_action) {
+        if next != state
+            || get(step_map, "uses")
+                .and_then(Value::as_str)
+                .is_some_and(is_checkout_action)
+        {
             return next;
         }
     }

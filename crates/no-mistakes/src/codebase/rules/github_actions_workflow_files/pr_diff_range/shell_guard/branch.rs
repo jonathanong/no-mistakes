@@ -28,7 +28,8 @@ impl GuardScan<'_> {
             depth: 0,
             in_double_bracket: false,
         };
-        if self.has_arithmetic_at(start_idx) || !self.consume_after(start_idx, "if", true, &mut state)
+        if self.has_arithmetic_at(start_idx)
+            || !self.consume_after(start_idx, "if", true, &mut state)
         {
             return None;
         }

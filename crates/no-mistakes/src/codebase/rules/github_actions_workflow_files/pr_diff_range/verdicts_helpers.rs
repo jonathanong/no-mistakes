@@ -3,7 +3,8 @@ use super::diff::Form;
 use super::revisions::Revision;
 use super::verdicts::Verdict;
 
-pub(super) const TWO_DOT_PR: &str = "diffs the pull request base against the head with a two-dot or \
+pub(super) const TWO_DOT_PR: &str =
+    "diffs the pull request base against the head with a two-dot or \
     two-argument range, which also lists base-branch changes made after the branch point. \
     Use a three-dot diff (`git diff <base>...<head>`) after fetching enough history, or \
     `git diff HEAD^1 HEAD` on the merge commit";
@@ -13,31 +14,38 @@ pub(super) const MISMATCH_BASE_MERGE: &str = "pairs a pull request base revision
     unrelated base-branch commits even in a three-dot diff. Use `HEAD^1` with `HEAD` on the \
     merge commit, or pair `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`";
 
-pub(super) const MISMATCH_BASEREF_MERGE_FORM: &str = "pairs `github.base_ref` with `github.sha` or `HEAD` \
+pub(super) const MISMATCH_BASEREF_MERGE_FORM: &str =
+    "pairs `github.base_ref` with `github.sha` or `HEAD` \
     without a pull-request-only three-dot merge-base diff. Use `git diff HEAD^1 HEAD` on the \
     merge commit, or `origin/${{ github.base_ref }}...${{ github.event.pull_request.head.sha }}`";
 
-pub(super) const MISMATCH_MERGE_PARENT_HEAD: &str = "pairs merge-commit parent `HEAD^1` with a non-merge \
+pub(super) const MISMATCH_MERGE_PARENT_HEAD: &str =
+    "pairs merge-commit parent `HEAD^1` with a non-merge \
     pull request head revision. Use `HEAD^1` with `HEAD` on a merge-commit checkout, or pair \
     `github.event.pull_request.base.sha` with `github.event.pull_request.head.sha`";
 
-pub(super) const MISMATCH_CHECKOUT_MERGE_PARENT: &str = "diffs `HEAD^1` against `HEAD` after checking out \
+pub(super) const MISMATCH_CHECKOUT_MERGE_PARENT: &str =
+    "diffs `HEAD^1` against `HEAD` after checking out \
     a non-merge revision (`actions/checkout` `with.ref`). On a PR head checkout, `HEAD^1` only \
     diffs the last commit instead of the whole pull request. Check out the merge commit or use a \
     three-dot diff between the PR base and head SHAs";
 
-pub(super) const MISMATCH_CROSS_EVENT: &str = "mixes `pull_request` and `merge_group` revisions in one pair. \
+pub(super) const MISMATCH_CROSS_EVENT: &str =
+    "mixes `pull_request` and `merge_group` revisions in one pair. \
     Pair `pull_request` base and head revisions together, `merge_group.base_sha` with \
     `merge_group.head_sha`, or matching `||` fallbacks on both ends";
 
-pub(super) const MISMATCH_SAME_SIDE: &str = "pairs two revisions from the same side (base with base or head \
+pub(super) const MISMATCH_SAME_SIDE: &str =
+    "pairs two revisions from the same side (base with base or head \
     with head) instead of a consistent base and head/merge pair";
 
-pub(super) const UNKNOWN_CHECKOUT: &str = "uses `HEAD` or `HEAD^1` after an `actions/checkout` step whose \
+pub(super) const UNKNOWN_CHECKOUT: &str =
+    "uses `HEAD` or `HEAD^1` after an `actions/checkout` step whose \
     `with.ref` cannot be classified statically; use a literal merge-commit checkout or explicit \
     base/head SHAs, or suppress this line";
 
-pub(super) const UNKNOWN_REVISION: &str = "uses a revision expression or variable that cannot be classified \
+pub(super) const UNKNOWN_REVISION: &str =
+    "uses a revision expression or variable that cannot be classified \
     statically, so base/merge pair consistency cannot be proven; pass explicit GitHub event SHAs \
     or `HEAD^1`/`HEAD`, or suppress this line";
 
@@ -50,8 +58,13 @@ pub(super) const NON_MAPPING_WITH: &str = "sets `with` to a non-mapping or YAML-
     or suppress this line";
 
 pub(super) fn uses_unknown_checkout(a: Revision, b: Revision, checkout: CheckoutState) -> bool {
-    let uses_head = matches!(a, Revision::CheckedOutUnknownHead | Revision::MergeCommitBase)
-        || matches!(b, Revision::CheckedOutUnknownHead | Revision::MergeCommitBase);
+    let uses_head = matches!(
+        a,
+        Revision::CheckedOutUnknownHead | Revision::MergeCommitBase
+    ) || matches!(
+        b,
+        Revision::CheckedOutUnknownHead | Revision::MergeCommitBase
+    );
     uses_head && checkout == CheckoutState::Unknown
 }
 
@@ -68,12 +81,13 @@ pub(super) fn merge_parent_verdict(
     } else {
         return None;
     };
-    if matches!(other, Revision::CheckedOutPrHead | Revision::CheckedOutPrBase)
-        || matches!(
-            checkout,
-            CheckoutState::PullRequestHead | CheckoutState::PullRequestBase
-        )
-    {
+    if matches!(
+        other,
+        Revision::CheckedOutPrHead | Revision::CheckedOutPrBase
+    ) || matches!(
+        checkout,
+        CheckoutState::PullRequestHead | CheckoutState::PullRequestBase
+    ) {
         return Some(Verdict::Mismatch(MISMATCH_CHECKOUT_MERGE_PARENT));
     }
     let ok = (checkout == CheckoutState::MergeCommit
@@ -105,12 +119,18 @@ pub(super) fn merge_group_verdict(
     let pair = [a, b];
     let has_mg_base = pair.contains(&Revision::MergeGroupBaseSha);
     let has_mg_head = pair.contains(&Revision::MergeGroupHeadSha);
-    let has_pr_base = pair
-        .iter()
-        .any(|r| matches!(r, Revision::PullRequestBaseSha | Revision::PullRequestBaseRef));
-    let has_pr_head = pair
-        .iter()
-        .any(|r| matches!(r, Revision::PullRequestHeadSha | Revision::PullRequestHeadRef));
+    let has_pr_base = pair.iter().any(|r| {
+        matches!(
+            r,
+            Revision::PullRequestBaseSha | Revision::PullRequestBaseRef
+        )
+    });
+    let has_pr_head = pair.iter().any(|r| {
+        matches!(
+            r,
+            Revision::PullRequestHeadSha | Revision::PullRequestHeadRef
+        )
+    });
     if (has_mg_base && has_pr_head)
         || (has_pr_base && has_mg_head)
         || (has_mg_base && pair.contains(&Revision::GithubSha) && pull && queue)
@@ -154,7 +174,8 @@ pub(super) fn base_with_merge_verdict(
         return Some(Verdict::Mismatch(MISMATCH_BASE_MERGE));
     }
     if pair.contains(&Revision::PullRequestBaseRef) {
-        let allowed = !mixed && form == Some(Form::ThreeDot) && checkout == CheckoutState::MergeCommit;
+        let allowed =
+            !mixed && form == Some(Form::ThreeDot) && checkout == CheckoutState::MergeCommit;
         return Some(if allowed {
             Verdict::Consistent
         } else if form.is_some() {

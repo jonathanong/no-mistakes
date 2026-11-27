@@ -61,7 +61,13 @@ pub(super) fn check_env_pairs(
     }
     let Some(local_map) = literal_mapping(raw) else {
         let line = field_line(ctx, "env");
-        emit(ctx, line, "env", Verdict::Unanalyzable(NON_MAPPING_ENV), out);
+        emit(
+            ctx,
+            line,
+            "env",
+            Verdict::Unanalyzable(NON_MAPPING_ENV),
+            out,
+        );
         return;
     };
     for pair in pairs {
@@ -81,7 +87,13 @@ pub(super) fn check_env_pairs(
             classify_value(head_val, ctx.checkout),
         );
         let line = env_pair_line(ctx, head, base);
-        emit(ctx, line, &format!("env pair `{base}` / `{head}`"), verdict, out);
+        emit(
+            ctx,
+            line,
+            &format!("env pair `{base}` / `{head}`"),
+            verdict,
+            out,
+        );
     }
 }
 
@@ -102,7 +114,13 @@ pub(super) fn check_with_pairs(
     }
     let Some(with_map) = literal_mapping(raw) else {
         let line = field_line(ctx, "with");
-        emit(ctx, line, "with", Verdict::Unanalyzable(NON_MAPPING_WITH), out);
+        emit(
+            ctx,
+            line,
+            "with",
+            Verdict::Unanalyzable(NON_MAPPING_WITH),
+            out,
+        );
         return;
     };
     for pair in pairs {
@@ -120,7 +138,13 @@ pub(super) fn check_with_pairs(
             .map_or(Revision::Unknown, |val| classify_value(val, ctx.checkout));
         let verdict = judge(ctx, base_rev, head_rev);
         let line = with_pair_line(ctx, head);
-        emit(ctx, line, &format!("input pair `{base}` / `{head}`"), verdict, out);
+        emit(
+            ctx,
+            line,
+            &format!("input pair `{base}` / `{head}`"),
+            verdict,
+            out,
+        );
     }
 }
 
@@ -146,13 +170,21 @@ pub(super) fn check_flag_pairs(
             let Some((base_tok, head_tok)) = extract_flag_pair(&command, base, head) else {
                 continue;
             };
-            let base_rev = base_tok
-                .map_or(Revision::Unknown, |tok| classify_token(tok, &exprs, env, ctx.checkout));
-            let head_rev = head_tok
-                .map_or(Revision::Unknown, |tok| classify_token(tok, &exprs, env, ctx.checkout));
+            let base_rev = base_tok.map_or(Revision::Unknown, |tok| {
+                classify_token(tok, &exprs, env, ctx.checkout)
+            });
+            let head_rev = head_tok.map_or(Revision::Unknown, |tok| {
+                classify_token(tok, &exprs, env, ctx.checkout)
+            });
             let verdict = judge(ctx, base_rev, head_rev);
             let line = yaml_line(ctx.located, script, command[0].line, base);
-            emit(ctx, line, &format!("flag pair `{base}` / `{head}`"), verdict, out);
+            emit(
+                ctx,
+                line,
+                &format!("flag pair `{base}` / `{head}`"),
+                verdict,
+                out,
+            );
         }
     }
 }
