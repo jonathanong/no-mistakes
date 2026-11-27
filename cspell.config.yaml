@@ -25,6 +25,7 @@ words:
   - clippy
   - RUSTFLAGS
   - jonathanong
+  - jongleberry
   - zizmor
   - unstub
   - opendir
