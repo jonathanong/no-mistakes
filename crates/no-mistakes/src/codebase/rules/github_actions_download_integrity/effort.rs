@@ -9,7 +9,9 @@ use crate::codebase::ts_source::{
     discover_files_from_visible, relative_slash_path, SourceStore, VisiblePathSnapshot,
 };
 use crate::config::v2::{Effort, NoMistakesConfig};
+use no_mistakes_rule_kernel::paths::normalize_discovery_path;
 use rayon::prelude::*;
+use std::sync::Arc;
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let snapshot = VisiblePathSnapshot::new(root);
@@ -80,12 +82,7 @@ pub fn diagnostics_with_files_and_sources(
                 let rel = relative_slash_path(root, path);
                 let kind = gha_kind(&rel);
                 if kind.is_none()
-                    && !(includes.is_match(&rel)
-                        && indexes.iter().any(|index| {
-                            index
-                                .binary_search_by(|entry| entry.as_os_str().cmp(path.as_os_str()))
-                                .is_ok()
-                        }))
+                    && !(includes.is_match(&rel) && indexed(&indexes, path))
                 {
                     return None;
                 }
@@ -130,4 +127,15 @@ pub fn diagnostics_with_files_and_sources(
     super::super::sort_findings(&mut diagnostics.findings);
     super::super::sort_findings(&mut diagnostics.advisories);
     Ok(diagnostics)
+}
+
+/// Index entries are normalized, but inventory paths can mix separators on
+/// Windows (`dir\scripts/x.sh`), so normalize before the exact probe.
+pub(super) fn indexed(indexes: &[Arc<Vec<PathBuf>>], path: &Path) -> bool {
+    let path = normalize_discovery_path(path);
+    indexes.iter().any(|index| {
+        index
+            .binary_search_by(|entry| entry.as_os_str().cmp(path.as_os_str()))
+            .is_ok()
+    })
 }
