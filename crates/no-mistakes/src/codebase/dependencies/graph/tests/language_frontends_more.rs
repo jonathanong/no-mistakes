@@ -63,7 +63,9 @@ fn empty_language_config_still_emits_kafka_queue_edges() {
 
 #[test]
 fn configured_kafka_glob_matches_a_java_producer_without_language_queue_facts() {
-    let root = lang_fixture("kafka-scoped-java");
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../test-cases/queue-kafka-java"),
+    );
     let options = GraphConfigOptions {
         queue_enqueues: vec!["**/*.java".into()],
         ..GraphConfigOptions::default()
