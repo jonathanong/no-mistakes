@@ -133,7 +133,7 @@ module.exports = rule(
         reportIfDisallowed(node, alias.mock);
       },
       "Program:exit"(node) {
-        if (suppressed(node)) return;
+        if (suppressed.file) return;
         for (const entry of tracker.stale()) {
           context.report({
             node,

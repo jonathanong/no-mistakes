@@ -170,6 +170,11 @@ describe("call-binding recall", () => {
               "suppressed-baselined.mjs",
               { baseline: [["suppressed-baselined.mjs", "./local", 1]] },
             ),
+            lintCase(
+              fixture("module-mock-boundary/suppressed-baselined-first-line.mjs"),
+              "suppressed-baselined-first-line.mjs",
+              { baseline: [["suppressed-baselined-first-line.mjs", "./local", 1]] },
+            ),
           ],
           invalid: [
             // 1 diagnostic.
@@ -204,6 +209,12 @@ describe("call-binding recall", () => {
               fixture("module-mock-boundary/suppressed-baselined.mjs"),
               "suppressed-baselined.mjs",
               { baseline: [["suppressed-baselined.mjs", "./local", 2]] },
+            ),
+            // Stale report stays. A line directive on line 1 must not hide it.
+            lintCase(
+              fixture("module-mock-boundary/suppressed-baselined-first-line.mjs"),
+              "suppressed-baselined-first-line.mjs",
+              { baseline: [["suppressed-baselined-first-line.mjs", "./local", 2]] },
             ),
           ],
         }),

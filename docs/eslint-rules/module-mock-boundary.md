@@ -73,8 +73,8 @@ vi.mock("@app/payments", () => ({ charge: vi.fn() }));
 `no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
 `no-mistakes-disable-file` also suppress this rule when the comment names it.
 Directive-looking string literals do not. A line or next-line directive still
-counts that call toward a `baseline` entry. It does not hide a stale baseline
-reported at the end of the file.
+counts that call toward a `baseline` entry, including a line directive on the
+first line. It does not hide a stale baseline reported for the file.
 
 ## Related rules
 
