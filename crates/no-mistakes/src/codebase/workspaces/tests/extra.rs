@@ -1,5 +1,5 @@
 use super::super::*;
-use super::resolve_entry;
+use super::{package_name_and_subpath, resolve_entry, resolve_export_subpath, try_resolve};
 
 fn pkg(content: &str) -> PackageJson {
     serde_json::from_str(content).unwrap()

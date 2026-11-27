@@ -10,4 +10,4 @@ include!("workspace_resolution/exports.rs");
 include!("workspace_resolution/path.rs");
 
 #[cfg(test)]
-include!("workspace_resolution/test_helpers.rs");
+mod test_helpers;

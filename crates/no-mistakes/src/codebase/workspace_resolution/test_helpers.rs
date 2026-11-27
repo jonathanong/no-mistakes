@@ -1,3 +1,5 @@
+use super::*;
+
 impl WorkspaceMap {
     pub(crate) fn resolve_specifier_from_visible(
         &self,

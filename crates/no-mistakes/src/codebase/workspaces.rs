@@ -6,8 +6,6 @@ use std::path::{Path, PathBuf};
 use super::workspace_resolution::{
     exports_to_entry_path, resolve_workspace_path, workspace_path_is_file,
 };
-#[cfg(test)]
-use super::workspace_resolution::{package_name_and_subpath, resolve_export_subpath, try_resolve};
 pub use super::workspace_resolution::{IndexedWorkspaceMap, WorkspaceMap, WorkspacePackage};
 use crate::codebase::ts_resolver::VisiblePathLookup;
 use crate::codebase::{glob_normalize, ts_resolver::normalize_path};

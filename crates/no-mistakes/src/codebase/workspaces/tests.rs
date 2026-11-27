@@ -1,4 +1,7 @@
 use super::*;
+use crate::codebase::workspace_resolution::{
+    package_name_and_subpath, resolve_export_subpath, try_resolve,
+};
 use tempfile::TempDir;
 mod extra;
 mod pnpm_include;
