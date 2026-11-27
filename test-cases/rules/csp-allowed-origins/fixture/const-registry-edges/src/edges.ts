@@ -7,6 +7,8 @@ export { type OriginName };
 
 export function unusedBuilder() {}
 
+export let listedOrigins = ["https://listed.example.com"];
+
 export const { grouped } = { grouped: ["https://grouped.example.com"] };
 
 const flagged = ["https://flagged.example.com"] as const;
@@ -28,6 +30,10 @@ export const semi = "script-src 'self';'nonce-" + nonce + "'";
 export const comma = "script-src 'self','nonce-" + nonce + "'";
 
 void (true && false);
+
+const flag = true;
+void ((flag ? "plain" : "other") + "tail");
+void ((flag && "plain") + "tail");
 
 const foo = { bar: ["https://spread.example.com"] };
 void ["connect-src", "'self'", ...foo.bar].join(" ");

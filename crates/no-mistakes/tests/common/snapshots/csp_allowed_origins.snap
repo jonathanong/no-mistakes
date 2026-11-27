@@ -1,5 +1,6 @@
 ---
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+assertion_line: 189
 ---
 {
   "const-registry-edge-syntax": {
@@ -13,7 +14,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "src/edges.ts",
-          "line": 33,
+          "line": 39,
           "message": "Dynamic CSP policy expression in src/edges.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
           "rule": "csp-allowed-origins",
           "sourceLine": "void [\"connect-src\", \"'self'\", ...foo.bar].join(\" \");",
@@ -21,7 +22,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/edges.ts",
-          "line": 34,
+          "line": 40,
           "message": "Dynamic CSP policy expression in src/edges.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
           "rule": "csp-allowed-origins",
           "sourceLine": "void [\"connect-src 'self'\", , \"img-src 'self'\"].join(\"; \");",
@@ -29,7 +30,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/edges.ts",
-          "line": 37,
+          "line": 43,
           "message": "Dynamic CSP policy expression in src/edges.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
           "rule": "csp-allowed-origins",
           "sourceLine": "setHeader(\"Content-Security-Policy\", `connect-src 'self' ${unknownIdent}`);",
@@ -37,7 +38,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/edges.ts",
-          "line": 39,
+          "line": 45,
           "message": "Dynamic CSP policy expression in src/edges.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
           "rule": "csp-allowed-origins",
           "sourceLine": "export const groupedPolicy = [\"connect-src\", \"'self'\", ...grouped].join(\" \");",
