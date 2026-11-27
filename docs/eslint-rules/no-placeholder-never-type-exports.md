@@ -44,6 +44,10 @@ surface exists.
 export type ImpossibleLegacyState = never;
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`ts-no-export-renaming`](ts-no-export-renaming.md) keeps exported value

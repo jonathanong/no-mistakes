@@ -1,0 +1,6 @@
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      requireExplicitWorkflowCallBindings: true
+      unanalyzable: ignore

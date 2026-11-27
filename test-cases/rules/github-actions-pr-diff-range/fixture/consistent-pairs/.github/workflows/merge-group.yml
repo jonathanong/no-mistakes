@@ -1,0 +1,13 @@
+name: merge-group
+on: merge_group
+jobs:
+  merge_commit_diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git diff --name-only HEAD^1 HEAD
+  explicit_merge_group_diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git diff --name-only ${{ github.event.merge_group.base_sha }} ${{ github.event.merge_group.head_sha }}

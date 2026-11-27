@@ -1,6 +1,7 @@
 "use strict";
 
 const { DEFAULT_NAMING_PATTERN, options, rule, selectorLiteral } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { selectorAttributeVisitors } = require("../selector-visitor");
 
 module.exports = rule(
@@ -22,9 +23,10 @@ module.exports = rule(
   (context) => {
     const pattern = options(context).pattern || DEFAULT_NAMING_PATTERN;
     const regex = new RegExp(pattern);
+    const suppressed = ruleSuppression(context, "playwright-naming-convention");
     return selectorAttributeVisitors(context, (node) => {
       const value = selectorLiteral(node);
-      if (value !== null && !regex.test(value)) {
+      if (value !== null && !regex.test(value) && !suppressed(node)) {
         context.report({ node, messageId: "naming", data: { value, pattern } });
       }
     });
