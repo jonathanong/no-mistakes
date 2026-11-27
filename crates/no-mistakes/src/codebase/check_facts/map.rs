@@ -6,8 +6,8 @@ use super::{CheckFactStats, PlaywrightSettingsKey, PlaywrightTestFacts};
 use crate::codebase::playwright_facts::text::AppTextTarget;
 use crate::codebase::playwright_facts::{selectors::AppSelector, StaticExportValues};
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
-use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
 use crate::codebase::storybook::StorybookFileFacts;
+use crate::codebase::testing_analysis::dynamic_imports::TestFacts;
 use crate::codebase::ts_source::facts::react_analysis::{
     component::FileAnalysis as ReactFileAnalysis, usages::UsageFileFacts,
 };
@@ -63,7 +63,7 @@ pub struct CheckFactMap {
     pub(crate) queue_paths: Option<super::family_scope::FamilyPathScope>,
     pub(crate) ts: FileIdMap<Arc<CheckFileFacts>>,
     pub(crate) vitest_exclude_imports:
-        crate::codebase::rules::vitest_default_excludes::ResolvedSpreads,
+        crate::codebase::testing_analysis::vitest_excludes::ResolvedSpreads,
     pub(crate) call_site_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     pub(crate) graph_plan: crate::codebase::ts_source::facts::TsFactPlan,
     pub(crate) integration_runner_configs: std::collections::BTreeMap<
@@ -129,12 +129,12 @@ impl CheckFactMap {
 pub(crate) struct CheckFileFacts {
     pub(crate) fact_extraction_panicked: bool,
     pub(crate) nested_controls: Option<Vec<crate::codebase::rules::nested_controls::Location>>,
-    pub(crate) test_reliability: Vec<crate::codebase::rules::test_reliability::Location>,
+    pub(crate) test_reliability: Vec<crate::codebase::testing_analysis::reliability::Location>,
     pub(crate) fixture_initializers: Option<
-        crate::codebase::rules::test_reliability::playwright_provenance::FixtureInitializers,
+        crate::codebase::testing_analysis::reliability::playwright_provenance::FixtureInitializers,
     >,
     pub(crate) vitest_default_excludes:
-        crate::codebase::rules::vitest_default_excludes::CollectedExcludes,
+        crate::codebase::testing_analysis::vitest_excludes::CollectedExcludes,
     pub(crate) csp_allowed_origins: crate::codebase::rules::csp_allowed_origins::CollectedOrigins,
     pub(crate) sql_source_prerequisites: super::SqlSourcePrerequisites,
     pub ts: Arc<TsFileFacts>,

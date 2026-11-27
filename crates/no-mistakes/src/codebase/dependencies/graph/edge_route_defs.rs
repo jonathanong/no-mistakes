@@ -5,7 +5,7 @@ struct ProjectRouteDefInputs<'a> {
     tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
     route_globset: &'a GlobSet,
     facts: Option<&'a dyn TsFactLookup>,
-    test_filter: Option<&'a crate::codebase::test_filter::TestFileFilter>,
+    test_filter: Option<&'a crate::codebase::testing_analysis::test_filter::TestFileFilter>,
     session: &'a crate::codebase::analysis_session::AnalysisSession,
 }
 
@@ -69,7 +69,7 @@ fn collect_backend_routes_from_graph_inputs(
     register_object: &str,
     pattern_globset: &GlobSet,
     facts: Option<&dyn TsFactLookup>,
-    test_filter: Option<&crate::codebase::test_filter::TestFileFilter>,
+    test_filter: Option<&crate::codebase::testing_analysis::test_filter::TestFileFilter>,
 ) -> Vec<(PathBuf, String)> {
     let route_files: Vec<PathBuf> = all_files
         .par_iter()

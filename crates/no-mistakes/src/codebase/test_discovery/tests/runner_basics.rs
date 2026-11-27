@@ -171,11 +171,11 @@ fn dotnet_project_discovery_falls_back_when_no_xunit_files_are_known() {
 #[test]
 fn test_runner_framework_maps_dotnet_and_swift() {
     assert_eq!(
-        TestRunner::Dotnet.framework(),
+        super::super::types::framework(TestRunner::Dotnet),
         crate::integration_tests::types::Framework::Dotnet
     );
     assert_eq!(
-        TestRunner::Swift.framework(),
+        super::super::types::framework(TestRunner::Swift),
         crate::integration_tests::types::Framework::Swift
     );
 }
@@ -232,7 +232,7 @@ fn language_runners_round_trip_names_and_frameworks() {
         assert_eq!(TestRunner::from_name(name), Some(runner));
         assert_eq!(runner.as_str(), name);
         assert!(runner.is_language_frontend());
-        assert_eq!(runner.framework(), framework);
+        assert_eq!(super::super::types::framework(runner), framework);
         assert_eq!(framework.as_str(), name);
         assert!(!framework.has_js_runner_config());
     }
@@ -244,7 +244,7 @@ fn jest_is_a_js_runner_not_a_language_frontend() {
     assert_eq!(TestRunner::Jest.as_str(), "jest");
     assert!(!TestRunner::Jest.is_language_frontend());
     assert_eq!(
-        TestRunner::Jest.framework(),
+        super::super::types::framework(TestRunner::Jest),
         crate::integration_tests::types::Framework::Jest
     );
     assert_eq!(

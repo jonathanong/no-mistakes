@@ -83,7 +83,7 @@ pub(super) fn prepare_shared_traversal(
     }
 
     let mut framework_plan =
-        crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(build_plan);
+        crate::codebase::testing_analysis::plan::FrameworkPreparationPlan::for_graph(build_plan);
     framework_plan.include_framework_names(requested_frameworks.iter().map(String::as_str));
     let prepared = SharedTraversalContext::prepare_with_framework_plan(
         root,

@@ -150,7 +150,7 @@ fn with_materialized_vitest_cache(mut graph: DepGraph) -> DepGraph {
     graph = graph.with_vitest_setup_projects(vec![VitestSetupProject {
         config: None,
         scope: Some(".".to_string()),
-        filter: crate::codebase::test_discovery::ProjectTestFilter::from_project_ref(
+        filter: crate::codebase::test_discovery::compile_project_filter(
             &crate::integration_tests::types::ConfigProject {
                 config: None,
                 workspace: false,

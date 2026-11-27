@@ -147,7 +147,7 @@ pub fn project_filters_from_visible(
         .flat_map(|runner| {
             projects::runner_projects_lossy_from_visible(root, config, runner, visible_paths, tsconfig)
                 .into_iter()
-                .filter_map(ProjectTestFilter::from_project)
+                .filter_map(|project| compile_project_filter(&project).ok())
                 .map(move |filter| (runner, filter))
         })
         .collect()
@@ -183,7 +183,7 @@ pub(crate) fn named_project_filters_from_visible(
     projects::runner_projects_lossy_from_visible(root, config, runner, visible_paths, tsconfig)
         .into_iter()
         .filter(|project| project.policy_name.as_ref().is_some_and(|name| names.contains(name)))
-        .filter_map(ProjectTestFilter::from_project)
+        .filter_map(|project| compile_project_filter(&project).ok())
         .collect()
 }
 

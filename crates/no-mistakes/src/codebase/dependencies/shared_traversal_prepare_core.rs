@@ -28,7 +28,7 @@ impl SharedTraversalContext {
             }
         }
         framework_plan.include(
-            crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(build_plan),
+            crate::codebase::testing_analysis::plan::FrameworkPreparationPlan::for_graph(build_plan),
         );
         let excluded_configs =
             framework_plan.excluded_config_paths(&root, &config, &root_visible_paths);
@@ -87,7 +87,7 @@ impl SharedTraversalContext {
                 framework_plan: &framework_plan,
             })?;
         let tsconfig_build_diagnostics = tsconfig_catalog.diagnostics();
-        let test_filter = crate::codebase::test_filter::TestFileFilter::from_prepared_projects(
+        let test_filter = crate::codebase::testing_analysis::test_filter::TestFileFilter::from_prepared_projects(
             &root,
             &config,
             &root_visible_paths,

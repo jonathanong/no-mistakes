@@ -1,6 +1,6 @@
 use super::{CheckFactPlan, CheckFileFacts, FactRequest};
 use crate::codebase::dependencies::extract::is_indexable;
-use crate::codebase::rules::test_reliability::playwright_provenance::ImportRef;
+use crate::codebase::testing_analysis::reliability::playwright_provenance::ImportRef;
 use crate::codebase::ts_resolver::{
     ScopedImportResolver, TsConfigCatalog, WorkspaceFallbackResolver,
 };

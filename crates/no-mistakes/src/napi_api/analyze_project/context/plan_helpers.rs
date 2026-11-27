@@ -47,8 +47,8 @@ fn graph_build_plan(options: &AnalyzeProjectOptions) -> Result<GraphBuildPlan> {
 fn framework_preparation_plan(
     options: &AnalyzeProjectOptions,
     graph_plan: GraphBuildPlan,
-) -> Result<crate::codebase::test_discovery::FrameworkPreparationPlan> {
-    let mut plan = crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(graph_plan);
+) -> Result<crate::codebase::testing_analysis::plan::FrameworkPreparationPlan> {
+    let mut plan = crate::codebase::testing_analysis::plan::FrameworkPreparationPlan::for_graph(graph_plan);
     for request in &options.reports {
         if super::graph_direction(&request.report_type).is_some() {
             let args = super::traverse_args(request, options)?;
@@ -59,17 +59,17 @@ fn framework_preparation_plan(
 }
 
 fn with_vitest_check_framework(
-    mut plan: crate::codebase::test_discovery::FrameworkPreparationPlan,
+    mut plan: crate::codebase::testing_analysis::plan::FrameworkPreparationPlan,
     check_config: Option<&crate::config::v2::NoMistakesConfig>,
     root: &Path,
     visible_paths: &[PathBuf],
     has_non_check_report: bool,
 ) -> (
-    crate::codebase::test_discovery::FrameworkPreparationPlan,
+    crate::codebase::testing_analysis::plan::FrameworkPreparationPlan,
     std::collections::HashSet<PathBuf>,
 ) {
     let Some(config) = check_config.filter(|config| {
-        crate::codebase::rules::test_no_live_repository_scan::vitest_roots_configured(config)
+        (crate::codebase::testing_analysis::hooks().vitest_roots_configured)(config)
     }) else {
         return (plan, Default::default());
     };

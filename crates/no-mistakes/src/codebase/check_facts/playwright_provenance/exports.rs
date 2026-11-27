@@ -1,6 +1,6 @@
 use super::*;
 use crate::codebase::dependencies::{extract::ImportedBindingKind, graph::EdgeKind};
-use crate::codebase::rules::test_reliability::playwright_provenance::WrapperCall;
+use crate::codebase::testing_analysis::reliability::playwright_provenance::WrapperCall;
 use crate::codebase::ts_resolver::ImportResolution;
 use crate::edge_index::{CanonicalEdge, EdgeIndex};
 use std::sync::Arc;

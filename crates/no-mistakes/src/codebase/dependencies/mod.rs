@@ -12,8 +12,10 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use crate::codebase::analysis_session::PathInterner;
+use crate::codebase::testing_analysis::{self, PreparedProjects};
 pub use crate::codebase::ts_resolver::TsConfig;
 pub use graph::{DepGraph, EdgeKind, NodeId};
+pub(crate) use testing_analysis::FrameworkCatalogPreparation;
 
 pub use crate::cli::Format;
 
@@ -32,7 +34,6 @@ include!("shared_traversal_bounded_seed.rs");
 include!("shared_traversal_prepare.rs");
 include!("shared_traversal_facts.rs");
 include!("shared_traversal_lazy_graph.rs");
-include!("shared_traversal_prepare_catalog.rs");
 include!("shared_traversal_reports.rs");
 include!("output_results.rs");
 include!("shared_graph_cache.rs");
@@ -92,7 +93,7 @@ fn apply_filters(
     config: &crate::config::v2::NoMistakesConfig,
     tsconfig: &TsConfig,
     visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
-    prepared_test_projects: Option<&crate::codebase::test_discovery::PreparedTestProjects>,
+    prepared_test_projects: Option<&dyn PreparedProjects>,
 ) -> Result<Vec<graph::NodeEntry>> {
     // Build combined filter from --filter and --test globs.
     let mut all_filters = args.filters.clone();
@@ -125,55 +126,22 @@ fn test_filters_from_prepared(
     config: &crate::config::v2::NoMistakesConfig,
     tsconfig: &TsConfig,
     visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
-    prepared_test_projects: Option<&crate::codebase::test_discovery::PreparedTestProjects>,
+    prepared_test_projects: Option<&dyn PreparedProjects>,
 ) -> Vec<String> {
-    let runner = crate::codebase::test_discovery::TestRunner::from_name(framework);
-    if let Some(runner) = runner {
-        let root_visible_paths = visible_paths.paths_for(root);
-        let discovered = match prepared_test_projects {
-            Some(prepared) => {
-                crate::codebase::test_discovery::discover_tests_from_prepared_projects(
-                    root,
-                    config,
-                    runner,
-                    prepared,
-                    &root_visible_paths,
-                    tsconfig,
-                )
-            }
-            None if runner == crate::codebase::test_discovery::TestRunner::Cargo => {
-                crate::codebase::test_discovery::discover_cargo_tests_with_sources(
-                    root,
-                    config,
-                    &root_visible_paths,
-                    &visible_paths.source_store_for(root),
-                )
-            }
-            None => crate::codebase::test_discovery::discover_tests_from_visible(
-                root,
-                config,
-                runner,
-                &root_visible_paths,
-                tsconfig,
-            ),
-        };
-        if let Ok(discovered) = discovered {
-            let filters = discovered
-                .tests
-                .iter()
-                .map(|path| {
-                    crate::codebase::test_discovery::literal_path_glob(
-                        &crate::codebase::ts_source::relative_slash_path(root, path),
-                    )
-                })
-                .collect::<Vec<_>>();
-            if filters.is_empty() {
-                return test_globs(framework);
-            }
-            return filters;
-        }
-    }
-    test_globs(framework)
+    (testing_analysis::hooks().test_filters_from_prepared)(
+        root,
+        framework,
+        config,
+        tsconfig,
+        visible_paths,
+        prepared_test_projects,
+    )
+}
+
+pub(crate) fn prepare_tsconfig_catalog_with_framework_projects(
+    input: FrameworkCatalogPreparation<'_>,
+) -> Result<testing_analysis::FrameworkCatalog> {
+    (testing_analysis::hooks().prepare_framework_catalog)(input)
 }
 
 fn apply_target_module_filters(

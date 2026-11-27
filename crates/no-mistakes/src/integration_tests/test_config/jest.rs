@@ -1,6 +1,6 @@
 use super::super::types::ConfigProject;
 use crate::codebase::dependencies::VITEST_JEST_TEST_GLOBS;
-use crate::codebase::rules::test_no_unmocked_dynamic_imports::config::{
+use crate::codebase::testing_analysis::matcher_properties::{
     extract_property_strings, extract_test_regexes,
 };
 use crate::codebase::ts_source::relative_slash_path;

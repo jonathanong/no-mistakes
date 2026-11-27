@@ -1,7 +1,7 @@
 fn collect_test_edges(
     root: &Path,
     files: &[PathBuf],
-    test_filter: Option<&crate::codebase::test_filter::TestFileFilter>,
+    test_filter: Option<&crate::codebase::testing_analysis::test_filter::TestFileFilter>,
     interner: &PathInterner,
 ) -> Vec<Edge> {
     let file_set: HashSet<&PathBuf> = files.iter().collect();
