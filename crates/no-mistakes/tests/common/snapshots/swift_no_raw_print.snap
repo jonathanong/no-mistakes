@@ -29,6 +29,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Control.swift",
+          "line": 2,
+          "message": "use a logger instead of raw print()",
+          "rule": "swift-no-raw-print",
+          "sourceLine": "print(\"[DEBUG]\", \"control\")"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "disable_lines": {
     "exitCode": 1,
     "report": {

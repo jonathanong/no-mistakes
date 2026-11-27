@@ -100,7 +100,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/invalid.rs",
           "line": 1,
-          "message": "cannot verify rust-no-inline-tests: cannot parse Rust: cannot parse string into token stream; repair source syntax so this check can verify the file",
+          "message": "cannot verify rust-no-inline-tests: cannot parse Rust: <rust-parse-error>; repair source syntax so this check can verify the file",
           "rule": "rust-no-inline-tests",
           "sourceLine": "#[cfg(test)]",
           "target": "unanalyzable"

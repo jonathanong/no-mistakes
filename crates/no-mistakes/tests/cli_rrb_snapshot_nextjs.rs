@@ -117,6 +117,11 @@ fn server_route_client_boundary_json_matches_snapshot() {
                 "../fail/boundary-only.no-mistakes.yml",
             ),
             c(
+                "disable_file",
+                "rules/server-route-client-boundary/fixture/disable-file",
+                "../fail/boundary-only.no-mistakes.yml",
+            ),
+            c(
                 "input_report",
                 inputs,
                 "server-route-client-boundary-report.yml",
