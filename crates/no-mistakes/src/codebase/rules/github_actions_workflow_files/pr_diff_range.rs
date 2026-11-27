@@ -114,8 +114,12 @@ fn scan_file(
     if super::gha_kind(&rel) != Some(false) {
         return output;
     }
-    let Some(content) = rules::read_language_source(sources, path) else {
-        return output;
+    let content = match super::read_workflow_source(root, path, sources, RULE_ID) {
+        Ok(content) => content,
+        Err(finding) => {
+            output.unanalyzable(policies.yaml, *finding);
+            return output;
+        }
     };
     if !defer_suppression && crate::codebase::ts_source::has_disable_file_comment(&content, RULE_ID)
     {

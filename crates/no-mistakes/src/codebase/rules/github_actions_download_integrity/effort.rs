@@ -2,6 +2,7 @@ use super::*;
 use crate::codebase::rules::{
     analysis_policy::AnalysisDiagnostics,
     file_diagnostics::{self, InputUncertainty},
+    github_actions_workflow_files::{parse_yaml, read_workflow_source},
     path_filter::GlobMatcher,
 };
 use crate::codebase::ts_source::{
@@ -88,14 +89,17 @@ pub fn diagnostics_with_files_and_sources(
                 {
                     return None;
                 }
+                if let Some(action) = kind {
+                    return Some(read_workflow_source(root, path, sources, RULE_ID).and_then(
+                        |content| {
+                            parse_yaml(root, path, sources, &content, RULE_ID, true).map(|value| {
+                                runs::check_workflow(&rel, &content, &value, action, &policy)
+                            })
+                        },
+                    ));
+                }
                 let content = super::super::read_language_source(sources, path)?;
-                Some(match kind {
-                    Some(action) => super::super::github_actions_workflow_files::parse_yaml(
-                        root, path, sources, &content, RULE_ID, true,
-                    )
-                    .map(|value| runs::check_workflow(&rel, &content, &value, action, &policy)),
-                    None => Ok(runs::check_shell(&rel, &content, &policy)),
-                })
+                Some(Ok(runs::check_shell(&rel, &content, &policy)))
             })
             .collect();
         let mut input_failures = Vec::new();

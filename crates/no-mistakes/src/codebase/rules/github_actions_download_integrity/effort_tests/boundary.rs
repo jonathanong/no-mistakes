@@ -25,7 +25,7 @@ fn standalone_default_max_matches_the_prepared_rule_boundary() {
 }
 
 #[test]
-fn low_ignores_non_actions_malformed_yaml_and_unreadable_inventory_entries() {
+fn low_reports_unreadable_selected_workflow() {
     let root = fixture_root("effort-argv");
     let malformed =
         std::fs::read_to_string(root.join(".github/workflows/malformed-low.yml")).unwrap();
@@ -52,7 +52,9 @@ fn low_ignores_non_actions_malformed_yaml_and_unreadable_inventory_entries() {
         false,
     )
     .unwrap();
-    assert!(result.findings.is_empty());
+    assert_eq!(result.findings.len(), 1);
+    assert_eq!(result.findings[0].file, ".github/workflows/removed-after-discovery.yml");
+    assert!(result.findings[0].message.contains("cannot read source"));
     assert!(result.advisories.is_empty());
 }
 

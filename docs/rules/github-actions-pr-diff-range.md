@@ -218,10 +218,11 @@ In a workflow that also runs on `push` or `merge_group`, do not pair
 ### Unanalyzable inputs
 
 Invalid YAML in a selected workflow is reported at the parser location.
+A selected workflow that cannot be read is reported at line 1.
 With no options set, the diagnostic defaults to a finding. When
 `requireConsistentRevisionPairs` is `true` or `revisionPairs` is non-empty,
-invalid YAML and ambiguous revision pairs default to an advisory.
-The effective `unanalyzable` policy controls both kinds of diagnostics.
+unreadable workflows, invalid YAML, and ambiguous revision pairs default to an advisory.
+The effective `unanalyzable` policy controls these diagnostics.
 Line, next-line, and file suppression directives apply to findings and advisories.
 
 ## Suppression

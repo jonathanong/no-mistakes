@@ -37,6 +37,17 @@ pub(super) fn gha_kind(rel: &str) -> Option<bool> {
     None
 }
 
+pub(super) fn read_workflow_source(
+    root: &Path,
+    path: &Path,
+    sources: &SourceStore,
+    rule_id: &str,
+) -> Result<Arc<str>, Box<RuleFinding>> {
+    sources
+        .read_source_path(path)
+        .map_err(|error| Box::new(source_access::read_failure(root, path, rule_id, &error)))
+}
+
 pub(super) fn parse_yaml(
     root: &Path,
     path: &Path,
@@ -72,12 +83,11 @@ pub(super) fn scan_yaml_files(
         .filter_map(|path| {
             let rel = relative_slash_path(root, path);
             let action = select(&rel)?;
-            let source = super::read_language_source(sources, path)?;
-            Some(
+            Some(read_workflow_source(root, path, sources, rule_id).and_then(|source| {
                 parse_yaml(root, path, sources, &source, rule_id, true).map(|value| {
                     judge(&rel, source.trim_start_matches('\u{feff}'), &value, action)
-                }),
-            )
+                })
+            }))
         })
         .collect();
     let mut findings = Vec::new();

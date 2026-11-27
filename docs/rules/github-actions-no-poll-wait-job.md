@@ -103,9 +103,10 @@ event that signals completion (`workflow_run` for another workflow,
 ### Unanalyzable inputs
 
 When a selected file has invalid YAML, the rule reports the parser location.
-The effective `unanalyzable` policy controls that diagnostic. Use `report`
+A selected file that cannot be read is reported at line 1.
+The effective `unanalyzable` policy controls these diagnostics. Use `report`
 (the default) for a finding, `advise` for an advisory, or `ignore` to omit it.
-Fix the YAML syntax so the rule can verify the file. Valid sibling files are
+Restore read access or fix the YAML syntax so the rule can verify the file. Valid sibling files are
 still checked.
 
 ## Suppression

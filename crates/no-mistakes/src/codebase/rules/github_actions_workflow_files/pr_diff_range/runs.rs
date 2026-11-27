@@ -3,11 +3,7 @@ use super::options::CompiledOptions;
 use super::pairs::{check_env_pairs, PairContext, PairOutput};
 use super::pairs_locate::shape_unanalyzable;
 use super::yaml_shapes::{env_of, events};
-#[cfg(test)]
-use super::RULE_ID;
 use crate::codebase::rules::github_actions_script_expressions::{step_run_lines, StepRun};
-#[cfg(test)]
-use crate::codebase::rules::github_actions_workflow_files::gha_kind;
 use crate::codebase::rules::github_actions_workflow_files::job_lines::document::Document;
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde_yaml::{Mapping, Value};
@@ -51,37 +47,6 @@ impl<'a> Scope<'a> {
             located,
         }
     }
-}
-
-#[cfg(test)]
-pub(super) fn check_source_with_options(
-    rel: &str,
-    source: &str,
-    opts: &CompiledOptions,
-) -> (Vec<RuleFinding>, Vec<RuleFinding>) {
-    if gha_kind(rel) != Some(false) {
-        return (Vec::new(), Vec::new());
-    }
-    let source = source.trim_start_matches('\u{feff}');
-    let value = match serde_yaml::from_str::<Value>(source) {
-        Ok(value) => value,
-        Err(error) => {
-            let line = error.location().map_or(1, |loc| loc.line());
-            let note = RuleFinding {
-                causes: Vec::new(),
-                rule: RULE_ID.to_string(),
-                file: rel.to_string(),
-                line,
-                message: format!(
-                    "cannot verify {RULE_ID}: YAML could not be parsed ({error}); repair source syntax so this check can verify the file"
-                ),
-                import: None,
-                target: Some("unanalyzable".to_string()),
-            };
-            return (Vec::new(), vec![note]);
-        }
-    };
-    check_parsed(rel, source, &value, opts)
 }
 
 pub(super) fn check_parsed(

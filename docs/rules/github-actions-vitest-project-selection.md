@@ -155,9 +155,10 @@ filter is intentional.
 ### Unanalyzable inputs
 
 When a file selected by a project has invalid YAML, the rule reports the parser location.
-The effective `unanalyzable` policy controls that diagnostic. Use `report`
+A selected file that cannot be read is reported at line 1.
+The effective `unanalyzable` policy controls these diagnostics. Use `report`
 (the default) for a finding, `advise` for an advisory, or `ignore` to omit it.
-Fix the YAML syntax so the rule can verify the file. Valid sibling files are
+Restore read access or fix the YAML syntax so the rule can verify the file. Valid sibling files are
 still checked.
 
 A command is left unjudged when a positional, a `--project` value, or an unknown flag value contains `$` or a backtick. Those inputs are not sent through `options.unanalyzable`. A literal positional file or name on a recognized Vitest command is judged, including when a known value flag such as `--shard` is dynamic.

@@ -41,9 +41,9 @@ pub(super) fn check_file(
     defer_suppression: bool,
 ) -> Result<AnalysisDiagnostics, Box<RuleFinding>> {
     let rel = relative_slash_path(root, path);
-    let Some(source) = super::super::read_language_source(sources, path) else {
-        return Ok(AnalysisDiagnostics::default());
-    };
+    let source = super::super::github_actions_workflow_files::read_workflow_source(
+        root, path, sources, RULE_ID,
+    )?;
     if !defer_suppression && crate::codebase::ts_source::has_disable_file_comment(&source, RULE_ID)
     {
         return Ok(AnalysisDiagnostics::default());

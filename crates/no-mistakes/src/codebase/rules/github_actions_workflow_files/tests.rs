@@ -1,9 +1,11 @@
 use super::{no_poll_wait_job, pr_diff_range, SourceStore};
 use crate::codebase::rules::{
-    analysis_policy::AnalysisDiagnostics, github_actions_docker_host_ports,
+    analysis_policy::AnalysisDiagnostics, github_actions_action_timeout_pair,
+    github_actions_docker_host_ports, github_actions_download_integrity,
     github_actions_vitest_project_selection, RuleFinding,
 };
-use crate::config::v2::NoMistakesConfig;
+use crate::codebase::ts_source::VisiblePathSnapshot;
+use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use std::path::{Path, PathBuf};
 
 type Check = fn(
@@ -86,4 +88,53 @@ fn standalone_docker_and_vitest_checks_discover_and_report_selected_yaml() {
             includes_other_project
         );
     }
+}
+
+#[test]
+fn unreadable_selected_workflow_obeys_policy_for_all_six_rules() {
+    let (fixture_root, mut config) = fixture("advise");
+    let fixture = crate::test_support::materialize_saved_fixture(&fixture_root);
+    let root = fixture.path();
+    let missing = ".github/workflows/broken.yml";
+    let files = [root.join(missing), root.join(".github/workflows/control.yml")];
+    std::fs::remove_file(&files[0]).unwrap();
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let checks: [Check; 6] = [
+        github_actions_action_timeout_pair::diagnostics_with_files_and_sources,
+        github_actions_docker_host_ports::diagnostics_with_files_and_sources,
+        no_poll_wait_job::diagnostics_with_files_and_sources,
+        pr_diff_range::diagnostics_with_files_and_sources,
+        github_actions_vitest_project_selection::diagnostics_with_files_and_sources,
+        |root, config, files, sources, defer| {
+            github_actions_download_integrity::diagnostics_with_files_and_sources(
+                root,
+                config,
+                files,
+                sources,
+                &VisiblePathSnapshot::from_paths(root, files),
+                defer,
+            )
+        },
+    ];
+    for (policy, findings, advisories) in [
+        (Unanalyzable::Report, 1, 0),
+        (Unanalyzable::Advise, 0, 1),
+        (Unanalyzable::Ignore, 0, 0),
+    ] {
+        config.unanalyzable = Some(policy);
+        for check in checks {
+            let output = check(root, &config, &files, &sources, false).unwrap();
+            let for_missing = |rows: &[RuleFinding]| {
+                rows.iter().filter(|row| row.file == missing).count()
+            };
+            assert_eq!(for_missing(&output.findings), findings);
+            assert_eq!(for_missing(&output.advisories), advisories);
+            for row in output.findings.iter().chain(&output.advisories).filter(|row| row.file == missing) {
+                assert_eq!(row.target.as_deref(), Some("unanalyzable"));
+                assert_eq!(row.line, 1);
+                assert!(row.message.contains("cannot read source"));
+            }
+        }
+    }
+    assert_eq!(sources.physical_read_count(), 2);
 }

@@ -94,7 +94,7 @@ fn enabled_config() -> NoMistakesConfig {
 }
 
 #[test]
-fn kinds_and_missing_sources_are_skipped() {
+fn kind_selection_reports_missing_workflows() {
     assert_eq!(gha_kind(".github/workflows/ci.yml"), Some(false));
     assert!(gha_kind(".github/workflows/nested/ci.yaml").is_none());
     assert_eq!(gha_kind(ACTION), Some(true));
@@ -105,17 +105,20 @@ fn kinds_and_missing_sources_are_skipped() {
     assert!(check("README.md", "run: docker run -p 5432:5432 postgres\n").is_empty());
     assert!(check(WORKFLOW, "jobs: [\n").is_empty());
     let sources = crate::codebase::rules::source_store_for_files(&[]);
-    let root = Path::new("/missing");
+    let root = tempfile::tempdir().unwrap();
+    let paths = [root.path().join("README.md"), root.path().join(WORKFLOW)];
     let (findings, failures) = super::super::github_actions_workflow_files::scan_yaml_files(
-        root,
-        &[PathBuf::from("README.md"), PathBuf::from(WORKFLOW)],
+        root.path(),
+        &paths,
         &sources,
         super::RULE_ID,
         &gha_kind,
         &|_, _, _, _| panic!("a missing source is not judged"),
     );
     assert!(findings.is_empty());
-    assert!(failures.is_empty());
+    assert_eq!(failures.len(), 1);
+    assert_eq!(failures[0].file, WORKFLOW);
+    assert!(failures[0].message.contains("cannot read source"));
 }
 
 #[test]
