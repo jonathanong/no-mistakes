@@ -227,7 +227,16 @@ const cases = [
       ],
       unknownValues: "finding",
     },
-    lines: [7, 11, 15, 17, 21, 29],
+    lines: [7, 11, 15, 17, 21, 29, 33],
+    messageIds: [
+      "unanalyzable",
+      "unanalyzable",
+      "unanalyzable",
+      "unanalyzable",
+      "unanalyzable",
+      "unanalyzable",
+      "unknownLocale",
+    ],
   },
   {
     name: "a same-file constructor alias still requires a locale",
@@ -243,6 +252,7 @@ const cases = [
       unknownValues: "finding",
     },
     lines: [6],
+    messageIds: ["unanalyzable"],
   },
   {
     name: "an import equals alias of a local name stays quiet when unknownValues is finding",
@@ -278,14 +288,11 @@ it("snapshots configured locale checks and scope boundaries", async () => {
       findings.map((finding) => finding.line),
       item.name,
     ).toEqual(item.lines);
-    if (
-      ["module-namespace.ts", "bound-undefined-locale.ts"].includes(item.file) &&
-      item.lines.length
-    ) {
+    if (item.messageIds) {
       expect(
         findings.map((finding) => finding.messageId),
         item.name,
-      ).toEqual(item.lines.map(() => "unanalyzable"));
+      ).toEqual(item.messageIds);
     }
     return { ...item, file, findings, rule };
   });

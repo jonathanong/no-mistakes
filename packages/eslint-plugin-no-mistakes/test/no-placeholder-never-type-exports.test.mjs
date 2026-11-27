@@ -18,6 +18,7 @@ it("reports unanalyzable type re-exports and keeps a same-file never export", as
     [26, "placeholder"],
     [28, "placeholder"],
     [32, "placeholder"],
+    [38, "placeholder"],
   ]);
   const ambientFile = "ts-object-recall/ambient-placeholder-types.d.ts";
   const ambientFindings = pluginFindings(fixture(ambientFile), rule, undefined, ambientFile);

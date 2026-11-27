@@ -170,7 +170,10 @@ module.exports = rule(
             ? globalResolution(item.namespace, sourceCode, evalScopes)
             : "global";
           if (namespaceState === "module") {
-            if (reportUnknown) report(item.node, item.method, "unanalyzable");
+            if (reportUnknown) {
+              const message = constructors.has(item.method) ? "unanalyzable" : "unknownLocale";
+              report(item.node, item.method, message);
+            }
             continue;
           }
           if (namespaceState === "local") continue;

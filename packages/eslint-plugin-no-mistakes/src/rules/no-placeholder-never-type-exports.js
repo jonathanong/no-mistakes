@@ -11,13 +11,15 @@ function declaredType(scope, name) {
   while (scope) {
     const definitions = scope.set.get(name)?.defs;
     if (definitions?.length) {
-      const localType = definitions.find(
+      const localTypes = definitions.filter(
         (definition) => definition.isTypeDefinition && definition.type !== "ImportBinding",
       );
-      if (localType) {
-        const { node } = localType;
-        return node.type === "TSTypeAliasDeclaration" &&
-          node.typeAnnotation?.type === "TSNeverKeyword"
+      if (localTypes.length) {
+        return localTypes.some(
+          ({ node }) =>
+            node.type === "TSTypeAliasDeclaration" &&
+            node.typeAnnotation?.type === "TSNeverKeyword",
+        )
           ? "never"
           : "other";
       }

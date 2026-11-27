@@ -33,3 +33,6 @@ export type { ImportedValue, OtherValue };
 import { ImportedValue as ValueOnly } from "./placeholder-values";
 export { type LocalValue as MixedType, ValueOnly };
 export * from "./placeholder-values";
+declare namespace Merged {}
+type Merged = never;
+export type { Merged };

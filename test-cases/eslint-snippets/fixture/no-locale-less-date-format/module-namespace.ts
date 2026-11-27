@@ -28,3 +28,6 @@ function branchAssignment(useLocal: boolean) {
   if (useLocal) Intl = { DateTimeFormat() {} };
   Intl.DateTimeFormat();
 }
+
+declare const key: string;
+new Intl[key]("en-GB");
