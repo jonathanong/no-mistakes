@@ -87,6 +87,9 @@ steps:
 
 ## Options and defaults
 
+Each `include` entry must be a valid glob. Variable names in `required` and
+`forbidden` must be non-blank.
+
 `required` defaults to `{}` and maps a name to a string, number, boolean,
 or YAML null. Null is normalized to the empty string. [Required values](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_workflow_files/env_policy.rs#L39-L58).
 `forbidden` defaults to `[]`. A name cannot be both required and forbidden;

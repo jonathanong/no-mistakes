@@ -84,6 +84,13 @@ forbidden explicit trigger activity types.
 
 ## Options and defaults
 
+List non-blank IDs in `requiredJobs` and `forbiddenJobs`. A `stepOrders` entry
+requires `jobId`. Each step selector needs a non-blank `id`, `uses`, or `name`.
+Each `requiredArtifactEdges` entry needs non-blank `from`, `to`, and `name`. Its
+optional `match` accepts `exact`, `pattern`, `all`, or `possible`. The loader
+rejects unknown fields inside these entries and inside `concurrencyPolicy`
+intents.
+
 Topology assertion collections default to empty, so omitted assertions impose
 no requirement. `secretInventory` is separately opt-in:
 
