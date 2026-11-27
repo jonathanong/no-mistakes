@@ -51,6 +51,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "const-registry-reexport": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/reexport-csp.ts",
+          "line": 4,
+          "message": "Dynamic CSP policy expression in src/reexport-csp.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return `connect-src 'self' ${registeredOrigins.join(\" \")}`;",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "const-registry-same-module": {
     "exitCode": 1,
     "report": {
@@ -66,6 +87,59 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Origin 'https://unlisted.example.net' used for connect-src is not allowed by CSP in src/same-module.ts. Add 'https://unlisted.example.net' to connect-src in src/same-module.ts or remove the third-party origin.",
           "rule": "csp-allowed-origins",
           "sourceLine": "void fetch(\"https://unlisted.example.net/v1/items\");"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "const-registry-shadowed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/shadowed.ts",
+          "line": 12,
+          "message": "Dynamic CSP policy expression in src/shadowed.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "`connect-src 'self' ${origins.join(\" \")}`;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/shadowed.ts",
+          "line": 16,
+          "message": "Dynamic CSP policy expression in src/shadowed.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return `connect-src 'self' ${origins.join(\" \")}`;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/shadowed.ts",
+          "line": 23,
+          "message": "Dynamic CSP policy expression in src/shadowed.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return `connect-src 'self' ${origins.join(\" \")}`;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/shadowed.ts",
+          "line": 4,
+          "message": "Dynamic CSP policy expression in src/shadowed.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return `connect-src 'self' ${origins.join(\" \")}`;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/shadowed.ts",
+          "line": 8,
+          "message": "Dynamic CSP policy expression in src/shadowed.ts cannot be statically resolved. Use static string literals (or a static array join with literal or nonce/hash template elements) or set options.unanalyzable to 'advise' or 'ignore'.",
+          "rule": "csp-allowed-origins",
+          "sourceLine": "return `connect-src 'self' ${origins.join(\" \")}`;",
+          "target": "unanalyzable"
         }
       ],
       "warnings": []

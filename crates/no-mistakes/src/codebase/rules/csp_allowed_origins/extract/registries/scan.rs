@@ -1,19 +1,27 @@
 use super::Binding;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    AssignmentTarget, CallExpression, Expression, IdentifierReference, Program, SpreadElement,
-    StaticMemberExpression,
+    ArrowFunctionExpression, AssignmentTarget, BindingIdentifier, BlockStatement, CallExpression,
+    CatchClause, Expression, ForInStatement, ForOfStatement, ForStatement, Function,
+    IdentifierReference, Program, SpreadElement, StaticBlock, StaticMemberExpression,
+    TSModuleBlock,
 };
 use oxc_ast_visit::{walk, Visit};
+use oxc_syntax::scope::ScopeFlags;
 use std::collections::BTreeMap;
 
 pub(super) fn remove_unsound(program: &Program<'_>, bindings: &mut BTreeMap<String, Binding>) {
-    let mut scan = Scan { bindings };
+    let mut scan = Scan {
+        bindings,
+        nested: 0,
+    };
     scan.visit_program(program);
 }
 
 struct Scan<'a> {
     bindings: &'a mut BTreeMap<String, Binding>,
+    /// Scopes below the module. A binding here hides the module const of the same name.
+    nested: u32,
 }
 
 impl Scan<'_> {
@@ -51,6 +59,67 @@ impl Scan<'_> {
 }
 
 impl<'a> Visit<'a> for Scan<'_> {
+    fn visit_binding_identifier(&mut self, identifier: &BindingIdentifier<'a>) {
+        // Name lookup cannot tell this binding from the module const.
+        if self.nested > 0 {
+            self.taint(identifier.name.as_str());
+        }
+    }
+
+    fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
+        self.nested += 1;
+        walk::walk_function(self, function, flags);
+        self.nested -= 1;
+    }
+
+    fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
+        self.nested += 1;
+        walk::walk_arrow_function_expression(self, arrow);
+        self.nested -= 1;
+    }
+
+    fn visit_catch_clause(&mut self, clause: &CatchClause<'a>) {
+        self.nested += 1;
+        walk::walk_catch_clause(self, clause);
+        self.nested -= 1;
+    }
+
+    fn visit_block_statement(&mut self, block: &BlockStatement<'a>) {
+        self.nested += 1;
+        walk::walk_block_statement(self, block);
+        self.nested -= 1;
+    }
+
+    fn visit_for_statement(&mut self, statement: &ForStatement<'a>) {
+        self.nested += 1;
+        walk::walk_for_statement(self, statement);
+        self.nested -= 1;
+    }
+
+    fn visit_for_in_statement(&mut self, statement: &ForInStatement<'a>) {
+        self.nested += 1;
+        walk::walk_for_in_statement(self, statement);
+        self.nested -= 1;
+    }
+
+    fn visit_for_of_statement(&mut self, statement: &ForOfStatement<'a>) {
+        self.nested += 1;
+        walk::walk_for_of_statement(self, statement);
+        self.nested -= 1;
+    }
+
+    fn visit_static_block(&mut self, block: &StaticBlock<'a>) {
+        self.nested += 1;
+        walk::walk_static_block(self, block);
+        self.nested -= 1;
+    }
+
+    fn visit_ts_module_block(&mut self, block: &TSModuleBlock<'a>) {
+        self.nested += 1;
+        walk::walk_ts_module_block(self, block);
+        self.nested -= 1;
+    }
+
     fn visit_export_named_declaration(
         &mut self,
         _export: &oxc_ast::ast::ExportNamedDeclaration<'a>,

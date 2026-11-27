@@ -130,6 +130,16 @@ fn csp_allowed_origins_json_matches_snapshot() {
                 const_registries.clone(),
                 const_registries.join("mutated.yml"),
             ),
+            (
+                "const-registry-shadowed",
+                const_registries.clone(),
+                const_registries.join("shadowed.yml"),
+            ),
+            (
+                "const-registry-reexport",
+                const_registries.clone(),
+                const_registries.join("reexport.yml"),
+            ),
         ],
     );
 }
