@@ -33,7 +33,14 @@ that require follows the same option instead of the built-in runner name. A
 `const` alias of its `.sequential` member, such as `const serial = base.sequential`,
 reports `unanalyzable` as well. A non-sequential alias stays quiet. A
 computed member of a resolved Vitest module, such as `vt[name].sequential`,
-stays silent. A nested `require("vitest")` does not make a different binding
+stays silent. An unknown member on the way to a runner, such as
+`vt[key].test.sequential`, stays silent, while `vt["test"].sequential` is still
+sequential. A default import named `test` is not itself a runner:
+`import test from "vitest"; test.sequential(...)` stays silent, and
+`test.test.sequential(...)` still reports. A call written above
+`const vt = require("vitest")` is still classified. A nested
+`const { test: suite }` does not make a module-scope `suite` a runner.
+A nested `require("vitest")` does not make a different binding
 of the same name a namespace.
 
 A static `require("vitest")`, `import vt = require("vitest")`, and a

@@ -27,6 +27,11 @@ const groups = [
       "shadow.test.ts",
       "alias-member.test.ts",
       "var-binding.test.ts",
+      "computed-chain.test.ts",
+      "default-named.test.ts",
+      "fixture-default.test.ts",
+      "late-binding.js",
+      "nested-destructure.js",
     ],
     valid: [
       "not-a-runner.test.ts",
@@ -34,6 +39,7 @@ const groups = [
       "type-only.test.ts",
       "computed-member.test.ts",
       "alias-plain.test.ts",
+      "nested-name.js",
     ],
   },
   {
@@ -105,8 +111,9 @@ const groups = [
       "shapes.test.ts",
       "shadow-cast.test.ts",
       "named-callback.test.ts",
+      "member-require.test.ts",
     ],
-    valid: ["not-a-callee.test.ts", "suppressed.test.ts"],
+    valid: ["not-a-callee.test.ts", "suppressed.test.ts", "reassign.test.ts"],
   },
   {
     rule: "test-no-shared-state",
@@ -141,7 +148,9 @@ const groups = [
       "dynamic.test.ts",
       "require-expect.test.ts",
       "require-runner.test.ts",
+      "default-namespace.test.ts",
     ],
+    valid: ["default-direct.test.ts"],
   },
   {
     rule: "test-no-error-message-matching",
@@ -171,8 +180,10 @@ const groups = [
       "type-namespace.test.ts",
       "type-qualified.test.ts",
       "wrapped-fn.test.ts",
+      "namespace-vi.test.ts",
+      "function-type.test.ts",
     ],
-    valid: ["tuple.test.ts", "reassign.test.ts"],
+    valid: ["tuple.test.ts", "reassign.test.ts", "other-export.test.ts"],
   },
   {
     rule: "test-no-typed-enqueue-fake",

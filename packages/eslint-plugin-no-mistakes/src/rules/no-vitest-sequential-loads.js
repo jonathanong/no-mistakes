@@ -1,12 +1,40 @@
 "use strict";
 
-const { unwrapExpression } = require("./async-ast");
+const { unwrapExpression, unwrapSequence } = require("./async-ast");
 const { requireResolution, requireSource } = require("./async-target-sources");
-const { literalString } = require("./logical-call");
+const { literalString, logicalCall } = require("./logical-call");
 const { isUnresolved, moduleLoad } = require("./module-load");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 const TEST_NAMES = new Set(["test", "it", "describe"]);
+
+function staticName(node, computed) {
+  node = unwrapExpression(node);
+  if (!node) return null;
+  if (computed && node.type === "Identifier") return null;
+  if (!computed && typeof node.name === "string" && node.type !== "Literal") return node.name;
+  return literalString(node);
+}
+
+function hasSequentialOption(node) {
+  // Opaque forwarding must not erase options already visible to the legacy check.
+  const args =
+    node.type === "CallExpression"
+      ? (logicalCall(node)?.arguments ?? node.arguments)
+      : node.arguments;
+  return (args || []).slice(1).some((argument) => {
+    const value = unwrapSequence(argument);
+    return (
+      value?.type === "ObjectExpression" &&
+      value.properties.some((property) => {
+        if (property.type !== "Property") return false;
+        const key = staticName(property.key, property.computed);
+        const option = unwrapExpression(property.value);
+        return key === "sequential" && option?.type === "Literal" && option.value === true;
+      })
+    );
+  });
+}
 
 function importedName(specifier) {
   const imported = specifier.imported;
@@ -58,6 +86,17 @@ function recordImportEquals(node, state) {
   state.namespaces.add(node.id.name);
 }
 
+function moduleScope(identifier, context) {
+  const scope = resolveVariable(identifier, context)?.scope;
+  const kind = scope?.type;
+  return (
+    kind === "module" ||
+    kind === "global" ||
+    kind === "script" ||
+    (kind === "function" && scope.block?.type === "Program")
+  );
+}
+
 function recordRequire(declaration, state, context) {
   const resolution = requireResolution(declaration?.init, context);
   if (!resolution) return;
@@ -70,7 +109,7 @@ function recordRequire(declaration, state, context) {
     return;
   }
   for (const entry of patternTests(declaration.id)) {
-    if (!entry.dynamic) state.roots.add(entry.local.name);
+    if (!entry.dynamic && moduleScope(entry.local, context)) state.roots.add(entry.local.name);
   }
 }
 
@@ -132,9 +171,11 @@ function destructuredFromNamespace(init, context, namespaces) {
 
 module.exports = {
   destructuredFromNamespace,
+  hasSequentialOption,
   isUnshadowedNamespace,
   recordImportEquals,
   recordRequire,
   recordVitestImport,
+  staticName,
   unresolvedSequential,
 };

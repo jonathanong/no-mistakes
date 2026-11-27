@@ -21,7 +21,8 @@ function namespace(node, context, seen) {
       MODULES.has(source) &&
       (def.node.type === "ImportNamespaceSpecifier" ||
         def.node.type === "TSImportEqualsDeclaration" ||
-        (def.node.type === "ImportDefaultSpecifier" && source === "@playwright/test"))
+        (def.node.type === "ImportDefaultSpecifier" &&
+          (source === "@playwright/test" || source === "vitest")))
     );
   }
   if (

@@ -101,7 +101,10 @@ function isFrameworkReceiver(receiver, sourceCode) {
     const variable = binding?.defs.length === 1 ? binding.defs[0] : null;
     if (variable?.type !== "Variable" || variable.node?.id?.type !== "ObjectPattern") return false;
     if (isReassigned(receiver, scopeContext(sourceCode))) return false;
-    const source = requireSource(variable.node.init, scopeContext(sourceCode));
+    const init = unwrapExpression(variable.node.init);
+    const source =
+      requireSource(variable.node.init, scopeContext(sourceCode)) ||
+      (init?.type === "Identifier" ? namespaceModule(init, sourceCode) : null);
     return frameworkModules.get(patternExportName(variable.node.id, receiver.name)) === source;
   }
   if (receiver?.type !== "MemberExpression") return false;

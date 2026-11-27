@@ -94,8 +94,26 @@ module.exports = rule(
       return current;
     }
 
+    function knownExportName(expr) {
+      if (expr?.type === "TSQualifiedName") {
+        return expr.right?.type === "Identifier" ? expr.right.name : null;
+      }
+      return memberPropertyName(expr);
+    }
+
+    function excludedExport(expr) {
+      const name = knownExportName(expr);
+      return Boolean(exportMatcher && name && !exportMatcher.test(name));
+    }
+
     function typeQueryUnresolved(typeNode, lintContext) {
+      if (typeNode?.type === "TSFunctionType") {
+        return typeNode.params.some((arg) =>
+          typeQueryUnresolved(arg.typeAnnotation?.typeAnnotation, lintContext),
+        );
+      }
       if (typeNode?.type === "TSTypeQuery") {
+        if (excludedExport(typeNode.exprName)) return false;
         return isUnresolved(moduleLoad(typeQueryName(typeNode.exprName), lintContext));
       }
       if (typeNode?.type !== "TSTypeReference") return false;
@@ -141,6 +159,7 @@ module.exports = rule(
         } else if (
           (method === "mocked" || method === "fn") &&
           !suppressed(node) &&
+          !(method === "mocked" && excludedExport(argument)) &&
           (isUnresolved(moduleLoad(method === "mocked" ? argument : callee, context)) ||
             (method === "fn" && unresolvedTypedTarget(typeArgParams(typeNode), context)))
         ) {

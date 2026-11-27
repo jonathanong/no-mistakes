@@ -77,7 +77,9 @@ and the code from that object. Do not call the receiver expression a second time
 Playwright namespace and default-runner `.expect` members retain assertion
 identity, including immutable namespace aliases. Vitest, Jest, and Playwright
 runner imports and immutable same-file aliases establish the test body for
-message equality and `.includes` checks. Nested parameters and mutable aliases
+message equality and `.includes` checks. A Vitest default import used as a
+namespace, such as `import vt from "vitest"; vt.test(...)`, establishes that
+body. Calling that default import directly does not. Nested parameters and mutable aliases
 do not establish runner identity. Assert the error type or code instead of its
 message, regardless of runner or assertion spelling.
 

@@ -1,6 +1,7 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
+const { isReassigned } = require("./async-target-bindings");
 const { requireSource } = require("./async-target-sources");
 const { literalString } = require("./logical-call");
 const { isUnresolved, moduleLoad } = require("./module-load");
@@ -25,9 +26,10 @@ function patternNames(pattern) {
   return found;
 }
 
-function recordModuleBinding(source, id, testCalleeNames, namespaces, testAliases) {
+function recordModuleBinding(source, id, testCalleeNames, namespaces, testAliases, context) {
   if ((source !== "vitest" && source !== "@playwright/test") || !id) return;
   if (id.type === "Identifier") {
+    if (context && isReassigned(id, context)) return;
     if (source === "vitest") {
       namespaces.add(id.name);
       testAliases.add(id, "namespace");
@@ -38,18 +40,40 @@ function recordModuleBinding(source, id, testCalleeNames, namespaces, testAliase
     return;
   }
   for (const { key, local } of patternNames(id)) {
+    if (context && isReassigned(local, context)) continue;
     testCalleeNames.add(local.name);
     testAliases.add(local, key);
   }
 }
 
+function recordMemberRequire(declaration, testCalleeNames, testAliases, context) {
+  const init = unwrapExpression(declaration?.init);
+  if (
+    init?.type !== "MemberExpression" ||
+    init.computed ||
+    declaration?.id?.type !== "Identifier"
+  ) {
+    return false;
+  }
+  const source = requireSource(init.object, context);
+  const key = init.property?.type === "Identifier" ? init.property.name : null;
+  if ((source !== "vitest" && source !== "@playwright/test") || !TEST_NAMES.has(key)) return false;
+  if (!isReassigned(declaration.id, context)) {
+    testCalleeNames.add(declaration.id.name);
+    testAliases.add(declaration.id, key);
+  }
+  return true;
+}
+
 function recordRequireDeclarator(declaration, testCalleeNames, namespaces, testAliases, context) {
+  if (recordMemberRequire(declaration, testCalleeNames, testAliases, context)) return;
   recordModuleBinding(
     requireSource(declaration?.init, context),
     declaration?.id,
     testCalleeNames,
     namespaces,
     testAliases,
+    context,
   );
 }
 

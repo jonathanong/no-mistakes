@@ -354,6 +354,12 @@
       "options": null
     },
     {
+      "file": "nested-name.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "helper.js",
       "findings": [
         {
@@ -694,6 +700,96 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "computed-chain.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 4,
+          "file": "computed-chain.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "default-named.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 3,
+          "file": "default-named.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "fixture-default.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 2,
+          "file": "fixture-default.test.ts",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "late-binding.js",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 2,
+          "file": "late-binding.js",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "nested-destructure.js",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 19,
+          "endLine": 3,
+          "file": "nested-destructure.js",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "no-vitest-sequential:sequential-ignore": [
@@ -822,6 +918,12 @@
     }
   ],
   "test-no-error-message-matching:message": [
+    {
+      "file": "default-direct.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
     {
       "file": "cjs.test.ts",
       "findings": [
@@ -988,6 +1090,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "default-namespace.test.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 29,
+          "endLine": 4,
+          "file": "default-namespace.test.ts",
+          "line": 4,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-error-message-matching:message-ignore": [
@@ -1135,6 +1255,12 @@
     },
     {
       "file": "suppressed.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "reassign.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -1389,6 +1515,35 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "member-require.test.ts",
+      "findings": [
+        {
+          "column": 23,
+          "endColumn": 34,
+          "endLine": 3,
+          "file": "member-require.test.ts",
+          "line": 3,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 35,
+          "endLine": 6,
+          "file": "member-require.test.ts",
+          "line": 6,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-shared-state:shared-ignore": [
@@ -1604,6 +1759,16 @@
       ]
     },
     {
+      "file": "other-export.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
       "file": "cjs.test.ts",
       "findings": [
         {
@@ -1735,6 +1900,50 @@
           "line": 3,
           "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
           "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "namespace-vi.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 4,
+          "file": "namespace-vi.test.ts",
+          "line": 4,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "function-type.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 60,
+          "endLine": 4,
+          "file": "function-type.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
           "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
           "severity": 2
         }

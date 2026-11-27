@@ -32,8 +32,10 @@ test("user", () => {
   `require` reports `unanalyzable`.
 
 `const vt = require("vitest")`, `const { test } = require("vitest")`,
+`const check = require("vitest").test`,
 `import vt = require("vitest")`, and `const { test } = require("@playwright/test")`
-register tests. Vitest's default import is not a test callee. A type assertion
+register tests. A later write, such as `let { test: check } = require("vitest"); check = local`,
+does not enter test scope. Vitest's default import is not a test callee. A type assertion
 on an array, such as `[] as string[]`, is still a mutable initializer, and
 `list = [] as string[]` inside `beforeEach` is still a reset. A push through a
 type assertion, a non-null assertion, or a cast method, such as
