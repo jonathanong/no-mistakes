@@ -1,0 +1,74 @@
+version: 2
+rules:
+  - rule: required-entrypoint-reachability
+    scope: repository
+    options:
+      sourceGlobs: ["sources/*.ts"]
+      entrypoints: ["sources/widget.ts"]
+      maxDepth: 2
+  - rule: required-local-docs
+    scope: repository
+    options:
+      roots: [widgets]
+      requiredFile: README.md
+      codeExtensions: [ts]
+      testExcludePatterns: ["*.test.*"]
+  - rule: package-json-export-target-prefix
+    scope: repository
+    include: ["packages/*/package.json"]
+    options: {}
+  - rule: package-json-nested-workspace-coverage
+    scope: repository
+    options:
+      roots: [apps]
+      dependencyNamePrefixes: ["@sample/"]
+  - rule: package-json-registry-only
+    scope: repository
+    options:
+      scopes: [packages/widget]
+  - rule: package-json-required-fields
+    scope: repository
+    options:
+      private: false
+      type: module
+      license: MIT
+      requireScopedName: true
+  - rule: package-json-workspace-coverage
+    scope: repository
+    options:
+      packageRoots: ["services/*"]
+      requireNamedPackage: true
+  - rule: require-files-in-subdirs
+    scope: repository
+    options:
+      packages:
+        - root: packages
+          requiredFiles: [README.md]
+  - rule: require-test-per-subdir
+    scope: repository
+    options:
+      roots: [packages]
+      excludeDirs: [fixtures]
+      testGlob: "*.test.*"
+      directChild: false
+  - rule: no-empty-or-comments-only-files
+    scope: repository
+    options:
+      extensions: [".ts"]
+  - rule: no-git-identity-mutation
+    scope: repository
+    options:
+      excludePaths: ["generated/**"]
+  - rule: no-raw-ephemeral-port
+    scope: repository
+    options:
+      include: ["**/*.ts"]
+      message: reserve a port
+  - rule: no-sparse-checkout
+    scope: repository
+    options:
+      include: [".github/workflows/**"]
+  - rule: no-test-git-sha
+    scope: repository
+    options:
+      allowedContexts: ["generated-ref"]

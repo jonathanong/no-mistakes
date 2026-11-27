@@ -117,6 +117,35 @@ fn invalid_nested_rule_options_abort_before_analysis() {
 }
 
 #[test]
+fn invalid_declared_option_values_abort_before_analysis() {
+    let root = rules_path("options-audit", "fixture", "issue-4654");
+    let cases = [(
+        "invalid-declared",
+        root.clone(),
+        root.join("invalid-declared.yml"),
+    )];
+    let result = assert_saved_fixture_report("invalid_declared_option_values", &cases, &[], &[]);
+    let case = &result["invalid-declared"];
+    let stderr = case["stderr"].as_str().unwrap_or("");
+    assert_eq!(case["exitCode"], 2, "{stderr}");
+    assert!(case["report"].is_null(), "{stderr}");
+}
+
+#[test]
+fn valid_declared_option_values_match_snapshot() {
+    let root = rules_path("options-audit", "fixture", "issue-4654");
+    let cases = [(
+        "valid-declared",
+        root.clone(),
+        root.join("valid-declared.yml"),
+    )];
+    let result = assert_saved_fixture_report("valid_declared_option_values", &cases, &[], &[]);
+    let case = &result["valid-declared"];
+    assert_eq!(case["exitCode"], 0, "{case}");
+    assert!(case["report"].is_object(), "{case}");
+}
+
+#[test]
 fn every_registered_rule_rejects_an_unknown_option() {
     let root = rules_path("options-audit", "fixture", "issue-4110");
     let path = root.join("all-rules.yml");
