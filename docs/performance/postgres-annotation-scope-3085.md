@@ -1,6 +1,6 @@
 # PostgreSQL annotation scope: regression and native validation
 
-PR [#3088](https://github.com/jonathanong/no-mistakes/pull/3088) removes the shared
+PR [#3088](https://github.com/jongleberry/no-mistakes/pull/3088) removes the shared
 scalar module-initialization cache after downstream validation reported higher
 CPU cost. Scoped executor seeds still prune irrelevant roots. Excluded callers
 that can supply SQL arguments to selected helpers retain contextual evaluation.

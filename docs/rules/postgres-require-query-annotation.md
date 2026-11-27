@@ -129,7 +129,7 @@ The CLI comparisons use four samples per binary per case in the initial sweep
 and twenty in the targeted jobs-8 recheck of excluded-caller controls. The
 reported medians apply to those workloads and have no confidence intervals.
 Max effort can still do more analysis than low effort.
-See the [benchmark results](https://github.com/jonathanong/no-mistakes/pull/3860).
+See the [benchmark results](https://github.com/jongleberry/no-mistakes/pull/3860).
 
 For an executor call with complete
 [SQL alternatives](../postgres-facts.md#finite-sql-alternatives), the rule uses

@@ -194,7 +194,7 @@ this conservative choice is intentional. See the
 [migration note](../migrations/github-actions-checkout-credentials-unanalyzable.md)
 for configuration and suppression examples.
 
-[reviewed-abstain]: https://github.com/jonathanong/no-mistakes/pull/2697#issuecomment-6383196957
+[reviewed-abstain]: https://github.com/jongleberry/no-mistakes/pull/2697#issuecomment-6383196957
 
 ## Valid example
 
