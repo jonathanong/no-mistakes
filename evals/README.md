@@ -29,16 +29,15 @@ run in [HISTORY.md](HISTORY.md) is marked "not re-measured".
 ### Tool skill (`no-mistakes`)
 
 **Description:** the `description:` line in `plugins/no-mistakes/skills/no-mistakes/SKILL.md`
-today. **Measured:** 2026-11-26 on main `24768fa692` plus #4742's reporting
+before it changed to "Load before answering any question about how code
+connects:" (see the note under the table). **Measured:** 2026-11-26 on main `24768fa692` plus #4742's reporting
 scripts (skill and cases are main's), Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge
 `claude-opus-5-5`, all eleven routine flows, `runs: 3`, `--ablation
 with-without -j 4`, one invocation per flow, 318 attempts, zero errored and
 `partial: false` on every flow. Cost `$49.83`: `$31.36` agent and `$18.46`
 judge. Reports outside git at `~/.cache/no-mistakes/evals/2026-11-26-skill-control/`.
 Run entry: [tool-skill control](HISTORY.md#2026-11-26--tool-skill-control-all-eleven-flows-re-measured).
-Built with `python3 evals/readme_table.py skill <reports>`. The `heldout` flow
-is not measured for this description; cases 07-09 are reserved, unrun, for
-the next candidate.
+Built with `python3 evals/readme_table.py skill <reports>`.
 
 | flow | trigger (with-arm) | should-fire Δ | content-only Δ | negatives Δ |
 | --- | --- | --- | --- | --- |
@@ -53,6 +52,16 @@ the next candidate.
 | `safety` | 0/6 (0-39%) | -0.17 | -0.17 | +0.00 |
 | `napi` | 0/12 (0-24%) | +0.11 | +0.17 | +0.00 |
 | `neg-hard` (guard) | 0/12 | n/a | n/a | +0.00 |
+
+**The description changed after this run.** Its single-arm screen
+(`--ablation none --runs 3`, same session,
+[candidate A](HISTORY.md#2026-11-26--candidate-a-load-before-answering-passes-its-gates))
+loaded the skill on 69/117 should-fire attempts against 32/117 above, with
+no `neg-hard` or per-flow negative loading, and the held-out cases 04–09
+loaded 18/18 against 0/18 for the old description
+([holdout](HISTORY.md#2026-11-26--holdout-for-candidate-a-1818-loaded-against-018)).
+The trigger and Δ columns above are the old description's; a with-without
+re-measure is needed before quoting a Δ for the new one.
 
 Trigger rates count should-fire cases only (negative cases excluded), so
 12/18 and the like are not out of the 318 attempts. Ranges are 95% Wilson
@@ -192,7 +201,7 @@ the 26 `rules` cases load the `no-mistakes-rules` plugin instead.
 | `neg-hard` | 4 | **over-trigger guards** — questions that look structural but aren't | `SKILL.md` claim |
 | `lang-graph` | 5 | configured non-TS graphs (**synthetic** fixture) | skill surface |
 | `napi` | 5 | programmatic API — `SKILL.md` gives it a short section (about 20 lines), so Δ ≈ 0 was expected; that rationale predates the section and needs re-examining | skill surface |
-| `heldout` | 9 | trigger-only cases in unseen wording: 01–03 spent, 04–06 live, 07–09 never run | real register |
+| `heldout` | 9 | trigger-only cases in unseen wording: all nine spent (04–09 on 2026-11-26); add new phrasings before the next candidate | real register |
 | `rules` | 26 | no-mistakes-rules plugin: MUST NOT traps in write, review and exception cases, plus off-topic over-trigger guards | skill surface |
 
 "Real traffic" means the phrasing was observed in mined session history.
