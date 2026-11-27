@@ -52,6 +52,12 @@ function valueKind(node, context) {
   return def?.type === "Variable" ? def.parent?.kind : null;
 }
 
+function constStringKey(node, context) {
+  if (node?.type !== "Identifier" || valueKind(node, context) !== "const") return null;
+  const init = resolveVariable(node, context)?.defs[0]?.node?.init;
+  return init ? literalString(init) : null;
+}
+
 function namedUse(fact) {
   return Boolean(
     fact &&
@@ -103,7 +109,8 @@ function reactUseStatus(node, context, useNames, seen = new Set()) {
     return "no";
   }
   if (callee?.type !== "MemberExpression") return "no";
-  const name = staticName(callee.property, callee.computed);
+  const name =
+    staticName(callee.property, callee.computed) || constStringKey(callee.property, context);
   if (name === "use") return namespaceStatus(callee.object, context);
   if (name) return "no";
   const status = namespaceStatus(callee.object, context);

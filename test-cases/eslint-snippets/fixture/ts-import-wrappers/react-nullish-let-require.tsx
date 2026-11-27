@@ -15,3 +15,13 @@ Written = null;
 export function letWritten(child: Written.ReactNode) {
   return child ?? "fallback";
 }
+
+var varReact = require("react");
+export function varNamespace(child: varReact.ReactNode) {
+  return child ?? "fallback";
+}
+
+var varModule = require(moduleName);
+export function varDynamic(child: varModule.ReactNode) {
+  return child ?? "fallback";
+}

@@ -55,3 +55,18 @@ export function assertedMissing(props: { children: ReactNode }) {
   const textProps = props as Missing;
   return textProps.children ?? "";
 }
+
+declare const moduleName: string;
+const Hidden = require(moduleName);
+
+export function annotatedUnknown(props: { children: ReactNode }) {
+  const { children }: Record<"children", unknown> = props;
+  return children ?? null;
+}
+
+type HiddenNode = Hidden.ReactNode;
+
+export function annotatedUnresolved(props: { children: ReactNode }) {
+  const { children }: HiddenNode = props;
+  return children ?? null;
+}

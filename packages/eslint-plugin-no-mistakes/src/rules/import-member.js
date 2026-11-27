@@ -34,9 +34,13 @@ function memberFact(node, context, importFact, requireModule, namespaceMember) {
   if (!base) return null;
   if (dynamic || base.unresolved) return { unresolved: true };
   let fact = base;
+  let projected = false;
   for (const name of names) {
-    fact = namespaceMember(fact, name);
-    if (!fact || fact.unresolved) return { unresolved: true };
+    const next = namespaceMember(fact, name);
+    if (next?.unresolved || (projected && !next)) return { unresolved: true };
+    if (!next) return null;
+    fact = next;
+    projected = true;
   }
   return { ...fact, name: fact.name || names.join(".") };
 }

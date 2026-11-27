@@ -12,8 +12,8 @@ const {
 const {
   assertedObjectFacts,
   classifiedProps,
+  destructureMemberFacts,
   memberExpressionStatus,
-  objectInitFacts,
 } = require("./react-nullish-props");
 
 const isObjectPattern = (node) => node && node.type === "ObjectPattern";
@@ -178,16 +178,16 @@ function createNullishState(context) {
     if (node.id.type === "ArrayPattern")
       return bindPatternNames(node.id, (name) => defineBinding(name, scope));
     if (!isObjectPattern(node.id)) return;
-    const initFacts = objectInitFacts(node.init, facts, lookupMembers);
-    const classified = classifiedProps(type, facts);
+    const members = destructureMemberFacts(type, node.init, facts, lookupMembers);
     definePattern(
       node.id,
-      classified.props || initFacts.props,
+      members.props,
       (name) => defineBinding(name, scope),
       (name) => defineReactNode(name, scope),
-      classified.unresolved || initFacts.unresolved,
+      members.unresolved,
       (name) => defineUnresolved(name, scope),
     );
+    if (members.allUnresolved) bindPatternNames(node.id, (name) => defineUnresolved(name, scope));
   }
 
   function expressionStatus(node) {

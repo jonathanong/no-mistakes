@@ -449,6 +449,17 @@
           "messageId": "nullish",
           "ruleId": "no-mistakes/react-no-nullish-react-node",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 26,
+          "endLine": 71,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-assertions.ts",
+          "line": 71,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
         }
       ],
       "name": "assertions classify the asserted type",
@@ -618,6 +629,28 @@
           "endLine": 16,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-let-require.tsx",
           "line": 16,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 21,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-let-require.tsx",
+          "line": 21,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 26,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-let-require.tsx",
+          "line": 26,
           "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/react-no-nullish-react-node",
@@ -986,6 +1019,17 @@
           "line": 86,
           "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 43,
+          "endLine": 110,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 110,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
           "severity": 2
         }
@@ -2339,6 +2383,13 @@
             "file": "react-nullish-assertions.ts",
             "line": 51,
             "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-assertions.ts",
+            "line": 71,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
           }
         ],
         "name": "react-nullish-assertions.ts",
@@ -2387,6 +2438,20 @@
             "column": 10,
             "file": "react-nullish-let-require.tsx",
             "line": 16,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-let-require.tsx",
+            "line": 21,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-let-require.tsx",
+            "line": 26,
             "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
           }
         ],
@@ -2642,6 +2707,13 @@
             "file": "react-use-bindings.tsx",
             "line": 86,
             "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 110,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
           }
         ],
         "name": "react-use-bindings.tsx",

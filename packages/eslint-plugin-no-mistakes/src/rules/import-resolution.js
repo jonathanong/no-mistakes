@@ -130,7 +130,7 @@ function defMayBeImport(def, context, seen) {
 }
 
 function reassignedFact(def, variable, context, seen) {
-  const fact = (node) => node && importFact(node, context, seen);
+  const fact = (node) => node && importFact(node, context, new Set(seen));
   if (fact(def.node.init)) return { unresolved: true };
   for (const reference of variable.references ?? []) {
     if (!reference.isWrite() || reference.init) continue;

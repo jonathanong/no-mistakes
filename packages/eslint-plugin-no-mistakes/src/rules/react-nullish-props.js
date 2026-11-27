@@ -59,4 +59,19 @@ function objectInitFacts(node, facts, lookup) {
   return { props: lookup(init, "objectTypes"), unresolved: lookup(init, "unresolvedMembers") };
 }
 
-module.exports = { assertedObjectFacts, classifiedProps, memberExpressionStatus, objectInitFacts };
+function destructureMemberFacts(type, init, facts, lookup) {
+  if (!type) return objectInitFacts(init, facts, lookup);
+  const classified = classifiedProps(type, facts);
+  if (classified.props || classified.unresolved) return classified;
+  return reactTypeStatus(type, facts) === "unresolved"
+    ? { props: null, unresolved: null, allUnresolved: true }
+    : { props: null, unresolved: null };
+}
+
+module.exports = {
+  assertedObjectFacts,
+  classifiedProps,
+  destructureMemberFacts,
+  memberExpressionStatus,
+  objectInitFacts,
+};

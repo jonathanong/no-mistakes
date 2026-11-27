@@ -93,3 +93,19 @@ const localApi = {
 export function localDynamic() {
   return localApi[method](Promise.resolve(1));
 }
+function plainLocal(value: unknown) {
+  return value;
+}
+let repeated = plainLocal;
+repeated = plainLocal;
+export function sameLocalTwice() {
+  return repeated(Promise.resolve(1));
+}
+const memoKey = "memo";
+const useKey = "use";
+export function constOtherKey() {
+  return React[memoKey](Promise.resolve(1));
+}
+export function constUseKey() {
+  return React[useKey](Promise.resolve(1));
+}
