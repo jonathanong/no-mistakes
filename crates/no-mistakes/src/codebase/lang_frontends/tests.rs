@@ -352,10 +352,13 @@ fn php_collects_laravel_route_and_dispatch() {
     assert!(routes.route_handlers.iter().any(|(route, handler)| {
         route == "/accounts/:account" && handler.contains("UserController")
     }));
+    assert!(routes.route_handlers.iter().any(|(route, handler)| {
+        route == "/hidden" && handler.ends_with("UserController.index")
+    }));
     assert!(routes
         .route_handlers
         .iter()
-        .all(|(route, _)| route != "/hidden"));
+        .all(|(route, _)| !route.starts_with("/hidden/")));
     let job = facts
         .files
         .values()
