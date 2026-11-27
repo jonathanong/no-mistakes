@@ -59,6 +59,9 @@ find('[data-pw="save"]');
 
 ```ts
 // eslint-disable-next-line no-mistakes/playwright-prefer-get-by-test-id -- browser-only selector syntax is under test
+// no-mistakes-disable-next-line playwright-prefer-get-by-test-id -- browser-only selector syntax is under test
+// no-mistakes-disable-line playwright-prefer-get-by-test-id -- browser-only selector syntax is under test
+// no-mistakes-disable-file playwright-prefer-get-by-test-id -- browser-only selector syntax is under test
 page.locator('[data-pw="save-button"]');
 ```
 

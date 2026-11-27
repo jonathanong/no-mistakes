@@ -8,13 +8,24 @@ to search, configure, and connect in static coverage analysis.
 ## Disallowed
 
 ```tsx
-<button data-testid="save">Save</button>
+<>
+  <button data-testid="save">Save</button>
+  <button {...{ "data-testid": "save" }}>Save</button>
+  <button ns:data-testid="save">Save</button>
+</>
 ```
+
+A spread whose keys are visible and not selector attributes stays quiet. A
+spread the rule cannot read, and a namespaced name whose local name is a
+configured selector attribute, are `unanalyzable`.
 
 ## Allowed
 
 ```tsx
-<button data-pw="save">Save</button>
+<>
+  <button data-pw="save">Save</button>
+  <button {...{ className: "save" }}>Save</button>
+</>
 ```
 
 ## Options
@@ -32,6 +43,9 @@ Rename recognized non-canonical attributes to the configured canonical name.
 
 ```tsx
 // eslint-disable-next-line no-mistakes/playwright-consistent-attribute -- vendor component contract requires data-testid
+// no-mistakes-disable-next-line playwright-consistent-attribute -- vendor component contract requires data-testid
+// no-mistakes-disable-line playwright-consistent-attribute -- vendor component contract requires data-testid
+// no-mistakes-disable-file playwright-consistent-attribute -- vendor component contract requires data-testid
 const vendorButton = <button data-testid="vendor-save">Save</button>;
 ```
 

@@ -47,6 +47,24 @@ test("dynamic browser access is unanalyzable", async ({ browser }) => {
 });
 ```
 
+```ts
+// e2e/orders-import-equals.spec.ts
+import test = require("@playwright/test");
+
+test("loads orders", async ({ browser }) => {
+  await browser.newPage();
+});
+```
+
+```ts
+// e2e/orders-reexport.spec.ts
+import { test } from "@example/e2e-fixtures";
+
+test("loads orders", async ({ browser }) => {
+  await browser.newPage();
+});
+```
+
 ## Allowed
 
 ```ts
@@ -55,6 +73,15 @@ import { test } from "./fixtures";
 
 test("loads orders", async ({ appPage }) => {
   await appPage.goto("/orders");
+});
+```
+
+```ts
+// e2e/orders-reexport-page.spec.ts
+import { test } from "@example/e2e-fixtures";
+
+test("loads orders", async ({ page }) => {
+  await page.goto("/orders");
 });
 ```
 
@@ -152,21 +179,31 @@ escaping `browser` or raw `fixtures` references, spread registration arguments,
 partially bound callbacks, unresolved external callbacks, and dynamic registrar
 properties are reported instead of silently passing.
 
+`import test = require("@playwright/test")` and a value import of the name
+`test` from any other module are not traced to a Playwright registrar. A direct
+`test(...)` call reports `unanalyzable` on the call when the visible callback
+uses `browser.newPage()`, when that callback cannot be proved free of it (rest
+or dynamic fixture bindings, an unresolved callback), and stays quiet when the
+visible callback never uses `browser.newPage()`. A direct
+`import { test } from "@playwright/test"` still reports the definite
+`browser.newPage()` finding. `test.only` and hook calls on an untraceable
+binding are outside this check.
+
 ## Suppression
 
 ```ts
+// no-mistakes-disable-file playwright-no-browser-new-page -- verifies raw browser.newPage behavior
 import { test } from "@playwright/test";
 
 test("dedicated browser.newPage contract", async ({ browser }) => {
   // no-mistakes-disable-next-line playwright-no-browser-new-page -- verifies raw browser.newPage behavior
-  const page = await browser.newPage();
+  const page = await browser.newPage(); // no-mistakes-disable-line playwright-no-browser-new-page -- verifies raw browser.newPage behavior
   await page.close();
 });
 ```
 
-`no-mistakes-disable-line` and `no-mistakes-disable-file` suppress findings the
-same way. Qualified `no-mistakes/playwright-no-browser-new-page` directives and
-standard ESLint suppression comments are also accepted.
+Qualified `no-mistakes/playwright-no-browser-new-page` directives and standard
+ESLint suppression comments are also accepted.
 
 ## Related rules
 

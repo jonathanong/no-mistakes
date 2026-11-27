@@ -58,6 +58,9 @@ export { Button } from "./button";
 
 ```tsx
 // eslint-disable-next-line no-mistakes/playwright-require-exported-component-attribute -- presentational primitive intentionally exposes no test hook
+// no-mistakes-disable-next-line playwright-require-exported-component-attribute -- presentational primitive intentionally exposes no test hook
+// no-mistakes-disable-line playwright-require-exported-component-attribute -- presentational primitive intentionally exposes no test hook
+// no-mistakes-disable-file playwright-require-exported-component-attribute -- presentational primitive intentionally exposes no test hook
 export function Stack() { return <div />; }
 ```
 

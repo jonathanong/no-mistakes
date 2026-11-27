@@ -105,6 +105,9 @@ export function Form() { return <Action />; }
 
 ```tsx
 // eslint-disable-next-line no-mistakes/playwright-require-interactive-test-id -- decorative control is deliberately not automation-facing
+// no-mistakes-disable-next-line playwright-require-interactive-test-id -- decorative control is deliberately not automation-facing
+// no-mistakes-disable-line playwright-require-interactive-test-id -- decorative control is deliberately not automation-facing
+// no-mistakes-disable-file playwright-require-interactive-test-id -- decorative control is deliberately not automation-facing
 const decorative = <button onClick={animate}>Play</button>;
 ```
 

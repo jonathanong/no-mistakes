@@ -7,6 +7,7 @@ const {
   resolveVariable,
   stableConstInitializer,
 } = require("./async-target-bindings");
+const { importRegistrar, untracedCall } = require("./playwright-import-registrar");
 const { literalString } = require("./module-mock-helpers");
 
 const MODIFIERS = new Set(["only", "skip", "fixme", "fail"]);
@@ -91,16 +92,10 @@ function createBrowserBindings(context, modules) {
     seen = new Set(seen);
     seen.add(variable);
     const def = variable.defs[0];
-    if (def.type === "ImportBinding" && def.parent.type === "ImportDeclaration") {
-      if (def.node.importKind === "type" || def.parent.importKind === "type") return null;
-      const source = def.parent.source.value;
-      if (!modules.has(source)) return null;
-      if (def.node.type === "ImportNamespaceSpecifier") return { kind: "namespace", source };
-      const imported =
-        def.node.type === "ImportDefaultSpecifier"
-          ? "default"
-          : (def.node.imported.name ?? def.node.imported.value);
-      return memberApi({ kind: "namespace", source }, imported);
+    if (def.type === "ImportBinding") {
+      return importRegistrar(def, modules, (source, imported) =>
+        memberApi({ kind: "namespace", source }, imported),
+      );
     }
     if (def.type !== "Variable") return null;
     const initial = def.node.init
@@ -179,11 +174,19 @@ function createBrowserBindings(context, modules) {
     if (!api) return null;
     if (api.kind === "opaque") return { kind: "opaque", node: callNode, reason: api.reason };
     const args = callNode.arguments;
-    if (api.kind === "test" || (api.kind === "modifier" && api.key === "only")) {
-      if (args.length === 1 && args[0].type === "SpreadElement") {
-        return callbackSlot(args[0], "test");
-      }
-      return args.length < 2 ? null : callbackSlot(args[args.length - 1], "test");
+    if (
+      api.kind === "test" ||
+      api.kind === "untraced" ||
+      (api.kind === "modifier" && api.key === "only")
+    ) {
+      const slot =
+        args.length === 1 && args[0].type === "SpreadElement"
+          ? callbackSlot(args[0], "test")
+          : args.length < 2
+            ? null
+            : callbackSlot(args[args.length - 1], "test");
+      if (!slot) return null;
+      return api.kind === "untraced" ? untracedCall(callNode, slot) : slot;
     }
     if (api.kind === "hook") {
       return args.length === 0 ? null : callbackSlot(args[args.length - 1], "hook");

@@ -13,11 +13,33 @@ export function SaveButton({ testId }: { testId?: string }) {
 }
 ```
 
+```tsx
+declare const id: string;
+
+export function RowButton() {
+  return <button {...{ "data-pw": id }}>Save</button>;
+}
+```
+
+A spread the rule cannot read, and a spread that sets a selector attribute to
+a non-literal, are `unanalyzable`. A literal selector spread is quiet.
+
 ## Allowed
 
 ```tsx
-export function SaveButton({ testId = "save-button" }: { testId?: string }) {
-  return <button data-pw={testId}>Save</button>;
+export function SaveButton({
+  testId = "save-button",
+  id,
+}: {
+  testId?: string;
+  id?: string;
+}) {
+  return (
+    <>
+      <button data-pw={testId}>Save</button>
+      <button data-pw={id ?? "save"}>Save</button>
+    </>
+  );
 }
 ```
 
@@ -35,6 +57,9 @@ at the JSX site.
 
 ```tsx
 // eslint-disable-next-line no-mistakes/playwright-defaults -- selector is supplied by a generated host
+// no-mistakes-disable-next-line playwright-defaults -- selector is supplied by a generated host
+// no-mistakes-disable-line playwright-defaults -- selector is supplied by a generated host
+// no-mistakes-disable-file playwright-defaults -- selector is supplied by a generated host
 return <button data-pw={testId}>Save</button>;
 ```
 
