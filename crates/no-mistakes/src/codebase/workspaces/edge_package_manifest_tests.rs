@@ -1,7 +1,5 @@
 use super::*;
 use crate::codebase::package_analysis;
-#[cfg(unix)]
-use crate::codebase::ts_resolver::VisiblePathLookup;
 
 #[test]
 fn package_edges_reuse_workspace_manifest_metadata_without_rereading() {

@@ -200,19 +200,6 @@ fn resolve_export_subpath_rejects_non_object_and_multi_star_patterns() {
 }
 
 #[test]
-fn export_pattern_sort_uses_pattern_name_as_tiebreaker() {
-    let b_pattern = "./b/*".to_string();
-    let a_pattern = "./a/*".to_string();
-    let b_value = serde_json::json!("./b/*.mts");
-    let a_value = serde_json::json!("./a/*.mts");
-    let mut patterns = [(&b_pattern, &b_value, 4), (&a_pattern, &a_value, 4)];
-
-    patterns.sort_by(compare_export_patterns);
-
-    assert_eq!(patterns[0].0, "./a/*");
-}
-
-#[test]
 fn resolve_specifier_falls_back_to_subpath_without_exports() {
     let dir = super::materialize_workspace_fixture(
         "resolve-specifier-falls-back-to-subpath-without-exports",

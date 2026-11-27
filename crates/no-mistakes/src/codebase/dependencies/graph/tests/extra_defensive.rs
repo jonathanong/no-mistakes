@@ -33,7 +33,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
     );
 
     assert!(
-        collect_workspace_manifest_edges(
+        (crate::codebase::package_analysis::hooks().manifest_edges)(
             &[root.join("missing/package.json")],
             &crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
                 crate::codebase::workspaces::WorkspacePackage {

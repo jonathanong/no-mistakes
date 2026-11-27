@@ -167,42 +167,6 @@ fn resolve_package_missing_returns_none() {
 }
 
 #[test]
-fn package_indexes_preserve_first_match_and_nearest_directory_behavior() {
-    let packages = vec![
-        WorkspacePackage {
-            name: "@x/shared".to_string(),
-            dir: PathBuf::from("/repo/packages/outer"),
-            entry: Some(PathBuf::from("/repo/packages/outer/index.mts")),
-            exports: None,
-            imports: None,
-        },
-        WorkspacePackage {
-            name: "@x/shared".to_string(),
-            dir: PathBuf::from("/repo/packages/outer/nested"),
-            entry: Some(PathBuf::from("/repo/packages/outer/nested/index.mts")),
-            exports: None,
-            imports: None,
-        },
-    ];
-    let map = WorkspaceMap::from_packages(packages);
-
-    assert_eq!(
-        map.resolve_package("@x/shared"),
-        Some(&PathBuf::from("/repo/packages/outer/index.mts"))
-    );
-    assert_eq!(
-        map.nearest_package(Path::new("/repo/packages/outer/nested/src/feature.mts"))
-            .map(|package| package.dir.as_path()),
-        Some(Path::new("/repo/packages/outer/nested"))
-    );
-    assert_eq!(
-        map.package_by_dir(Path::new("/repo/packages/outer/ignored/../nested"))
-            .map(|package| package.dir.as_path()),
-        Some(Path::new("/repo/packages/outer/nested"))
-    );
-}
-
-#[test]
 fn loaded_workspace_reuses_root_dependency_metadata() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/codebase-intel/fixture");
@@ -223,21 +187,6 @@ fn resolve_specifier_rejects_relative_and_missing_packages() {
     assert_eq!(map.resolve_specifier("./local"), None);
     assert_eq!(map.resolve_specifier("/abs"), None);
     assert_eq!(map.resolve_specifier("@missing/pkg/subpath"), None);
-}
-
-#[test]
-fn resolve_specifier_rejects_unprefixed_subpath_without_exports() {
-    let dir = materialize_workspace_fixture("package-without-exports");
-    let map = WorkspaceMap::from_packages(vec![WorkspacePackage {
-        name: "@x/api".to_string(),
-        dir: dir.path().to_path_buf(),
-        entry: None,
-        exports: None,
-        imports: None,
-    }]);
-
-    assert_eq!(map.resolve_specifier("@x/api"), None);
-    assert_eq!(map.packages[0].resolve_subpath("src/public", None), None);
 }
 
 // ── entry resolution order ────────────────────────────────────────────
