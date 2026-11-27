@@ -150,8 +150,32 @@ module.exports = Object.assign(
       const surfaceOpaque = reportUnanalyzable(option);
       let isPlaywrightFile = isPlaywrightPath(context.filename);
       const expectNames = new Set(["expect"]);
+      const pending = [];
       function admit(node) {
         if (admitsPlaywrightModule(node, context)) isPlaywrightFile = true;
+      }
+      function checkAssertion(node) {
+        if (suppressed(node)) return;
+        const invoked = invokedCall(node);
+        if (!invoked || invoked.callee?.type !== "MemberExpression") return;
+        const method = memberName(invoked.callee);
+        if (!TIMEOUT_MATCHERS.has(method)) return;
+        const root = expectRoot(invoked.callee.object, context, expectNames);
+        const options = unwrapExpression(invoked.arguments.at(-1));
+        const timeout =
+          options?.type === "ObjectExpression"
+            ? options.properties.find(
+                (property) => property.type === "Property" && patternKey(property) === "timeout",
+              )
+            : undefined;
+        if (root === "opaque") {
+          if (surfaceOpaque && timeout) context.report({ node, messageId: "unanalyzable" });
+          return;
+        }
+        if (!root || !timeout) return;
+        if (numericLiteral(timeout.value) > max) {
+          context.report({ node, messageId: "timeout", data: { max } });
+        }
       }
       return {
         ImportDeclaration(node) {
@@ -166,27 +190,11 @@ module.exports = Object.assign(
         VariableDeclarator: admit,
         ExpressionStatement: admit,
         CallExpression(node) {
-          if (!isPlaywrightFile || suppressed(node)) return;
-          const invoked = invokedCall(node);
-          if (!invoked || invoked.callee?.type !== "MemberExpression") return;
-          const method = memberName(invoked.callee);
-          if (!TIMEOUT_MATCHERS.has(method)) return;
-          const root = expectRoot(invoked.callee.object, context, expectNames);
-          const options = unwrapExpression(invoked.arguments.at(-1));
-          const timeout =
-            options?.type === "ObjectExpression"
-              ? options.properties.find(
-                  (property) => property.type === "Property" && patternKey(property) === "timeout",
-                )
-              : undefined;
-          if (root === "opaque") {
-            if (surfaceOpaque && timeout) context.report({ node, messageId: "unanalyzable" });
-            return;
-          }
-          if (!root || !timeout) return;
-          if (numericLiteral(timeout.value) > max) {
-            context.report({ node, messageId: "timeout", data: { max } });
-          }
+          pending.push(node);
+        },
+        "Program:exit"() {
+          if (!isPlaywrightFile) return;
+          for (const node of pending) checkAssertion(node);
         },
       };
     },

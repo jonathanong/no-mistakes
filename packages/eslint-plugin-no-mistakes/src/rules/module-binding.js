@@ -108,10 +108,7 @@ function resolveModuleBinding(node, context, seen = new Set()) {
 
 function playwrightRequire(node, context) {
   let current = unwrapExpression(node);
-  while (current?.type === "MemberExpression") {
-    if (memberKey(current) == null) break;
-    current = unwrapExpression(current.object);
-  }
+  while (current?.type === "MemberExpression") current = unwrapExpression(current.object);
   return requireSource(current, context) === PLAYWRIGHT_TEST;
 }
 

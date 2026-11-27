@@ -104,6 +104,25 @@ const cases = [
     expected: [],
   },
   {
+    name: "dynamic member require admits an unanalyzable matcher",
+    rule: "playwright-assertion-timeout-cap",
+    file: "src/member-dynamic.ts",
+    expected: [[5, "unanalyzable"]],
+  },
+  {
+    name: "dynamic member require stays quiet when unanalyzable is ignore",
+    rule: "playwright-assertion-timeout-cap",
+    file: "src/member-dynamic-ignore.ts",
+    options: { unanalyzable: "ignore" },
+    expected: [],
+  },
+  {
+    name: "assertion before the Playwright require is still checked",
+    rule: "playwright-assertion-timeout-cap",
+    file: "src/assertion-before-require.ts",
+    expected: [[3, "timeout"]],
+  },
+  {
     name: "assertion binding branches",
     rule: "playwright-assertion-timeout-cap",
     file: "e2e/assertion-branches.spec.ts",
@@ -134,6 +153,12 @@ const cases = [
     file: "e2e/assertion-ignore.spec.ts",
     options: { unanalyzable: "ignore" },
     expected: [],
+  },
+  {
+    name: "repeated require is the same setTimeout receiver",
+    rule: "playwright-test-timeout-cap",
+    file: "e2e/test-timeout-rebind.spec.ts",
+    expected: [[1, "timeout"]],
   },
   {
     name: "test timeout CommonJS and import-equals (#4357)",
@@ -271,6 +296,13 @@ const cases = [
     name: "opaque beforeAll that does not read a token stays quiet",
     rule: "playwright-no-hoisted-unique-token",
     file: "e2e/hoisted-opaque-quiet.spec.ts",
+    options: { tokenFactories: ["makeToken"] },
+    expected: [],
+  },
+  {
+    name: "token minted inside an opaque beforeAll stays quiet",
+    rule: "playwright-no-hoisted-unique-token",
+    file: "e2e/hoisted-opaque-local.spec.ts",
     options: { tokenFactories: ["makeToken"] },
     expected: [],
   },

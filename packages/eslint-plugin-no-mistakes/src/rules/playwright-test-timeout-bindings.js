@@ -11,6 +11,13 @@ const { createStaticName } = require("./playwright-test-timeout-name");
 const HOOKS = new Set(["beforeAll", "beforeEach", "afterAll", "afterEach"]);
 const CHAINS = new Set(["only", "skip", "fixme", "fail", "describe", "parallel", "serial"]);
 
+function sameApiRoot(left, right) {
+  if (!left || !right || left.kind !== right.kind) return false;
+  if (JSON.stringify(left.path) !== JSON.stringify(right.path)) return false;
+  if (left.root === right.root) return true;
+  return typeof left.source === "string" && left.source === right.source;
+}
+
 function createBindings(context, modules, exportRoles = {}, calls = []) {
   const active = new Set();
   const name = createStaticName(context);
@@ -55,14 +62,19 @@ function createBindings(context, modules, exportRoles = {}, calls = []) {
       if (role === "assertion" || role === "ordinary") return null;
       if (role === "opaque") return { kind: "opaque", root: owner.root };
       if (key === "test" || (key === "default" && owner.source === "@playwright/test"))
-        return { kind: "test", root: owner.root, path: [] };
+        return { kind: "test", root: owner.root, path: [], source: owner.source };
       if (key === "defineConfig" || key === "mergeTests") return { kind: key, root: owner.root };
       return owner.source !== "@playwright/test" ? { kind: "opaque", root: owner.root } : null;
     }
     if (owner.kind === "test") return { kind: "method", owner, key };
     if (owner.kind === "method" && CHAINS.has(owner.key))
       return property(
-        { kind: "test", root: owner.owner.root, path: [...owner.owner.path, owner.key] },
+        {
+          kind: "test",
+          root: owner.owner.root,
+          path: [...owner.owner.path, owner.key],
+          source: owner.owner.source,
+        },
         key,
       );
     if (owner.kind === "info" && (key === "setTimeout" || key === "slow" || key === null))
@@ -90,11 +102,7 @@ function createBindings(context, modules, exportRoles = {}, calls = []) {
         const target = resolve(callee.object),
           receiver = resolve(node.arguments[0]);
         if (target?.kind !== "method") return null;
-        if (
-          receiver?.kind !== target.owner.kind ||
-          receiver.root !== target.owner.root ||
-          JSON.stringify(receiver.path) !== JSON.stringify(target.owner.path)
-        )
+        if (!sameApiRoot(receiver, target.owner))
           return {
             kind: "partial",
             target,

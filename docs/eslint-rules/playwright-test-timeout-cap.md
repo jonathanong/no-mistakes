@@ -12,7 +12,8 @@ The rule checks admitted `test.setTimeout`, actual test/hook callback TestInfo
 setters, `test.info()` setters, `describe.configure` timeout fields, recognized
 configuration/project timeout fields and fixture tuple timeout options. It follows
 immutable aliases, renamed destructuring, namespace imports, bound setters with
-matching receivers and statically known computed names. Partially applied setters
+matching receivers and statically known computed names. Repeated
+`require("@playwright/test")` loads of the same export are the same receiver. Partially applied setters
 or slow methods and dynamic members on a proven framework API report as
 unresolved under `unknownValues: "finding"`. Later call arguments do not
 replace pre-bound arguments. [Unknown values](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-test-timeout-cap.js#L28-L34) and [bound setters](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-test-timeout-cap.js#L82-L106).

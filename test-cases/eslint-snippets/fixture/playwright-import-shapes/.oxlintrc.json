@@ -24,12 +24,14 @@
         "e2e/assertion-members.spec.ts",
         "e2e/assertion-relative-alias.spec.ts",
         "src/member-require.ts",
-        "src/member-require-local.ts"
+        "src/member-require-local.ts",
+        "src/member-dynamic.ts",
+        "src/assertion-before-require.ts"
       ],
       "rules": { "no-mistakes/playwright-assertion-timeout-cap": "error" }
     },
     {
-      "files": ["e2e/assertion-ignore.spec.ts"],
+      "files": ["e2e/assertion-ignore.spec.ts", "src/member-dynamic-ignore.ts"],
       "rules": {
         "no-mistakes/playwright-assertion-timeout-cap": ["error", { "unanalyzable": "ignore" }]
       }
@@ -37,6 +39,7 @@
     {
       "files": [
         "e2e/test-timeout-require.spec.ts",
+        "e2e/test-timeout-rebind.spec.ts",
         "e2e/test-timeout-wrappers.spec.ts",
         "e2e/test-timeout-dynamic-ignore.spec.ts",
         "e2e/test-timeout-shapes.spec.ts"
@@ -82,7 +85,8 @@
         "e2e/hoisted-aliases.spec.ts",
         "e2e/hoisted-opaque-quiet.spec.ts",
         "e2e/hoisted-opaque-write.spec.ts",
-        "e2e/hoisted-default-alias.spec.ts"
+        "e2e/hoisted-default-alias.spec.ts",
+        "e2e/hoisted-opaque-local.spec.ts"
       ],
       "rules": {
         "no-mistakes/playwright-no-hoisted-unique-token": [

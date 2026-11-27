@@ -1,6 +1,25 @@
 {
   "eslint": [
     {
+      "file": "src/assertion-before-require.ts",
+      "findings": [
+        {
+          "column": 19,
+          "endColumn": 61,
+          "endLine": 3,
+          "file": "src/assertion-before-require.ts",
+          "line": 3,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion before the Playwright require is still checked",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
       "file": "e2e/assertion-branches.spec.ts",
       "findings": [
         {
@@ -342,6 +361,34 @@
       ],
       "name": "assertion unresolved expect (#4578)",
       "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/member-dynamic.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 5,
+          "file": "src/member-dynamic.ts",
+          "line": 5,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "dynamic member require admits an unanalyzable matcher",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/member-dynamic-ignore.ts",
+      "findings": [],
+      "name": "dynamic member require stays quiet when unanalyzable is ignore",
+      "options": {
+        "unanalyzable": "ignore"
+      },
       "rule": "playwright-assertion-timeout-cap"
     },
     {
@@ -698,6 +745,17 @@
       "file": "e2e/hoisted-opaque-write.spec.ts",
       "findings": [],
       "name": "opaque beforeAll that only writes a token stays quiet",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-opaque-local.spec.ts",
+      "findings": [],
+      "name": "token minted inside an opaque beforeAll stays quiet",
       "options": {
         "tokenFactories": [
           "makeToken"
@@ -1317,6 +1375,25 @@
       "rule": "playwright-test-timeout-cap"
     },
     {
+      "file": "e2e/test-timeout-rebind.spec.ts",
+      "findings": [
+        {
+          "column": 84,
+          "endColumn": 91,
+          "endLine": 1,
+          "file": "e2e/test-timeout-rebind.spec.ts",
+          "line": 1,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "repeated require is the same setTimeout receiver",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
       "file": "e2e/test-timeout-require.spec.ts",
       "findings": [
         {
@@ -1421,6 +1498,21 @@
     }
   ],
   "oxlint": [
+    {
+      "file": "src/assertion-before-require.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 19,
+          "file": "src/assertion-before-require.ts",
+          "line": 3,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        }
+      ],
+      "name": "assertion before the Playwright require is still checked",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
     {
       "file": "e2e/assertion-branches.spec.ts",
       "findings": [
@@ -1664,6 +1756,28 @@
         }
       ],
       "name": "assertion unresolved expect (#4578)",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/member-dynamic.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "src/member-dynamic.ts",
+          "line": 5,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked."
+        }
+      ],
+      "name": "dynamic member require admits an unanalyzable matcher",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/member-dynamic-ignore.ts",
+      "findings": [],
+      "name": "dynamic member require stays quiet when unanalyzable is ignore",
       "options": null,
       "rule": "playwright-assertion-timeout-cap"
     },
@@ -1913,6 +2027,13 @@
       "file": "e2e/hoisted-opaque-write.spec.ts",
       "findings": [],
       "name": "opaque beforeAll that only writes a token stays quiet",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
+      "file": "e2e/hoisted-opaque-local.spec.ts",
+      "findings": [],
+      "name": "token minted inside an opaque beforeAll stays quiet",
       "options": null,
       "rule": "playwright-no-hoisted-unique-token"
     },
@@ -2339,6 +2460,21 @@
         }
       ],
       "name": "registration package and partial bind",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-rebind.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 84,
+          "file": "e2e/test-timeout-rebind.spec.ts",
+          "line": 1,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        }
+      ],
+      "name": "repeated require is the same setTimeout receiver",
       "options": null,
       "rule": "playwright-test-timeout-cap"
     },

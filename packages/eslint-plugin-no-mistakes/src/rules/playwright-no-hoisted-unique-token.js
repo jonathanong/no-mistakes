@@ -16,6 +16,13 @@ const {
 
 const TEST_BODY_NAMES = new Set(["test", "it"]);
 
+function nodeWithin(node, ancestor) {
+  for (let current = node; current; current = current.parent) {
+    if (current === ancestor) return true;
+  }
+  return false;
+}
+
 function nearestOwnFunction(node) {
   for (let current = node.parent; current && current.type !== "Program"; current = current.parent) {
     if (isFunctionNode(current)) return current;
@@ -176,7 +183,9 @@ module.exports = rule(
           const readsCandidate = events.some(
             (event) =>
               !event.isWrite &&
-              resolveVariable(event.node, context)?.defs?.some((def) => candidates.has(def.node)),
+              resolveVariable(event.node, context)?.defs?.some(
+                (def) => candidates.has(def.node) && !nodeWithin(def.node, callback),
+              ),
           );
           if (readsCandidate && !suppressed(node))
             context.report({ node, messageId: "unanalyzable" });
