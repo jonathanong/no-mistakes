@@ -14,6 +14,7 @@ import { fixture, lint, plugin, require, runOxlintAsync, __dirname } from "./hel
 
 const { ruleSuppression } = require("../src/rule-suppression");
 const id = "no-comment-phrases";
+const ruleId = `no-mistakes/${id}`;
 const fixtureRoot = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", id);
 // Identical comments would alternate under a stateful global regex. Zero-width
 // `a*` matches every comment once, including `beta` and the empty block.
@@ -336,9 +337,16 @@ describe(id, () => {
     const name = "placeholder-phrase.mjs";
     const file = `${id}/${name}`;
     const source = fixture(file);
-    const unknown = { patterns: [{ pattern: "placeholder" }], notAnOption: true };
-    assert.throws(() => check(name, ["error", unknown]));
     const options = { patterns: [{ pattern: "placeholder" }] };
+    const unknown = { ...options, notAnOption: true };
+    const rules = (value) => ({ [ruleId]: ["error", value] });
+    const filename = resolve(fixtureRoot, name);
+    assert.equal(lint(source, rules(options), filename).length, 1);
+    // ESLint exposes the rejected schema key only through its error message.
+    assert.throws(
+      () => lint(source, rules(unknown), filename),
+      (error) => error instanceof Error && error.message.includes('"notAnOption"'),
+    );
     const findings = pluginFindings(source, id, options, file);
     assert.deepEqual(
       findings.map((finding) => finding.line),
