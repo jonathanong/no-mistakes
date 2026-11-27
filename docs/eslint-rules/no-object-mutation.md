@@ -354,7 +354,7 @@ and mapper callbacks retain ordinary escape handling. Fresh literal results
 such as `Array.from({ length: count }, () => ({}))` remain clean. Staging a
 parameter-array element in a local pending array also retains its prior
 diagnostics; its borrowed-child provenance gap is tracked separately in
-[#3646](https://github.com/jonathanong/no-mistakes/issues/3646). Receiver alias
+[#3646](https://github.com/jongleberry/no-mistakes/issues/3646). Receiver alias
 and indirect-escape checks apply to the newly
 recognized iterations without changing existing array diagnostics. Only inline,
 synchronous, non-generator iteration callbacks receive ownership preservation;
