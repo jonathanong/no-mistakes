@@ -5,7 +5,7 @@ use std::path::PathBuf;
 fn parses_and_matches_exact_wildcard_scheme_and_fallback_sources() {
     let policy = CspPolicySet::parse_from_strings(&[[
         "default-src 'self' https://fallback.example.com",
-        "img-src 'self' https://cdn.example.com:443 https://*.assets.example.org https://[2001:db8::1]",
+        "img-src 'self' https://cdn.example.com:443 https://*.assets.example.org https://[2001:db8::1] https://unlisted.example.net:notaport",
         "connect-src 'self' wss://rt.example.com:8443 ws://ws.example.com:* http://[::1]:3000 https: 'nonce-abc'",
         "frame-src 'none'",
         "media-src *",
