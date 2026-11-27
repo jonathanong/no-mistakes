@@ -9,17 +9,17 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.109.123"
+version = "0.109.124"
 edition = "2021"
 rust-version = "1.97"
 license = "MIT"
 repository = "https://github.com/jongleberry/no-mistakes"
 
 [workspace.dependencies]
-no-mistakes-rule-kernel = { version = "=0.109.123", path = "crates/no-mistakes-rule-kernel" }
-no-mistakes-invocation = { version = "=0.109.123", path = "crates/no-mistakes-invocation" }
-no-mistakes-postgres-sql = { version = "=0.109.123", path = "crates/no-mistakes-postgres-sql" }
-no-mistakes-ts-facts = { version = "=0.109.123", path = "crates/no-mistakes-ts-facts" }
+no-mistakes-rule-kernel = { version = "=0.109.124", path = "crates/no-mistakes-rule-kernel" }
+no-mistakes-invocation = { version = "=0.109.124", path = "crates/no-mistakes-invocation" }
+no-mistakes-postgres-sql = { version = "=0.109.124", path = "crates/no-mistakes-postgres-sql" }
+no-mistakes-ts-facts = { version = "=0.109.124", path = "crates/no-mistakes-ts-facts" }
 
 [workspace.lints.cargo]
 unused_dependencies = "warn"

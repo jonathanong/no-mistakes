@@ -1286,7 +1286,7 @@ dependencies = [
 
 [[package]]
 name = "no-mistakes"
-version = "0.109.123"
+version = "0.109.124"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -1350,7 +1350,7 @@ dependencies = [
 
 [[package]]
 name = "no-mistakes-invocation"
-version = "0.109.123"
+version = "0.109.124"
 dependencies = [
  "anyhow",
  "clap",
@@ -1369,7 +1369,7 @@ dependencies = [
 
 [[package]]
 name = "no-mistakes-postgres-sql"
-version = "0.109.123"
+version = "0.109.124"
 dependencies = [
  "anyhow",
  "num_cpus",
@@ -1384,7 +1384,7 @@ dependencies = [
 
 [[package]]
 name = "no-mistakes-rule-kernel"
-version = "0.109.123"
+version = "0.109.124"
 dependencies = [
  "anyhow",
  "globset",
@@ -1394,7 +1394,7 @@ dependencies = [
 
 [[package]]
 name = "no-mistakes-ts-facts"
-version = "0.109.123"
+version = "0.109.124"
 dependencies = [
  "anyhow",
  "ignore",
