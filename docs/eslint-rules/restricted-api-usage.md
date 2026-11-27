@@ -214,9 +214,11 @@ and excluded contract-test cases then preserve the intended prevention policy.
 - A plain assignment such as `const alias = ns.member` is not followed past that
   member, and nested namespace objects are not inspected. A dynamic member of a
   resolved namespace, `import name = require("pkg")`, or `require("pkg")` module is
-  `unanalyzable` instead of a pass. A static key, including a static computed key,
-  `require("pkg").name`, and `const { name } = require("pkg")` are judged. Dynamic
-  module specifiers stay unresolved.
+  `unanalyzable` instead of a pass. A non-literal computed destructure key of that
+  module, `const { [key]: value } = ns`, is the same unproven member. A static key,
+  including a static computed key, `require("pkg").name`, and
+  `const { name } = require("pkg")` are judged. Dynamic module specifiers stay
+  unresolved.
 - Import declarations remain findings even when matching calls are independently
   suppressed. A target matching both selectors reports a namespace call at its
   member access once.

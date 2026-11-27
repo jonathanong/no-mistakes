@@ -110,6 +110,23 @@ function namespaceVisitors({ context, targets, report, bindings, suppressed }) {
       if (property.type !== "Property") continue;
       const name = patternKey(property);
       const local = patternLocal(property);
+      if (
+        binding &&
+        !name &&
+        targets.some(
+          (target) =>
+            target.imported && (target.source === undefined || target.source === binding.source),
+        )
+      ) {
+        if (!suppressed(property)) {
+          context.report({
+            node: property,
+            messageId: "unanalyzable",
+            data: { name: binding.source },
+          });
+        }
+        continue;
+      }
       if (binding && name && local) remember(local, binding.source, name);
       for (const target of targets)
         if (matches(target, binding, name)) report(property, target, name);

@@ -398,6 +398,17 @@
           "severity": 2
         },
         {
+          "column": 9,
+          "endColumn": 23,
+          "endLine": 39,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 39,
+          "message": "Cannot tell whether this member of @example/client is restricted. Write a static member so the restricted API can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
           "column": 24,
           "endColumn": 27,
           "endLine": 43,
@@ -531,6 +542,17 @@
           "line": 17,
           "message": "Restricted API '@example/client'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
           "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 23,
+          "endLine": 39,
+          "file": "test-cases/eslint-snippets/fixture/restricted-api-usage/recall.ts",
+          "line": 39,
+          "message": "Cannot tell whether this member of @example/client is restricted. Write a static member so the restricted API can be checked.",
+          "messageId": "unanalyzable",
           "ruleId": "no-mistakes/restricted-api-usage",
           "severity": 2
         },
