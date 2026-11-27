@@ -108,3 +108,16 @@ users:
         .iter()
         .any(|(path, handler)| { path == "/users" && handler.contains("UsersController") }));
 }
+
+#[test]
+fn yaml_controller_before_path_extracts() {
+    let source = r#"
+item:
+  controller: App\Controller\ItemController
+  path: /items
+"#;
+    let routes = extract_yaml_routes(source);
+    assert!(routes
+        .iter()
+        .any(|(path, handler)| { path == "/items" && handler == "App.Controller.ItemController" }));
+}

@@ -59,6 +59,7 @@ fn resources_options_and_computed_paths_stay_empty() {
     let routes = extract_http_routes(
         r#"
     resources "/users", UserController, only: [:index]
+    resources "/#{id}", UserController
     resources path, UserController
     get path, UserController, :index
     get "/users", UserController
