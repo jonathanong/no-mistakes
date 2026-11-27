@@ -2,7 +2,7 @@
 
 <!-- cspell:ignore uuidv -->
 
-[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/jonathanong/no-mistakes?utm_source=badge)
+[![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/jongleberry/no-mistakes?utm_source=badge)
 
 `no-mistakes` is about **deterministically not making mistakes**. It tells
 coding agents and CI which files, tests, and routes a change can affect, then
