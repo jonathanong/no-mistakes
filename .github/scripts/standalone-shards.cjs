@@ -79,10 +79,12 @@ function run(mode, bundle, index, total, env = process.env) {
   const target =
     mode === "build" ? env.CARGO_TARGET_DIR : path.resolve("target/standalone-lib/target");
   requireNoCli(target);
-  if (mode === "build" && (index === undefined || index === SHARDS)) {
-    for (let shard = 0; shard < SHARDS; shard += 1) {
-      if (!existsSync(path.join(directory, archiveName(shard))))
-        throw new Error("standalone build requires all three archives before publication");
+  if (mode === "build") {
+    const archives = index === undefined ? SHARDS : 1;
+    for (let offset = 0; offset < archives; offset += 1) {
+      const archive = archiveName((index ?? 1) - 1 + offset);
+      if (!existsSync(path.join(directory, archive)))
+        throw new Error(`standalone build did not produce ${archive}`);
     }
     writeFileSync(
       manifestPath,

@@ -18,12 +18,23 @@ test("the macOS jobs retain the Windows build and test phases on parallel runner
     const macos = job(`${run}-macos`);
     assert.match(macos, /^    needs: changes$/m);
     const expected = new Set(
-      windows.flatMap(stepNames).filter((name) => name !== "Exclude workspace from Microsoft Defender"),
+      windows
+        .flatMap(stepNames)
+        .filter((name) => name !== "Exclude workspace from Microsoft Defender"),
     );
+    if (run === "native-rust-tests") {
+      expected.delete("Cache Cargo registry sources");
+      expected.delete("Cache native workspace artifacts by source");
+      expected.delete("Save verified workspace artifacts");
+      expected.add("Cache Cargo dependencies");
+    }
     const names = stepNames(macos);
     assert.equal(names.length, expected.size, run);
     assert.deepEqual(new Set(names), expected, run);
-    for (const [body, os] of [...windows.map((body) => [body, "windows-2025"]), [macos, "macos-15"]]) {
+    for (const [body, os] of [
+      ...windows.map((body) => [body, "windows-2025"]),
+      [macos, "macos-15"],
+    ]) {
       const runners = [...body.matchAll(/^          (?:- |  )os: (.+)$/gm)];
       assert.ok(runners.length > 0);
       assert.ok(runners.every((row) => row[1] === os));
@@ -33,13 +44,13 @@ test("the macOS jobs retain the Windows build and test phases on parallel runner
   }
 });
 
-test("native jobs keep six Windows shards and one macOS job per test suite", () => {
+test("native jobs keep two Windows shards and one macOS job per test suite", () => {
   for (const [name, macosCount] of [
     ["native-rust-tests", 1],
     ["native-api-tests", 1],
   ]) {
     for (const [suffix, count] of [
-      ["", 6],
+      ["", 2],
       ["-macos", macosCount],
     ]) {
       const body = job(name + suffix);

@@ -146,13 +146,9 @@ function plan(caches, states, budget = BUDGET, sourceRunStates = {}) {
   if (!Number.isSafeInteger(before)) throw new Error("Cache size exceeds safe integer range");
   let after = before - remove.reduce((sum, cache) => sum + cache.size_in_bytes, 0);
   const removed = new Set(remove.map((cache) => cache.id));
-  const macosHarness = kept.find(
-    (cache) => cache.family === "native-test-harness-workspace-v2-aarch64-apple-darwin",
-  );
   const expendable = caches.filter(
     (cache) =>
       cache.ref === "refs/heads/main" &&
-      cache.id !== macosHarness?.id &&
       workspace(cache.key, 2) &&
       !removed.has(cache.id) &&
       Number.isFinite(Date.parse(cache.last_accessed_at)),

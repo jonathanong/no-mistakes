@@ -11,23 +11,28 @@ test("Tests with coverage waits directly for the coverage merge and the Linux AP
   assert.ok(ci.jobs["tests-gate"].needs.includes("linux-api-tests"));
 });
 
-test("each cache is retained from its own build result", () => {
-  for (const name of [
+test("one main-only retention job waits for the cache producers without gating tests", () => {
+  const retain = ci.jobs["retain-caches"];
+  assert.deepEqual(retain.needs, [
     "linux-runtime",
     "native-build",
+    "native-api-tests-macos",
     "native-test-build",
+    "native-rust-tests-macos",
     "standalone-build",
     "rust-coverage-build",
-  ])
-    assert.equal(ci.jobs[`retain-${name}-cache`]?.needs, name, name);
-  for (const [retention, job] of [
-    ["retain-native-build-macos-cache", "native-api-tests-macos"],
-    ["retain-native-test-build-macos-cache", "native-rust-tests-macos"],
-  ]) {
-    assert.equal(ci.jobs[retention]?.needs, job, job);
-    assert.ok(ci.jobs[retention].if.includes(`needs.${job}.outputs.built == 'true'`), job);
-  }
-  assert.equal(ci.jobs["retain-caches"], undefined);
+  ]);
+  assert.match(retain.if, /github.event_name == 'push' && github.ref == 'refs\/heads\/main'/);
+  assert.match(retain.if, /contains\(needs\.\*\.result, 'success'\)/);
+  for (const producer of ["native-api-tests-macos", "native-rust-tests-macos"])
+    assert.ok(retain.if.includes(`needs.${producer}.outputs.built == 'true'`));
+  assert.equal(retain.uses, "./.github/workflows/cache-retention.yml");
+  assert.equal(retain.with.best_effort, true);
+  assert.deepEqual(
+    Object.keys(ci.jobs).filter((id) => id.startsWith("retain-")),
+    ["retain-caches"],
+  );
+  assert.ok(!ci.jobs["tests-gate"].needs.includes("retain-caches"));
 });
 
 test("Clippy jobs share check metadata while retaining separate lint invocations", () => {

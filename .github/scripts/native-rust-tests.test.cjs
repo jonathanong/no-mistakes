@@ -180,9 +180,9 @@ test("native workflow keeps independent runtime and Rust archive builds", () => 
     const rows = [
       ...consumer.matchAll(/- os:\s+(\S+)\s+target:\s+(\S+)\s+shard:\s+(\d+)\s+total:\s+(\d+)/g),
     ];
-    assert.equal(rows.length, 6 + macosCount);
+    assert.equal(rows.length, 2 + macosCount);
     for (const [os, target, count] of [
-      ["windows-2025", "x86_64-pc-windows-msvc", 6],
+      ["windows-2025", "x86_64-pc-windows-msvc", 2],
       ["macos-15", "aarch64-apple-darwin", macosCount],
     ]) {
       const selected = rows.filter((row) => row[1] === os);

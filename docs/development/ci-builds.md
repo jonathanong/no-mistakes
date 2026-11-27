@@ -53,9 +53,9 @@ The current validation graph is organized as follows:
   still evaluate dependency results and reject failures.
 - Independent Linux CLI and N-API producers upload their binaries for the AST check and
   Linux real-addon tests. Ordinary JavaScript tests run in two parallel Vitest
-  shards on pull requests and four on other events;
+  shards;
   a merge job combines the blob reports and coverage before enforcing the
-  configured floors. Linux real-addon cases run in isolated matrix jobs, using
+  configured floors. Linux real-addon cases run in two isolated matrix jobs, using
   the shared case partitioning script even for tests registered through umbrella imports.
 - Rust coverage builds the instrumented library and integration targets in two
   parallel PR jobs. Each archive feeds six execution shards. The report checks
@@ -69,12 +69,12 @@ The current validation graph is organized as follows:
   filesystem and copies them across filesystems. Reporting uses those profiles
   to produce LCOV and apply the coverage and complexity gates.
 - Standalone library tests build without the CLI. Each of the three PR shards
-  builds and runs its own test slice on one runner. On other events, one
-  producer builds all three archives for three test consumers. Native platform jobs build runtime and Rust test
+  builds and runs its own test slice on one runner. On other events, three
+  parallel producers each build one archive for the three test consumers. Native platform jobs build runtime and Rust test
   artifacts separately. Each platform has its own producer and consumer jobs,
   so its tests start when its artifacts are ready without waiting for the other
   platform. Contract tests keep their build and test commands aligned.
-  On `main`, Windows runs six Rust shards and six real-addon API shards.
+  On `main`, Windows runs two Rust shards and two real-addon API shards.
   The main macOS suite runs one Rust test job and one real-addon API
   test job. Each downloads its archive once and runs every selected case.
   Folding the shards saves runner setup and download time. The test
@@ -142,8 +142,8 @@ The current validation graph is organized as follows:
   run on `main` and manual dispatch. They build in parallel and each runs its
   tests on its own build runner. They still publish the runtime and Rust test
   archives for exact-commit measurement reuse. Only a validated reuse run
-  downloads an archive before testing. Cache retention follows a successful
-  build upload even if tests later fail. The PR smoke tier means that
+  downloads an archive before testing. The main-push retention job allows a
+  successful build upload to qualify even if macOS tests later fail. The PR smoke tier means that
   an OS-only regression outside the smoke list surfaces on `main` after merge
   instead of on the pull request. The release workflow is a manual dispatch
   and does not read `main` CI results, so the maintainer must confirm `main` is
@@ -153,8 +153,8 @@ The current validation graph is organized as follows:
   and requires `Windows smoke` when the Rust scope requests it on a pull request, and the smoke jobs are not separate required checks. The release
   workflow does not use these outputs.
   A pull request likewise runs one `Windows smoke` job (`windows-smoke`,
-  windows-2025) instead of the 14 full Windows jobs (`native-build`,
-  `native-test-build`, six `native-rust-tests` and six `native-api-tests`
+  windows-2025) instead of the six full Windows jobs (`native-build`,
+  `native-test-build`, two `native-rust-tests` and two `native-api-tests`
   shards), so a push starts at most one Windows job. It restores the Windows
   workspace cache that `main` builds, builds the CLI and N-API addon, runs
   `check` on one saved fixture, runs `analyzeProject` through the built addon,
@@ -305,14 +305,15 @@ per platform, architecture, and Node runtime so superseded lockfile generations
 do not crowd out workspace snapshots. Different platforms, architectures, Node
 runtimes, and unknown key formats remain separate.
 
-Cleanup runs after successful main producers, on PR closure, and when a
+One best-effort job applies repository-wide retention after the main CI producers
+finish if at least one published build outputs or succeeded. Cleanup also runs
+on PR closure and when a
 main-push run of Test CI or Benchmarks finishes. A run can save caches before a
 later job fails, so cleanup also runs after unsuccessful completions.
 
 After deduplication it evicts least-recently-accessed main workspace snapshots
-until the inventory fits an 8 GiB budget. Budget eviction skips the newest
-main macOS test harness snapshot for `main` macOS test-harness restores.
-Deduplication still removes superseded harness snapshots. Open PRs, unknown
+until the inventory fits an 8 GiB budget. The former macOS Rust test harness
+snapshot can be evicted along with other workspace snapshots. Open PRs, unknown
 families, release dependencies, and active benchmark handoffs also remain
 protected. If protected entries alone exceed the budget, cleanup reports the
 remaining excess. Individual uploads can briefly precede their cleanup jobs,
@@ -505,14 +506,36 @@ and, for each job, its own cleanup. The earlier macOS native path alone exceeded
 the ten-minute target. The following completed parallel measurements distinguish
 cache states and include scheduling overhead.
 
+### Test shard sizing
+
+Keep setup below 30% of each test shard's wall time, measured from job start
+to the start of the test step. The wall-time denominator includes test execution,
+reporting, and cleanup. Queue time is separate. Main run
+[`46045845814`](https://github.com/jongleberry/no-mistakes/actions/runs/46045845814)
+spent a combined 422 seconds running the Windows Rust shards, 336 seconds running
+the Windows API shards, and 184 seconds running the Linux N-API shards. Dividing
+the test time evenly across two runners projects a setup share of 25% for
+Windows Rust (70 / 281 seconds) and 23% for Linux N-API (28 / 120 seconds) at
+the maximum observed setup times. The Windows API estimate is 29% with median
+setup (68.5 / 236.5 seconds) and just under 30% with maximum setup and five
+seconds of reporting and cleanup (73 / 246 seconds). JavaScript projects
+25% (18 / 72 seconds). Use observed per-shard timings to check the balance.
+
+The full macOS Rust job caches Cargo dependencies and rebuilds its workspace
+harnesses. Main runs `46020851639` and `46038889294` both downloaded a 4.62 GiB
+workspace snapshot and reached the step deadline during extraction. The required
+build and tests then skipped, so they had no case inventory to upload. The
+dependency-only cache is best effort. Inventory upload runs after the test step
+starts, including when tests fail.
+
 ### Standalone archive transfers
 
 On pushes and manual dispatches, the [standalone archive producer](../../.github/scripts/standalone-shards.cjs)
 uses long-distance archive compression to reduce repeated shard downloads while
 preserving symbol names for panic diagnostics. Debug metadata is already disabled;
-stripping symbols would remove those diagnostics. Once the producer compiles the
-three test executables, it publishes one artifact per shard. Each test runner
-downloads its archive and the shared revision manifest. Warm dispatches validate
+stripping symbols would remove those diagnostics. Each producer publishes one
+artifact with its archive and a revision manifest. Each test runner downloads
+the artifact for its shard. Warm dispatches validate
 that all three artifacts are present and unexpired.
 
 The [standalone shard workflow](../../.github/workflows/ci.yml) bounds the initial
@@ -553,7 +576,7 @@ Those weights are scheduling units, not predicted seconds. The archived
 loads across three shards (previously 185/188 with 430-unit loads across two
 shards), separating bounded-statement and query-annotation work. Each selected
 case still runs exactly once, with the original filters, batching and flags.
-Windows retains its existing six-shard assignments.
+Windows currently runs two deterministic shards.
 
 The existing harness batching already avoids spawning a process per case.
 Adding runners would repeat checkout, runtime setup and artifact downloads
@@ -700,7 +723,7 @@ For local debugging, set `CARGO_PROFILE_DEV_DEBUG=2` or
 <!-- cspell:ignore nm_shard_all nm_shard_postgres_source NM_TEST_SHARD codegen nextest CODEGEN dead_code unused_imports -->
 
 `Build standalone library tests` compiles the default-feature library test
-target on a 16 GB `ubuntu-latest` runner. Workspace dev and test profiles
+target across three 16 GB `ubuntu-latest` runners. Workspace dev and test profiles
 already set `debug = 0`, so this peak is not debugger metadata. Run
 `44867392510` recorded one `rustc` at 13,086 MiB (`top_rss=13086MiB`) while
 swap was present. Run `44868635492` had no swap, reached 14,147 MiB, and the
@@ -737,16 +760,15 @@ always sets `nm_shard_all`, and `crates/no-mistakes-postgres-sql/build.rs` watch
 `NM_POSTGRES_SQL_TEST_SHARD` (used only by the `postgres-source` slice) rather
 than `NM_TEST_SHARD`, so Cargo keeps both sibling library artifacts fresh when
 `NM_TEST_SHARD` cycles across `0`, `1`, and `2`. The standalone producer for pushes and manual dispatches sets
-`NM_TEST_SHARD` to `0`, `1`, and `2` on three sequential `cargo nextest archive`
-commands (shard 0 archives `--workspace --lib` so the smaller
+`NM_TEST_SHARD` to `0`, `1`, and `2` on parallel runners using `cargo nextest archive` (shard 0 archives `--workspace --lib` so the smaller
 `no-mistakes-invocation` and `no-mistakes-postgres-sql` crates run all of their
 unit tests once, while shards 1 and 2 archive `-p no-mistakes --lib`) and writes
 `standalone-0.tar.zst`, `standalone-1.tar.zst`, and `standalone-2.tar.zst`.
 Each consumer runs one of those archives and does not hash-partition it. Cargo
-uses a distinct workspace compiler wrapper path for each shard, preserving the
-three library test fingerprints in one target while sharing registry dependencies.
-The build restores input timestamps only when a workspace cache matches and
-records them only when a successful main build will publish a new cache.
+uses a distinct workspace compiler wrapper path for each shard. Each runner
+restores the shared workspace snapshot and its input timestamps when available.
+Only the first shard, which builds the full workspace library suite, publishes
+a new snapshot on main. The three jobs use independent target directories.
 Each archive command has its own deadline within the 25-minute producer job.
 The first command also builds registry dependencies. The job sets `CARGO_BUILD_JOBS=1`, `CARGO_INCREMENTAL=0`,
 `CARGO_PROFILE_DEV_DEBUG=0`, `CARGO_PROFILE_TEST_DEBUG=0`,

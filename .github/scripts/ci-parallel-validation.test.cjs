@@ -33,7 +33,10 @@ test("native API timeout leaves startup and teardown room after the observed Win
     entries
       .filter((entry) => entry[1] === "windows-2025")
       .map((entry) => [Number(entry[2]), Number(entry[3])]),
-    Array.from({ length: 6 }, (_, index) => [index + 1, 6]),
+    [
+      [1, 2],
+      [2, 2],
+    ],
   );
   assert.deepEqual(
     entries
@@ -241,15 +244,11 @@ test("standalone library deadline reserves cold-cache time beyond the censored p
   const build = workflowJob("standalone-build");
   const shards = workflowJob("standalone-shards");
   const gate = workflowJob("tests-gate");
-  const compileSteps = [
-    "Build standalone library without a CLI",
-    "Build standalone library shard 2",
-    "Build standalone library shard 3",
-  ];
-  assert.deepEqual(
-    compileSteps.map((name) => stepBudgetSeconds(build, name)),
-    current.standaloneBuildSteps,
+  assert.equal(
+    stepBudgetSeconds(build, "Build standalone library without a CLI"),
+    current.standaloneBuildStep,
   );
+  assert.match(build, /shard: \[1, 2, 3\]/);
   const stepBudget = stepBudgetSeconds(shards, stepName);
   assert.equal(stepBudget, 360);
   assert.ok(coldRequired > stepBudget);
@@ -451,7 +450,6 @@ test("v2 workspace producers prefer matching manifests before compatible compile
     "native-build",
     "native-api-tests-macos",
     "native-test-build",
-    "native-rust-tests-macos",
     "standalone-build",
     "rust-coverage-build",
   ];
@@ -487,12 +485,7 @@ test("v2 workspace producers prefer matching manifests before compatible compile
     workflowJob("linux-runtime"),
     /key: linux-runtime-workspace-v2-\$\{\{ matrix\.role \}\}/,
   );
-  for (const name of [
-    "native-build",
-    "native-api-tests-macos",
-    "native-test-build",
-    "native-rust-tests-macos",
-  ]) {
+  for (const name of ["native-build", "native-api-tests-macos", "native-test-build"]) {
     const body = workflowJob(name);
     assert.match(body, /key: [^\n]*\$\{\{ matrix\.target \}\}/);
     assert.match(body, /shared-key: cargo-registry-v1/);

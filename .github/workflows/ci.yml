@@ -769,13 +769,13 @@ jobs:
           if-no-files-found: error
           retention-days: 1
   javascript-shards:
-    name: JavaScript shard (${{ matrix.shard }}/${{ github.event_name == 'pull_request' && 2 || 4 }})
+    name: JavaScript shard (${{ matrix.shard }}/2)
     runs-on: ubuntu-latest
     timeout-minutes: 8
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(github.event_name == 'pull_request' && '[1,2]' || '[1,2,3,4]') }}
+        shard: [1, 2]
     steps:
       - name: Checkout
         timeout-minutes: 5
@@ -813,7 +813,7 @@ jobs:
         run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Run JavaScript tests
         timeout-minutes: 4
-        run: pnpm run test:ci --config .github/scripts/vitest-shard.config.cjs --shard=${{ matrix.shard }}/${{ github.event_name == 'pull_request' && 2 || 4 }} --reporter=blob
+        run: pnpm run test:ci --config .github/scripts/vitest-shard.config.cjs --shard=${{ matrix.shard }}/2 --reporter=blob
       - name: Upload JavaScript shard report
         timeout-minutes: 3
         if: ${{ always() }}
@@ -896,14 +896,14 @@ jobs:
           flags: javascript
           fail_ci_if_error: true
   linux-api-tests:
-    name: Linux N-API tests (${{ matrix.shard }}/4)
+    name: Linux N-API tests (${{ matrix.shard }}/2)
     needs: linux-runtime
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2]
     env:
       NATIVE_API_SHARD: ${{ matrix.shard }}
     steps:
@@ -955,7 +955,7 @@ jobs:
         id: real-napi
         run: >-
           NO_MISTAKES_TEST_NAPI_ADDON_PATH="$GITHUB_WORKSPACE/target/debug/no-mistakes.node"
-          node .github/scripts/native-api-shards.cjs "$NATIVE_API_SHARD" 4 linux
+          node .github/scripts/native-api-shards.cjs "$NATIVE_API_SHARD" 2 linux
       - name: Report real N-API test durations
         if: ${{ !cancelled() && steps.real-napi.outcome != 'skipped' }}
         timeout-minutes: 2
@@ -1482,27 +1482,11 @@ jobs:
           - os: windows-2025
             target: x86_64-pc-windows-msvc
             shard: 1
-            total: 6
+            total: 2
           - os: windows-2025
             target: x86_64-pc-windows-msvc
             shard: 2
-            total: 6
-          - os: windows-2025
-            target: x86_64-pc-windows-msvc
-            shard: 3
-            total: 6
-          - os: windows-2025
-            target: x86_64-pc-windows-msvc
-            shard: 4
-            total: 6
-          - os: windows-2025
-            target: x86_64-pc-windows-msvc
-            shard: 5
-            total: 6
-          - os: windows-2025
-            target: x86_64-pc-windows-msvc
-            shard: 6
-            total: 6
+            total: 2
 
     steps:
       - name: Exclude workspace from Microsoft Defender
@@ -1661,56 +1645,23 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Cache Cargo registry sources
+      - name: Cache Cargo dependencies
         if: ${{ env.COLD_BUILD != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
+        continue-on-error: true
         timeout-minutes: 3
         uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
         with:
-          shared-key: cargo-registry-v1-${{ hashFiles('Cargo.lock') }}
-          add-rust-environment-hash-key: false
-          cache-targets: false
+          cache-targets: true
           cache-bin: false
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
-
-      - name: Cache native workspace artifacts by source
-        id: native-workspace-cache
-        if: ${{ (env.COLD_BUILD != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 3
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          key: native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-${{ hashFiles('crates/**/*.rs') }}
-          restore-keys: |
-            native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-
-            native-test-harness-workspace-v2-${{ matrix.target }}-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
-          path: |
-            target/debug
-            target/.rustc_info.json
-            ${{ runner.temp }}/nm-cargo-inputs
 
       # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Precompile native Rust test targets
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 35
         shell: bash
-        env:
-          NATIVE_RUST_CACHE_HIT: ${{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' || 'false' }}
-        run: |
-          set -euo pipefail
-          node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
-          node .github/scripts/native-test-archive.cjs build
-          node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
-
-      - name: Save verified workspace artifacts
-        if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.native-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 3
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          key: ${{ steps.native-workspace-cache.outputs.cache-primary-key }}
-          path: |
-            target/debug
-            target/.rustc_info.json
-            ${{ runner.temp }}/nm-cargo-inputs
+        run: node .github/scripts/native-test-archive.cjs build
 
       - name: Upload native-rust-archive
         id: native-build-artifact
@@ -1750,12 +1701,13 @@ jobs:
           path: target/native-test-artifacts
 
       - name: Run platform-specific Rust tests
+        id: native-rust-tests
         timeout-minutes: 15
         shell: bash
         run: node .github/scripts/native-test-archive.cjs run ${{ matrix.shard }} ${{ matrix.total }}
 
       - name: Retain native Rust case execution inventory
-        if: ${{ always() }}
+        if: ${{ !cancelled() && steps.native-rust-tests.outcome != 'skipped' }}
         timeout-minutes: 2
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -1787,27 +1739,11 @@ jobs:
           - os: windows-2025
             target: x86_64-pc-windows-msvc
             shard: 1
-            total: 6
+            total: 2
           - os: windows-2025
             target: x86_64-pc-windows-msvc
             shard: 2
-            total: 6
-          - os: windows-2025
-            target: x86_64-pc-windows-msvc
-            shard: 3
-            total: 6
-          - os: windows-2025
-            target: x86_64-pc-windows-msvc
-            shard: 4
-            total: 6
-          - os: windows-2025
-            target: x86_64-pc-windows-msvc
-            shard: 5
-            total: 6
-          - os: windows-2025
-            target: x86_64-pc-windows-msvc
-            shard: 6
-            total: 6
+            total: 2
 
     steps:
       - name: Exclude workspace from Microsoft Defender
@@ -2458,11 +2394,15 @@ jobs:
         run: node .github/scripts/smoke.cjs windows api target/debug/no-mistakes.node
 
   standalone-build:
-    name: Build standalone library tests
+    name: Build standalone library tests (${{ matrix.shard }}/3)
     needs: changes
     if: ${{ github.event_name != 'pull_request' && needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     env: &standalone-env
       CARGO_BUILD_JOBS: "1"
       CARGO_TARGET_DIR: ${{ github.workspace }}/target/standalone-lib/target
@@ -2527,6 +2467,7 @@ jobs:
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 13
         env:
+          STANDALONE_SHARD: ${{ matrix.shard }}
           WORKSPACE_CACHE_KEY: ${{ steps.standalone-lib-workspace-cache.outputs.cache-matched-key }}
         shell: bash
         run: |
@@ -2537,21 +2478,14 @@ jobs:
           printf 'standalone library build: cargo_jobs=%s dev_units=%s test_units=%s dev_debug=%s test_debug=%s incremental=%s shards=%s\n' \
             "$CARGO_BUILD_JOBS" "$CARGO_PROFILE_DEV_CODEGEN_UNITS" "$CARGO_PROFILE_TEST_CODEGEN_UNITS" \
             "$CARGO_PROFILE_DEV_DEBUG" "$CARGO_PROFILE_TEST_DEBUG" "$CARGO_INCREMENTAL" 3
-          bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle 1
-      - name: Build standalone library shard 2
-        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 10
-        run: bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle 2
-      - name: Build standalone library shard 3
-        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 10
-        run: bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle 3
+          bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle "$STANDALONE_SHARD"
+
       - name: Record standalone compiler inputs for cache publication
-        if: ${{ env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
+        if: ${{ matrix.shard == 1 && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
         run: node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
       - name: Save verified workspace artifacts
-        if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
+        if: ${{ (success() && matrix.shard == 1 && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -2560,42 +2494,17 @@ jobs:
             target/standalone-lib/target/debug
             target/standalone-lib/target/.rustc_info.json
             ${{ runner.temp }}/nm-standalone-lib-cargo-inputs
-      - name: Upload standalone library archive 1
+      - name: Upload standalone library archive
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: standalone-library-1
-          path: |
-            target/standalone-bundle/build.json
-            target/standalone-bundle/standalone-0.tar.zst
+          name: standalone-library-${{ matrix.shard }}
+          path: target/standalone-bundle/
           if-no-files-found: error
           compression-level: 0
           retention-days: 1
-      - name: Upload standalone library archive 2
-        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 3
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: standalone-library-2
-          path: |
-            target/standalone-bundle/build.json
-            target/standalone-bundle/standalone-1.tar.zst
-          if-no-files-found: error
-          compression-level: 0
-          retention-days: 1
-      - name: Upload standalone library archive 3
-        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
-        timeout-minutes: 3
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: standalone-library-3
-          path: |
-            target/standalone-bundle/build.json
-            target/standalone-bundle/standalone-2.tar.zst
-          if-no-files-found: error
-          compression-level: 0
-          retention-days: 1
+
 
   standalone-pr:
     name: Standalone PR library shard (${{ matrix.shard }}/3)
@@ -3259,82 +3168,22 @@ jobs:
           fi
           ast-grep scan --off=no-inline-test-fixture-write --off=no-inline-test-fixture-write-cfg
           python3 .ast-grep/check-inline-fixture-writes.py "${baseline_args[@]}"
-  retain-linux-runtime-cache:
-    name: Retain linux-runtime cache
-    needs: linux-runtime
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.linux-runtime.result == 'success' }}
-    permissions:
-      contents: read
-      actions: write
-      pull-requests: read
-    uses: ./.github/workflows/cache-retention.yml
-    with:
-      best_effort: true
-
-  retain-native-build-cache:
-    name: Retain native-build cache
-    needs: native-build
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-build.result == 'success' }}
-    permissions:
-      contents: read
-      actions: write
-      pull-requests: read
-    uses: ./.github/workflows/cache-retention.yml
-    with:
-      best_effort: true
-
-  retain-native-build-macos-cache:
-    name: Retain native-build-macos cache
-    needs: native-api-tests-macos
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-api-tests-macos.outputs.built == 'true' }}
-    permissions:
-      contents: read
-      actions: write
-      pull-requests: read
-    uses: ./.github/workflows/cache-retention.yml
-    with:
-      best_effort: true
-
-  retain-native-test-build-cache:
-    name: Retain native-test-build cache
-    needs: native-test-build
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-test-build.result == 'success' }}
-    permissions:
-      contents: read
-      actions: write
-      pull-requests: read
-    uses: ./.github/workflows/cache-retention.yml
-    with:
-      best_effort: true
-
-  retain-native-test-build-macos-cache:
-    name: Retain native-test-build-macos cache
-    needs: native-rust-tests-macos
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.native-rust-tests-macos.outputs.built == 'true' }}
-    permissions:
-      contents: read
-      actions: write
-      pull-requests: read
-    uses: ./.github/workflows/cache-retention.yml
-    with:
-      best_effort: true
-
-  retain-standalone-build-cache:
-    name: Retain standalone-build cache
-    needs: standalone-build
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.standalone-build.result == 'success' }}
-    permissions:
-      contents: read
-      actions: write
-      pull-requests: read
-    uses: ./.github/workflows/cache-retention.yml
-    with:
-      best_effort: true
-
-  retain-rust-coverage-build-cache:
-    name: Retain rust-coverage-build cache
-    needs: rust-coverage-build
-    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.rust-coverage-build.result == 'success' }}
+  retain-caches:
+    name: Retain CI caches
+    needs:
+      [
+        linux-runtime,
+        native-build,
+        native-api-tests-macos,
+        native-test-build,
+        native-rust-tests-macos,
+        standalone-build,
+        rust-coverage-build,
+      ]
+    if: >-
+      ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+          (contains(needs.*.result, 'success') || needs.native-api-tests-macos.outputs.built == 'true' ||
+           needs.native-rust-tests-macos.outputs.built == 'true') }}
     permissions:
       contents: read
       actions: write
