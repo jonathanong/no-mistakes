@@ -742,4 +742,4 @@ paths remain unanalyzable; see [awaited return origins](../postgres-query-annota
 ## Invalid UTF-8
 
 The rule reads SQL from executor calls in application source. Source text
-is decoded lossily, so a stray byte alone does not drop a file. [Source selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_require_query_annotation/scan.rs#L39-L61).
+is decoded lossily, so a stray byte alone does not drop a file. [Source selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_require_query_annotation/scan.rs#L39-L61).

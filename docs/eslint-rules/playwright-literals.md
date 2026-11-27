@@ -43,7 +43,7 @@ find(`save-${user.id}`);
   `true`.
 - `allowStaticTemplates` defaults to `false`. Enable it to permit interpolated
   templates that contain a nonempty literal fragment. Templates without
-  substitutions already count as literals. [Template classification](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/helpers.js#L59-L73).
+  substitutions already count as literals. [Template classification](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/helpers.js#L59-L73).
 
 ## Fix
 

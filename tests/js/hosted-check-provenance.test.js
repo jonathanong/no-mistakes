@@ -184,7 +184,7 @@ test("unprefixed stable release tags retain the resolved release identity", () =
     build.refs.baseline.ref = "refs/tags/0.94.0";
     build.refs.baseline.release.tag = "0.94.0";
     build.refs.baseline.release.url =
-      "https://github.com/jonathanong/no-mistakes/releases/tag/0.94.0";
+      "https://github.com/jongleberry/no-mistakes/releases/tag/0.94.0";
   }
   validateBuildPair(builds);
 });

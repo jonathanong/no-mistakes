@@ -323,7 +323,7 @@ rules:
 
 At max effort, the rule skips unresolved URLs and continues checking literal
 candidates. At either effort, it skips scripts with an unterminated heredoc
-and workflows that cannot be read or parsed. [Shell judging](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/judge.rs#L58-L104), [URL operands](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/judge.rs#L118-L140), and [workflow selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/effort.rs#L87-L94).
+and workflows that cannot be read or parsed. [Shell judging](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/judge.rs#L58-L104), [URL operands](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/judge.rs#L118-L140), and [workflow selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/effort.rs#L87-L94).
 
 ### Limits
 

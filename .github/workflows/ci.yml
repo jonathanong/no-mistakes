@@ -514,7 +514,7 @@ jobs:
       # docs/performance/2238/39488578982/README.md and tables.md are hash-locked by checksums.json.
       LYCHEE_ARGS: >-
         --no-progress
-        --remap '^https://github\.com/jonathanong/no-mistakes/blob/main/docs/ file://${{ github.workspace }}/docs/'
+        --remap '^https://github\.com/jongleberry/no-mistakes/blob/main/docs/ file://${{ github.workspace }}/docs/'
         --exclude-path ^fixtures/
         --exclude-path 'docs/performance/2238/39488578982/(README|tables)\.md$'
         --files-from "$RUNNER_TEMP/lychee-inputs.txt"
@@ -549,7 +549,7 @@ jobs:
           args: >-
             --offline
             --no-progress
-            --remap '^https://github\.com/jonathanong/no-mistakes/blob/main/docs/ file://${{ github.workspace }}/docs/'
+            --remap '^https://github\.com/jongleberry/no-mistakes/blob/main/docs/ file://${{ github.workspace }}/docs/'
             --exclude-path ^fixtures/
             --exclude-path 'docs/performance/2238/39488578982/(README|tables)\.md$'
             --files-from "$RUNNER_TEMP/lychee-offline-inputs.txt"

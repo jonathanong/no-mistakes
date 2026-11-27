@@ -25,7 +25,7 @@ snapshot bookkeeping are removed rather than enabled by another configuration
 option. Initialization counts remain actual counts; retained callers are not
 reclassified to hide their work.
 
-The [earlier cached implementation measurements](https://github.com/jonathanong/no-mistakes/blob/c0f7a4a0ed3ae7d9a1a72e3fd209a2cc0406a1c2/docs/performance/postgres-annotation-scope-3085.md)
+The [earlier cached implementation measurements](https://github.com/jongleberry/no-mistakes/blob/c0f7a4a0ed3ae7d9a1a72e3fd209a2cc0406a1c2/docs/performance/postgres-annotation-scope-3085.md)
 and the historical JSON beside this page are superseded. They used different
 sources and release settings and are not acceptance evidence for this revision.
 

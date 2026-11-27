@@ -222,7 +222,7 @@ successful helper recovery. An identifier hole stays a placeholder and retains
 the text after it. The rule still checks visible `FOR UPDATE` clauses in the
 recovered prefix. The default uncertainty finding applies only to dynamic
 calls without recovered text. Under `advise`, the unproven tail can also
-produce an advisory. [Finding selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_ordering/scan.rs#L78-L124) and [SQL verdicts](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_ordering/scan/verdicts.rs#L74-L95).
+produce an advisory. [Finding selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_ordering/scan.rs#L78-L124) and [SQL verdicts](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_ordering/scan/verdicts.rs#L74-L95).
 
 Recovered SQL containing `FOR UPDATE` that fails to parse always produces an
 `unparseable` finding, including under `ignore` and `advise`. That SQL may hold
@@ -272,4 +272,4 @@ executor SQL. See [suppression hygiene](../configuration/suppressions.md).
 ## Invalid UTF-8
 
 The rule reads SQL from executor calls in application source. Source text
-is decoded lossily, so a stray byte alone does not drop a file. [Source selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_ordering/scan.rs#L42-L57).
+is decoded lossily, so a stray byte alone does not drop a file. [Source selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_ordering/scan.rs#L42-L57).

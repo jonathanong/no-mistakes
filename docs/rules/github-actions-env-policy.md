@@ -88,18 +88,18 @@ steps:
 ## Options and defaults
 
 `required` defaults to `{}` and maps a name to a string, number, boolean,
-or YAML null. Null is normalized to the empty string. [Required values](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_workflow_files/env_policy.rs#L39-L58).
+or YAML null. Null is normalized to the empty string. [Required values](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_workflow_files/env_policy.rs#L39-L58).
 `forbidden` defaults to `[]`. A name cannot be both required and forbidden;
 that is a configuration error, as is a non-scalar required value. With both
 empty the rule reports nothing, so it is opt-in.
 
 `unanalyzable` inherits the repository setting when present and otherwise
-defaults to `advise`. [Policy precedence](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/config/v2/analysis_policy.rs#L86-L96).
+defaults to `advise`. [Policy precedence](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/config/v2/analysis_policy.rs#L86-L96).
 
 `include` defaults to `.github/workflows/**/*.yml`,
 `.github/workflows/**/*.yaml`, `.github/actions/**/action.yml`, and
 `.github/actions/**/action.yaml`. A nonempty list replaces those globs.
-An empty list uses the defaults. [Include selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_workflow_files/env_policy.rs#L109-L114).
+An empty list uses the defaults. [Include selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_workflow_files/env_policy.rs#L109-L114).
 
 ```yaml
 rules:
