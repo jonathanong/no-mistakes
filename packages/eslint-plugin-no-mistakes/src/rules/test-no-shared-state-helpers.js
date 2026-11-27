@@ -139,12 +139,14 @@ function childNodes(node) {
 
 function namedCallbackArgument(args) {
   for (let index = args.length - 1; index >= 0; index -= 1) {
-    if (args[index].type === "Identifier") return args[index];
+    const argument = unwrapExpression(args[index]);
+    if (argument.type === "Identifier") return argument;
   }
 }
 
 function firstNamedCallbackArgument(args) {
-  return args[0]?.type === "Identifier" ? args[0] : undefined;
+  const argument = args[0] && unwrapExpression(args[0]);
+  return argument?.type === "Identifier" ? argument : undefined;
 }
 
 module.exports = {

@@ -128,9 +128,10 @@ module.exports = rule(
         viMockTracker.collectFactoryReferences(node);
         const registered = registrationCall(node);
         if (!registered) {
-          reportOpaqueRegistration(node, context);
+          reportOpaqueRegistration(node, context, suppressed, node);
           return;
         }
+        const source = node;
         node = registered;
         const isShadowed = testAliases.isShadowed(node.callee);
         const isDescribe =
@@ -143,7 +144,7 @@ module.exports = rule(
         if (!isShadowed && configureSerialMode(node)) cleanupTracker.markCurrentSuiteSerial();
         const entered = !isShadowed && isTestCall(node, testCalleeNames, namespaces);
         if (!entered && !setupCallbackKind(node, testCalleeNames, namespaces))
-          reportOpaqueRegistration(node, context);
+          reportOpaqueRegistration(node, context, suppressed, source);
         if (entered) {
           depth.test += 1;
           const callback = namedCallbackArgument(node.arguments);

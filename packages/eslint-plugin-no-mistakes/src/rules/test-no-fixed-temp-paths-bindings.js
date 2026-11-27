@@ -43,6 +43,12 @@ function memberBinding(object, member) {
   return object && member && !member.includes(".") ? `${object}.${member}` : null;
 }
 
+function unresolvedMember(member) {
+  if (member === null || member === "promises") return UNRESOLVED;
+  const bare = member.replace(/Sync$/, "");
+  return PATH_METHODS.has(bare) ? UNRESOLVED : null;
+}
+
 function importedBinding(definition) {
   const { node, parent } = definition;
   if (node.importKind === "type" || parent.importKind === "type") return null;
@@ -92,10 +98,7 @@ function bindingResolver(context) {
     if (node?.type === "MemberExpression") {
       const object = resolve(node.object);
       const member = memberPropertyName(node);
-      if (object === UNRESOLVED) {
-        const bare = member?.replace(/Sync$/, "");
-        return member === null || PATH_METHODS.has(bare) ? UNRESOLVED : null;
-      }
+      if (object === UNRESOLVED) return unresolvedMember(member);
       if (object && member === null && ["fs", "fs/promises", "path", "os"].includes(object)) {
         return UNRESOLVED;
       }
@@ -122,16 +125,18 @@ function bindingResolver(context) {
     } else if (definition.type === "Variable" && definition.parent.kind === "const") {
       const { id, init } = definition.node;
       const value = resolve(init);
-      if (value === UNRESOLVED) binding = UNRESOLVED;
-      else if (id.type === "Identifier") binding = value;
-      else if (value && id.type === "ObjectPattern") {
+      if (id.type === "Identifier") binding = value;
+      else if (id.type === "ObjectPattern") {
         const member = destructuredMember(id, node.name);
-        binding = member
-          ? memberBinding(value, member)
-          : ["fs", "fs/promises"].includes(value)
-            ? UNRESOLVED
-            : null;
-      }
+        if (value === UNRESOLVED) binding = unresolvedMember(member);
+        else if (value) {
+          binding = member
+            ? memberBinding(value, member)
+            : ["fs", "fs/promises"].includes(value)
+              ? UNRESOLVED
+              : null;
+        }
+      } else if (value === UNRESOLVED) binding = UNRESOLVED;
     }
     bindings.set(variable, binding);
     return binding;

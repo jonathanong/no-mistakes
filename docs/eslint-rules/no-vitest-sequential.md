@@ -38,7 +38,8 @@ of the same name a namespace.
 
 A static `require("vitest")`, `import vt = require("vitest")`, and a
 destructured `test`, `it`, or `describe` from that module are the same runner
-as a named import. Vitest's default import is not a runner, and a destructured
+as a named import. A `var` or `let` binding of that require with no later write
+is the same runner. A later write reports `unanalyzable`. Vitest's default import is not a runner, and a destructured
 `expect` is not a runner. Type assertions, `satisfies`, and `as const` keys do
 not hide a sequential call.
 

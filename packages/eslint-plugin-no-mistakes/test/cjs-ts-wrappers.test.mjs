@@ -26,6 +26,7 @@ const groups = [
       "shapes.test.ts",
       "shadow.test.ts",
       "alias-member.test.ts",
+      "var-binding.test.ts",
     ],
     valid: [
       "not-a-runner.test.ts",
@@ -51,8 +52,9 @@ const groups = [
       "opaque-method.test.ts",
       "identifier-alias.test.ts",
       "call-apply.test.ts",
+      "inline-require.test.ts",
     ],
-    valid: ["type-only-equals.test.ts"],
+    valid: ["type-only-equals.test.ts", "suppressed.test.ts"],
   },
   {
     rule: "module-mock-boundary",
@@ -64,6 +66,7 @@ const groups = [
     rule: "module-mock-preserve-exports",
     dir: "preserve",
     invalid: ["mocks.test.ts", "dynamic.test.ts", "call-apply.test.ts"],
+    valid: ["suppressed.test.ts"],
   },
   {
     rule: "module-mock-preserve-exports",
@@ -101,8 +104,9 @@ const groups = [
       "dynamic.test.ts",
       "shapes.test.ts",
       "shadow-cast.test.ts",
+      "named-callback.test.ts",
     ],
-    valid: ["not-a-callee.test.ts"],
+    valid: ["not-a-callee.test.ts", "suppressed.test.ts"],
   },
   {
     rule: "test-no-shared-state",
@@ -161,8 +165,14 @@ const groups = [
     rule: "test-no-typed-enqueue-fake",
     dir: "enqueue-exact",
     options: [{ singleExportPattern: "^enqueue$" }],
-    invalid: ["cjs.test.ts", "dynamic.test.ts", "type-namespace.test.ts"],
-    valid: ["tuple.test.ts"],
+    invalid: [
+      "cjs.test.ts",
+      "dynamic.test.ts",
+      "type-namespace.test.ts",
+      "type-qualified.test.ts",
+      "wrapped-fn.test.ts",
+    ],
+    valid: ["tuple.test.ts", "reassign.test.ts"],
   },
   {
     rule: "test-no-typed-enqueue-fake",
@@ -186,7 +196,16 @@ const groups = [
     rule: "vitest-timeout-cap",
     dir: "timeout-finding",
     options: [{ unknownValues: "finding" }],
-    invalid: ["dynamic.test.ts"],
+    invalid: [
+      "dynamic.test.ts",
+      "pattern.config.ts",
+      "bare.config.ts",
+      "loop.config.ts",
+      "object.config.ts",
+      "rest.config.ts",
+      "default.config.ts",
+      "for-in.config.ts",
+    ],
     valid: ["vitest.config.ts"],
   },
   {
@@ -204,8 +223,8 @@ const groups = [
   {
     rule: "test-no-fixed-temp-paths",
     dir: "temp",
-    invalid: ["paths.test.ts", "dynamic.test.ts"],
-    valid: ["mock-after.test.ts"],
+    invalid: ["paths.test.ts", "dynamic.test.ts", "promises.test.ts"],
+    valid: ["mock-after.test.ts", "other-member.test.ts"],
   },
   {
     rule: "test-no-fixed-temp-paths",

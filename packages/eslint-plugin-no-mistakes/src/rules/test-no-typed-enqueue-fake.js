@@ -3,7 +3,7 @@
 const { posix } = require("node:path");
 const { options, rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
-const { unwrapExpression } = require("./async-ast");
+const { isTransparentExpression, unwrapExpression } = require("./async-ast");
 const { isUnresolved, moduleLoad } = require("./module-load");
 const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
 const { memberPropertyName } = require("./logical-call");
@@ -122,11 +122,10 @@ module.exports = rule(
       CallExpression(node) {
         let callee = node.callee;
         let typeNode = node;
-        if (callee.type === "TSInstantiationExpression") {
-          typeNode = callee;
+        while (isTransparentExpression(callee)) {
+          if (callee.type === "TSInstantiationExpression") typeNode = callee;
           callee = callee.expression;
         }
-        callee = unwrapExpression(callee);
         if (
           callee?.type !== "MemberExpression" ||
           !isFrameworkReceiver(callee.object, sourceCode)

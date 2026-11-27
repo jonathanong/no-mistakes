@@ -119,7 +119,7 @@ module.exports = rule(
       CallExpression(node) {
         const memberMock = isModuleMockMemberCall(node, context);
         if (memberMock?.unanalyzable) {
-          if (MODULE_MOCK_METHODS.has(memberMock.method)) {
+          if (MODULE_MOCK_METHODS.has(memberMock.method) && !suppressed(node)) {
             reportUnanalyzable(context, node, "this call");
           }
           return;
@@ -130,7 +130,7 @@ module.exports = rule(
         }
         const directCall = matchDirectMockCallApply(node, context, MODULE_MOCK_METHODS);
         if (directCall?.mock.unanalyzable) {
-          if (MODULE_MOCK_METHODS.has(directCall.mock.method)) {
+          if (MODULE_MOCK_METHODS.has(directCall.mock.method) && !suppressed(node)) {
             reportUnanalyzable(context, node, "this call");
           }
           return;

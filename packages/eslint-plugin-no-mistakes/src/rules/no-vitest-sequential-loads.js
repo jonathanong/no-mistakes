@@ -74,8 +74,34 @@ function recordRequire(declaration, state, context) {
   }
 }
 
+function hasLaterWrite(variable) {
+  return variable.references.some((reference) => reference.isWrite() && !reference.init);
+}
+
+function bindingRoot(node) {
+  let current = unwrapExpression(node);
+  while (current?.type === "MemberExpression" || current?.type === "CallExpression") {
+    current = unwrapExpression(current.type === "CallExpression" ? current.callee : current.object);
+  }
+  return current?.type === "Identifier" ? current : null;
+}
+
+function reassignedVitestRequire(callee, context) {
+  const root = bindingRoot(callee);
+  if (!root) return false;
+  const variable = resolveVariable(root, context);
+  if (!variable || variable.defs.length !== 1) return false;
+  const def = variable.defs[0];
+  return (
+    def.type === "Variable" &&
+    def.node?.id?.type === "Identifier" &&
+    requireSource(def.node.init, context) === "vitest" &&
+    hasLaterWrite(variable)
+  );
+}
+
 function unresolvedSequential(callee, context) {
-  return isUnresolved(moduleLoad(callee, context));
+  return isUnresolved(moduleLoad(callee, context)) || reassignedVitestRequire(callee, context);
 }
 
 function isUnshadowedNamespace(identifier, context, namespaces) {
@@ -93,9 +119,9 @@ function isUnshadowedNamespace(identifier, context, namespaces) {
   }
   return (
     def.type === "Variable" &&
-    def.parent?.kind === "const" &&
     def.node?.id?.type === "Identifier" &&
-    requireSource(def.node.init, context) === "vitest"
+    requireSource(def.node.init, context) === "vitest" &&
+    !hasLaterWrite(variable)
   );
 }
 

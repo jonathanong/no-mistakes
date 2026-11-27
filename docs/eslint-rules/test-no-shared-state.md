@@ -38,7 +38,11 @@ on an array, such as `[] as string[]`, is still a mutable initializer, and
 `list = [] as string[]` inside `beforeEach` is still a reset. A push through a
 type assertion, a non-null assertion, or a cast method, such as
 `(bag as any[]).push(1)`, `bag!.push(1)`, and `(bag.push as any)(1)`, is still
-that shared mutation.
+that shared mutation. A named callback wrapped in `as` or `!`, such as
+`test("case", run as typeof run)` or `test("case", run!)`, is still that callback.
+A suppression on `vt.test` silences the unresolved-registration advisory.
+A nested pattern such as `const { pkg: { vt } } = require("vitest")` is not traced
+to the inner binding.
 
 ## Fix
 

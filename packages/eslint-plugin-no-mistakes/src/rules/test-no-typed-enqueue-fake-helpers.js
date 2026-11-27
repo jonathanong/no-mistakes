@@ -1,7 +1,7 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
-const { staticImportSource } = require("./async-target-bindings");
+const { isReassigned, staticImportSource } = require("./async-target-bindings");
 const { requireSource } = require("./async-target-sources");
 const { literalString, memberPropertyName } = require("./logical-call");
 const { importSpecifierName } = require("./module-mock-helpers");
@@ -100,6 +100,7 @@ function isFrameworkReceiver(receiver, sourceCode) {
     }
     const variable = binding?.defs.length === 1 ? binding.defs[0] : null;
     if (variable?.type !== "Variable" || variable.node?.id?.type !== "ObjectPattern") return false;
+    if (isReassigned(receiver, scopeContext(sourceCode))) return false;
     const source = requireSource(variable.node.init, scopeContext(sourceCode));
     return frameworkModules.get(patternExportName(variable.node.id, receiver.name)) === source;
   }
@@ -151,6 +152,7 @@ function resolveImportTarget(node, sourceCode) {
     }
     const variable = binding?.defs.length === 1 ? binding.defs[0] : null;
     if (variable?.type === "Variable" && variable.node?.id?.type === "ObjectPattern") {
+      if (isReassigned(node, scopeContext(sourceCode))) return null;
       const name = patternExportName(variable.node.id, node.name);
       const init = unwrapExpression(variable.node.init);
       const module =
@@ -165,7 +167,7 @@ function resolveImportTarget(node, sourceCode) {
     node.left.type === "Identifier" &&
     node.right.type === "Identifier"
   ) {
-    const module = namespaceModule(node.left, sourceCode);
+    const module = namespaceModule(node.left, sourceCode, true);
     return module ? { name: node.right.name, module } : null;
   }
   if (node?.type === "MemberExpression") {

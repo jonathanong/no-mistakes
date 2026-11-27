@@ -72,13 +72,13 @@ function recordTopLevelRequires(node, testCalleeNames, namespaces, testAliases, 
   }
 }
 
-function reportOpaqueRegistration(call, context) {
+function reportOpaqueRegistration(call, context, suppressed, source) {
   const callee = unwrapExpression(call?.callee);
   if (callee?.type !== "MemberExpression" || callee.computed) return;
   const name = callee.property?.name;
   if (name !== "test" && name !== "it" && name !== "describe") return;
-  if (isUnresolved(moduleLoad(callee.object, context))) {
-    reportUnanalyzable(context, call, "this test registration");
+  if (isUnresolved(moduleLoad(callee.object, context)) && !suppressed(source)) {
+    reportUnanalyzable(context, call.loc ? call : source, "this test registration");
   }
 }
 

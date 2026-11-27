@@ -46,6 +46,7 @@ applicable mocks; `baseline` provides temporary `[file, specifier]` allowances.
 `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
 mock whose framework binding comes from a non-static `require` reports
 `unanalyzable`, including `.call` and a literal-array `.apply` on that mock.
+A suppression on that call silences the advisory.
 See the exhaustive table in
 [`eslint-plugin`](../eslint-plugin.md#rule-options).
 

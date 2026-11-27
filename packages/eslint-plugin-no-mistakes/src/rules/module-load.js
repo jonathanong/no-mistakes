@@ -15,8 +15,9 @@ function patternExport(pattern, name) {
     let value = property.value;
     while (value?.type === "AssignmentPattern") value = value.left;
     if (value?.type === "ObjectPattern") {
-      const nested = patternExport(value, name);
-      if (nested !== undefined) return nested;
+      // A nested pattern is a silent limit, not the inner export name.
+      if (patternExport(value, name) !== undefined) return undefined;
+      continue;
     }
     if (value?.type !== "Identifier" || value.name !== name) continue;
     if (!property.computed && property.key?.type === "Identifier") return property.key.name;

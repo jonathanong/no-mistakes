@@ -73,7 +73,7 @@ module.exports = rule(
       CallExpression(node) {
         const direct = isPreserveMockCall(node, context);
         if (direct?.unanalyzable) {
-          reportUnanalyzable(context, node, "this call");
+          if (!suppressed(node)) reportUnanalyzable(context, node, "this call");
           return;
         }
         if (direct) {
@@ -86,7 +86,7 @@ module.exports = rule(
           new Set(["mock", "doMock", "unstable_mockModule"]),
         );
         if (forwarded?.mock.unanalyzable) {
-          reportUnanalyzable(context, node, "this call");
+          if (!suppressed(node)) reportUnanalyzable(context, node, "this call");
           return;
         }
         if (forwarded) {

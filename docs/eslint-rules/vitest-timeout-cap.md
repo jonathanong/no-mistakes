@@ -253,7 +253,9 @@ it("runs", () => {}, budget);
 
 `const vt = require("vitest")` and `const { test } = require("vitest")` are
 test registrations. Reading `cfg.test.testTimeout as number` still sees the
-numeric timeout. `test.apply(null, [name, callback] as const)` still forwards
+numeric timeout. A pattern or loop write, such as
+`[(cfg.test.testTimeout as number)] = [60000]`, `[cfg.test.testTimeout] = [60000]`,
+or `for (cfg.test.testTimeout of [60000])`, is not a read of the initializer. `test.apply(null, [name, callback] as const)` still forwards
 that callback, including `ctx.onTestFinished`.
 
 Both numeric caps must be positive finite numbers. Set the rule in the files

@@ -132,6 +132,9 @@ function isFrameworkBinding(node, context) {
 function frameworkBindingOpaque(node, context, seen = new Set()) {
   node = unwrapExpression(node);
   if (!node || frameworkBindingModule(node, context)) return false;
+  if (node.type === "CallExpression") {
+    return requireResolution(node, context)?.source === null;
+  }
   if (node.type === "MemberExpression") {
     const known = frameworkBindingModule(node.object, context);
     if (known && memberPropertyName(node) === null) return false;

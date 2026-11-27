@@ -7,6 +7,12 @@
       "options": null
     },
     {
+      "file": "suppressed.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "mocks.test.ts",
       "findings": [
         {
@@ -179,6 +185,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "inline-require.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 37,
+          "endLine": 2,
+          "file": "inline-require.test.ts",
+          "line": 2,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "module-mock-boundary:boundary-ignore": [
@@ -204,6 +228,12 @@
     }
   ],
   "module-mock-preserve-exports:preserve": [
+    {
+      "file": "suppressed.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
     {
       "file": "mocks.test.ts",
       "findings": [
@@ -624,6 +654,46 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "var-binding.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 2,
+          "file": "var-binding.test.ts",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 4,
+          "file": "var-binding.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 7,
+          "file": "var-binding.test.ts",
+          "line": 7,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "no-vitest-sequential:sequential-ignore": [
@@ -940,6 +1010,12 @@
       "options": null
     },
     {
+      "file": "other-member.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "paths.test.ts",
       "findings": [
         {
@@ -996,6 +1072,46 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "promises.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 45,
+          "endLine": 3,
+          "file": "promises.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 38,
+          "endLine": 5,
+          "file": "promises.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 7,
+          "file": "promises.test.ts",
+          "line": 7,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-fixed-temp-paths:temp-ignore": [
@@ -1013,6 +1129,12 @@
   "test-no-shared-state:shared": [
     {
       "file": "not-a-callee.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "suppressed.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -1238,6 +1360,35 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "named-callback.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 18,
+          "endLine": 4,
+          "file": "named-callback.test.ts",
+          "line": 4,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 18,
+          "endLine": 4,
+          "file": "named-callback.test.ts",
+          "line": 4,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-shared-state:shared-ignore": [
@@ -1443,6 +1594,16 @@
       ]
     },
     {
+      "file": "reassign.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
       "file": "cjs.test.ts",
       "findings": [
         {
@@ -1528,6 +1689,50 @@
           "endLine": 4,
           "file": "type-namespace.test.ts",
           "line": 4,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "type-qualified.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 3,
+          "file": "type-qualified.test.ts",
+          "line": 3,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "wrapped-fn.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 42,
+          "endLine": 3,
+          "file": "wrapped-fn.test.ts",
+          "line": 3,
           "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
           "messageId": "typedEnqueueFake",
           "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
@@ -2064,6 +2269,314 @@
           "file": "dynamic.test.ts",
           "line": 3,
           "message": "Vitest framework API carrier cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "pattern.config.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "pattern.config.ts",
+          "line": 2,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "pattern.config.ts",
+          "line": 2,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "pattern.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "bare.config.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "bare.config.ts",
+          "line": 2,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "bare.config.ts",
+          "line": 2,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "bare.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "loop.config.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "loop.config.ts",
+          "line": 2,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "loop.config.ts",
+          "line": 2,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "loop.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "object.config.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "object.config.ts",
+          "line": 2,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "object.config.ts",
+          "line": 2,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "object.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "rest.config.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "rest.config.ts",
+          "line": 2,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "rest.config.ts",
+          "line": 2,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "rest.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "default.config.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "default.config.ts",
+          "line": 2,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "default.config.ts",
+          "line": 2,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "default.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "for-in.config.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "for-in.config.ts",
+          "line": 2,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "for-in.config.ts",
+          "line": 2,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "for-in.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
           "messageId": "unknown",
           "ruleId": "no-mistakes/vitest-timeout-cap",
           "severity": 2
