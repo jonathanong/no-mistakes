@@ -1,5 +1,5 @@
 const { spawnSync } = require("node:child_process");
-const { readFileSync, writeFileSync } = require("node:fs");
+const { existsSync, readFileSync, writeFileSync } = require("node:fs");
 const { basename, join, resolve } = require("node:path");
 const {
   TARGET,
@@ -30,6 +30,16 @@ const FLAGS = {
   RUSTFLAGS: "-D warnings",
   NO_MISTAKES_BUILD_NAPI: "1",
 };
+
+function readSourceVersion(source, manifestText) {
+  const direct = manifestText.match(/^version = "([^"]+)"/m)?.[1];
+  if (direct) return direct;
+  const root = join(source, "Cargo.toml");
+  if (!existsSync(root)) return undefined;
+  return readFileSync(root, "utf8").match(
+    /\[workspace\.package\][\s\S]*?^version = "([^"]+)"/m,
+  )?.[1];
+}
 
 function command(executable, args, cwd) {
   const result = spawnSync(executable, args, {
@@ -148,7 +158,7 @@ function build(phase, source, output, refs, variant, run = command, env = proces
       compiler: refs.compiler,
       rustc,
       cargo,
-      sourceVersion: original.match(/^version = "([^"]+)"/m)?.[1],
+      sourceVersion: readSourceVersion(source, original),
       sourceManifestSha256,
       sourceHashes,
       removedStubArtifacts,
@@ -180,4 +190,4 @@ if (require.main === module) {
     variant,
   );
 }
-module.exports = { ARGS, FLAGS, productionManifest, verifyEnvironment, build };
+module.exports = { ARGS, FLAGS, productionManifest, readSourceVersion, verifyEnvironment, build };

@@ -314,6 +314,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "file_disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "folded_function_names": {
     "exitCode": 1,
     "report": {
@@ -648,6 +660,18 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "line_disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "shared_function": {
     "exitCode": 1,
     "report": {
@@ -874,6 +898,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-column-requires-trigger",
           "sourceLine": "{",
           "target": "table:statement_orders"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unsuppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:orders: table has column updated_at but no BEFORE UPDATE FOR EACH ROW trigger executing fn_touch_updated_at()",
+          "rule": "postgres-column-requires-trigger",
+          "sourceLine": "{",
+          "target": "table:orders"
         }
       ],
       "warnings": []

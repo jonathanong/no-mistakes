@@ -75,9 +75,11 @@ Following recall over precision, nothing is silently treated as clean ([how anal
 
 ## Suppression
 
-If a file is intentionally exempted with a disable comment,
-both blocking findings and near-limit advisories for this rule are suppressed.
-Use suppression sparingly and prefer reducing document size where possible.
+Use `no-mistakes-disable-file agents-md-max-size` for an intentional
+exemption from both blocking findings and near-limit advisories. The rule
+reports at the start of the document, so `no-mistakes-disable-line` also
+works on the first line. A next-line directive applies to the second line
+or later. Prefer reducing document size where possible.
 
 ## Related rules
 

@@ -14,6 +14,9 @@ fn postgres_table_shape_check_json_snapshot() {
     let rule = "postgres-table-shape";
     let root = catalog();
     let config = |name: &str| rules_path(rule, "configs", name);
+    let fixture = |name| rules_path(rule, "fixture", name);
+    let fail = fixture("fail");
+    let suppression_config = fail.join(".no-mistakes.yml");
     // valid_examples_and_edges_pass and reports_every_specified_finding_text
     // share main. empty_shapes_report_nothing_and_runs_match's equality is the
     // jobs 1 vs 2 check on main; the empty catalog is empty_shapes.
@@ -76,6 +79,13 @@ fn postgres_table_shape_check_json_snapshot() {
                 root,
                 config("pattern-diagnostics.yml"),
             ),
+            ("unsuppressed", fail, suppression_config.clone()),
+            (
+                "line_disable",
+                fixture("line-disable"),
+                suppression_config.clone(),
+            ),
+            ("file_disable", fixture("file-disable"), suppression_config),
         ],
     );
 }

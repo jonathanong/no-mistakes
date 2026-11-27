@@ -1,0 +1,14 @@
+// no-mistakes-disable-file postgres-status-with-lifecycle-timestamps
+{
+  "formatVersion": 2, "coverage": "complete",
+  "tables": {
+    "deliveries": {
+      "relationKind": "table",
+      "columns": {
+        "state": { "dataType": "text", "nullable": false, "ordinalPosition": 1 },
+        "sent_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 2 },
+        "failed_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 }
+      }
+    }
+  }
+}

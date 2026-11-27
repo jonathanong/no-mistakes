@@ -1,11 +1,10 @@
 use ignore::WalkBuilder;
-use oxc_ast::ast::{Expression, PropertyKey};
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub mod facts;
-pub mod jsx;
+pub use no_mistakes_ts_facts::jsx;
 pub mod module_facts;
 
 pub(crate) mod bound_comments;
@@ -14,10 +13,9 @@ pub(crate) mod builtin_receivers;
 mod file_id_map;
 mod file_inventory;
 mod fixture_read_index;
-mod fixture_reads;
 #[doc(hidden)]
 pub use fixture_read_index::{FixtureReadIndex, FixtureReadScope};
-mod parser_diagnostic;
+pub(crate) use no_mistakes_ts_facts::fixture_reads;
 mod path_order;
 mod path_remapper;
 mod source_store;
@@ -25,7 +23,9 @@ pub(crate) use file_id_map::{FileIdMap, FileIdMapIter, FileIdMapIterMut};
 pub(crate) use file_inventory::ClassifiedPath;
 #[doc(hidden)]
 pub use file_inventory::{FileClassification, FileId, FileInventory};
-pub(crate) use parser_diagnostic::format_parse_diagnostic;
+pub use no_mistakes_ts_facts::syntax_helpers::{
+    is_test_file, starts_with_use_client, static_property_key_name, unwrap_ts_wrappers,
+};
 pub(crate) use path_order::{cmp_os_str_paths, sort_os_str_paths};
 pub(crate) use path_remapper::FrozenPathRemapper;
 #[doc(hidden)]
@@ -56,7 +56,6 @@ include!("disable_comments.rs");
 include!("comment_parser.rs");
 include!("comment_parser_html.rs");
 include!("comment_parser_modes.rs");
-include!("syntax_helpers.rs");
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod comment_parser_markdown_tests;

@@ -14,6 +14,7 @@ mod report;
 mod request;
 mod resources;
 mod timeout;
+pub(crate) mod ts_facts_hooks;
 
 use std::sync::Arc;
 

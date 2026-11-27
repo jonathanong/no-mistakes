@@ -13,6 +13,7 @@ const {
   FLAGS,
   build,
   productionManifest,
+  readSourceVersion,
   verifyEnvironment,
 } = require("../../.github/scripts/hosted-check-build.cjs");
 const {
@@ -432,4 +433,14 @@ test("demand runs always source-build latest release against resolved main, with
   assert.match(workflow, /measure fixture artifact measurements/);
   assert.match(workflow, /measurements\/comparisons\.json/);
   for (const [, ref] of workflow.matchAll(/uses: ([^\s#]+)/g)) assert.match(ref, /@[a-f0-9]{40}$/);
+});
+
+test("readSourceVersion reads direct package version and falls back to workspace.package", () => {
+  assert.equal(readSourceVersion(join(fixture, "source"), 'version = "0.94.0"\n'), "0.94.0");
+  const repoRoot = join(__dirname, "../..");
+  const crateManifest = readFileSync(join(repoRoot, "crates/no-mistakes/Cargo.toml"), "utf8");
+  const rootManifest = readFileSync(join(repoRoot, "Cargo.toml"), "utf8");
+  const expected = rootManifest.match(/\[workspace\.package\][\s\S]*?^version = "([^"]+)"/m)?.[1];
+  assert.ok(expected);
+  assert.equal(readSourceVersion(repoRoot, crateManifest), expected);
 });

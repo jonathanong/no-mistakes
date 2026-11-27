@@ -11,6 +11,9 @@ fn postgres_object_naming_check_json_snapshot() {
     let prepared_config = rules_path(RULE, "configs", "prepared-catalog.yml");
     let denied = rules_path(RULE, "configs", "replacement-denied.yml");
     let position = rules_path(RULE, "configs", "replacement-position.yml");
+    let fixture = |name| rules_path(RULE, "fixture", name);
+    let fail = fixture("fail");
+    let config = fail.join(".no-mistakes.yml");
     assert_saved_fixture(
         "postgres_object_naming",
         &[
@@ -52,6 +55,9 @@ fn postgres_object_naming_check_json_snapshot() {
                 rules_path(RULE, "fixture", "replacement-position-fail"),
                 position,
             ),
+            ("unsuppressed", fail, config.clone()),
+            ("line_disable", fixture("line-disable"), config.clone()),
+            ("file_disable", fixture("file-disable"), config),
         ],
     );
 }

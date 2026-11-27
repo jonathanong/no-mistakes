@@ -98,8 +98,10 @@ Following recall over precision, nothing is silently treated as clean ([how anal
 
 ## Suppression
 
-Prefer a narrow, reasoned `allowlist` entry for a temporary cycle. Use a file
-directive only for generated manifests.
+Use a narrow, reasoned `allowlist` entry for a temporary cycle, including in
+generated manifests. The cycle check builds its graph from valid
+`package.json` files. Adding a comment makes a manifest invalid JSON and
+removes the package from cycle analysis.
 
 ## Related rules
 

@@ -7,6 +7,8 @@ fn postgres_duplicate_function_body_check_json_snapshot() {
     let cases = [
         // fn_reject_orders_update, fn_reject_invoices_update, and fn_reject_refunds_update must remain
         ("copied_raise_cluster", "rejects", "catalog.yml"),
+        ("line_disable", "line-disable", "catalog.yml"),
+        ("file_disable", "file-disable", "catalog.yml"),
         // must not contain fn_touch_orders, fn_touch_invoices, fn_sql_copy, fn_plpgsql_copy, fn_reject_mutation, fn_flow_if, fn_flow_case, fn_bad, or fn_nobody
         ("valid_shapes", "schema", "catalog.yml"),
         ("min_tokens_splits_rejects", "rejects", "min-tokens.yml"),

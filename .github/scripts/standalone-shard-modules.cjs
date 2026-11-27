@@ -311,6 +311,11 @@ function libraryShardCoverage(root, options = {}) {
           srcDir: join(root, "crates/no-mistakes-postgres-sql/src"),
           entries: [join(root, "crates/no-mistakes-postgres-sql/src/lib.rs")],
         },
+        {
+          crateName: "no-mistakes-ts-facts",
+          srcDir: join(root, "crates/no-mistakes-ts-facts/src"),
+          entries: [join(root, "crates/no-mistakes-ts-facts/src/lib.rs")],
+        },
       ];
   let currentCrate = "no-mistakes";
   let currentSrcDir = roots[0].srcDir;

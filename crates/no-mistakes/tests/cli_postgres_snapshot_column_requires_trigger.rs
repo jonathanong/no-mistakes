@@ -31,5 +31,14 @@ fn postgres_column_requires_trigger_check_json_snapshot() {
         ("folded_function_names", "folded-names.yml"),
     ]
     .map(|(label, config)| (label, root.clone(), rules_path(rule, "configs", config)));
+    let fixture = |name| rules_path(rule, "fixture", name);
+    let fail = fixture("fail");
+    let config = fail.join(".no-mistakes.yml");
+    let mut cases = cases.to_vec();
+    cases.extend([
+        ("unsuppressed", fail, config.clone()),
+        ("line_disable", fixture("line-disable"), config.clone()),
+        ("file_disable", fixture("file-disable"), config),
+    ]);
     assert_saved_fixture("postgres_column_requires_trigger", &cases);
 }

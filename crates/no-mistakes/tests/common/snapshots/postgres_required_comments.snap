@@ -307,7 +307,31 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "file_disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "include_misses_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line_disable": {
     "exitCode": 0,
     "report": {
       "advisories": [],
@@ -394,6 +418,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "unsuppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:orders: table has no COMMENT ON TABLE. Add COMMENT ON TABLE with at least 1 characters so agents know what the object is for.",
+          "rule": "postgres-required-comments",
+          "sourceLine": "{",
+          "target": "table:orders"
+        }
+      ],
       "warnings": []
     }
   },

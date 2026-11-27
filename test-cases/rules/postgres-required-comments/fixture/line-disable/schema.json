@@ -1,0 +1,11 @@
+{ // no-mistakes-disable-line postgres-required-comments
+  "formatVersion": 2, "coverage": "complete",
+  "tables": {
+    "orders": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "dataType": "uuid", "nullable": false, "ordinalPosition": 1 }
+      }
+    }
+  }
+}

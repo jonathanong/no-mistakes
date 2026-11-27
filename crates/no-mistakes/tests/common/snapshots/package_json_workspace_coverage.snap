@@ -311,6 +311,50 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "unmatched_pattern_control": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: workspace pattern \"apps/*\" does not correspond to a package directory",
+          "rule": "package-json-workspace-coverage",
+          "sourceLine": "packages:"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unmatched_pattern_disable_file": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unmatched_pattern_disable_line": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "unnamed_selected": {
     "exitCode": 1,
     "report": {

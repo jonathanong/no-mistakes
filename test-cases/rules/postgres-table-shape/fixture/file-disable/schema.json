@@ -1,0 +1,16 @@
+// no-mistakes-disable-file postgres-table-shape
+{
+  "formatVersion": 2, "coverage": "complete",
+  "tables": {
+    "order_history": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "nullable": false,
+          "ordinalPosition": 1,
+          "dataType": "uuid"
+        }
+      }
+    }
+  }
+}

@@ -3,6 +3,7 @@
 - `crates/no-mistakes` — CLI, N-API library, graph, and rules (`pub use no_mistakes_invocation as invocation;`; `codebase::postgres` re-exports the postgres-sql crate).
 - `crates/no-mistakes-invocation` — invocation locking, deadlines, watchdogs, process trees, and `macos_invocation` (inverted diagnostics hooks in `hooks.rs`).
 - `crates/no-mistakes-postgres-sql` — pure PostgreSQL SQL parsing, statement/DML/lock/bound facts, identifiers (no `no-mistakes` dep; `CatalogLifecycleLookup` + `source::record_global_rayon_threads`).
+- `crates/no-mistakes-ts-facts` — pure OXC TS parsing, module facts, and value-flow extraction (must not depend on `no-mistakes`; diagnostics via `hooks`).
 ## Performance Guidelines
 Core check/evaluator optimizations must also follow [the crate rules](no-mistakes/AGENTS.md).
 ### Core architecture invariants

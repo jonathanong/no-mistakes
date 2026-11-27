@@ -21,7 +21,12 @@ rule:
 files:
   - "crates/no-mistakes/src/codebase/dependencies/extract.rs"
   - "crates/no-mistakes/src/codebase/dependencies/extract_*.rs"
+  - "crates/no-mistakes-ts-facts/src/extract/mod.rs"
+  - "crates/no-mistakes-ts-facts/src/extract/extract_*.rs"
 ignores:
   - "crates/no-mistakes/src/**/tests/**"
   - "crates/no-mistakes/src/**/*_tests.rs"
   - "crates/no-mistakes/src/**/tests.rs"
+  - "crates/no-mistakes-ts-facts/src/**/tests/**"
+  - "crates/no-mistakes-ts-facts/src/**/*_tests.rs"
+  - "crates/no-mistakes-ts-facts/src/**/tests.rs"

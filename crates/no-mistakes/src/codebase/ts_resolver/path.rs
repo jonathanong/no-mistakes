@@ -1,25 +1,4 @@
-/// Resolve `.` and `..` components without touching the filesystem.
-pub fn normalize_path(path: &Path) -> PathBuf {
-    use std::path::Component;
-    let mut normalized = PathBuf::with_capacity(path.as_os_str().len());
-    for c in path.components() {
-        match c {
-            Component::CurDir => {}
-            Component::ParentDir => {
-                if matches!(
-                    normalized.components().next_back(),
-                    Some(Component::Normal(_))
-                ) {
-                    normalized.pop();
-                } else {
-                    normalized.push(c.as_os_str());
-                }
-            }
-            other => normalized.push(other.as_os_str()),
-        }
-    }
-    normalized
-}
+pub use no_mistakes_ts_facts::path_norm::normalize_path;
 
 /// Try to match `specifier` against `pattern` (which may contain a single `*`).
 /// Returns `Some(capture)` where `capture` is what the `*` matched, or `""` for exact.
