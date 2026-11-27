@@ -22,8 +22,12 @@ fn prepared_imported_record_heads_keep_low_proofs_under_mixed_effort() {
             collect_check_facts(root, paths.clone(), plan(root, &config(&efforts)))
         });
         let file = facts.ts.get(&caller).expect("prepared caller");
-        let embedded = &file.embedded_sql[0].1;
-        let heads = file.query_annotation_heads.as_ref().expect("low facts");
+        let embedded = &file.postgres().embedded_sql[0].1;
+        let heads = file
+            .postgres()
+            .query_annotation_heads
+            .as_ref()
+            .expect("low facts");
         let proofs = embedded
             .call_spans
             .iter()
@@ -50,7 +54,7 @@ fn prepared_imported_record_heads_keep_low_proofs_under_mixed_effort() {
             assert_eq!(&proofs, low_proofs);
         } else {
             low_proofs = Some(proofs);
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert!(embedded.calls.iter().all(|call| call.variants.is_empty()));
             assert_eq!(
                 observer

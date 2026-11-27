@@ -1,9 +1,9 @@
 use super::PreparedRuleContext;
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig};
 use anyhow::{bail, ensure, Result};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use options::CompiledOptions;
 use rayon::prelude::*;
 use std::collections::BTreeSet;
@@ -24,7 +24,7 @@ pub use types::{
 };
 
 pub const RULE_ID: &str = "postgres-lock-inventory";
-pub(crate) const DEFAULT_BASELINE_FILE: &str = ".no-mistakes/postgres-locks.json";
+use crate::config::v2::DEFAULT_POSTGRES_BASELINE_FILE as DEFAULT_BASELINE_FILE;
 super::prepared_rule_entrypoints!(super::check_prepared_sql_rule);
 
 pub(crate) fn standalone_application(config: &NoMistakesConfig) -> Result<&RuleDef> {

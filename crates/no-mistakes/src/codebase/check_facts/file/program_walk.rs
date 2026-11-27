@@ -2,8 +2,8 @@ use super::super::{family_scope::applies, CheckFactPlan};
 use crate::codebase::rules::nextjs_no_caching::{
     finish_visitor, prepare_visitor, NextjsCachingFinding, NextjsCachingVisitor,
 };
-use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::{Collector, TestFacts};
 use crate::codebase::storybook::StorybookFileFacts;
+use crate::codebase::testing_analysis::dynamic_imports::{Collector, TestFacts};
 use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
 use std::collections::HashSet;

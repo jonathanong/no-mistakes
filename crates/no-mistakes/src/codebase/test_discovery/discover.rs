@@ -59,7 +59,7 @@ fn discover_from_projects_from_files(
     };
     let compiled = projects
         .iter()
-        .map(|project| Ok((project, ProjectTestFilter::from_project_ref(project)?)))
+        .map(|project| Ok((project, compile_project_filter(project)?)))
         .collect::<Result<Vec<_>>>()?;
     let mut project_scoped_paths = BTreeSet::new();
     for path in files {

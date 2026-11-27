@@ -1,22 +1,9 @@
-use serde::{Deserialize, Serialize};
-
 use super::types::TestRunner;
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct TestExecutionTarget {
-    pub runner: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub config: Option<String>,
-    #[serde(default, skip_serializing_if = "is_false")]
-    pub workspace: bool,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub project: Option<String>,
-    pub base_command: Vec<String>,
-    pub runner_args: Vec<String>,
-}
+pub use crate::codebase::testing_analysis::discovered_tests::TestExecutionTarget;
 
 pub(super) fn target_for(
     runner: TestRunner,
@@ -137,10 +124,6 @@ fn swift_target_for(
 
 fn default_swift_base() -> Vec<String> {
     vec!["swift".to_string(), "test".to_string()]
-}
-
-fn is_false(value: &bool) -> bool {
-    !value
 }
 
 fn swift_filter_from_path(test_file: &str) -> &str {

@@ -73,7 +73,7 @@ impl<'a, F: Fn(&str, &Path) -> Option<PathBuf>> Resolver<'a, F> {
         let Some(file) = files.get(path) else {
             return Proof::default();
         };
-        if let Some(heads) = file.query_annotation_heads.as_deref() {
+        if let Some(heads) = file.postgres().query_annotation_heads.as_deref() {
             if let Some(&signature) = heads.exported_effects.get(name) {
                 return Proof {
                     signature: Some(signature),

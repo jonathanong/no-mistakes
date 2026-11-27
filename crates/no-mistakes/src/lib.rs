@@ -53,6 +53,7 @@ pub mod swift_api;
 pub mod terraform_api;
 #[cfg(test)]
 pub(crate) mod test_support;
+mod testing_analysis_registration;
 mod tests;
 pub use ci::{run as ci_run, CiArgs};
 pub use impacted_checks::{run as impacted_checks_run, ImpactedChecksArgs};
@@ -70,6 +71,7 @@ pub mod postgres_catalog;
 pub mod postgres_lock_inventory;
 
 mod package_analysis_registration;
+mod postgres_analysis_registration;
 mod react_analysis_registration;
 
 ctor::declarative::ctor! {

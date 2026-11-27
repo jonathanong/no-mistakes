@@ -92,6 +92,8 @@ nothing. A file is in scope when its repository-relative path matches either
 glob. Helpers are scanned the same way as tests. `include` and `exclude`
 still apply.
 
+Unknown fields in `scopes` are configuration errors.
+
 ## Valid example
 
 ```ts

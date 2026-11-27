@@ -53,7 +53,7 @@ fn configured_low_annotation_skips_composition_in_the_real_shared_fact_pass() {
             collect_check_facts(root, vec![path.clone()], plan)
         });
         let file = facts.ts.get(&path).unwrap();
-        let embedded = &file.embedded_sql[0].1;
+        let embedded = &file.postgres().embedded_sql[0].1;
         assert!(!embedded.call_spans.is_empty());
         if let Some(spans) = &expected_spans {
             assert_eq!(&embedded.call_spans, spans);
@@ -72,8 +72,9 @@ fn configured_low_annotation_skips_composition_in_the_real_shared_fact_pass() {
                 "head-only collection must never compose SQL variants"
             );
             assert!(embedded.calls.iter().all(|call| call.variants.is_empty()));
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert!(file
+                .postgres()
                 .query_annotation_heads
                 .as_ref()
                 .unwrap()
@@ -126,12 +127,16 @@ fn direct_imported_helper_heads_project_from_prepared_source_facts() {
         )
     });
     let file = facts.ts.get(&caller).expect("caller prepared");
-    let heads = file.query_annotation_heads.as_ref().expect("low heads");
-    let statuses = file.embedded_sql[0]
+    let heads = file
+        .postgres()
+        .query_annotation_heads
+        .as_ref()
+        .expect("low heads");
+    let statuses = file.postgres().embedded_sql[0]
         .1
         .calls
         .iter()
-        .zip(&file.embedded_sql[0].1.call_spans)
+        .zip(&file.postgres().embedded_sql[0].1.call_spans)
         .map(|(call, span)| (call.line, heads.calls.get(span).copied()))
         .collect::<Vec<_>>();
     assert_eq!(
@@ -155,7 +160,7 @@ fn direct_imported_helper_heads_project_from_prepared_source_facts() {
             (25, Some(HeadProof::Literal)),
         ]
     );
-    assert!(file.query_annotation.is_empty());
+    assert!(file.postgres().query_annotation.is_empty());
     assert_eq!(
         observer
             .snapshot()

@@ -24,12 +24,9 @@ pub(crate) fn failure_facts(
 ) -> super::CheckFileFacts {
     super::CheckFileFacts {
         sql_source_prerequisites: super::SqlSourcePrerequisites::failed_source(root, path, plan),
-        sql_identifier_syntax: crate::codebase::postgres::sql_identifier_syntax::FileFacts {
-            low_applications: super::sql_source_prerequisites::planned_low_applications(
-                root, path, plan,
-            ),
-            ..Default::default()
-        },
+        postgres_file: (crate::codebase::postgres_analysis::hooks().failed_source)(
+            root, path, plan,
+        ),
         ts: std::sync::Arc::new(TsFileFacts {
             operational_error: Some(parse_error.clone()),
             parse_error: Some(parse_error.clone()),

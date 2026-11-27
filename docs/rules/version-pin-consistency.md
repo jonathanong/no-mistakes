@@ -106,6 +106,8 @@ Missing or blank `sourceFile` / `sourceKey`, and missing `anchors`,
 are configuration errors even when the selected file set is empty. An explicit
 empty anchor list retains its no-op behavior.
 
+Unknown fields in `anchors` entries are configuration errors.
+
 ## Valid example
 
 ```toml

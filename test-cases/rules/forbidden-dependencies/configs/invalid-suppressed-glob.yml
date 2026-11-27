@@ -1,0 +1,20 @@
+version: 2
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: ['*.mts']
+      forbiddenFiles: ['lib/forbidden.mts']
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: ['*.mts']
+      forbiddenModules:
+        # no-mistakes-disable-next-line forbidden-dependencies
+        - '['
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: ['*.mts']
+      forbiddenModules:
+        - '['

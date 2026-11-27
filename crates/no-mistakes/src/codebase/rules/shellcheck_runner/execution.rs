@@ -7,22 +7,10 @@ pub(crate) fn run_shellcheck(
     opts: &Options,
     shell_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
-    let sev = if opts.shellcheck.severity.is_empty() {
-        DEFAULT_SEVERITY
-    } else {
-        &opts.shellcheck.severity
-    };
-
-    if !VALID_SEVERITIES.contains(&sev) {
-        return Err(anyhow::anyhow!(
-            "invalid shellcheck severity: \"{}\". Expected one of: error, warning, info, style",
-            sev
-        ));
-    }
-
+    let severity = opts.shellcheck.severity.as_str();
     let mut command = Command::new("shellcheck");
     command
-        .args(["-f", "gcc", "-S", sev, "--"])
+        .args(["-f", "gcc", "-S", severity, "--"])
         .args(shell_files);
     let result = crate::invocation::command_output(&mut command);
     handle_shellcheck_result(root, shell_files, result)

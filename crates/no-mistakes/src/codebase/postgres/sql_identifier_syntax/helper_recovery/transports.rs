@@ -6,11 +6,10 @@ use super::{
     values::{Cache, Engine},
     ApplicationKey, Recovered,
 };
+use crate::codebase::postgres::check_analysis::source_demand::source_demanded;
 use crate::codebase::{
     check_facts::{
-        sql_source_prerequisites::{
-            source_demanded, source_failed, FailedSqlSources, SqlProjection, SqlSourceKey,
-        },
+        sql_source_prerequisites::{source_failed, FailedSqlSources, SqlProjection, SqlSourceKey},
         CheckFileFacts,
     },
     ts_source::FileIdMap,
@@ -33,10 +32,14 @@ pub(super) fn project(
         if file.parse_error.is_some() || file.ts.parse_error.is_some() {
             continue;
         }
-        let models = &file.sql_identifier_syntax.recovery;
-        for application in file.sql_identifier_syntax.application_keys() {
+        let models = &file.postgres().sql_identifier_syntax.recovery;
+        for application in file.postgres().sql_identifier_syntax.application_keys() {
             let profile = &application.profile;
-            let Some(calls) = file.sql_identifier_syntax.calls_for(&application) else {
+            let Some(calls) = file
+                .postgres()
+                .sql_identifier_syntax
+                .calls_for(&application)
+            else {
                 continue;
             };
             let Some(executors) = models.executors.get(profile) else {

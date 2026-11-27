@@ -16,7 +16,7 @@ pub(crate) struct Options {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(crate) struct BannedPath {
     pub(crate) glob: String,
     pub(crate) message: String,

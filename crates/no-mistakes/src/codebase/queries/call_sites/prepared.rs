@@ -71,7 +71,7 @@ fn build_graph(
             &codebase_config,
             &config,
             &target.visible_paths,
-            crate::codebase::test_filter::TestFileFilter::fallback_only(),
+            crate::codebase::testing_analysis::test_filter::TestFileFilter::fallback_only(),
             workspace,
         )?;
     let graph = DepGraph::build_with_plan_files_prepared_config_facts_resolution_cache_and_session(

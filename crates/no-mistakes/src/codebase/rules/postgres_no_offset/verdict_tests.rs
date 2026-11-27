@@ -20,6 +20,7 @@ fn prepared_verdicts_distinguish_exact_union_prefix_unknown_and_invalid_sql() {
         .ts
         .get(&file)
         .unwrap()
+        .postgres()
         .embedded_sql
         .iter()
         .map(|(profile, _)| profile.clone())

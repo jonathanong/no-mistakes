@@ -10,7 +10,10 @@ fn verdicts_and_advisories_preserve_low_demand_and_call_spans() {
             facts.enable_sql_verdicts();
         }
         check_with_files_sources_and_facts(&root(), &cfg, &files, &sources, &facts).unwrap();
-        assert!(facts.ts.values().all(|file| file.embedded_sql.is_empty()));
+        assert!(facts
+            .ts
+            .values()
+            .all(|file| file.postgres().embedded_sql.is_empty()));
         let records = facts.sql_verdicts();
         let residuals = records
             .iter()

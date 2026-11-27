@@ -46,6 +46,8 @@ to be directories, and wildcard targets' parent directories to exist. A wildcard
 with an extension does not require a matching file. These are explicit policy
 options; there are no inferred alias conventions.
 
+Unknown fields in `mappings` entries are configuration errors.
+
 ## Valid example
 
 ```json

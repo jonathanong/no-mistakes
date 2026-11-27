@@ -52,7 +52,8 @@ fn cov_p2_closed_names_require_resolvable_static_imports_only() {
     let before: FileIdMap<_> = files
         .iter()
         .filter_map(|(path, file)| {
-            file.query_annotation_heads
+            file.postgres()
+                .query_annotation_heads
                 .clone()
                 .map(|heads| (path.clone(), heads))
         })
@@ -67,7 +68,11 @@ fn cov_p2_closed_names_require_resolvable_static_imports_only() {
         assert_eq!(original.import_gated_finite.len(), 1, "{name}");
         let span = original.import_gated_finite[0];
         assert_eq!(original.calls[&span], HeadProof::Literal);
-        let heads = files[&path].query_annotation_heads.as_ref().unwrap();
+        let heads = files[&path]
+            .postgres()
+            .query_annotation_heads
+            .as_ref()
+            .unwrap();
         assert_eq!(heads.accepts(span), accepted, "{name}");
         for (call, proof) in &original.calls {
             if *call != span {
@@ -103,14 +108,23 @@ fn cov_p2_closed_names_require_resolvable_static_imports_only() {
         .unwrap();
     assert_eq!(original.calls[span], HeadProof::Literal);
     assert_eq!(
-        file.query_annotation_heads.as_ref().unwrap().calls,
+        file.postgres()
+            .query_annotation_heads
+            .as_ref()
+            .unwrap()
+            .calls,
         original.calls
     );
     let path = root.join("ungated.mts");
     let original = &before[&path];
     assert!(original.import_gated_finite.is_empty());
     assert_eq!(
-        files[&path].query_annotation_heads.as_ref().unwrap().calls,
+        files[&path]
+            .postgres()
+            .query_annotation_heads
+            .as_ref()
+            .unwrap()
+            .calls,
         original.calls
     );
 }
@@ -119,7 +133,11 @@ fn cov_p2_closed_names_require_resolvable_static_imports_only() {
 fn cov_p2_destructuring_requires_plain_record_source_not_builder() {
     let (mut files, root) = prepared();
     let path = root.join("records.mts");
-    let heads = files[&path].query_annotation_heads.as_ref().unwrap();
+    let heads = files[&path]
+        .postgres()
+        .query_annotation_heads
+        .as_ref()
+        .unwrap();
     assert_eq!(
         heads
             .pending_imports
@@ -131,7 +149,11 @@ fn cov_p2_destructuring_requires_plain_record_source_not_builder() {
     super::super::import_projection::project(&mut files, |specifier, _| {
         (specifier == "./producer.mjs").then(|| root.join("producer.mts"))
     });
-    let heads = files[&path].query_annotation_heads.as_ref().unwrap();
+    let heads = files[&path]
+        .postgres()
+        .query_annotation_heads
+        .as_ref()
+        .unwrap();
     let source = std::fs::read_to_string(&path).unwrap();
     let accepted = source
         .match_indices("read(")

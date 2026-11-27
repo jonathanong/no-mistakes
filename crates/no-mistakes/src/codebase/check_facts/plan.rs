@@ -9,7 +9,8 @@ use std::{collections::HashSet, path::PathBuf};
 pub struct CheckFactPlan {
     pub imports: bool,
     #[doc(hidden)]
-    pub postgres_executor_warning_scans: Arc<Vec<crate::codebase::postgres::ExecutorWarningScan>>,
+    pub postgres_executor_warning_scans:
+        Arc<Vec<crate::codebase::postgres_analysis::executor_warning_scan::ExecutorWarningScan>>,
     #[doc(hidden)]
     pub nested_control_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     /// Exact configured files whose AST comments are requested.
@@ -20,7 +21,10 @@ pub struct CheckFactPlan {
     pub csp_allowed_origins_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     #[doc(hidden)]
     pub test_reliability_paths: Arc<
-        std::collections::BTreeMap<PathBuf, crate::codebase::rules::test_reliability::SourceDemand>,
+        std::collections::BTreeMap<
+            PathBuf,
+            crate::codebase::testing_analysis::reliability::SourceDemand,
+        >,
     >,
     #[doc(hidden)]
     pub playwright_fixture_support: bool,
@@ -83,25 +87,28 @@ pub struct CheckFactPlan {
     /// Syntactic leading-name proofs for low-effort annotation, without helper evaluation.
     pub query_annotation_heads: bool,
     /// Low-effort SQL identifier projections; never invokes JavaScript evaluation.
-    pub sql_identifier_profiles: crate::codebase::postgres::SqlIdentifierScans,
+    pub sql_identifier_profiles:
+        crate::codebase::postgres_analysis::identifier_plan::SqlIdentifierScans,
     /// Explicit annotation-only profiles. `None` preserves the direct fact
     /// API's request for annotation on every embedded SQL profile.
-    pub query_annotation_options: Option<Vec<crate::codebase::postgres::EmbeddedSqlOptions>>,
+    pub query_annotation_options:
+        Option<Vec<crate::codebase::postgres_analysis::options::EmbeddedSqlOptions>>,
     /// The owning request's ordinary importer catalog, including explicit overrides.
     #[doc(hidden)]
     pub query_annotation_catalog: Option<Arc<crate::codebase::ts_resolver::TsConfigCatalog>>,
     /// Distinct configured embedded-SQL projections collected from each
     /// already-parsed TS/JS program during the request's shared fact pass.
-    pub embedded_sql_options: Vec<crate::codebase::postgres::EmbeddedSqlOptions>,
+    pub embedded_sql_options: Vec<crate::codebase::postgres_analysis::options::EmbeddedSqlOptions>,
     /// Profiles consumed exclusively by syntactic, low-effort annotation checks.
     #[doc(hidden)]
-    pub embedded_sql_head_calls_only: Vec<crate::codebase::postgres::EmbeddedSqlOptions>,
+    pub embedded_sql_head_calls_only:
+        Vec<crate::codebase::postgres_analysis::options::EmbeddedSqlOptions>,
     /// PostgreSQL rule applications that selected each embedded-SQL profile.
     ///
     /// Empty for a direct extract. Each entry carries that application's
     /// include and exclude. A site is omitted when no application scans the
     /// file, or when every scanning id suppresses that line.
-    pub embedded_sql_rule_ids: crate::codebase::postgres::EmbeddedSqlRuleScans,
+    pub embedded_sql_rule_ids: crate::codebase::postgres_analysis::scans::EmbeddedSqlRuleScans,
     /// Repository-relative schema snapshots loaded once at the request boundary.
     pub postgres_schema_catalog_paths: Vec<String>,
     pub postgres_dml: bool,

@@ -21,7 +21,7 @@ pub(crate) struct Options {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Anchor {
     pub(crate) file: String,
     pub(crate) pattern: String,

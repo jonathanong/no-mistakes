@@ -10,21 +10,7 @@ use std::sync::Arc;
 
 mod calls;
 
-#[derive(Clone)]
-#[doc(hidden)]
-pub struct ExecutorWarningScan {
-    scan: SqlIdentifierScan,
-    label: String,
-    import_specifier: String,
-    omitted: Vec<String>,
-    exclusions: Vec<String>,
-}
-
-impl ExecutorWarningScan {
-    pub(crate) fn includes(&self, root: &Path, path: &Path) -> bool {
-        self.scan.includes(root, path)
-    }
-}
+pub use crate::codebase::postgres_analysis::executor_warning_scan::ExecutorWarningScan;
 
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]

@@ -34,17 +34,17 @@ fn vitest_fallback_excludes_config_only_playwright_owned_paths() {
     .unwrap();
     let prepared = shared
         .prepared_test_projects
-        .as_ref()
+        .as_deref()
         .expect("Vitest project discovery is prepared");
-    let discovered = crate::codebase::test_discovery::discover_tests_from_prepared_projects(
-        &root,
-        shared.config(),
-        crate::codebase::test_discovery::TestRunner::Vitest,
-        prepared,
-        shared.visible_paths().paths_for(&root).as_ref(),
-        shared.tsconfig(),
-    )
-    .unwrap();
+    let discovered = prepared
+        .discover_tests(
+            &root,
+            shared.config(),
+            crate::codebase::test_discovery::TestRunner::Vitest,
+            shared.visible_paths().paths_for(&root).as_ref(),
+            shared.tsconfig(),
+        )
+        .unwrap();
     let counts = crate::ast::finish_parse_count(&root);
 
     for owned in ["routes/custom-owned.test.mts", "http/custom-owned.test.mts"] {

@@ -53,11 +53,15 @@ fn low_skips_evaluator_and_reuses_literal_parse_across_calls_and_applications() 
     second.name = Some("second".into());
     cfg.rules.push(second);
     let (cfg, files, sources, facts) = prepared(cfg);
-    assert!(facts.ts.values().all(|file| file.embedded_sql.is_empty()));
     assert!(facts
         .ts
         .values()
-        .any(|file| !file.sql_identifier_syntax.profiles.is_empty()));
+        .all(|file| file.postgres().embedded_sql.is_empty()));
+    assert!(facts.ts.values().any(|file| !file
+        .postgres()
+        .sql_identifier_syntax
+        .profiles
+        .is_empty()));
     let observer = crate::diagnostics::InvocationObserver::new(true);
     crate::diagnostics::with_observer(Some(observer.clone()), || {
         check_with_files_sources_and_facts(&root(), &cfg, &files, &sources, &facts).unwrap();
@@ -81,7 +85,10 @@ fn mixed_max_application_keeps_max_profile_and_borrows_its_sql_projection() {
         .insert("effort".into(), "max".into());
     cfg.rules.push(max);
     let (cfg, files, sources, facts) = prepared(cfg);
-    assert!(facts.ts.values().any(|file| !file.embedded_sql.is_empty()));
+    assert!(facts
+        .ts
+        .values()
+        .any(|file| !file.postgres().embedded_sql.is_empty()));
     let observer = crate::diagnostics::InvocationObserver::new(true);
     crate::diagnostics::with_observer(Some(observer.clone()), || {
         check_with_files_sources_and_facts(&root(), &cfg, &files, &sources, &facts).unwrap();

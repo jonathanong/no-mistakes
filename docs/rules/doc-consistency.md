@@ -21,6 +21,8 @@ default to empty lists. `requiredHeading` defaults to unset. Each
 `requiredSubstrings` item names one `file` and one literal `substring`. An
 empty or omitted `bannedPatterns` list does no pattern work.
 
+Config loading rejects unknown keys in `requiredSubstrings` entries.
+
 `requiredHeading` applies to each `requiredFiles` document. A valid ATX value
 (`## Install`) requires the parsed heading text at that exact level; `# Install`
 and fenced or indented code examples do not satisfy it. A value without leading

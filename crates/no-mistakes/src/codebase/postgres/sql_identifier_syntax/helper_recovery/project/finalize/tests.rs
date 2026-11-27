@@ -41,7 +41,11 @@ fn stale_updates_cannot_create_missing_file_or_profile_facts() {
     );
     assert!(files.get(&missing).is_none());
     let file = files.get(&owner).unwrap();
-    assert!(file.sql_identifier_syntax.application_calls.is_empty());
+    assert!(file
+        .postgres()
+        .sql_identifier_syntax
+        .application_calls
+        .is_empty());
     let key = SqlSourceKey::application(
         SqlProjection::LowSyntax,
         &profile,

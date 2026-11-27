@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+      - name: routeFiles
+        kind: path-regex-capture
+        pattern: '^src/routes/(?<value>[^/]+)\.ts$'
+        minSiz: 1

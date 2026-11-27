@@ -14,7 +14,7 @@ fn vitest_setup_edges_are_lazy_and_connect_setup_dependencies_to_tests() {
     .with_vitest_setup_projects(vec![VitestSetupProject {
         config: Some("vitest.config.ts".to_string()),
         scope: Some(".".to_string()),
-        filter: crate::codebase::test_discovery::ProjectTestFilter::from_project_ref(
+        filter: crate::codebase::test_discovery::compile_project_filter(
             &crate::integration_tests::types::ConfigProject {
                 config: Some("vitest.config.ts".to_string()),
                 workspace: false,
@@ -228,7 +228,7 @@ fn vitest_project(
     VitestSetupProject {
         config: project.config.clone(),
         scope: project.scope.clone(),
-        filter: crate::codebase::test_discovery::ProjectTestFilter::from_project_ref(&project)
+        filter: crate::codebase::test_discovery::compile_project_filter(&project)
             .unwrap(),
         tests: Vec::new(),
         setups: vec![(setup.to_path_buf(), VitestSetupField::SetupFiles)],

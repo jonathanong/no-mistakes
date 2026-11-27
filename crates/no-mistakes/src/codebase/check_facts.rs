@@ -14,10 +14,10 @@ mod plan;
 mod playwright_facts;
 mod playwright_plan;
 mod playwright_provenance;
-mod relative_scope;
 mod runner;
 mod sql_scope;
 mod staged_playwright;
+pub(crate) mod workspace_setup;
 pub(crate) use staged_playwright::{collect_precollected_route_facts, PrecollectedRouteFacts};
 pub(crate) mod sql_source_prerequisites;
 mod stats;
@@ -99,6 +99,7 @@ pub(crate) fn into_ordered_path_exclusion(
         .collect()
 }
 
+pub use super::postgres::check_analysis::{SqlApplicationFacts, SqlFactContext};
 pub(crate) use batch::{collect_check_fact_batch_with_session, BatchCheckFactRequest};
 pub use collect::{
     collect_check_facts, collect_check_facts_with_graph_files_and_playwright,
@@ -115,7 +116,7 @@ pub use family_scope::{
     configure_nextjs_caching_scope, FamilyPathScope,
 };
 pub(crate) use file::is_mdx_file;
-pub use map::{CheckFactMap, SqlApplicationFacts, SqlFactContext};
+pub use map::CheckFactMap;
 pub(crate) use map::{CheckFileFacts, PlaywrightTestFilesByProject};
 pub use plan::CheckFactPlan;
 pub(crate) use playwright_facts::PlaywrightTestFacts;
@@ -124,9 +125,9 @@ pub(crate) use playwright_plan::{
     PlaywrightFactSelection, PlaywrightModuleResolution, PlaywrightOccurrenceKey,
     PlaywrightSettingsKey,
 };
-#[doc(hidden)]
-pub use relative_scope::unproven_member_query_warning;
 pub(crate) use runner::{collect_prepared_runner_facts, runner_config_facts, RunnerConfigFacts};
+#[doc(hidden)]
+pub use stats::unproven_member_query_warning;
 pub use stats::CheckFactStats;
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
@@ -141,5 +142,6 @@ mod head_calls_only_tests;
 
 pub(crate) use family_scope::applies as discovery_applies;
 pub(crate) use file::collect_file_facts_from_program_with_discovery as file_program_with_discovery;
+pub(crate) use file::collect_with_postgres;
 
 pub(crate) use file::CheckFactVariant;

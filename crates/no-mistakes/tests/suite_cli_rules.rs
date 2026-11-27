@@ -47,6 +47,9 @@ mod cli_shell_compatibility;
 #[path = "cli_shellcheck_policy.rs"]
 mod cli_shellcheck_policy;
 
+#[path = "cli_shellcheck_options.rs"]
+mod cli_shellcheck_options;
+
 // Share stateless fixture helpers across the modules in this harness.
 #[path = "common/check_json_case.rs"]
 mod check_json_case;
@@ -332,6 +335,8 @@ mod cli_postgres_snapshot_declared_bounds;
 
 #[path = "cli_postgres_option_validation.rs"]
 mod cli_postgres_option_validation;
+#[path = "cli_postgres_rule_timings.rs"]
+mod cli_postgres_rule_timings;
 #[path = "cli_postgres_snapshot_materialized_view_shape.rs"]
 mod cli_postgres_snapshot_materialized_view_shape;
 #[path = "cli_postgres_unused_disables.rs"]

@@ -21,6 +21,7 @@ pub const RULE_ID: &str = "forbidden-dependencies";
 
 pub(in crate::codebase::rules) mod options;
 mod selectors;
+pub(in crate::codebase::rules) mod validate;
 use options::Options;
 
 /// Resolves the `DepGraph`'s `GraphConfigOptions` via default `--config`

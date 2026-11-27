@@ -32,8 +32,12 @@ fn imported_builder_endpoints_require_typed_prepared_source() {
             collect_check_facts(root, paths.clone(), plan(root, &config(&efforts)))
         });
         let file = facts.ts.get(&caller).expect("prepared caller");
-        let embedded = &file.embedded_sql[0].1;
-        let heads = file.query_annotation_heads.as_ref().expect("low facts");
+        let embedded = &file.postgres().embedded_sql[0].1;
+        let heads = file
+            .postgres()
+            .query_annotation_heads
+            .as_ref()
+            .expect("low facts");
         let proofs = embedded
             .call_spans
             .iter()
@@ -41,7 +45,7 @@ fn imported_builder_endpoints_require_typed_prepared_source() {
             .collect::<Vec<_>>();
         assert_eq!(proofs, expected);
         if efforts == ["low"] {
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert!(embedded.calls.iter().all(|call| call.variants.is_empty()));
             assert_eq!(
                 observer

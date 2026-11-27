@@ -47,7 +47,7 @@ fn missing_overlay_source_is_unanalyzable() {
     let root = std::env::temp_dir().join("nm-3387-fk-absent");
     let path = root.join("migrations").join("001.sql");
     let mut facts = CheckFactMap::default();
-    facts.postgres.schema.insert(
+    facts.postgres_mut().schema.insert(
         path.clone(),
         Ok(Arc::new(SqlSchemaFileFacts {
             path: path.clone(),

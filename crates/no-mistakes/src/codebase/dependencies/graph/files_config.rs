@@ -33,7 +33,7 @@ struct GraphConfigOptions {
     http_route: crate::codebase::config::HttpRouteOptions,
     http_call: crate::codebase::config::HttpCallOptions,
     project_route_globset: Option<GlobSet>,
-    test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
+    test_filter: Option<crate::codebase::testing_analysis::test_filter::TestFileFilter>,
     rewrites: Vec<crate::config::v2::schema::RewriteRule>,
     queue_project_factory_names: Vec<String>,
     dotnet_projects: Vec<crate::codebase::dotnet::DotnetConfigProject>,
@@ -83,12 +83,12 @@ fn graph_config_options_from_loaded_with_test_filter(
     config: &crate::codebase::config::Config,
     v2_config: &crate::config::v2::NoMistakesConfig,
     visible_paths: &[PathBuf],
-    test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
+    test_filter: Option<crate::codebase::testing_analysis::test_filter::TestFileFilter>,
 ) -> GraphConfigOptions {
     let project_route_globs = ConfigView::new(v2_config).server_route_globs();
     let test_filter = Some(
         test_filter
-            .unwrap_or_else(|| crate::codebase::test_filter::TestFileFilter::new(root, v2_config)),
+            .unwrap_or_else(|| crate::codebase::testing_analysis::test_filter::TestFileFilter::new(root, v2_config)),
     );
     // Union of every configured frontend app's rewrites. #624 was caused by
     // this list being sourced from whichever `type: nextjs` project sorted
@@ -142,7 +142,7 @@ fn graph_config_options_from_loaded_with_test_filter(
         trpc_routers: flatten_trpc_routers(v2_config),
         terraform: v2_config.infra.terraform.clone(),
         ci: v2_config.ci.clone(),
-        assertion_owners: v2_config.rule_applications(crate::codebase::rules::coverage_producer_assertion_owner::RULE_ID).into_iter().cloned().collect(),
+        assertion_owners: v2_config.rule_applications(crate::codebase::testing_analysis::hooks().assertion_owner_rule_id).into_iter().cloned().collect(),
     }
 }
 

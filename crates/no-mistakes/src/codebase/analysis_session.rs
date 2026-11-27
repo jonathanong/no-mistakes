@@ -19,7 +19,6 @@ mod parsing;
 mod registry_extension;
 mod resolver;
 mod visible;
-
 pub use intern::PathInterner;
 pub use io::SourceReadError;
 use registry_extension::{RegistryExtensionCell, RegistryExtensionKey};
@@ -55,7 +54,7 @@ pub struct AnalysisResources {
 
 type AnalysisDataset = crate::codebase::analysis_dataset::AnalysisDataset;
 type DatasetCell = OnceLock<Arc<AnalysisDataset>>;
-type TestFilterCell = OnceLock<Arc<crate::codebase::test_filter::TestFileFilter>>;
+type TestFilterCell = OnceLock<Arc<crate::codebase::testing_analysis::test_filter::TestFileFilter>>;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SessionWorkSnapshot {

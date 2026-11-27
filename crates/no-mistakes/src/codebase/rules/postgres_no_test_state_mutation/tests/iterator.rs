@@ -56,7 +56,7 @@ fn finite_vitest_rows_prove_only_unmodified_local_sql_maps() {
         + 1;
     let (low, facts) = run("low.yml");
     assert!(
-        facts.postgres.embedded.is_empty(),
+        facts.postgres().embedded.is_empty(),
         "low ran max embedded extraction"
     );
     let (max, max_facts) = run("max.yml");

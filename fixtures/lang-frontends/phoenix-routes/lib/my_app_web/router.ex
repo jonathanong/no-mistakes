@@ -22,4 +22,10 @@ defmodule MyAppWeb.Router do
   scope "/", MyAppWeb do
     get "/aliased", MyAppWeb.UserController, :index
   end
+
+  resources "/accounts", MyAppWeb.UserController
+
+  scope "/v1" do
+    resources "/members", MyAppWeb.UserController
+  end
 end

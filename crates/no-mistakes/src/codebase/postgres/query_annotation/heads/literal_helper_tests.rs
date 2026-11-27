@@ -42,8 +42,8 @@ fn helper_demand_is_opt_in_profile_specific_and_reuses_the_prepared_walk() {
         if enabled {
             assert!(work["postgres.annotation.literal-helper.candidates"] > 0);
             assert!(file.ts.module_bindings.is_some());
-            let span = file.embedded_sql[0].1.call_spans[0];
-            let heads = file.query_annotation_heads.as_ref().unwrap();
+            let span = file.postgres().embedded_sql[0].1.call_spans[0];
+            let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
             assert_eq!(
                 heads.helper(span, &profile.sql_literal_helpers),
                 Some(super::HeadProof::Literal)
@@ -53,7 +53,7 @@ fn helper_demand_is_opt_in_profile_specific_and_reuses_the_prepared_walk() {
         } else {
             assert!(!work.contains_key("postgres.annotation.literal-helper.candidates"));
             assert!(
-                file.query_annotation_heads.is_none(),
+                file.postgres().query_annotation_heads.is_none(),
                 "disabled helpers add no heads walk"
             );
             assert!(
@@ -95,7 +95,7 @@ fn configured_helpers_fail_closed_without_prepared_module_or_import_ownership() 
             program,
             None,
         );
-        let spans = &file.embedded_sql[0].1.call_spans;
+        let spans = &file.postgres().embedded_sql[0].1.call_spans;
         // Missing and incomplete prepared ownership must never trust spelling.
         for missing_module in [false, true] {
             let mut ts = file.ts.as_ref().clone();

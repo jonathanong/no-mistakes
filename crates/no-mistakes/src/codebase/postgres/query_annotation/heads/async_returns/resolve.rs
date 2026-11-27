@@ -15,7 +15,7 @@ pub(in super::super) fn project(
     let mut effect_resolver = super::super::effects::Resolver::new(files, resolve);
     let mut failed = Vec::new();
     for (path, file) in files.iter() {
-        let Some(heads) = file.query_annotation_heads.as_deref() else {
+        let Some(heads) = file.postgres().query_annotation_heads.as_deref() else {
             continue;
         };
         for pending in &heads.pending_async_returns {
@@ -28,7 +28,7 @@ pub(in super::super) fn project(
             }
             let Some(summary) = files
                 .get(&target)
-                .and_then(|file| file.query_annotation_heads.as_deref())
+                .and_then(|file| file.postgres().query_annotation_heads.as_deref())
                 .and_then(|heads| heads.exported_async_returns.get(&pending.imported))
             else {
                 continue;
@@ -51,6 +51,7 @@ pub(in super::super) fn project(
     for (path, span, proof) in completed {
         let Some(heads) = files
             .get_mut(&path)
+            .and_then(CheckFileFacts::postgres_if_present_mut)
             .and_then(|file| file.query_annotation_heads.as_mut())
         else {
             continue;

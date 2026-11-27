@@ -32,12 +32,16 @@ fn exact_local_const_sql_operands_require_closed_uses_and_order() {
             None,
         );
         CheckFileFacts {
-            sql_identifier_syntax: super::super::tests::collect(
-                program,
-                &ts,
-                &source,
-                &[profile()],
-            ),
+            postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                sql_identifier_syntax: super::super::tests::collect(
+                    program,
+                    &ts,
+                    &source,
+                    &[profile()],
+                ),
+                ..Default::default()
+            }
+            .into_payload(),
             ts: Arc::new(ts),
             ..Default::default()
         }
@@ -53,7 +57,7 @@ fn exact_local_const_sql_operands_require_closed_uses_and_order() {
         resolve: &|_, _| None,
     };
     let mut checked = 0;
-    for call in &files[&path].sql_identifier_syntax.recovery.calls {
+    for call in &files[&path].postgres().sql_identifier_syntax.recovery.calls {
         let raw = &source[call.span.0 as usize..call.span.1 as usize];
         if !raw.starts_with("read(") {
             continue;
@@ -121,12 +125,16 @@ fn local_const_cannot_revive_reassigned_tag() {
             None,
         );
         CheckFileFacts {
-            sql_identifier_syntax: super::super::tests::collect(
-                program,
-                &ts,
-                &source,
-                &[profile()],
-            ),
+            postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                sql_identifier_syntax: super::super::tests::collect(
+                    program,
+                    &ts,
+                    &source,
+                    &[profile()],
+                ),
+                ..Default::default()
+            }
+            .into_payload(),
             ts: Arc::new(ts),
             ..Default::default()
         }
@@ -142,6 +150,7 @@ fn local_const_cannot_revive_reassigned_tag() {
         resolve: &|_, _| None,
     };
     let call = files[&path]
+        .postgres()
         .sql_identifier_syntax
         .recovery
         .calls
@@ -178,12 +187,16 @@ fn dynamic_fixture(name: &str) -> (std::path::PathBuf, String, FileIdMap<CheckFi
             None,
         );
         CheckFileFacts {
-            sql_identifier_syntax: super::super::tests::collect(
-                program,
-                &ts,
-                &source,
-                &[profile()],
-            ),
+            postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                sql_identifier_syntax: super::super::tests::collect(
+                    program,
+                    &ts,
+                    &source,
+                    &[profile()],
+                ),
+                ..Default::default()
+            }
+            .into_payload(),
             ts: Arc::new(ts),
             ..Default::default()
         }
@@ -204,7 +217,7 @@ fn direct_eval_keeps_const_sql_map_uncertain() {
         profile: Some(&profile),
         resolve: &|_, _| None,
     };
-    let models = &files[&path].sql_identifier_syntax.recovery;
+    let models = &files[&path].postgres().sql_identifier_syntax.recovery;
     assert!(models.dynamic_scope);
     let id = files[&path]
         .ts
@@ -240,7 +253,7 @@ fn direct_eval_keeps_const_sql_map_uncertain() {
 #[test]
 fn sloppy_with_statement_blocks_local_const_admission() {
     let (path, _, files) = dynamic_fixture("local-const-with.js");
-    let models = &files[&path].sql_identifier_syntax.recovery;
+    let models = &files[&path].postgres().sql_identifier_syntax.recovery;
     assert!(models.dynamic_scope);
     let id = files[&path]
         .ts
@@ -273,7 +286,7 @@ fn prior_executor_uses_cannot_expose_a_later_proven_builder() {
         resolve: &|_, _| None,
     };
     let mut checked = 0;
-    for call in &files[&path].sql_identifier_syntax.recovery.calls {
+    for call in &files[&path].postgres().sql_identifier_syntax.recovery.calls {
         let raw = &source[call.span.0 as usize..call.span.1 as usize];
         if !raw.starts_with("read(")
             || !source[call.span.1 as usize..]

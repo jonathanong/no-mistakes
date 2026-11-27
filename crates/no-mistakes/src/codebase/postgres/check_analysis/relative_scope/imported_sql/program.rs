@@ -1,0 +1,191 @@
+//! Runs lowered helper programs across modules.
+//!
+//! A call site's arguments are known only to its own module; a helper may in
+//! turn call helpers imported into *its* module. Each nested call resolves
+//! through that module's own import bindings, bounded by [`MAX_CALL_DEPTH`]
+//! and a cycle check, and memoized per `(root, module, helper, arguments)`.
+
+use super::locate::{Located, Locator};
+use super::CheckFileFacts;
+use crate::codebase::check_facts::sql_source_prerequisites::FailedSqlSources;
+use crate::codebase::dependencies::extract::ImportedBindingKind;
+use crate::codebase::postgres::{
+    Callee, Callees, EmbeddedSqlOptions, ImportedSite, Outcome, RecoveredSql, Ret, SiteArg,
+    SiteKind,
+};
+use crate::codebase::ts_source::FileIdMap;
+use crate::fx::FxHashMap;
+use std::path::{Path, PathBuf};
+mod frame;
+mod frozen;
+use frame::Frame;
+
+pub(super) struct Filled {
+    pub(super) texts: Vec<RecoveredSql>,
+    pub(super) contributes_sql: bool,
+}
+
+/// Profile index, executor module, helper module, helper, arguments.
+type Key = (usize, PathBuf, PathBuf, String, Vec<SiteArg>);
+
+/// State shared by every frame of one site's execution.
+pub(super) struct Shared<'a, R> {
+    pub(super) files: &'a FileIdMap<CheckFileFacts>,
+    locator: Locator<'a, R>,
+    cache: FxHashMap<Key, (Option<Vec<Outcome>>, FailedSqlSources)>,
+    pub(super) failures: FailedSqlSources,
+}
+
+impl<'a, R: FnMut(&str, &Path) -> Option<PathBuf>> Shared<'a, R> {
+    pub(super) fn new(files: &'a FileIdMap<CheckFileFacts>, locator: Locator<'a, R>) -> Self {
+        Self {
+            files,
+            locator,
+            cache: FxHashMap::default(),
+            failures: FailedSqlSources::default(),
+        }
+    }
+
+    /// Declaring module and local name for a helper or selected namespace constant.
+    pub(super) fn find(
+        &mut self,
+        from: &Path,
+        name: &str,
+        member: Option<&str>,
+    ) -> Option<(PathBuf, String)> {
+        let file = self.files.get(from)?;
+        let import = file
+            .ts
+            .imported_bindings
+            .iter()
+            .find(|binding| binding.local == name && !binding.is_type_only);
+        let Some(import) = import else {
+            return Some((from.to_path_buf(), name.to_string()));
+        };
+        let exported = match member {
+            Some(member) if import.kind == ImportedBindingKind::Namespace => member,
+            Some(_) => return None,
+            None => &import.imported,
+        };
+        let target = self.locator.target(&import.specifier, from)?;
+        let located = self.locator.locate(&target, exported);
+        self.failures.append(&mut self.locator.failures);
+        match located {
+            Located::Found(origin, local) => Some((origin, local)),
+            _ => None,
+        }
+    }
+
+    /// The fixed-shape summary of an imported helper, which fills a hole with
+    /// exactly one text. A helper in the executor's own module has none.
+    fn summary_text(
+        &mut self,
+        options: &EmbeddedSqlOptions,
+        from: &Path,
+        site: &ImportedSite,
+    ) -> Option<RecoveredSql> {
+        if site.kind != SiteKind::Sql {
+            return None;
+        }
+        let (origin, local) = self.find(from, &site.local, None)?;
+        if origin == from {
+            return None;
+        }
+        let (_, embedded) = self
+            .files
+            .get(&origin)?
+            .postgres()
+            .embedded_sql
+            .iter()
+            .find(|(known, _)| known == options)?;
+        embedded
+            .exported_helpers
+            .get(&local)?
+            .fill(site, &origin, from)
+    }
+
+    /// Every alternative text the helper called at `site` contributes.
+    pub(super) fn fill(
+        &mut self,
+        profile: usize,
+        options: &EmbeddedSqlOptions,
+        from: &Path,
+        site: &ImportedSite,
+    ) -> Option<Filled> {
+        if site.constant.is_none() && site.member.is_some() {
+            return frozen::member(self, options, from, site);
+        }
+        if site.constant.is_some() {
+            return super::constants::recovered(self, options, from, site).map(|text| Filled {
+                texts: vec![text],
+                contributes_sql: true,
+            });
+        }
+        if let Some(text) = self.summary_text(options, from, site) {
+            return Some(Filled {
+                texts: vec![text],
+                contributes_sql: true,
+            });
+        }
+        let mut frame = Frame::new(self, profile, options, from);
+        let outcomes = match frame.call(&site.local, &site.args) {
+            Callee::Done(outcomes) => outcomes,
+            Callee::Unresolved | Callee::Failed => return None,
+        };
+        let builder = site.args.iter().position(|arg| *arg == SiteArg::Builder);
+        let mut texts = Vec::new();
+        for outcome in outcomes {
+            let text = match site.kind {
+                SiteKind::Sql => hole_text(outcome, builder, site.value_used)?,
+                SiteKind::PlainClause | SiteKind::ParameterizedMember => clause_text(outcome)?,
+            };
+            if !texts.contains(&text) {
+                texts.push(text);
+            }
+        }
+        (!texts.is_empty()).then_some(Filled {
+            texts,
+            contributes_sql: true,
+        })
+    }
+}
+
+/// An ordinary-template interpolation is text only after every helper path
+/// returns one source-mapped, marker-free string.
+fn clause_text(outcome: Outcome) -> Option<RecoveredSql> {
+    let Ret::Str(value, Some(text)) = outcome.ret else {
+        return None;
+    };
+    if text.sql != value || value.contains(['\n', '\r', '\0', '\u{10FFFE}', '\u{10FFFF}']) {
+        return None;
+    }
+    Some(text)
+}
+
+/// What fills the hole: the suffix appended to the caller's builder, or the
+/// value the helper returned.
+fn hole_text(outcome: Outcome, builder: Option<usize>, value_used: bool) -> Option<RecoveredSql> {
+    match builder {
+        Some(index) => {
+            // A value-position call yields the helper's result, which must be
+            // the very builder it was given for `base + suffix` to hold.
+            if value_used && outcome.ret != Ret::Param(index) {
+                return None;
+            }
+            outcome
+                .suffixes
+                .into_iter()
+                .find(|(param, _)| *param == index)
+                .map(|(_, text)| text)
+        }
+        None => match outcome.ret {
+            Ret::Sql(text) => Some(text),
+            Ret::Str(_, Some(text)) => Some(text),
+            _ => None,
+        },
+    }
+}
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+#[path = "program_tests.rs"]
+mod program_tests;

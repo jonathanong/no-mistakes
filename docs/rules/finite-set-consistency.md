@@ -21,6 +21,8 @@ fields (`file`, `target`, `key`, `pattern`, `property`, `minSize`,
 `right` and default `mode` to `equal-set`. Optional `message` replaces the
 generated finding text. Supported modes are documented below.
 
+Config loading rejects unknown keys in `sets` and `comparisons` entries.
+
 ```yaml
 rules:
   - rule: finite-set-consistency

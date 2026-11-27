@@ -40,12 +40,16 @@ fn prepared() -> (PathBuf, String, FileIdMap<CheckFileFacts>) {
                 None,
             );
             CheckFileFacts {
-                sql_identifier_syntax: super::super::tests::collect(
-                    program,
-                    &ts,
-                    &source,
-                    &[profile()],
-                ),
+                postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                    sql_identifier_syntax: super::super::tests::collect(
+                        program,
+                        &ts,
+                        &source,
+                        &[profile()],
+                    ),
+                    ..Default::default()
+                }
+                .into_payload(),
                 ts: Arc::new(ts),
                 ..Default::default()
             }
@@ -79,7 +83,7 @@ fn value_only_abrupt_paths_keep_source_effects_and_async_uncertainty() {
         resolve: &resolve,
     };
     let mut checked = 0;
-    for call in &files[&path].sql_identifier_syntax.recovery.calls {
+    for call in &files[&path].postgres().sql_identifier_syntax.recovery.calls {
         let raw = &source[call.span.0 as usize..call.span.1 as usize];
         if !raw.starts_with("read(") {
             continue;
@@ -126,7 +130,7 @@ fn site_stop_cache_cannot_hide_later_transport_sql_or_throw_effects() {
         profile: Some(&profile),
         resolve: &|_, _| None,
     };
-    let models = &files[&path].sql_identifier_syntax.recovery;
+    let models = &files[&path].postgres().sql_identifier_syntax.recovery;
     let call = |prefix: &str| {
         models
             .calls
@@ -194,19 +198,23 @@ fn invalidated_constructor_argument_retains_source_sql_effect() {
             None,
         );
         CheckFileFacts {
-            sql_identifier_syntax: super::super::tests::collect(
-                program,
-                &ts,
-                &source,
-                &[profile()],
-            ),
+            postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                sql_identifier_syntax: super::super::tests::collect(
+                    program,
+                    &ts,
+                    &source,
+                    &[profile()],
+                ),
+                ..Default::default()
+            }
+            .into_payload(),
             ts: Arc::new(ts),
             ..Default::default()
         }
     })
     .unwrap();
     let profile = profile();
-    let models = &facts.sql_identifier_syntax.recovery;
+    let models = &facts.postgres().sql_identifier_syntax.recovery;
     let constructor = models
         .calls
         .iter()

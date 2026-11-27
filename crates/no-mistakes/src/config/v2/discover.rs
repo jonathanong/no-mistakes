@@ -192,3 +192,5 @@ mod fragment_selection_tests;
 mod fragment_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
+
+pub(crate) use fragments::DEFAULT_BASELINE_FILE;

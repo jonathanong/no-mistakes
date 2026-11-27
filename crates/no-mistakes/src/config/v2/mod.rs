@@ -23,3 +23,5 @@ pub use view::ConfigView;
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
+
+pub(crate) use discover::DEFAULT_BASELINE_FILE as DEFAULT_POSTGRES_BASELINE_FILE;

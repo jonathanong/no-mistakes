@@ -28,7 +28,12 @@ fn prepared_catalog_follows_exports_and_preserves_mutation_cycle_and_failure_unc
             resolve: &resolve,
         };
         let mut checked = 0;
-        for call in &files[&caller].sql_identifier_syntax.recovery.calls {
+        for call in &files[&caller]
+            .postgres()
+            .sql_identifier_syntax
+            .recovery
+            .calls
+        {
             let raw = &source[call.span.0 as usize..call.span.1 as usize];
             if !raw.starts_with("read(") {
                 continue;
@@ -61,6 +66,7 @@ fn prepared_catalog_follows_exports_and_preserves_mutation_cycle_and_failure_unc
         resolve: &resolve,
     };
     let call = files[&caller]
+        .postgres()
         .sql_identifier_syntax
         .recovery
         .calls

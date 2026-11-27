@@ -38,9 +38,7 @@ pub(crate) fn matching_catalog_files(
     }
     let filters = selected
         .iter()
-        .map(|project| {
-            crate::codebase::test_discovery::ProjectTestFilter::from_project_ref(project)
-        })
+        .map(|project| crate::codebase::test_discovery::compile_project_filter(project))
         .collect::<Result<Vec<_>>>()?;
     let mut matched = files
         .iter()

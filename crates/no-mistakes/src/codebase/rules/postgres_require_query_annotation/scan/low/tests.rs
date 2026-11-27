@@ -127,7 +127,7 @@ fn borrowed_observer_counts_calls_on_a_worker_without_diagnostic_tls() {
             ..Default::default()
         },
     );
-    let expected_calls = facts.ts.get(&files[0]).unwrap().embedded_sql[0]
+    let expected_calls = facts.ts.get(&files[0]).unwrap().postgres().embedded_sql[0]
         .1
         .calls
         .len();

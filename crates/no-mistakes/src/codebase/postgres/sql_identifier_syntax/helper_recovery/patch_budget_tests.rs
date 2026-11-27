@@ -98,7 +98,7 @@ fn saved_transport_and_caller_replay_share_fail_closed_limits() {
         profile: Some(&profile),
         resolve: &resolve,
     };
-    let models = &files[&path].sql_identifier_syntax.recovery;
+    let models = &files[&path].postgres().sql_identifier_syntax.recovery;
     let executors = models.executors.get(&profile).unwrap();
     let actual = |call: &&super::CallModel| {
         source[call.span.0 as usize..call.span.1 as usize].starts_with("query(statement)")

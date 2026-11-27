@@ -37,15 +37,19 @@ pub(crate) fn projection<'a>(
     let key = ApplicationKey::new(profile, rule, index);
     // A shared profile cannot grant another application's file membership.
     anyhow::ensure!(
-        file.sql_identifier_syntax.includes_application(&key),
+        file.postgres()
+            .sql_identifier_syntax
+            .includes_application(&key),
         "{rule}: prepared low-effort SQL application missing for {}",
         path.display()
     );
     let projections = file
+        .postgres_for_policy()
         .sql_identifier_syntax
         .policy_projection
         .get_or_init(|| {
-            file.sql_identifier_syntax
+            file.postgres()
+                .sql_identifier_syntax
                 .application_keys()
                 .into_iter()
                 .filter(|key| supports(&key.rule))

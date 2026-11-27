@@ -1,108 +1,8 @@
 use crate::integration_tests::types::Framework;
-use std::collections::BTreeMap;
-use std::path::PathBuf;
 
-use super::targets::TestExecutionTarget;
+pub use crate::codebase::testing_analysis::runner::TestRunner;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum TestRunner {
-    Dotnet,
-    Playwright,
-    Vitest,
-    Swift,
-    Python,
-    Go,
-    Cargo,
-    Rails,
-    Php,
-    Java,
-    Kotlin,
-    Elixir,
-    Dart,
-    Jest,
-}
-
-impl TestRunner {
-    pub(crate) fn from_name(name: &str) -> Option<Self> {
-        match name {
-            "dotnet" => Some(Self::Dotnet),
-            "playwright" => Some(Self::Playwright),
-            "vitest" => Some(Self::Vitest),
-            "swift" => Some(Self::Swift),
-            "python" => Some(Self::Python),
-            "go" => Some(Self::Go),
-            "cargo" => Some(Self::Cargo),
-            "rails" => Some(Self::Rails),
-            "php" => Some(Self::Php),
-            "java" => Some(Self::Java),
-            "kotlin" => Some(Self::Kotlin),
-            "elixir" => Some(Self::Elixir),
-            "dart" => Some(Self::Dart),
-            "jest" => Some(Self::Jest),
-            _ => None,
-        }
-    }
-
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Dotnet => "dotnet",
-            Self::Playwright => "playwright",
-            Self::Vitest => "vitest",
-            Self::Swift => "swift",
-            Self::Python => "python",
-            Self::Go => "go",
-            Self::Cargo => "cargo",
-            Self::Rails => "rails",
-            Self::Php => "php",
-            Self::Java => "java",
-            Self::Kotlin => "kotlin",
-            Self::Elixir => "elixir",
-            Self::Dart => "dart",
-            Self::Jest => "jest",
-        }
-    }
-
-    pub(super) fn is_language_frontend(self) -> bool {
-        matches!(
-            self,
-            Self::Python
-                | Self::Go
-                | Self::Cargo
-                | Self::Rails
-                | Self::Php
-                | Self::Java
-                | Self::Kotlin
-                | Self::Elixir
-                | Self::Dart
-        )
-    }
-
-    pub(super) fn framework(self) -> Framework {
-        match self {
-            Self::Dotnet => Framework::Dotnet,
-            Self::Playwright => Framework::Playwright,
-            Self::Vitest => Framework::Vitest,
-            Self::Swift => Framework::Swift,
-            Self::Python => Framework::Python,
-            Self::Go => Framework::Go,
-            Self::Cargo => Framework::Cargo,
-            Self::Rails => Framework::Rails,
-            Self::Php => Framework::Php,
-            Self::Java => Framework::Java,
-            Self::Kotlin => Framework::Kotlin,
-            Self::Elixir => Framework::Elixir,
-            Self::Dart => Framework::Dart,
-            Self::Jest => Framework::Jest,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct DiscoveredTests {
-    pub tests: Vec<PathBuf>,
-    pub targets_by_path: BTreeMap<PathBuf, Vec<TestExecutionTarget>>,
-    pub used_fallback: bool,
-}
+pub use crate::codebase::testing_analysis::discovered_tests::DiscoveredTests;
 
 /// Read-only identity of a runner project prepared for the current request.
 /// It intentionally exposes only the values needed to validate target-scoped
@@ -112,4 +12,23 @@ pub struct DiscoveredTests {
 pub struct PreparedRunnerProject {
     pub config: Option<String>,
     pub runner_project_arg: Option<String>,
+}
+
+pub(super) fn framework(runner: TestRunner) -> Framework {
+    match runner {
+        TestRunner::Dotnet => Framework::Dotnet,
+        TestRunner::Playwright => Framework::Playwright,
+        TestRunner::Vitest => Framework::Vitest,
+        TestRunner::Swift => Framework::Swift,
+        TestRunner::Python => Framework::Python,
+        TestRunner::Go => Framework::Go,
+        TestRunner::Cargo => Framework::Cargo,
+        TestRunner::Rails => Framework::Rails,
+        TestRunner::Php => Framework::Php,
+        TestRunner::Java => Framework::Java,
+        TestRunner::Kotlin => Framework::Kotlin,
+        TestRunner::Elixir => Framework::Elixir,
+        TestRunner::Dart => Framework::Dart,
+        TestRunner::Jest => Framework::Jest,
+    }
 }

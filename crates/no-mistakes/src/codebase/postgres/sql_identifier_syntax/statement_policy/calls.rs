@@ -80,7 +80,7 @@ pub(super) fn helper_lines(
     call: &SqlCall,
 ) -> Vec<u32> {
     use crate::codebase::postgres::embedded::helpers::program::{Expr, Stmt};
-    let models = &file.sql_identifier_syntax.recovery.calls;
+    let models = &file.postgres().sql_identifier_syntax.recovery.calls;
     let Some(argument) = models
         .binary_search_by_key(&call.span, |call| call.span)
         .ok()

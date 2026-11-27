@@ -75,11 +75,15 @@ fn builtin_helpers_require_runtime_imports_and_selected_annotation_profiles() {
             })
             .unwrap()
         });
-        assert_eq!(file.query_annotation_heads.is_some(), expected, "{fixture}");
+        assert_eq!(
+            file.postgres().query_annotation_heads.is_some(),
+            expected,
+            "{fixture}"
+        );
         assert_eq!(file.ts.module_bindings.is_some(), expected, "{fixture}");
         if expected {
-            let heads = file.query_annotation_heads.as_ref().unwrap();
-            let span = file.embedded_sql[0].1.call_spans[0];
+            let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
+            let span = file.postgres().embedded_sql[0].1.call_spans[0];
             assert_eq!(heads.helper(span, &[]), None);
             assert_eq!(
                 heads.annotation_helper(span, &[]),
@@ -139,8 +143,8 @@ fn builtin_template_heads_preserve_exact_helper_and_namespace_key_grammar() {
             program,
             None,
         );
-        let heads = file.query_annotation_heads.as_ref().unwrap();
-        let spans = &file.embedded_sql[0].1.call_spans;
+        let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
+        let spans = &file.postgres().embedded_sql[0].1.call_spans;
         assert_eq!(spans.len(), expected.len());
         for (index, (&span, expected)) in spans.iter().zip(expected).enumerate() {
             assert_eq!(heads.annotation_helper(span, &[]), expected, "case {index}");

@@ -24,13 +24,14 @@ fn returned_first_builder_projects_one_prepared_hop_without_low_evaluation() {
         });
         let source = facts.ts.get(&helper).expect("prepared helper-only module");
         let file = facts.ts.get(&caller).expect("prepared caller");
-        let embedded = &file.embedded_sql[0].1;
+        let embedded = &file.postgres().embedded_sql[0].1;
         if efforts == ["max"] {
-            assert!(file.query_annotation_heads.is_none());
+            assert!(file.postgres().query_annotation_heads.is_none());
             max_calls = Some(format!("{:?}", embedded.calls));
             continue;
         }
         let producer = source
+            .postgres()
             .query_annotation_heads
             .as_ref()
             .expect("producer heads");
@@ -40,7 +41,11 @@ fn returned_first_builder_projects_one_prepared_hop_without_low_evaluation() {
         assert!(!producer.exported_returned_params.contains("wrongReturn"));
         assert!(!producer.exported_returned_params.contains("aliasEscape"));
         assert!(!producer.exported_returned_params.contains("unsafeDefault"));
-        let heads = file.query_annotation_heads.as_ref().expect("caller heads");
+        let heads = file
+            .postgres()
+            .query_annotation_heads
+            .as_ref()
+            .expect("caller heads");
         assert!(heads.has_pending_imports());
         let proofs = embedded
             .call_spans
@@ -62,7 +67,7 @@ fn returned_first_builder_projects_one_prepared_hop_without_low_evaluation() {
             assert_eq!(format!("{:?}", embedded.calls), max_calls.clone().unwrap());
         } else {
             low_proofs = Some(proofs);
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert!(embedded.calls.iter().all(|call| call.variants.is_empty()));
             assert_eq!(
                 observer
@@ -115,15 +120,15 @@ fn returned_parameter_export_aliases_share_positive_and_negative_source_censuses
             .copied(),
         Some(expected_visits as u64)
     );
-    let producer = source.query_annotation_heads.as_ref().unwrap();
+    let producer = source.postgres().query_annotation_heads.as_ref().unwrap();
     assert_eq!(producer.exported_returned_params.len(), 16);
     assert!(producer
         .exported_returned_params
         .iter()
         .all(|name| name.starts_with("factory")));
     let file = facts.ts.get(&caller).unwrap();
-    let heads = file.query_annotation_heads.as_ref().unwrap();
-    let proofs = file.embedded_sql[0]
+    let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
+    let proofs = file.postgres().embedded_sql[0]
         .1
         .call_spans
         .iter()

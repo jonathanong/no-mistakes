@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: banned-renamed-files
+    scope: repository
+    options:
+      bannedBasenames:
+      - name: legacy
+        messag: Rename the file to current.ts.

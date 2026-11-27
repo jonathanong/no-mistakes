@@ -71,24 +71,28 @@ fn prepared_fixture_with_profiles(
                     None,
                     None,
                 )),
-                query_annotation: profiles
-                    .iter()
-                    .map(|options| {
-                        (
-                            options.clone(),
-                            query_annotation::collect(program, &source, options),
-                        )
-                    })
-                    .collect(),
-                embedded_sql: profiles
-                    .iter()
-                    .map(|options| {
-                        (
-                            options.clone(),
-                            extract_embedded_sql_from_program(&path, program, &source, options),
-                        )
-                    })
-                    .collect(),
+                postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                    query_annotation: profiles
+                        .iter()
+                        .map(|options| {
+                            (
+                                options.clone(),
+                                query_annotation::collect(program, &source, options),
+                            )
+                        })
+                        .collect(),
+                    embedded_sql: profiles
+                        .iter()
+                        .map(|options| {
+                            (
+                                options.clone(),
+                                extract_embedded_sql_from_program(&path, program, &source, options),
+                            )
+                        })
+                        .collect(),
+                    ..Default::default()
+                }
+                .into_payload(),
                 source: Some(source.clone().into()),
                 ..Default::default()
             })

@@ -2,7 +2,7 @@ use crate::config::v2::schema::NoMistakesConfig;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use super::filters::ProjectTestFilter;
+use super::filters::compile_project_filter;
 use super::projects;
 use super::types::TestRunner;
 
@@ -45,7 +45,7 @@ pub(super) fn runner_reserved_tests_from_visible(
     }
     let reserved_filters = reserved_projects
         .into_iter()
-        .filter_map(ProjectTestFilter::from_project)
+        .filter_map(|project| compile_project_filter(&project).ok())
         .collect::<Vec<_>>();
     files
         .iter()

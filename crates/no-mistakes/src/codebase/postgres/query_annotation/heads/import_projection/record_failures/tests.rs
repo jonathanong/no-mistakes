@@ -28,8 +28,12 @@ fn conditional_effect_failure_reaches_its_executor_only() {
     let mut files = FileIdMap::from_entries([(
         owner.clone(),
         CheckFileFacts {
-            query_annotation_heads: Some(Arc::new(heads)),
-            embedded_sql: vec![(profile.clone(), embedded)],
+            postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                query_annotation_heads: Some(Arc::new(heads)),
+                embedded_sql: vec![(profile.clone(), embedded)],
+                ..Default::default()
+            }
+            .into_payload(),
             ..Default::default()
         },
     )]);

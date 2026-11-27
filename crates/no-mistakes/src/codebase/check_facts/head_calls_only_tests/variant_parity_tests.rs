@@ -12,9 +12,9 @@ fn finite_helper_suffix_variants_keep_low_head_proofs_under_mixed_effort() {
     for efforts in [vec!["low"], vec!["low", "max"]] {
         let facts = collect_check_facts(root, vec![path.clone()], plan(root, &config(&efforts)));
         let file = facts.ts.get(&path).unwrap();
-        let embedded = &file.embedded_sql[0].1;
+        let embedded = &file.postgres().embedded_sql[0].1;
         assert_eq!(embedded.call_spans.len(), 3);
-        let heads = file.query_annotation_heads.as_ref().unwrap();
+        let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
         let proofs = embedded
             .call_spans
             .iter()
@@ -66,8 +66,8 @@ fn imported_helper_head_is_independent_of_another_applications_full_sql_demand()
             plan,
         );
         let file = facts.ts.get(&caller).unwrap();
-        let heads = file.query_annotation_heads.as_ref().unwrap();
-        let calls = file.embedded_sql[0]
+        let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
+        let calls = file.postgres().embedded_sql[0]
             .1
             .call_spans
             .iter()
@@ -100,9 +100,9 @@ fn concise_helper_and_consumed_append_heads_survive_mixed_full_sql_demand() {
         let mut proofs = Vec::new();
         for name in ["query.mts", "append.mts"] {
             let file = facts.ts.get(&root.join("src").join(name)).unwrap();
-            let heads = file.query_annotation_heads.as_ref().unwrap();
+            let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
             proofs.push(
-                file.embedded_sql[0]
+                file.postgres().embedded_sql[0]
                     .1
                     .call_spans
                     .iter()
@@ -110,8 +110,8 @@ fn concise_helper_and_consumed_append_heads_survive_mixed_full_sql_demand() {
                     .collect::<Vec<_>>(),
             );
             if efforts == ["low"] {
-                assert!(file.query_annotation.is_empty());
-                assert!(file.embedded_sql[0]
+                assert!(file.postgres().query_annotation.is_empty());
+                assert!(file.postgres().embedded_sql[0]
                     .1
                     .calls
                     .iter()

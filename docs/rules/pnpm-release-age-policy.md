@@ -82,6 +82,8 @@ selectors in pnpm. A temporary selector authorizes only that package version.
 and lockfile paths when discoverable. `temporarySelectors` is a compatibility
 flat list; selectors must not repeat across it and `temporaryGroups`.
 
+Config loading rejects unknown keys in `permanentPackages` and `temporaryGroups` entries.
+
 ## Valid example
 
 The `@acme/*` pattern covers both locked `@acme` packages. The exact

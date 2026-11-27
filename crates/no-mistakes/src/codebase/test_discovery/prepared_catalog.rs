@@ -62,7 +62,7 @@ impl PreparedTestProjects {
             .flat_map(|(runner, projects)| {
                 projects
                     .iter()
-                    .filter_map(|project| ProjectTestFilter::from_project_ref(project).ok())
+                    .filter_map(|project| compile_project_filter(project).ok())
                     .map(move |filter| (runner, filter))
             })
             .collect()

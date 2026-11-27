@@ -80,6 +80,43 @@ fn valid_declared_option_values_still_run() {
 }
 
 #[test]
+fn invalid_nested_rule_options_abort_before_analysis() {
+    let root = rules_path("options-audit", "fixture", "issue-4575");
+    let labels: Vec<_> = (4530..=4558).map(|issue| issue.to_string()).collect();
+    let mut cases: Vec<_> = labels
+        .iter()
+        .map(|label| {
+            (
+                label.as_str(),
+                root.clone(),
+                root.join(format!("{label}.yml")),
+            )
+        })
+        .collect();
+    cases.push((
+        "literal-selector",
+        root.clone(),
+        root.join("literal-selector.yml"),
+    ));
+    cases.push((
+        "malformed-normalized-selector",
+        root.clone(),
+        root.join("malformed-normalized-selector.yml"),
+    ));
+    let result = assert_saved_fixture_report("invalid_nested_rule_options", &cases, &[], &[]);
+    for label in labels {
+        assert_eq!(result[&label]["exitCode"], 2, "{label}: {result}");
+        assert!(result[&label]["report"].is_null(), "{label}: {result}");
+    }
+    assert_eq!(result["literal-selector"]["exitCode"], 0);
+    assert_eq!(result["malformed-normalized-selector"]["exitCode"], 2);
+    assert!(result["malformed-normalized-selector"]["stderr"]
+        .as_str()
+        .unwrap()
+        .contains("options.roots[0]: invalid glob"));
+}
+
+#[test]
 fn every_registered_rule_rejects_an_unknown_option() {
     let root = rules_path("options-audit", "fixture", "issue-4110");
     let path = root.join("all-rules.yml");

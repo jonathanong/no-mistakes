@@ -1,0 +1,179 @@
+use crate::config::v2::NoMistakesConfig;
+use globset::{Glob, GlobSet, GlobSetBuilder};
+use std::path::Path;
+
+use super::{
+    hooks,
+    project_filter::{fallback_test_path, ProjectTestFilter},
+    runner::TestRunner,
+    runner_filter::TestFilter as RunnerTestFilter,
+};
+
+#[derive(Clone)]
+pub struct TestFileFilter {
+    /// Opt-in stub/mock test globs that are always treated as test files,
+    /// even when a configured suite `exclude` would otherwise drop them.
+    /// `None` when unconfigured, keeping the default path a no-op.
+    always_include: Option<GlobSet>,
+    config_filter: Option<RunnerTestFilter>,
+    suites: Vec<TestSuiteFilter>,
+}
+
+#[derive(Clone)]
+struct TestSuiteFilter {
+    filter: ProjectTestFilter,
+}
+
+impl TestFileFilter {
+    #[doc(hidden)]
+    pub fn fallback_only() -> Self {
+        Self {
+            always_include: None,
+            config_filter: None,
+            suites: Vec::new(),
+        }
+    }
+
+    pub fn new(root: &Path, config: &NoMistakesConfig) -> Self {
+        (hooks().new_test_filter)(root, config)
+    }
+
+    #[doc(hidden)]
+    pub fn from_visible(
+        root: &Path,
+        config: &NoMistakesConfig,
+        visible_paths: &[std::path::PathBuf],
+    ) -> Self {
+        (hooks().test_filter_from_visible)(root, config, visible_paths)
+    }
+
+    #[doc(hidden)]
+    pub fn from_prepared_projects(
+        root: &Path,
+        config: &NoMistakesConfig,
+        visible_paths: &[std::path::PathBuf],
+        filters: Vec<(TestRunner, ProjectTestFilter)>,
+    ) -> Self {
+        Self::with_filters(
+            (hooks().legacy_filter_from_visible)(root, config, visible_paths).ok(),
+            filters,
+        )
+    }
+
+    pub(crate) fn with_filters(
+        config_filter: Option<RunnerTestFilter>,
+        filters: Vec<(TestRunner, ProjectTestFilter)>,
+    ) -> Self {
+        Self {
+            always_include: None,
+            config_filter,
+            suites: filters
+                .into_iter()
+                .map(|(_runner, filter)| TestSuiteFilter { filter })
+                .collect(),
+        }
+    }
+
+    #[doc(hidden)]
+    pub fn for_impact_from_prepared_projects(
+        root: &Path,
+        config: &NoMistakesConfig,
+        visible_paths: &[std::path::PathBuf],
+        filters: Vec<(TestRunner, ProjectTestFilter)>,
+    ) -> Self {
+        let mut filter = Self::from_prepared_projects(root, config, visible_paths, filters);
+        filter.always_include = compile_optional_globset(&config.tests.impact.always_include_tests);
+        filter
+    }
+
+    /// Filter variant for the `tests impact` query: additionally always-surfaces
+    /// the stub/mock tests configured under `tests.impact.alwaysIncludeTests`,
+    /// even when a suite `exclude` would drop them. This is scoped to impact and
+    /// is intentionally NOT applied by `tests plan` / configured plans, which
+    /// schedule tests to *run* and must respect suite excludes.
+    pub fn for_impact(root: &Path, config: &NoMistakesConfig) -> Self {
+        let mut filter = Self::new(root, config);
+        filter.always_include = compile_optional_globset(&config.tests.impact.always_include_tests);
+        filter
+    }
+
+    pub fn is_match(&self, root: &Path, path: &Path) -> bool {
+        let rel = crate::codebase::ts_source::relative_slash_path(root, path);
+        self.is_match_rel(&rel)
+    }
+
+    pub fn is_configured_suite_match(&self, root: &Path, path: &Path) -> bool {
+        let rel = crate::codebase::ts_source::relative_slash_path(root, path);
+        self.configured_suite_match(&rel) == Some(true)
+    }
+
+    pub fn is_match_rel(&self, rel_path: &str) -> bool {
+        // Opt-in stub/mock tests are always surfaced, bypassing suite excludes.
+        if self
+            .always_include
+            .as_ref()
+            .is_some_and(|set| set.is_match(rel_path))
+        {
+            return true;
+        }
+        if let Some(is_match) = self.configured_suite_match(rel_path) {
+            return is_match;
+        }
+        if self
+            .config_filter
+            .as_ref()
+            .is_some_and(|filter| filter.is_match(rel_path))
+        {
+            return true;
+        }
+        fallback_test_path(rel_path)
+    }
+
+    fn configured_suite_match(&self, rel_path: &str) -> Option<bool> {
+        let mut excluded_by_matching_suite = false;
+        for suite in &self.suites {
+            if !suite.matches_include(rel_path) {
+                continue;
+            }
+            if suite.matches_exclude(rel_path) {
+                excluded_by_matching_suite = true;
+            } else {
+                return Some(true);
+            }
+        }
+        excluded_by_matching_suite.then_some(false)
+    }
+}
+
+impl TestSuiteFilter {
+    fn matches_include(&self, rel_path: &str) -> bool {
+        self.filter.includes(rel_path)
+    }
+
+    fn matches_exclude(&self, rel_path: &str) -> bool {
+        self.filter.excludes(rel_path)
+    }
+}
+
+/// Compile an opt-in glob list into a [`GlobSet`]. Returns `None` when the list
+/// is empty (the unconfigured default) or when every pattern is malformed.
+/// Malformed patterns are skipped so a single bad glob does not silently
+/// disable the valid ones, and a panic is never possible.
+fn compile_optional_globset(patterns: &[String]) -> Option<GlobSet> {
+    if patterns.is_empty() {
+        return None;
+    }
+    let mut builder = GlobSetBuilder::new();
+    let mut has_valid = false;
+    for pattern in patterns {
+        if let Ok(glob) = Glob::new(pattern) {
+            builder.add(glob);
+            has_valid = true;
+        }
+    }
+    has_valid.then(|| builder.build().ok()).flatten()
+}
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+#[path = "../test_filter/tests.rs"]
+mod tests;

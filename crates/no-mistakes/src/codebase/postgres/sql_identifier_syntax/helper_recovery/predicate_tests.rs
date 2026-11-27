@@ -31,12 +31,16 @@ fn prepared() -> (PathBuf, String, FileIdMap<CheckFileFacts>) {
             None,
         );
         CheckFileFacts {
-            sql_identifier_syntax: super::super::tests::collect(
-                program,
-                &ts,
-                &source,
-                &[profile()],
-            ),
+            postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                sql_identifier_syntax: super::super::tests::collect(
+                    program,
+                    &ts,
+                    &source,
+                    &[profile()],
+                ),
+                ..Default::default()
+            }
+            .into_payload(),
             ts: Arc::new(ts),
             ..Default::default()
         }
@@ -64,7 +68,7 @@ fn strict_scalar_predicates_correlate_boolean_builder_branches_within_budget() {
         resolve: &|_, _| None,
     };
     let mut checked = [false; 3];
-    for call in &files[&path].sql_identifier_syntax.recovery.calls {
+    for call in &files[&path].postgres().sql_identifier_syntax.recovery.calls {
         let raw = &source[call.span.0 as usize..call.span.1 as usize];
         if !raw.starts_with("read(") {
             continue;

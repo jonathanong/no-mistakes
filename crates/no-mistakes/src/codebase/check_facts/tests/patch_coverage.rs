@@ -287,12 +287,12 @@ fn legacy_embedded_sql_demand_uses_the_default_profile() {
     )
     .expect("embedded SQL fixture is parsed");
 
-    assert_eq!(facts.embedded_sql.len(), 1);
+    assert_eq!(facts.postgres().embedded_sql.len(), 1);
     assert_eq!(
-        facts.embedded_sql[0].0,
+        facts.postgres().embedded_sql[0].0,
         crate::codebase::postgres::EmbeddedSqlOptions::default()
     );
-    assert!(facts.embedded_sql[0].1.calls.is_empty());
+    assert!(facts.postgres().embedded_sql[0].1.calls.is_empty());
 }
 
 #[test]
@@ -314,18 +314,22 @@ fn prepared_postgres_fact_accessors_preserve_missing_and_load_errors() {
     );
     let facts = CheckFactMap {
         ts,
-        postgres_schema_catalogs: std::collections::BTreeMap::from([
-            (
-                "broken.json".to_string(),
-                Err(std::sync::Arc::<str>::from("catalog load failed")),
-            ),
-            (
-                "valid.json".to_string(),
-                Ok(std::sync::Arc::new(
-                    crate::codebase::postgres::SchemaCatalog::default(),
-                )),
-            ),
-        ]),
+        postgres_payload: crate::codebase::postgres::check_analysis::map::PostgresMapFacts {
+            catalogs: std::collections::BTreeMap::from([
+                (
+                    "broken.json".to_string(),
+                    Err(std::sync::Arc::<str>::from("catalog load failed")),
+                ),
+                (
+                    "valid.json".to_string(),
+                    Ok(std::sync::Arc::new(
+                        crate::codebase::postgres::SchemaCatalog::default(),
+                    )),
+                ),
+            ]),
+            ..Default::default()
+        }
+        .into_payload(),
         ..CheckFactMap::default()
     };
     let options = crate::codebase::postgres::EmbeddedSqlOptions::configured("@example/db", &[]);

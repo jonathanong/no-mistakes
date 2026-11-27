@@ -18,9 +18,12 @@ fn profile_batch_merges_in_the_same_order_with_one_or_four_workers() {
         files
             .iter()
             .flat_map(|(path, file)| {
-                file.query_annotation.iter().map(move |(profile, facts)| {
-                    ((path.clone(), profile.clone()), facts.calls.clone())
-                })
+                file.postgres()
+                    .query_annotation
+                    .iter()
+                    .map(move |(profile, facts)| {
+                        ((path.clone(), profile.clone()), facts.calls.clone())
+                    })
             })
             .collect::<BTreeMap<_, _>>()
     };
@@ -34,7 +37,7 @@ fn mixed_profile_scopes_match_separate_profile_projections() {
         let mut files = prepared();
         for (path, file) in &mut files {
             // Model distinct include scopes while retaining shared/cyclic helpers.
-            file.query_annotation.retain(|(profile, _)| {
+            file.postgres_mut().query_annotation.retain(|(profile, _)| {
                 let selected = if path.components().any(|part| part.as_os_str() == "nested-a") {
                     profile.import_specifier == "@app/db"
                 } else if path.components().any(|part| part.as_os_str() == "nested-b") {
@@ -53,9 +56,12 @@ fn mixed_profile_scopes_match_separate_profile_projections() {
         files
             .iter()
             .flat_map(|(path, file)| {
-                file.query_annotation.iter().map(move |(profile, facts)| {
-                    ((path.clone(), profile.clone()), facts.calls.clone())
-                })
+                file.postgres()
+                    .query_annotation
+                    .iter()
+                    .map(move |(profile, facts)| {
+                        ((path.clone(), profile.clone()), facts.calls.clone())
+                    })
             })
             .collect::<BTreeMap<_, _>>()
     };

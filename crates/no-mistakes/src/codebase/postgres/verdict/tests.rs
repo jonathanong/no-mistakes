@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::postgres::EmbeddedSqlOptions;
 use serde::Deserialize;
 
 #[derive(Deserialize)]

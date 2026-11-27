@@ -12,7 +12,7 @@ impl SharedTraversalContext {
             tsconfig_path,
             config_path,
             build_plan,
-            crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(build_plan),
+            crate::codebase::testing_analysis::plan::FrameworkPreparationPlan::for_graph(build_plan),
         )
     }
 
@@ -24,7 +24,7 @@ impl SharedTraversalContext {
         session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     ) -> Result<Self> {
         let framework_plan =
-            crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(build_plan);
+            crate::codebase::testing_analysis::plan::FrameworkPreparationPlan::for_graph(build_plan);
         Self::prepare_with_session_and_framework_plan(
             root,
             tsconfig_path,

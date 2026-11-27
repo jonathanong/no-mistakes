@@ -33,7 +33,12 @@ pub(super) fn prepare(names: &[&str]) -> FileIdMap<CheckFileFacts> {
                     super::super::tests::collect(program, &ts, &source, &[super::tests::profile()]);
                 CheckFileFacts {
                     ts: Arc::new(ts),
-                    sql_identifier_syntax: syntax,
+                    postgres_file:
+                        crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                            sql_identifier_syntax: syntax,
+                            ..Default::default()
+                        }
+                        .into_payload(),
                     ..Default::default()
                 }
             })

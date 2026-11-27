@@ -54,16 +54,16 @@ fn low_prefix_demand_does_not_publish_a_max_append_fallback() {
         true,
     );
     assert_eq!(
-        format!("{:?}", max.embedded_sql[0].1.calls),
-        format!("{:?}", mixed.embedded_sql[0].1.calls)
+        format!("{:?}", max.postgres().embedded_sql[0].1.calls),
+        format!("{:?}", mixed.postgres().embedded_sql[0].1.calls)
     );
-    let heads = mixed.query_annotation_heads.as_ref().unwrap();
-    assert!(mixed.embedded_sql[0]
+    let heads = mixed.postgres().query_annotation_heads.as_ref().unwrap();
+    assert!(mixed.postgres().embedded_sql[0]
         .1
         .call_spans
         .iter()
         .all(|span| !heads.accepts_trusted_append(*span)));
-    assert!(mixed.embedded_sql[0]
+    assert!(mixed.postgres().embedded_sql[0]
         .1
         .call_spans
         .iter()
@@ -74,9 +74,9 @@ fn low_prefix_demand_does_not_publish_a_max_append_fallback() {
 fn max_proofs_require_trusted_append_origins_and_safe_local_uses() {
     let profile = EmbeddedSqlOptions::configured("@bench/db", &["read".into()]);
     let file = prepared("annotation-trusted-append.mts", &profile, &profile);
-    let embedded = &file.embedded_sql[0].1;
+    let embedded = &file.postgres().embedded_sql[0].1;
     assert_eq!(embedded.calls.len(), 7);
-    let heads = file.query_annotation_heads.as_ref().unwrap();
+    let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
     for index in [0, 6] {
         let call = &embedded.calls[index];
         assert_eq!(call.variants.len(), 1);
@@ -101,7 +101,7 @@ fn unselected_max_profiles_do_not_collect_head_facts_or_lexical_indexes() {
     let profile = EmbeddedSqlOptions::configured("@bench/db", &["read".into()]);
     let selected = EmbeddedSqlOptions::configured("@other/db", &["read".into()]);
     let file = prepared("annotation-trusted-append.mts", &profile, &selected);
-    assert!(file.query_annotation_heads.is_none());
+    assert!(file.postgres().query_annotation_heads.is_none());
     assert!(file.ts.module_bindings.is_none());
 }
 
@@ -109,8 +109,8 @@ fn unselected_max_profiles_do_not_collect_head_facts_or_lexical_indexes() {
 fn ordinary_inline_calls_need_no_max_append_head_pass() {
     let profile = EmbeddedSqlOptions::configured("@example/db", &[]);
     let file = prepared("inline-insert.ts", &profile, &profile);
-    assert!(!file.embedded_sql[0].1.calls.is_empty());
-    assert!(file.query_annotation_heads.is_none());
+    assert!(!file.postgres().embedded_sql[0].1.calls.is_empty());
+    assert!(file.postgres().query_annotation_heads.is_none());
     assert!(file.ts.module_bindings.is_none());
 }
 
@@ -118,7 +118,7 @@ fn ordinary_inline_calls_need_no_max_append_head_pass() {
 fn trusted_tagged_builder_origins_are_required_for_composed_head_proofs() {
     let profile = EmbeddedSqlOptions::configured("@bench/db", &["read".into()]);
     let file = prepared("annotation-trusted-append.mts", &profile, &profile);
-    let embedded = &file.embedded_sql[0].1;
+    let embedded = &file.postgres().embedded_sql[0].1;
     let candidates = embedded.call_spans.iter().copied().collect();
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/postgres-facts/embedded/annotation-trusted-append.mts");
@@ -154,12 +154,12 @@ fn low_text_field_proof_does_not_expand_max_legacy_append() {
     let max = prepared("annotation-field-max-parity.mts", &profile, &profile);
     let mixed = prepared_with_low("annotation-field-max-parity.mts", &profile, &profile, true);
     assert_eq!(
-        format!("{:?}", max.embedded_sql[0].1.calls),
-        format!("{:?}", mixed.embedded_sql[0].1.calls)
+        format!("{:?}", max.postgres().embedded_sql[0].1.calls),
+        format!("{:?}", mixed.postgres().embedded_sql[0].1.calls)
     );
-    let max_heads = max.query_annotation_heads.as_ref();
-    let mixed_heads = mixed.query_annotation_heads.as_ref().unwrap();
-    let spans = &mixed.embedded_sql[0].1.call_spans;
+    let max_heads = max.postgres().query_annotation_heads.as_ref();
+    let mixed_heads = mixed.postgres().query_annotation_heads.as_ref().unwrap();
+    let spans = &mixed.postgres().embedded_sql[0].1.call_spans;
     assert_eq!(spans.len(), 2);
     assert!(mixed_heads.accepts(spans[0]));
     assert_eq!(

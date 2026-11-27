@@ -42,7 +42,8 @@ pub(super) fn ts_extract_plan(
             .as_ref()
             .is_some_and(|scope| scope.applies(path));
     }
-    ts_plan.module_bindings |= super::sql_identifier::selected(root, path, plan);
+    ts_plan.module_bindings |=
+        crate::codebase::postgres_analysis::identifier_plan::selected(root, path, plan);
     ts_plan.imports |= plan.production_import_paths.contains(path);
     if playwright.is_some_and(|plan| plan.file(path).is_some()) {
         ts_plan.include(TsFactPlan::imports());
@@ -106,7 +107,7 @@ pub(super) fn requires_parse(
         || plan.imports
         || plan.query_annotation
         || plan.query_annotation_heads
-        || super::sql_identifier::selected(root, path, plan)
+        || crate::codebase::postgres_analysis::identifier_plan::selected(root, path, plan)
         || plan.symbols
         || plan.react
         || plan.react_usages

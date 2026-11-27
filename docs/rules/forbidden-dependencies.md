@@ -59,13 +59,15 @@ A valid pattern with no matches selects nothing. Overlapping selectors
 select each origin once. Use `excludeRoots` or the rule's top-level `exclude`
 to remove test files as origins; excluding an origin does not remove that file
 as a reachable forbidden target. Use explicit exclusions rather than `!` patterns.
-Malformed glob patterns report configuration findings at their option entries.
+Malformed glob patterns fail configuration loading. The diagnostic identifies
+the invalid list item and its source location, and `check` exits with code 2.
 An existing literal file or directory takes precedence over glob interpretation,
 so a literal root containing brackets remains usable.
 
 ### Per-root exceptions
 
 `exceptions` is a list of `{ roots, allowedFiles }` objects, defaulting to `[]`.
+The configuration loader rejects unknown keys within these objects.
 Its `roots` uses the same origin selectors. Its `allowedFiles` uses the same
 root-relative target globs as `forbiddenFiles`. Matching exceptions allow only
 those file targets for that particular origin; their allowed target sets are

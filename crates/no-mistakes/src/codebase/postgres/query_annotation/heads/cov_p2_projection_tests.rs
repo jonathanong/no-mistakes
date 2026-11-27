@@ -16,13 +16,18 @@ fn cov_p2_callback_and_namespace_projections_keep_exact_runtime_shapes() {
     ] {
         let path = root.join(format!("{name}.mts"));
         let source = std::fs::read_to_string(&path).unwrap();
-        let heads = files[&path].query_annotation_heads.as_ref().unwrap();
+        let heads = files[&path]
+            .postgres()
+            .query_annotation_heads
+            .as_ref()
+            .unwrap();
         let mut offset = 0;
         let mut checked = 0;
         for line in source.split_inclusive('\n') {
             if let Some((statement, expected)) = line.split_once("// low: ") {
                 let start = offset + statement.find("read(").unwrap();
                 let span = files[&path]
+                    .postgres()
                     .embedded_sql
                     .iter()
                     .flat_map(|(_, embedded)| &embedded.call_spans)

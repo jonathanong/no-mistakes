@@ -12,6 +12,7 @@ pub(super) fn proves_missing(
         return false;
     };
     let Some(tags) = file
+        .postgres()
         .query_annotation_heads
         .as_ref()
         .and_then(|heads| heads.loop_carried_missing.get(&span))
@@ -20,9 +21,12 @@ pub(super) fn proves_missing(
     };
     tags.iter().any(|tag| {
         tag.as_ref().is_none_or(|tag| {
-            file.query_annotation.iter().any(|(options, annotation)| {
-                options == &opts.embedded && annotation.trusts_loop_tag(tag)
-            })
+            file.postgres()
+                .query_annotation
+                .iter()
+                .any(|(options, annotation)| {
+                    options == &opts.embedded && annotation.trusts_loop_tag(tag)
+                })
         })
     })
 }

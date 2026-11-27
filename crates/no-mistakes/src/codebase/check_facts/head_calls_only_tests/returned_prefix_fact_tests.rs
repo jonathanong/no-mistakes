@@ -19,8 +19,12 @@ fn closed_returned_prefix_reuses_low_facts_without_sql_composition() {
         if efforts == ["max"] {
             continue;
         }
-        let heads = file.query_annotation_heads.as_ref().expect("low heads");
-        let proofs = file.embedded_sql[0]
+        let heads = file
+            .postgres()
+            .query_annotation_heads
+            .as_ref()
+            .expect("low heads");
+        let proofs = file.postgres().embedded_sql[0]
             .1
             .call_spans
             .iter()
@@ -36,7 +40,7 @@ fn closed_returned_prefix_reuses_low_facts_without_sql_composition() {
         }
         low_proofs = Some(proofs);
         if efforts == ["low"] {
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert_eq!(
                 observer
                     .snapshot()

@@ -25,11 +25,7 @@ pub(crate) struct Parity {
     pub(crate) compare_root: bool,
 }
 
-#[derive(Default)]
-pub struct Diagnostics {
-    pub findings: Vec<RuleFinding>,
-    pub incomplete: Vec<CheckFailure>,
-}
+pub use crate::codebase::testing_analysis::vitest_policy::Diagnostics;
 
 pub fn diagnostics_with_files_and_sources(
     root: &Path,

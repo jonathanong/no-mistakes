@@ -47,6 +47,8 @@ listed subdirectory may contain source files of `sourceExtension` only directly
 inside it, plus `<testDirName>/<test file>`. Deeper files are findings. Only
 files are checked; an empty directory is not a finding.
 
+Config loading rejects unknown keys in `packages` entries.
+
 Per-package `testFilePatterns` and `testDirName` override the rule-wide options.
 Omitted fields inherit the rule-wide values; when those are omitted, the
 existing defaults remain `*.test.*` / `*.spec.*` and `__tests__`. An explicit

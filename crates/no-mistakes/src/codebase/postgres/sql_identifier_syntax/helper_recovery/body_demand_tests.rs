@@ -36,7 +36,11 @@ fn prepared(name: &str) -> (PathBuf, String, CheckFileFacts) {
             super::super::tests::collect(program, &ts, &source, &[super::tests::profile()]);
         CheckFileFacts {
             ts: Arc::new(ts),
-            sql_identifier_syntax: syntax,
+            postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                sql_identifier_syntax: syntax,
+                ..Default::default()
+            }
+            .into_payload(),
             ..Default::default()
         }
     })
@@ -60,7 +64,7 @@ fn function<'a>(
 #[test]
 fn known_anonymous_body_is_trimmed_but_unknown_caller_replays() {
     let (path, source, facts) = prepared("callbacks.mts");
-    let models = &facts.sql_identifier_syntax.recovery;
+    let models = &facts.postgres().sql_identifier_syntax.recovery;
     let known = function(models, &source, "SELECT 1 OFFSET 3");
     assert!(matches!(
         known.lowered.program.body.as_slice(),
@@ -87,6 +91,7 @@ fn known_anonymous_body_is_trimmed_but_unknown_caller_replays() {
         [Stmt::Opaque]
     ));
     let partial_call = facts
+        .postgres()
         .sql_identifier_syntax
         .profiles
         .iter()
@@ -115,7 +120,7 @@ fn known_anonymous_body_is_trimmed_but_unknown_caller_replays() {
     assert!(models.sinks.get(&profile).unwrap().contains(&sink.span));
     let mut files = FileIdMap::default();
     files.insert(path.clone(), facts);
-    let models = &files[&path].sql_identifier_syntax.recovery;
+    let models = &files[&path].postgres().sql_identifier_syntax.recovery;
     let sink = models
         .calls
         .iter()
@@ -146,7 +151,7 @@ fn known_anonymous_body_is_trimmed_but_unknown_caller_replays() {
 #[test]
 fn iterator_params_and_conservative_module_roots_survive() {
     let (_, source, facts) = prepared("callbacks.mts");
-    let models = &facts.sql_identifier_syntax.recovery;
+    let models = &facts.postgres().sql_identifier_syntax.recovery;
     let iterator = function(models, &source, "SELECT 1 OFFSET 8");
     assert!(matches!(
         iterator.lowered.program.body.as_slice(),
@@ -156,7 +161,7 @@ fn iterator_params_and_conservative_module_roots_survive() {
     assert!(models.iterators.contains_key(&iterator.id));
     let (_, source, exported) = prepared("exported.mts");
     let model = function(
-        &exported.sql_identifier_syntax.recovery,
+        &exported.postgres().sql_identifier_syntax.recovery,
         &source,
         "SELECT 1 OFFSET 6",
     );
@@ -173,7 +178,7 @@ fn iterator_params_and_conservative_module_roots_survive() {
         .diagnostics
         .is_empty());
     let model = function(
-        &diagnostic.sql_identifier_syntax.recovery,
+        &diagnostic.postgres().sql_identifier_syntax.recovery,
         &source,
         "SELECT 1 OFFSET 7",
     );

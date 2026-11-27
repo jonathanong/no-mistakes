@@ -91,37 +91,23 @@ fn a_clean_exception_root_still_has_a_real_forbidden_import_edge() {
 }
 
 #[test]
-fn invalid_selection_and_exception_globs_have_authored_config_locations() {
-    use crate::codebase::ts_source::{FileInventory, SourceStore};
-    use std::sync::Arc;
+fn invalid_programmatic_selection_and_exception_globs_produce_config_findings() {
     let (root, _, graph) = setup();
-    for (name, line, field) in [
-        ("invalid-roots.yml", 5, "roots"),
-        ("invalid-exclude-roots.yml", 8, "excludeRoots"),
-        ("invalid-exception-root.yml", 9, "exceptions[0].roots"),
-        (
-            "invalid-exception-target.yml",
-            10,
-            "exceptions[0].allowedFiles",
-        ),
+    for (name, field) in [
+        ("invalid-roots.yml", "roots"),
+        ("invalid-exclude-roots.yml", "excludeRoots"),
+        ("invalid-exception-root.yml", "exceptions[0].roots"),
+        ("invalid-exception-target.yml", "exceptions[0].allowedFiles"),
     ] {
-        let path = root.join(name);
-        let config = crate::config::v2::load_v2_config(&root, Some(&path)).unwrap();
-        let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&[path])));
-        let anchor = ConfigAnchor::resolve(&root, &config, Some(&sources), &config.rules[0]);
-        assert_eq!(anchor.nested_option_item_line("missing", 0, "roots", 0), 2);
+        let yaml = std::fs::read_to_string(root.join(name)).unwrap();
+        let config: NoMistakesConfig = serde_yaml::from_str(&yaml).unwrap();
         let opts = config.rules[0].try_rule_options().unwrap();
-        let findings = check_rule_application(
-            &root,
-            &config,
-            &config.rules[0],
-            &opts,
-            &graph,
-            application_scope(None, None, Some(&sources)),
-        )
-        .unwrap();
+        let findings = check_application(&root, &opts, &graph).unwrap();
         assert_eq!(findings.len(), 1, "{name}: {findings:?}");
-        assert_eq!((findings[0].file.as_str(), findings[0].line), (name, line));
+        assert_eq!(
+            (findings[0].file.as_str(), findings[0].line),
+            (".no-mistakes.yml", 1)
+        );
         assert!(findings[0].message.contains(field), "{findings:?}");
     }
 }

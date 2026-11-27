@@ -86,7 +86,7 @@ impl AnalysisSession {
         &self,
         root: &Path,
         config: &crate::config::v2::NoMistakesConfig,
-    ) -> Arc<crate::codebase::test_filter::TestFileFilter> {
+    ) -> Arc<crate::codebase::testing_analysis::test_filter::TestFileFilter> {
         self.test_file_filter_with_visible(root, config, None)
     }
 
@@ -95,7 +95,7 @@ impl AnalysisSession {
         root: &Path,
         config: &crate::config::v2::NoMistakesConfig,
         visible_paths: Option<&[PathBuf]>,
-    ) -> Arc<crate::codebase::test_filter::TestFileFilter> {
+    ) -> Arc<crate::codebase::testing_analysis::test_filter::TestFileFilter> {
         let root = normalize_path(root);
         let cell = self.test_filter_cell(&root);
         Arc::clone(cell.get_or_init(|| {
@@ -103,9 +103,11 @@ impl AnalysisSession {
             let paths = visible_paths
                 .map(<[PathBuf]>::to_vec)
                 .unwrap_or_else(|| self.visible_paths(&root).paths_for(&root).as_ref().clone());
-            Arc::new(crate::codebase::test_filter::TestFileFilter::from_visible(
-                &root, config, &paths,
-            ))
+            Arc::new(
+                crate::codebase::testing_analysis::test_filter::TestFileFilter::from_visible(
+                    &root, config, &paths,
+                ),
+            )
         }))
     }
 
@@ -114,7 +116,7 @@ impl AnalysisSession {
     pub fn insert_test_file_filter(
         &self,
         root: &Path,
-        filter: crate::codebase::test_filter::TestFileFilter,
+        filter: crate::codebase::testing_analysis::test_filter::TestFileFilter,
     ) {
         let cell = self.test_filter_cell(&normalize_path(root));
         let _ = cell.get_or_init(|| Arc::new(filter));

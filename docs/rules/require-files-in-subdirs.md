@@ -38,6 +38,8 @@ scanned.
 `packages` is required; each item has `root`, `requiredFiles`, and optional
 `requireAnyOf`. There are no implicit roots or required filenames.
 
+Config loading rejects unknown keys in `packages` entries.
+
 ## Valid example
 
 ```text

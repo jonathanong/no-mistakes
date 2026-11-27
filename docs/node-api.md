@@ -641,7 +641,7 @@ See the [migration guide](migrations/deprecated-surfaces.md).
 | `serverRouteEdges` | `serverRouteEdges(options)` |
 | `serverRouteList` | `serverRouteList(options)` returns `ServerRoute[]`, the same row type present in `serverRoutes()`. |
 | `serverRouteRelated` | `serverRouteRelated(options)` |
-| `serverRoutes` | `serverRoutes(options)`; Remix file-based routes appear when a `type: remix` project is configured |
+| `serverRoutes` | `serverRoutes(options)` and `serverRouteList(options)` include static Laravel resource forms and Phoenix `resources` macros; Remix file-based routes appear when a `type: remix` project is configured |
 | `testsAudit` | `testsAudit(options)` |
 | `testsGraph` | `testsGraph(options)` |
 | `testsImpact` | `testsImpact(options)` |

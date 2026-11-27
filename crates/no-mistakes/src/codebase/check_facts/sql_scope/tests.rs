@@ -110,11 +110,13 @@ fn sql_seed_closure_preserves_imported_helper_findings_and_skips_unrelated_walks
     assert_eq!(findings(&root, &files, &sources, &config, &narrow).len(), 1);
     assert!(
         narrow.ts[&root.join("helpers/paging.mts")]
+            .postgres()
             .embedded_sql
             .len()
             == 1
     );
     assert!(narrow.ts[&root.join("unrelated/dense.mts")]
+        .postgres()
         .embedded_sql
         .is_empty());
     assert_eq!(
@@ -157,7 +159,7 @@ fn batch_mixed_graph_demand_preserves_other_variants_and_disabled_work_is_zero()
     for (path, facts) in &maps[1].ts {
         assert_eq!(facts.ts.imports, baseline.ts[path].ts.imports);
         assert_eq!(facts.ts.function_calls, baseline.ts[path].ts.function_calls);
-        assert!(facts.embedded_sql.is_empty());
+        assert!(facts.postgres().embedded_sql.is_empty());
     }
     assert_eq!(
         findings(&root, &files, &sources, &config, &maps[0]).len(),
@@ -461,6 +463,7 @@ fn middle_exclusion_retains_selected_prefix_and_required_excluded_support() {
         "the excluded constant remains required supporting SQL"
     );
     assert!(!narrow.ts[&root.join("helpers/constant.mts")]
+        .postgres()
         .embedded_sql
         .is_empty());
     assert!(narrow.ts[&root.join("unrelated/broken.mts")]

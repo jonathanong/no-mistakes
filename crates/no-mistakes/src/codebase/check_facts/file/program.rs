@@ -1,4 +1,4 @@
-use super::super::{CheckFactPlan, CheckFileFacts};
+use super::super::CheckFileFacts;
 use super::plan::ts_extract_plan;
 use super::should_store_source;
 use super::CheckFactVariant;
@@ -13,33 +13,39 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
     program: &oxc_ast::ast::Program<'_>,
     owned_source: Option<Arc<str>>,
 ) -> CheckFileFacts {
+    let sql = crate::codebase::postgres_analysis::FileInput {
+        root: variant.root,
+        path,
+        source,
+        program,
+        plan: variant.plan,
+    };
+    (crate::codebase::postgres_analysis::hooks().collect_program)(variant, sql, owned_source)
+}
+
+pub(crate) fn collect_with_postgres(
+    variant: &CheckFactVariant<'_>,
+    input: crate::codebase::postgres_analysis::FileInput<'_, '_>,
+    owned_source: Option<Arc<str>>,
+    sql_bindings: bool,
+    finish_sql: impl FnOnce(
+        &crate::codebase::ts_source::facts::TsFileFacts,
+    ) -> crate::codebase::postgres_analysis::FilePayload,
+) -> CheckFileFacts {
     use crate::codebase::rules::{csp_allowed_origins, nested_controls};
-    let root = variant.root;
-    let plan = variant.plan;
+    let crate::codebase::postgres_analysis::FileInput {
+        root,
+        path,
+        source,
+        program,
+        plan,
+    } = input;
     let playwright = variant.playwright;
-    let mut scoped_executors = Default::default();
-    let embedded_sql =
-        embedded::prepared_with_scopes(root, path, source, program, plan, &mut scoped_executors);
-    let mut head_candidates = heads::candidates(plan, &embedded_sql);
-    let (helpers, helper_candidates) = heads::helper_candidates(plan, &embedded_sql, program);
-    head_candidates.extend(helper_candidates);
-    let loop_heads = (plan.query_annotation
-        && !plan.query_annotation_heads
-        && heads::has_annotation_executors(plan, &embedded_sql))
-    .then(|| {
-        crate::codebase::postgres::query_annotation::heads::prepare_loop_heads(
-            program,
-            source,
-            !head_candidates.is_empty(),
-            helpers,
-        )
-    })
-    .flatten();
     let mut ts_plan = ts_extract_plan(root, plan, path, playwright);
-    ts_plan.module_bindings |= !head_candidates.is_empty() || loop_heads.is_some();
+    ts_plan.module_bindings |= sql_bindings;
     let stored_source = owned_source.or_else(|| {
         (should_store_source(plan, path)
-            || super::sql_identifier::policy_selected(root, path, plan))
+            || (crate::codebase::postgres_analysis::hooks().retain_source)(root, path, plan))
         .then(|| Arc::<str>::from(source))
     });
     let prepared = super::prepared_program::collect(
@@ -120,32 +126,7 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
             (source_facts, static_exports, test_facts)
         })
         .unwrap_or_default();
-    let query_annotation = annotation::collect(root, path, source, program, plan, &embedded_sql);
-    let query_annotation_heads = (plan.query_annotation_heads
-        || !head_candidates.is_empty()
-        || loop_heads.is_some())
-    .then(|| {
-        Arc::new(
-            crate::codebase::postgres::query_annotation::heads::collect_prepared(
-                program,
-                &ts,
-                heads::call_spans(plan, &embedded_sql),
-                &head_candidates,
-                plan.query_annotation_heads,
-                helpers,
-                loop_heads,
-            ),
-        )
-    });
-    let sql_identifier_syntax = super::sql_identifier::collect_with_scopes(
-        root,
-        path,
-        source,
-        program,
-        &ts,
-        plan,
-        &mut scoped_executors,
-    );
+    let postgres_file = finish_sql(&ts);
     let symbols = ts.symbols.clone();
     CheckFileFacts {
         nested_controls: nested_controls::collect(path, source, program, plan),
@@ -168,11 +149,8 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
         nextjs_caching: fused.nextjs_caching,
         nextjs_caching_low: fused.nextjs_caching_low,
         storybook: fused.storybook,
-        embedded_sql,
+        postgres_file,
         sql_source_prerequisites: Default::default(),
-        query_annotation,
-        query_annotation_heads,
-        sql_identifier_syntax,
         server_route_client_boundary,
         playwright,
         playwright_fetch,
@@ -185,12 +163,3 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
         parsed: true,
     }
 }
-
-#[path = "program_embedded.rs"]
-mod embedded;
-pub(super) use embedded::prepared_embedded_sql;
-#[path = "program_heads.rs"]
-mod heads;
-
-#[path = "program_annotation.rs"]
-mod annotation;

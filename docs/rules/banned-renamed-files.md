@@ -16,6 +16,8 @@ compound-extension and regular-expression matching.
 `scope`, `matchCompoundExtensions`, and `pattern`; omitted optional fields use
 their documented simple-basename behavior.
 
+Config loading rejects unknown keys in `bannedBasenames` entries.
+
 Entry-level `scope` and `extensions` override the corresponding rule-wide
 options. Omitted entry fields inherit the rule-wide values. An explicit empty
 extension list matches no simple basenames; `pattern` retains precedence over

@@ -14,7 +14,7 @@ pub(super) fn literals<'a>(
     path: &Path,
     source: &str,
 ) -> &'a BTreeMap<Span, TransformedLiteral> {
-    file.sql_identifier_syntax.transformed_literals.get_or_init(|| project_literals(
+    file.postgres_for_policy().sql_identifier_syntax.transformed_literals.get_or_init(|| project_literals(
         file, facts, path, source,
         LiteralProjection {
             project: |statement| statement.transformed_column_uses.clone(),

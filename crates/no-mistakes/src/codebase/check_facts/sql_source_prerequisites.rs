@@ -1,6 +1,6 @@
 use super::CheckFileFacts;
 mod declared;
-use crate::codebase::postgres::EmbeddedSqlOptions;
+use crate::codebase::postgres_analysis::options::EmbeddedSqlOptions;
 use crate::codebase::ts_source::FileIdMap;
 pub(crate) use declared::{planned_low_applications, with_failed_source};
 use std::collections::{BTreeMap, BTreeSet};
@@ -48,7 +48,7 @@ impl SqlSourceKey {
 #[derive(Clone, Debug, Default)]
 pub(crate) struct SqlSourcePrerequisites {
     failures: BTreeMap<SqlSourceKey, BTreeMap<(u32, u32), FailedSqlSources>>,
-    declared: Option<BTreeSet<SqlSourceKey>>,
+    pub(crate) declared: Option<BTreeSet<SqlSourceKey>>,
 }
 
 impl SqlSourcePrerequisites {
@@ -102,41 +102,6 @@ pub(crate) fn source_failed(files: &FileIdMap<CheckFileFacts>, path: &Path) -> b
     files
         .get(path)
         .is_some_and(|file| source_error(file).is_some())
-}
-
-pub(crate) fn source_demanded(
-    files: &FileIdMap<CheckFileFacts>,
-    path: &Path,
-    key: &SqlSourceKey,
-) -> bool {
-    if !matches!(
-        key.projection,
-        SqlProjection::LowSyntax | SqlProjection::AnnotationMax
-    ) {
-        return true;
-    }
-    let Some(file) = files.get(path) else {
-        return true;
-    };
-    if let Some(declared) = &file.sql_source_prerequisites.declared {
-        return declared.contains(key);
-    }
-    match key.projection {
-        SqlProjection::LowSyntax if !file.sql_identifier_syntax.low_applications.is_empty() => {
-            key.application.as_ref().is_some_and(|(rule, index)| {
-                file.sql_identifier_syntax.low_applications.iter().any(
-                    |(profile, owner, ordinal)| {
-                        profile == &key.profile && owner == rule && ordinal == index
-                    },
-                )
-            })
-        }
-        SqlProjection::AnnotationMax if !file.query_annotation.is_empty() => file
-            .query_annotation
-            .iter()
-            .any(|(profile, _)| profile == &key.profile),
-        _ => true,
-    }
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]

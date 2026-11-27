@@ -11,12 +11,14 @@ impl PreparedCatalog<'_> {
         // A companion can collect this profile outside the requesting application's roots.
         if self.application.is_some_and(|application| {
             !facts
+                .postgres()
                 .sql_identifier_syntax
                 .includes_application(application)
         }) {
             return false;
         }
         facts
+            .postgres()
             .sql_identifier_syntax
             .profiles
             .iter()
@@ -39,6 +41,7 @@ impl PreparedCatalog<'_> {
             return false;
         }
         for call in facts
+            .postgres()
             .sql_identifier_syntax
             .recovery
             .calls
@@ -78,6 +81,7 @@ impl PreparedCatalog<'_> {
             }
             let Some(model) = self.files.get(&key.file).and_then(|facts| {
                 facts
+                    .postgres()
                     .sql_identifier_syntax
                     .recovery
                     .functions

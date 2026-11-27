@@ -31,7 +31,7 @@ fn prepared_scan_contextualizes_a_missing_embedded_sql_projection() {
     ));
     let sources = crate::codebase::ts_source::SourceStore::new(inventory);
     let mut facts = crate::codebase::check_facts::CheckFactMap::default();
-    facts.postgres_schema_catalogs.insert(
+    facts.postgres_catalogs_mut().insert(
         "schema.json".to_string(),
         Ok(std::sync::Arc::new(
             crate::codebase::postgres::SchemaCatalog::default(),

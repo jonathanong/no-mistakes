@@ -171,6 +171,7 @@ pub(super) fn apply(
             .get_mut(&originals[&path])
             .expect("projected source remains in the prepared map");
         let (_, facts) = file
+            .postgres_mut()
             .query_annotation
             .iter_mut()
             .find(|(profile, _)| profile == options)

@@ -18,9 +18,12 @@ fn completed_profile_releases_its_unique_module_while_another_root_is_running() 
         } else {
             "@app/other"
         };
-        file.query_annotation
+        let postgres = file.postgres_mut();
+        postgres
+            .query_annotation
             .retain(|(options, _)| options.import_specifier == wanted);
-        file.embedded_sql
+        postgres
+            .embedded_sql
             .retain(|(options, _)| options.import_specifier == wanted);
     }
     let candidates = files.keys().cloned().collect::<BTreeSet<_>>();

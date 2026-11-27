@@ -14,7 +14,7 @@ use anyhow::Result;
 use discovery::{build_globset, build_regexes, extract_test_property_strings, ConfigFile};
 use std::path::{Path, PathBuf};
 
-pub(crate) use discovery::{extract_property_strings, extract_test_regexes};
+use discovery::{extract_property_strings, extract_test_regexes};
 pub(crate) use filter::test_filter_from_visible;
 pub use filter::{test_filter, TestFilter};
 pub(super) use prepared::prepare_with_runner_facts;

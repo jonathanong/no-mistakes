@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 
 use super::super::schema::{ConfigProvenance, NoMistakesConfig};
 use super::provenance::record_provenance;
-use crate::codebase::rules::postgres_lock_inventory::DEFAULT_BASELINE_FILE;
+pub(crate) const DEFAULT_BASELINE_FILE: &str = ".no-mistakes/postgres-locks.json";
 use crate::config::source_locations::ConfigPath;
 
 #[derive(Clone, Debug)]

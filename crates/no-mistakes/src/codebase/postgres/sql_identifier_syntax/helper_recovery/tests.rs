@@ -51,7 +51,11 @@ pub(super) fn prepared() -> FileIdMap<CheckFileFacts> {
             let syntax = super::super::tests::collect(program, &ts, &source, &[profile()]);
             CheckFileFacts {
                 ts: Arc::new(ts),
-                sql_identifier_syntax: syntax,
+                postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                    sql_identifier_syntax: syntax,
+                    ..Default::default()
+                }
+                .into_payload(),
                 ..Default::default()
             }
         })
@@ -80,6 +84,7 @@ fn helper_values_recover_fresh_builders_defaults_and_all_boolean_alternatives() 
     for call in &files
         .get(&query)
         .unwrap()
+        .postgres()
         .sql_identifier_syntax
         .recovery
         .calls
@@ -141,6 +146,7 @@ fn helper_values_reject_opaque_calls_and_dynamic_fragments() {
     for call in &files
         .get(&query)
         .unwrap()
+        .postgres()
         .sql_identifier_syntax
         .recovery
         .calls
@@ -236,6 +242,7 @@ fn generated_bind_ranges_keep_real_parameters_and_known_branches() {
     for call in &files
         .get(&path)
         .unwrap()
+        .postgres()
         .sql_identifier_syntax
         .recovery
         .calls
@@ -304,7 +311,12 @@ fn typed_helper_transport_checks_every_use_and_real_sql_sink() {
         resolve: &resolve,
     };
     let source = std::fs::read_to_string(&path).unwrap();
-    let models = &files.get(&path).unwrap().sql_identifier_syntax.recovery;
+    let models = &files
+        .get(&path)
+        .unwrap()
+        .postgres()
+        .sql_identifier_syntax
+        .recovery;
     let executors = &models.executors[&profile];
     let mut cache = Cache::default();
     let mut checked = 0;
@@ -348,6 +360,7 @@ fn aggregate_sql_bytes_and_cache_hits_obey_each_roots_limits() {
     let call = files
         .get(&path)
         .unwrap()
+        .postgres()
         .sql_identifier_syntax
         .recovery
         .calls
@@ -396,7 +409,12 @@ fn async_helpers_keep_promise_values_distinct_and_unknown_await_residual() {
         resolve: &resolve,
     };
     let source = std::fs::read_to_string(&path).unwrap();
-    let models = &files.get(&path).unwrap().sql_identifier_syntax.recovery;
+    let models = &files
+        .get(&path)
+        .unwrap()
+        .postgres()
+        .sql_identifier_syntax
+        .recovery;
     let executors = &models.executors[&profile];
     let mut checked = 0;
     for call in &models.calls {
@@ -445,7 +463,12 @@ fn returned_builder_payload_is_an_executor_carrier_until_a_checked_sink_consumes
         resolve: &resolve,
     };
     let source = std::fs::read_to_string(&path).unwrap();
-    let models = &files.get(&path).unwrap().sql_identifier_syntax.recovery;
+    let models = &files
+        .get(&path)
+        .unwrap()
+        .postgres()
+        .sql_identifier_syntax
+        .recovery;
     let mut checked = 0;
     for call in &models.calls {
         let raw = &source[call.span.0 as usize..call.span.1 as usize];

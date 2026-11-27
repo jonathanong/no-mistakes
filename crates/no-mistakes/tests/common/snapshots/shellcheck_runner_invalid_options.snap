@@ -1,0 +1,61 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "severity-blank": {
+    "exitCode": 2,
+    "stderr": "error: severity-blank.yml:9: invalid options for rule `shellcheck-runner` at options.shellcheck.severity: unknown variant ``, expected one of `error`, `warning`, `info`, `style`\n"
+  },
+  "severity-unknown": {
+    "exitCode": 2,
+    "stderr": "error: severity-unknown.yml:9: invalid options for rule `shellcheck-runner` at options.shellcheck.severity: unknown variant `sideways`, expected one of `error`, `warning`, `info`, `style`\n"
+  },
+  "shebang-dir-absolute": {
+    "exitCode": 2,
+    "stderr": "error: shebang-dir-absolute.yml:9: invalid options for rule `shellcheck-runner` at options.shebangDirs[0]: expected a repository-relative directory path, got \"/outside\"\n"
+  },
+  "shebang-dir-parent": {
+    "exitCode": 2,
+    "stderr": "error: shebang-dir-parent.yml:9: invalid options for rule `shellcheck-runner` at options.shebangDirs[0]: expected a repository-relative directory path, got \"../elsewhere\"\n"
+  },
+  "shell-file-absolute": {
+    "exitCode": 2,
+    "stderr": "error: shell-file-absolute.yml:9: invalid options for rule `shellcheck-runner` at options.shellFiles[0]: expected an existing repository-relative file path, got \"/outside.sh\"\n"
+  },
+  "shell-file-directory": {
+    "exitCode": 2,
+    "stderr": "error: shell-file-directory.yml:9: invalid options for rule `shellcheck-runner` at options.shellFiles[0]: expected an existing repository-relative file path, got \"scripts\"\n"
+  },
+  "shell-file-missing": {
+    "exitCode": 2,
+    "stderr": "error: shell-file-missing.yml:10: invalid options for rule `shellcheck-runner` at options.shellFiles[1]: expected an existing repository-relative file path, got \"scripts/missing.sh\"\n"
+  },
+  "shell-file-parent": {
+    "exitCode": 2,
+    "stderr": "error: shell-file-parent.yml:9: invalid options for rule `shellcheck-runner` at options.shellFiles[0]: expected an existing repository-relative file path, got \"../escape.sh\"\n"
+  },
+  "shellcheck-key": {
+    "exitCode": 2,
+    "stderr": "error: shellcheck-key.yml:10: invalid options for rule `shellcheck-runner` at options.shellcheck.unexpectedField: unknown field `unexpectedField`, expected `severity`\n"
+  },
+  "skills-lockfile-absolute": {
+    "exitCode": 2,
+    "stderr": "error: skills-lockfile-absolute.yml:8: invalid options for rule `shellcheck-runner` at options.skillsLockfile: expected a repository-relative file path, got \"/outside.json\"\n"
+  },
+  "skills-lockfile-parent": {
+    "exitCode": 2,
+    "stderr": "error: skills-lockfile-parent.yml:8: invalid options for rule `shellcheck-runner` at options.skillsLockfile: expected a repository-relative file path, got \"../escape.json\"\n"
+  },
+  "valid": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

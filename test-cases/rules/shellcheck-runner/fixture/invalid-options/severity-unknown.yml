@@ -1,0 +1,9 @@
+version: 2
+rules:
+- rule: shellcheck-runner
+  scope: repository
+  exclude: [scripts/**]
+  options:
+    unanalyzable: ignore
+    shellcheck:
+      severity: sideways

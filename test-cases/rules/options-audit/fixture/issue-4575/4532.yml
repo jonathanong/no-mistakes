@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: doc-consistency
+    scope: repository
+    options:
+      requiredSubstrings:
+      - file: README.md
+        substring: Install the CLI
+        auditUnexpectedField: true

@@ -1,9 +1,9 @@
 use super::super::{CheckFactPlan, PlaywrightFactPlan};
 use super::plan::ts_extract_context;
-use crate::codebase::rules::test_reliability::{
-    self, playwright_provenance::FixtureInitializers, Location,
+use crate::codebase::testing_analysis::reliability::{
+    playwright_provenance::FixtureInitializers, Location,
 };
-use crate::codebase::rules::vitest_default_excludes::{self, CollectedExcludes};
+use crate::codebase::testing_analysis::{self, vitest_excludes::CollectedExcludes};
 use crate::codebase::ts_source::facts::{self, TsFactPlan, TsFileFacts};
 use oxc_ast::ast::{ModuleDeclaration, Program};
 use oxc_semantic::{SemanticBuilder, SemanticBuilderReturn};
@@ -44,7 +44,8 @@ pub(super) fn collect<'a>(
     let vitest = &plan.request.vitest_default_exclude_paths;
     let selected_vitest = vitest.contains(path);
     let collect_vitest = selected_vitest
-        || (!vitest.is_empty() && vitest_default_excludes::has_candidate_exports(program));
+        || (!vitest.is_empty()
+            && (testing_analysis::hooks().has_vitest_candidate_exports)(program));
     let semantic = (collect_vitest
         || reliability_demand.is_some()
         || fixture_has_initializers
@@ -70,13 +71,18 @@ pub(super) fn collect<'a>(
         reliability_demand
             .zip(semantic.as_ref())
             .map_or_else(Vec::new, |(demand, semantic)| {
-                test_reliability::ast::collect(*demand, source, program, &semantic.semantic)
+                (testing_analysis::hooks().collect_reliability)(
+                    *demand,
+                    source,
+                    program,
+                    &semantic.semantic,
+                )
             });
     let fixture_initializers = semantic
         .as_ref()
         .filter(|_| fixture_has_initializers)
         .map(|semantic| {
-            test_reliability::ast::fixture_initializers(
+            (testing_analysis::hooks().collect_fixture_initializers)(
                 program,
                 &semantic.semantic,
                 &ts.exported_bindings,
@@ -91,7 +97,7 @@ pub(super) fn collect<'a>(
         semantic
             .as_ref()
             .map_or_else(CollectedExcludes::default, |semantic| {
-                vitest_default_excludes::collect_prepared(
+                (testing_analysis::hooks().collect_vitest_excludes)(
                     program,
                     source,
                     &semantic.semantic,

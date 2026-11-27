@@ -33,7 +33,7 @@ fn prepared_catalog_errors_when_the_fact_entry_is_broken_or_missing() {
     let sql = root.join("sql/qualified.sql");
     let sources = super::super::source_store_for_files(&[root.join("schema.json"), sql.clone()]);
     let mut broken = CheckFactMap::default();
-    broken.postgres_schema_catalogs.insert(
+    broken.postgres_catalogs_mut().insert(
         "missing/schema.json".to_string(),
         Err(Arc::<str>::from("catalog broke")),
     );

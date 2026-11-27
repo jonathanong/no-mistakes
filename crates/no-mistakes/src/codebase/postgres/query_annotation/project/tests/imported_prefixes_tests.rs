@@ -74,7 +74,7 @@ fn imported_prefixes_reuse_resolved_tags_and_require_matching_origins() {
         let call = "read(statement)";
         let start = (declaration + source[declaration..].find(call).unwrap()) as u32;
         let span = (start, start + call.len() as u32);
-        let facts = &file.query_annotation[0].1;
+        let facts = &file.postgres().query_annotation[0].1;
         assert_eq!(facts.calls[&span].as_deref(), expected);
         assert_eq!(
             facts.proven_call_prefixes.contains(&span),

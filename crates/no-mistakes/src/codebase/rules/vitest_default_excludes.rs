@@ -26,28 +26,7 @@ use options::{applications, Application, CheckMode};
 
 pub const RULE_ID: &str = "vitest-default-excludes";
 
-#[derive(Default)]
-pub(crate) struct CollectedExcludes {
-    pub(crate) default_export: Vec<ExcludeArray>,
-    pub(crate) test_literals: Vec<ExcludeArray>,
-    pub(crate) exports: FxHashMap<String, FxHashSet<String>>,
-}
-
-#[derive(Clone, Debug, Eq, Hash, PartialEq, Ord, PartialOrd)]
-pub(crate) struct SpreadImport {
-    pub(crate) specifier: String,
-    pub(crate) name: String,
-}
-
-pub(crate) type ResolvedSpreads = FxHashMap<PathBuf, FxHashMap<SpreadImport, FxHashSet<String>>>;
-
-pub(crate) struct ExcludeArray {
-    line: usize,
-    globs: FxHashSet<String>,
-    spreads_config_defaults: bool,
-    pub(crate) imports: Vec<SpreadImport>,
-    unknown: bool,
-}
+use crate::codebase::testing_analysis::vitest_excludes::{CollectedExcludes, ExcludeArray, SpreadImport};
 
 #[doc(hidden)]
 pub fn required_files(

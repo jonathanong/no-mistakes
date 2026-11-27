@@ -1,0 +1,137 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "4530": {
+    "exitCode": 2,
+    "stderr": "error: 4530.yml:8: invalid options for rule `banned-paths` at options.bannedPaths[0].messag: unknown field `messag`, expected `glob` or `message`\n"
+  },
+  "4531": {
+    "exitCode": 2,
+    "stderr": "error: 4531.yml:8: invalid options for rule `banned-renamed-files` at options.bannedBasenames[0].messag: unknown field `messag`, expected one of `name`, `extensions`, `scope`, `message`, `matchCompoundExtensions`, `pattern`\n"
+  },
+  "4532": {
+    "exitCode": 2,
+    "stderr": "error: 4532.yml:9: invalid options for rule `doc-consistency` at options.requiredSubstrings[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected `file` or `substring`\n"
+  },
+  "4533": {
+    "exitCode": 2,
+    "stderr": "error: 4533.yml:9: invalid options for rule `file-extension-policy` at options.scopes[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected `path` or `bannedExtensions`\n"
+  },
+  "4534": {
+    "exitCode": 2,
+    "stderr": "error: 4534.yml:10: invalid options for rule `finite-set-consistency` at options.sets[0].minSiz: unknown field `minSiz`, expected one of `name`, `file`, `kind`, `target`, `property`, `pattern`, `key`, `minSize`, `stripPrefix`, `excludePrefix`\n"
+  },
+  "4535": {
+    "exitCode": 2,
+    "stderr": "error: 4535.yml:10: invalid options for rule `finite-set-consistency` at options.comparisons[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected one of `left`, `right`, `mode`, `message`\n"
+  },
+  "4536": {
+    "exitCode": 2,
+    "stderr": "error: 4536.yml:9: invalid options for rule `forbidden-dependencies` at options.forbiddenModules[1]: invalid glob: error parsing glob '[': unclosed character class; missing ']'\n"
+  },
+  "4537": {
+    "exitCode": 2,
+    "stderr": "error: 4537.yml:6: invalid options for rule `forbidden-dependencies` at options.roots[0]: invalid glob: error parsing glob '[': unclosed character class; missing ']'\n"
+  },
+  "4538": {
+    "exitCode": 2,
+    "stderr": "error: 4538.yml:11: invalid options for rule `forbidden-dependencies` at options.exceptions[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected `roots` or `allowedFiles`\n"
+  },
+  "4539": {
+    "exitCode": 2,
+    "stderr": "error: 4539.yml:10: invalid options for rule `forbidden-dependencies` at options.exceptions[0].allowedFiles[0]: invalid glob: error parsing glob '[': unclosed character class; missing ']'\n"
+  },
+  "4540": {
+    "exitCode": 2,
+    "stderr": "error: 4540.yml:9: invalid options for rule `forbidden-dependencies` at options.exceptions[0].roots[0]: invalid glob: error parsing glob '[': unclosed character class; missing ']'\n"
+  },
+  "4541": {
+    "exitCode": 2,
+    "stderr": "error: 4541.yml:8: invalid options for rule `forbidden-dependencies` at options.excludeRoots[0]: invalid glob: error parsing glob '[': unclosed character class; missing ']'\n"
+  },
+  "4542": {
+    "exitCode": 2,
+    "stderr": "error: 4542.yml:7: invalid options for rule `forbidden-dependencies` at options.forbiddenFiles[0]: invalid glob: error parsing glob '[': unclosed character class; missing ']'\n"
+  },
+  "4543": {
+    "exitCode": 2,
+    "stderr": "error: 4543.yml:7: invalid options for rule `forbidden-workspace-closure` at options.forbidden[0]: invalid glob: error parsing glob '[': unclosed character class; missing ']'\n"
+  },
+  "4544": {
+    "exitCode": 2,
+    "stderr": "error: 4544.yml:9: invalid options for rule `markdown-child-links` at options.groups[0].countCanonicalHtmlListItem: unknown field `countCanonicalHtmlListItem`, expected one of `parents`, `children`, `requireWholeFile`, `countCanonicalHtmlListItems`\n"
+  },
+  "4545": {
+    "exitCode": 2,
+    "stderr": "error: 4545.yml:9: invalid options for rule `pnpm-release-age-policy` at options.permanentPackages[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected one of `name`, `pattern`, `reason`\n"
+  },
+  "4546": {
+    "exitCode": 2,
+    "stderr": "error: 4546.yml:10: invalid options for rule `pnpm-release-age-policy` at options.temporaryGroups[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected one of `selectors`, `reason`, `eligibleForRemovalAt`\n"
+  },
+  "4547": {
+    "exitCode": 2,
+    "stderr": "error: 4547.yml:9: invalid options for rule `require-files-in-subdirs` at options.packages[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected one of `root`, `requiredFiles`, `requireAnyOf`\n"
+  },
+  "4548": {
+    "exitCode": 2,
+    "stderr": "error: 4548.yml:11: invalid options for rule `strict-package-layout` at options.packages[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected one of `root`, `sourceExtension`, `testFilePatterns`, `testDirName`, `allowedRootFiles`, `allowedSubdirs`\n"
+  },
+  "4549": {
+    "exitCode": 2,
+    "stderr": "error: 4549.yml:9: invalid options for rule `structured-config-policy` at options.policies[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected one of `files`, `requiredKeys`, `bannedKeys`, `valueAssertions`, `when`\n"
+  },
+  "4550": {
+    "exitCode": 2,
+    "stderr": "error: 4550.yml:11: invalid options for rule `structured-config-policy` at options.policies[0].valueAssertions[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected one of `key`, `kind`, `prefix`, `glob`, `value`, `requiredKeys`, `forbiddenKeys`, `requiredValues`, `message`, `file`, `fromKey`, `extendsKey`, `overridesKey`, `filesKey`, `excludeFilesKey`, `rulesKey`, `match`\n"
+  },
+  "4551": {
+    "exitCode": 2,
+    "stderr": "error: 4551.yml:11: invalid options for rule `structured-config-policy` at options.policies[0].when[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected `key`\n"
+  },
+  "4552": {
+    "exitCode": 2,
+    "stderr": "error: 4552.yml:9: invalid options for rule `test-fixture-size-cap` at options.scopes.auditUnexpectedField: unknown field `auditUnexpectedField`, expected `tests` or `helpers`\n"
+  },
+  "4553": {
+    "exitCode": 2,
+    "stderr": "error: 4553.yml:9: invalid options for rule `test-no-dependency-pins` at options.patterns[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected `reason` or `regex`\n"
+  },
+  "4554": {
+    "exitCode": 2,
+    "stderr": "error: 4554.yml:9: invalid options for rule `tsconfig-alias-folder-mapping` at options.mappings[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected `prefix` or `root`\n"
+  },
+  "4555": {
+    "exitCode": 2,
+    "stderr": "error: 4555.yml:9: invalid options for rule `tsconfig-file-coverage` at options.allow[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected `path` or `reason`\n"
+  },
+  "4556": {
+    "exitCode": 2,
+    "stderr": "error: 4556.yml:9: invalid options for rule `tsconfig-file-coverage` at options.auxiliaryConfigs[0].auditUnexpectedField: unknown field `auditUnexpectedField`, expected one of `path`, `reason`, `requiredBasename`\n"
+  },
+  "4557": {
+    "exitCode": 2,
+    "stderr": "error: 4557.yml:11: invalid options for rule `version-pin-consistency` at options.anchors[0].labe: unknown field `labe`, expected one of `file`, `pattern`, `label`\n"
+  },
+  "4558": {
+    "exitCode": 2,
+    "stderr": "error: 4558.yml:9: invalid options for rule `vitest-ci-path-coverage` at options.workflows[0].jo: unknown field `jo`, expected one of `path`, `job`, `stepId`\n"
+  },
+  "literal-selector": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "malformed-normalized-selector": {
+    "exitCode": 2,
+    "stderr": "error: malformed-normalized-selector.yml:6: invalid options for rule `forbidden-dependencies` at options.roots[0]: invalid glob: error parsing glob '[/../src/**': unclosed character class; missing ']'\n"
+  }
+}

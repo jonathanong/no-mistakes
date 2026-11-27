@@ -45,15 +45,11 @@ pub(super) fn fill_parse_errors(
                     path,
                     variant.plan,
                 ),
-            sql_identifier_syntax: crate::codebase::postgres::sql_identifier_syntax::FileFacts {
-                low_applications:
-                    crate::codebase::check_facts::sql_source_prerequisites::planned_low_applications(
-                        variant.root,
-                        path,
-                        variant.plan,
-                    ),
-                ..Default::default()
-            },
+            postgres_file: (crate::codebase::postgres_analysis::hooks().failed_source)(
+                variant.root,
+                path,
+                variant.plan,
+            ),
             ts: Arc::new(TsFileFacts {
                 fatal_parse_error: legacy,
                 parse_error: Some(parse_error.clone()),
@@ -119,19 +115,15 @@ pub(super) fn recovered_error_facts(
         symbols: symbols.clone(),
         legacy_symbols: symbols,
         integration_runner_config,
-        sql_identifier_syntax: super::super::sql_identifier::invalid(
-            variant.root,
-            path,
-            parsed_source,
-            program,
-            plan,
-        ),
-        embedded_sql: super::super::embedded_sql::prepared_embedded_sql(
-            variant.root,
-            path,
-            parsed_source,
-            program,
-            plan,
+        postgres_file: (crate::codebase::postgres_analysis::hooks().recover_program)(
+            crate::codebase::postgres_analysis::FileInput {
+                root: variant.root,
+                path,
+                source: parsed_source,
+                program,
+                plan,
+            },
+            crate::codebase::postgres_analysis::RecoveryPath::Variants,
         ),
         parse_error: Some(parse_error),
         parsed: true,

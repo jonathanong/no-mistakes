@@ -42,7 +42,12 @@ fn prepared(names: &[&str]) -> FileIdMap<CheckFileFacts> {
                     super::super::tests::collect(program, &ts, &source, &[super::tests::profile()]);
                 CheckFileFacts {
                     ts: Arc::new(ts),
-                    sql_identifier_syntax: syntax,
+                    postgres_file:
+                        crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                            sql_identifier_syntax: syntax,
+                            ..Default::default()
+                        }
+                        .into_payload(),
                     ..Default::default()
                 }
             })
@@ -58,11 +63,12 @@ fn target_free_and_type_only_modules_discard_unreachable_models() {
     for name in ["target-free.mts", "type-only.mts"] {
         let facts = &files[&root().join(name)];
         assert!(facts
+            .postgres()
             .sql_identifier_syntax
             .profiles
             .iter()
             .all(|(_, calls)| calls.is_empty()));
-        let models = &facts.sql_identifier_syntax.recovery;
+        let models = &facts.postgres().sql_identifier_syntax.recovery;
         assert!(models.functions.is_empty() && models.locals.is_empty() && models.calls.is_empty());
         assert!(models.executors.is_empty() && models.sinks.is_empty());
     }
@@ -84,7 +90,7 @@ fn executor_escape_and_unproved_member_keep_unknown_obligations() {
     ] {
         let path = root().join(name);
         let source = std::fs::read_to_string(&path).unwrap();
-        let facts = &files[&path].sql_identifier_syntax;
+        let facts = &files[&path].postgres().sql_identifier_syntax;
         let selected = facts
             .profiles
             .iter()
@@ -105,7 +111,7 @@ fn exported_helper_without_local_executor_remains_resolvable() {
     let files = prepared(&["exported.mts", "caller.mts"]);
     let helper = root().join("exported.mts");
     let caller = root().join("caller.mts");
-    let helper_facts = &files[&helper].sql_identifier_syntax;
+    let helper_facts = &files[&helper].postgres().sql_identifier_syntax;
     assert!(helper_facts
         .profiles
         .iter()
@@ -121,6 +127,7 @@ fn exported_helper_without_local_executor_remains_resolvable() {
     };
     let source = std::fs::read_to_string(&caller).unwrap();
     let call = files[&caller]
+        .postgres()
         .sql_identifier_syntax
         .recovery
         .calls

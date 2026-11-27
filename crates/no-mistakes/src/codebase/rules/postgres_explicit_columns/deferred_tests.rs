@@ -30,7 +30,7 @@ fn prepared_scans_fail_on_absent_fact_demand_and_keep_sql_opt_in() {
     let catalog =
         crate::codebase::postgres::SchemaCatalog::load(&root, "schema.json", &sources).unwrap();
     facts
-        .postgres_schema_catalogs
+        .postgres_catalogs_mut()
         .insert("schema.json".into(), Ok(std::sync::Arc::new(catalog)));
     assert!(scan::scan(
         &root,
@@ -51,5 +51,5 @@ fn prepared_scans_fail_on_absent_fact_demand_and_keep_sql_opt_in() {
         &[RULE_ID],
     )
     .unwrap();
-    assert!(prepared.postgres.statements.is_empty());
+    assert!(prepared.postgres().statements.is_empty());
 }

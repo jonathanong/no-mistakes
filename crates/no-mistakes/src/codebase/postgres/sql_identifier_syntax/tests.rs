@@ -154,7 +154,7 @@ fn low_syntax_scope_union_keeps_distinct_applications_once() {
     existing.insert(profile.clone(), vec![first.clone()]);
     let mut additional = plan::SqlIdentifierScans::new();
     additional.insert(profile.clone(), vec![first, second]);
-    plan::merge(&mut existing, additional);
+    crate::codebase::postgres_analysis::identifier_plan::merge(&mut existing, additional);
     assert_eq!(existing[&profile].len(), 2);
     assert!(existing[&profile][1].includes(&root, &root.join("src/selection.ts")));
 }

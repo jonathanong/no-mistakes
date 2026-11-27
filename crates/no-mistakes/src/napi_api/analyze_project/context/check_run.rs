@@ -103,7 +103,7 @@ impl SharedCheckContext {
             .graph_plan
             .map(|_| facts.with_graph_file_universe(self.graph_files.clone()));
         let needs_sql_verdicts = include_sql_verdicts
-            || crate::codebase::postgres::has_sql_advice(&self.prepared.config);
+            || (crate::codebase::postgres_analysis::hooks().has_sql_advice)(&self.prepared.config);
         let isolated_facts = needs_sql_verdicts.then(|| {
             scoped_facts
                 .as_ref()
@@ -147,14 +147,17 @@ impl SharedCheckContext {
                 // Hygiene and optional accounting share the same consumed directives.
                 defer_suppression: include_suppressed || config.audits_disable_directives(),
             });
-        let completed = crate::check_runner::results::retain_domain_checks(&session, (
-            react,
-            queues,
-            rules,
-            integration,
-            codebase,
-            filesystem_rules,
-        ));
+        let completed = crate::check_runner::results::retain_domain_checks(
+            &session,
+            (
+                react,
+                queues,
+                rules,
+                integration,
+                codebase,
+                filesystem_rules,
+            ),
+        );
         let mut results = crate::check_runner::results::finalize_domain_checks(
             crate::check_runner::results::FinalizeInput {
                 root: &self.root,

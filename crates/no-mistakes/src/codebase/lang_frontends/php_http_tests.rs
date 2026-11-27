@@ -28,6 +28,10 @@ Route::resource('/posts', \App\Http\Controllers\PostController::class);
     assert!(routes
         .iter()
         .any(|(path, handler)| { path == "/posts/:post" && handler.contains("PostController") }));
+    assert!(routes.contains(&("/users".into(), "UserController".into())));
+    assert!(routes
+        .iter()
+        .all(|(path, handler)| path != "/users/create" && handler != "UserController.index"));
 }
 
 #[test]
@@ -60,23 +64,14 @@ Route::apiResource('/posts', \App\Http\Controllers\PostController::class);
     assert!(routes
         .iter()
         .any(|(path, handler)| { path == "/posts/:post" && handler.contains("PostController") }));
+    assert!(routes.contains(&("/accounts".into(), "UserController".into())));
+    assert!(routes.iter().all(|(path, handler)| {
+        path != "/accounts/create" && handler != "UserController.index"
+    }));
 }
 
-#[test]
-fn laravel_resource_only_and_computed_are_non_edges() {
-    let source = r#"
-Route::resource('hidden', UserController::class, ['only' => ['index']]);
-Route::resource('limited', UserController::class)->only(['index']);
-Route::resource('named', UserController::class)->names(['index' => 'users.index'])->only(['index']);
-Route::resource("$prefix/users", UserController::class);
-Route::apiResource('filtered', UserController::class)->only(['index']);
-Route::apiResource('excluded', UserController::class)->except(['index']);
-Route::apiResources(['bulk' => UserController::class]);
-Route::resource($name, UserController::class);
-Route::resource('photos.comments', PhotoCommentController::class);
-"#;
-    assert!(extract_php_routes(source, true, false).is_empty());
-}
+#[path = "php_http_resource_tests.rs"]
+mod resource_tests;
 
 #[test]
 fn symfony_attribute_literal_routes_extract() {
@@ -112,4 +107,17 @@ users:
     assert!(routes
         .iter()
         .any(|(path, handler)| { path == "/users" && handler.contains("UsersController") }));
+}
+
+#[test]
+fn yaml_controller_before_path_extracts() {
+    let source = r#"
+item:
+  controller: App\Controller\ItemController
+  path: /items
+"#;
+    let routes = extract_yaml_routes(source);
+    assert!(routes
+        .iter()
+        .any(|(path, handler)| { path == "/items" && handler == "App.Controller.ItemController" }));
 }

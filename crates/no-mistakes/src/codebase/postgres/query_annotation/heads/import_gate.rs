@@ -13,7 +13,8 @@ pub(crate) fn retain(
     let blocked: Vec<PathBuf> = files
         .iter()
         .filter(|(path, file)| {
-            file.query_annotation_heads
+            file.postgres()
+                .query_annotation_heads
                 .as_deref()
                 .is_some_and(|heads| !heads.import_gated_finite.is_empty())
                 && unresolved(&file.ts.imports, path, resolve)
@@ -23,6 +24,7 @@ pub(crate) fn retain(
     for path in blocked {
         let Some(heads) = files
             .get_mut(&path)
+            .and_then(CheckFileFacts::postgres_if_present_mut)
             .and_then(|file| file.query_annotation_heads.as_mut())
         else {
             continue;

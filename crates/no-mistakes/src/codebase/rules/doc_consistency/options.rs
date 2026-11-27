@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(crate) struct SubstringSpec {
     pub(crate) file: String,
     pub(crate) substring: String,

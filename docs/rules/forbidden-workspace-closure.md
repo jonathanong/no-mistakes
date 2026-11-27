@@ -41,6 +41,10 @@ lockfile, is reported instead of "no pnpm importers".
 `devDependencies` and `peerDependencies` count only when listed. Optional
 `lockfile` adds resolved lockfile edges.
 
+Malformed `forbidden` globs fail configuration loading. The diagnostic
+identifies the invalid list item and its source location, and `check` exits
+with code 2.
+
 ## Valid example
 
 The compliant manifest pair below passes because the `@acme/app` closure never

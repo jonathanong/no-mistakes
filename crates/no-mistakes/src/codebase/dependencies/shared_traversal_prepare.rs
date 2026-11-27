@@ -4,7 +4,7 @@ pub(crate) struct SnapshotTraversalPreparation {
     pub(crate) session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     pub(crate) include_check_plan: bool,
     pub(crate) needs_reverse_graph: bool,
-    pub(crate) framework_plan: crate::codebase::test_discovery::FrameworkPreparationPlan,
+    pub(crate) framework_plan: crate::codebase::testing_analysis::plan::FrameworkPreparationPlan,
 }
 
 struct TraversalPreparationContext {
@@ -13,7 +13,7 @@ struct TraversalPreparationContext {
     session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     include_check_plan: bool,
     needs_reverse_graph: bool,
-    framework_plan: crate::codebase::test_discovery::FrameworkPreparationPlan,
+    framework_plan: crate::codebase::testing_analysis::plan::FrameworkPreparationPlan,
 }
 
 impl SharedTraversalContext {
@@ -22,7 +22,7 @@ impl SharedTraversalContext {
         tsconfig_path: Option<&Path>,
         config_path: Option<&Path>,
         build_plan: graph::GraphBuildPlan,
-        framework_plan: crate::codebase::test_discovery::FrameworkPreparationPlan,
+        framework_plan: crate::codebase::testing_analysis::plan::FrameworkPreparationPlan,
     ) -> Result<Self> {
         let session =
             crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
@@ -42,7 +42,7 @@ impl SharedTraversalContext {
         tsconfig_path: Option<&Path>,
         config_path: Option<&Path>,
         build_plan: graph::GraphBuildPlan,
-        framework_plan: crate::codebase::test_discovery::FrameworkPreparationPlan,
+        framework_plan: crate::codebase::testing_analysis::plan::FrameworkPreparationPlan,
         direction: Direction,
     ) -> Result<Self> {
         let session =
@@ -64,7 +64,7 @@ impl SharedTraversalContext {
         config_path: Option<&Path>,
         build_plan: graph::GraphBuildPlan,
         session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
-        framework_plan: crate::codebase::test_discovery::FrameworkPreparationPlan,
+        framework_plan: crate::codebase::testing_analysis::plan::FrameworkPreparationPlan,
         needs_reverse_graph: bool,
     ) -> Result<Self> {
         let dataset = session.dataset(&root);

@@ -7,12 +7,11 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 pub(crate) mod ast;
 mod findings;
 pub(in crate::codebase::rules) mod options;
-pub(crate) mod playwright_provenance;
+pub(crate) use crate::codebase::testing_analysis::reliability::playwright_provenance;
 mod scope;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
@@ -20,8 +19,9 @@ mod workflow;
 
 use findings::{findings_for, source_findings, unreadable, RuleContext};
 use options::{Allowlist, RetryOptions, SerialOptions};
-use scope::Origin;
-pub use scope::{required_files, SourceDemand};
+pub(crate) use crate::codebase::testing_analysis::reliability::{Location, Origin, Shape};
+pub use crate::codebase::testing_analysis::reliability::SourceDemand;
+pub use scope::required_files;
 
 pub const RULE_ID: &str = "test-no-retries";
 pub use RULE_ID as TEST_NO_RETRIES;
@@ -30,24 +30,6 @@ pub const PLAYWRIGHT_NO_SERIAL: &str = "playwright-no-serial";
 pub(crate) fn configured(config: &NoMistakesConfig) -> bool {
     super::rule_enabled(config, TEST_NO_RETRIES)
         || super::rule_enabled(config, PLAYWRIGHT_NO_SERIAL)
-}
-
-pub(crate) struct Location {
-    shape: Shape,
-    line: usize,
-    project: Option<String>,
-    origin: Origin,
-    pub(crate) playwright_candidates: Vec<playwright_provenance::ImportRef>,
-    pub(crate) playwright_import: Option<playwright_provenance::ImportRef>,
-    pub(crate) playwright_binding: Option<Arc<str>>,
-    pub(crate) playwright_wrappers: Vec<playwright_provenance::WrapperCall>,
-    pub(crate) resolved_playwright_exports: Vec<(String, Arc<str>)>,
-    pub(crate) unresolved_reason: Option<&'static str>,
-}
-
-enum Shape {
-    Retry(&'static str, Option<u64>),
-    Serial(&'static str),
 }
 
 pub(crate) struct Inputs<'a> {

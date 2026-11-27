@@ -330,6 +330,9 @@ mocks. A nonempty `include` replaces that set. A nonempty `patterns` list
 replaces the built-in pin regexes and their placeholder exemption. Omitting
 `patterns` or setting it to `[]` uses the built-in regexes. [File selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_no_dependency_pins.rs#L57-L64) and [pattern selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_no_dependency_pins.rs#L125-L140).
 
+Each `patterns` entry accepts `reason` and `regex`. Unknown fields in an
+entry are configuration errors.
+
 ## Valid example
 
 ```ts
