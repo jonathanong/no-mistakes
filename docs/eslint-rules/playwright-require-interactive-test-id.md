@@ -108,6 +108,10 @@ export function Form() { return <Action />; }
 const decorative = <button onClick={animate}>Play</button>;
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`playwright-require-exported-component-attribute`](playwright-require-exported-component-attribute.md)
