@@ -1,0 +1,17 @@
+const createUser = () => {};
+exports.makeUser = createUser;
+module.exports.publishUser = createUser;
+module["exports"].quotedFromModule = createUser;
+exports.createUser = createUser;
+exports.calledUser = createUser();
+exports.memberUser = accounts.createUser;
+exports["quotedUser"] = createUser;
+exports[dynamicName] = createUser;
+exports.wrappedUser = createUser!;
+exports.addedUser += createUser;
+module.exports = createUser;
+module.meta.publishUser = createUser;
+other.exports.publishUser = createUser;
+loadAccounts().exports.publishUser = createUser;
+let slot = createUser;
+slot = createUser;
