@@ -23,13 +23,7 @@ fn module_name_follows(after_declare: &str) -> Option<&str> {
         return None;
     }
     let after_keyword = trimmed.strip_prefix("module")?;
-    if after_keyword.starts_with(|ch: char| is_ident_char(ch)) {
-        return None;
-    }
     let quoted = after_keyword.trim_start();
-    if quoted.len() == after_keyword.len() {
-        return None;
-    }
     let quote = quoted.chars().next()?;
     if !matches!(quote, '\'' | '"') {
         return None;
@@ -41,8 +35,4 @@ fn module_name_follows(after_declare: &str) -> Option<&str> {
 
 fn is_ident_byte(byte: u8) -> bool {
     byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'$'
-}
-
-fn is_ident_char(ch: char) -> bool {
-    ch.is_ascii_alphanumeric() || ch == '_' || ch == '$'
 }

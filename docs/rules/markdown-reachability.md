@@ -99,8 +99,10 @@ selected depth. Keep the default two-hop budget unless the documentation map
 needs a second index level; set `maxDepth: 3` explicitly for that layout.
 Prefer removing baseline entries as documents are repaired.
 
-Suppressions use standard `no-mistakes` directives. Prefer fixing the map;
-suppression hides future discoverability regressions.
+The rule reports file-level findings at line 1. Use `no-mistakes-disable-line`
+on that line or a file directive to suppress them. A `no-mistakes-disable-next-line`
+directive on line 1 targets line 2. Prefer fixing the map so future
+discoverability regressions stay visible.
 
 ## Counterexample
 

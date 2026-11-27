@@ -17,16 +17,19 @@ async function analyzeEffects(api) {
   const pending = api.analyzeProject({ root, config, reports: effectsRequests });
   assert.ok(pending instanceof Promise);
   const { reports } = await pending;
-  assert.equal(reports.length, effectsRequests.length);
+  assert.deepEqual(reports.map(({ id }) => id).sort(), effectsRequests.map(({ id }) => id).sort());
   return new Map(reports.map(({ id, result }) => [id, result]));
 }
 
 // Retain one request per facade in this shard. Cases only read the results.
 async function preparedEffects(entry) {
-  prepared ??= Promise.all([
-    analyzeEffects(require("../index.js")),
-    import("../index.mjs").then(analyzeEffects),
-  ]);
+  if (prepared === undefined) {
+    Object.freeze(effectsRequests);
+    prepared = Promise.all([
+      analyzeEffects(require("../index.js")),
+      import("../index.mjs").then(analyzeEffects),
+    ]);
+  }
   const [cjs, esm] = await prepared;
   return [cjs.get(entry), esm.get(entry)];
 }
@@ -271,5 +274,15 @@ test(
     assert.ok(esmPending instanceof Promise);
     assert.deepEqual(await cjsPending, cjs);
     assert.deepEqual(await esmPending, esm);
+  },
+);
+
+test(
+  "compiled mutable receiver batch rejects late registrations",
+  { skip: !compiled },
+  async () => {
+    const entry = "src/nested-receiver-containers/mutable-affected-cross-scope.mts";
+    await preparedEffects(entry);
+    assert.throws(() => effectsEntry(entry), TypeError);
   },
 );

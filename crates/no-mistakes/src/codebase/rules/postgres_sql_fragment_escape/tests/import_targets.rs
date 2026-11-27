@@ -408,11 +408,12 @@ fn ambient_source(source: &str) -> TsFileFacts {
 }
 
 #[test]
-fn spaced_ambient_declaration_names_the_external_specifier() {
+fn ambient_declarations_name_external_specifiers() {
     let mut world = world();
     let escape = world.escape.clone();
     let declared = std::path::PathBuf::from("/repo/declared.ts");
     let single = std::path::PathBuf::from("/repo/single.ts");
+    let compact = std::path::PathBuf::from("/repo/compact.d.ts");
     insert(
         &mut world.facts,
         declared.clone(),
@@ -425,13 +426,20 @@ fn spaced_ambient_declaration_names_the_external_specifier() {
         single.clone(),
         ambient_source("declare\nmodule\n'single-widget' {}\n"),
     );
+    insert(
+        &mut world.facts,
+        compact.clone(),
+        ambient_source(include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../test-cases/rules/postgres-sql-fragment-escape/fixtures/ambient-module-spelling/compact.d.ts"
+        ))),
+    );
     for (path, source) in [
         ("/repo/tight.ts", "declaremodule \"tight-widget\" {}\n"),
         (
             "/repo/extra.ts",
             "declare moduleExtra \"extra-widget\" {}\n",
         ),
-        ("/repo/nospace.ts", "declare module\"nospace-widget\" {}\n"),
         ("/repo/fn.ts", "declare function \"fn-widget\" {}\n"),
     ] {
         insert(
@@ -471,6 +479,6 @@ fn spaced_ambient_declaration_names_the_external_specifier() {
     assert_eq!(hit("glued-widget"), None);
     assert_eq!(hit("tight-widget"), None);
     assert_eq!(hit("extra-widget"), None);
-    assert_eq!(hit("nospace-widget"), None);
+    assert_eq!(hit("nospace-widget"), Some(compact));
     assert_eq!(hit("fn-widget"), None);
 }

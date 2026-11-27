@@ -102,7 +102,16 @@ fn markdown_reachability_json_matches_snapshot() {
             saved_root("filtered-target-graph"),
             config("filtered-guide.yml"),
         ),
-        ("file_suppression", saved_root("suppression"), repository),
+        (
+            "file_suppression",
+            saved_root("suppression"),
+            repository.clone(),
+        ),
+        (
+            "line_suppression",
+            saved_root("line-suppression"),
+            repository,
+        ),
         (
             "three_hop_index_routes",
             saved_root("depth-three"),
