@@ -21,7 +21,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/pipeline.yml",
           "line": 8,
-          "message": "required artifact edge missing: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#test: dist [prefix]",
+          "message": "required artifact edge missing: .github/workflows/pipeline.yml#build -> .github/workflows/pipeline.yml#test: dist [pattern]",
           "rule": "workflow-topology-policy",
           "sourceLine": "test:"
         },
@@ -1533,24 +1533,8 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "step-order-unlabeled": {
-    "exitCode": 1,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [
-        {
-          "file": ".github/workflows/pipeline.yml",
-          "line": 20,
-          "message": "required ordered step missing: .github/workflows/pipeline.yml#empty: <step>",
-          "rule": "workflow-topology-policy",
-          "sourceLine": "empty:"
-        }
-      ],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: ../../configs/step-order-unlabeled.yml:9: invalid options for rule `workflow-topology-policy` at options.stepOrders[0].steps[0]: must specify id, uses, or name\n"
   },
   "unlocked-reason-empty": {
     "exitCode": 1,

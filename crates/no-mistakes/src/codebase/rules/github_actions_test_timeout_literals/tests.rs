@@ -87,21 +87,6 @@ fn to_contain_without_digit_passes() {
 
 // Output cases moved to cli_gha_snapshot_test_timeout_literals.
 
-#[test]
-fn empty_reason_is_a_finding() {
-    let findings = scan_source(
-        "timeout-minutes: 20\n",
-        r#"
-allow:
-  - file: .github/workflows/ci.test.mts
-    text: "timeout-minutes: 20"
-    reason: " "
-"#,
-    );
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(findings[0].message.contains("has no reason"));
-}
-
 // Output cases moved to cli_gha_snapshot_test_timeout_literals.
 
 #[test]
