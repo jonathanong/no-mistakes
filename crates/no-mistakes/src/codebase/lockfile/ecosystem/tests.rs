@@ -324,7 +324,7 @@ fn gomod_reads_require_lines_not_replace_or_exclude() {
         "gomod",
         "base.mod",
         "head.mod",
-        &["example.com/sample-delta"],
+        &["example.invalid/sample-delta/v2"],
         &["example.com/sample-beta"],
         &["example.com/sample-alpha"],
     );

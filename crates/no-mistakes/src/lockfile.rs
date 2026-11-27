@@ -87,11 +87,7 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
             }
             continue;
         };
-        let rel = lf_path
-            .strip_prefix(&git_root)
-            .unwrap_or(lf_path)
-            .to_string_lossy()
-            .replace('\\', "/");
+        let rel = lockfile::git_lockfile_path(&git_root, lf_path);
 
         let head = args.head.as_deref().unwrap_or("HEAD");
         let new_content = if args.head.is_some() {

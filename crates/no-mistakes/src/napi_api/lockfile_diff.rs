@@ -108,11 +108,6 @@ fn git_lockfile_content(
     match git_show_file(git_root, reference, lockfile) {
         Ok(Some(content)) => return Ok(Some(content)),
         Ok(None) => {}
-        Err(error) if error.kind() == std::io::ErrorKind::InvalidData => {
-            return Err(napi::Error::from_reason(format!(
-                "`{lockfile}` at ref `{reference}` is not valid UTF-8"
-            )));
-        }
         Err(error) => return Err(git_io_to_napi(error)),
     }
     if !git_ref_exists(git_root, reference).map_err(git_io_to_napi)? {
@@ -136,11 +131,7 @@ fn diff_one_lockfile(
     base: &str,
 ) -> napi::Result<LockfileOutcome> {
     let basename = lf_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-    let rel = lf_path
-        .strip_prefix(git_root)
-        .unwrap_or(lf_path)
-        .to_string_lossy()
-        .replace('\\', "/");
+    let rel = lockfile::git_lockfile_path(git_root, lf_path);
     let Some(manager) = lockfile::detect_manager(basename) else {
         return Ok(if lockfile::is_binary_lockfile(basename) {
             LockfileOutcome::Warning(LockfileDiffWarning {

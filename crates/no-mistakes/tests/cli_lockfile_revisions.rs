@@ -64,3 +64,44 @@ fn truncated_lock_is_malformed_at_a_git_revision() {
     let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
     assert_eq!(report, serde_json::json!([]));
 }
+
+#[cfg(unix)]
+#[test]
+fn unix_root_components_keep_literal_backslashes() {
+    let dir = committed_repo("lockfile-diff-pnpm-subdir");
+    let root = dir.path();
+    let original = root.join("packages/api");
+    let renamed = root.join(r"packages/service\api");
+    std::fs::rename(&original, &renamed).unwrap();
+    git_commit(root, &["-A"], "rename");
+    copy_after("lockfile-diff-pnpm-subdir", &renamed.join("pnpm-lock.yaml"));
+    git_commit(root, &["-A"], "update");
+
+    let output = diff_revisions(&renamed, "HEAD~1");
+    assert!(output.status.success());
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(
+        report[0]["lockfile"],
+        r"packages/service\api/pnpm-lock.yaml"
+    );
+    assert_eq!(report[0]["changed"], serde_json::json!(["lodash"]));
+}
+
+#[test]
+fn a_git_tree_at_a_lockfile_path_is_reported_as_unreadable() {
+    let fixture = ecosystem_lock("revision-directory");
+    let dir = crate::saved_fixture::materialize_path(&fixture);
+    let root = dir.path();
+    git_init(root);
+    git_commit(root, &["-A"], "directory");
+
+    let output = diff_revisions(root, "HEAD");
+    assert!(output.status.success());
+    let warning = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        warning.contains("`Cargo.lock` at ref `HEAD` could not be read as a file"),
+        "{warning}"
+    );
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(report, serde_json::json!([]));
+}

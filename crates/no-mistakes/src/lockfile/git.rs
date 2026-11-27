@@ -46,7 +46,7 @@ fn git_content(git_root: &Path, git_ref: &str, rel: &str) -> Result<Option<Optio
             Ok(None)
         }
         Err(error) if error.kind() == std::io::ErrorKind::InvalidData => {
-            eprintln!("warning: `{rel}` at ref `{git_ref}` is not valid UTF-8; skipping it");
+            eprintln!("warning: {error}; skipping it");
             Ok(None)
         }
         Err(error) => Err(error.into()),
