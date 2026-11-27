@@ -6,6 +6,9 @@ use crate::config::v2::schema::{
 };
 use std::path::{Path, PathBuf};
 
+#[path = "repository_rule_excludes_tests.rs"]
+mod repository_rule_excludes_tests;
+
 fn wrapper(module: &str, export: &str, test_id_argument: usize) -> PlaywrightSelectorWrapper {
     PlaywrightSelectorWrapper {
         module: module.to_string(),

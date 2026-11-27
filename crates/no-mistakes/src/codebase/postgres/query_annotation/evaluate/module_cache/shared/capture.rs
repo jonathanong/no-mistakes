@@ -171,5 +171,13 @@ fn collect_dep_refs(
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[path = "capture_fixture.rs"]
+mod fixture;
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 #[path = "capture_tests.rs"]
 mod tests;
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[path = "capture_build_tests.rs"]
+mod build_tests;
