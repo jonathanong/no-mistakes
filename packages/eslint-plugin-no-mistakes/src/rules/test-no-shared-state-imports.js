@@ -9,6 +9,7 @@ const { reportUnanalyzable } = require("./rule-unanalyzable");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 const TEST_NAMES = new Set(["describe", "it", "test"]);
+const REGISTRATION_MODIFIERS = new Set(["concurrent", "each", "fails", "only", "skip", "todo"]);
 
 function patternNames(pattern) {
   const found = [];
@@ -107,13 +108,27 @@ function dynamicDestructuredTest(callee, context) {
   return patternNames(def.node.id).some((entry) => entry.local.name === callee.name);
 }
 
+function registrationMember(node) {
+  let current = unwrapExpression(node);
+  while (current?.type === "CallExpression") current = unwrapExpression(current.callee);
+  while (current?.type === "MemberExpression" && !current.computed) {
+    const name = current.property?.name;
+    if (TEST_NAMES.has(name)) return current;
+    if (!REGISTRATION_MODIFIERS.has(name)) return null;
+    current = unwrapExpression(current.object);
+    while (current?.type === "CallExpression") current = unwrapExpression(current.callee);
+  }
+  return null;
+}
+
 function reportOpaqueRegistration(call, context, suppressed, source) {
   const callee = unwrapExpression(call?.callee);
-  const member =
-    callee?.type === "MemberExpression" && !callee.computed ? callee.property?.name : null;
-  const unresolvedMember =
-    (member === "test" || member === "it" || member === "describe") &&
-    isUnresolved(moduleLoad(callee.object, context));
+  // `each(rows)` builds the registration that the following call invokes.
+  if (callee?.type === "MemberExpression" && !callee.computed && callee.property?.name === "each") {
+    return;
+  }
+  const registration = registrationMember(callee);
+  const unresolvedMember = registration && isUnresolved(moduleLoad(registration.object, context));
   if (!unresolvedMember && !dynamicDestructuredTest(callee, context)) return;
   if (!suppressed(source)) {
     reportUnanalyzable(context, call.loc ? call : source, "this test registration");

@@ -1415,6 +1415,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "static-apply.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 44,
+          "endLine": 7,
+          "file": "static-apply.test.ts",
+          "line": 7,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-error-message-matching:message-ignore": [
@@ -1694,6 +1712,28 @@
           "endLine": 4,
           "file": "dynamic.test.ts",
           "line": 4,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 50,
+          "endLine": 5,
+          "file": "dynamic.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 51,
+          "endLine": 6,
+          "file": "dynamic.test.ts",
+          "line": 6,
           "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/test-no-shared-state",
@@ -2227,6 +2267,16 @@
       ]
     },
     {
+      "file": "opaque-quiet.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
       "file": "cjs.test.ts",
       "findings": [
         {
@@ -2286,10 +2336,21 @@
         },
         {
           "column": 1,
-          "endColumn": 29,
+          "endColumn": 44,
           "endLine": 5,
           "file": "dynamic.test.ts",
           "line": 5,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 6,
+          "file": "dynamic.test.ts",
+          "line": 6,
           "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
@@ -2467,11 +2528,55 @@
           "singleExportPattern": "^enqueue$"
         }
       ]
+    },
+    {
+      "file": "opaque-receiver.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 4,
+          "file": "opaque-receiver.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 5,
+          "file": "opaque-receiver.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
     }
   ],
   "test-no-typed-enqueue-fake:enqueue-ignore": [
     {
       "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$",
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "opaque-receiver.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -3079,6 +3184,28 @@
           "endLine": 3,
           "file": "dynamic.test.ts",
           "line": 3,
+          "message": "Vitest framework API carrier cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 64,
+          "endLine": 5,
+          "file": "dynamic.test.ts",
+          "line": 5,
+          "message": "Vitest framework API carrier cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 5,
+          "file": "dynamic.test.ts",
+          "line": 5,
           "message": "Vitest framework API carrier cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
           "messageId": "unknown",
           "ruleId": "no-mistakes/vitest-timeout-cap",

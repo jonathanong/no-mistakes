@@ -249,7 +249,8 @@ it("runs", () => {}, budget);
 - `unknownValues` is `"ignore"` by default. Set it to `"finding"` to report
   unresolved timeout expressions. A non-static `require` of `vitest` is an
   unresolved framework binding, so `vt.test(..., timeout)` follows this option
-  instead of passing silently.
+  instead of passing silently. `require(moduleName).test.bind(null)(...)` keeps
+  that same advisory.
 
 `const vt = require("vitest")` and `const { test } = require("vitest")` are
 test registrations. Reading `cfg.test.testTimeout as number` still sees the

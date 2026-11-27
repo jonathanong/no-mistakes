@@ -192,17 +192,23 @@ function resolveImportTarget(node, sourceCode) {
   if (node?.type === "MemberExpression") {
     const object = unwrapExpression(node.object);
     const name = memberPropertyName(node);
-    const module =
-      object?.type === "Identifier" && name ? namespaceModule(object, sourceCode) : null;
+    if (!name) return null;
+    const required = requireSource(object, scopeContext(sourceCode));
+    if (required) return { name, module: required };
+    if (object?.type !== "Identifier") return null;
+    const module = namespaceModule(object, sourceCode);
     return module ? { name, module } : null;
   }
   return null;
 }
 
 module.exports = {
+  frameworkModules,
   isFrameworkMockType,
   isFrameworkReceiver,
+  patternExportName,
   referenceBinding,
   resolveImportTarget,
+  scopeContext,
   typeArgParams,
 };

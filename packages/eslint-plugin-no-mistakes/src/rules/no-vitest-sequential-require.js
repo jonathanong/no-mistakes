@@ -24,6 +24,7 @@ function reassignedVitestRequire(callee, context) {
   const loaded = init?.type === "MemberExpression" ? unwrapExpression(init.object) : init;
   const member =
     init?.type === "MemberExpression" ? staticName(init.property, init.computed) : null;
+  if (init?.type === "MemberExpression" && member === null) return false;
   return requireSource(loaded, context) === "vitest" && (member === null || TEST_NAMES.has(member));
 }
 

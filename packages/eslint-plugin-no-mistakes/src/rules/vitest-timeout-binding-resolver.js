@@ -59,8 +59,7 @@ function createBindingResolver(context) {
     if (HOOKS.has(name)) return { kind: "hook", name, root: owner.root };
     if (CHAIN.has(name)) return { ...owner };
     if (name === "describe" || name === "suite") return { ...owner, name };
-    if (BUILDERS.has(name)) return { kind: "builder", name, owner, root: owner.root };
-    return null;
+    return BUILDERS.has(name) ? { kind: "builder", name, owner, root: owner.root } : null;
   }
   function resolve(node) {
     node = unwrapExpression(node);
@@ -90,6 +89,7 @@ function createBindingResolver(context) {
           target?.kind === "setter"
             ? receiver?.kind === "runtime" && receiver.root === target.root
             : target?.kind === "hook" && receiver?.root === target.root;
+        if (target?.required && !valid) return target;
         if (!valid)
           return target && new Set(["setter", "hook", "test"]).has(target.kind)
             ? { kind: "unknown", root: target.root }

@@ -137,9 +137,11 @@ function expectArguments(node, context) {
     if (name === "call") {
       callee = callee.object;
       args = args.slice(1);
-    } else if (name === "apply" && unwrap(args[1])?.type === "ArrayExpression") {
+    } else if (name === "apply") {
+      const list = unwrap(args[1]);
+      if (list?.type !== "ArrayExpression") return null;
       callee = callee.object;
-      args = unwrap(args[1]).elements;
+      args = list.elements;
     }
   }
   return isExpectCallee(callee, context) ? args : null;

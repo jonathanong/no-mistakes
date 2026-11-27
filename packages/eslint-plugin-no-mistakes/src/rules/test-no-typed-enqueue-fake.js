@@ -7,6 +7,7 @@ const { isTransparentExpression, unwrapExpression } = require("./async-ast");
 const { isUnresolved, moduleLoad } = require("./module-load");
 const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
 const { memberPropertyName } = require("./logical-call");
+const { opaqueFrameworkReceiver } = require("./test-no-typed-enqueue-fake-opaque");
 const {
   isFrameworkMockType,
   isFrameworkReceiver,
@@ -152,14 +153,24 @@ module.exports = rule(
           if (callee.type === "TSInstantiationExpression") typeNode = callee;
           callee = callee.expression;
         }
-        if (
-          callee?.type !== "MemberExpression" ||
-          !isFrameworkReceiver(callee.object, sourceCode)
-        ) {
-          return;
-        }
+        if (callee?.type !== "MemberExpression") return;
         const method = memberPropertyName(callee);
         const argument = unwrapExpression(node.arguments[0]);
+        if (!isFrameworkReceiver(callee.object, sourceCode)) {
+          const unresolved =
+            method === "mocked"
+              ? isUnresolved(moduleLoad(argument, context))
+              : method === "fn" && unresolvedTypedTarget(typeArgParams(typeNode), context);
+          if (
+            unresolved &&
+            opaqueFrameworkReceiver(callee.object, sourceCode) &&
+            !suppressed(node) &&
+            !(method === "mocked" && excludedExport(argument))
+          ) {
+            reportUnanalyzable(context, node, "this enqueue fake");
+          }
+          return;
+        }
         if (method === "fn" && hasTypedEnqueueArg(typeArgParams(typeNode))) {
           report(node);
         } else if (method === "mocked" && matchesTarget(argument)) {

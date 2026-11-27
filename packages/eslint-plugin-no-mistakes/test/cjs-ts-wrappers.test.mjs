@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import tsParser from "@typescript-eslint/parser";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
@@ -165,6 +165,7 @@ const groups = [
       "require-runner.test.ts",
       "default-namespace.test.ts",
       "spread-apply.test.ts",
+      "static-apply.test.ts",
     ],
     valid: ["default-direct.test.ts"],
   },
@@ -200,12 +201,14 @@ const groups = [
       "function-type.test.ts",
       "member-vi.test.ts",
       "member-export.test.ts",
+      "opaque-receiver.test.ts",
     ],
     valid: [
       "tuple.test.ts",
       "reassign.test.ts",
       "other-export.test.ts",
       "local-parameters.test.ts",
+      "opaque-quiet.test.ts",
     ],
   },
   {
@@ -218,7 +221,7 @@ const groups = [
     rule: "test-no-typed-enqueue-fake",
     dir: "enqueue-ignore",
     options: [{ singleExportPattern: "^enqueue$", unanalyzable: "ignore" }],
-    valid: ["dynamic.test.ts"],
+    valid: ["dynamic.test.ts", "opaque-receiver.test.ts"],
   },
   {
     rule: "vitest-timeout-cap",
@@ -317,26 +320,30 @@ describe("CommonJS and TypeScript wrappers", () => {
         group.options ? ["error", ...group.options] : "error",
         group.dir,
       );
-      for (const name of [...(group.invalid ?? []), ...(group.valid ?? [])]) {
-        const file = resolve(config, "..", name);
-        const result = spawnSync(
-          process.execPath,
-          [oxlint, "--config", config, "--format", "json", file],
-          { encoding: "utf8" },
-        );
+      const names = [...(group.invalid ?? []), ...(group.valid ?? [])];
+      const result = spawnSync(
+        process.execPath,
+        [
+          oxlint,
+          "--config",
+          config,
+          "--format",
+          "json",
+          ...names.map((name) => resolve(config, "..", name)),
+        ],
+        { encoding: "utf8", maxBuffer: 10 * 1024 * 1024 },
+      );
+      assert.ok(result.status === 0 || result.status === 1, `${group.dir}\n${result.stderr}`);
+      const diagnostics = JSON.parse(result.stdout).diagnostics.filter((diagnostic) =>
+        diagnostic.code.includes(group.rule),
+      );
+      for (const name of names) {
         const expected = lint(
           fixture(`cjs-ts-wrappers/${group.dir}/${name}`),
           { [`no-mistakes/${group.rule}`]: configured },
           name,
         );
-        assert.equal(
-          result.status,
-          expected.length ? 1 : 0,
-          `${group.dir}/${name}\n${result.stderr}`,
-        );
-        const actual = JSON.parse(result.stdout).diagnostics.filter((diagnostic) =>
-          diagnostic.code.includes(group.rule),
-        );
+        const actual = diagnostics.filter((diagnostic) => basename(diagnostic.filename) === name);
         assert.deepEqual(
           actual.map((diagnostic) => diagnostic.labels[0].span.line).sort((a, b) => a - b),
           expected.map((finding) => finding.line).sort((a, b) => a - b),
@@ -344,5 +351,5 @@ describe("CommonJS and TypeScript wrappers", () => {
         );
       }
     }
-  }, 120_000);
+  }, 30_000);
 });
