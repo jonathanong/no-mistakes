@@ -1,0 +1,194 @@
+//! The built-in functions the bound facts reason about, by name.
+use super::super::value::PlaceholderPositions;
+use crate::idents::{ident_key, object_name_ident};
+use crate::statements::SqlBoundItemKind;
+use sqlparser::ast::{Function, FunctionArguments, ObjectName, TableFunctionArgs};
+mod caller_arguments;
+mod inputs;
+use caller_arguments::caller_supplied_argument;
+
+pub(super) use caller_arguments::unnest_kind_at;
+
+/// The built-in aggregates, ordered-set and hypothetical-set aggregates included.
+#[rustfmt::skip]
+const AGGREGATES: &[&str] = &[
+    "count", "sum", "avg", "min", "max", "bool_and", "bool_or", "every", "array_agg",
+    "string_agg", "json_agg", "jsonb_agg", "json_object_agg", "jsonb_object_agg",
+    "json_objectagg", "json_arrayagg", "xmlagg", "bit_and", "bit_or", "bit_xor", "stddev",
+    "stddev_pop", "stddev_samp", "variance", "var_pop", "var_samp", "corr", "covar_pop",
+    "covar_samp", "regr_avgx", "regr_avgy", "regr_count", "regr_intercept", "regr_r2",
+    "regr_slope", "regr_sxx", "regr_sxy", "regr_syy", "percentile_cont", "percentile_disc",
+    "mode", "rank", "dense_rank", "percent_rank", "cume_dist", "any_value", "range_agg",
+    "range_intersect_agg",
+];
+
+mod set_returning;
+pub use set_returning::SET_RETURNING;
+
+/// Catalog SRFs that return one row and therefore preserve a pure aggregate's cap.
+const FIXED_ONE_ROW: &[&str] = &["pg_stat_get_recovery_prefetch"];
+// These names became core builtins after PostgreSQL 12. Bare calls on older
+// servers can resolve to user code, so only catalog qualification proves identity.
+const LATER_SCALAR: &[&str] = &[
+    "gen_random_uuid",
+    "regexp_count",
+    "regexp_instr",
+    "regexp_substr",
+];
+/// Builtins introduced in PostgreSQL 18. Bare calls are not trusted without a configured server
+/// version; an explicitly qualified `pg_catalog` call cannot resolve to a user-defined function.
+const POSTGRES_18_SCALAR: &[&str] = &["uuidv4", "uuidv7"];
+
+mod scalar;
+use scalar::is_datetime_keyword;
+pub use scalar::SCALAR;
+
+/// Functions whose result row count follows caller-provided argument values.
+#[rustfmt::skip]
+const CALLER_SIZED: &[&str] = &[
+    "unnest", "generate_series", "generate_subscripts", "json_array_elements",
+    "json_array_elements_text", "jsonb_array_elements", "jsonb_array_elements_text",
+    "json_each", "json_each_text", "jsonb_each", "jsonb_each_text", "json_object_keys",
+    "jsonb_object_keys", "string_to_table", "regexp_split_to_table", "regexp_matches",
+    "json_populate_recordset", "jsonb_populate_recordset", "json_to_recordset",
+    "jsonb_to_recordset", "jsonb_path_query", "jsonb_path_query_tz", "aclexplode",
+    "pg_options_to_table", "pg_mcv_list_items", "pg_snapshot_xip", "txid_snapshot_xip",
+    "ts_parse", "ts_debug",
+];
+
+/// Whether `name` is bare or `pg_catalog`-qualified and its bare part is in `list`. A function
+/// of any other schema that shares a name is an ordinary function, whatever it returns.
+fn builtin(name: &ObjectName, list: &[&str]) -> bool {
+    let schema = name
+        .0
+        .len()
+        .checked_sub(2)
+        .and_then(|index| name.0[index].as_ident());
+    let in_scope = match name.0.len() {
+        1 => true,
+        2 => schema.is_some_and(|schema| ident_key(schema) == "pg_catalog"),
+        _ => false,
+    };
+    in_scope && named(name, list)
+}
+
+fn named(name: &ObjectName, list: &[&str]) -> bool {
+    object_name_ident(name).is_some_and(|ident| list.contains(&ident_key(ident).as_str()))
+}
+
+/// A built-in aggregate: the bare name, or `pg_catalog.<name>`. A function in any other schema
+/// that shares a name has unknown cardinality and may return a set.
+pub(super) fn is_aggregate(name: &ObjectName) -> bool {
+    builtin(name, AGGREGATES)
+}
+
+/// A catalog set-returning function must have a builtin schema identity.
+/// A same-named user function has an unknown cardinality rather than the catalog contract.
+pub(super) fn is_set_returning(name: &ObjectName) -> bool {
+    builtin(name, SET_RETURNING) && !builtin(name, FIXED_ONE_ROW)
+}
+
+/// Unknown projection calls may return a set. Only documented builtin scalar cardinality
+/// (including aggregates) proves otherwise; spelling alone never trusts a user schema.
+pub(super) fn projection_can_expand(function: &Function) -> bool {
+    let name = &function.name;
+    if function.over.is_some()
+        || is_aggregate(name)
+        || builtin(name, FIXED_ONE_ROW)
+        || conditional_form(function)
+        || array_subquery(function)
+    {
+        return false;
+    }
+    is_set_returning(name)
+        || !(is_datetime_keyword(name)
+            || (builtin(name, SCALAR)
+                && (!builtin(name, LATER_SCALAR) || pg_catalog_qualified(name)))
+            || (builtin(name, POSTGRES_18_SCALAR) && pg_catalog_qualified(name)))
+}
+
+/// Aggregate, window, and COALESCE calls reject or contain nested row expansion.
+pub(super) fn projection_traversal_boundary(function: &Function) -> bool {
+    function.over.is_some()
+        || is_aggregate(&function.name)
+        || builtin(&function.name, FIXED_ONE_ROW)
+        || (conditional_form(function)
+            && object_name_ident(&function.name)
+                .is_some_and(|ident| ident_key(ident) == "coalesce"))
+}
+
+/// `ARRAY(SELECT ...)` collapses its subquery into one array value per row.
+fn array_subquery(function: &Function) -> bool {
+    matches!(function.args, FunctionArguments::Subquery(_))
+        && function.name.0.len() == 1
+        && object_name_ident(&function.name)
+            .is_some_and(|ident| ident.quote_style.is_none() && ident_key(ident) == "array")
+}
+
+pub(super) fn conditional_form(function: &Function) -> bool {
+    function.name.0.len() == 1
+        && object_name_ident(&function.name).is_some_and(|ident| {
+            ident.quote_style.is_none()
+                && ["coalesce", "greatest", "least", "nullif"].contains(&ident_key(ident).as_str())
+        })
+}
+
+fn pg_catalog_qualified(name: &ObjectName) -> bool {
+    name.0.len() == 2
+        && name.0[0]
+            .as_ident()
+            .is_some_and(|schema| ident_key(schema) == "pg_catalog")
+}
+
+/// A projection call can introduce rows independently of FROM. Its output is caller-sized
+/// only for a known built-in whose arguments contain no database-backed values.
+pub(super) fn data_backed_projection(
+    function: &Function,
+    positions: PlaceholderPositions<'_>,
+) -> bool {
+    if function.over.is_none()
+        && named(&function.name, SET_RETURNING)
+        && !builtin(&function.name, SET_RETURNING)
+    {
+        return true;
+    }
+    if !projection_can_expand(function) {
+        return false;
+    }
+    // Literal arguments do not size server-state SRFs such as pg_ls_dir or ts_stat.
+    if !builtin(&function.name, CALLER_SIZED) {
+        return true;
+    }
+    match &function.args {
+        FunctionArguments::List(list) => !list
+            .args
+            .iter()
+            .all(|arg| caller_supplied_argument(arg, positions)),
+        _ => true,
+    }
+}
+
+/// A table function is sized by the caller only when it is a set-returning built-in over
+/// arguments the text provides; any other function can return rows from anywhere.
+pub(super) fn function_kind_at(
+    name: &ObjectName,
+    args: &TableFunctionArgs,
+    positions: PlaceholderPositions<'_>,
+) -> SqlBoundItemKind {
+    let given = args
+        .args
+        .iter()
+        .all(|arg| caller_supplied_argument(arg, positions));
+    // This catalog function was added after the supported PostgreSQL version floor.
+    // Bare spelling cannot prove catalog ownership on older servers.
+    let fixed_catalog_row =
+        name.0.len() == 2 && builtin(name, FIXED_ONE_ROW) && args.args.is_empty();
+    if fixed_catalog_row || (given && builtin(name, CALLER_SIZED)) {
+        SqlBoundItemKind::Other
+    } else {
+        SqlBoundItemKind::Opaque
+    }
+}
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+mod tests;

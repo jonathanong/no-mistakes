@@ -281,18 +281,49 @@ function libraryShardCoverage(root, options = {}) {
   let testCount = 0;
   let postgresSourceTestCount = 0;
   const includeStack = [];
-  const srcDir = options.srcDir ?? join(root, "crates/no-mistakes/src");
   const excluded = new Set(options.excluded ?? UNCOMPILED_SRC);
-  const entries = options.entry
-    ? [options.entry]
-    : [join(srcDir, "lib.rs"), join(srcDir, "main.rs")];
-  const relativeSrc = (file) => relative(srcDir, file).split("\\").join("/");
-  const countsTests = (file) => !excluded.has(relativeSrc(file));
+  const roots = options.srcDir
+    ? [
+        {
+          crateName: "no-mistakes",
+          srcDir: options.srcDir,
+          entries: options.entry
+            ? [options.entry]
+            : [join(options.srcDir, "lib.rs"), join(options.srcDir, "main.rs")],
+        },
+      ]
+    : [
+        {
+          crateName: "no-mistakes",
+          srcDir: join(root, "crates/no-mistakes/src"),
+          entries: [
+            join(root, "crates/no-mistakes/src/lib.rs"),
+            join(root, "crates/no-mistakes/src/main.rs"),
+          ],
+        },
+        {
+          crateName: "no-mistakes-invocation",
+          srcDir: join(root, "crates/no-mistakes-invocation/src"),
+          entries: [join(root, "crates/no-mistakes-invocation/src/lib.rs")],
+        },
+        {
+          crateName: "no-mistakes-postgres-sql",
+          srcDir: join(root, "crates/no-mistakes-postgres-sql/src"),
+          entries: [join(root, "crates/no-mistakes-postgres-sql/src/lib.rs")],
+        },
+      ];
+  let currentCrate = "no-mistakes";
+  let currentSrcDir = roots[0].srcDir;
+  const relativeSrc = (file) => relative(currentSrcDir, file).split("\\").join("/");
+  const countsTests = (file) =>
+    currentCrate !== "no-mistakes" || !excluded.has(relativeSrc(file));
   const isPostgresSourcePath = (modPath) =>
-    modPath.length >= 3 &&
-    modPath[0] === "codebase" &&
-    modPath[1] === "postgres" &&
-    modPath[2] === "source";
+    currentCrate === "no-mistakes-postgres-sql"
+      ? modPath.length >= 1 && modPath[0] === "source"
+      : modPath.length >= 3 &&
+        modPath[0] === "codebase" &&
+        modPath[1] === "postgres" &&
+        modPath[2] === "source";
 
   function walkFile(file, shards, inPgSource, modPath, childDir, included) {
     if (!existsSync(file)) {
@@ -501,7 +532,16 @@ function libraryShardCoverage(root, options = {}) {
     }
   }
 
-  for (const entry of entries) walkFile(entry, ALL, true, [], null, false);
+  let plainTestCount = 0;
+  for (const crate of roots) {
+    currentCrate = crate.crateName;
+    currentSrcDir = crate.srcDir;
+    for (const entry of crate.entries) walkFile(entry, ALL, true, [], null, false);
+    plainTestCount += countPlainTests(
+      crate.srcDir,
+      crate.crateName === "no-mistakes" ? excluded : new Set(),
+    );
+  }
   return {
     nested,
     droppedTests,
@@ -510,7 +550,7 @@ function libraryShardCoverage(root, options = {}) {
     unresolved,
     incomplete,
     testCount,
-    plainTestCount: countPlainTests(srcDir, excluded),
+    plainTestCount,
   };
 }
 

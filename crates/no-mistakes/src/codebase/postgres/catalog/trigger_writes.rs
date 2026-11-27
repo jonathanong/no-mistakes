@@ -11,12 +11,7 @@ pub(crate) struct CatalogTriggerWrites {
     pub update_columns: Vec<String>,
     pub writes: Vec<CatalogTriggerWrite>,
 }
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct CatalogTriggerWrite {
-    pub relation: String,
-    pub event: TriggerEvent,
-    pub columns: Vec<String>,
-}
+pub(crate) use no_mistakes_postgres_sql::CatalogTriggerWrite;
 
 impl SchemaCatalog {
     pub(crate) fn trigger_write_effects(&self) -> &[CatalogTriggerWrites] {

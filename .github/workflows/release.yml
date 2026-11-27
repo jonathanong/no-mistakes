@@ -1306,6 +1306,9 @@ jobs:
           if [ -d crates/no-mistakes-invocation ]; then
             pkgs+=(no-mistakes-invocation)
           fi
+          if [ -d crates/no-mistakes-postgres-sql ]; then
+            pkgs+=(no-mistakes-postgres-sql)
+          fi
           pkgs+=(no-mistakes)
           for pkg in "${pkgs[@]}"; do
             if curl --fail --silent --output /dev/null "https://crates.io/api/v1/crates/$pkg/$version"; then

@@ -57,7 +57,11 @@ pub struct JobsPoolWarning {
 pub fn init_rayon_threads(args: JobsArg) -> Option<JobsPoolWarning> {
     let environment = std::env::var("RAYON_NUM_THREADS").ok();
     let requested = rayon_thread_count(args, environment.as_deref());
-    let recorded = *RECORDED_RAYON_THREADS.get_or_init(|| install_global_pool(requested));
+    let recorded = *RECORDED_RAYON_THREADS.get_or_init(|| {
+        let count = install_global_pool(requested);
+        no_mistakes_postgres_sql::source::record_global_rayon_threads(count);
+        count
+    });
     jobs_pool_mismatch(requested, Some(recorded))
 }
 
@@ -65,10 +69,6 @@ pub fn init_rayon_threads_if_requested(jobs: Option<usize>) -> Option<JobsPoolWa
     init_rayon_threads(JobsArg {
         jobs: jobs.unwrap_or(0),
     })
-}
-
-pub(crate) fn recorded_rayon_threads() -> Option<usize> {
-    RECORDED_RAYON_THREADS.get().copied()
 }
 
 pub(crate) fn rayon_thread_count(args: JobsArg, raw_threads: Option<&str>) -> usize {

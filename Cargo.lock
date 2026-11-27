@@ -1311,6 +1311,7 @@ dependencies = [
  "napi-derive",
  "nix 0.32.0",
  "no-mistakes-invocation",
+ "no-mistakes-postgres-sql",
  "num_cpus",
  "oxc_allocator",
  "oxc_ast",
@@ -1363,6 +1364,21 @@ dependencies = [
  "tempfile",
  "wait-timeout",
  "windows-sys",
+]
+
+[[package]]
+name = "no-mistakes-postgres-sql"
+version = "0.109.123"
+dependencies = [
+ "anyhow",
+ "num_cpus",
+ "rayon",
+ "regex",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "sqlparser",
 ]
 
 [[package]]
