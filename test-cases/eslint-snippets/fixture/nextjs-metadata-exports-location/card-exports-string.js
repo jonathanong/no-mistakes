@@ -1,0 +1,1 @@
+exports["metadata"] = { title: "Card" };

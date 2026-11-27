@@ -1,6 +1,6 @@
 "use strict";
 
-const { rule } = require("../helpers");
+const { literalString, rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 
 const ALLOWED_SUFFIXES = [
@@ -49,6 +49,39 @@ function collectPatternNames(node, names = new Set()) {
   return names;
 }
 
+function isFree(identifier, context) {
+  let scope = context.sourceCode.getScope(identifier);
+  while (scope) {
+    const variable = scope.variables?.find((item) => item.name === identifier.name);
+    if (variable) return variable.defs.length === 0;
+    scope = scope.upper;
+  }
+  return true;
+}
+
+function isExportsBinding(node, context) {
+  return node?.type === "Identifier" && node.name === "exports" && isFree(node, context);
+}
+
+function isModuleExports(node, context) {
+  return (
+    node?.type === "MemberExpression" &&
+    !node.computed &&
+    node.property?.type === "Identifier" &&
+    node.property.name === "exports" &&
+    node.object?.type === "Identifier" &&
+    node.object.name === "module" &&
+    isFree(node.object, context)
+  );
+}
+
+function propertyStatus(key, computed) {
+  if (!computed && key?.type === "Identifier") return { kind: "static", name: key.name };
+  const name = literalString(key);
+  if (name !== null) return { kind: "static", name };
+  return { kind: "dynamic" };
+}
+
 module.exports = Object.assign(
   rule(
     {
@@ -61,17 +94,27 @@ module.exports = Object.assign(
       messages: {
         location:
           "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+        unanalyzable:
+          "Could not resolve whether this CommonJS assignment exports metadata or generateMetadata. Use a static property name.",
       },
     },
     (context) => {
       const suppressed = ruleSuppression(context, "nextjs-metadata-exports-location");
+      const checked = isNextFile(context.filename) && !isAllowedFile(context.filename);
       function report(node) {
         if (!suppressed(node)) context.report({ node, messageId: "location" });
       }
+      function reportProperty(key, computed, node) {
+        const status = propertyStatus(key, computed);
+        if (status.kind === "dynamic") {
+          if (!suppressed(node)) context.report({ node, messageId: "unanalyzable" });
+          return;
+        }
+        if (METADATA_EXPORTS.has(status.name)) report(node);
+      }
       return {
         ExportNamedDeclaration(node) {
-          if (!isNextFile(context.filename)) return;
-          if (isAllowedFile(context.filename)) return;
+          if (!checked) return;
           if (node.declaration?.type === "VariableDeclaration") {
             if (
               node.declaration.declarations.some((declaration) =>
@@ -90,6 +133,13 @@ module.exports = Object.assign(
             report(node);
           }
           if (
+            node.declaration?.type === "TSImportEqualsDeclaration" &&
+            node.declaration.id?.type === "Identifier" &&
+            METADATA_EXPORTS.has(node.declaration.id.name)
+          ) {
+            report(node);
+          }
+          if (
             node.exportKind !== "type" &&
             node.specifiers?.some(
               (specifier) =>
@@ -97,6 +147,19 @@ module.exports = Object.assign(
             )
           ) {
             report(node);
+          }
+        },
+        AssignmentExpression(node) {
+          if (!checked || node.left.type !== "MemberExpression") return;
+          const left = node.left;
+          if (isExportsBinding(left.object, context) || isModuleExports(left.object, context)) {
+            reportProperty(left.property, left.computed, left);
+            return;
+          }
+          if (!isModuleExports(left, context) || node.right.type !== "ObjectExpression") return;
+          for (const property of node.right.properties) {
+            if (property.type === "Property")
+              reportProperty(property.key, property.computed, property);
           }
         },
       };
