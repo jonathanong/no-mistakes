@@ -188,13 +188,15 @@ run those tests alongside the focused module tests.
 For shared diagnostics changes, run the full `suite_cli_queries` target to cover
 every command's basic timing catalog alongside verbose instrumentation.
 
-Rust integration tests share six explicitly registered suites: `suite_cli_queries`,
-`suite_cli_rules`, `suite_cli_postgres`, `suite_cli_package_config`,
-`suite_cli_test_plans`, and `suite_contracts`. This links the analyzer once per suite instead of once per
-source file. Keep new root `crates/no-mistakes/tests/*.rs` modules registered in
-one suite; the registration test rejects omitted or duplicate sources. Original
-module and fixture paths stay unchanged. To run one former target, use, for example,
-`cargo test --locked -p no-mistakes --test suite_cli_queries cli_queries::`.
+Rust integration tests share five explicitly registered suites: `suite_cli_queries`,
+`suite_cli_rules`, `suite_cli_postgres`, `suite_cli_package_config`, and
+`suite_contracts`. Cargo links the analyzer once per suite. The query suite also
+registers the test-plan and test-impact modules. Register each new top-level
+`crates/no-mistakes/tests/*.rs` module in exactly one suite. The registration
+test rejects omitted or duplicate sources. For example, run query cases with
+`cargo test --locked -p no-mistakes --test suite_cli_queries cli_queries::` and
+.NET test-plan cases with
+`cargo test --locked -p no-mistakes --test suite_cli_queries cli_test_plan_dotnet::`.
 Use the full module-qualified name with `-- --exact` for a single test.
 `windows_job_object` and `windows_invocation` remain separate platform harnesses in `crates/no-mistakes`,
 while `macos_invocation` lives in `crates/no-mistakes-invocation` alongside `src/invocation*` (re-exported by `crates/no-mistakes` as `invocation`). The native macOS job also runs
