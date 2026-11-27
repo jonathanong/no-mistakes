@@ -3,6 +3,7 @@
 //! to find where a component is rendered. Unlike `jsx_children`, this is not
 //! restricted to a single component span — it scans the whole file.
 
+use crate::codebase::ts_source::facts::react_analysis::usages::RawCallsite;
 use crate::react_traits::analyze::import_table::ImportTable;
 use crate::react_traits::analyze::jsx_resolve::{
     attribute_name, collect_local_components, element_root_and_suffix, resolve_target,
@@ -11,16 +12,6 @@ use oxc_ast::ast::{JSXAttributeItem, JSXOpeningElement, Program};
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashMap;
 use std::path::PathBuf;
-
-/// A resolved JSX render site before it is filtered against a target component.
-#[derive(Clone)]
-pub(crate) struct RawCallsite {
-    pub(crate) resolved_path: PathBuf,
-    pub(crate) exported_name: String,
-    pub(crate) line: usize,
-    pub(crate) props: Vec<String>,
-    pub(crate) has_spread: bool,
-}
 
 struct CallsiteVisitor<'a> {
     import_table: &'a ImportTable,

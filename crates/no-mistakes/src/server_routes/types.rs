@@ -2,19 +2,7 @@ use serde::Serialize;
 use std::fmt;
 use std::path::PathBuf;
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum Framework {
-    ApiServer,
-    Express,
-    Fastify,
-    Hono,
-    KoaPathMatch,
-    KoaRouter,
-    Nestjs,
-    Heuristic,
-    Remix,
-}
+pub use crate::codebase::ts_source::facts::react_analysis::server::Framework;
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Serialize)]
 #[serde(rename_all = "camelCase")]

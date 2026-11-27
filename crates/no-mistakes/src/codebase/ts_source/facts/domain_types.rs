@@ -162,8 +162,8 @@ impl TsFactContext {
     }
 }
 
-impl Default for TsFactContext {
-    fn default() -> Self {
+impl TsFactContext {
+    pub(crate) fn without_extensions() -> Self {
         Self {
             root: PathBuf::new(),
             backend_route_extractors: Vec::new(),

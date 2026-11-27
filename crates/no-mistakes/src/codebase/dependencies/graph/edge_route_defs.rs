@@ -9,9 +9,7 @@ struct ProjectRouteDefInputs<'a> {
     session: &'a crate::codebase::analysis_session::AnalysisSession,
 }
 
-fn collect_project_server_route_defs(
-    inputs: ProjectRouteDefInputs<'_>,
-) -> Vec<(PathBuf, String)> {
+fn collect_project_server_route_defs(inputs: ProjectRouteDefInputs<'_>) -> Vec<(PathBuf, String)> {
     let route_files: Vec<PathBuf> = inputs
         .all_files
         .par_iter()
@@ -36,17 +34,13 @@ fn collect_project_server_route_defs(
     else {
         return Vec::new();
     };
-    crate::server_routes::route_defs_from_prepared_facts_with_catalog(
+    let hooks = crate::codebase::ts_source::facts::react_analysis::hooks();
+    (hooks.project_server_routes)(
         inputs.root,
         inputs.tsconfig,
         inputs.tsconfig_catalog,
-        route_files.iter().filter_map(|path| {
-            facts
-                .get_ts_facts(path)
-                .and_then(|facts| facts.server_routes.as_ref())
-                .cloned()
-                .map(|facts| (path.clone(), facts))
-        }),
+        &route_files,
+        facts,
         inputs.session,
     )
 }

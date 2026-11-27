@@ -11,13 +11,15 @@ use super::{CheckFactStats, PlaywrightSettingsKey, PlaywrightTestFacts};
 use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
 use crate::codebase::storybook::StorybookFileFacts;
+use crate::codebase::ts_source::facts::react_analysis::{
+    component::FileAnalysis as ReactFileAnalysis, usages::UsageFileFacts,
+};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_source::FileIdMap;
 use crate::codebase::ts_symbols::FileSymbols;
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
 use crate::playwright::analysis::text_types::AppTextTarget;
 use crate::playwright::selectors::{AppSelector, StaticExportValues};
-use crate::react_traits::analyze::file::FileAnalysis as ReactFileAnalysis;
 use dashmap::DashMap;
 pub use sql_verdicts::{SqlApplicationFacts, SqlFactContext};
 use std::collections::HashMap;
@@ -151,7 +153,7 @@ pub(crate) struct CheckFileFacts {
     pub symbols: Option<Arc<FileSymbols>>,
     pub(crate) legacy_symbols: Option<Arc<FileSymbols>>,
     pub react: Option<Arc<ReactFileAnalysis>>,
-    pub(crate) react_usages: Option<crate::react_traits::pipeline::usages::UsageFileFacts>,
+    pub(crate) react_usages: Option<UsageFileFacts>,
     pub integration: Option<IntegrationFileAnalysis>,
     pub(crate) integration_runner_config:
         Option<crate::integration_tests::runner_config::RunnerConfigFileFacts>,

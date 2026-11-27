@@ -9,8 +9,6 @@ use crate::codebase::ts_resources::{ResourceCall, ResourceDiagnostic};
 use crate::codebase::ts_routes::refs::{RouteHelper, RouteHelperImport, RouteHelperRef, RouteRef};
 use crate::codebase::ts_symbols::FileSymbols;
 use crate::queue::extract::FileFacts as QueueProjectFacts;
-use crate::react_traits::report::types::ComponentFacts;
-use crate::server_routes::model::FileFacts as ServerRouteFileFacts;
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
 #[doc(hidden)]
@@ -29,6 +27,7 @@ mod map;
 mod map_iter;
 pub use map_iter::{TsFactMapIntoIter, TsFactMapIter, TsFactMapIterMut};
 mod plan;
+pub(crate) mod react_analysis;
 pub use call_sites::CallSiteFact;
 pub(crate) use collect::{
     collect_file_facts_from_program, collect_file_facts_from_program_with_semantic,
@@ -161,8 +160,8 @@ pub struct TsFileFacts {
     pub(crate) queue_project: Option<QueueProjectFacts>,
     pub http_calls: Vec<HttpCall>,
     pub process_spawns: Vec<SpawnEdge>,
-    pub(crate) server_routes: Option<ServerRouteFileFacts>,
-    pub react_components: Arc<Vec<ComponentFacts>>,
+    pub(crate) server_routes: Option<react_analysis::server::FileFacts>,
+    pub react_components: Arc<Vec<react_analysis::component::ComponentFacts>>,
     pub effect_calls: Vec<EffectCallFact>,
     pub rsc_environment: Option<RscEnvironmentFact>,
     pub trpc_procedures: Vec<String>,

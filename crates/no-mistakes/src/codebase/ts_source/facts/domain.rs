@@ -38,7 +38,7 @@ pub(crate) struct DomainFacts {
     pub queue_project: Option<crate::queue::extract::FileFacts>,
     pub http_calls: Vec<HttpCall>,
     pub process_spawns: Vec<SpawnEdge>,
-    pub server_routes: Option<crate::server_routes::model::FileFacts>,
+    pub server_routes: Option<super::react_analysis::server::FileFacts>,
     pub rsc_environment: Option<RscEnvironmentFact>,
     pub trpc_procedures: Vec<String>,
     pub trpc_calls: Vec<crate::codebase::ts_trpc::TrpcCallFact>,
@@ -108,7 +108,7 @@ pub(crate) fn collect_domain_facts<'a>(
         Vec::new()
     };
     let server_routes = (plan.server_routes && context.matches_server_route(path))
-        .then(|| crate::server_routes::extract::extract_program(path, source, program));
+        .then(|| (super::react_analysis::hooks().extract_server_routes)(path, source, program));
     let rsc_environment = plan
         .rsc_environment
         .then(|| classify_rsc_environment(program));

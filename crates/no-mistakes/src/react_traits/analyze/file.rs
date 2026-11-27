@@ -1,5 +1,6 @@
 use crate::ast;
-use crate::codebase::ts_source::SourceStore;
+pub(crate) use crate::codebase::ts_source::facts::react_analysis::component::FileAnalysis;
+use crate::codebase::ts_source::{facts::TsFactContext, SourceStore};
 use crate::imports::{
     collect_identifier_references, collect_runtime_imports_from_program, relative_string,
 };
@@ -13,10 +14,6 @@ use crate::react_traits::traits;
 use anyhow::Result;
 use std::path::Path;
 use std::sync::Arc;
-
-pub(crate) struct FileAnalysis {
-    pub(crate) components: std::sync::Arc<Vec<ComponentFacts>>,
-}
 
 #[cfg(not(test))]
 macro_rules! allow_empty_component_return {
@@ -56,6 +53,21 @@ fn analyze_file_inner(
     ast::with_program(abs_path, &source, |program, _src| {
         analyze_program_inner(abs_path, root, &source, program, visible_files)
     })
+}
+
+pub(crate) fn collect_components(
+    path: &Path,
+    source: &str,
+    program: &oxc_ast::ast::Program<'_>,
+    context: &TsFactContext,
+) -> Arc<Vec<ComponentFacts>> {
+    match context.visible_files.as_deref() {
+        Some(visible) => {
+            analyze_program_from_visible(path, &context.root, source, program, visible)
+        }
+        None => analyze_program(path, &context.root, source, program),
+    }
+    .components
 }
 
 pub(crate) fn analyze_program(

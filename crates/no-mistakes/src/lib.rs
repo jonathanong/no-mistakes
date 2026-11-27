@@ -57,3 +57,5 @@ pub use tests::{
 
 pub mod postgres_catalog;
 pub mod postgres_lock_inventory;
+
+mod react_analysis_registration;
