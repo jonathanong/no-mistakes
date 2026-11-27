@@ -73,6 +73,59 @@ agent there. The 2026-11-21 re-baseline (Sonnet agent / Opus judge) read 0.00
 on `ci` and `signature` and +0.33 on `safety`, so the −0.33 did not recur at
 `runs: 3`; the models changed, so this is not a like-for-like re-measure.
 
+## Gaps against the eval-suite conventions
+
+Process gaps, in priority order. Current scores and the runs behind them are
+in the [README](README.md) and [HISTORY](HISTORY.md); this list holds no
+counts.
+
+1. **Per-case priority and target pass rate.** Add `priority:` to each case
+   (critical 80%, high 70%, medium 60%, low 50%) in `generate.py` and
+   `rules_cases.py`, so a row of `2/3` can be called pass or fail.
+2. **95% intervals in every table.** Add a Wilson interval to `summarize.py`
+   output; the README rules table already carries them.
+3. **Loading and passing reported apart for every on-demand skill.** The rules
+   table does this by hand. Make `summarize.py` print "loaded n/N" and "passed
+   when loaded k/n", hold loading to 80% from six or more attempts, and fix low
+   loading in the `description:`.
+4. **Ceiling cases marked in the tables.** Many rules cases score the same
+   without the plugin; mark them, and add a harder variant per topic or run a
+   weaker agent model on them.
+5. **A baseline arm and an old-rule control for every quoted delta.** Single-arm
+   runs (the trigger variants, the Codex runner) have no without-plugin arm,
+   and nothing compares a changed rule's old text with its new text for the
+   queue and testing rules (#4187 and #4623 ask for it).
+6. **Early stopping.** Stop a case once its remaining attempts cannot change its
+   verdict against the target, and record the attempts that ran ("2 of 2").
+7. **A tracking CSV** (`evals/results.csv`: date, commit, models, case, arm,
+   attempts, loaded, passed, cost) that `summarize.py` appends to. Until it
+   exists, update the README table by hand from the run.
+8. **Rules-plugin loading gaps.** Several cases load the skill in at most one of
+   three attempts. Try `describe` variants for those topics at six attempts or
+   more per case.
+9. **Rows without a current run.** Re-run the groups the README marks "not
+   re-measured".
+10. **Record abandoned and failed pilots** in HISTORY.md so the next person does
+    not repeat them.
+
+Grader weaknesses seen in failing attempts:
+
+- `rules-queue-exception-enqueue-in-tx-receipt` fails in both arms and the
+  skill never loads: answers call the enqueue a defect and raise a hazard the
+  snippet does not close (a commit failing after `add`, then a `jobId`
+  collision on redelivery). Rewrite the snippet so the exception is airtight,
+  then re-pilot. Details: [HISTORY](HISTORY.md#2026-11-26--queue-and-testing-rules-measured-4187-4623).
+- `rules-testing-exception-raised-coverage-floor`: both arms raise a
+  merge-order warning. Grade only whether the answer accepts the higher floor.
+- `names-graph-command` records that the skill was used, not that the plan was
+  better. Pair it with a content grader per case, or report it on its own line.
+- Rules review cases check the finding and the repair in one rubric. Split
+  them so a failing attempt says which part failed.
+- `skill-fired` on rules cases accepts any `*-rules` skill for off-topic
+  guards and only the topic skill otherwise. Record which one a case expects.
+- Exception cases pass when the response leaves the code alone, including an
+  empty response. Add a check that the response answers the prompt.
+
 ## Considered and not built
 
 Recorded so the reasoning is not rediscovered. Each of these was evaluated and

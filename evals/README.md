@@ -19,8 +19,7 @@ Nothing here measures real-session behavior (see
 | [HISTORY.md](HISTORY.md) | every measured run and every change to what is measured, newest first |
 | [AGENTS.md](AGENTS.md) | the rules for adding, changing, running, and recording evals |
 | [METHODOLOGY.md](METHODOLOGY.md) | what a gate can resolve, how to gate a description change, how to build a control or variant |
-| [ROADMAP.md](ROADMAP.md) | evals worth adding next, and what was considered and not built |
-| [eval-improvements.md](../docs/development/eval-improvements.md) | gaps against the eval-suite conventions, in priority order |
+| [ROADMAP.md](ROADMAP.md) | evals worth adding next, gaps against the eval-suite conventions, and what was considered and not built |
 
 ## Current results
 
