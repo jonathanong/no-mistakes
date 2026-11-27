@@ -77,7 +77,8 @@ selector and enabled submodules. A matching `CHECKSUMS` entry supplies its `sha2
 fingerprint. A `PATH` entry uses its `remote` value and any `glob` selector as the
 directory fingerprint. `PLUGIN SOURCE` specs use the plugin remote as their
 fingerprint. `composer.lock` reads `packages` and `packages-dev`. A null development section contributes no packages.
-Distribution references take precedence over checksums. A path source
+Distribution references take precedence over checksums. An unpinned archive
+without a checksum uses its distribution URL. A path source
 uses its directory URL and any reference, and a git source with no dist is git.
 
 `lockfile diff` warns and omits unreadable files and malformations in

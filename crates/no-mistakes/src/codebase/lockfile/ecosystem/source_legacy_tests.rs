@@ -55,3 +55,25 @@ fn bundler_submodules_and_pipenv_archive_subdirectories_affect_fingerprints() {
 fn uv_rejects_a_present_source_without_a_known_kind() {
     assert!(packages_for_diff(PackageManager::Uv, &fixture("uv", "unknown-source.lock")).is_err());
 }
+
+#[test]
+fn composer_compares_unpinned_distribution_urls() {
+    let base = packages_for_diff(
+        PackageManager::Composer,
+        &fixture("composer", "archive-url-base.lock"),
+    )
+    .unwrap();
+    let head = packages_for_diff(
+        PackageManager::Composer,
+        &fixture("composer", "archive-url-head.lock"),
+    )
+    .unwrap();
+    assert_eq!(diff(&base, &head).changed, ["example/sample"]);
+}
+
+#[test]
+fn cargo_rejects_nonpositive_lockfile_format_markers() {
+    for name in ["negative-version.lock", "zero-version.lock"] {
+        assert!(packages_for_diff(PackageManager::Cargo, &fixture("cargo", name)).is_err());
+    }
+}

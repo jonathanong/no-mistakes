@@ -1,11 +1,12 @@
 use super::super::super::{ResolutionKind, ResolvedPackage};
 use super::TomlError;
 use serde::Deserialize;
+use std::num::NonZeroU32;
 
 #[derive(Deserialize)]
 struct CargoLock {
     #[serde(default)]
-    version: Option<i64>,
+    version: Option<NonZeroU32>,
     #[serde(default)]
     package: Vec<CargoPackage>,
     #[serde(default)]

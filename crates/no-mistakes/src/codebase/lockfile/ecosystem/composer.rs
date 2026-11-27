@@ -53,7 +53,8 @@ fn parse_entry(entry: &serde_json::Value) -> Result<ResolvedPackage, ComposerErr
     } else if dist.is_none() && source_type == "git" {
         (ResolutionKind::Git, source_ref.to_string())
     } else {
-        let fingerprint = first_text(dist_ref, first_text(text(dist, "shasum"), source_ref));
+        let fallback = first_text(source_ref, text(dist, "url"));
+        let fingerprint = first_text(dist_ref, first_text(text(dist, "shasum"), fallback));
         (ResolutionKind::Registry, fingerprint.to_string())
     };
     Ok(ResolvedPackage {
