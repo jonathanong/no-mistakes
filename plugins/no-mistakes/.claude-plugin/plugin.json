@@ -6,8 +6,8 @@
     "name": "Jonathan Ong",
     "email": "jonathanrichardong@gmail.com"
   },
-  "homepage": "https://github.com/jonathanong/no-mistakes",
-  "repository": "https://github.com/jonathanong/no-mistakes",
+  "homepage": "https://github.com/jongleberry/no-mistakes",
+  "repository": "https://github.com/jongleberry/no-mistakes",
   "license": "MIT",
   "keywords": [
     "static-analysis",

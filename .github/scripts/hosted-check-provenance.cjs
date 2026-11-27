@@ -20,7 +20,7 @@ function validateBuildPair(builds) {
       candidateSelectionRef.ref === candidateSelectionRef.commit);
   if (
     refs?.schemaVersion !== 1 ||
-    refs.repository !== "jonathanong/no-mistakes" ||
+    refs.repository !== "jongleberry/no-mistakes" ||
     !candidateSelection
   )
     throw new Error("Candidate source must be selected from main or an exact immutable commit");
