@@ -126,7 +126,8 @@ function compile(entry) {
     body = [entry.receiver, ...body];
     wildcard = false;
   }
-  return { wildcard, parts: body, message: entry.message };
+  const path = wildcard ? `*.${body.join(".")}` : body.join(".");
+  return { wildcard, parts: body, message: entry.message, path };
 }
 
 module.exports = { schema, compile, assertChains };

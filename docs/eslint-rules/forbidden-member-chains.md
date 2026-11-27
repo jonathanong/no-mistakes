@@ -22,6 +22,11 @@ const { panel: { open } } = other;
 function f(records) {
   return records.entry;
 }
+const method = "open";
+other.panel[method];
+declare const unbound: string;
+other.panel[unbound];
+const { [unbound]: opened } = other.panel;
 ```
 
 ## Allowed
@@ -32,10 +37,8 @@ panel.open;
 other.panel.close;
 const label = "other.panel.open";
 // comment mentioning other.panel.open is not a member access
-other.panel[method];
 const { close } = other.panel;
 const { open } = panel;
-const { [name]: open } = other.panel;
 const { ["open"]: show } = other.panel;
 function f(records) {
   return records.entries;
@@ -83,9 +86,14 @@ dropping the chain. A sibling chain in the same list does not run.
 ```
 
 The match is the static member chain. Dot access and literal bracket keys are
-the same segment. String literals, numeric literals, and no-substitution
-template literals count. `this`, `super`, and `import.meta` are static roots.
-Private names include `#`. Optional `?.` does not change the chain.
+the same segment. String literals, numeric literals, boolean literals, `null`,
+and no-substitution template literals count. A unary `+` or `-` on a numeric
+literal is that number. A `const` binding whose initializer is one of those is
+the same segment, one binding deep. A later alias is not followed. `let`,
+`var`, parameters, and imports are not followed. `this`, `super`, and
+`import.meta` are static roots. Private names include `#`. Optional `?.` does
+not change the chain. A bigint key is not a string segment, so `matrix[1n]`
+does not match `matrix.1`.
 
 Transparent wrappers that do not change the chain are ignored: parentheses,
 `as` assertions (including `as const`), `satisfies`, non-null `!`, angle-bracket
@@ -94,12 +102,16 @@ matching member. A trailing call or `new` whose callee is that member is the
 same access and reports once, on the invocation. A repeated suffix inside one
 chain reports once. Two configured chains may both report on one access.
 
-Dynamic computed keys are explicitly unproven and do not match. That includes
-identifiers, calls, concatenations, and templates with substitutions. A static
-tail after a dynamic key can still match a receiver wildcard; the key itself is
-not guessed. Strings, comments, and JSX member names are not member chains.
-Unrelated paths do not match. The walk proves at most 32 member segments;
-deeper chains are unproven.
+A computed key the rule cannot read is unanalyzable when that missing segment
+could complete a configured path. The finding names the path and repeats the
+configured message. A key the rule can read that is a different segment stays
+quiet, including `true`, `-1`, and `records.entries` against `records.entry`.
+A static tail after an unknown key still matches a receiver wildcard when the
+known suffix is the path (`obj[name].panel.open`). The unknown key is not
+guessed as a definite segment. An unknown key cannot be a private `#` name, so
+it does not match `*.#slot`. Strings, comments, and JSX member names are not
+member chains. The walk proves at most 32 member segments. A deeper chain is
+unproven and stays quiet.
 
 Object destructuring is the same access. `const { open } = other.panel`, a
 rename `const { open: show } = other.panel`, and a nested pattern
@@ -111,16 +123,20 @@ in an array element is the same kind of default,
 completes the chain. A repeated suffix inside one pattern reports once. The
 outer pattern and its default share that pair, so
 `const { panel: { open } = other.panel } = other` reports `*.panel.open` once.
-Computed pattern keys stay unproven and are not reported,
-including a literal computed key such as `{ ["open"]: show }`. A non-computed
-key may be an identifier or a string or numeric literal. A static tail on the
-receiver can still match a wildcard after a dynamic member
+An identifier computed pattern key follows the same `const` rule.
+`const { [method]: open } = other.panel` matches when `method` is a `const`
+string or number. An identifier the rule cannot read, such as
+`const { [unbound]: open } = other.panel`, is unanalyzable when it could
+complete a configured path. Other computed pattern keys stay unproven and are
+not reported, including a literal computed key such as `{ ["open"]: show }`.
+A non-computed key may be an identifier or a string or numeric literal. A
+static tail on the receiver can still match a wildcard after a dynamic member
 (`const { open } = other[name].panel`).
 
-Named roots are file-local spellings, not resolved bindings. The rule does not
-build a scope and ignores lexical shadowing, so a parameter or local does not
-hide a chain. `function f(records) { return records.entry }` is reported for
-`records.entry`.
+Named roots are file-local spellings, not resolved bindings. A parameter or
+local does not hide a chain. `function f(records) { return records.entry }` is
+reported for `records.entry`. Scope is read only for one `const` initializer
+behind a computed key.
 
 ## Fix
 
@@ -138,7 +154,9 @@ records.entry;
 records.entry(); // no-mistakes-disable-line forbidden-member-chains
 ```
 
-`no-mistakes-disable-file` before the first token suppresses the whole file.
+The same comments remove an unanalyzable finding. An unsuppressed copy of that
+access still reports. `no-mistakes-disable-file` before the first token
+suppresses the whole file.
 `no-mistakes/forbidden-member-chains` is the same rule id. A directive-looking
 string does not suppress a finding. ESLint's own suppression comments still
 work when the file is linted with ESLint.

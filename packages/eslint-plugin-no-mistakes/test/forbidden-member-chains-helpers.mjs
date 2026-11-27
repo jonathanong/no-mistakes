@@ -19,6 +19,10 @@ export const drawer = "Toggle the drawer through the helper.";
 export const slot = "Do not read the numeric slot.";
 export const priv = "Do not read the private slot.";
 
+export function unanalyzable(path, message) {
+  return `Cannot tell whether this member chain is \`${path}\`. ${message}`;
+}
+
 export function check(name, options = { chains }) {
   return lint(
     fixture(`${id}/${name}`),

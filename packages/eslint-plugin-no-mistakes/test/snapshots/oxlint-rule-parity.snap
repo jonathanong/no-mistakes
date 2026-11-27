@@ -85,6 +85,7 @@ ESLint 32:12 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel
 ESLint 35:1 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
 ESLint 36:1 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
 ESLint 37:1 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
+ESLint 38:1 no-mistakes/forbidden-member-chains (unanalyzable) Cannot tell whether this member chain is `records.entry`. Use the entry helper.
 ESLint 38:9 no-mistakes/forbidden-member-chains (forbiddenChain) Open the panel through the helper.
 Oxlint 1:1 no-mistakes(forbidden-member-chains) Use the entry helper.
 Oxlint 2:1 no-mistakes(forbidden-member-chains) Use the entry helper.
@@ -115,6 +116,7 @@ Oxlint 32:12 no-mistakes(forbidden-member-chains) Open the panel through the hel
 Oxlint 35:1 no-mistakes(forbidden-member-chains) Open the panel through the helper.
 Oxlint 36:1 no-mistakes(forbidden-member-chains) Open the panel through the helper.
 Oxlint 37:1 no-mistakes(forbidden-member-chains) Open the panel through the helper.
+Oxlint 38:1 no-mistakes(forbidden-member-chains) Cannot tell whether this member chain is `records.entry`. Use the entry helper.
 Oxlint 38:9 no-mistakes(forbidden-member-chains) Open the panel through the helper.
 
 ## gh-api-argument-safety

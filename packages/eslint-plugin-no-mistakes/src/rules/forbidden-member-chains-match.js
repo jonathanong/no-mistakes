@@ -1,6 +1,7 @@
 "use strict";
 
 const MAX_WALK = 32;
+const IMPOSSIBLE = Symbol("impossible");
 const TRANSPARENT = new Set([
   "ChainExpression",
   "ParenthesizedExpression",
@@ -18,22 +19,65 @@ function unwrap(node) {
   return current;
 }
 
+function numericText(node) {
+  const value = unwrap(node);
+  if (value?.type !== "Literal" || typeof value.value !== "number") return null;
+  return String(value.value);
+}
+
 function literalKey(node) {
   const value = unwrap(node);
-  if (
-    value?.type === "Literal" &&
-    (typeof value.value === "string" || typeof value.value === "number")
-  ) {
-    return String(value.value);
+  if (value?.type === "UnaryExpression" && (value.operator === "-" || value.operator === "+")) {
+    const inner = numericText(value.argument);
+    if (inner == null) return null;
+    return value.operator === "-" ? `-${inner}` : inner;
+  }
+  if (value?.type === "Literal") {
+    if (typeof value.value === "bigint") return IMPOSSIBLE;
+    if (
+      typeof value.value === "string" ||
+      typeof value.value === "number" ||
+      typeof value.value === "boolean"
+    ) {
+      return String(value.value);
+    }
+    if (value.value === null) return "null";
+    return null;
   }
   if (value?.type === "TemplateLiteral" && value.expressions.length === 0) {
+    if (value.quasis.some((quasi) => quasi.value.cooked == null)) return null;
     return value.quasis.map((quasi) => quasi.value.cooked).join("");
   }
   return null;
 }
 
-function staticProperty(member) {
-  if (member.computed) return literalKey(member.property);
+function findVariable(scope, name) {
+  while (scope) {
+    const variable = scope.variables.find((candidate) => candidate.name === name);
+    if (variable) return variable;
+    scope = scope.upper;
+  }
+  return null;
+}
+
+// One const hop. A later alias, let, var, parameter, or import stays unresolved.
+function constSegment(node, context) {
+  const value = unwrap(node);
+  if (value?.type !== "Identifier" || !context.sourceCode?.getScope) return null;
+  const variable = findVariable(context.sourceCode.getScope(value), value.name);
+  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  if (!def || def.type !== "Variable" || def.parent?.kind !== "const") return null;
+  if (def.node?.id?.type !== "Identifier" || !def.node.init) return null;
+  return literalKey(def.node.init);
+}
+
+function staticProperty(member, resolveName) {
+  if (member.computed) {
+    const literal = literalKey(member.property);
+    if (literal != null) return literal;
+    const resolved = resolveName?.(member.property);
+    return resolved == null ? null : resolved;
+  }
   const property = member.property;
   return property.type === "PrivateIdentifier" ? `#${property.name}` : property.name;
 }
@@ -47,31 +91,36 @@ function rooted(segments, node) {
   return true;
 }
 
-function computeChain(member) {
+function computeChain(member, resolveName) {
   const segments = [];
   let current = member;
   for (let steps = 0; current?.type === "MemberExpression"; steps += 1) {
     if (steps >= MAX_WALK) return null;
-    const name = staticProperty(current);
-    if (name == null) return { segments, rooted: false };
-    segments.unshift(name);
+    segments.unshift(staticProperty(current, resolveName));
     current = unwrap(current.object);
   }
   return { segments, rooted: rooted(segments, current) };
 }
 
-function matches(info, chain) {
-  if (!info) return false;
-  const { segments, rooted: fromRoot } = info;
-  const { parts } = chain;
-  if (segments.length < parts.length) return false;
-  const start = segments.length - parts.length;
-  for (let index = 0; index < parts.length; index += 1) {
-    if (segments[start + index] !== parts[index]) return false;
+function disposition(info, chain) {
+  if (!info || info.segments.length < chain.parts.length) return null;
+  const start = info.segments.length - chain.parts.length;
+  const { rooted: fromRoot } = info;
+  if (!chain.wildcard) {
+    if (!fromRoot || start !== 0) return null;
+  } else if (start === 0 && fromRoot) return null;
+  let hole = false;
+  for (let index = 0; index < chain.parts.length; index += 1) {
+    const segment = info.segments[start + index];
+    const part = chain.parts[index];
+    if (segment == null) {
+      if (part.startsWith("#")) return null;
+      hole = true;
+      continue;
+    }
+    if (segment !== part) return null;
   }
-  // A wildcard needs a receiver. An opaque receiver is not one of the segments.
-  if (!chain.wildcard) return fromRoot && start === 0;
-  return start > 0 || !fromRoot;
+  return hole ? "unanalyzable" : "match";
 }
 
 function surface(node) {
@@ -86,14 +135,15 @@ function surface(node) {
   return current;
 }
 
-function hasMatchingAncestor(node, chain, info) {
+function hasMatchingAncestor(node, chain, info, kind) {
   let current = node;
   for (;;) {
     const parent = surface(current).parent;
     if (!parent || parent.type !== "MemberExpression" || unwrap(parent.object) !== current) {
       return false;
     }
-    if (matches(info(parent), chain)) return true;
+    const parentKind = disposition(info(parent), chain);
+    if (parentKind === "match" || (kind !== "match" && parentKind === "unanalyzable")) return true;
     current = parent;
   }
 }
@@ -112,9 +162,11 @@ function expressionInfo(node, memberInfo) {
 }
 
 module.exports = {
-  matches,
+  constSegment,
   computeChain,
+  disposition,
   hasMatchingAncestor,
   invocationOf,
   expressionInfo,
+  unwrap,
 };

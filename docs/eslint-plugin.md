@@ -529,7 +529,9 @@ See [the rule reference](eslint-rules/no-comment-phrases.md).
 
 Opt-in bans for configured static member chains. Each `chains` entry sets
 `path`, an optional `receiver` (`*` or a root name), and `message`. A malformed
-`path` is a schema error. Object destructuring of the final segment matches,
+`path` is a schema error. A `const` string or number key is that segment. A
+computed key the rule cannot read is unanalyzable when it could complete a
+configured path. Object destructuring of the final segment matches,
 and a named root ignores shadowing. File scope stays on the lint config. See
 [the rule reference](eslint-rules/forbidden-member-chains.md).
 
