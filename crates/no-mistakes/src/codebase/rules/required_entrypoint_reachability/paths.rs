@@ -10,9 +10,8 @@ pub(super) fn resolve_entrypoint(root: &Path, configured: &str) -> Option<PathBu
         root.join(configured)
     };
     let path = crate::codebase::ts_resolver::normalize_path(&path);
-    use crate::codebase::ts_resolver::absolute_normalized_path;
-    absolute_normalized_path(&path)
-        .starts_with(absolute_normalized_path(root))
+    use crate::codebase::ts_resolver::is_within;
+    is_within(&path, root)
         .then_some(path)
 }
 

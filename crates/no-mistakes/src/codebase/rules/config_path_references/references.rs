@@ -1,5 +1,5 @@
 use super::*;
-use crate::codebase::ts_resolver::{absolute_normalized_path, normalize_path};
+use crate::codebase::ts_resolver::{is_within, normalize_path};
 use crate::codebase::ts_source::relative_slash_path;
 use globset::Glob;
 
@@ -18,7 +18,7 @@ pub(super) fn reference_exists(
     let target = normalize_path(&base.join(reference));
     let root = normalize_path(root);
     let config_file = normalize_path(config_file);
-    let contained = absolute_normalized_path(&target).starts_with(absolute_normalized_path(&root));
+    let contained = is_within(&target, &root);
     if contained && tracked_reference_exists(&root, &target, rel_files) {
         return Ok(true);
     }
