@@ -36,7 +36,7 @@ small static wrapper when the relationship should be analyzable.
 
 ## Limits
 
-`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. A computed identifier key is not the `fetch` property, including when that identifier is spelled `fetch`: `const fetch = "setTimeout"; const { [fetch]: schedule } = globalThis`. `const request = fetch as typeof fetch` is still `fetch`. `(globalThis as typeof globalThis).fetch`, `globalThis["fetch" as const]`, and `const { fetch: request } = globalThis as typeof globalThis` are still the global `fetch`. `as` and `satisfies` around a string URL keep it static. `import type { fetch }` does not shadow the runtime global `fetch`.
+`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. A computed identifier key is not the `fetch` property, including when that identifier is spelled `fetch`: `const fetch = "setTimeout"; const { [fetch]: schedule } = globalThis`. `const request = fetch as typeof fetch` is still `fetch`. `(globalThis as typeof globalThis).fetch`, `globalThis["fetch" as const]`, and `const { fetch: request } = globalThis as typeof globalThis` are still the global `fetch`. `as` and `satisfies` around a string URL keep it static. `import type { fetch }` does not shadow the runtime global `fetch`, and `import type { window }` does not shadow `window.fetch`.
 
 ## Suppression
 

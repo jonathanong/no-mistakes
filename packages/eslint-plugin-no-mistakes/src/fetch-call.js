@@ -37,7 +37,7 @@ function unboundRoot(node, context) {
   let scope = context.sourceCode.getScope(node);
   while (scope) {
     const variable = scope.variables?.find((item) => item.name === node.name);
-    if (variable) return !variable.defs?.some((def) => LOCAL_BINDING_TYPES.has(def.type));
+    if (variable) return !variable.defs?.some(shadowsFetch);
     scope = scope.upper;
   }
   return true;

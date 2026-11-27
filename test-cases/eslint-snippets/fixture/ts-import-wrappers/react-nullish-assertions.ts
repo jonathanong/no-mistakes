@@ -74,3 +74,9 @@ export function annotatedUnresolved(props: { children: ReactNode }) {
 export function annotatedParam({ children }: HiddenNode) {
   return children ?? null;
 }
+
+export function namedExpression(node: Hidden.ReactNode) {
+  return function node() {
+    return node ?? null;
+  };
+}

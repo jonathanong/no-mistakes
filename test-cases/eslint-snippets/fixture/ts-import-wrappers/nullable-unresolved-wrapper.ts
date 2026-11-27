@@ -22,3 +22,15 @@ export function destructured(): Promise<Widget | null> {
   const { wrapNullable } = require(moduleName);
   return wrapNullable(getWidget());
 }
+
+export function thisArg(): Promise<Widget | null> {
+  return wrapNullable.call(getWidget());
+}
+
+export function appliedThis(): Promise<Widget | null> {
+  return wrapNullable.apply(getWidget(), []);
+}
+
+export function forwardedArg(): Promise<Widget | null> {
+  return wrapNullable.call(null, getWidget());
+}

@@ -25,3 +25,17 @@ function E(props?: Props) {
   const { children } = props!;
   return children ?? null;
 }
+
+interface Base {
+  child: ReactNode;
+  kept: ReactNode;
+}
+interface Overridden extends Base {
+  child: string;
+}
+function overriddenChild(props: Overridden) {
+  return props.child ?? "";
+}
+function overriddenKept(props: Overridden) {
+  return props.kept ?? "";
+}

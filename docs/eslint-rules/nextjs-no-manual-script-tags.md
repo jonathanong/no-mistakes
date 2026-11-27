@@ -39,7 +39,7 @@ Both inline-id options default to no exemptions.
 `unanalyzable` is `"finding"` or `"ignore"`. It defaults to `"finding"`.
 Outside `app` and `pages`, a non-static `require`, `import()`, or
 `import = require` reports `unanalyzable` on each raw `<script>` because the
-module might be `next/`. JSON-LD and an allowed inline id are checked first.
+module might be `next/`. A namespace alias such as `import Svg = Icons.Svg` is not a module import. JSON-LD and an allowed inline id are checked first.
 JSON-LD still reports `unanalyzable` when a structured-data option is set.
 `"ignore"` drops only that uncertain report. A static
 `require("next/…")` or `import Name = require("next/…")` is a Next.js file. An expression-free template counts by its cooked text, so an escaped slash in a `next/script` template is still that module. A type-only import, including `import type Head = require("next/head")` and `import { type Script } from "next/script"`, does not.

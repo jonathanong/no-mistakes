@@ -203,6 +203,7 @@ function createNullishState(context) {
 
   function enterFunction(node) {
     pushScope("function");
+    if (node.type === "FunctionExpression") if (isIdentifier(node.id)) defineBinding(node.id.name);
     for (const param of node.params) defineParam(param);
   }
 

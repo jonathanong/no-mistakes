@@ -32,7 +32,7 @@ of those references. Optional calls are supported.
 For `.call` and `.apply`, the rule checks the forwarded options position. It reports a recognized `fetch` target when an opaque forwarding list
 or an argument spread hides the options position.
 
-`as` and `satisfies` around the options object, the method value, or a computed `"method"` key do not hide a dynamic method or flag a literal one. `import type { fetch }` does not shadow the runtime global `fetch`.
+`as` and `satisfies` around the options object, the method value, or a computed `"method"` key do not hide a dynamic method or flag a literal one. `import type { fetch }` does not shadow the runtime global `fetch`, and `import type { window }` does not shadow `window.fetch`.
 
 Within an options object literal, properties take effect in source order.
 A spread or computed key that could set `method` makes it unresolved. A later

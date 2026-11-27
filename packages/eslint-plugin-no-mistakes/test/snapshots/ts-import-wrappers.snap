@@ -308,6 +308,17 @@
           "messageId": "dynamic",
           "ruleId": "no-mistakes/nextjs-static-fetch-url",
           "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 17,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/fetch-type-only.ts",
+          "line": 7,
+          "message": "fetch() URL must be a string literal or an expression-free template literal so it can be statically analyzed.",
+          "messageId": "dynamic",
+          "ruleId": "no-mistakes/nextjs-static-fetch-url",
+          "severity": 2
         }
       ],
       "name": "type-only fetch url",
@@ -599,6 +610,17 @@
           "endLine": 26,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish.tsx",
           "line": 26,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 26,
+          "endLine": 40,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish.tsx",
+          "line": 40,
           "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
           "messageId": "nullish",
           "ruleId": "no-mistakes/react-no-nullish-react-node",
@@ -1447,7 +1469,30 @@
     },
     {
       "file": "nullable-unresolved-wrapper.ts",
-      "findings": [],
+      "findings": [
+        {
+          "column": 28,
+          "endColumn": 39,
+          "endLine": 27,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved-wrapper.ts",
+          "line": 27,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 40,
+          "endLine": 31,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved-wrapper.ts",
+          "line": 31,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
       "name": "ignored unresolved wrapper",
       "options": {
         "getterCalleePatterns": [
@@ -1837,6 +1882,72 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 40,
+          "endLine": 27,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved-wrapper.ts",
+          "line": 27,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 28,
+          "endColumn": 39,
+          "endLine": 27,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved-wrapper.ts",
+          "line": 27,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 45,
+          "endLine": 31,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved-wrapper.ts",
+          "line": 31,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 40,
+          "endLine": 31,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved-wrapper.ts",
+          "line": 31,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 46,
+          "endLine": 35,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved-wrapper.ts",
+          "line": 35,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 34,
+          "endColumn": 45,
+          "endLine": 35,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved-wrapper.ts",
+          "line": 35,
+          "message": "Could not resolve whether 'getWidget' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
         }
       ],
       "name": "unresolved wrapper is not inside",
@@ -1954,6 +2065,13 @@
             "file": "fetch-type-only.ts",
             "line": 5,
             "message": "fetch() URL must be a string literal or an expression-free template literal so it can be statically analyzed."
+          },
+          {
+            "code": "no-mistakes(nextjs-static-fetch-url)",
+            "column": 14,
+            "file": "fetch-type-only.ts",
+            "line": 7,
+            "message": "fetch() URL must be a string literal or an expression-free template literal so it can be statically analyzed."
           }
         ],
         "name": "fetch-type-only.ts",
@@ -2019,7 +2137,22 @@
       },
       {
         "file": "nullable-unresolved-wrapper.ts",
-        "findings": [],
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 28,
+            "file": "nullable-unresolved-wrapper.ts",
+            "line": 27,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 29,
+            "file": "nullable-unresolved-wrapper.ts",
+            "line": 31,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          }
+        ],
         "name": "nullable-unresolved-wrapper.ts",
         "options": null
       }
@@ -2368,6 +2501,48 @@
             "file": "nullable-unresolved-wrapper.ts",
             "line": 23,
             "message": "Could not resolve whether 'getWidget' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-unresolved-wrapper.ts",
+            "line": 27,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 28,
+            "file": "nullable-unresolved-wrapper.ts",
+            "line": 27,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-unresolved-wrapper.ts",
+            "line": 31,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 29,
+            "file": "nullable-unresolved-wrapper.ts",
+            "line": 31,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-unresolved-wrapper.ts",
+            "line": 35,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 34,
+            "file": "nullable-unresolved-wrapper.ts",
+            "line": 35,
+            "message": "Could not resolve whether 'getWidget' is the configured getter or wrapper. Use a static import."
           }
         ],
         "name": "nullable-unresolved-wrapper.ts",
@@ -2675,6 +2850,13 @@
             "column": 10,
             "file": "react-nullish.tsx",
             "line": 26,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish.tsx",
+            "line": 40,
             "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
           }
         ],

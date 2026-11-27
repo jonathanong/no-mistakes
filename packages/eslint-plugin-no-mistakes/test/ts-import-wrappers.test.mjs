@@ -463,7 +463,7 @@ describe("typescript import wrappers", () => {
       cases
         .find((item) => item.name === "import-equals and wrapped ReactNode")
         .findings.map((f) => f.line),
-    ).toEqual([5, 9, 17, 21, 26]);
+    ).toEqual([5, 9, 17, 21, 26, 40]);
     expect(
       cases.find((item) => item.name === "wrapped fetch method").findings.map((f) => f.line),
     ).toEqual([2, 3, 4, 5]);
@@ -475,7 +475,7 @@ describe("typescript import wrappers", () => {
     ).toEqual([4]);
     expect(
       cases.find((item) => item.name === "type-only fetch url").findings.map((f) => f.line),
-    ).toEqual([5]);
+    ).toEqual([5, 7]);
     expect(
       cases.find((item) => item.name === "require next/head").findings.map((f) => f.messageId),
     ).toEqual(["script"]);
@@ -728,8 +728,21 @@ describe("typescript import wrappers", () => {
       [12, "unanalyzable"],
       [23, "unanalyzable"],
       [23, "unanalyzable"],
+      [27, "unanalyzable"],
+      [27, "wrapper"],
+      [31, "unanalyzable"],
+      [31, "wrapper"],
+      [35, "unanalyzable"],
+      [35, "unanalyzable"],
     ]);
-    expect(cases.find((item) => item.name === "ignored unresolved wrapper").findings).toEqual([]);
+    expect(
+      cases
+        .find((item) => item.name === "ignored unresolved wrapper")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [27, "wrapper"],
+      [31, "wrapper"],
+    ]);
 
     const oxlint = {
       "react-use": oxlintOn(".oxlintrc-react-use.json", [
@@ -808,10 +821,28 @@ describe("typescript import wrappers", () => {
       0,
       JSON.stringify(oxlint["nullish-ignore"].findings),
     );
-    assert.equal(
-      oxlint["nullable-ignore"].status,
-      0,
-      JSON.stringify(oxlint["nullable-ignore"].findings),
+    assert.deepEqual(
+      oxlint["nullable-ignore"].findings.map((item) => [
+        item.file,
+        item.findings.map((finding) => [finding.line, finding.message]),
+      ]),
+      [
+        ["nullable-relay-getter.ts", []],
+        ["nullable-unresolved-name.ts", []],
+        [
+          "nullable-unresolved-wrapper.ts",
+          [
+            [
+              27,
+              "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+            ],
+            [
+              31,
+              "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+            ],
+          ],
+        ],
+      ],
     );
     assert.equal(
       oxlint["script-ignore"].status,
