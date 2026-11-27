@@ -48,6 +48,92 @@ said exactly that. The queue-rules exception does not apply to this snippet.
 the edit was dropped and the arms were not run at 3. The case stays as it
 was; the ROADMAP says what a redesign needs.
 
+## 2026-11-26 — holdout for candidate A: 18/18 loaded against 0/18
+
+**Run:** the pre-registered holdout (gate 6), run after A passed G1–G3 and
+won the tie rule. `heldout-04` to `heldout-09`, one `--case` invocation each,
+`--ablation none --runs 3 -j 3`. The shipped description ran from `evals/`
+and A from `evals-variants/nm-load-before/`, in the same session. Claude CLI
+2.1.332, agent `claude-sonnet-5-5`, judge `claude-opus-5-5`, 36 attempts,
+zero errored. Cost `$7.12`: `$4.73` agent and `$2.39` judge (shipped
+`$2.07` + `$1.38`, A `$2.66` + `$1.01`). Reports outside git at
+`~/.cache/no-mistakes/evals/2026-11-26-holdout/`.
+
+| held-out case | loaded, shipped | loaded, A | passed, shipped | passed, A |
+| --- | --- | --- | --- | --- |
+| `heldout-04-swap-the-arg` | 0/3 | 3/3 | 0/3 | 3/3 |
+| `heldout-05-other-side-of-the-outbox` | 0/3 | 3/3 | 0/3 | 3/3 |
+| `heldout-06-two-copies` | 0/3 | 3/3 | 0/3 | 3/3 |
+| `heldout-07-second-producer` | 0/3 | 3/3 | 0/3 | 3/3 |
+| `heldout-08-deleting-a-page` | 0/3 | 3/3 | 0/3 | 3/3 |
+| `heldout-09-which-workflows` | 0/3 | 3/3 | 0/3 | 2/3 |
+| **total** | **0/18** | **18/18** | **0/18** | **17/18** |
+
+**Verdict: A ships.** On wording the description was never tuned against,
+the shipped description loaded on no attempt and A on every one. "Passed" here
+includes `skill-fired`, so the passed columns follow loading. The shipped
+description's misses read like the control's: a plan that names the work and
+does not load the skill. The one A failure, `heldout-09`, loaded the skill and
+named `ci impact`, but failed `workflow-trigger-impact`: it planned to read
+each workflow's `on:` block rather than say which workflows a
+`modules/shared` change triggers. All nine held-out cases are now spent.
+
+**Abandoned first attempts, no cost.** Two earlier invocations, one with
+`--case 'heldout-0[4-9]*'` and one with `--tag heldout --case '0[4-9]-*'`,
+matched no cases ("No eval cases found") and ran nothing. The cause was not
+investigated; one exact case name per invocation worked.
+
+Holdout cases share the plan-mode, empty-sandbox setup, so this cannot show a
+win that holds outside that setup.
+
+## 2026-11-26 — candidate A ("Load before answering"): passes its gates
+
+**Run:** main `24768fa692` plus the gates commit; `evals/variants/nm-load-before/`, `python3 evals/generate.py
+--variant nm-load-before`, then `--eval-dir evals-variants/nm-load-before
+--ablation none --runs 3 -j 4`, one invocation per flow, all eleven flows,
+Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge `claude-opus-5-5`, 159
+attempts, zero errored and `partial: false` on every flow. Cost `$26.26`:
+`$17.87` agent and `$8.39` judge. Reports outside git at
+`~/.cache/no-mistakes/evals/2026-11-26-skill-nm-load-before/<flow>.json`.
+Gates: [pre-registered](#2026-11-26--gates-for-the-no-mistakes-description-candidates-a-and-b).
+Control: the with arm of the
+[tool-skill control](#2026-11-26--tool-skill-control-all-eleven-flows-re-measured).
+
+| flow | loaded, control | loaded, A | gate | content-only, control | content-only, A |
+| --- | --- | --- | --- | --- | --- |
+| `before-edit` | 12/18 | **18/18** | ≥ 8 | 1.00 | 0.94 |
+| `after-edit` | 7/12 | **12/12** | ≥ 4 | 1.00 | 1.00 |
+| `signature` | 0/12 | **12/12** | — | 1.00 | 1.00 |
+| `lang-graph` | 7/12 | **11/12** | ≥ 4 | 0.92 | 1.00 |
+| `usage` | 5/12 | 6/12 | ≥ 3 | 0.92 | 1.00 |
+| `queues` | 0/12 | 3/12 | — | 1.00 | 1.00 |
+| `ci` | 1/12 | 6/12 | ≥ 0 | 1.00 | 1.00 |
+| `duplication` | 0/9 | 0/9 | — | 0.89 | 0.78 |
+| `safety` | 0/6 | 0/6 | — | 0.83 | 1.00 |
+| `napi` | 0/12 | 1/12 | — | 1.00 | 1.00 |
+| **summed should-fire** | 32/117 | **69/117** | ≥ 48 | | |
+| `neg-hard` loaded | 0/12 | 0/12 | ≤ 4 | | |
+| `neg-hard` invented commands | 2/12 | 0/12 | ≤ 6 | | |
+| each flow's negative case | 0/3 | 0/3 | ≤ 2 | | |
+
+Content-only is the mean with-arm score with `skill-fired` and
+`names-graph-command` left out. G1, G2 and G3 pass. On content, `before-edit`
+dropped by two attempts on one case (below), and `duplication`'s drop is on a
+flow where neither description loaded.
+
+**Failing attempts read.** `before-edit-03-full-suite` failed 2/3 with the
+skill loaded, on `produces-reduced-test-set`: the plan diagnoses the barrel
+fan-out and lists `tests plan` and `tests why`, then stops short of naming the
+reduced set. The control passed that grader 3/3 here, and the 2026-11-21 run
+1/3 with the skill and 0/3 without, so the case swings by two on its own; it
+is the one content drop to re-check. `usage-04-paths-in-ci` failed 2/3
+with the skill loaded, on `names-graph-command` only: both answers passed the
+content grader and explained the format without naming a full command.
+`usage-01-json-for-scripting` never loaded (0/3): each
+answer says "I can't tell which tooling you mean", so the prompt does not name
+the tool. The `duplication` misses never loaded the skill. No failing attempt quotes or follows
+the changed sentence.
+
 ## 2026-11-26 — candidate B ("or planning how to answer"): passes its gates, not shipped
 
 **Run:** `evals/variants/nm-load-plan/`, set up the same way as candidate A
