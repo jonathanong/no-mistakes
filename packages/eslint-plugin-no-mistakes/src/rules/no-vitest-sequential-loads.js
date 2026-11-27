@@ -139,8 +139,27 @@ function reassignedVitestRequire(callee, context) {
   );
 }
 
+function dynamicLetRequire(callee, context) {
+  const root = bindingRoot(callee);
+  if (!root) return false;
+  const variable = resolveVariable(root, context);
+  if (!variable || variable.defs.length !== 1) return false;
+  const def = variable.defs[0];
+  return (
+    def.type === "Variable" &&
+    def.parent?.kind !== "const" &&
+    def.node?.id?.type === "Identifier" &&
+    requireResolution(def.node.init, context)?.source === null
+  );
+}
+
 function unresolvedSequential(callee, context) {
-  return isUnresolved(moduleLoad(callee, context)) || reassignedVitestRequire(callee, context);
+  const target = unwrapSequence(callee);
+  return (
+    isUnresolved(moduleLoad(target, context)) ||
+    reassignedVitestRequire(target, context) ||
+    dynamicLetRequire(target, context)
+  );
 }
 
 function isUnshadowedNamespace(identifier, context, namespaces) {

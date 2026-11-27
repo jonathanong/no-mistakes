@@ -140,7 +140,7 @@ function frameworkBindingOpaque(node, context, seen = new Set()) {
     if (known && memberPropertyName(node) === null) return false;
     return frameworkBindingOpaque(node.object, context, seen);
   }
-  if (node.type !== "Identifier" || seen.has(node.name)) return false;
+  if (node.type !== "Identifier") return false;
   let scope = context.sourceCode.getScope(node);
   while (scope) {
     const found = scope.variables.find((candidate) => candidate.name === node.name);
@@ -148,18 +148,21 @@ function frameworkBindingOpaque(node, context, seen = new Set()) {
       scope = scope.upper;
       continue;
     }
-    if (found.defs.length !== 1) return false;
-    seen.add(node.name);
+    if (seen.has(found) || found.defs.length !== 1) return false;
+    seen.add(found);
     const def = found.defs[0];
-    const required = requireResolution(def.node?.init, context);
-    if (required?.source === null && def.type === "Variable") return true;
     if (opaqueImportEquals(def)) return true;
-    if (def.type === "Variable" && def.node?.id?.type === "ObjectPattern") {
+    if (def.type !== "Variable") return false;
+    const required = requireResolution(def.node?.init, context);
+    if (required?.source === null) return true;
+    if (def.node?.id?.type === "ObjectPattern") {
       const key = patternKey(def.node.id, node.name);
-      if (key === null && required?.source === null) return true;
+      if (key === null && frameworkBindingModule(def.node.init, context)) return false;
     }
-    if (opaqueIdentifierAlias(def, context, seen, frameworkBindingOpaque)) return true;
-    return false;
+    return (
+      opaqueIdentifierAlias(def, context, seen, frameworkBindingOpaque) ||
+      Boolean(def.node?.init && frameworkBindingOpaque(def.node.init, context, seen))
+    );
   }
   return false;
 }

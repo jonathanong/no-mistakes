@@ -1,5 +1,7 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
+
 function staticImportSource(definition) {
   return require("./async-target-bindings").staticImportSource(definition);
 }
@@ -16,8 +18,9 @@ function opaqueImportEquals(def) {
 
 function opaqueIdentifierAlias(def, context, seen, opaque) {
   if (def.type !== "Variable" || def.node?.id?.type !== "Identifier") return false;
-  if (def.node.init?.type !== "Identifier") return false;
-  return opaque(def.node.init, context, seen);
+  const init = unwrapExpression(def.node.init);
+  if (init?.type !== "Identifier") return false;
+  return opaque(init, context, seen);
 }
 
 module.exports = { opaqueIdentifierAlias, opaqueImportEquals };

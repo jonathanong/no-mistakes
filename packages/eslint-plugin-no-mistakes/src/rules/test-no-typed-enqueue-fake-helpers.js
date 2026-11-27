@@ -86,6 +86,16 @@ function patternExportName(pattern, name) {
   return null;
 }
 
+function memberFramework(variable, sourceCode) {
+  const init = unwrapExpression(variable.node.init);
+  if (init?.type !== "MemberExpression") return false;
+  const object = unwrapExpression(init.object);
+  const source =
+    requireSource(object, scopeContext(sourceCode)) ||
+    (object?.type === "Identifier" ? namespaceModule(object, sourceCode) : null);
+  return frameworkModules.get(memberPropertyName(init)) === source;
+}
+
 function isFrameworkReceiver(receiver, sourceCode) {
   receiver = unwrapExpression(receiver);
   if (receiver?.type === "Identifier") {
@@ -99,8 +109,10 @@ function isFrameworkReceiver(receiver, sourceCode) {
       return true;
     }
     const variable = binding?.defs.length === 1 ? binding.defs[0] : null;
-    if (variable?.type !== "Variable" || variable.node?.id?.type !== "ObjectPattern") return false;
-    if (isReassigned(receiver, scopeContext(sourceCode))) return false;
+    if (variable?.type !== "Variable" || isReassigned(receiver, scopeContext(sourceCode)))
+      return false;
+    if (variable.node?.id?.type === "Identifier") return memberFramework(variable, sourceCode);
+    if (variable.node?.id?.type !== "ObjectPattern") return false;
     const init = unwrapExpression(variable.node.init);
     const source =
       requireSource(variable.node.init, scopeContext(sourceCode)) ||

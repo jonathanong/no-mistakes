@@ -77,7 +77,7 @@ function createBindingResolver(context) {
       if (required) {
         if (required.source === null) return { kind: "unknown", root: node, required: true };
         if (["vitest", "vitest/config", "vite"].includes(required.source)) {
-          return { kind: "namespace", source: required.source, root: node };
+          return { kind: "namespace", source: required.source, root: required.source };
         }
         return null;
       }

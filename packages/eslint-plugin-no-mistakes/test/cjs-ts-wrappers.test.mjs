@@ -32,6 +32,7 @@ const groups = [
       "fixture-default.test.ts",
       "late-binding.js",
       "nested-destructure.js",
+      "let-dynamic.test.ts",
     ],
     valid: [
       "not-a-runner.test.ts",
@@ -46,7 +47,7 @@ const groups = [
     rule: "no-vitest-sequential",
     dir: "sequential-ignore",
     options: [{ unanalyzable: "ignore" }],
-    valid: ["dynamic.test.ts"],
+    valid: ["dynamic.test.ts", "let-dynamic.test.ts"],
   },
   {
     rule: "module-mock-boundary",
@@ -59,8 +60,14 @@ const groups = [
       "identifier-alias.test.ts",
       "call-apply.test.ts",
       "inline-require.test.ts",
+      "opaque-follow.test.ts",
     ],
-    valid: ["type-only-equals.test.ts", "suppressed.test.ts"],
+    valid: [
+      "type-only-equals.test.ts",
+      "suppressed.test.ts",
+      "static-member.test.ts",
+      "resolved-computed.test.ts",
+    ],
   },
   {
     rule: "module-mock-boundary",
@@ -71,7 +78,7 @@ const groups = [
   {
     rule: "module-mock-preserve-exports",
     dir: "preserve",
-    invalid: ["mocks.test.ts", "dynamic.test.ts", "call-apply.test.ts"],
+    invalid: ["mocks.test.ts", "dynamic.test.ts", "call-apply.test.ts", "opaque-follow.test.ts"],
     valid: ["suppressed.test.ts"],
   },
   {
@@ -92,6 +99,7 @@ const groups = [
       "dynamic.test.ts",
       "dynamic-forward.test.ts",
       "shapes.test.ts",
+      "member-alias.test.ts",
     ],
     valid: ["foo.mock.test.ts", "expect-only.test.ts"],
   },
@@ -182,6 +190,7 @@ const groups = [
       "wrapped-fn.test.ts",
       "namespace-vi.test.ts",
       "function-type.test.ts",
+      "member-vi.test.ts",
     ],
     valid: ["tuple.test.ts", "reassign.test.ts", "other-export.test.ts"],
   },
@@ -200,8 +209,8 @@ const groups = [
   {
     rule: "vitest-timeout-cap",
     dir: "timeout",
-    invalid: ["cjs.test.ts", "vitest.config.ts", "apply.test.ts"],
-    valid: ["dynamic.test.ts"],
+    invalid: ["cjs.test.ts", "vitest.config.ts", "apply.test.ts", "call-receiver.test.ts"],
+    valid: ["dynamic.test.ts", "other-receiver.test.ts"],
   },
   {
     rule: "vitest-timeout-cap",
@@ -223,7 +232,14 @@ const groups = [
     rule: "test-no-skips",
     dir: "skips",
     options: [{ testModules: ["./custom-test"] }],
-    invalid: ["configured.test.ts", "wrappers.test.ts", "dynamic.test.ts", "awaited.test.ts"],
+    invalid: [
+      "configured.test.ts",
+      "wrappers.test.ts",
+      "dynamic.test.ts",
+      "awaited.test.ts",
+      "member-require.js",
+    ],
+    valid: ["not-a-runner.js"],
   },
   {
     rule: "test-no-skips",

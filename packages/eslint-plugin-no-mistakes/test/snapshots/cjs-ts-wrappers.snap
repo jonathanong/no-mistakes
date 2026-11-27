@@ -13,6 +13,18 @@
       "options": null
     },
     {
+      "file": "static-member.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "resolved-computed.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "mocks.test.ts",
       "findings": [
         {
@@ -203,6 +215,57 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "opaque-follow.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 4,
+          "file": "opaque-follow.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 20,
+          "endLine": 8,
+          "file": "opaque-follow.test.ts",
+          "line": 8,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 11,
+          "file": "opaque-follow.test.ts",
+          "line": 11,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 13,
+          "file": "opaque-follow.test.ts",
+          "line": 13,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "module-mock-boundary:boundary-ignore": [
@@ -290,6 +353,57 @@
           "endLine": 4,
           "file": "call-apply.test.ts",
           "line": 4,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "opaque-follow.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "opaque-follow.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 45,
+          "endLine": 8,
+          "file": "opaque-follow.test.ts",
+          "line": 8,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 11,
+          "file": "opaque-follow.test.ts",
+          "line": 11,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 47,
+          "endLine": 13,
+          "file": "opaque-follow.test.ts",
+          "line": 13,
           "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/module-mock-preserve-exports",
@@ -790,11 +904,50 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "let-dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 3,
+          "file": "let-dynamic.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 26,
+          "endLine": 5,
+          "file": "let-dynamic.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "no-vitest-sequential:sequential-ignore": [
     {
       "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "let-dynamic.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -1560,6 +1713,18 @@
   ],
   "test-no-skips:skips": [
     {
+      "file": "not-a-runner.js",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
       "file": "configured.test.ts",
       "findings": [
         {
@@ -1706,6 +1871,63 @@
           "endLine": 3,
           "file": "awaited.test.ts",
           "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "member-require.js",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 11,
+          "endLine": 2,
+          "file": "member-require.js",
+          "line": 2,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 28,
+          "endLine": 3,
+          "file": "member-require.js",
+          "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 32,
+          "endColumn": 36,
+          "endLine": 4,
+          "file": "member-require.js",
+          "line": 4,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 31,
+          "endLine": 5,
+          "file": "member-require.js",
+          "line": 5,
           "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
           "messageId": "modifier",
           "ruleId": "no-mistakes/test-no-skips",
@@ -1944,6 +2166,39 @@
           "line": 4,
           "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "member-vi.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 5,
+          "file": "member-vi.test.ts",
+          "line": 5,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 6,
+          "file": "member-vi.test.ts",
+          "line": 6,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
           "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
           "severity": 2
         }
@@ -2370,6 +2625,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "member-alias.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 7,
+          "file": "member-alias.test.ts",
+          "line": 1,
+          "message": "Cannot tell whether a module mock mocks a module. Use a static vi.mock or jest.mock call.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "vitest-mock-test-file-naming:naming-ignore": [
@@ -2387,6 +2660,12 @@
   "vitest-timeout-cap:timeout": [
     {
       "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "other-receiver.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -2448,6 +2727,35 @@
           "file": "apply.test.ts",
           "line": 2,
           "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "call-receiver.test.ts",
+      "findings": [
+        {
+          "column": 59,
+          "endColumn": 81,
+          "endLine": 1,
+          "file": "call-receiver.test.ts",
+          "line": 1,
+          "message": "Vitest testTimeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 61,
+          "endColumn": 83,
+          "endLine": 2,
+          "file": "call-receiver.test.ts",
+          "line": 2,
+          "message": "Vitest testTimeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
           "messageId": "timeout",
           "ruleId": "no-mistakes/vitest-timeout-cap",
           "severity": 2

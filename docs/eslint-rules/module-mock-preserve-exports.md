@@ -46,7 +46,7 @@ applicable mocks; `baseline` provides temporary `[file, specifier]` allowances.
 `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
 mock whose framework binding comes from a non-static `require` reports
 `unanalyzable`, including `.call` and a literal-array `.apply` on that mock.
-A suppression on that call silences the advisory.
+A suppression on that call silences the advisory. The same advisory covers `const api = require(moduleName).vi`, `const { vi: api } = sdk`, a cast alias `const cast = sdk as any`, and a nested binding that reuses the outer name.
 See the exhaustive table in
 [`eslint-plugin`](../eslint-plugin.md#rule-options).
 

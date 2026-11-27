@@ -1,10 +1,15 @@
 "use strict";
 const { options } = require("../helpers");
-const { resolveVariable, stableConstInitializer } = require("./async-target-bindings");
+const { resolveVariable } = require("./async-target-bindings");
 const { requireResolution } = require("./async-target-sources");
 const { importSpecifierName } = require("./test-no-shared-state-callees");
-const { literalString } = require("./module-mock-helpers");
 const { unwrapExpression, isFunction, isTransparentExpression } = require("./async-ast");
+const {
+  memberName,
+  patternBindingName,
+  requireExport,
+  requireMemberBinding,
+} = require("./test-no-skips-members");
 const NAMES = new Set(["it", "test", "describe"]);
 const MODULES = new Set(["vitest", "@playwright/test"]);
 const CONFIGURED_NAMESPACE = "configured-test-module";
@@ -22,44 +27,6 @@ function admit(source, importedName, namespace, testModules) {
   }
   if (!testModules.has(source) || importedName !== (namespace ? "*" : "test")) return null;
   return namespace ? CONFIGURED_NAMESPACE : { framework: "@playwright/test", name: "test" };
-}
-function immutableKey(node, context) {
-  const seen = new Set();
-  while (node) {
-    node = unwrapExpression(node);
-    const literal = literalString(node);
-    if (literal !== null) return literal;
-    node = stableConstInitializer(node, context, seen);
-  }
-  return null;
-}
-function memberName(node, context) {
-  if (!node.computed && node.property.type === "Identifier") return node.property.name;
-  return immutableKey(node.property, context);
-}
-function unwrapBinding(node) {
-  let current = node;
-  while (current.type === "AssignmentPattern") current = current.left;
-  return current;
-}
-function propertyKey(property) {
-  if (!property.computed && property.key.type === "Identifier") return property.key.name;
-  return literalString(property.key);
-}
-// The key that introduces the identifier, after defaults and nested objects.
-// `const { test: t = x } = require("vitest")` and
-// `const { runner: { test: t } = fallback } = require("vitest")` both yield `test`.
-function patternBindingName(pattern, name) {
-  for (const property of pattern.properties) {
-    if (property.type !== "Property") continue;
-    const value = unwrapBinding(property.value);
-    if (value.type === "Identifier" && value.name === name) return propertyKey(property);
-    if (value.type === "ObjectPattern") {
-      const nested = patternBindingName(value, name);
-      if (nested) return nested;
-    }
-  }
-  return null;
 }
 function testModulesFor(context) {
   const cached = testModulesByContext.get(context);
@@ -113,13 +80,17 @@ function imported(node, context, namespace = false, seen = new Set()) {
       let init = unwrapExpression(declaration.init || {});
       const awaited = init.type === "AwaitExpression";
       if (awaited) init = unwrapExpression(init.argument);
-      const required = requireResolution(init, context);
-      if (required) source = required.source;
+      const exported = declaration.id.type === "Identifier" ? requireExport(init, context) : null;
+      const required = exported ? null : requireResolution(init, context);
+      if (exported) source = exported.source;
+      else if (required) source = required.source;
       else if (init.type === "ImportExpression" && awaited) {
         source = init.source?.type === "Literal" ? init.source.value : null;
       }
       if (declaration.id.type === "ObjectPattern") {
         importedName = patternBindingName(declaration.id, node.name);
+      } else if (exported && declaration.id.name === node.name) {
+        importedName = exported.name;
       } else if (declaration.id.type === "Identifier" && declaration.id.name === node.name) {
         importedName = "*";
       }
@@ -163,6 +134,14 @@ function testBinding(node, context, visited = new Set()) {
   if (node.type !== "MemberExpression") return null;
   const name = memberName(node, context);
   const object = unwrapExpression(node.object);
+  const requiredMember = requireMemberBinding(
+    object,
+    name,
+    context,
+    admit,
+    testModulesFor(context),
+  );
+  if (requiredMember) return requiredMember;
   if (NAMES.has(name) && object?.type === "Identifier") {
     const framework = imported(object, context, true);
     if (framework && (framework !== CONFIGURED_NAMESPACE || name === "test"))
