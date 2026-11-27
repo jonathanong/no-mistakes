@@ -86,8 +86,6 @@ function combineConditional(consequent, alternate) {
   };
 }
 
-// An executor value, a const or stable function that carries one, bind, or
-// && / || / ??. Fresh objects and constructor arguments are visited by the rule.
 function unresolvedPassed(node, context, options) {
   if (node?.type === "MemberExpression") {
     const name = propertyText(node, context);
@@ -103,6 +101,8 @@ function unresolvedPassed(node, context, options) {
   );
 }
 
+// An executor value, a const or stable function that carries one, bind, or
+// && / || / ??. Fresh objects and constructor arguments are visited by the rule.
 function resolvePassed(node, context, bindings, options, seen) {
   const current = unwrapPassed(node);
   if (unresolvedPassed(current, context, options)) return { unanalyzable: true };
