@@ -9,9 +9,9 @@ if (args[0] === "list") {
     throw new Error("dynamic test imports require collection");
   fs.copyFileSync(inventoryPath, "target/native-api-inventory.json");
 } else {
-  const pattern = new RegExp(
-    args.find((arg) => arg.startsWith("--testNamePattern=")).slice("--testNamePattern=".length),
-  );
+  if (args.some((arg) => arg.startsWith("--testNamePattern=")))
+    throw new Error("test names must be read from the shard plan");
+  const pattern = require(args[args.indexOf("--config") + 1]).test.testNamePattern;
   const selected = JSON.parse(fs.readFileSync(inventoryPath, "utf8")).filter((row) =>
     pattern.test(row.name.replaceAll(" > ", " ")),
   );

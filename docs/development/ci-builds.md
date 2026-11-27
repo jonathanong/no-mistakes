@@ -1220,7 +1220,8 @@ Linux real-addon jobs select the full Linux inventory in the
 [shared file catalog](../../.github/scripts/native-api-files.cjs), while the
 platform jobs keep their narrower inventory. The
 [case partitioning script](../../.github/scripts/native-api-shards.cjs) collects actual test
-names, including umbrella imports, before partitioning them. Splitting files
+names, including umbrella imports, before partitioning them. Vitest reads the
+filter from the saved shard plan to accommodate long Windows test lists. Splitting files
 alone leaves the large umbrella suite concentrated in one job. Each Linux
 matrix member retains serial file execution and its enforced timing report;
 the `JavaScript tests` aggregate requires the whole matrix to succeed. Shard

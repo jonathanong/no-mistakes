@@ -15,7 +15,7 @@ test("native API shards collect every legacy file including the large real addon
   );
   const source = fs.readFileSync(path.join(__dirname, "native-api-shards.cjs"), "utf8");
   assert.match(source, /"list",\s*\.\.\.files,\s*"--no-static-parse"/);
-  assert.match(source, /"run",\s*\.\.\.runFiles,\s*`--testNamePattern=/);
+  assert.match(source, /"run",\s*\.\.\.runFiles,\s*"--config"/);
   assert.match(source, /NO_MISTAKES_VITEST_LIST:\s*"1"/);
 });
 
@@ -35,26 +35,11 @@ test("case shards partition all collected names exactly once with regex escaping
   }
 });
 
-test("API case partition rejects empty, invalid and oversized inventories", () => {
+test("API case partition rejects empty and invalid inventories", () => {
   assert.throws(() => partition([], 1, 1), /inventory/);
   assert.throws(() => partition(inventory, 0, 1), /shard/);
   assert.throws(() => partition(inventory, 2, 1), /shard/);
   assert.throws(() => partition(inventory, 1, 0), /shard/);
-  assert.throws(
-    () => partition([{ file: "file", name: "x".repeat(25000) }], 1, 1, "win32"),
-    /argument budget/,
-  );
-  assert.ok(
-    partition([{ file: "file", name: "x".repeat(25000) }], 1, 1, "darwin").pattern.length > 24000,
-  );
-  assert.throws(
-    () => partition([{ file: "file", name: "x".repeat(120000) }], 1, 1, "darwin"),
-    /argument budget/,
-  );
-  assert.throws(
-    () => partition([{ file: "file", name: "é".repeat(61000) }], 1, 1, "darwin"),
-    /argument budget/,
-  );
 });
 
 test("native API runner collects dynamic cases and executes case filters without rebuilding", () => {
@@ -84,6 +69,13 @@ test("native API runner collects dynamic cases and executes case filters without
     }
     const sorted = (rows) => rows.map((row) => `${row.file}:${row.name}`).sort();
     assert.deepEqual(sorted(executed), sorted(inventory));
+    const widePattern = Array.from({ length: 400 }, (_, index) => ({
+      file: inventory[0].file,
+      name: `synthetic case ${index} ${"long title ".repeat(20)}`,
+    }));
+    const widePlan = partition(widePattern, 1, 2);
+    assert.ok(widePlan.pattern.length > 32767);
+    assert.ok(new RegExp(widePlan.pattern).test(widePattern[0].name));
     const commands = fs
       .readFileSync(path.join(directory, "commands.jsonl"), "utf8")
       .trim()
@@ -144,7 +136,7 @@ test("Linux runner shards execute the complete expanded inventory once and rejec
       const listArgs = commands[offset];
       const runArgs = commands[offset + 1];
       assert.deepEqual(listArgs.slice(1, 1 + linuxFiles.length), linuxFiles);
-      const patternIndex = runArgs.findIndex((arg) => arg.startsWith("--testNamePattern="));
+      const patternIndex = runArgs.indexOf("--config");
       const shardRunFiles = runArgs.slice(1, patternIndex);
       const expectedFiles = linuxFiles.filter((file) =>
         partition(expected, offset / 2 + 1, 4).files.includes(file),
