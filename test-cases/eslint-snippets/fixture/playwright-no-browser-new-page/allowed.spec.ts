@@ -1,6 +1,5 @@
 import type { test as TypeOnlyTest } from "@playwright/test";
 import { expect, test, type TestType } from "@playwright/test";
-import { test as unconfiguredTest } from "./unconfigured-fixtures";
 
 const contextMethod = "newContext";
 
@@ -83,10 +82,6 @@ const customTest = test.extend({
   },
 });
 void customTest;
-
-unconfiguredTest("unconfigured module stays silent", async ({ browser }) => {
-  await browser.newPage();
-});
 
 function unrelatedHelper({ browser }: { browser: { newPage(): Promise<void> } }) {
   return browser.newPage();

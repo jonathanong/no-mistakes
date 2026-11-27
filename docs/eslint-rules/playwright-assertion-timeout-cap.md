@@ -84,6 +84,9 @@ verify(page.getByRole("status")).toBeVisible({ timeout: 30_000 });
 
 ```ts
 // eslint-disable-next-line no-mistakes/playwright-assertion-timeout-cap -- third-party report has a documented 20s SLA
+// no-mistakes-disable-next-line playwright-assertion-timeout-cap -- third-party report has a documented 20s SLA
+// no-mistakes-disable-line playwright-assertion-timeout-cap -- third-party report has a documented 20s SLA
+// no-mistakes-disable-file playwright-assertion-timeout-cap -- third-party report has a documented 20s SLA
 await expect(report).toBeVisible({ timeout: 20_000 });
 ```
 

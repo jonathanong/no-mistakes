@@ -1,0 +1,212 @@
+[
+  {
+    "file": "untraceable-suppressed.tsx",
+    "findings": [
+      {
+        "column": 15,
+        "endColumn": 45,
+        "endLine": 6,
+        "file": "untraceable-suppressed.tsx",
+        "line": 6,
+        "message": "Cannot tell whether this JSX spread or namespaced name sets a non-canonical test ID. Write the test ID as a static attribute.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/playwright-consistent-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-consistent-attribute untraceable-suppressed.tsx",
+    "options": null,
+    "rule": "playwright-consistent-attribute"
+  },
+  {
+    "file": "untraceable.tsx",
+    "findings": [
+      {
+        "column": 15,
+        "endColumn": 45,
+        "endLine": 4,
+        "file": "untraceable.tsx",
+        "line": 4,
+        "message": "Cannot tell whether this JSX spread or namespaced name sets a non-canonical test ID. Write the test ID as a static attribute.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/playwright-consistent-attribute",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 36,
+        "endLine": 5,
+        "file": "untraceable.tsx",
+        "line": 5,
+        "message": "Cannot tell whether this JSX spread or namespaced name sets a non-canonical test ID. Write the test ID as a static attribute.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/playwright-consistent-attribute",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 26,
+        "endLine": 6,
+        "file": "untraceable.tsx",
+        "line": 6,
+        "message": "Use 'data-pw' instead of 'data-testid' for test IDs.",
+        "messageId": "attribute",
+        "ruleId": "no-mistakes/playwright-consistent-attribute",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 25,
+        "endLine": 8,
+        "file": "untraceable.tsx",
+        "line": 8,
+        "message": "Cannot tell whether this JSX spread or namespaced name sets a non-canonical test ID. Write the test ID as a static attribute.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/playwright-consistent-attribute",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-consistent-attribute untraceable.tsx",
+    "options": null,
+    "rule": "playwright-consistent-attribute"
+  },
+  {
+    "file": "untraceable-suppressed.tsx",
+    "findings": [
+      {
+        "column": 15,
+        "endColumn": 37,
+        "endLine": 8,
+        "file": "untraceable-suppressed.tsx",
+        "line": 8,
+        "message": "Cannot tell whether this JSX spread passes a test ID without a literal default. Write the test ID as a static attribute.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/playwright-defaults",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-defaults untraceable-suppressed.tsx",
+    "options": null,
+    "rule": "playwright-defaults"
+  },
+  {
+    "file": "untraceable.tsx",
+    "findings": [
+      {
+        "column": 15,
+        "endColumn": 37,
+        "endLine": 6,
+        "file": "untraceable.tsx",
+        "line": 6,
+        "message": "Cannot tell whether this JSX spread passes a test ID without a literal default. Write the test ID as a static attribute.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/playwright-defaults",
+        "severity": 2
+      },
+      {
+        "column": 15,
+        "endColumn": 25,
+        "endLine": 9,
+        "file": "untraceable.tsx",
+        "line": 9,
+        "message": "Cannot tell whether this JSX spread passes a test ID without a literal default. Write the test ID as a static attribute.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/playwright-defaults",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-defaults untraceable.tsx",
+    "options": null,
+    "rule": "playwright-defaults"
+  },
+  {
+    "file": "untraceable-import-equals.spec.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 3,
+        "endLine": 5,
+        "file": "untraceable-import-equals.spec.ts",
+        "line": 3,
+        "message": "Cannot prove an untraceable test binding avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/playwright-no-browser-new-page",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-no-browser-new-page untraceable-import-equals.spec.ts",
+    "options": null,
+    "rule": "playwright-no-browser-new-page"
+  },
+  {
+    "file": "untraceable-reexport.spec.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 3,
+        "endLine": 13,
+        "file": "untraceable-reexport.spec.ts",
+        "line": 11,
+        "message": "Cannot prove an untraceable test binding avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/playwright-no-browser-new-page",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 3,
+        "endLine": 17,
+        "file": "untraceable-reexport.spec.ts",
+        "line": 15,
+        "message": "Cannot prove an untraceable test binding avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/playwright-no-browser-new-page",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 59,
+        "endLine": 23,
+        "file": "untraceable-reexport.spec.ts",
+        "line": 23,
+        "message": "Cannot prove an untraceable test binding avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/playwright-no-browser-new-page",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 3,
+        "endLine": 27,
+        "file": "untraceable-reexport.spec.ts",
+        "line": 25,
+        "message": "Cannot prove an untraceable test binding avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/playwright-no-browser-new-page",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-no-browser-new-page untraceable-reexport.spec.ts",
+    "options": null,
+    "rule": "playwright-no-browser-new-page"
+  },
+  {
+    "file": "untraceable-suppressed.spec.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 3,
+        "endLine": 10,
+        "file": "untraceable-suppressed.spec.ts",
+        "line": 8,
+        "message": "Cannot prove an untraceable test binding avoids browser.newPage(). Use the shared `page` fixture directly, or make the browser usage statically visible.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/playwright-no-browser-new-page",
+        "severity": 2
+      }
+    ],
+    "name": "playwright-no-browser-new-page untraceable-suppressed.spec.ts",
+    "options": null,
+    "rule": "playwright-no-browser-new-page"
+  }
+]

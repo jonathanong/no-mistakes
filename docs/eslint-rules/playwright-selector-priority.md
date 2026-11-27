@@ -78,6 +78,9 @@ find("#save");
 
 ```ts
 // eslint-disable-next-line no-mistakes/playwright-selector-priority -- verifies generated CSS selector contract
+// no-mistakes-disable-next-line playwright-selector-priority -- verifies generated CSS selector contract
+// no-mistakes-disable-line playwright-selector-priority -- verifies generated CSS selector contract
+// no-mistakes-disable-file playwright-selector-priority -- verifies generated CSS selector contract
 page.locator(".generated-widget");
 ```
 

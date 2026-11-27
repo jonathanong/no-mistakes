@@ -179,11 +179,17 @@ window.scrollTo(0, document.body.scrollHeight);
 
 ```ts
 // eslint-disable-next-line no-mistakes/playwright-no-raw-scroll-pagination -- this scroll never races the paginated request in this test
+// no-mistakes-disable-next-line playwright-no-raw-scroll-pagination -- this scroll never races the paginated request in this test
+// no-mistakes-disable-line playwright-no-raw-scroll-pagination -- this scroll never races the paginated request in this test
+// no-mistakes-disable-file playwright-no-raw-scroll-pagination -- this scroll never races the paginated request in this test
 await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 ```
 
 ```ts
 // eslint-disable-next-line no-mistakes/playwright-no-raw-scroll-pagination -- this test inspects the sentinel itself
+// no-mistakes-disable-next-line playwright-no-raw-scroll-pagination -- this test inspects the sentinel itself
+// no-mistakes-disable-line playwright-no-raw-scroll-pagination -- this test inspects the sentinel itself
+// no-mistakes-disable-file playwright-no-raw-scroll-pagination -- this test inspects the sentinel itself
 await sentinel.scrollIntoViewIfNeeded();
 ```
 

@@ -58,6 +58,15 @@ module.exports = rule(
       context.report({ node, messageId: "noBrowserNewPage", data: { message } });
     }
 
+    function reportUntraced(call, fn) {
+      let uncertain = false;
+      const mark = () => {
+        uncertain = true;
+      };
+      createBrowserInspector(context, bindings, browserFixtureName, mark, mark)(fn);
+      if (uncertain) reportUnanalyzable(call, "an untraceable test binding");
+    }
+
     function reportUnanalyzable(node, reason) {
       if (!reportUnanalyzableEnabled || reported.has(node) || suppressed(node)) return;
       reported.add(node);
@@ -85,6 +94,7 @@ module.exports = rule(
           const target = bindings.extractCallTarget(call);
           if (!target) continue;
           if (target.kind === "fn") inspectCallback(target.fn);
+          else if (target.kind === "untraced") reportUntraced(call, target.fn);
           else reportUnanalyzable(target.node, target.reason);
         }
       },

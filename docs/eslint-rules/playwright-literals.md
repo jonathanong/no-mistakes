@@ -72,6 +72,9 @@ find(`save-${user.id}`);
 
 ```tsx
 // eslint-disable-next-line no-mistakes/playwright-literals -- generated rows require runtime ids
+// no-mistakes-disable-next-line playwright-literals -- generated rows require runtime ids
+// no-mistakes-disable-line playwright-literals -- generated rows require runtime ids
+// no-mistakes-disable-file playwright-literals -- generated rows require runtime ids
 return <button data-pw={`row-${row.id}`}>Open</button>;
 ```
 
