@@ -1,0 +1,5 @@
+PATH
+  remote: ./sample
+  glob: packages/beta/sample.gemspec
+  specs:
+    sample (1.0.0)

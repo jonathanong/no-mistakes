@@ -34,7 +34,11 @@ fn parse_entry(name: &str, entry: &serde_json::Value) -> Result<ResolvedPackage,
     if editable.is_some_and(|value| !value.is_boolean()) {
         return Err(PipfileError);
     }
-    let version = text(obj, "version").map(|raw| raw.strip_prefix("==").unwrap_or(raw).to_string());
+    let version = obj
+        .get("version")
+        .map(|value| value.as_str().ok_or(PipfileError))
+        .transpose()?
+        .map(|raw| raw.strip_prefix("==").unwrap_or(raw).to_string());
     let (kind, fingerprint, version_optional) = if let Some(git) = text(obj, "git") {
         let fingerprint = super::source_fingerprint(
             text(obj, "ref").unwrap_or(git),

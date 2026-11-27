@@ -64,15 +64,15 @@ removed from `version`. A git or path entry may omit `version`; its
 fingerprint is `ref` or `path`. A Git subdirectory selector contributes to
 that fingerprint. File, URL, and other version-control sources
 may omit `version`. Their source URL and any non-Git revision form the fingerprint. A registry entry
-requires `version` and uses all sorted hashes. `go.mod` requires a module
-declaration and reads `require` lines, including `// indirect` and revision
+requires `version` and uses all sorted hashes. `go.mod` requires exactly one
+module declaration and reads `require` lines, including `// indirect` and revision
 names written in place of canonical versions.
 `replace`, `exclude`, `retract`, and `go.sum`
 are not packages. `Gemfile.lock` reads specs indented four spaces; deeper
 lines are dependencies. A `GIT` revision, its optional `glob` selector, and
 a `CHECKSUMS` `sha256` are
-fingerprints. A `PATH` entry uses its `remote` value as the directory
-fingerprint. `PLUGIN SOURCE` specs use the plugin remote as their
+fingerprints. A `PATH` entry uses its `remote` value and any `glob` selector as the
+directory fingerprint. `PLUGIN SOURCE` specs use the plugin remote as their
 fingerprint. `composer.lock` reads `packages` and `packages-dev`. A null development section contributes no packages.
 Distribution references take precedence over checksums. A path source
 uses its directory URL and any reference, and a git source with no dist is git.

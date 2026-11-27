@@ -51,8 +51,8 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
         let (directive, rest) = line.split_at(end.unwrap_or(line.len()));
         let rest = rest.trim();
         match directive {
-            "module" if rest == "(" => block = Some(Block::Module(false)),
-            "module" if has_one_token(rest) => saw_module = true,
+            "module" if !saw_module && rest == "(" => block = Some(Block::Module(false)),
+            "module" if !saw_module && has_one_token(rest) => saw_module = true,
             "go" if has_one_token(rest) => {}
             "toolchain" if has_one_token(rest) => {}
             "require" if rest == "(" => block = Some(Block::Requirements),

@@ -20,7 +20,7 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
     let mut section = Section::None;
     let mut saw_header = false;
     let mut section_fingerprint = "";
-    let mut git_glob = None;
+    let mut source_glob = None;
     for raw in content.lines() {
         let line = raw.trim_end_matches('\r');
         let indent = line.chars().take_while(|ch| *ch == ' ').count();
@@ -36,7 +36,7 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
         }
         if indent == 0 && is_header(trimmed) {
             section_fingerprint = "";
-            git_glob = None;
+            source_glob = None;
             section = match trimmed {
                 "GEM" => Section::Specs(ResolutionKind::Registry),
                 "GIT" => Section::Specs(ResolutionKind::Git),
@@ -59,13 +59,16 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
             );
             continue;
         }
-        let source_field = match section {
-            Section::Specs(ResolutionKind::Git) => {
-                if let Some(glob) = trimmed.strip_prefix("glob:") {
-                    git_glob = Some(glob.trim());
-                }
-                trimmed.strip_prefix("revision:")
+        if matches!(
+            section,
+            Section::Specs(ResolutionKind::Git | ResolutionKind::Directory)
+        ) {
+            if let Some(glob) = trimmed.strip_prefix("glob:") {
+                source_glob = Some(glob.trim());
             }
+        }
+        let source_field = match section {
+            Section::Specs(ResolutionKind::Git) => trimmed.strip_prefix("revision:"),
             Section::Specs(ResolutionKind::Directory | ResolutionKind::Other) => {
                 trimmed.strip_prefix("remote:")
             }
@@ -98,7 +101,7 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
         out.push(ResolvedPackage {
             name: name.to_string(),
             version: version.to_string(),
-            fingerprint: super::source_fingerprint(section_fingerprint, "glob", git_glob),
+            fingerprint: super::source_fingerprint(section_fingerprint, "glob", source_glob),
             kind,
         });
     }

@@ -35,8 +35,8 @@ fn parse_entry(entry: &serde_json::Value) -> Result<ResolvedPackage, ComposerErr
         .get("version")
         .and_then(|value| value.as_str())
         .ok_or(ComposerError)?;
-    let dist = entry.get("dist");
-    let source = entry.get("source");
+    let dist = package_source(entry, "dist")?;
+    let source = package_source(entry, "source")?;
     let dist_type = text(dist, "type");
     let source_type = text(source, "type");
     let dist_ref = text(dist, "reference");
@@ -62,6 +62,24 @@ fn parse_entry(entry: &serde_json::Value) -> Result<ResolvedPackage, ComposerErr
         fingerprint,
         kind,
     })
+}
+
+fn package_source<'a>(
+    entry: &'a serde_json::Value,
+    key: &str,
+) -> Result<Option<&'a serde_json::Value>, ComposerError> {
+    let Some(value) = entry.get(key).filter(|value| !value.is_null()) else {
+        return Ok(None);
+    };
+    if !value.is_object()
+        || ["type", "url", "reference", "shasum"]
+            .into_iter()
+            .filter_map(|field| value.get(field))
+            .any(|field| !field.is_null() && !field.is_string())
+    {
+        return Err(ComposerError);
+    }
+    Ok(Some(value))
 }
 
 fn text<'a>(value: Option<&'a serde_json::Value>, key: &str) -> &'a str {
