@@ -393,7 +393,7 @@ its message names `tx(sql)` or `tx.query(sql)`. An untyped `client.query(sql)`
 has no receiver provenance, so it is not a judged offset.
 
 This rule is opt-in. It is not part of `configs.recommended` or `configs.strict`.
-It does not ban ordinary object mutation; that is [issue #2219](https://github.com/jonathanong/no-mistakes/issues/2219).
+It does not ban ordinary object mutation; that is [issue #2219](https://github.com/jongleberry/no-mistakes/issues/2219).
 
 ## Disallowed
 
@@ -587,7 +587,7 @@ run(0 ?? read, account);
   `@example/db` for `executorNames`.
 - `executorNames` lists checked executor names. It defaults to `["query",
   "read", "write"]` with a configured module. Without a module, supply
-  `executorNames` explicitly. An empty list selects no named executors. [Executor option validation](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/postgres-executor.js#L7-L21). A
+  `executorNames` explicitly. An empty list selects no named executors. [Executor option validation](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/postgres-executor.js#L7-L21). A
   renamed import matches the imported name and the direct form uses
   the local name.
 - `executorFactoryNames` lists imports whose call result bound with `const`,
@@ -1056,5 +1056,5 @@ comment.
 - [`postgres-no-unbounded-query-fanout`](postgres-no-unbounded-query-fanout.md)
   bounds concurrent mapped queries.
 - General object mutation is tracked separately in
-  [issue #2219](https://github.com/jonathanong/no-mistakes/issues/2219). This
+  [issue #2219](https://github.com/jongleberry/no-mistakes/issues/2219). This
   rule does not report ordinary property writes.

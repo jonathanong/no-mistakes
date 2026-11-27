@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 description = "TypeScript AST parsing, module facts, and value-flow extraction for no-mistakes"
 repository.workspace = true
-documentation = "https://github.com/jonathanong/no-mistakes"
+documentation = "https://github.com/jongleberry/no-mistakes"
 
 [lints]
 workspace = true

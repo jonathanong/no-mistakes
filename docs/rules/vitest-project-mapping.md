@@ -135,7 +135,7 @@ Make project globs mutually exclusive, add the missing include, or enable
 
 The rule maps files to projects by glob. With `explicitProjectsOnly` off,
 a selected runner config that fails to load can make the check `incomplete`.
-The rule does not use `options.unanalyzable`. [Project source selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/vitest_project_mapping/project_sources.rs#L13-L31) and [Check input failures](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/check_tasks/filesystem/partial.rs#L41-L52).
+The rule does not use `options.unanalyzable`. [Project source selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/vitest_project_mapping/project_sources.rs#L13-L31) and [Check input failures](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/check_tasks/filesystem/partial.rs#L41-L52).
 
 ## Suppression
 

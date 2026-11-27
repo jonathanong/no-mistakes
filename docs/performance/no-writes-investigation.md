@@ -2,7 +2,7 @@
 
 <!-- cspell:ignore ABBA BAAB codegen wait4 rlib PMU Callgrind preflight cbc opt0 opt3 Clippy stationarity predeclared -->
 
-[#1972](https://github.com/jonathanong/no-mistakes/issues/1972) is complete as a
+[#1972](https://github.com/jongleberry/no-mistakes/issues/1972) is complete as a
 bounded investigation, with an **inconclusive optimized historical result**.
 The original repeatable unoptimized slowdown remains unexplained. No runtime
 fix or zero-overhead claim follows from this conclusion. The later attempted
@@ -35,7 +35,7 @@ counts differed by less than 0.002%; that neither explains native latency nor
 proves flat cost. Hardware counters were unavailable.
 
 [The hosted follow-up](receiver-native-hosted-evidence-2012/README.md), merged in
-[#2027](https://github.com/jonathanong/no-mistakes/pull/2027), retains all 288 rows.
+[#2027](https://github.com/jongleberry/no-mistakes/pull/2027), retains all 288 rows.
 Its optimized pilot values were +0.844%, while the longer values series was
 −1.219%; optimized imports and both longer opt0 demands were inconclusive.
 The direction change prevents a stable improvement, zero-overhead, or resolved

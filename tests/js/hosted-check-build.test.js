@@ -28,7 +28,7 @@ const fixture = join(__dirname, "../../fixtures/hosted-check/build");
 const responses = JSON.parse(readFileSync(join(fixture, "github-responses.json"), "utf8"));
 const compiler = "1.93.0";
 const rustc = `rustc ${compiler} (saved)\nbinary: rustc\nrelease: ${compiler}\nhost: x86_64-unknown-linux-gnu`;
-const repository = "jonathanong/no-mistakes";
+const repository = "jongleberry/no-mistakes";
 const harness = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
 const refs = resolveRefs((endpoint) => responses[endpoint], compiler, repository, harness);
 
@@ -120,7 +120,7 @@ test("resolves current main and GitHub's latest stable tag once, ignoring releas
   assert.equal(result.candidate.commit, responses[calls[0]].sha);
   assert.equal(result.baseline.ref, "refs/tags/v0.94.0");
   assert.equal(result.baseline.commit, responses[calls[2]].sha);
-  assert.equal(result.baseline.release.endpoint, "repos/jonathanong/no-mistakes/releases/latest");
+  assert.equal(result.baseline.release.endpoint, "repos/jongleberry/no-mistakes/releases/latest");
   assert.equal(result.compiler, compiler);
   assert.equal(result.harnessCommit, harness);
   assert.match(sourceSummary(result), /Baseline: release \[v0.94.0\]/);

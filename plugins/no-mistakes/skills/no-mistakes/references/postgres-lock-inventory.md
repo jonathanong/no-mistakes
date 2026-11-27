@@ -32,5 +32,5 @@ Use `await postgresLockInventory({ root, config, writeBaseline: false })` for
 repeated in-process inventory queries. Ordinary `check()` and
 `analyzeProject({ reports: [{ type: "check" }] })` expose the rule findings.
 
-See the [rule contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-lock-inventory.md)
-and [CLI options](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/postgres-lock-inventory.md).
+See the [rule contract](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-lock-inventory.md)
+and [CLI options](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/postgres-lock-inventory.md).

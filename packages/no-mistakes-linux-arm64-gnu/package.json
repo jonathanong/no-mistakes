@@ -5,7 +5,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jonathanong/no-mistakes.git",
+    "url": "git+https://github.com/jongleberry/no-mistakes.git",
     "directory": "packages/no-mistakes-linux-arm64-gnu"
   },
   "files": [
