@@ -92,3 +92,32 @@ fn client_paths_match_normalized_route_patterns() {
     assert_eq!(normalize_route_pattern(""), "/");
     assert_eq!(normalize_route_pattern("/users/{id:int}"), "/users/:id");
 }
+
+#[test]
+fn client_argument_boundaries_preserve_static_literals() {
+    let go = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/lang-frontends/http-clients/go/client.go"
+    ));
+    assert_eq!(
+        extract_go(go),
+        ["/nested-context", "/plain-context", "/users"]
+    );
+
+    let rust = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/lang-frontends/http-clients/rust/src/client.rs"
+    ));
+    assert_eq!(extract_rust(rust), ["/chained", "/users"]);
+
+    let ruby = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/lang-frontends/http-clients/rails/client.rb"
+    ));
+    let computed_ruby = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/lang-frontends/http-clients/rails/computed.rb"
+    ));
+    assert_eq!(extract_ruby(ruby), ["/bare", "/users", "/wrapped"]);
+    assert!(extract_ruby(computed_ruby).is_empty());
+}

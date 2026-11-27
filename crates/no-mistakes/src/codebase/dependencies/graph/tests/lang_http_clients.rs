@@ -114,20 +114,34 @@ fn cross_language_and_parameterized_client_routes_keep_their_report_patterns() {
             .unwrap(),
         )
         .unwrap();
-        assert!(report["files"].as_array().unwrap().iter().any(|file| {
-            file["path"].as_str().is_some_and(|path| path.replace('\\', "/") == "python/client.py")
-        }), "{route}: {report}");
+        assert!(
+            report["files"].as_array().unwrap().iter().any(|file| {
+                file["path"]
+                    .as_str()
+                    .is_some_and(|path| path.replace('\\', "/") == "python/client.py")
+            }),
+            "{route}: {report}"
+        );
     }
     let edges: Vec<serde_json::Value> = serde_json::from_str(
         &crate::napi_api::server_route_edges_json_impl(serde_json::json!({"root": root})).unwrap(),
     )
     .unwrap();
-    for route in ["/shared/client-check", "/customers/{customer_id}", "/members/{id:int}"] {
-        assert!(edges.iter().any(|edge| {
-            edge["kind"] == "client-call"
-                && edge["to"] == route
-                && edge["from"].as_str().is_some_and(|path| path.replace('\\', "/") == "python/client.py")
-        }), "{route}: {edges:?}");
+    for route in [
+        "/shared/client-check",
+        "/customers/{customer_id}",
+        "/members/{id:int}",
+    ] {
+        assert!(
+            edges.iter().any(|edge| {
+                edge["kind"] == "client-call"
+                    && edge["to"] == route
+                    && edge["from"]
+                        .as_str()
+                        .is_some_and(|path| path.replace('\\', "/") == "python/client.py")
+            }),
+            "{route}: {edges:?}"
+        );
     }
 }
 
@@ -142,7 +156,8 @@ fn server_edge_filters_exclude_unselected_language_client_sources() {
         .unwrap(),
     )
     .unwrap();
-    let clients: Vec<_> = edges.iter()
+    let clients: Vec<_> = edges
+        .iter()
         .filter(|edge| edge["kind"] == "client-call")
         .map(|edge| edge["from"].as_str().unwrap().replace('\\', "/"))
         .collect();
@@ -172,4 +187,46 @@ fn dotnet_only_edge_plan_omits_http_calls() {
         &PathInterner::default(),
     );
     assert!(edges.iter().all(|(_, _, kind)| *kind != EdgeKind::HttpCall));
+}
+
+#[test]
+fn http_target_globs_apply_to_routes_but_not_to_clients() {
+    let root = lang_fixture("http-clients");
+    let caller = root.join("python/client.py");
+    let included = root.join("go/routes.go");
+    let excluded = root.join("dotnet/Routes.cs");
+    let calls = ["/users".to_string()];
+    let routes = [("/users".to_string(), "ListUsers".to_string())];
+    let files = [
+        HttpClientFile {
+            path: &caller,
+            calls: &calls,
+            routes: &[],
+        },
+        HttpClientFile {
+            path: &included,
+            calls: &[],
+            routes: &routes,
+        },
+        HttpClientFile {
+            path: &excluded,
+            calls: &[],
+            routes: &routes,
+        },
+    ];
+    let options = GraphConfigOptions {
+        project_route_globset: compile_project_route_globset(&["go/**".to_string()]),
+        ..Default::default()
+    };
+    let interner = PathInterner::default();
+    assert_eq!(
+        http_edges_for_client_files(&files, &interner, |path| {
+            route_file_allowed(&root, path, &options)
+        }),
+        [(
+            NodeId::file_in(&interner, &caller),
+            NodeId::file_in(&interner, &included),
+            EdgeKind::HttpCall,
+        )]
+    );
 }

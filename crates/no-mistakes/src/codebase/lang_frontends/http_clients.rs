@@ -13,14 +13,34 @@ pub(crate) fn extract_python(source: &str, masked: &str) -> Vec<String> {
 }
 
 pub(crate) fn extract_go(source: &str) -> Vec<String> {
-    paths_from(
-        source,
-        &[
-            regexes::go_get(),
-            regexes::go_request(),
-            regexes::go_request_ctx(),
-        ],
-    )
+    let mut paths = paths_from(source, &[regexes::go_get(), regexes::go_request()]);
+    paths.extend(
+        regexes::go_request_with_context()
+            .find_iter(source)
+            .filter_map(|call| {
+                let arguments = after_context_argument(&source[call.end()..])?;
+                let method_and_url = regexes::go_method_and_url().captures(arguments)?;
+                static_path(first_group(&method_and_url))
+            }),
+    );
+    paths.sort();
+    paths.dedup();
+    paths
+}
+
+fn after_context_argument(arguments: &str) -> Option<&str> {
+    let mut depth = 0;
+    for token in regexes::go_context_tokens().find_iter(arguments) {
+        match token.as_str() {
+            "(" | "[" | "{" => depth += 1,
+            ")" | "]" | "}" if depth == 0 => return None,
+            ")" | "]" | "}" => depth -= 1,
+            "," if depth == 0 => return arguments.get(token.end()..),
+            "'" | "\"" | "`" => return None,
+            _ => {}
+        }
+    }
+    None
 }
 
 pub(crate) fn extract_rust(source: &str) -> Vec<String> {
@@ -28,7 +48,10 @@ pub(crate) fn extract_rust(source: &str) -> Vec<String> {
 }
 
 pub(crate) fn extract_ruby(source: &str) -> Vec<String> {
-    paths_from(source, &[regexes::ruby(), regexes::ruby_net()])
+    paths_from(
+        source,
+        &[regexes::ruby(), regexes::ruby_bare(), regexes::ruby_net()],
+    )
 }
 
 pub(crate) fn extract_php(source: &str) -> Vec<String> {

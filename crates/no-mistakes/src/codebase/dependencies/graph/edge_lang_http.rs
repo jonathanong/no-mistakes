@@ -25,7 +25,9 @@ fn collect_lang_http_client_edges(
         );
     }
     extend_dotnet_http_client_files(inputs.dotnet_facts, &mut files);
-    http_edges_for_client_files(&files, &inputs.interner)
+    http_edges_for_client_files(&files, &inputs.interner, |path| {
+        route_file_allowed(inputs.root, path, options)
+    })
 }
 
 fn extend_dotnet_http_client_files<'a>(
@@ -50,16 +52,24 @@ struct HttpClientFile<'a> {
     routes: &'a [(String, String)],
 }
 
-fn http_edges_for_client_files(files: &[HttpClientFile<'_>], interner: &PathInterner) -> Vec<Edge> {
+fn http_edges_for_client_files(
+    files: &[HttpClientFile<'_>],
+    interner: &PathInterner,
+    route_allowed: impl Fn(&Path) -> bool,
+) -> Vec<Edge> {
     use crate::codebase::lang_frontends::normalize_route_pattern;
     use crate::codebase::ts_routes::matcher;
 
-    let mut callers = files.iter().filter(|file| !file.calls.is_empty()).peekable();
+    let mut callers = files
+        .iter()
+        .filter(|file| !file.calls.is_empty())
+        .peekable();
     if callers.peek().is_none() {
         return Vec::new();
     }
     let routes: Vec<_> = files
         .iter()
+        .filter(|file| route_allowed(file.path))
         .flat_map(|file| {
             file.routes
                 .iter()

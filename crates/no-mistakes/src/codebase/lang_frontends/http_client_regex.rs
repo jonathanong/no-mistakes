@@ -29,13 +29,28 @@ pub(super) fn go_request() -> &'static Regex {
     })
 }
 
-pub(super) fn go_request_ctx() -> &'static Regex {
+pub(super) fn go_request_with_context() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"\bhttp\.NewRequestWithContext\(").expect("go request context prefix")
+    })
+}
+
+pub(super) fn go_context_tokens() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r#""(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`[^`]*`|[()\[\]{},'"`]"#)
+            .expect("go context tokens")
+    })
+}
+
+pub(super) fn go_method_and_url() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(
-            r#"\bhttp\.NewRequestWithContext\(\s*[^,]+,\s*(?:"[A-Z]+"|http\.Method[A-Za-z]+)\s*,\s*(?:"([^"]+)"|`([^`]+)`)[ \t]*[,)]"#,
+            r#"^\s*(?:"[A-Z]+"|http\.Method[A-Za-z]+)\s*,\s*(?:"([^"]+)"|`([^`]+)`)[ \t]*[,)]"#,
         )
-        .expect("go request context")
+        .expect("go request context method and URL")
     })
 }
 
@@ -48,7 +63,7 @@ pub(super) fn rust_client() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
         Regex::new(
-            r#"\breqwest::Client::new\(\)\.(?:get|post|put|patch|delete)\(\s*"([^"]+)"\s*[,)]"#,
+            r#"\breqwest::Client::new\(\)\s*\.(?:get|post|put|patch|delete)\(\s*"([^"]+)"\s*[,)]"#,
         )
         .expect("reqwest client")
     })
@@ -64,10 +79,21 @@ pub(super) fn ruby() -> &'static Regex {
     })
 }
 
+pub(super) fn ruby_bare() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(
+            r#"\b(?:Faraday|HTTParty|RestClient)\.(?:get|post|put|patch|delete)[ \t]+["']([^"']+)["'][ \t]*(?:[,;]|\r?\n|$)"#,
+        )
+        .expect("ruby client without parentheses")
+    })
+}
+
 pub(super) fn ruby_net() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"\bNet::HTTP\.get\(\s*URI\(\s*["']([^"']+)["']\s*\)"#).expect("net http")
+        Regex::new(r#"\bNet::HTTP\.get\(\s*URI\(\s*["']([^"']+)["']\s*\)\s*[,)]"#)
+            .expect("net http")
     })
 }
 
