@@ -19,6 +19,10 @@ impl std::fmt::Display for OptionLocation {
 impl std::error::Error for OptionLocation {}
 
 impl OptionLocation {
+    pub(crate) fn semantic(path: ConfigPath, message: String) -> anyhow::Error {
+        Self { path, message }.into()
+    }
+
     pub(super) fn from_error(
         rule: &RuleDef,
         error: serde_path_to_error::Error<serde_yaml::Error>,

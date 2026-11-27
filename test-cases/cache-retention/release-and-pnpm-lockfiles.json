@@ -1,0 +1,79 @@
+[
+  {
+    "id": 201,
+    "ref": "refs/heads/main",
+    "key": "v1-rust-release-release-aarch64-apple-darwin-Darwin-arm64-48c78939-61ea2056",
+    "size_in_bytes": 280000000,
+    "created_at": "2026-11-24T06:00:00Z"
+  },
+  {
+    "id": 202,
+    "ref": "refs/heads/main",
+    "key": "v1-rust-release-release-aarch64-apple-darwin-Darwin-arm64-48c78939-3e06d178",
+    "size_in_bytes": 280000000,
+    "created_at": "2026-11-25T11:00:00Z"
+  },
+  {
+    "id": 203,
+    "ref": "refs/heads/main",
+    "key": "v1-rust-release-validate-Linux-x64-adc868b9-61ea2056",
+    "size_in_bytes": 320000000,
+    "created_at": "2026-11-24T06:00:00Z"
+  },
+  {
+    "id": 204,
+    "ref": "refs/heads/main",
+    "key": "v1-rust-release-validate-Linux-x64-99999999-3e06d178",
+    "size_in_bytes": 325000000,
+    "created_at": "2026-11-25T11:00:00Z"
+  },
+  {
+    "id": 205,
+    "ref": "refs/heads/main",
+    "key": "pnpm-cache-Linux-x64-1111111111111111111111111111111111111111111111111111111111111111-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc-100-1-00000000-0000-0000-0000-000000000205",
+    "size_in_bytes": 128000000,
+    "created_at": "2026-11-24T05:00:00Z"
+  },
+  {
+    "id": 206,
+    "ref": "refs/heads/main",
+    "key": "pnpm-cache-Linux-x64-1111111111111111111111111111111111111111111111111111111111111111-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc-101-1-00000000-0000-0000-0000-000000000206",
+    "size_in_bytes": 128000000,
+    "created_at": "2026-11-25T21:00:00Z"
+  },
+  {
+    "id": 207,
+    "ref": "refs/heads/main",
+    "key": "pnpm-cache-Linux-x64-2222222222222222222222222222222222222222222222222222222222222222-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb-2222222222222222222222222222222222222222222222222222222222222222-101-1-00000000-0000-0000-0000-000000000207",
+    "size_in_bytes": 128000000,
+    "created_at": "2026-11-25T21:05:00Z"
+  },
+  {
+    "id": 208,
+    "ref": "refs/heads/main",
+    "key": "pnpm-cache-Linux-x64-1111111111111111111111111111111111111111111111111111111111111111-dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc-102-1-00000000-0000-0000-0000-000000000208",
+    "size_in_bytes": 0,
+    "created_at": "2026-11-25T22:00:00Z"
+  },
+  {
+    "id": 209,
+    "ref": "refs/heads/main",
+    "key": "pnpm-lockfile-verified-Linux-x64-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "size_in_bytes": 600,
+    "created_at": "2026-11-24T05:00:00Z"
+  },
+  {
+    "id": 210,
+    "ref": "refs/heads/main",
+    "key": "pnpm-lockfile-verified-Linux-x64-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "size_in_bytes": 600,
+    "created_at": "2026-11-25T21:00:00Z"
+  },
+  {
+    "id": 211,
+    "ref": "refs/pull/3328/merge",
+    "key": "pnpm-lockfile-verified-Linux-x64-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "size_in_bytes": 600,
+    "created_at": "2026-11-25T10:00:00Z"
+  }
+]
