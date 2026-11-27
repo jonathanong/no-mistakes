@@ -146,14 +146,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "disable_file": {
-    "exitCode": 0,
+    "exitCode": 1,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "docs/control.md",
+          "import": "old.md",
+          "line": 1,
+          "message": "docs/control.md: link text \"old.md\" does not match target basename \"new.md\"",
+          "rule": "markdown-link-display-text",
+          "sourceLine": "[old.md](new.md)",
+          "target": "new.md"
+        }
+      ],
       "warnings": []
     }
   },

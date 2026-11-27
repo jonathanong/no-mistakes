@@ -236,20 +236,5 @@ export interface TestTargetWarning {
   file: string;
 }
 
-export interface LockfileDiffOptions {
-  /** Project root. Defaults to the current working directory. */
-  root?: string;
-  base: string;
-  head?: string;
-  lockfile?: string;
-}
-
-export interface LockfileDiffEntry {
-  lockfile: string;
-  manager: "npm" | "pnpm" | "yarn" | "bun";
-  added: string[];
-  removed: string[];
-  changed: string[];
-}
-
+export * from "./lockfile-diff-types";
 export * from "./test-plan-document-types";

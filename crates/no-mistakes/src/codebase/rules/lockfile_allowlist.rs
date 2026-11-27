@@ -48,46 +48,39 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| {
-            let opts: Options = rule.try_rule_options()?;
-            let files =
-                super::selected_rule_files_with_sources(root, config, rule, all_files, sources)?;
-            let audit = super::allow_audit::AllowAudit::new_files(
-                root,
-                config,
-                rule,
-                Some(sources),
-                "allowed",
-                opts.allowed.len(),
-            );
-            let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
-            let matchers = opts
-                .allowed
-                .iter()
-                .map(|pattern| Glob::new(pattern).map(|glob| glob.compile_matcher()))
-                .collect::<Result<Vec<_>, _>>()?;
-            let mut findings = scan(root, &opts, &files, opts.allowed.is_empty())?;
-            findings.retain(|finding| {
-                !audit.usage.suppress(
-                    matchers
-                        .iter()
-                        .map(|matcher| matcher.is_match(&finding.file)),
-                )
-            });
-            findings.extend(audit.finish_files(
-                |index| scope.glob(&opts.allowed[index]),
-                |index| opts.allowed[index].clone(),
-                |index| opts.allowed[index].clone(),
-            ));
-            Ok(findings)
-        })
-        .collect();
-    let mut findings = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: Options = rule.try_rule_options()?;
+        let files =
+            super::selected_rule_files_with_sources(root, config, rule, all_files, sources)?;
+        let audit = super::allow_audit::AllowAudit::new_files(
+            root,
+            config,
+            rule,
+            Some(sources),
+            "allowed",
+            opts.allowed.len(),
+        );
+        let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
+        let matchers = opts
+            .allowed
+            .iter()
+            .map(|pattern| Glob::new(pattern).map(|glob| glob.compile_matcher()))
+            .collect::<Result<Vec<_>, _>>()?;
+        let mut findings = scan(root, &opts, &files, opts.allowed.is_empty())?;
+        findings.retain(|finding| {
+            !audit.usage.suppress(
+                matchers
+                    .iter()
+                    .map(|matcher| matcher.is_match(&finding.file)),
+            )
+        });
+        findings.extend(audit.finish_files(
+            |index| scope.glob(&opts.allowed[index]),
+            |index| opts.allowed[index].clone(),
+            |index| opts.allowed[index].clone(),
+        ));
+        Ok(findings)
+    })
 }
 
 fn build_glob_set(patterns: &[&str]) -> Result<GlobSet> {
@@ -145,7 +138,7 @@ fn scan(
             }]
         })
         .collect();
-    findings.sort_by(|a, b| a.file.cmp(&b.file));
+    super::sort_findings::sort_by_file(&mut findings);
     Ok(findings)
 }
 

@@ -1,12 +1,12 @@
 const { spawnSync } = require("node:child_process");
 
-function profileArgs(platform) {
+function profileArgs(platform, pkg = "no-mistakes") {
   return platform === "macOS"
     ? [
         "--config",
-        "profile.dev.package.no-mistakes.codegen-units=64",
+        `profile.dev.package.${pkg}.codegen-units=64`,
         "--config",
-        "profile.test.package.no-mistakes.codegen-units=64",
+        `profile.test.package.${pkg}.codegen-units=64`,
       ]
     : [];
 }
@@ -32,7 +32,7 @@ function targets(platform) {
     ];
   if (platform === "macOS")
     return [
-      { selector: ["--test", "macos_invocation"], cases: [[]] },
+      { package: "no-mistakes-invocation", selector: ["--test", "macos_invocation"], cases: [[]] },
       { selector: ["--bin", "no-mistakes"], cases: [["invocation::tests::blocked_check::"]] },
       ...shared,
     ];
@@ -41,10 +41,16 @@ function targets(platform) {
 
 function commands(mode, platform) {
   const selected = targets(platform);
-  const base = ["test", ...profileArgs(platform), "--locked", "-p", "no-mistakes"];
+  const baseFor = (pkg = "no-mistakes") => [
+    "test",
+    ...profileArgs(platform, pkg),
+    "--locked",
+    "-p",
+    pkg,
+  ];
   if (mode === "build" || mode === "archive-build")
-    return selected.map(({ selector }) => [
-      ...base,
+    return selected.map(({ package: pkg, selector }) => [
+      ...baseFor(pkg),
       "--no-run",
       "--timings",
       "--verbose",
@@ -52,8 +58,8 @@ function commands(mode, platform) {
       ...selector,
     ]);
   if (mode === "run")
-    return selected.flatMap(({ selector, cases }) =>
-      cases.map((args) => [...base, ...selector, ...args]),
+    return selected.flatMap(({ package: pkg, selector, cases }) =>
+      cases.map((args) => [...baseFor(pkg), ...selector, ...args]),
     );
   throw new Error("usage: native-rust-tests.cjs <build|run>");
 }

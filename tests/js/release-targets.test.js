@@ -356,7 +356,7 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   );
   assert.match(
     nativeCommands,
-    /cargo test(?: --config \S+)* --locked -p no-mistakes --test macos_invocation/,
+    /cargo test(?: --config \S+)* --locked -p no-mistakes-invocation --test macos_invocation/,
     "macOS native jobs must run the focused invocation test target",
   );
   assert.doesNotMatch(nativeCommands, /cargo test\b[^\r\n]*--lib\b/);
@@ -371,7 +371,7 @@ test("native CI jobs run only platform-specific Rust tests", () => {
     "Windows must run the Job Object regression as an integration test",
   );
   const macosInvocation = readFileSync(
-    join(repoRoot, "crates", "no-mistakes", "tests", "macos_invocation.rs"),
+    join(repoRoot, "crates", "no-mistakes-invocation", "tests", "macos_invocation.rs"),
     "utf8",
   );
   assert.match(macosInvocation, /#\[path = "\.\.\/src\/invocation\.rs"\]/);
@@ -485,7 +485,7 @@ test("release publication requires both parallel validation suites", () => {
     sampled +
       'bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" test-integration',
     sampled + 'bash "$RUNNER_TEMP/validation-tools/.github/scripts/rust-validation.sh" doc',
-    sampled + "cargo publish --dry-run --locked -p no-mistakes",
+    sampled + "cargo publish --dry-run --locked --workspace",
     "pnpm run build:js",
   ])
     assert.ok(rust.includes(`run: ${command}\n`), command);

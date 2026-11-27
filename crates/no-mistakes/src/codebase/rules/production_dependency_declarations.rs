@@ -24,7 +24,6 @@ use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -100,43 +99,36 @@ pub(crate) fn check_with_files_sources_and_facts(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: Option<&dyn TsFactLookup>,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            let anchor =
-                super::config_diagnostic::ConfigAnchor::resolve(root, config, Some(sources), rule);
-            let workspace_roots = match workspace_roots(root, &opts) {
-                Ok(roots) => roots,
-                Err(message) => {
-                    return Ok(vec![findings::config(
-                        &anchor,
-                        anchor.option_line("workspaceRoots"),
-                        &message,
-                    )])
-                }
-            };
-            let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &workspace_roots))
-                .cloned()
-                .collect();
-            scan::run(
-                root,
-                &workspace_roots,
-                &opts,
-                &files,
-                sources,
-                facts,
-                &anchor,
-            )
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: Options = rule.try_rule_options()?;
+        let anchor =
+            super::config_diagnostic::ConfigAnchor::resolve(root, config, Some(sources), rule);
+        let workspace_roots = match workspace_roots(root, &opts) {
+            Ok(roots) => roots,
+            Err(message) => {
+                return Ok(vec![findings::config(
+                    &anchor,
+                    anchor.option_line("workspaceRoots"),
+                    &message,
+                )])
+            }
+        };
+        let skip = super::skip_dir_set(config);
+        let files: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &workspace_roots))
+            .cloned()
+            .collect();
+        scan::run(
+            root,
+            &workspace_roots,
+            &opts,
+            &files,
+            sources,
+            facts,
+            &anchor,
+        )
+    })
 }
 
 fn workspace_roots(root: &Path, opts: &Options) -> Result<Vec<PathBuf>, String> {

@@ -19,6 +19,8 @@ export interface PostgresCatalogOptions {
    * Use the deployed database's name so regeneration does not depend on where it runs.
    */
   currentDatabase?: string;
+  /** Optional path to atomically replace with the generated catalog. Relative to the process cwd. */
+  output?: string;
 }
 export interface PostgresOrderingCatalog {
   formatVersion: 2;

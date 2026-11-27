@@ -1,0 +1,140 @@
+version: 2
+rules:
+  - rule: nextjs-redirect-destinations
+    scope: repository
+    options:
+      includeRewrites: "yes"
+  - rule: rust-max-lines-per-file
+    scope: repository
+    options:
+      srcMax: "many"
+  - rule: rust-no-inline-allows
+    scope: repository
+    options:
+      testMax: "many"
+  - rule: rust-no-inline-tests
+    scope: repository
+    options:
+      excludes: "src"
+  - rule: postgres-array-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      neverAllowElementTypes: ["uuid"]
+      allowElementTypes: ["uuid"]
+  - rule: postgres-bounded-statements
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      statements: ["merge"]
+  - rule: postgres-conflict-ordering
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      include: ["["]
+  - rule: postgres-constraint-validate
+    scope: repository
+    options:
+      sqlInclude: "migrations"
+  - rule: postgres-duplicate-function-body
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      minClusterSize: 1
+  - rule: postgres-explain-write-rollback
+    scope: repository
+    options:
+      sqlInclude: ["["]
+  - rule: postgres-explicit-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      maxColumns: -1
+  - rule: postgres-finite-text-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      columnTypes: []
+  - rule: postgres-fk-index
+    scope: repository
+    options:
+      allowedColumns: "id"
+  - rule: postgres-generated-column-predicates
+    scope: repository
+    options:
+      executorNames: []
+      functions: []
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options:
+      executorNames: []
+      include: ["["]
+  - rule: postgres-identifier-length
+    scope: repository
+    options:
+      maxBytes: 64
+  - rule: postgres-json-relation-ids
+    scope: repository
+    options:
+      idKeyPattern: "("
+  - rule: postgres-key-column-types
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allowedTypes: []
+  - rule: postgres-lock-ordering
+    scope: repository
+    options:
+      executorNames: []
+      include: ["["]
+  - rule: postgres-lock-written-rows-only
+    scope: repository
+    options:
+      executorNames: []
+      checks:
+        not-a-check: fail
+  - rule: postgres-materialized-view-shape
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      windowFunctions: [""]
+  - rule: postgres-no-transformed-uuid-predicates
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      executorNames: []
+      sqlInclude: ["["]
+  - rule: postgres-redundant-index
+    scope: repository
+    options:
+      allowedIndexes: "orders_pkey"
+  - rule: postgres-require-fk-on-delete
+    scope: repository
+    options:
+      sqlInclude: "migrations"
+  - rule: postgres-require-named-constraints
+    scope: repository
+    options:
+      sqlInclude: "migrations"
+  - rule: postgres-require-query-annotation
+    scope: repository
+    options:
+      executorNames: []
+      sqlLiteralHelpers: ["not-an-identity"]
+  - rule: postgres-required-comments
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      objects: ["index"]
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options:
+      bannedStatements: ["NOT_A_KIND"]
+  - rule: postgres-status-with-lifecycle-timestamps
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      statusColumns: []

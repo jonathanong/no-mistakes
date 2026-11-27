@@ -7,7 +7,6 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use project_sources::vitest_projects;
 use projects::{build_project_globs, matching_projects};
-use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -58,25 +57,18 @@ pub(crate) fn check_with_files_and_catalog(
     all_files: &[PathBuf],
     catalog: Option<&super::PreparedVitestProjectCatalog>,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
-                .cloned()
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, config, &opts, &files, &target_roots, catalog)
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: Options = rule.try_rule_options()?;
+        let target_roots = super::target_roots(root, config, rule);
+        let skip = super::skip_dir_set(config);
+        let files: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
+            .cloned()
+            .collect();
+        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        scan(root, config, &opts, &files, &target_roots, catalog)
+    })
 }
 
 fn scan(
@@ -133,7 +125,7 @@ fn scan(
             }),
         }
     }
-    findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
+    super::sort_findings::sort_by_file_and_message(&mut findings);
     Ok(findings)
 }
 

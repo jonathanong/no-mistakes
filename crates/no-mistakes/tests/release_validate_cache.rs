@@ -49,7 +49,7 @@ fn validate_job_drops_cargo_package_tree_before_rust_cache_save() {
         .find("Swatinem/rust-cache")
         .expect("Validate must set up Swatinem/rust-cache before package verification");
     let publish = validate
-        .find("cargo publish --dry-run --locked -p no-mistakes")
+        .find("cargo publish --dry-run --locked --workspace")
         .expect("Validate must dry-run cargo publish");
     let cleanup_heading = validate
         .find("name: Drop cargo package verification tree")
@@ -102,7 +102,7 @@ fn validate_job_drops_test_executables_after_tests_before_package_verification()
         .find("name: Drop Rust test executables")
         .expect("Validate must free test executables before package verification");
     let publish = validate
-        .find("cargo publish --dry-run --locked -p no-mistakes")
+        .find("cargo publish --dry-run --locked --workspace")
         .unwrap();
     assert!(
         rust_tests < integration_tests

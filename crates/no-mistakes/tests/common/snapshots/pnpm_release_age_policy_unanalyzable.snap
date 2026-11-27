@@ -1,0 +1,170 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "packages/broken/package.json",
+          "line": 1,
+          "message": "packages/broken/package.json: cannot verify dependency policy because this manifest could not be read or parsed: EOF while parsing an object at line 2 column 0. Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "{",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "packages/invalid-utf8/package.json",
+          "line": 1,
+          "message": "packages/invalid-utf8/package.json: cannot verify dependency policy because this manifest could not be read or parsed: invalid utf-8 sequence of 1 bytes from index 0. Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"unknown\" is not in a release-age exemption registry",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude: [acme, unknown]",
+          "target": "unknown"
+        }
+      ],
+      "suppressed": [
+        {
+          "directive": {
+            "kind": "file",
+            "line": 1
+          },
+          "domain": "advisories",
+          "file": "packages/suppressed-utf8/package.json",
+          "line": 1,
+          "reason": "packages/suppressed-utf8/package.json: cannot verify dependency policy because this manifest could not be read or parsed: invalid utf-8 sequence of 1 bytes from index 52. Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "sourceFile": "packages/suppressed-utf8/package.json"
+        },
+        {
+          "directive": {
+            "kind": "file",
+            "line": 1
+          },
+          "domain": "advisories",
+          "file": "packages/suppressed/package.json",
+          "line": 1,
+          "reason": "packages/suppressed/package.json: cannot verify dependency policy because this manifest could not be read or parsed: expected value at line 1 column 1. Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "sourceFile": "packages/suppressed/package.json",
+          "sourceLine": "// no-mistakes-disable-file pnpm-release-age-policy"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "packages/suppressed-utf8/package.json",
+          "line": 1,
+          "message": "directive for `pnpm-release-age-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "target": "pnpm-release-age-policy"
+        },
+        {
+          "file": "packages/suppressed/package.json",
+          "line": 1,
+          "message": "directive for `pnpm-release-age-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-file pnpm-release-age-policy",
+          "target": "pnpm-release-age-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"unknown\" is not in a release-age exemption registry",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude: [acme, unknown]",
+          "target": "unknown"
+        }
+      ],
+      "suppressed": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/broken/package.json",
+          "line": 1,
+          "message": "packages/broken/package.json: cannot verify dependency policy because this manifest could not be read or parsed: EOF while parsing an object at line 2 column 0. Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "{",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "packages/invalid-utf8/package.json",
+          "line": 1,
+          "message": "packages/invalid-utf8/package.json: cannot verify dependency policy because this manifest could not be read or parsed: invalid utf-8 sequence of 1 bytes from index 0. Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "pnpm-workspace.yaml",
+          "line": 1,
+          "message": "pnpm-workspace.yaml: \"unknown\" is not in a release-age exemption registry",
+          "rule": "pnpm-release-age-policy",
+          "sourceLine": "minimumReleaseAgeExclude: [acme, unknown]",
+          "target": "unknown"
+        }
+      ],
+      "suppressed": [
+        {
+          "directive": {
+            "kind": "file",
+            "line": 1
+          },
+          "domain": "filesystem",
+          "file": "packages/suppressed-utf8/package.json",
+          "line": 1,
+          "reason": "packages/suppressed-utf8/package.json: cannot verify dependency policy because this manifest could not be read or parsed: invalid utf-8 sequence of 1 bytes from index 52. Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "sourceFile": "packages/suppressed-utf8/package.json"
+        },
+        {
+          "directive": {
+            "kind": "file",
+            "line": 1
+          },
+          "domain": "filesystem",
+          "file": "packages/suppressed/package.json",
+          "line": 1,
+          "reason": "packages/suppressed/package.json: cannot verify dependency policy because this manifest could not be read or parsed: expected value at line 1 column 1. Repair the manifest or restore read access.",
+          "rule": "pnpm-release-age-policy",
+          "sourceFile": "packages/suppressed/package.json",
+          "sourceLine": "// no-mistakes-disable-file pnpm-release-age-policy"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
