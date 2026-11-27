@@ -850,6 +850,12 @@
       "findings": [],
       "kind": "valid",
       "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
     }
   ],
   "react-no-nullish-react-node": [

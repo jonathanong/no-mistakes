@@ -14,11 +14,6 @@ export function otherMethod(query: Builder, access: string) {
   if (access === "member") query.other(sql`AND member_id = $1`);
 }
 
-export function nestedObject(box: { query: Builder }, access: string) {
-  if (access === "owned") box.query.append(sql`AND account_id = $1`);
-  if (access === "member") box.query.append(sql`AND member_id = $1`);
-}
-
 export function spreadCall(query: Builder, access: string) {
   const piece = sql`AND account_id = $1`;
   if (access === "owned") query.append.call(query, ...[piece]);

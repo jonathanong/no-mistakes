@@ -90,6 +90,7 @@ function forwarderAppend(call, methods, tags, context) {
 
 function findAppends(node, methods, tags, context) {
   const builders = new Map();
+  const unknown = [];
   const visit = (current) => {
     if (isFunction(current)) {
       return;
@@ -98,16 +99,18 @@ function findAppends(node, methods, tags, context) {
       const object =
         directAppend(current, methods, tags, null, context) ||
         forwarderAppend(current, methods, tags, context);
-      const variable = object && resolveVariable(object, context);
-      // One guard contributes once per actual receiver binding, in source order.
-      if (variable && !builders.has(variable)) {
-        builders.set(variable, { object, call: current });
+      if (object) {
+        const variable = resolveVariable(object, context);
+        // One guard contributes once per actual receiver binding, in source order.
+        if (variable) {
+          if (!builders.has(variable)) builders.set(variable, { object, call: current });
+        } else unknown.push(current);
       }
     }
     for (const child of childNodes(current)) visit(child);
   };
   visit(node);
-  return [...builders.values()];
+  return { builders: [...builders.values()], unknown };
 }
 
 module.exports = {

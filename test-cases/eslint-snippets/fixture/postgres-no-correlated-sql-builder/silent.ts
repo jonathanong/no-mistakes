@@ -33,21 +33,11 @@ export function notSql(query: Builder, access: string, other: string) {
   if (access === "extra") query.push(sql`AND extra = $1`);
 }
 
-export function member(box: { query: Builder }, access: string) {
-  if (access === "owned") box.query.append(sql`AND account_id = $1`);
-  if (access === "member") box.query.append(sql`AND member_id = $1`);
-}
-
 declare function append(text: unknown): unknown;
 
 export function bare(access: string) {
   if (access === "owned") append(sql`AND account_id = $1`);
   if (access === "member") append(sql`AND member_id = $1`);
-}
-
-export function lostBuilder(access: string) {
-  if (access === "owned") missingBuilder.append(sql`AND account_id = $1`);
-  if (access === "member") missingBuilder.append(sql`AND member_id = $1`);
 }
 
 export function unresolved(query: Builder) {
