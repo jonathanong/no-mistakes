@@ -9,7 +9,7 @@ module.exports = defineConfig({
     pool: "forks",
     // Each native process owns a Rayon pool; overlap would time competing pools.
     fileParallelism: !compiledNative || listingNative,
-    // Forked workers isolate process env and module hooks per worker while sharing module evaluation across files.
+    // Isolation is off for every non-native run and for `vitest list`, so files in one worker share module evaluation. That is safe because those tests do not keep a private module registry and do not depend on file order. Native addon runs keep isolation so each file owns its runtime directory. Separate workers still do not share process.env or module hooks.
     isolate: Boolean(compiledNative && !listingNative),
     // Loaded CI shards exceed the 5s default (typed programs, compiled API); policy caps this at 30s.
     testTimeout: 30_000,
