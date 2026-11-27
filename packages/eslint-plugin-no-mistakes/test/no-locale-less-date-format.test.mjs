@@ -228,6 +228,16 @@ const cases = [
     lines: [7, 11, 15],
   },
   {
+    name: "an import equals alias of a local name stays quiet when unknownValues is finding",
+    file: "import-equals-local.ts",
+    options: {
+      methods: [],
+      constructors: ["LocalIntl.DateTimeFormat"],
+      unknownValues: "finding",
+    },
+    lines: [],
+  },
+  {
     name: "a proven local Intl object stays quiet when unknownValues is finding",
     file: "local-intl-object.mjs",
     options: {

@@ -16,13 +16,13 @@ function isRequireCall(node) {
 }
 
 // An import, `import = require`, or `require()` names a module this file
-// cannot read. A local object with the same name is a proven shadow.
+// cannot read. `import =` of a local name, and a local object, stay quiet.
 function isUnreadModuleDef(def) {
-  if (def.type === "ImportBinding") return true;
   const node = def.node;
   if (node?.type === "TSImportEqualsDeclaration") {
     return node.moduleReference?.type === "TSExternalModuleReference";
   }
+  if (def.type === "ImportBinding") return true;
   return def.type === "Variable" && node?.type === "VariableDeclarator" && isRequireCall(node.init);
 }
 

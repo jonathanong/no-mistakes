@@ -90,7 +90,8 @@ const Intl = { DateTimeFormat() { return { format() {} }; } };
 new Intl.DateTimeFormat();
 ```
 
-An unread module reports `unanalyzable` once `unknownValues` is `"finding"`
+An `import Local = Other` alias of a name in this file stays quiet. An
+unread module reports `unanalyzable` once `unknownValues` is `"finding"`
 and `constructors` lists that dotted name:
 
 ```ts

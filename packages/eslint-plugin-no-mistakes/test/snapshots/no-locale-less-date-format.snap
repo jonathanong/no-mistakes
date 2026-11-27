@@ -187,6 +187,19 @@
     "rule": "no-locale-less-date-format"
   },
   {
+    "file": "no-locale-less-date-format/import-equals-local.ts",
+    "findings": [],
+    "name": "an import equals alias of a local name stays quiet when unknownValues is finding",
+    "options": {
+      "constructors": [
+        "LocalIntl.DateTimeFormat"
+      ],
+      "methods": [],
+      "unknownValues": "finding"
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
     "file": "no-locale-less-date-format/intl-constructors.mjs",
     "findings": [
       {
