@@ -489,3 +489,20 @@ a price, and this runner does not invent one. `python3 evals/summarize.py` on
 that file prints the with-arm trigger and the content delta. The runner's own
 summary prints the trigger rate for both arms. Write `--output` outside the
 worktree, as with the Claude reports.
+
+## What the measurements support (moved from the README)
+
+Rules for changing the description. The evidence for each is in
+[HISTORY.md](HISTORY.md).
+
+- **Name the subjects that matter.** A subject the description names is
+  reached reliably; one it does not name may or may not be, and nothing
+  predicts which.
+- **Treat the description as a budget.** Rewording reallocates coverage, so
+  measure every flow whose subject a change removes, not only the flows it
+  targets.
+- **Prefer concrete question forms over general framing.**
+- **Gate against a same-day control arm, never a stored number**
+  ([procedure](METHODOLOGY.md#gating-a-description-change)).
+- **Read `neg-hard` as two numbers:** `skill-fired`, plus invented commands in
+  the non-firing runs. A non-firing plan has never named a real subcommand.
