@@ -98,6 +98,10 @@ literal JSON-LD tags remain allowed. This rule does not autofix either case.
 const bootstrap = <script id="parser-bootstrap">window.ready = true;</script>;
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`nextjs-metadata-exports-location`](nextjs-metadata-exports-location.md)

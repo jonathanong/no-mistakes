@@ -1,0 +1,17 @@
+name: caller-valid
+on: push
+jobs:
+  explicit:
+    uses: ./.github/workflows/callee.yml
+    with:
+      target_env: staging
+    secrets:
+      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+      AUDIT_TOKEN: ${{ secrets.AUDIT_TOKEN }}
+  case_insensitive:
+    uses: ./.github/workflows/callee.yml
+    with:
+      TARGET_ENV: production
+    secrets:
+      deploy_key: ${{ secrets.DEPLOY_KEY }}
+      audit_token: ${{ secrets.AUDIT_TOKEN }}

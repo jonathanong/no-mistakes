@@ -16,12 +16,12 @@ memory changing from 41.9 KB to 126.2 KB and language extraction from 469.7 KB t
 1,033.9 KB. The native benchmark loads the changed Swift corpus; the language
 frontend corpus and both collector implementations were unchanged. These are
 matched measurements requiring investigation, rather than proof that changing
-labels caused either increase. See [the original report](https://github.com/jonathanong/no-mistakes/pull/1214#issuecomment-5971148534).
+labels caused either increase. See [the original report](https://github.com/jongleberry/no-mistakes/pull/1214#issuecomment-5971148534).
 
 The following PR #1215 kept these benchmark corpora unchanged and reported Swift
 memory of 43.4 KB and language extraction of 435.3 KB against that anonymized
 parent. Separate CI runs are a useful control, but do not establish paired-run
-allocator nondeterminism or explain the earlier report. See [the unchanged-corpus control](https://github.com/jonathanong/no-mistakes/issues/1412#issuecomment-5976634890).
+allocator nondeterminism or explain the earlier report. See [the unchanged-corpus control](https://github.com/jongleberry/no-mistakes/issues/1412#issuecomment-5976634890).
 
 ## Paired local experiment
 

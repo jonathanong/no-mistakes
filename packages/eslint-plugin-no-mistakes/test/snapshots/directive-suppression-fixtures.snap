@@ -1,0 +1,870 @@
+{
+  "nextjs-metadata-exports-location": [
+    {
+      "file": "app/components/line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/components/next-line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/components/file.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/components/control.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 1,
+          "file": "app/components/control.mjs",
+          "line": 1,
+          "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
+          "messageId": "location",
+          "ruleId": "no-mistakes/nextjs-metadata-exports-location",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "nextjs-no-manual-script-tags": [
+    {
+      "file": "app/line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/next-line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/file.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "app/control.jsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 57,
+          "endLine": 2,
+          "file": "app/control.jsx",
+          "line": 2,
+          "message": "Use next/script instead of a raw <script> tag.",
+          "messageId": "script",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "nextjs-static-fetch-method": [
+    {
+      "file": "line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "next-line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "file.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "control.mjs",
+      "findings": [
+        {
+          "column": 37,
+          "endColumn": 50,
+          "endLine": 1,
+          "file": "control.mjs",
+          "line": 1,
+          "message": "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
+          "messageId": "dynamic",
+          "ruleId": "no-mistakes/nextjs-static-fetch-method",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "nextjs-static-fetch-url": [
+    {
+      "file": "line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "next-line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "file.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "control.mjs",
+      "findings": [
+        {
+          "column": 13,
+          "endColumn": 35,
+          "endLine": 1,
+          "file": "control.mjs",
+          "line": 1,
+          "message": "fetch() URL must be a string literal or an expression-free template literal so it can be statically analyzed.",
+          "messageId": "dynamic",
+          "ruleId": "no-mistakes/nextjs-static-fetch-url",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-delete-property": [
+    {
+      "file": "samples/line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "samples/next-line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "samples/file.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "samples/control.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 1,
+          "file": "samples/control.mjs",
+          "line": 1,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.",
+          "messageId": "delete",
+          "ruleId": "no-mistakes/no-delete-property",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-global-fetch-outside-helper": [
+    {
+      "file": "web/app/line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "checkedPathPatterns": [
+            "web/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "web/app/next-line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "checkedPathPatterns": [
+            "web/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "web/app/file.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "checkedPathPatterns": [
+            "web/**"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "web/app/control.mjs",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 12,
+          "endLine": 1,
+          "file": "web/app/control.mjs",
+          "line": 1,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "checkedPathPatterns": [
+            "web/**"
+          ]
+        }
+      ]
+    }
+  ],
+  "no-inline-noop-promise-catch": [
+    {
+      "file": "line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "next-line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "file.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "control.mjs",
+      "findings": [
+        {
+          "column": 16,
+          "endColumn": 24,
+          "endLine": 1,
+          "file": "control.mjs",
+          "line": 1,
+          "message": "Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable.",
+          "messageId": "noopCatch",
+          "ruleId": "no-mistakes/no-inline-noop-promise-catch",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-placeholder-never-type-exports": [
+    {
+      "file": "line.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "next-line.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "file.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "control.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 34,
+          "endLine": 1,
+          "file": "control.ts",
+          "line": 1,
+          "message": "Do not export placeholder never types. Define the real type or remove the export.",
+          "messageId": "placeholder",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-vitest-sequential": [
+    {
+      "file": "file.test.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "control.test.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 1,
+          "file": "control.test.mjs",
+          "line": 1,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "playwright-assertion-timeout-cap": [
+    {
+      "file": "e2e/line.spec.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "e2e/next-line.spec.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "e2e/file.spec.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "e2e/control.spec.mjs",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 78,
+          "endLine": 2,
+          "file": "e2e/control.spec.mjs",
+          "line": 2,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "playwright-consistent-attribute": [
+    {
+      "file": "line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "next-line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "file.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "control.jsx",
+      "findings": [
+        {
+          "column": 24,
+          "endColumn": 35,
+          "endLine": 1,
+          "file": "control.jsx",
+          "line": 1,
+          "message": "Use 'data-pw' instead of 'data-testid' for test IDs.",
+          "messageId": "attribute",
+          "ruleId": "no-mistakes/playwright-consistent-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "playwright-defaults": [
+    {
+      "file": "line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "next-line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "file.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "control.jsx",
+      "findings": [
+        {
+          "column": 18,
+          "endColumn": 34,
+          "endLine": 2,
+          "file": "control.jsx",
+          "line": 2,
+          "message": "Test ID prop passthrough must have a literal default.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/playwright-defaults",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "playwright-literals": [
+    {
+      "file": "line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "file.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "control.jsx",
+      "findings": [
+        {
+          "column": 24,
+          "endColumn": 43,
+          "endLine": 1,
+          "file": "control.jsx",
+          "line": 1,
+          "message": "Use a literal test ID, a static template, or a prop with a literal default.",
+          "messageId": "literal",
+          "ruleId": "no-mistakes/playwright-literals",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "playwright-naming-convention": [
+    {
+      "file": "line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "next-line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "file.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "control.jsx",
+      "findings": [
+        {
+          "column": 24,
+          "endColumn": 44,
+          "endLine": 1,
+          "file": "control.jsx",
+          "line": 1,
+          "message": "Test ID 'SaveButton' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$.",
+          "messageId": "naming",
+          "ruleId": "no-mistakes/playwright-naming-convention",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "playwright-no-empty": [
+    {
+      "file": "line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "next-line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "file.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "control.jsx",
+      "findings": [
+        {
+          "column": 24,
+          "endColumn": 34,
+          "endLine": 1,
+          "file": "control.jsx",
+          "line": 1,
+          "message": "Test ID must not be empty.",
+          "messageId": "empty",
+          "ruleId": "no-mistakes/playwright-no-empty",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "playwright-no-hoisted-unique-token": [
+    {
+      "file": "e2e/line.spec.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "e2e/next-line.spec.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "e2e/file.spec.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "e2e/control.spec.mjs",
+      "findings": [
+        {
+          "column": 36,
+          "endColumn": 42,
+          "endLine": 3,
+          "file": "e2e/control.spec.mjs",
+          "line": 3,
+          "message": "`suffix` is generated once by `randomSuffix()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `randomSuffix()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "tokenFactories": [
+            "randomSuffix"
+          ]
+        }
+      ]
+    }
+  ],
+  "playwright-no-raw-scroll-pagination": [
+    {
+      "file": "e2e/line.spec.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "e2e/file.spec.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "e2e/control.spec.mjs",
+      "findings": [
+        {
+          "column": 29,
+          "endColumn": 50,
+          "endLine": 3,
+          "file": "e2e/control.spec.mjs",
+          "line": 3,
+          "message": "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout. Use a helper that scrolls repeatedly until the request fires instead of a single raw call.",
+          "messageId": "rawScroll",
+          "ruleId": "no-mistakes/playwright-no-raw-scroll-pagination",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "playwright-prefer-get-by-test-id": [
+    {
+      "file": "line.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "file.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "control.mjs",
+      "findings": [
+        {
+          "column": 12,
+          "endColumn": 34,
+          "endLine": 1,
+          "file": "control.mjs",
+          "line": 1,
+          "message": "Prefer getByTestId('save') for exact test ID selectors.",
+          "messageId": "prefer",
+          "ruleId": "no-mistakes/playwright-prefer-get-by-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "playwright-require-exported-component-attribute": [
+    {
+      "file": "line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "next-line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "file.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "control.jsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 31,
+          "endLine": 2,
+          "file": "control.jsx",
+          "line": 2,
+          "message": "Exported component 'SaveButton' must return JSX containing one of: data-pw.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-exported-component-attribute",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "playwright-require-interactive-test-id": [
+    {
+      "file": "line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "file.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "control.jsx",
+      "findings": [
+        {
+          "column": 18,
+          "endColumn": 24,
+          "endLine": 1,
+          "file": "control.jsx",
+          "line": 1,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "playwright-selector-priority": [
+    {
+      "file": "e2e/line.spec.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "e2e/file.spec.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "e2e/control.spec.mjs",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 1,
+          "file": "e2e/control.spec.mjs",
+          "line": 1,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "playwright-test-timeout-cap": [
+    {
+      "file": "e2e/line.spec.mjs",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "e2e/control.spec.mjs",
+      "findings": [
+        {
+          "column": 17,
+          "endColumn": 22,
+          "endLine": 2,
+          "file": "e2e/control.spec.mjs",
+          "line": 2,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "playwright-unique": [
+    {
+      "file": "line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "next-line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "file.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "control.jsx",
+      "findings": [
+        {
+          "column": 24,
+          "endColumn": 38,
+          "endLine": 2,
+          "file": "control.jsx",
+          "line": 2,
+          "message": "Test ID 'save' is already used in this file.",
+          "messageId": "duplicate",
+          "ruleId": "no-mistakes/playwright-unique",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ]
+}

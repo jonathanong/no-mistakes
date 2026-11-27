@@ -12,7 +12,7 @@ literal heads at the executor call or in one local const, trusted
 `sql-template-strings` append prefixes, finite all-named conditional arms,
 and fixed-return helpers (including total finite returns and one safe returned tagged local) in the same
 file or through one direct source import. See the
-[bounded syntax shapes](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-query-annotation/low-effort.md).
+[bounded syntax shapes](https://github.com/jongleberry/no-mistakes/blob/main/docs/postgres-query-annotation/low-effort.md).
 Low also accepts a literal string `const` name inside the first comment and a
 closed `as const` literal table member passed directly to an executor. Table
 writes, aliases, exports, and dynamic reads keep the unanalyzable policy.
@@ -55,7 +55,7 @@ visible source text, not an executed statement. Dynamic `EXECUTE` fails closed.
 IF/ELSIF/ELSE branches expose typed conditions and nested statements;
 inspect every branch without assuming its condition is true. PostgreSQL 18 virtual generated columns retain their declared or
 default storage. Unrecognized procedural forms remain explicit. UTF-8 offsets are zero-based; Unicode line/columns are one-based,
-with exclusive span ends. See [the source API](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-source-api.md)
+with exclusive span ends. See [the source API](https://github.com/jongleberry/no-mistakes/blob/main/docs/postgres-source-api.md)
 for exported types, structural index identity, and grammar boundaries.
 Literal PL/pgSQL `EXECUTE` source occurrences in supported `DO` bodies expose
 `kind: "literalExecute"` and a `PostgresSqlLiteralExecute` payload. Dollar-quoted,
@@ -159,7 +159,7 @@ fact or evaluate array contents. An otherwise supported `INSERT ... SELECT`
 with `x = ANY(t.aliases)` can therefore be complete.
 
 Grouped residual advice, including a `target` that may list several checks, is described in
-[SQL verdicts](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-sql-verdicts.md).
+[SQL verdicts](https://github.com/jongleberry/no-mistakes/blob/main/docs/postgres-sql-verdicts.md).
 
 For `postgres-no-unbounded-sql-identifier`, low effort accepts direct literal SQL/templates or one lexical const and skips call-graph/provenance inference. Keep relations literal; bind external values. Helper/alias/factory/type shapes are unanalyzable and follow `report`, `advise`, or `ignore`. Direct global `process.env` relation inputs remain violations.
 
@@ -199,7 +199,7 @@ intentionally, use `excludeExecutorNames: [query]`; it removes names after
 replacement or defaults plus extras and suppresses omitted-default warnings.
 Remove exclusions flagged as unused: they either are not default names or are
 never imported from the selected module and called in scoped files. See
-[executor selection](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/rules.md#postgresql-executor-selection).
+[executor selection](https://github.com/jongleberry/no-mistakes/blob/main/docs/configuration/rules.md#postgresql-executor-selection).
 
 Use opt-in `postgres-lock-written-rows-only` to audit configured transaction
 executors. Start with its default advisory checks, then set individual check
@@ -238,7 +238,7 @@ transaction, including a guard-relation read between the lock and DDL. Optional
 Keep `allow` reasons and `writeSets` assertions
 narrow. Unknown SQL, helper execution, or transaction membership follows the
 unanalyzable policy and never proves a safe lock. See
-[the rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-lock-written-rows-only.md)
+[the rule](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-lock-written-rows-only.md)
 for limits and rewrites.
 
 For catalog column bounds, use `postgres-column-check-constraints` with
@@ -246,7 +246,7 @@ For catalog column bounds, use `postgres-column-check-constraints` with
 `require: non-negative`. It requires validated CHECK proofs for selected
 columns. Adopt with `severity: advisory`; the default severity is `error`.
 Exceptions name an exact `table.column` and a reason. See
-the [rule contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-column-check-constraints.md).
+the [rule contract](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-column-check-constraints.md).
 
 For catalog review, opt into `postgres-materialized-view-shape` with
 `schemaCatalogPath`. The shared application `severity` defaults to `error`;
@@ -258,7 +258,7 @@ for key-window predicates or use a plain indexed range; reserve
 `allowBaseTables: [{table, reason}]` for bounded-size tables. Run
 `no-mistakes check --root <repo> --format json` and inspect `rules` or
 `advisories` according to the configured severity. See
-the [rule contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-materialized-view-shape.md).
+the [rule contract](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-materialized-view-shape.md).
 
 For independent candidate pools, configure
 `postgres-bounded-statements.options.materializedBodies`: `ignore` (default),
@@ -281,7 +281,7 @@ as `acceptedBounds` (`rule`, `file`, `line`, `rows`, `justification`) and do not
 fail the check. A disable directive that covers the declaration or the statement
 omits that entry. A missing limit, `rows<=0`, a missing justification, or a
 declaration on an already bounded statement is a finding. See
-[declared statement bounds](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-bounded-statements.md#declared-statement-bounds).
+[declared statement bounds](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-bounded-statements.md#declared-statement-bounds).
 
 `postgres-bounded-statements.options.maxDomainRows` accepts a unique-key lookup
 whose free columns each have a proven finite domain when the product of those

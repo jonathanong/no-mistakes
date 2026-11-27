@@ -129,7 +129,7 @@ The CLI comparisons use four samples per binary per case in the initial sweep
 and twenty in the targeted jobs-8 recheck of excluded-caller controls. The
 reported medians apply to those workloads and have no confidence intervals.
 Max effort can still do more analysis than low effort.
-See the [benchmark results](https://github.com/jonathanong/no-mistakes/pull/3860).
+See the [benchmark results](https://github.com/jongleberry/no-mistakes/pull/3860).
 
 For an executor call with complete
 [SQL alternatives](../postgres-facts.md#finite-sql-alternatives), the rule uses
@@ -742,4 +742,4 @@ paths remain unanalyzable; see [awaited return origins](../postgres-query-annota
 ## Invalid UTF-8
 
 The rule reads SQL from executor calls in application source. Source text
-is decoded lossily, so a stray byte alone does not drop a file. [Source selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_require_query_annotation/scan.rs#L39-L61).
+is decoded lossily, so a stray byte alone does not drop a file. [Source selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_require_query_annotation/scan.rs#L39-L61).

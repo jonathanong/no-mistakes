@@ -16,4 +16,4 @@
 
 ### Errors in docs/performance/foreign-receiver-work-budget.md
 
-* [502] <https://github.com/jonathanong/no-mistakes/pull/3056> (at 148:36) | Rejected status code: 502 Bad Gateway
+* [502] <https://github.com/jongleberry/no-mistakes/pull/3056> (at 148:36) | Rejected status code: 502 Bad Gateway

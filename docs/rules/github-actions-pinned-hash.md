@@ -22,6 +22,8 @@ reference; the following line of a block `uses` is. A `uses` field under
 
 ## Options
 
+Each `excludePaths` entry must be a valid glob.
+
 - `excludePaths` skips matching workflow and composite action files. It
   defaults to an empty list.
 - `images` defaults to `false`. Set it to `true` to require an

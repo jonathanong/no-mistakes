@@ -8,4 +8,4 @@
 
 ### Errors in docs/missing.md
 
-* [404] <https://github.com/jonathanong/no-mistakes/pull/999999999> (at 1:1) | Rejected status code: 404 Not Found
+* [404] <https://github.com/jongleberry/no-mistakes/pull/999999999> (at 1:1) | Rejected status code: 404 Not Found

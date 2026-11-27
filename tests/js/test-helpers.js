@@ -32,10 +32,10 @@ async function testInstallerMainDownloads(main, name, packageRoot, assert) {
     return `/tmp/${args[2].destinationName}`;
   });
   assert.equal(calls.length, 2);
-  assert.deepEqual(calls[0].slice(0, 2), [name, "jonathanong/no-mistakes"]);
+  assert.deepEqual(calls[0].slice(0, 2), [name, "jongleberry/no-mistakes"]);
   assert.equal(calls[0][2].vendorDir, join(packageRoot, "bin"));
   assert.equal(calls[0][2].destinationName, name);
-  assert.deepEqual(calls[1].slice(0, 2), [`${name}-napi`, "jonathanong/no-mistakes"]);
+  assert.deepEqual(calls[1].slice(0, 2), [`${name}-napi`, "jongleberry/no-mistakes"]);
   assert.equal(calls[1][2].vendorDir, join(packageRoot, "bin"));
   assert.equal(calls[1][2].destinationName, `${name}.node`);
   assert.equal(calls[1][2].assetExtension, ".node");

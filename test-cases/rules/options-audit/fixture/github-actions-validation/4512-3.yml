@@ -1,0 +1,9 @@
+version: 2
+rules:
+- rule: github-actions-test-timeout-literals
+  scope: repository
+  options:
+    allow:
+    - file: .github/workflows/sample.test.ts
+      text: expect(job.timeoutMinutes).toBe(12);
+      reason: ''

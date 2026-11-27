@@ -1,0 +1,6 @@
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      forbidSecretsInherit: true
+      requireExplicitWorkflowCallBindings: true

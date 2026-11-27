@@ -1,7 +1,7 @@
 # Annotation stall diagnosis (#2118)
 
 This directory retains compact summaries and provenance. Original raw records
-are linked from [the #2118 evidence comment](https://github.com/jonathanong/no-mistakes/issues/2118#issuecomment-6307927353) at the immutable reviewed
+are linked from [the #2118 evidence comment](https://github.com/jongleberry/no-mistakes/issues/2118#issuecomment-6307927353) at the immutable reviewed
 commit `2bb59a66b263a1b49f652d78c4cfdb5318f04782`. Large progress streams,
 coverage tables, debugger traces, and per-fixture rows are outside the final
 source tree. `manifest.json` maps removed files to their original SHA-256 values

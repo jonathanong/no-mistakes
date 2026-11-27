@@ -56,6 +56,10 @@ object to make the method visible when options are assembled elsewhere.
 await fetch(url, { method: requestMethod });
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`nextjs-static-fetch-url`](nextjs-static-fetch-url.md) requires the same

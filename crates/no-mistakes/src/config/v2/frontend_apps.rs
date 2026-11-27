@@ -12,7 +12,7 @@ use build::{build_app, relative_string};
 /// selectors". A repository can have more than one such app (for example two
 /// Next.js services sharing a monorepo); [`frontend_apps`] resolves the
 /// complete, deterministic set instead of picking one, which is what caused
-/// <https://github.com/jonathanong/no-mistakes/issues/624>.
+/// <https://github.com/jongleberry/no-mistakes/issues/624>.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FrontendApp {
     /// The `.no-mistakes.yml` `projects:` key this app was configured under,
@@ -26,7 +26,7 @@ pub struct FrontendApp {
     /// Resolved by preferring `<root>/src/app` over `<root>/app`, mirroring
     /// Next.js's own `src/`-directory precedence
     /// (<https://nextjs.org/docs/app/building-your-application/configuring/src-directory>).
-    /// See <https://github.com/jonathanong/no-mistakes/issues/625>.
+    /// See <https://github.com/jongleberry/no-mistakes/issues/625>.
     pub route_root: String,
     /// Repo-relative roots scanned for selector usage. Defaults to `[root]`
     /// (the whole package, not just `route_root`) so narrowing route
