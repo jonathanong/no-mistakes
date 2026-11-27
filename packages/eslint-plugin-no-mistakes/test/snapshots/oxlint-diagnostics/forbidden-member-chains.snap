@@ -204,6 +204,13 @@
   },
   {
     "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 38,
+    "message": "Cannot tell whether this member chain is `records.entry`. Use the entry helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
     "column": 9,
     "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
     "line": 38,
