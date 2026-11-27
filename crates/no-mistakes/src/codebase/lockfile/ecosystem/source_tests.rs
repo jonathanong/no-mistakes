@@ -224,7 +224,15 @@ fn uv_uses_source_hash_without_wheels_and_classifies_direct_archives() {
         "https://packages.example.invalid/example.tar.gz",
         ResolutionKind::Tarball,
     );
-    assert_eq!(diff(&base, &head).changed, ["sample-sdist"]);
+    expect(
+        &head,
+        "sample-local",
+        "1.0.0",
+        "sha256:same",
+        ResolutionKind::Tarball,
+    );
+    assert_eq!(diff(&base, &head).changed, ["sample-local", "sample-sdist"]);
+    assert!(packages_for_diff(PackageManager::Uv, &fixture("uv", "missing-version.lock")).is_err());
     assert!(packages_for_diff(PackageManager::Uv, &fixture("uv", "invalid-source.lock")).is_err());
 }
 
@@ -268,9 +276,12 @@ fn checked_text_lockfiles_reject_unrecognized_top_level_structures() {
         &fixture("gemfile", "unrecognized-header.lock")
     )
     .is_err());
+    for name in ["unknown-directive.mod", "conflict.mod"] {
+        assert!(packages_for_diff(PackageManager::Go, &fixture("gomod", name)).is_err());
+    }
     assert!(packages_for_diff(
-        PackageManager::Go,
-        &fixture("gomod", "unknown-directive.mod")
+        PackageManager::Pipfile,
+        &fixture("pipfile", "invalid-editable.lock")
     )
     .is_err());
     let packages =

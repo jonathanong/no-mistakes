@@ -95,7 +95,7 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
 
         let head = args.head.as_deref().unwrap_or("HEAD");
         let new_content = if args.head.is_some() {
-            let Some(c) = git_content_or_empty(&git_root, head, &rel)? else {
+            let Some(c) = git_content(&git_root, head, &rel)? else {
                 continue;
             };
             c
@@ -108,11 +108,11 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
                 }
             }
         };
-        let Some(old_content) = git_content_or_empty(&git_root, &args.base, &rel)? else {
+        let Some(old_content) = git_content(&git_root, &args.base, &rel)? else {
             continue;
         };
 
-        let old_pkgs = match lockfile::packages_for_diff(manager, &old_content) {
+        let old_pkgs = match lockfile::packages_for_optional_diff(manager, old_content.as_deref()) {
             Ok(packages) => packages,
             Err(error) => {
                 eprintln!(
@@ -122,7 +122,7 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
                 continue;
             }
         };
-        let new_pkgs = match lockfile::packages_for_diff(manager, &new_content) {
+        let new_pkgs = match lockfile::packages_for_optional_diff(manager, new_content.as_deref()) {
             Ok(packages) => packages,
             Err(error) => {
                 eprintln!("warning: `{rel}` has {}; skipping it", error.description);

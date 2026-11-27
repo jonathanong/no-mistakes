@@ -16,6 +16,12 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
         if line.is_empty() {
             continue;
         }
+        if ["<<<<<<<", "|||||||", "=======", ">>>>>>>"]
+            .iter()
+            .any(|marker| line.starts_with(marker))
+        {
+            return Err(GoModError);
+        }
         if let Some(is_require) = block {
             if line == ")" {
                 block = None;

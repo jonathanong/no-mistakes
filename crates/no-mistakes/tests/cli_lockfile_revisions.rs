@@ -43,3 +43,24 @@ fn diff_revisions(root: &Path, base: &str) -> Output {
         "json",
     ])
 }
+
+#[test]
+fn truncated_lock_is_malformed_at_a_git_revision() {
+    let repo = empty_repo();
+    let root = repo.path();
+    let lock = root.join("composer.lock");
+    std::fs::copy(ecosystem_lock("composer/base.lock"), &lock).unwrap();
+    git_commit(root, &["composer.lock"], "valid");
+    std::fs::copy(ecosystem_lock("composer/truncated.lock"), &lock).unwrap();
+    git_commit(root, &["composer.lock"], "truncated");
+
+    let output = diff_revisions(root, "HEAD~1");
+    assert!(output.status.success());
+    let warning = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        warning.contains("malformed composer.lock content"),
+        "{warning}"
+    );
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(report, serde_json::json!([]));
+}

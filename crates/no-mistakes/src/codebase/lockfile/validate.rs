@@ -23,14 +23,21 @@ pub fn validate_for_planning(
     }
 }
 
+pub fn packages_for_optional_diff(
+    manager: PackageManager,
+    content: Option<&str>,
+) -> Result<Vec<ResolvedPackage>, LockfileValidationError> {
+    match content {
+        Some(content) => packages_for_diff(manager, content),
+        None => Ok(Vec::new()),
+    }
+}
+
 /// Preserve npm-family diff behavior while checking ecosystem formats.
 pub fn packages_for_diff(
     manager: PackageManager,
     content: &str,
 ) -> Result<Vec<ResolvedPackage>, LockfileValidationError> {
-    if content.trim().is_empty() {
-        return Ok(Vec::new());
-    }
     match manager {
         PackageManager::Npm | PackageManager::Pnpm | PackageManager::Yarn | PackageManager::Bun => {
             Ok(super::parse_lockfile(manager, content))

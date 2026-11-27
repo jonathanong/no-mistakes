@@ -52,8 +52,9 @@ source is the workspace. Poetry git uses `resolved_reference`, then
 Poetry `url` and `file` sources are tarballs.
 uv git uses the commit in the URL fragment after `#`, then `rev`. uv
 `editable`, `directory`, and `virtual` sources use the directory path as
-their fingerprint and may omit `version`. uv uses the first wheel hash or falls back to the source-distribution
-hash. A direct URL source is a tarball. `Pipfile.lock` reads `default`,
+their fingerprint and may omit `version`. uv uses the first wheel hash or
+falls back to the source-distribution hash. Direct URLs and local archives
+are tarballs. `Pipfile.lock` reads `default`,
 `develop`, and custom package categories. The object key is the name. A leading `==` is
 removed from `version`. A git or path entry may omit `version`; its
 fingerprint is `ref` or `path`. File, URL, and other version-control sources
@@ -62,14 +63,15 @@ requires `version` and uses the first hash. `go.mod` reads `require` lines, incl
 `replace`, `exclude`, `retract`, and `go.sum`
 are not packages. `Gemfile.lock` reads specs indented four spaces; deeper
 lines are dependencies. A `GIT` revision and a `CHECKSUMS` `sha256` are
-fingerprints, and `PATH` is a directory. `composer.lock` reads `packages` and
-`packages-dev`. A null development section contributes no packages.
+fingerprints. A `PATH` entry uses its `remote` value as the directory
+fingerprint. `composer.lock` reads `packages` and `packages-dev`. A null development section contributes no packages.
 Distribution references take precedence over checksums. A path source
 uses its directory URL and any reference, and a git source with no dist is git.
 
-A malformed file of one of those managers is not an empty package list.
-`lockfile diff` warns and omits malformed or unreadable working-tree files. The async
-`lockfileDiff()` call rejects with the same description. `pom.xml`, Gradle
+`lockfile diff` warns and omits unreadable files and malformations in
+checked formats from either revision. A zero-byte file in a checked format
+is malformed. A missing file contributes an empty package list for that
+revision. The async `lockfileDiff()` call rejects with the same description. `pom.xml`, Gradle
 lockfiles, `mix.lock`, and `pubspec.yaml` are not lockfile diffs.
 
 pnpm 12 still writes `lockfileVersion: '9.0'`. When the project pins pnpm 12, or has config dependencies, `pnpm-lock.yaml` is two YAML documents. The env document comes first and records `configDependencies` and `packageManagerDependencies`. The project document is last. Package diffs union `packages` from every document, so a pnpm pin or config dependency change is reported. Importer and snapshot impact use the project document. A document before that project document must be an env lockfile: its `.` importer has only `configDependencies` and `packageManagerDependencies`. Anything else is rejected instead of being read as the workspace. A `resolution.revision` field is accepted metadata; the `integrity` digest remains the package identity. Lockfile majors outside 5 through 9 stay unsupported.

@@ -19,7 +19,7 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
     let mut out: Vec<ResolvedPackage> = Vec::new();
     let mut section = Section::None;
     let mut saw_header = false;
-    let mut revision = String::new();
+    let mut section_fingerprint = String::new();
     for raw in content.lines() {
         let line = raw.trim_end_matches('\r');
         let indent = line.chars().take_while(|ch| *ch == ' ').count();
@@ -34,7 +34,7 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
             continue;
         }
         if indent == 0 && is_header(trimmed) {
-            revision.clear();
+            section_fingerprint.clear();
             section = match trimmed {
                 "GEM" => Section::Specs(ResolutionKind::Registry),
                 "GIT" => Section::Specs(ResolutionKind::Git),
@@ -56,10 +56,13 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
             );
             continue;
         }
-        if let Section::Specs(ResolutionKind::Git) = section {
-            if let Some(rev) = trimmed.strip_prefix("revision:") {
-                revision = rev.trim().to_string();
-            }
+        let source_field = match section {
+            Section::Specs(ResolutionKind::Git) => trimmed.strip_prefix("revision:"),
+            Section::Specs(ResolutionKind::Directory) => trimmed.strip_prefix("remote:"),
+            _ => None,
+        };
+        if let Some(value) = source_field {
+            section_fingerprint = value.trim().to_string();
         }
         if section == Section::Checksums {
             if let Some((name, version, Some(digest))) = spec(trimmed) {
@@ -82,15 +85,10 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
         let Some((name, version, _)) = spec(trimmed) else {
             return Err(GemfileError);
         };
-        let fingerprint = if kind == ResolutionKind::Git {
-            revision.clone()
-        } else {
-            String::new()
-        };
         out.push(ResolvedPackage {
             name: name.to_string(),
             version: version.to_string(),
-            fingerprint,
+            fingerprint: section_fingerprint.clone(),
             kind,
         });
     }

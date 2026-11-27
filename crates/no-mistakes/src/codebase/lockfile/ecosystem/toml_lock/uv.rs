@@ -14,7 +14,7 @@ struct UvLock {
 struct UvPackage {
     name: String,
     #[serde(default)]
-    version: String,
+    version: Option<String>,
     #[serde(default)]
     source: Option<UvSource>,
     #[serde(default)]
@@ -31,6 +31,8 @@ struct UvSource {
     rev: Option<String>,
     #[serde(default)]
     url: Option<String>,
+    #[serde(default)]
+    path: Option<String>,
     #[serde(default)]
     editable: Option<String>,
     #[serde(default)]
@@ -50,22 +52,27 @@ pub(super) fn parse(content: &str) -> Result<Vec<ResolvedPackage>, TomlError> {
     if lock.version.is_none() && lock.package.is_empty() {
         return Err(TomlError);
     }
-    Ok(lock.package.into_iter().map(package).collect())
+    lock.package.into_iter().map(package).collect()
 }
 
-fn package(pkg: UvPackage) -> ResolvedPackage {
+fn package(pkg: UvPackage) -> Result<ResolvedPackage, TomlError> {
     let distribution_hash = pkg
         .wheels
         .iter()
         .find_map(|wheel| wheel.hash.as_deref())
         .or_else(|| pkg.sdist.as_ref().and_then(|sdist| sdist.hash.as_deref()));
     let (kind, fingerprint) = resolution(pkg.source.as_ref(), distribution_hash);
-    ResolvedPackage {
+    let version = match pkg.version {
+        Some(version) => version,
+        None if kind == ResolutionKind::Directory => String::new(),
+        None => return Err(TomlError),
+    };
+    Ok(ResolvedPackage {
         name: pkg.name,
-        version: pkg.version,
+        version,
         fingerprint,
         kind,
-    }
+    })
 }
 
 fn resolution(
@@ -89,10 +96,10 @@ fn resolution(
     {
         return (ResolutionKind::Directory, path.to_string());
     }
-    if let Some(url) = source.url.as_deref() {
+    if let Some(archive) = source.url.as_deref().or(source.path.as_deref()) {
         return (
             ResolutionKind::Tarball,
-            distribution_hash.unwrap_or(url).to_string(),
+            distribution_hash.unwrap_or(archive).to_string(),
         );
     }
     (

@@ -104,9 +104,9 @@ fn git_lockfile_content(
     reference: &str,
     lockfile: &str,
     kind: &str,
-) -> napi::Result<String> {
+) -> napi::Result<Option<String>> {
     match git_show_file(git_root, reference, lockfile) {
-        Ok(Some(content)) => return Ok(content),
+        Ok(Some(content)) => return Ok(Some(content)),
         Ok(None) => {}
         Err(error) if error.kind() == std::io::ErrorKind::InvalidData => {
             return Err(napi::Error::from_reason(format!(
@@ -120,7 +120,7 @@ fn git_lockfile_content(
             "Could not retrieve `{lockfile}` at ref `{reference}`; ensure the {kind} ref exists in the git history"
         )));
     }
-    Ok(String::new())
+    Ok(None)
 }
 
 enum LockfileOutcome {
@@ -159,8 +159,8 @@ fn diff_one_lockfile(
         })?,
     };
     let old_content = git_lockfile_content(git_root, base, &rel, "base")?;
-    let old_pkgs = packages_for_entry(manager, &rel, &old_content)?;
-    let new_pkgs = packages_for_entry(manager, &rel, &new_content)?;
+    let old_pkgs = packages_for_entry(manager, &rel, old_content.as_deref())?;
+    let new_pkgs = packages_for_entry(manager, &rel, new_content.as_deref())?;
     let diff = lockfile::diff(&old_pkgs, &new_pkgs);
     Ok(LockfileOutcome::Entry(LockfileDiffEntry {
         lockfile: rel,
@@ -174,9 +174,9 @@ fn diff_one_lockfile(
 fn packages_for_entry(
     manager: PackageManager,
     rel: &str,
-    content: &str,
+    content: Option<&str>,
 ) -> napi::Result<Vec<lockfile::ResolvedPackage>> {
-    lockfile::packages_for_diff(manager, content)
+    lockfile::packages_for_optional_diff(manager, content)
         .map_err(|error| napi::Error::from_reason(format!("`{rel}` has {}", error.description)))
 }
 

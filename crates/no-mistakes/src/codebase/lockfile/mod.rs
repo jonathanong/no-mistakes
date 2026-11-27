@@ -10,7 +10,7 @@ pub mod yarn;
 
 pub use pnpm::{parse_importers, PnpmImporter, PnpmImporterDependency};
 pub use revisions::{detect_lockfiles_at_refs, git_show_file};
-pub use validate::packages_for_diff;
+pub use validate::{packages_for_diff, packages_for_optional_diff};
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
@@ -136,13 +136,14 @@ pub fn binary_lockfile_warning(basename: &str) -> String {
     format!("`{basename}` is a binary lockfile and cannot be parsed for dependency changes")
 }
 
-pub fn read_worktree_lockfile(path: &std::path::Path) -> std::io::Result<String> {
+pub fn read_worktree_lockfile(path: &std::path::Path) -> std::io::Result<Option<String>> {
     match std::fs::read_to_string(path) {
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(String::new()),
-        result => result,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        result => result.map(Some),
     }
 }
 
+/// Legacy best-effort extraction. Use `packages_for_diff` to distinguish invalid input.
 pub fn parse_lockfile(manager: PackageManager, content: &str) -> Vec<ResolvedPackage> {
     match manager {
         PackageManager::Npm => npm::parse(content),

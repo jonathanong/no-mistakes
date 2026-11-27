@@ -37,10 +37,10 @@ fn git_ref_exists(root: &Path, git_ref: &str) -> Result<bool> {
         .success())
 }
 
-fn git_content_or_empty(git_root: &Path, git_ref: &str, rel: &str) -> Result<Option<String>> {
+fn git_content(git_root: &Path, git_ref: &str, rel: &str) -> Result<Option<Option<String>>> {
     match lockfile::git_show_file(git_root, git_ref, rel) {
-        Ok(Some(content)) => Ok(Some(content)),
-        Ok(None) if git_ref_exists(git_root, git_ref)? => Ok(Some(String::new())),
+        Ok(Some(content)) => Ok(Some(Some(content))),
+        Ok(None) if git_ref_exists(git_root, git_ref)? => Ok(Some(None)),
         Ok(None) => {
             eprintln!("warning: could not retrieve {rel} at ref {git_ref}");
             Ok(None)

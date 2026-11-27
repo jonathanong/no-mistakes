@@ -30,6 +30,10 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Pipfi
 
 fn parse_entry(name: &str, entry: &serde_json::Value) -> Result<ResolvedPackage, PipfileError> {
     let obj = entry.as_object().ok_or(PipfileError)?;
+    let editable = obj.get("editable");
+    if editable.is_some_and(|value| !value.is_boolean()) {
+        return Err(PipfileError);
+    }
     let version = text(obj, "version").map(|raw| raw.strip_prefix("==").unwrap_or(raw).to_string());
     let (kind, fingerprint, version_optional) = if let Some(git) = text(obj, "git") {
         let fingerprint = text(obj, "ref").unwrap_or(git).to_string();
@@ -45,7 +49,7 @@ fn parse_entry(name: &str, entry: &serde_json::Value) -> Result<ResolvedPackage,
         (ResolutionKind::Other, fingerprint, true)
     } else if let Some(url) = text(obj, "file").or_else(|| text(obj, "url")) {
         (ResolutionKind::Tarball, url.to_string(), true)
-    } else if obj.contains_key("editable") {
+    } else if editable.is_some() {
         (ResolutionKind::Directory, String::new(), true)
     } else {
         let fingerprint = obj

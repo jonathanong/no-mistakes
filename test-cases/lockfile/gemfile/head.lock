@@ -5,7 +5,7 @@ GEM
     sample-gamma (2.0.0)
 
 PATH
-  remote: vendor/sample-app
+  remote: vendor/updated-sample-app
   specs:
     sample-app (0.1.0)
 

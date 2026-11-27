@@ -354,7 +354,7 @@ fn gemfile_specs_checksums_and_git_revision() {
         &packages,
         "sample-app",
         "0.1.0",
-        "",
+        "vendor/sample-app",
         ResolutionKind::Directory,
     );
     expect(
@@ -372,7 +372,7 @@ fn gemfile_specs_checksums_and_git_revision() {
         "head.lock",
         &["sample-gamma"],
         &["sample-beta"],
-        &["sample-alpha"],
+        &["sample-alpha", "sample-app"],
     );
 }
 

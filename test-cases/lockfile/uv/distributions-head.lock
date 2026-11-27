@@ -15,3 +15,9 @@ wheels = [{ hash = "sha256:wheel" }]
 name = "sample-archive"
 version = "1.0.0"
 source = { url = "https://packages.example.invalid/example.tar.gz" }
+
+[[package]]
+name = "sample-local"
+version = "1.0.0"
+source = { path = "./sample.whl" }
+wheels = [{ hash = "sha256:same" }]
