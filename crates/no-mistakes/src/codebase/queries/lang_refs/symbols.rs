@@ -9,6 +9,9 @@ use std::io::{self, Write};
 
 mod text;
 
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod text_tests;
+
 pub(crate) fn run_symbols(args: SymbolsArgs) -> Result<()> {
     let _diagnostics = crate::diagnostics::LegacyDiagnosticsGuard::new(args.timings, false);
     let mut timings = crate::codebase::timing::PhaseTimings::start();

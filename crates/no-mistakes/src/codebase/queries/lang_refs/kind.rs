@@ -51,3 +51,28 @@ pub(super) fn frontend(path: &Path) -> Option<Frontend> {
         _ => None,
     }
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod tests {
+    use super::Frontend;
+
+    #[test]
+    fn every_frontend_label_is_stable() {
+        let cases = [
+            (Frontend::Python, "python"),
+            (Frontend::Go, "go"),
+            (Frontend::Rust, "rust"),
+            (Frontend::Ruby, "rails"),
+            (Frontend::Php, "php"),
+            (Frontend::Java, "java"),
+            (Frontend::Kotlin, "kotlin"),
+            (Frontend::Elixir, "elixir"),
+            (Frontend::Dart, "dart"),
+            (Frontend::Swift, "swift"),
+            (Frontend::Dotnet, "dotnet"),
+        ];
+        for (frontend, label) in cases {
+            assert_eq!(frontend.label(), label);
+        }
+    }
+}
