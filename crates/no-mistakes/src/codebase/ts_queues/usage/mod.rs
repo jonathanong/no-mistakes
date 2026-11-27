@@ -1,4 +1,7 @@
 use crate::codebase::ts_source::byte_offset_to_line;
+pub use crate::codebase::ts_source::facts::queue_facts::usage::{
+    EnqueueCall, QueueUsage, WorkerDeclaration,
+};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     Argument, ArrayExpressionElement, CallExpression, Expression, FunctionBody,

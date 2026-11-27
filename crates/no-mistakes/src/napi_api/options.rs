@@ -176,3 +176,6 @@ pub(crate) fn parse_include(value: Option<&str>) -> AnyhowResult<Include> {
 include!("options_symbols.rs");
 
 include!("options_routing.rs");
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+pub(crate) use super::queue::parse_queue_direction;

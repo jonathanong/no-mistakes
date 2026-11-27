@@ -1,3 +1,4 @@
+pub(crate) mod analysis_hooks;
 mod cycles;
 mod enqueue_wrapper;
 pub(crate) mod extract;
@@ -5,7 +6,7 @@ mod extract_factory;
 mod extract_helpers;
 mod extract_job_id;
 mod extract_model;
-pub(crate) mod extract_prefilter;
+mod extract_prefilter;
 mod extract_priority;
 mod extract_processor;
 mod extract_record;
@@ -30,6 +31,7 @@ mod rate_limit;
 mod resolver;
 mod source;
 mod test_scope;
+mod traversal;
 mod types;
 mod worker_rate_limit;
 
@@ -53,7 +55,5 @@ pub use worker_rate_limit::{
     is_worker_rate_limit_unresolved_diagnostic, WORKER_RATE_LIMIT_UNRESOLVED_MESSAGE,
 };
 
-#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
-pub(crate) mod allow_paths_test_hook;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 pub(crate) mod tests;

@@ -1,7 +1,8 @@
+use super::{Edge, EdgeKind};
 use crate::cli::traversal::{IndexedTraversableEdge, TraversableEdge};
 
-impl TraversableEdge for crate::queue::Edge {
-    type Kind = crate::queue::EdgeKind;
+impl TraversableEdge for Edge {
+    type Kind = EdgeKind;
 
     fn source(&self) -> &str {
         &self.from
@@ -16,7 +17,7 @@ impl TraversableEdge for crate::queue::Edge {
     }
 }
 
-impl IndexedTraversableEdge for crate::queue::Edge {
+impl IndexedTraversableEdge for Edge {
     fn reversed(&self) -> Self {
         Self {
             from: self.to.clone(),

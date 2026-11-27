@@ -1,7 +1,8 @@
 use crate::codebase::ts_resolver::ImportResolverFacade;
 use crate::codebase::ts_source::FrozenPathRemapper;
 use crate::config::v2::schema::QueuesTopLevelConfig;
-use crate::queue::extract_model::{FileFacts, ProducerBinding};
+use crate::queue::extract_model::FileFacts;
+pub(crate) use crate::queue::extract_model::{JobStatePattern, JobStateSite};
 use crate::queue::graph_model::{CheckFinding, CheckSeverity};
 use crate::queue::graph_resolution::{local_queues, resolved_binding};
 use crate::queue::source::relative_string;
@@ -24,26 +25,6 @@ mod listing;
 mod stmts;
 
 pub(crate) use extract::collect;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) enum JobStatePattern {
-    GetJobStateGuard,
-    ListingFeedsAction,
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct JobStateSite {
-    pub line: usize,
-    pub binding: ProducerBinding,
-    /// When the guarded/fed action is `.add` / `.addBulk`, its receiver must also
-    /// resolve to a configured queue (so `Set.add` does not trigger a finding).
-    pub action_binding: Option<ProducerBinding>,
-    pub queue_file: Option<PathBuf>,
-    pub queue_name: Option<String>,
-    pub unresolved_receiver: bool,
-    pub uncertain_item: bool,
-    pub pattern: JobStatePattern,
-}
 
 const UNRESOLVED_RECEIVER_MESSAGE: &str =
     "job-state-as-record was not judged because the queue receiver did not resolve";
