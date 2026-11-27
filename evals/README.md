@@ -399,7 +399,15 @@ Then summarize, and check the result before believing it:
 ```sh
 python3 evals/summarize.py "$OUT"/*.json   # trigger, per-arm score, Δ; refuses errored runs; exits 1 if with < without
 python3 evals/power.py "$OUT"/<flow>.json  # what this run can resolve
+python3 evals/readme_table.py skill "$OUT"/<flow>.json...   # README tool-skill rows
+python3 evals/readme_table.py rules "$OUT"/<topic>.json...  # README rules tables
 ```
+
+`summarize.py` prints agent and judge cost apart, and a `content` column: Δ
+with `names-graph-command` left out as well as `skill-fired`. That regex only
+records that the plan named a command, so `content` is the part of Δ a content
+grader carries. Build the README tables with `readme_table.py` rather than by
+hand; it refuses partial and errored runs.
 
 The plugin arm must never score below the baseline arm. `summarize.py` prints a
 `REGRESSION` row for each such case with its with-arm fire count and exits 1.
