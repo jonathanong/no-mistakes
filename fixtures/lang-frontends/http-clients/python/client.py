@@ -1,4 +1,4 @@
 import requests
 
 def load():
-    requests.get("/users")
+    requests.get("http://localhost:8080/users")

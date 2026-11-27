@@ -1,3 +1,3 @@
 pub fn load() {
-    reqwest::get("/users");
+    reqwest::get("http://localhost:8080/users");
 }

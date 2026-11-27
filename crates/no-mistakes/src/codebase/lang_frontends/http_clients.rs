@@ -66,16 +66,26 @@ fn first_group<'a>(cap: &'a regex::Captures<'a>) -> Option<&'a str> {
 
 fn static_path(raw: Option<&str>) -> Option<String> {
     let raw = raw?;
-    if !raw.starts_with('/') || raw.starts_with("//") || raw.contains(['$', '{', '%']) {
+    if raw.starts_with("//") || raw.contains(['$', '{', '%']) {
         return None;
     }
-    let path = raw.split(['?', '#']).next().unwrap_or(raw);
-    let path = if path.len() > 1 {
-        path.trim_end_matches('/')
-    } else {
-        path
-    };
-    Some(path.to_string())
+    if raw.starts_with('/') {
+        return Some(normalize_route_pattern(raw));
+    }
+    let url = url::Url::parse(raw).ok()?;
+    if !matches!(url.scheme(), "http" | "https") || !loopback_host(url.host()) {
+        return None;
+    }
+    Some(normalize_route_pattern(url.path()))
+}
+
+fn loopback_host(host: Option<url::Host<&str>>) -> bool {
+    match host {
+        Some(url::Host::Domain("localhost")) => true,
+        Some(url::Host::Ipv4(ip)) => ip.is_loopback(),
+        Some(url::Host::Ipv6(ip)) => ip.is_loopback(),
+        _ => false,
+    }
 }
 
 pub(crate) fn normalize_route_pattern(raw: &str) -> String {

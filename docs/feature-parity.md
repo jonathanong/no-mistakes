@@ -1105,6 +1105,10 @@ shipped for configured Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and D
 `dependents --relationship <lang|route|queue|http>` and
 `tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart` for those questions instead of `rg`.
 
+Configured language clients can match static root-relative paths and literal
+HTTP(S) URLs on loopback hosts. Use `rg` for client calls with other hosts or
+call shapes outside the documented matchers.
+
 Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
 `Cargo.lock`, `Gemfile.lock`, `composer.lock`), Laravel resource routes with

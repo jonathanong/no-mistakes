@@ -39,6 +39,25 @@ fn static_literals_keep_a_path_and_computed_urls_do_not() {
 }
 
 #[test]
+fn loopback_clients_match_without_treating_other_hosts_as_local() {
+    assert_eq!(
+        extract_python(r#"requests.get("http://localhost:8080/users?x=1")"#),
+        vec!["/users"]
+    );
+    assert_eq!(
+        extract_go(r#"http.Get("http://127.0.0.1/users")"#),
+        vec!["/users"]
+    );
+    assert_eq!(
+        extract_rust(r#"reqwest::get("https://[::1]/users")"#),
+        vec!["/users"]
+    );
+    assert!(extract_python(r#"requests.get("http://localhost.example.invalid/users")"#).is_empty());
+    assert!(extract_go(r#"http.Get("http://192.0.2.1/users")"#).is_empty());
+    assert!(extract_go(r#"http.Get("ftp://localhost/users")"#).is_empty());
+}
+
+#[test]
 fn client_paths_match_normalized_route_patterns() {
     assert_eq!(normalize_route_pattern("users/"), "/users");
     assert_eq!(normalize_route_pattern("/api/users?query=1"), "/api/users");

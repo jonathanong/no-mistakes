@@ -52,7 +52,7 @@ fn configured_language_http_clients_match_route_files() {
             "/users",
         ),
     ];
-    for (route, client, computed, pattern) in cases {
+    for (route, client, computed, _) in cases {
         let output = crate::napi_api::dependents_json_impl(
             crate::napi_api::options::test_json_arg(serde_json::json!({
                 "root": &root,
@@ -76,7 +76,6 @@ fn configured_language_http_clients_match_route_files() {
             files.iter().all(|path| path != computed),
             "{route} dependents include unsupported URL source {computed}: {files:?}"
         );
-        let _ = pattern;
     }
     let output = crate::napi_api::server_route_edges_json_impl(
         crate::napi_api::options::test_json_arg(serde_json::json!({ "root": &root })),
