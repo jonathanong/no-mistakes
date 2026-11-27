@@ -166,8 +166,10 @@ invalid alias remains a configuration error even when the canonical key is
 valid. Legacy PostgreSQL applications that historically ignored this
 `unanalyzableSql` payload continue to ignore it for compatibility.
 
-[`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options)
-always reports incomplete SQL and uses one analysis mode. Its rule options
+[`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options) uses
+one analysis mode and by default (`baselineUnanalyzed: false`) reports every
+incomplete SQL input; when `baselineUnanalyzed: true` is configured, it reports
+only growth above the recorded per-`(file, reason)` counts. Its rule options
 reject `unanalyzable` and `unanalyzableSql`.
 
 [`postgres-grouping-not-aggregation`](../rules/postgres-grouping-not-aggregation.md)
@@ -1006,9 +1008,13 @@ outside the exemptions.
 The opt-in [`postgres-lock-inventory`](../rules/postgres-lock-inventory.md) rule
 uses standard PostgreSQL executor selection and `sqlInclude` scoping. `helpers`
 lists configured helper call names. `baselineFile` (alias `baseline`) defaults
-to `.no-mistakes/postgres-locks.json`. The baseline stores stable physical site
-identities rather than line numbers. Added sites and stale entries report;
-unresolved SQL is listed separately and prevents rewriting the baseline.
-Initialize or prune it with
+to `.no-mistakes/postgres-locks.json`. `baselineUnanalyzed` defaults to `false`;
+when set to `true`, the baseline also records per-`(file, reason)` counts of
+unresolved inputs so additions and unresolved growth both fail while
+`--write-baseline` can initialize and prune downward despite unresolved SQL. The
+baseline stores stable physical site identities rather than line numbers. Added
+sites and stale entries report; unresolved SQL is listed separately and grouped
+by reason and directory in the inventory report. Initialize or prune the
+baseline with
 [`postgres lock-inventory --write-baseline`](../cli/postgres-lock-inventory.md).
 Record reviewed additions manually in the baseline before pruning.

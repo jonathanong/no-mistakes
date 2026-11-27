@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 
 mod baseline;
 mod embedded;
+mod findings;
 pub(in crate::codebase::rules) mod options;
 mod report;
 mod scan;
@@ -18,8 +19,8 @@ mod scan;
 mod tests;
 mod types;
 pub use types::{
-    LockInventoryBaseline, LockInventoryBaselineSite, LockInventoryReport, LockInventorySite,
-    UnanalyzedLockSite,
+    LockInventoryBaseline, LockInventoryBaselineSite, LockInventoryBaselineUnanalyzed,
+    LockInventoryReport, LockInventorySite, LockInventoryUnanalyzedDelta, UnanalyzedLockSite,
 };
 
 pub const RULE_ID: &str = "postgres-lock-inventory";
@@ -77,8 +78,8 @@ pub(crate) fn check_with_files_sources_and_facts(
         .enumerate()
         .map(
             |(index, (rule, options))| match collect_application(&context, index, rule, options) {
-                Ok(report) => Ok(report_findings(report)),
-                Err(error) if error.is::<baseline::InvalidBaseline>() => Ok(vec![finding(
+                Ok(report) => Ok(findings::report_findings(report)),
+                Err(error) if error.is::<baseline::InvalidBaseline>() => Ok(vec![findings::finding(
                     options.baseline_file.clone(),
                     1,
                     format!(
@@ -124,52 +125,4 @@ fn collect_application(
     )?;
     baseline::compare(&mut report, baseline.as_ref());
     Ok(report)
-}
-
-fn report_findings(report: LockInventoryReport) -> Vec<RuleFinding> {
-    let mut findings = Vec::new();
-    for site in report.added {
-        findings.push(finding(
-            site.file,
-            site.line,
-            format!("new PostgreSQL lock site ({}, {}). Remove the lock or record the reviewed site in the baseline", site.category, site.key),
-            site.category,
-        ));
-    }
-    for gaps in report.unanalyzed.chunk_by(PartialEq::eq) {
-        for (index, gap) in gaps.iter().enumerate() {
-            let reason = if gaps.len() == 1 {
-                gap.reason.clone()
-            } else {
-                format!("{}, occurrence {} of {}", gap.reason, index + 1, gaps.len())
-            };
-            findings.push(finding(
-                gap.file.clone(),
-                gap.line,
-                format!("incomplete PostgreSQL lock inventory ({reason}). Make the configured SQL or helper call statically analyzable"),
-                "unanalyzable".into(),
-            ));
-        }
-    }
-    if !report.removed.is_empty() {
-        findings.push(finding(
-            report.baseline_file,
-            1,
-            format!("stale PostgreSQL lock baseline contains {} removed site(s). Run `no-mistakes postgres lock-inventory --write-baseline` after resolving any new sites", report.removed.len()),
-            "stale-baseline".into(),
-        ));
-    }
-    findings
-}
-
-fn finding(file: String, line: usize, message: String, target: String) -> RuleFinding {
-    RuleFinding {
-        rule: RULE_ID.into(),
-        file,
-        line,
-        message,
-        target: Some(target),
-        import: None,
-        causes: Vec::new(),
-    }
 }

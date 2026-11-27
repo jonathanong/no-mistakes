@@ -87,8 +87,10 @@ still validated in those cases, so an invalid value remains a configuration
 error even when the canonical value is valid. Legacy PostgreSQL applications
 that historically ignored this per-rule payload continue to ignore it for
 compatibility.
-[`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options) always
-reports incomplete SQL and uses a single analysis mode. Omit per-rule
+[`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options) uses a
+single analysis mode and by default (`baselineUnanalyzed: false`) reports every
+incomplete SQL input; when `baselineUnanalyzed: true` is configured, it reports
+only growth above the recorded per-`(file, reason)` counts. Omit per-rule
 `unanalyzable` and `unanalyzableSql` for this rule.
 When a low-effort rule requires a partner check that is missing or outside its
 configured scope, `check` warns and runs that rule at `max`.

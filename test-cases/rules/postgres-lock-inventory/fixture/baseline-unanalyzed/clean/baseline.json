@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "sites": [
+    {
+      "key": "a0a24b607c1a723810f319a5a7e0f3ae#1",
+      "file": "src/orders/repo.ts",
+      "category": "for-update"
+    }
+  ],
+  "unanalyzed": [
+    {
+      "file": "migrations/broken.sql",
+      "reason": "SQL could not be parsed completely",
+      "count": 1
+    },
+    {
+      "file": "src/orders/repo.ts",
+      "reason": "executor SQL could not be resolved",
+      "count": 1
+    }
+  ]
+}

@@ -116,7 +116,9 @@ proven grouping advisories remain. A rule's canonical `options.unanalyzable`
 can override the inherited policy; restating the legacy project key on the rule
 is still a configuration error.
 [`postgres-lock-inventory`](../rules/postgres-lock-inventory.md#options) does not
-inherit uncertainty policies: inventory gaps always produce findings. It can
+inherit uncertainty policies: by default (`baselineUnanalyzed: false`) every
+inventory gap produces a finding, and with `baselineUnanalyzed: true` only
+growth above the recorded per-`(file, reason)` counts produces a finding. It can
 use an empty project import specifier with explicit `executorNames: []` for
 SQL-only inventory, or with configured helper names for helper-only inventory.
 Every key is optional. Other embedded-SQL rules still need a non-empty

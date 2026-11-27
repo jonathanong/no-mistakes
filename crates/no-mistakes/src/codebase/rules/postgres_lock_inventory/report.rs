@@ -11,9 +11,14 @@ pub(super) fn build(
         sites: Vec::new(),
         counts: BTreeMap::new(),
         unanalyzed: Vec::new(),
+        unanalyzed_by_reason: BTreeMap::new(),
+        unanalyzed_by_directory: BTreeMap::new(),
         baseline_file: options.baseline_file.clone(),
+        baseline_unanalyzed: options.baseline_unanalyzed,
         added: Vec::new(),
         removed: Vec::new(),
+        unanalyzed_added: Vec::new(),
+        unanalyzed_removed: Vec::new(),
         baseline_updated: false,
     };
     for (file, row) in rows {
@@ -39,15 +44,28 @@ fn append_file(report: &mut LockInventoryReport, file: &str, mut row: FileInvent
             key: format!("{hash:032x}#{ordinal}"),
         });
     }
-    report.unanalyzed.extend(
-        row.gaps
-            .into_iter()
-            .map(|(line, reason)| UnanalyzedLockSite {
-                file: file.into(),
-                line: line.max(1),
-                reason: reason.into(),
-            }),
-    );
+    if !row.gaps.is_empty() {
+        let directory = file_directory(file);
+        *report
+            .unanalyzed_by_directory
+            .entry(directory.into())
+            .or_insert(0) += row.gaps.len();
+    }
+    for (line, reason) in row.gaps {
+        *report
+            .unanalyzed_by_reason
+            .entry(reason.into())
+            .or_insert(0) += 1;
+        report.unanalyzed.push(UnanalyzedLockSite {
+            file: file.into(),
+            line: line.max(1),
+            reason: reason.into(),
+        });
+    }
+}
+
+fn file_directory(file: &str) -> &str {
+    file.rsplit_once('/').map_or(".", |(dir, _)| dir)
 }
 
 fn fingerprint(parts: &[&str]) -> u128 {

@@ -230,6 +230,7 @@ test("check rule options compile from the package root", () => {
       join(repositoryRoot, "fixtures/node-api/github-actions-env-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/github-actions-no-poll-wait-job/public.mts"),
       join(repositoryRoot, "fixtures/node-api/github-actions-run-command-policy/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/postgres-lock-inventory/public.mts"),
       join(repositoryRoot, "fixtures/node-api/postgres-sql-statement-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/pnpm-release-age-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/shell-compatibility/public.mts"),

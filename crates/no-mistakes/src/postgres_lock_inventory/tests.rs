@@ -32,6 +32,26 @@ fn rejects_invalid_baseline_contents_and_paths() {
             "helpers must be non-empty names",
         ),
         (
+            "invalid",
+            "unanalyzed-zero.yml",
+            "baseline unanalyzed count must be positive",
+        ),
+        (
+            "invalid",
+            "unanalyzed-duplicate.yml",
+            "duplicate baseline unanalyzed entry",
+        ),
+        (
+            "invalid",
+            "unanalyzed-empty.yml",
+            "empty baseline unanalyzed identity",
+        ),
+        (
+            "invalid",
+            "invalid-baseline-unanalyzed.yml",
+            "baselineUnanalyzed",
+        ),
+        (
             "queries",
             "directory-baseline.yml",
             "must be a regular file",
@@ -125,6 +145,16 @@ fn reports_sql_parse_and_read_gaps_alongside_other_files() {
     assert!(report.unanalyzed[0].reason.contains("parsed"));
     assert_eq!(report.unanalyzed[1].file, "missing.sql");
     assert!(report.unanalyzed[1].reason.contains("read"));
+    assert_eq!(report.unanalyzed_by_directory["invalid"], 1);
+    assert_eq!(report.unanalyzed_by_directory["."], 1);
+    assert_eq!(
+        report.unanalyzed_by_reason["SQL could not be parsed completely"],
+        1
+    );
+    assert_eq!(
+        report.unanalyzed_by_reason["SQL source could not be read"],
+        1
+    );
 }
 
 #[test]

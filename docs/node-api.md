@@ -1220,16 +1220,25 @@ advisory in every mode.
 
 `await postgresLockInventory({ root, config, writeBaseline: false })` returns
 the `LockInventoryReport` fields `sites`, category `counts`, `unanalyzed` SQL
-inputs, `baselineFile`, `added`, `removed`, and `baselineUpdated`, plus optional
-invocation metadata such as `jobsPoolWarning`. Site keys ignore comments and
-whitespace; SQL token changes create new keys. With `writeBaseline: true`, a
-missing baseline is initialized from the analyzed sites. For an existing
-baseline, the writer prunes stale entries after any intentional additions have
-been recorded manually. Both paths require all configured SQL to be resolved. The command and this asynchronous API share one prepared
-analysis. A malformed baseline rejects the standalone API call. In
-`check()` and `analyzeProject()` check reports it appears as an
-`invalid-baseline` finding. See the [rule](rules/postgres-lock-inventory.md)
-and [command](cli/postgres-lock-inventory.md) for keys and baseline workflow.
+inputs, `unanalyzedByReason` and `unanalyzedByDirectory` summaries,
+`baselineFile`, `baselineUnanalyzed`, `added`, `removed`, `unanalyzedAdded`,
+`unanalyzedRemoved`, and `baselineUpdated`, plus optional invocation metadata
+such as `jobsPoolWarning`. Exported contract types include
+`PostgresLockInventoryRuleOptions`, `LockInventoryBaselineUnanalyzed`, and
+`LockInventoryUnanalyzedDelta`. Site keys ignore comments and whitespace; SQL
+token changes create new keys. With `writeBaseline: true`, a missing baseline is
+initialized from the analyzed sites. For an existing baseline, the writer prunes
+stale entries after any intentional additions have been recorded manually. By
+default (`baselineUnanalyzed: false`), both paths require all configured SQL to
+be resolved. When `baselineUnanalyzed: true` is configured, the baseline also
+tracks per-`(file, reason)` unresolved input counts so `--write-baseline` and
+`writeBaseline: true` can initialize and prune downward while unresolved inputs
+exist, still refusing new resolved sites or unresolved growth. The command and
+this asynchronous API share one prepared analysis. A malformed baseline rejects
+the standalone API call. In `check()` and `analyzeProject()` check reports it
+appears as an `invalid-baseline` finding. See the
+[rule](rules/postgres-lock-inventory.md) and
+[command](cli/postgres-lock-inventory.md) for keys and baseline workflow.
 
 
 ## Categorized local changes

@@ -4,8 +4,8 @@ use serde::Deserialize;
 use std::path::PathBuf;
 
 pub use rule::{
-    LockInventoryBaseline, LockInventoryBaselineSite, LockInventoryReport, LockInventorySite,
-    UnanalyzedLockSite,
+    LockInventoryBaseline, LockInventoryBaselineSite, LockInventoryBaselineUnanalyzed,
+    LockInventoryReport, LockInventorySite, LockInventoryUnanalyzedDelta, UnanalyzedLockSite,
 };
 #[cfg(test)]
 mod tests;
@@ -63,11 +63,16 @@ pub fn run(options: &PostgresLockInventoryOptions) -> Result<LockInventoryReport
                         && write::staged_deletion(&root, &report.baseline_file)?)),
             "restore the tracked lock inventory baseline before rewriting it; a tracked baseline cannot be reinitialized"
         );
+        if !report.baseline_unanalyzed {
+            anyhow::ensure!(
+                report.unanalyzed.is_empty(),
+                "cannot rewrite lock inventory baseline while SQL is unanalyzed"
+            );
+        }
         anyhow::ensure!(
-            report.unanalyzed.is_empty(),
-            "cannot rewrite lock inventory baseline while SQL is unanalyzed"
+            !existing || (report.added.is_empty() && report.unanalyzed_added.is_empty()),
+            "lock inventory baseline may only go down; remove newly added lock sites or unanalyzed SQL, or record them in the baseline after review before rewriting it"
         );
-        anyhow::ensure!(!existing || report.added.is_empty(), "lock inventory baseline may only go down; remove newly added lock sites or record them in the baseline after review before rewriting it");
         let mut sites: Vec<_> = report
             .sites
             .iter()
@@ -78,14 +83,25 @@ pub fn run(options: &PostgresLockInventoryOptions) -> Result<LockInventoryReport
             })
             .collect();
         sites.sort();
+        let unanalyzed = if report.baseline_unanalyzed {
+            report.unanalyzed_baseline_entries()
+        } else {
+            Vec::new()
+        };
         write::publish(
             &root,
             &report.baseline_file,
-            &LockInventoryBaseline { version: 1, sites },
+            &LockInventoryBaseline {
+                version: 1,
+                sites,
+                unanalyzed,
+            },
             existing,
         )?;
         report.added.clear();
         report.removed.clear();
+        report.unanalyzed_added.clear();
+        report.unanalyzed_removed.clear();
         report.baseline_updated = true;
     }
     Ok(report)

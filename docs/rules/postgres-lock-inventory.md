@@ -52,11 +52,14 @@ names for calls into stored routines.
 `baselineFile` selects the JSON baseline and defaults to
 `.no-mistakes/postgres-locks.json`; `baseline` is its alias. Automatic
 configuration discovery reserves that default path for the baseline. Place a
-custom baseline outside the `.no-mistakes/` fragment directory. Configure helper
-TypeScript/SQL function names with `helpers`. TypeScript matches case exactly.
-PostgreSQL folds unquoted names to lowercase. Quoted SQL names containing
-uppercase letters require an exact configured spelling.
-Executor selection uses the standard PostgreSQL options, including
+custom baseline outside the `.no-mistakes/` fragment directory.
+`baselineUnanalyzed` is an opt-in boolean (default `false`) that also baselines
+per-`(file, reason)` counts of unresolved inputs alongside resolved lock-site
+keys so a count ratchet can begin before every dynamic query is statically
+resolved. Configure helper TypeScript/SQL function names with `helpers`.
+TypeScript matches case exactly. PostgreSQL folds unquoted names to lowercase.
+Quoted SQL names containing uppercase letters require an exact configured
+spelling. Executor selection uses the standard PostgreSQL options, including
 `importSpecifier`, `executorNames`, `executorFactoryNames`, `executorTypeNames`,
 `executorOptionProperties`, and `executorOptions`. Rule-level `include` and
 `exclude` select source files; `sqlInclude` selects SQL files.
@@ -64,15 +67,28 @@ Configured `.query()` calls inside transaction callbacks are included.
 Reassigning `.query` leaves an unresolved site instead of a counted lock.
 
 The inventory uses its sole analysis mode at either [effort
-setting](../configuration/README.md) and always reports incomplete SQL. Omit
-`unanalyzable` and `unanalyzableSql` from its rule options.
+setting](../configuration/README.md). By default (`baselineUnanalyzed: false`),
+it always reports every incomplete SQL site and refuses baseline creation or
+pruning while SQL is unresolved. Omit `unanalyzable` and `unanalyzableSql` from
+its rule options.
 
 The baseline is compared with an empty inventory when it is missing, so every
 current site is reported as added. With a baseline, newly added sites are
-diagnostics. Stale-entry diagnostics are deferred while any SQL is unresolved,
-because incomplete inventory cannot establish which baseline entries were
-removed. Unresolved SQL prevents baseline creation or pruning. Malformed baseline
-contents produce an `invalid-baseline` finding at the baseline path during
+diagnostics. When `baselineUnanalyzed: false`, stale-entry diagnostics are
+deferred while any SQL is unresolved, because incomplete inventory cannot
+establish which baseline entries were removed.
+
+When `baselineUnanalyzed: true`, the baseline records both resolved site keys in
+`sites` and per-`(file, reason)` unresolved counts in `unanalyzed`. Any added
+resolved site fails, and any `(file, reason)` whose unresolved count grows above
+the baseline fails. When unresolved counts do not grow, stale-entry diagnostics
+report removed resolved sites and lowered unresolved counts. `--write-baseline`
+succeeds even when unresolved inputs exist, initializing a missing baseline or
+pruning removed sites and lowered unresolved counts while still refusing
+additions or unresolved growth. The structured inventory report groups
+unresolved inputs in `unanalyzedByReason` and `unanalyzedByDirectory`. Malformed
+baseline contents produce an `invalid-baseline` finding at the baseline path
+during
 `check`. Repair the file before running the standalone inventory.
 
 ## Valid example
