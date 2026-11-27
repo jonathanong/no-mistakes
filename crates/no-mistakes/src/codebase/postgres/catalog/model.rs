@@ -96,13 +96,7 @@ pub enum TriggerTiming {
     InsteadOf,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TriggerEvent {
-    Insert,
-    Update,
-    Delete,
-    Truncate,
-}
+pub use no_mistakes_postgres_sql::TriggerEvent;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CatalogTrigger {

@@ -173,8 +173,8 @@ scope. Recorded project-file targets are followed exactly, including path
 aliases and workspace packages whose filenames differ from their specifiers.
 This also covers path aliases and workspace packages when the canonical graph
 is unavailable. A unique ambient declaration can identify an external module,
-including declarations with whitespace between their tokens. The rule
-does not match an import to a neighboring file by file stem. External packages
+including declarations with or without whitespace before the quoted module
+name. The rule does not match an import to a neighboring file by file stem. External packages
 are not read. Silence at that analysis boundary does not establish that an
 unread package contains no SQL fragments.
 

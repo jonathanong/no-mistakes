@@ -1,12 +1,6 @@
 use super::BoundedUniqueIndex;
+pub use no_mistakes_postgres_sql::order::CanonicalOrderKey;
 use std::collections::BTreeMap;
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CanonicalOrderKey {
-    pub expression: String,
-    pub ascending: bool,
-    pub nulls_first: bool,
-}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CanonicalIndex {

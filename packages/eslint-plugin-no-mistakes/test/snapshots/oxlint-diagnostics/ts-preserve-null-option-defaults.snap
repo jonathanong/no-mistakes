@@ -1,0 +1,30 @@
+[
+  {
+    "code": "no-mistakes(ts-preserve-null-option-defaults)",
+    "column": 10,
+    "file": "eslint-plugin/ts-preserve-null-option-defaults/fixture/invalid.ts",
+    "line": 7,
+    "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly."
+  },
+  {
+    "code": "no-mistakes(ts-preserve-null-option-defaults)",
+    "column": 10,
+    "file": "eslint-plugin/ts-preserve-null-option-defaults/fixture/invalid.ts",
+    "line": 11,
+    "message": "Do not default nullable option 'alias' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly."
+  },
+  {
+    "code": "no-mistakes(ts-preserve-null-option-defaults)",
+    "column": 3,
+    "file": "eslint-plugin/ts-preserve-null-option-defaults/fixture/invalid.ts",
+    "line": 15,
+    "message": "Do not default nullable option 'value' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly."
+  },
+  {
+    "code": "no-mistakes(ts-preserve-null-option-defaults)",
+    "column": 3,
+    "file": "eslint-plugin/ts-preserve-null-option-defaults/fixture/invalid.ts",
+    "line": 16,
+    "message": "Do not default nullable option 'alias' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly."
+  }
+]

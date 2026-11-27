@@ -1,6 +1,8 @@
-//! Cli queries integration tests, linked in one harness.
+//! CLI query and test-planning integration tests.
 
 // Share stateless fixture helpers across the modules in this harness.
+#[path = "common/mod.rs"]
+mod common;
 #[path = "common/gitignore_fixture.rs"]
 mod gitignore_fixture;
 #[path = "common/saved_fixture.rs"]
@@ -71,3 +73,5 @@ mod cli_fetches2;
 mod cli_gitignore_tsconfig;
 #[path = "cli_workspace_tsconfig.rs"]
 mod cli_workspace_tsconfig;
+
+include!("suite_cli_test_plans.rs");

@@ -1,5 +1,7 @@
 //! Independent, read-only PostgreSQL schema catalog generation.
 mod connection;
+mod publication;
+pub use publication::generate_to;
 mod sql;
 
 use anyhow::{bail, Context, Result};

@@ -1,0 +1,44 @@
+[
+  {
+    "code": "no-mistakes(require-options-on-imported-call)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/require-options-on-imported-call/recall.mjs",
+    "line": 4,
+    "message": "Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal."
+  },
+  {
+    "code": "no-mistakes(require-options-on-imported-call)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/require-options-on-imported-call/recall.mjs",
+    "line": 6,
+    "message": "Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal."
+  },
+  {
+    "code": "no-mistakes(require-options-on-imported-call)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/require-options-on-imported-call/recall.mjs",
+    "line": 7,
+    "message": "Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal."
+  },
+  {
+    "code": "no-mistakes(require-options-on-imported-call)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/require-options-on-imported-call/recall.mjs",
+    "line": 8,
+    "message": "Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal."
+  },
+  {
+    "code": "no-mistakes(require-options-on-imported-call)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/require-options-on-imported-call/recall.mjs",
+    "line": 9,
+    "message": "Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal."
+  },
+  {
+    "code": "no-mistakes(require-options-on-imported-call)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/require-options-on-imported-call/recall.mjs",
+    "line": 10,
+    "message": "Call 'validateUrl' from 'ssrf-guard/node' must pass a statically visible options object at argument 2 containing any of: timeoutMs, signal."
+  }
+]

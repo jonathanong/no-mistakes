@@ -2170,6 +2170,17 @@
           "messageId": "bannedImport",
           "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
           "severity": 2
+        },
+        {
+          "column": 31,
+          "endColumn": 55,
+          "endLine": 203,
+          "file": "src/app/build.ts",
+          "line": 203,
+          "message": "Do not re-export banned import \"createProgram\" from \"typescript\"; it stays reachable outside allowed paths.",
+          "messageId": "bannedReExport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
         }
       ],
       "kind": "invalid",

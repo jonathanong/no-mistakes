@@ -79,7 +79,8 @@ describe.sequential("migration", () => {});
 ```
 
 `no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
-`no-mistakes-disable-file` also suppress this rule when the comment names it.
+`no-mistakes-disable-file` also suppress this rule when the comment names
+`no-vitest-sequential` or `no-mistakes/no-vitest-sequential`.
 Directive-looking string literals do not.
 
 ## Related rules

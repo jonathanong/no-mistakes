@@ -115,7 +115,7 @@ module.exports = Object.assign(
             for (const target of matchingTargets(
               optionTargets,
               resolved.source,
-              resolved.calleeName,
+              resolved.calleeNames ?? resolved.calleeName,
             )) {
               reportMissing(
                 context,

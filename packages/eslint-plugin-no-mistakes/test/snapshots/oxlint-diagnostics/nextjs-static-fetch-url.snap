@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(nextjs-static-fetch-url)",
+    "column": 7,
+    "file": "eslint-plugin/oxlint-snapshots/fixture/fetch-url.js",
+    "line": 1,
+    "message": "fetch() URL must be a string literal or an expression-free template literal so it can be statically analyzed."
+  }
+]

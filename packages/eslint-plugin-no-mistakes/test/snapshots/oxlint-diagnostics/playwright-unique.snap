@@ -1,0 +1,16 @@
+[
+  {
+    "code": "no-mistakes(playwright-unique)",
+    "column": 11,
+    "file": "eslint-snippets/fixture/unique.jsx",
+    "line": 3,
+    "message": "Test ID 'save' is already used in this file."
+  },
+  {
+    "code": "no-mistakes(playwright-unique)",
+    "column": 11,
+    "file": "eslint-snippets/fixture/unique.jsx",
+    "line": 4,
+    "message": "Test ID 'save' is already used in this file."
+  }
+]

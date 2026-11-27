@@ -110,26 +110,20 @@ impl Recovered {
         self.merge_append_sites(other);
     }
     pub(super) fn same_value(&self, other: &Self) -> bool {
-        let mut left = self.clone();
-        let mut right = other.clone();
-        left.invocations = Default::default();
-        right.invocations = Default::default();
-        left.first_append_offset = None;
-        right.first_append_offset = None;
-        left.append_sites.clear();
-        right.append_sites.clear();
-        left.append_decisions.clear();
-        right.append_decisions.clear();
-        left.decision_offs.clear();
-        right.decision_offs.clear();
-        left.closed_domain = false;
-        right.closed_domain = false;
-        left.type_annotation = false;
-        right.type_annotation = false;
-        left.variants_truncated = false;
-        right.variants_truncated = false;
-        left == right
+        self.same_physical_value(other)
+            && self.enumerated == other.enumerated
+            && self.choices == other.choices
     }
+
+    fn same_physical_value(&self, other: &Self) -> bool {
+        self.value == other.value
+            && self.sql == other.sql
+            && self.line == other.line
+            && self.origins == other.origins
+            && self.positions == other.positions
+            && self.fragment == other.fragment
+    }
+
     pub(super) fn publish(self) -> EmbeddedSqlVariant {
         debug_assert_eq!(self.origins.len(), self.sql.len());
         let first_append_offset = self

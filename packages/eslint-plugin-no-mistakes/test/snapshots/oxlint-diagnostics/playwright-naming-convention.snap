@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(playwright-naming-convention)",
+    "column": 11,
+    "file": "eslint-plugin/oxlint-snapshots/fixture/test-id-name.jsx",
+    "line": 1,
+    "message": "Test ID 'SaveButton' does not match ^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$."
+  }
+]

@@ -25,11 +25,7 @@ test("standalone build retains the default-feature library-only scope", () => {
       command[expectedPrefix.length],
       path.resolve(`target/bundle/standalone-${shard}.tar.zst`),
     );
-    assert.deepEqual(command.slice(expectedPrefix.length + 1), [
-      "--zstd-level",
-      "6",
-      "--zstd-long",
-    ]);
+    assert.deepEqual(command.slice(expectedPrefix.length + 1), ["--zstd-level", "6", "--zstd-long"]);
     assert.ok(!command.includes("--all-features"));
     assert.ok(!command.includes("--bins"));
     assert.ok(!command.includes("--partition"));

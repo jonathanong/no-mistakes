@@ -2,8 +2,69 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { expect, it } from "vitest";
-import { oxlintFindings, pluginFindings } from "./diagnostic-snapshot.mjs";
+import { oxlintFindings, pluginFindings, snapshotDocument } from "./diagnostic-snapshot.mjs";
 import { __dirname } from "./helpers.mjs";
+
+// Fixture-relative line from each rule's saved ESLint case (#4189–#4265).
+const expectedLine = {
+  "async-try-catch-return-await": 13,
+  "await-array-methods": 3,
+  "forbidden-member-chains": 1,
+  "gh-api-argument-safety": 4,
+  "module-mock-boundary": 8,
+  "module-mock-preserve-exports": 3,
+  "nextjs-metadata-exports-location": 22,
+  "nextjs-no-manual-script-tags": 4,
+  "nextjs-static-fetch-method": 3,
+  "nextjs-static-fetch-url": 1,
+  "no-argv-main-guard": 4,
+  "no-banned-import-outside-allowed-paths": 2,
+  "no-comment-phrases": 1,
+  "no-consecutive-unbatched-reads": 5,
+  "no-delete-property": 1,
+  "no-global-fetch-outside-helper": 1,
+  "no-import-only-test-files": 1,
+  "no-inline-noop-promise-catch": 1,
+  "no-locale-less-date-format": 1,
+  "no-placeholder-never-type-exports": 1,
+  "no-top-level-await": 1,
+  "no-vitest-sequential": 4,
+  "playwright-assertion-timeout-cap": 23,
+  "playwright-consistent-attribute": 1,
+  "playwright-defaults": 1,
+  "playwright-naming-convention": 1,
+  "playwright-no-empty": 1,
+  "playwright-no-hoisted-unique-token": 3,
+  "playwright-no-raw-scroll-pagination": 2,
+  "playwright-no-swallowed-visibility": 22,
+  "playwright-prefer-get-by-test-id": 4,
+  "playwright-require-exported-component-attribute": 2,
+  "playwright-selector-priority": 4,
+  "playwright-unique": 3,
+  "postgres-cursor-call-contract": 2,
+  "postgres-no-async-sql-builder": 3,
+  "postgres-no-correlated-sql-builder": 6,
+  "postgres-no-executor-adapter": 17,
+  "postgres-no-manual-transaction": 6,
+  "postgres-no-nonliteral-sql-registry-key": 7,
+  "postgres-no-unbounded-query-fanout": 11,
+  "postgres-pool-requires-error-listener": 7,
+  "react-no-iife-in-jsx": 44,
+  "react-no-nullish-react-node": 14,
+  "react-no-use-promise-resolve": 3,
+  "require-options-on-imported-call": 4,
+  "require-top-level-registration": 1,
+  "restricted-api-usage": 4,
+  "server-require-nullable-fetch-wrapper": 11,
+  "test-no-typed-enqueue-fake": 9,
+  "test-no-wall-time-assertions": 1,
+  "ts-no-const-aliases": 3,
+  "ts-no-export-renaming": 5,
+  "ts-no-function-aliases": 3,
+  "ts-preserve-null-option-defaults": 7,
+  "vitest-mock-test-file-naming": 1,
+  "vitest-timeout-cap": 5,
+};
 
 const root = resolve(__dirname, "../../..");
 const fixtures = resolve(root, "test-cases");
@@ -58,6 +119,14 @@ it("snapshots saved rule diagnostics from ESLint and Oxlint", async () => {
         oxlintFindingsForRule.map(({ line, message }) => [line, message]),
         id,
       ).toEqual(eslintFindings.map(({ line, message }) => [line, message]));
+      expect(expectedLine[rule], rule).toEqual(expect.any(Number));
+      expect(
+        oxlintFindingsForRule.some((finding) => finding.line === expectedLine[rule]),
+        `${rule} line ${expectedLine[rule]}`,
+      ).toBe(true);
+      await expect(snapshotDocument(oxlintFindingsForRule)).toMatchFileSnapshot(
+        `snapshots/oxlint-diagnostics/${rule}.snap`,
+      );
 
       findingCount += oxlintFindingsForRule.length;
       sections.push(

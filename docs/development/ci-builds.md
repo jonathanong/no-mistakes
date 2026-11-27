@@ -83,7 +83,9 @@ The current validation graph is organized as follows:
   `check` on a saved fixture and requires the `agents-md-max-size` finding on
   `AGENTS.md:1`. It runs the explicit OS-dependent list in
   `.github/scripts/smoke-tests.cjs` (keyed by OS): the macOS invocation and global-lock
-  harness (`tests/macos_invocation.rs`, `tests/cli_invocation.rs`), one
+  harness (`crates/no-mistakes-invocation/tests/macos_invocation.rs`, which also
+  exercises `crates/no-mistakes/tests/cli_invocation.rs` against the built CLI
+  via `NO_MISTAKES_CLI_BIN`), one
   `analyzeProject` call on a saved fixture through
   the built addon, and real-addon API tests for the cross-process lock, rename
   semantics, and diagnostics. The dependency-report API tests stay in the full
@@ -111,39 +113,29 @@ The current validation graph is organized as follows:
   CI workflows and their scripts, and native package code. A rename contributes
   both old and new paths. The rule scope reads both committed trees so a platform
   operation added or removed in an otherwise portable rule still triggers smoke.
-  Before compiling the Rust tests, smoke first tries to restore the
-  `native-test-harness-workspace-v2-aarch64-apple-darwin`
-  `target/debug` snapshot that `native-rust-tests-macos` saves on `main`
-  (same primary key, harness restore prefixes and paths). PRs only restore.
-  `smoke.cjs` uses the same `profileArgs` Cargo profile. If the harness cache
-  misses, smoke falls back to the compatible macOS runtime workspace from
-  `main` for compiled dependencies and still builds the selected harnesses.
-  The integration harness checks that the CLI deadline stops blocked
-  configuration loading. The full binary test harness, including the
-  internal blocked-check tests, runs in the native suite on main.
-  The tests run before the runtime build, which rewrites the `no-mistakes`
-  crate-type and invalidates restored test units. Before this, the job restored
-  no `target/`, spent 14m27s compiling on one run and hit the 15 minute step
-  timeout; `cache-topology.test.cjs` and `smoke-tests.test.cjs` guard the
-  shared key and profile. The timeout was not raised.
-  Restoring `target/debug` does not avoid recompiling the changed
-  `no-mistakes` crate and its test binaries: that single-crate test compile
-  took 9m54s to 11m39s inside the 15 minute test step on passing runs, and the
-  tests themselves about 40 seconds. Step durations of 673 to 831 seconds were
-  the same before and after #3987, and timeouts at about 910 seconds occurred
-  on both sides of it (runs 45313505893 and 45314362424 before, 45326909265
-  and 45332735694 after), so #3987 did not cause them. `Compile macOS-dependent
-  Rust tests` therefore runs one `cargo test --no-run` over every listed target
-  (same `profileArgs`, `--locked` and `-p`) under a 20 minute cap, with live
-  cargo output, and the 15 minute `Run macOS-dependent Rust tests` step only
-  runs them. A separately bounded step replays the saved input timestamps
-  once before compilation. In run 45364121571, that replay took 30 seconds
-  and Cargo finished the compile in 19m34s. Sharing one step deadline caused
-  the runner to terminate the step after Cargo listed both test binaries.
-  The compile and test step caps remain inside the job's 45-minute limit.
-  Keep the timestamp replay ahead of compilation because replaying it again
-  would mark changed files fresh and force a rebuild.
-  [macOS smoke job](https://github.com/jonathanong/no-mistakes/actions/runs/45364121571/job/138343765816)
+  `macos-smoke` restores the compatible macOS runtime workspace snapshot from
+  `main` (PRs only restore, never save target caches), runs `Build native CLI
+  and N-API addon` first, and then runs `Compile macOS-dependent Rust tests`
+  and `Run macOS-dependent Rust tests` against the standalone
+  `no-mistakes-invocation` crate (`-p no-mistakes-invocation --test
+  macos_invocation`, using `smoke.cjs`'s `profileArgs` with `codegen-units=64`
+  on `no-mistakes-invocation`) with `NO_MISTAKES_CLI_BIN` pointing at
+  `target/debug/no-mistakes`. Because `no-mistakes-invocation` does not depend
+  on `no-mistakes`, building the runtime CLI and shared-library addon first
+  neither invalidates the test harness nor compiles `no-mistakes` a second time,
+  so `macos-smoke` does not need a separate test-harness cache restore or
+  timestamp replay. `cache-topology.test.cjs` and `smoke-tests.test.cjs` guard
+  the build-first order, package selector, and profile.
+  The harness checks the macOS invocation adapters, direct-FIFO watchdog
+  deadlines (`blocked_fifo`), and CLI deadline enforcement against blocked
+  configuration loading (`cli_invocation`); the full `no-mistakes` binary test
+  harness runs in the native suite on `main`.
+  Before extracting `no-mistakes-invocation`, compiling `macos_invocation`
+  inside `no-mistakes` took 9m54s–13m32s (and 19m34s in run `45364121571`,
+  [macOS smoke job](https://github.com/jonathanong/no-mistakes/actions/runs/45364121571/job/138343765816)),
+  requiring a separate harness cache restore and timestamp replay ahead of the
+  runtime build. After extraction, `Compile macOS-dependent Rust tests` runs
+  in ~8–10 seconds within the unchanged job budget.
   The full macOS jobs (`native-rust-tests-macos` and `native-api-tests-macos`)
   run on `main` and manual dispatch. They build in parallel and each runs its
   tests on its own build runner. They still publish the runtime and Rust test
@@ -236,8 +228,9 @@ never restore it independently.
 
 In macOS pull-request smoke CI, the runtime build replays timestamps when its
 workspace cache restores an exact or prefix match. When the runtime cache
-misses, Cargo uses the timestamps already prepared for the Rust test build and
-the fresh timestamp from rewriting the runtime manifest.
+misses, Cargo builds from the fresh timestamp left by rewriting the runtime
+manifest. The `no-mistakes-invocation` tests compile afterwards and need no
+timestamp replay of their own.
 
 Workspace restores require the same compiler, Rust flags, and Cargo
 configuration; only tracked Rust source bytes may differ between a primary key
@@ -297,7 +290,7 @@ later job fails, so cleanup also runs after unsuccessful completions.
 
 After deduplication it evicts least-recently-accessed main workspace snapshots
 until the inventory fits an 8 GiB budget. Budget eviction skips the newest
-main macOS test harness snapshot so pull request smoke jobs can restore it.
+main macOS test harness snapshot for `main` macOS test-harness restores.
 Deduplication still removes superseded harness snapshots. Open PRs, unknown
 families, release dependencies, and active benchmark handoffs also remain
 protected. If protected entries alone exceed the budget, cleanup reports the
@@ -713,13 +706,20 @@ attribute on that child compiles it into no archive: the parent's shard skips
 the child, and the child's shard never loads the parent. Modules that
 production code or several shards call stay on plain `cfg(test)` and compile
 with every shard. A shard's
-`rustc` allows `dead_code` and `unused_imports` for the `no_mistakes` crate
+`rustc` allows `dead_code` and `unused_imports` for the `no_mistakes` and
+`no_mistakes_postgres_sql` crates
 only, because an item used solely by another shard is not dead in the full
 suite. `cargo clippy --all-targets` leaves `NM_TEST_SHARD` unset and still
-denies both lints. `crates/no-mistakes/build.rs` sets
-`nm_shard_all` when `NM_TEST_SHARD` is unset, which is what local `cargo test`
-and clippy do. The standalone build sets `NM_TEST_SHARD` to `0`, `1`, and `2`
-on three sequential `cargo nextest archive` commands and writes
+denies both lints. `crates/no-mistakes/build.rs` sets `nm_shard_all` when `NM_TEST_SHARD` is unset,
+which is what local `cargo test` and clippy do. `crates/no-mistakes-invocation/build.rs`
+always sets `nm_shard_all`, and `crates/no-mistakes-postgres-sql/build.rs` watches
+`NM_POSTGRES_SQL_TEST_SHARD` (used only by the `postgres-source` slice) rather
+than `NM_TEST_SHARD`, so Cargo keeps both sibling library artifacts fresh when
+`NM_TEST_SHARD` cycles across `0`, `1`, and `2`. The standalone build sets
+`NM_TEST_SHARD` to `0`, `1`, and `2` on three sequential `cargo nextest archive`
+commands (shard 0 archives `--workspace --lib` so the smaller
+`no-mistakes-invocation` and `no-mistakes-postgres-sql` crates run all of their
+unit tests once, while shards 1 and 2 archive `-p no-mistakes --lib`) and writes
 `standalone-0.tar.zst`, `standalone-1.tar.zst`, and `standalone-2.tar.zst`.
 Each consumer runs one of those archives and does not hash-partition it. Cargo
 uses a distinct workspace compiler wrapper path for each shard, preserving the
@@ -1525,14 +1525,17 @@ ran all three unit-test slices (`0`, `1`, `2`) sequentially because the
 minutes compiling unrelated test modules three times (e.g., main run
 `45687283513`: 14m51s total, 8927 MiB peak `rustc` RSS, 340 runs covering 328
 unique tests with 6 plain `cfg(test)` tests repeated across slices). It now
-compiles once with `NM_TEST_SHARD=postgres-source` (`cfg(nm_shard_postgres_source)`),
-which includes only the `codebase::postgres::source` unit-test modules and
-shared plain `cfg(test)` modules under the same `--no-default-features` and
-`--features test-instrumentation` settings, 4096 codegen units, and zero debug
-info. The job retains its 30-minute step and 40-minute job bounds, and
-`postgres-source-identities.test.cjs` locks that every
-`codebase::postgres::source::` unit test compiles into the `postgres-source`
-slice. Run 45000861345 exhausted the job bound while the original whole-crate
+compiles `no-mistakes-postgres-sql` once with
+`NM_POSTGRES_SQL_TEST_SHARD=postgres-source` (`cfg(nm_shard_postgres_source)`),
+plus `NM_TEST_SHARD=postgres-source` for `standalone-shard-rustc.sh`, which
+includes only the `source::`
+unit-test modules and shared plain `cfg(test)` modules under the same
+`--no-default-features` and `--features test-instrumentation` settings, 4096
+codegen units, and zero debug info, without compiling `no-mistakes`. The job
+retains its 30-minute step and 40-minute job bounds, and
+`postgres-source-identities.test.cjs` locks that every `source::` unit test in
+`no-mistakes-postgres-sql` compiles into the `postgres-source` slice. Run
+45000861345 exhausted the job bound while the original whole-crate
 quality command was still active; its runner did not upload the step log. The
 existing standalone memory measurements explain why compiling the entire test
 harness is unsafe on the hosted runner. Resource samples continue to wrap this

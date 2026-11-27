@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
-import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { afterAll, describe, it as registerIt } from "vitest";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 import tsParser from "@typescript-eslint/parser";
 import { Linter } from "eslint";
@@ -47,8 +49,27 @@ function check(code, option = DB, filename = "app.ts") {
 }
 
 const recorded = [];
+let registration = 0;
+let activeOrder = 0;
+let activeStep = 0;
+
+// Stamp records when the test is registered. Shuffle runs the body later.
+function it(name, fn, timeout) {
+  const order = registration;
+  registration += 1;
+  const run = () => {
+    activeOrder = order;
+    activeStep = 0;
+    return fn();
+  };
+  return timeout === undefined ? registerIt(name, run) : registerIt(name, run, timeout);
+}
+
 function recordDiagnostic(code, option, filename, expected) {
-  recorded.push({ code, option, filename, expected, empty: expected.length === 0 });
+  const order = activeOrder;
+  const step = activeStep;
+  activeStep += 1;
+  recorded.push({ order, step, code, option, filename, expected, empty: expected.length === 0 });
 }
 
 const languageOptions = {
@@ -1056,8 +1077,9 @@ describe("postgres-no-executor-adapter", () => {
   });
 });
 
-it("snapshots postgres-no-executor-adapter diagnostics", async () => {
-  // A filtered or failed earlier test must not write a reduced snapshot with -u.
+afterAll(async () => {
+  recorded.sort((left, right) => left.order - right.order || left.step - right.step);
+  // A filtered or failed earlier test must not accept a short snapshot.
   assert.equal(recorded.length, 136, "Run the complete adapter file before updating snapshots");
   const valid = [];
   const invalid = [];
@@ -1083,7 +1105,11 @@ it("snapshots postgres-no-executor-adapter diagnostics", async () => {
     ),
     ordered.map((item) => item.expected),
   );
-  await expect(snapshotDocument(rows)).toMatchFileSnapshot(
-    "snapshots/postgres-no-executor-adapter.snap",
+  assert.equal(
+    snapshotDocument(rows),
+    readFileSync(
+      fileURLToPath(new URL("snapshots/postgres-no-executor-adapter.snap", import.meta.url)),
+      "utf8",
+    ),
   );
 }, 30_000);

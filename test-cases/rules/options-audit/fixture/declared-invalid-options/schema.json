@@ -1,0 +1,18 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "orders": {
+      "relationKind": "table",
+      "comment": "One row per checkout",
+      "columns": {
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "ordinalPosition": 1,
+          "comment": "Checkout identifier"
+        }
+      }
+    }
+  }
+}

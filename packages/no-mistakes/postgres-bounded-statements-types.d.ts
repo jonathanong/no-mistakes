@@ -4,6 +4,12 @@ import type { Effort, Unanalyzable } from "./traversal-types";
 
 export type PostgresMaterializedBodyPolicy = "ignore" | "advise" | "report" | "require-bound";
 
+/** The statement kinds selected by `postgres-bounded-statements`. */
+export type PostgresBoundedStatementKind = "select" | "update" | "delete";
+
+/** The legacy SQL analysis policy used by `unanalyzableSql`. */
+export type PostgresLegacyUnanalyzableSql = "fail" | "advise" | "ignore";
+
 export type PostgresViewBoundMode = "bounded" | "unbounded";
 
 /** An application assertion that each selected key has bounded fan-out. */
@@ -29,7 +35,7 @@ export interface PostgresBoundedStatementsOptions {
   trustedSqlTags?: { module: string; name: string }[];
   sqlIdentifierAssertions?: PostgresSqlIdentifierAssertion[];
   rawSqlTags?: PostgresRawSqlTag[];
-  statements?: ("select" | "update" | "delete")[];
+  statements?: PostgresBoundedStatementKind[];
   allow?: { object: string; reason: string }[];
   viewBounds?: Record<string, PostgresViewBoundMode>;
   /** Catalog `table.column` names, each with a nonempty reason. */
@@ -44,5 +50,5 @@ export interface PostgresBoundedStatementsOptions {
   maxDomainRows?: number;
   effort?: Effort;
   unanalyzable?: Unanalyzable;
-  unanalyzableSql?: Unanalyzable;
+  unanalyzableSql?: PostgresLegacyUnanalyzableSql;
 }

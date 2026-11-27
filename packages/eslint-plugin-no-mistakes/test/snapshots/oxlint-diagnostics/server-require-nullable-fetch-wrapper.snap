@@ -1,0 +1,93 @@
+[
+  {
+    "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+    "column": 10,
+    "file": "eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts",
+    "line": 11,
+    "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently."
+  },
+  {
+    "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+    "column": 50,
+    "file": "eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts",
+    "line": 14,
+    "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently."
+  },
+  {
+    "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+    "column": 10,
+    "file": "eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts",
+    "line": 17,
+    "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently."
+  },
+  {
+    "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+    "column": 10,
+    "file": "eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts",
+    "line": 21,
+    "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently."
+  },
+  {
+    "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+    "column": 10,
+    "file": "eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts",
+    "line": 25,
+    "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently."
+  },
+  {
+    "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+    "column": 10,
+    "file": "eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts",
+    "line": 29,
+    "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently."
+  },
+  {
+    "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+    "column": 42,
+    "file": "eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts",
+    "line": 32,
+    "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently."
+  },
+  {
+    "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+    "column": 10,
+    "file": "eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts",
+    "line": 38,
+    "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently."
+  },
+  {
+    "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+    "column": 10,
+    "file": "eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts",
+    "line": 42,
+    "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently."
+  },
+  {
+    "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+    "column": 41,
+    "file": "eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts",
+    "line": 47,
+    "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently."
+  },
+  {
+    "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+    "column": 10,
+    "file": "eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts",
+    "line": 50,
+    "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently."
+  },
+  {
+    "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+    "column": 10,
+    "file": "eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts",
+    "line": 56,
+    "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently."
+  },
+  {
+    "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+    "column": 22,
+    "file": "eslint-plugin/server-require-nullable-fetch-wrapper/fixture/invalid.ts",
+    "line": 60,
+    "message": "Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently."
+  }
+]

@@ -356,7 +356,7 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   );
   assert.match(
     nativeCommands,
-    /cargo test(?: --config \S+)* --locked -p no-mistakes --test macos_invocation/,
+    /cargo test(?: --config \S+)* --locked -p no-mistakes-invocation --test macos_invocation/,
     "macOS native jobs must run the focused invocation test target",
   );
   assert.doesNotMatch(nativeCommands, /cargo test\b[^\r\n]*--lib\b/);
@@ -371,7 +371,7 @@ test("native CI jobs run only platform-specific Rust tests", () => {
     "Windows must run the Job Object regression as an integration test",
   );
   const macosInvocation = readFileSync(
-    join(repoRoot, "crates", "no-mistakes", "tests", "macos_invocation.rs"),
+    join(repoRoot, "crates", "no-mistakes-invocation", "tests", "macos_invocation.rs"),
     "utf8",
   );
   assert.match(macosInvocation, /#\[path = "\.\.\/src\/invocation\.rs"\]/);

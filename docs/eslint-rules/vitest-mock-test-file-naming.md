@@ -56,6 +56,11 @@ installMocks();
 vi.mock("@app/mail");
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names
+`vitest-mock-test-file-naming` or `no-mistakes/vitest-mock-test-file-naming`.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`module-mock-boundary`](module-mock-boundary.md) controls which internal

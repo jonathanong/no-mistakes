@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import tsParser from "@typescript-eslint/parser";
@@ -10,7 +9,7 @@ import {
   snapshotDocument,
   snapshotSuite,
 } from "./diagnostic-snapshot.mjs";
-import { __dirname, fixture, lint, messages } from "./helpers.mjs";
+import { __dirname, fixture, lint, messages, runOxlintAsync } from "./helpers.mjs";
 
 const languageOptions = {
   ecmaVersion: 2024,
@@ -205,7 +204,7 @@ describe("test rule static recall follow-up", () => {
     "test-no-error-message-matching",
     "vitest-mock-test-file-naming",
   ]) {
-    it(`matches type-aware Oxlint for every supported ${rule} fixture`, () => {
+    it.concurrent(`matches type-aware Oxlint for every supported ${rule} fixture`, async () => {
       const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", rule);
       const files = readdirSync(root, { recursive: true })
         .filter((file) => /\.[cm]?[jt]sx?$/.test(file))
@@ -215,24 +214,16 @@ describe("test rule static recall follow-up", () => {
         )
         .sort();
       assert.ok(files.length > 0);
-      const result = spawnSync(
-        process.execPath,
-        [
-          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-          "--type-aware",
-          "--config",
-          resolve(root, ".oxlintrc-static-followup.json"),
-          "--format",
-          "json",
-          ...files.map((file) => resolve(root, file)),
-        ],
-        { encoding: "utf8", timeout: 4000, maxBuffer: 4 * 1024 * 1024 },
-      );
+      const result = await runOxlintAsync({
+        config: resolve(root, ".oxlintrc-static-followup.json"),
+        files: files.map((file) => resolve(root, file)),
+        typeAware: true,
+        timeout: 10_000,
+        maxBuffer: 4 * 1024 * 1024,
+      });
       assert.equal(result.error, undefined, `${rule}: ${result.error}`);
       assert.equal(result.signal, null, `${rule}: ${result.stderr}`);
-      const actual = JSON.parse(result.stdout).diagnostics.filter((item) =>
-        item.code.includes(rule),
-      );
+      const actual = result.diagnostics.filter((item) => item.code.includes(rule));
       for (const file of files) {
         const expected = lint(
           fixture(`${rule}/${file}`),
@@ -249,8 +240,8 @@ describe("test rule static recall follow-up", () => {
           expected.every((item) => !item.fatal),
           `${rule}/${file}: invalid fixture mode`,
         );
-        const lines = actual
-          .filter((item) => resolve(item.filename) === resolve(root, file))
+        const lines = result
+          .forFile(resolve(root, file), rule)
           .map((item) => item.labels[0].span.line)
           .sort((a, b) => a - b);
         assert.deepEqual(

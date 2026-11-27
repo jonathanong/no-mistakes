@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import tsParser from "@typescript-eslint/parser";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
-import { fixture, lint, plugin, require, __dirname } from "./helpers.mjs";
+import { fixture, lint, plugin, require, runOxlintAsync, __dirname } from "./helpers.mjs";
 
 const { ruleSuppression } = require("../src/rule-suppression");
 const id = "no-comment-phrases";
@@ -42,33 +42,6 @@ function lines(name, ruleConfig) {
 
 function loc(line) {
   return { start: { line, column: 0 }, end: { line, column: 1 } };
-}
-
-function oxlint(configName, name) {
-  const result = spawnSync(
-    process.execPath,
-    [
-      resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-      "--config",
-      resolve(fixtureRoot, configName),
-      "--format",
-      "json",
-      resolve(fixtureRoot, name),
-    ],
-    { encoding: "utf8" },
-  );
-  const report = JSON.parse(result.stdout || "{}");
-  const diagnostics = (report.diagnostics || []).filter((entry) => entry.code?.includes(id));
-  assert.equal(
-    result.status,
-    diagnostics.length ? 1 : 0,
-    `${name}\n${result.stderr}\n${result.stdout}`,
-  );
-  return diagnostics;
-}
-
-function oxlintLines(configName, name) {
-  return oxlint(configName, name).map((entry) => entry.labels[0].span.line);
 }
 
 describe(id, () => {
@@ -281,7 +254,7 @@ describe(id, () => {
     assert.doesNotMatch(output, /Invalid comment phrase pattern/);
   });
 
-  it("has real oxlint parity for comments, strings, regex, and reasons", () => {
+  it("has real oxlint parity for comments, strings, regex, and reasons", async () => {
     const expected = [
       [".oxlintrc.json", "comments.mjs", [1, 3, 4, 5]],
       [".oxlintrc.json", "strings.ts", []],
@@ -310,15 +283,47 @@ describe(id, () => {
       [".oxlintrc.case.json", "case.mjs", [1, 2]],
       [".oxlintrc.invalid.json", "invalid.mjs", [1, 1]],
     ];
+    const byConfig = new Map();
     for (const [configName, name, expectedLines] of expected) {
-      assert.deepEqual(oxlintLines(configName, name), expectedLines, `${configName} ${name}`);
+      const list = byConfig.get(configName) || [];
+      list.push([name, expectedLines]);
+      byConfig.set(configName, list);
     }
-    const messages = oxlint(".oxlintrc.json", "messages.mjs").map((entry) => entry.message);
+    const batches = new Map(
+      await Promise.all(
+        [...byConfig.entries()].map(async ([configName, entries]) => {
+          const result = await runOxlintAsync({
+            config: resolve(fixtureRoot, configName),
+            files: entries.map(([name]) => resolve(fixtureRoot, name)),
+          });
+          const hasAny = entries.some(([, expectedLines]) => expectedLines.length > 0);
+          assert.equal(
+            result.status,
+            hasAny ? 1 : 0,
+            `${configName}\n${result.stderr}\n${result.stdout}`,
+          );
+          return [configName, result];
+        }),
+      ),
+    );
+    for (const [configName, name, expectedLines] of expected) {
+      const diagnostics = batches.get(configName).forFile(resolve(fixtureRoot, name), id);
+      assert.deepEqual(
+        diagnostics.map((entry) => entry.labels[0].span.line),
+        expectedLines,
+        `${configName} ${name}`,
+      );
+    }
+    const messages = batches
+      .get(".oxlintrc.json")
+      .forFile(resolve(fixtureRoot, "messages.mjs"), id)
+      .map((entry) => entry.message);
     assert.deepEqual(messages, [options.patterns[0].message, options.message]);
     assert.ok(
-      oxlint(".oxlintrc.invalid.json", "invalid.mjs").some((entry) =>
-        /Invalid comment phrase pattern/.test(entry.message),
-      ),
+      batches
+        .get(".oxlintrc.invalid.json")
+        .forFile(resolve(fixtureRoot, "invalid.mjs"), id)
+        .some((entry) => /Invalid comment phrase pattern/.test(entry.message)),
     );
   }, 30_000);
 

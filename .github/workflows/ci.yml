@@ -805,9 +805,6 @@ jobs:
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
       - name: Run JavaScript tests
         timeout-minutes: 4
         run: pnpm run test:ci --config .github/scripts/vitest-shard.config.cjs --shard=${{ matrix.shard }}/4 --reporter=blob
@@ -938,9 +935,6 @@ jobs:
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
       - name: Download Linux runtime
         timeout-minutes: 6
         env:
@@ -1873,10 +1867,6 @@ jobs:
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
-
       - name: Run native CLI smoke test
         timeout-minutes: 2
         shell: bash
@@ -2107,10 +2097,6 @@ jobs:
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
-
       - name: Run native CLI smoke test
         timeout-minutes: 2
         shell: bash
@@ -2222,40 +2208,6 @@ jobs:
           cache-workspace-crates: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      # Main's test harness cache is preferred. If retention or eviction leaves
-      # it unavailable, the compatible runtime workspace can supply dependencies
-      # while Cargo builds the test units. Rust tests precede the crate-type rewrite.
-      - name: Restore native test harness artifacts built on main
-        id: native-test-harness-cache
-        if: ${{ env.COLD_BUILD != 'true' }}
-        timeout-minutes: 3
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          key: native-test-harness-workspace-v2-aarch64-apple-darwin-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-${{ hashFiles('crates/**/*.rs') }}
-          restore-keys: |
-            native-test-harness-workspace-v2-aarch64-apple-darwin-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-
-            native-test-harness-workspace-v2-aarch64-apple-darwin-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-
-            native-runtime-workspace-v2-aarch64-apple-darwin-${{ steps.native-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-cgu64-
-          path: |
-            target/debug
-            target/.rustc_info.json
-            ${{ runner.temp }}/nm-cargo-inputs
-
-      - name: Restore macOS test input timestamps
-        timeout-minutes: 3
-        shell: bash
-        run: node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
-
-      - name: Compile macOS-dependent Rust tests
-        timeout-minutes: 20
-        shell: bash
-        run: node .github/scripts/smoke.cjs macos rust-build
-
-      - name: Run macOS-dependent Rust tests
-        timeout-minutes: 15
-        shell: bash
-        run: node .github/scripts/smoke.cjs macos rust
-
       - name: Restore native workspace artifacts built on main
         id: native-workspace-cache
         if: ${{ env.COLD_BUILD != 'true' }}
@@ -2315,13 +2267,21 @@ jobs:
         timeout-minutes: 2
         run: node .github/scripts/smoke.cjs macos cli ./target/debug/no-mistakes
 
+      - name: Compile macOS-dependent Rust tests
+        timeout-minutes: 20
+        shell: bash
+        run: node .github/scripts/smoke.cjs macos rust-build
+
+      - name: Run macOS-dependent Rust tests
+        timeout-minutes: 15
+        shell: bash
+        env:
+          NO_MISTAKES_CLI_BIN: ${{ github.workspace }}/target/debug/no-mistakes
+        run: node .github/scripts/smoke.cjs macos rust
+
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
 
       - name: Run analyzeProject on a saved fixture
         timeout-minutes: 2
@@ -2482,10 +2442,6 @@ jobs:
       - name: Install pnpm dependencies
         timeout-minutes: 5
         run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Build JavaScript packages
-        timeout-minutes: 2
-        run: pnpm run build:js
 
       - name: Run analyzeProject on a saved fixture
         timeout-minutes: 2

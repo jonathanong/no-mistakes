@@ -28,6 +28,10 @@ function moduleTag(tag) {
 
 function bindName(name, tag, scope, kind) {
   const target = kind === "var" ? scope.functionEnv : scope;
+  if (target.isModule && tag?.type === "shared" && tag.origin === "import") {
+    target.cells.set(name, { kind: "import", tag });
+    return;
+  }
   if (target.isModule) {
     // Escape after the module body so method walks see later bindings.
     if (tag?.type === "fresh") {

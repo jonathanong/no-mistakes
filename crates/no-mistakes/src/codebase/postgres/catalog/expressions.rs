@@ -1,7 +1,6 @@
 use super::CanonicalOrderKey;
-use crate::codebase::postgres::parse_postgres_sql;
 use regex::Regex;
-use sqlparser::ast::{visit_expressions, Expr, SelectItem, SetExpr, Statement};
+use sqlparser::ast::{visit_expressions, Expr};
 use std::ops::ControlFlow;
 use std::sync::OnceLock;
 
@@ -66,23 +65,7 @@ pub fn normalize_expression(expression: &str) -> String {
         })
         .unwrap_or_else(|| normalize_sql_display(expression))
 }
-pub fn parse_postgres_expression(expression: &str) -> Option<Expr> {
-    let mut statements = parse_postgres_sql(&format!("SELECT {expression}")).ok()?;
-    let Statement::Query(query) = statements.pop()? else {
-        return None;
-    };
-    let SetExpr::Select(select) = *query.body else {
-        return None;
-    };
-    (select.projection.len() == 1).then_some(())?;
-    match select.projection.into_iter().next()? {
-        SelectItem::UnnamedExpr(expression)
-        | SelectItem::ExprWithAlias {
-            expr: expression, ..
-        } => Some(expression),
-        _ => None,
-    }
-}
+pub use no_mistakes_postgres_sql::parse_postgres_expression;
 fn normalize_sql_display(sql: &str) -> String {
     let mut normalized = String::with_capacity(sql.len());
     let mut quote = None;

@@ -1,0 +1,17 @@
+SELECT id FROM accounts WHERE id = $1 ORDER BY id FOR UPDATE;
+SELECT id FROM (SELECT id FROM accounts) sub WHERE id = $1 FOR UPDATE;
+SELECT id FROM accounts FOR UPDATE;
+SELECT name FROM accounts WHERE id = $1 FOR UPDATE;
+SELECT 1 FROM ONLY accounts WHERE id = $1 FOR UPDATE;
+SELECT 1 FROM accounts a(x) WHERE a.x = $1 FOR UPDATE;
+SELECT 1 FROM accounts* WHERE id = $1 FOR UPDATE;
+UPDATE accounts SET balance = 1 WHERE $1 = id AND tenant_id = $2;
+UPDATE accounts SET balance = 1;
+UPDATE accounts SET balance = 1 WHERE (id + 1) = $1 AND tenant_id = $2;
+UPDATE accounts SET balance = 1 WHERE id = next_id() AND tenant_id = $2;
+UPDATE accounts SET balance = 1 WHERE id = $1 AND id = $2;
+UPDATE accounts SET balance = 1 FROM other WHERE accounts.id = other.id;
+UPDATE accounts SET balance = 1 WHERE id = $1;
+WITH d AS (VALUES (1)) DELETE FROM accounts USING d WHERE accounts.id = d.column1;
+WITH d AS (SELECT id FROM accounts FOR UPDATE) DELETE FROM accounts USING d;
+WITH d AS (SELECT id FROM accounts FOR UPDATE) DELETE FROM accounts USING d WHERE d.id = accounts.id;

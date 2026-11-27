@@ -1,0 +1,23 @@
+[
+  {
+    "code": "no-mistakes(no-top-level-await)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-top-level-await/await-using.ts",
+    "line": 1,
+    "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint."
+  },
+  {
+    "code": "no-mistakes(no-top-level-await)",
+    "column": 3,
+    "file": "eslint-snippets/fixture/no-top-level-await/await-using.ts",
+    "line": 3,
+    "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint."
+  },
+  {
+    "code": "no-mistakes(no-top-level-await)",
+    "column": 3,
+    "file": "eslint-snippets/fixture/no-top-level-await/await-using.ts",
+    "line": 10,
+    "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint."
+  }
+]

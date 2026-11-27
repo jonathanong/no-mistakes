@@ -45,7 +45,8 @@ name containing dots or uppercase letters is preserved as a raw name, rather
 than split or folded.
 
 The async Node equivalent is `generatePostgresCatalog({ connectionEnv, schema,
-coverage, searchPathSchemas, currentDatabase })`. It returns the catalog object; the caller owns writing it to disk.
+coverage, searchPathSchemas, currentDatabase, output })`. It returns the catalog
+object and atomically publishes it if `output` is supplied.
 The optional `searchPathEvidence` output contains only requested schemas: `null` means a
 schema did not exist or the catalog role lacked `USAGE`; an array is its complete PostgreSQL relation-namespace inventory,
 including views, foreign tables, sequences, partitions, and other names omitted from the

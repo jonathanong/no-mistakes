@@ -45,6 +45,11 @@ return <div>{renderLabel()}</div>;
 return <div>{(() => label)()}</div>;
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names
+`react-no-iife-in-jsx` or `no-mistakes/react-no-iife-in-jsx`.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`react-no-nullish-react-node`](react-no-nullish-react-node.md) keeps JSX

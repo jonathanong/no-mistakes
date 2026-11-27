@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import tsParser from "@typescript-eslint/parser";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
-import { fixture, lint, plugin, __dirname } from "./helpers.mjs";
+import { fixture, lint, plugin, runOxlint, __dirname } from "./helpers.mjs";
 
 const rule = "vitest-timeout-cap";
 const finding = { unknownValues: "finding" };
@@ -162,51 +161,35 @@ describe(rule, () => {
       __dirname,
       "../../../test-cases/eslint-snippets/fixture/vitest-timeout-cap",
     );
-    const run = (name) =>
-      spawnSync(
-        process.execPath,
-        [
-          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-          "--config",
-          resolve(root, ".oxlintrc.json"),
-          "--format",
-          "json",
-          resolve(root, `${name}.ts`),
-        ],
-        { encoding: "utf8" },
-      );
-    assert.equal(
-      JSON.parse(run("overrides").stdout).diagnostics.filter((item) => item.code?.includes(rule))
-        .length,
-      13,
-    );
-    assert.equal(
-      JSON.parse(run("arithmetic").stdout).diagnostics.filter((item) => item.code?.includes(rule))
-        .length,
-      11,
-    );
+    const names = [
+      "overrides",
+      "arithmetic",
+      "config-return-values",
+      "positive-boundaries",
+      "number-shapes",
+      "suppression-file",
+    ];
+    const result = runOxlint({
+      config: resolve(root, ".oxlintrc.json"),
+      files: names.map((name) => resolve(root, `${name}.ts`)),
+    });
+    assert.equal(result.status, 1, result.stderr);
+    const items = (name) => result.forFile(resolve(root, `${name}.ts`), rule);
+    assert.equal(items("overrides").length, 13);
+    assert.equal(items("arithmetic").length, 11);
     assert.deepEqual(
-      JSON.parse(run("config-return-values").stdout)
-        .diagnostics.filter((item) => item.code?.includes(rule))
+      items("config-return-values")
         .map((item) => item.labels[0].span.line)
         .toSorted((left, right) => left - right),
       [9, 13],
     );
-    const boundaries = JSON.parse(run("positive-boundaries").stdout).diagnostics.filter((item) =>
-      item.code?.includes(rule),
-    );
+    const boundaries = items("positive-boundaries");
     assert.equal(boundaries.filter((item) => item.message.includes("must be positive")).length, 7);
     assert.ok(!boundaries.some((item) => item.labels[0].span.line === 22));
     assert.deepEqual(
-      JSON.parse(run("number-shapes").stdout)
-        .diagnostics.filter((item) => item.code?.includes(rule))
-        .map((item) => item.labels[0].span.line),
+      items("number-shapes").map((item) => item.labels[0].span.line),
       [7],
     );
-    assert.ok(
-      !JSON.parse(run("suppression-file").stdout).diagnostics.some((item) =>
-        item.code?.includes(rule),
-      ),
-    );
+    assert.equal(items("suppression-file").length, 0);
   });
 });

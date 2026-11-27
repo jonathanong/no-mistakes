@@ -156,6 +156,55 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "line_suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".no-mistakes/rules/types.yml",
+          "import": "tsconfig-gate-coverage",
+          "line": 5,
+          "message": "stale tsconfig-gate-coverage allowProjects entry `docs/unsuppressed.json` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "docs/unsuppressed.json: invalid",
+          "target": "docs/unsuppressed.json"
+        },
+        {
+          "file": ".no-mistakes/rules/types.yml",
+          "import": "tsconfig-gate-coverage",
+          "line": 6,
+          "message": "stale tsconfig-gate-coverage allowProjects entry `docs/line.json` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "docs/line.json: invalid # no-mistakes-disable-line tsconfig-gate-coverage",
+          "target": "docs/line.json"
+        },
+        {
+          "file": ".no-mistakes/rules/types.yml",
+          "import": "tsconfig-gate-coverage",
+          "line": 8,
+          "message": "stale tsconfig-gate-coverage allowProjects entry `docs/next-line.json` matched no finding in this invocation; remove the entry so exceptions cannot hide stale rule intent",
+          "rule": "unused-allow-entry",
+          "sourceLine": "docs/next-line.json: invalid",
+          "target": "docs/next-line.json"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes/rules/types.yml",
+          "line": 5,
+          "message": "allowProjects entry `docs/unsuppressed.json` is not a tsconfig path",
+          "rule": "tsconfig-gate-coverage",
+          "sourceLine": "docs/unsuppressed.json: invalid",
+          "target": "docs/unsuppressed.json"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "local_action_targets": {
     "exitCode": 1,
     "report": {

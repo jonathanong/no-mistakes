@@ -1,0 +1,23 @@
+[
+  {
+    "code": "no-mistakes(react-no-nullish-react-node)",
+    "column": 8,
+    "file": "eslint-plugin/react-no-nullish-react-node/fixture/invalid.tsx",
+    "line": 14,
+    "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+  },
+  {
+    "code": "no-mistakes(react-no-nullish-react-node)",
+    "column": 8,
+    "file": "eslint-plugin/react-no-nullish-react-node/fixture/invalid.tsx",
+    "line": 15,
+    "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+  },
+  {
+    "code": "no-mistakes(react-no-nullish-react-node)",
+    "column": 6,
+    "file": "eslint-plugin/react-no-nullish-react-node/fixture/invalid.tsx",
+    "line": 28,
+    "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+  }
+]

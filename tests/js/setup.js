@@ -7,7 +7,8 @@ configureCompiledApiEnvironment();
 
 if (
   process.platform === "linux" &&
-  process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node")
+  process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node") &&
+  process.env.NO_MISTAKES_VITEST_LIST !== "1"
 ) {
   // Forked test files need distinct native invocation locks; their own children inherit this one.
   const runtime = mkdtempSync(join(tmpdir(), "no-mistakes-api-runtime-"));

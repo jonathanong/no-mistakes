@@ -181,3 +181,6 @@ fn record(observer: Option<&InvocationObserver>, metric: &'static str, count: u6
         observer.increment(metric, count);
     }
 }
+
+#[cfg(test)]
+mod tests;

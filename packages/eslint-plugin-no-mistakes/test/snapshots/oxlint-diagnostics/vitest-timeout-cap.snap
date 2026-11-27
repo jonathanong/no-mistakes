@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(vitest-timeout-cap)",
+    "column": 24,
+    "file": "eslint-snippets/fixture/vitest-timeout-cap/limits-parameter.ts",
+    "line": 5,
+    "message": "Vitest timeout cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values."
+  }
+]

@@ -25,23 +25,27 @@ fn saved(name: &str) -> std::path::PathBuf {
 }
 
 #[test]
-fn lockfile_diff_json_impl_binary_lockfile_explicit_returns_err() {
-    // Covers lines 62-65: when the explicit lockfile path is a binary format
-    // (bun.lockb), detect_manager returns None and is_binary_lockfile returns true
-    // → error instead of a silent skip.
-    let dir = tempfile::tempdir().unwrap();
-    let options = format!(
-        r#"{{"root": "{}", "base": "HEAD", "lockfile": "bun.lockb"}}"#,
-        dir.path().to_str().unwrap().replace('\\', "/")
-    );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
-    assert!(result.is_err(), "binary lockfile should return an error");
-    let err = result.unwrap_err();
-    assert!(
-        err.reason.contains("binary lockfile"),
-        "error should mention binary lockfile: {}",
-        err.reason
-    );
+fn binary_lockfile_warning_is_additive_and_matches_the_saved_cli_fixture() {
+    use crate::test_support::{git_commit_all, git_init, materialize_saved_fixture};
+    use serde_json::{json, Value};
+
+    let saved = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/lockfile-diff-bun-binary");
+    let fixture = materialize_saved_fixture(&saved.join("fixture"));
+    let root = fixture.path();
+    git_init(root);
+    git_commit_all(root, "Add binary lockfile");
+    let mut options = json!({"root": root, "base": "HEAD", "lockfile": "bun.lockb"});
+    let error = lockfile_diff_json_impl(options.clone()).unwrap_err();
+    assert!(error.reason.contains("binary lockfile"));
+
+    options["includeWarnings"] = true.into();
+    let output = lockfile_diff_json_impl(options).unwrap();
+    let report: Value = serde_json::from_str(&output).unwrap();
+    let expected: Value =
+        serde_json::from_str(&std::fs::read_to_string(saved.join("expected-node.json")).unwrap())
+            .unwrap();
+    assert_eq!(report, expected);
 }
 
 #[test]
@@ -82,8 +86,16 @@ fn lockfile_diff_json_impl_newly_added_no_head_reports_all_added() {
         r#"{{"root": "{}", "base": "HEAD"}}"#,
         root.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let mut input: serde_json::Value = serde_json::from_str(&options).unwrap();
+    let result = lockfile_diff_json_impl(input.clone()).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
+    input["includeWarnings"] = true.into();
+    let report: serde_json::Value =
+        serde_json::from_str(&lockfile_diff_json_impl(input).unwrap()).unwrap();
+    assert_eq!(
+        report,
+        serde_json::json!({"entries": entries, "warnings": []})
+    );
     assert_eq!(entries.len(), 1, "should detect newly added lockfile");
     let added = entries[0]["added"].as_array().unwrap();
     assert!(

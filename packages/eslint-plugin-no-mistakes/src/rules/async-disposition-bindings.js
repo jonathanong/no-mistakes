@@ -44,11 +44,11 @@ function pushedArray(node) {
     !push.arguments.includes(value) ||
     callee?.type !== "MemberExpression" ||
     memberPropertyName(callee) !== "push" ||
-    callee.object.type !== "Identifier" ||
+    unwrapExpression(callee.object)?.type !== "Identifier" ||
     !standalonePush(push)
   )
     return null;
-  return { id: callee.object, push };
+  return { id: unwrapExpression(callee.object), push };
 }
 
 function collectedPromise(node, context, isAggregate, disposed, createdHere) {
@@ -62,7 +62,7 @@ function collectedPromise(node, context, isAggregate, disposed, createdHere) {
     if (reference.init) continue;
     const id = reference.identifier;
     const parent = unwrapTransparentParent(id).parent;
-    if (isAggregate(parent) && parent.arguments[0] === id) {
+    if (isAggregate(parent) && unwrapExpression(parent.arguments[0]) === id) {
       if (laterDrain(found.push, parent, createdHere) && disposed(parent)) drained = true;
       continue;
     }
@@ -99,7 +99,9 @@ function retainedCollection(node, context, isAggregate, disposed) {
     if (reference.init) continue;
     const id = unwrapTransparentParent(reference.identifier);
     const parent = id.parent;
-    if (!isAggregate(parent) || parent.arguments[0] !== id) return false;
+    if (!isAggregate(parent) || unwrapExpression(parent.arguments[0]) !== reference.identifier) {
+      return false;
+    }
     if (laterDrain(node, parent) && disposed(parent)) drained = true;
   }
   return drained;

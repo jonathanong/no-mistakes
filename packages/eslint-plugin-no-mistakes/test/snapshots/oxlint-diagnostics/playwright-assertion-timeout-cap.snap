@@ -1,0 +1,16 @@
+[
+  {
+    "code": "no-mistakes(playwright-assertion-timeout-cap)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/playwright-assertion-timeout-cap/branches.spec.ts",
+    "line": 23,
+    "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+  },
+  {
+    "code": "no-mistakes(playwright-assertion-timeout-cap)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/playwright-assertion-timeout-cap/branches.spec.ts",
+    "line": 29,
+    "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+  }
+]

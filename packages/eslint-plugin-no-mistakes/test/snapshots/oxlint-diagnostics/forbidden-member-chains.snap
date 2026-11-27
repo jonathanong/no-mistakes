@@ -1,0 +1,212 @@
+[
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 1,
+    "message": "Use the entry helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 2,
+    "message": "Use the entry helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 3,
+    "message": "Use the entry helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 4,
+    "message": "Use the entry helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 5,
+    "message": "Use the entry helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 6,
+    "message": "Open the panel through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 7,
+    "message": "Open the panel through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 8,
+    "message": "Open the panel through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 9,
+    "message": "Open the panel through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 10,
+    "message": "Open the panel through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 11,
+    "message": "Open the panel through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 12,
+    "message": "Open the panel through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 13,
+    "message": "Toggle the drawer through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 14,
+    "message": "Toggle the drawer through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 15,
+    "message": "Do not read the numeric slot."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 16,
+    "message": "Do not read the numeric slot."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 17,
+    "message": "Do not read the numeric slot."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 18,
+    "message": "Use the entry helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 8,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 19,
+    "message": "Use the entry helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 6,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 20,
+    "message": "Open the panel through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 8,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 21,
+    "message": "Use the entry helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 22,
+    "message": "Use the entry helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 16,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 22,
+    "message": "Open the panel through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 12,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 26,
+    "message": "Do not read the private slot."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 12,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 29,
+    "message": "Open the panel through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 12,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 32,
+    "message": "Open the panel through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 35,
+    "message": "Open the panel through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 36,
+    "message": "Open the panel through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 37,
+    "message": "Open the panel through the helper."
+  },
+  {
+    "code": "no-mistakes(forbidden-member-chains)",
+    "column": 9,
+    "file": "eslint-snippets/fixture/forbidden-member-chains/unsafe.mjs",
+    "line": 38,
+    "message": "Open the panel through the helper."
+  }
+]

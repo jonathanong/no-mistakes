@@ -32,7 +32,7 @@ they apply only to `undefined`.
 
 ## Limits
 
-`` options[`label`] `` and `` const { [`label`]: text } = options `` are `options.label`. A computed identifier key is not:
+``options[`label`]`` and ``const { [`label`]: text } = options`` are `options.label`. A computed identifier key is not:
 `options[key] ?? "Untitled"` does not prove which nullable member is read.
 Same-file object aliases and direct static destructuring patterns preserve the option
 member. A parameter-default destructure such as
@@ -61,9 +61,11 @@ reports the same nullable default; rewrite the return as
 `alias === undefined ? "Untitled" : alias`. Parameter-initializer reads are not
 followed because another parameter may still be uninitialized. It uses the actual lexical binding,
 so a nearer hoisted variable or later declaration does not borrow an outer
-nullable fact. `let`/`var` sources or aliases, assignment aliases, TypeScript
-wrappers around scalar aliases, imported values and forward reads are outside
-this added proof. Existing direct-member and object-alias behavior is unchanged.
+nullable fact. An assertion, non-null, `satisfies`, or instantiation wrapper
+around the member read or the scalar alias is the same read, including
+`const { limit } = options!`. `let`/`var` sources or aliases, assignment
+aliases, imported values, and forward reads stay outside this added proof.
+Existing direct-member and object-alias behavior is unchanged.
 
 ```ts
 function render(options: { label?: string | null }) {

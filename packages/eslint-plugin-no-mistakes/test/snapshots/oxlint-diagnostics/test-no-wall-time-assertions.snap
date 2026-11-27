@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(test-no-wall-time-assertions)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-wall-time-assertions/benchmarks/speed.test.js",
+    "line": 1,
+    "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers."
+  }
+]

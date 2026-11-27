@@ -15,7 +15,8 @@ test("native API shards collect every legacy file including the large real addon
   );
   const source = fs.readFileSync(path.join(__dirname, "native-api-shards.cjs"), "utf8");
   assert.match(source, /"list",\s*\.\.\.files,\s*"--no-static-parse"/);
-  assert.match(source, /"run",\s*\.\.\.files,\s*`--testNamePattern=/);
+  assert.match(source, /"run",\s*\.\.\.runFiles,\s*`--testNamePattern=/);
+  assert.match(source, /NO_MISTAKES_VITEST_LIST:\s*"1"/);
 });
 
 test("case shards partition all collected names exactly once with regex escaping", () => {
@@ -138,7 +139,21 @@ test("Linux runner shards execute the complete expanded inventory once and rejec
       .split("\n")
       .map(JSON.parse);
     assert.equal(commands.length, 8);
-    for (const args of commands) assert.deepEqual(args.slice(1, 1 + linuxFiles.length), linuxFiles);
+    const runFileUnion = new Set();
+    for (let offset = 0; offset < commands.length; offset += 2) {
+      const listArgs = commands[offset];
+      const runArgs = commands[offset + 1];
+      assert.deepEqual(listArgs.slice(1, 1 + linuxFiles.length), linuxFiles);
+      const patternIndex = runArgs.findIndex((arg) => arg.startsWith("--testNamePattern="));
+      const shardRunFiles = runArgs.slice(1, patternIndex);
+      const expectedFiles = linuxFiles.filter((file) =>
+        partition(expected, offset / 2 + 1, 4).files.includes(file),
+      );
+      assert.deepEqual(shardRunFiles, expectedFiles);
+      assert.ok(shardRunFiles.length < linuxFiles.length);
+      for (const file of shardRunFiles) runFileUnion.add(file);
+    }
+    assert.deepEqual([...runFileUnion].sort(), [...linuxFiles].sort());
     const invalid = invoke(1, "unknown");
     assert.equal(invalid.status, 1);
     assert.match(invalid.stderr, /suite must be platform or linux/);

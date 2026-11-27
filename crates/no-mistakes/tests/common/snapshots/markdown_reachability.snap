@@ -324,6 +324,42 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "line_suppression": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "next-line.md",
+          "line": 1,
+          "message": "directive for `markdown-reachability` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "<!-- no-mistakes-disable-next-line markdown-reachability -->",
+          "target": "markdown-reachability"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "next-line.md",
+          "line": 1,
+          "message": "not reachable from a configured root Markdown file within 2 hops",
+          "rule": "markdown-reachability",
+          "sourceLine": "<!-- no-mistakes-disable-next-line markdown-reachability -->"
+        },
+        {
+          "file": "unsuppressed.md",
+          "line": 1,
+          "message": "not reachable from a configured root Markdown file within 2 hops",
+          "rule": "markdown-reachability",
+          "sourceLine": "orphan"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "nested_project_scope": {
     "exitCode": 1,
     "report": {

@@ -2,10 +2,34 @@
 
 const { isPromiseMethodCall } = require("./async-disposition-bindings");
 const { unwrapTransparentParent, unwrapExpression } = require("./async-ast");
+const { resolveImportedValue } = require("./configured-runtime-import");
 const { resolveVariable, isReassigned, memberPropertyName } = require("./async-target-bindings");
 const { localFunction } = require("./async-consumer-local-proof");
 const { observerMutated, globalObserverMutated } = require("./async-observer-mutations");
 const { propertiesWritten } = require("./async-disposition-mocks");
+
+function isVitestExpect(resolved) {
+  return (
+    resolved &&
+    !resolved.unresolved &&
+    resolved.imported === "expect" &&
+    ["vitest", "@jest/globals"].includes(resolved.source)
+  );
+}
+
+function expectCallee(callee, context) {
+  const node = unwrapExpression(callee);
+  if (node?.type === "MemberExpression") {
+    return (
+      memberPropertyName(node) === "expect" && isVitestExpect(resolveImportedValue(node, context))
+    );
+  }
+  if (node?.type !== "Identifier" || node.name !== "expect") return false;
+  if (isReassigned(node, context) || propertiesWritten(node, context)) return false;
+  const resolved = resolveImportedValue(node, context);
+  if (resolved) return isVitestExpect(resolved);
+  return !resolveVariable(node, context)?.defs.length && !globalObserverMutated("expect", context);
+}
 
 function assertionExpression(node, context) {
   const argument = unwrapTransparentParent(node);
@@ -15,23 +39,9 @@ function assertionExpression(node, context) {
     call?.type !== "CallExpression" ||
     call.arguments.length !== 1 ||
     call.arguments[0] !== argument ||
-    callee?.type !== "Identifier" ||
-    callee.name !== "expect" ||
-    isReassigned(callee, context) ||
-    propertiesWritten(callee, context)
+    !expectCallee(callee, context)
   )
     return null;
-  const variable = resolveVariable(callee, context);
-  const definition = variable?.defs.length === 1 ? variable.defs[0] : null;
-  if (
-    variable?.defs.length &&
-    (definition?.type !== "ImportBinding" ||
-      definition.node.type !== "ImportSpecifier" ||
-      definition.node.imported.name !== "expect" ||
-      !["vitest", "@jest/globals"].includes(definition.parent.source.value))
-  )
-    return null;
-  if (!variable?.defs.length && globalObserverMutated("expect", context)) return null;
   const modifier = unwrapTransparentParent(call).parent;
   if (
     modifier?.type !== "MemberExpression" ||
@@ -74,16 +84,17 @@ function promiseChainFrom(node, origin, context) {
 }
 
 function handledCatchStatement(node, context, origin) {
-  const callee = unwrapExpression(node?.callee);
-  const handler = unwrapExpression(node?.arguments?.[0]);
+  const call = unwrapExpression(node);
+  const callee = unwrapExpression(call?.callee);
+  const handler = unwrapExpression(call?.arguments?.[0]);
   return Boolean(
-    node?.type === "CallExpression" &&
-    node.parent?.type === "ExpressionStatement" &&
+    call?.type === "CallExpression" &&
+    unwrapTransparentParent(call).parent?.type === "ExpressionStatement" &&
     callee?.type === "MemberExpression" &&
     !callee.optional &&
     memberPropertyName(callee) === "catch" &&
-    !node.optional &&
-    promiseChainFrom(node, origin, context) &&
+    !call.optional &&
+    promiseChainFrom(call, origin, context) &&
     !(origin.type === "Identifier" && propertiesWritten(origin, context)) &&
     !observerMutated(origin, context) &&
     !globalObserverMutated("Promise", context) &&

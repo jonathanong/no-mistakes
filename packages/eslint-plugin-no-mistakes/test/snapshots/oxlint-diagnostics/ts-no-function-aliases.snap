@@ -1,0 +1,51 @@
+[
+  {
+    "code": "no-mistakes(ts-no-function-aliases)",
+    "column": 8,
+    "file": "eslint-snippets/fixture/ts-no-function-aliases/release-jsdoc.mjs",
+    "line": 3,
+    "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+  },
+  {
+    "code": "no-mistakes(ts-no-function-aliases)",
+    "column": 27,
+    "file": "eslint-snippets/fixture/ts-no-function-aliases/release-jsdoc.mjs",
+    "line": 5,
+    "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+  },
+  {
+    "code": "no-mistakes(ts-no-function-aliases)",
+    "column": 43,
+    "file": "eslint-snippets/fixture/ts-no-function-aliases/release-jsdoc.mjs",
+    "line": 6,
+    "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+  },
+  {
+    "code": "no-mistakes(ts-no-function-aliases)",
+    "column": 17,
+    "file": "eslint-snippets/fixture/ts-no-function-aliases/release-jsdoc.mjs",
+    "line": 8,
+    "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+  },
+  {
+    "code": "no-mistakes(ts-no-function-aliases)",
+    "column": 8,
+    "file": "eslint-snippets/fixture/ts-no-function-aliases/release-jsdoc.mjs",
+    "line": 10,
+    "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+  },
+  {
+    "code": "no-mistakes(ts-no-function-aliases)",
+    "column": 22,
+    "file": "eslint-snippets/fixture/ts-no-function-aliases/release-jsdoc.mjs",
+    "line": 12,
+    "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+  },
+  {
+    "code": "no-mistakes(ts-no-function-aliases)",
+    "column": 26,
+    "file": "eslint-snippets/fixture/ts-no-function-aliases/release-jsdoc.mjs",
+    "line": 14,
+    "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+  }
+]

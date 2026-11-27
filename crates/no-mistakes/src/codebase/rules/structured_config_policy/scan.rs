@@ -1,11 +1,11 @@
-use super::ancestor_override_subset::{ParsedAncestorCache, check_ancestor_override_subset};
+use super::ancestor_override_subset::{check_ancestor_override_subset, ParsedAncestorCache};
 use super::equals_file::check_equals_file;
 use super::partial;
 use super::paths::CanonicalInventory;
 use super::when::policy_applies;
-use super::{AssertionKind, Options, RULE_ID, assert_value};
-use crate::codebase::rules::RuleFinding;
+use super::{assert_value, AssertionKind, Options, RULE_ID};
 use crate::codebase::rules::file_diagnostics::ClassifiedInputFindings;
+use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
@@ -159,8 +159,6 @@ pub(super) fn scan_with_state(
             }
         }
     }
-    result
-        .findings
-        .sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
+    super::super::sort_findings::sort_by_file_and_message(&mut result.findings);
     Ok(result)
 }

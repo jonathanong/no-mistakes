@@ -178,11 +178,10 @@ nodeModuleBuiltins.builtinModules;
 import * as nodeModuleNsBuiltins from "node:module";
 nodeModuleNsBuiltins.builtinModules;
 
-// A destructured inline export declaration is unsupported for tagging (only
-// a plain identifier declarator is), matching the destructuring precision
-// boundary elsewhere in this file.
+// A destructured inline export reports when the property is a banned name.
+// transpileModule is not banned, so this export stays quiet.
 import * as ts9 from "typescript";
-export const { createProgram: destructuredInlineExport } = ts9;
+export const { transpileModule: destructuredInlineExport } = ts9;
 
 // A directly re-exported name from a `from` source that isn't itself banned
 // carries no report, matching the un-sourced local re-export precision

@@ -196,3 +196,8 @@ export const inlineExportedCompile = tsForInlineExport.createProgram;
 // call; NewExpression resolves its callee the same way CallExpression does.
 import limiterForNew from "@acme/rate-limit";
 new limiterForNew();
+
+// A destructured inline export exposes a banned property the same way a
+// member alias does. The valid fixture keeps transpileModule quiet.
+import * as tsDestructuredInline from "typescript";
+export const { createProgram: destructuredInlineExport } = tsDestructuredInline;

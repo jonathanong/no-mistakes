@@ -32,7 +32,7 @@ pub(super) fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec
             check_file(path, root, limit)
         })
         .collect();
-    findings.sort_by(|a, b| a.file.cmp(&b.file));
+    super::super::sort_findings::sort_by_file(&mut findings);
     Ok(findings)
 }
 

@@ -1,12 +1,10 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, resolve } from "node:path";
-import { Linter } from "eslint";
 import tsParser from "@typescript-eslint/parser";
 import { expect, it } from "vitest";
-import { __dirname, plugin } from "./helpers.mjs";
+import { __dirname, getLinter, plugin, runOxlintAsync } from "./helpers.mjs";
 
 const root = resolve(
   __dirname,
@@ -78,7 +76,7 @@ function verify(name, typed = false, awaitingConsumers, parser = tsParser) {
   const filename = resolve(root, name);
   return {
     filename,
-    messages: new Linter({ cwd: dirname(filename) }).verify(
+    messages: getLinter(dirname(filename)).verify(
       readFileSync(filename, "utf8"),
       {
         files: ["**/*.ts"],
@@ -118,17 +116,13 @@ function eslintDiagnostics(file, mode) {
     .sort(compareDiagnostics);
 }
 
-function oxlintDiagnostics(configName, files, typeAware) {
-  const args = [
-    resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-    "--config",
-    resolve(root, configName),
-    "--format",
-    "json",
-  ];
-  if (typeAware) args.splice(1, 0, "--type-aware", "--deny-warnings");
-  args.push(...files.map((file) => resolve(root, file)));
-  const result = spawnSync(process.execPath, args, { encoding: "utf8" });
+async function oxlintDiagnostics(configName, files, typeAware) {
+  const result = await runOxlintAsync({
+    config: resolve(root, configName),
+    files: files.map((file) => resolve(root, file)),
+    typeAware,
+    denyWarnings: typeAware,
+  });
   // Real Oxlint must exit 1 on these fixtures. Exit 0 would snapshot a silent miss.
   assert.equal(result.status, 1, result.stderr);
   const payload = JSON.parse(result.stdout || "null");
@@ -194,20 +188,22 @@ const eslintCases = [
 // and Oxlint processes. That exceeds the 5s JavaScript testTimeout when CI
 // workers are saturated. 30s matches other process-spawning plugin tests.
 it("snapshots proven-consumer fixture diagnostics", async () => {
+  const oxlintPromise = Promise.all([
+    // Matches real Oxlint for local proofs and configured imported or DI consumers.
+    oxlintDiagnostics(".oxlintrc.json", ["imported.ts"], false),
+    oxlintDiagnostics(".oxlintrc.json", ["local.ts"], false),
+    oxlintDiagnostics(".oxlintrc.json", ["properties.ts"], false),
+    // Proves cross-file consumers in real type-aware Oxlint without configured contracts.
+    oxlintDiagnostics(".oxlintrc-proven.json", ["cross-file-chain.ts", "cross-file.ts"], true),
+  ]);
+  const eslint = eslintCases.map(([file, mode]) => ({
+    diagnostics: eslintDiagnostics(file, mode),
+    file,
+    mode,
+  }));
   const document = sortValue({
-    eslint: eslintCases.map(([file, mode]) => ({
-      diagnostics: eslintDiagnostics(file, mode),
-      file,
-      mode,
-    })),
-    oxlint: [
-      // Matches real Oxlint for local proofs and configured imported or DI consumers.
-      oxlintDiagnostics(".oxlintrc.json", ["imported.ts"], false),
-      oxlintDiagnostics(".oxlintrc.json", ["local.ts"], false),
-      oxlintDiagnostics(".oxlintrc.json", ["properties.ts"], false),
-      // Proves cross-file consumers in real type-aware Oxlint without configured contracts.
-      oxlintDiagnostics(".oxlintrc-proven.json", ["cross-file-chain.ts", "cross-file.ts"], true),
-    ],
+    eslint,
+    oxlint: await oxlintPromise,
   });
   await expect(`${JSON.stringify(document, null, 2)}\n`).toMatchFileSnapshot(
     "snapshots/async-call-disposition-proven-consumers.snap",

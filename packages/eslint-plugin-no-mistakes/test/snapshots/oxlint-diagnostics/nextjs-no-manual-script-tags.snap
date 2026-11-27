@@ -1,0 +1,16 @@
+[
+  {
+    "code": "no-mistakes(nextjs-no-manual-script-tags)",
+    "column": 7,
+    "file": "eslint-plugin/nextjs-structured-data/fixture/app/page.tsx",
+    "line": 4,
+    "message": "Use <StructuredData> instead of a raw JSON-LD <script> tag."
+  },
+  {
+    "code": "no-mistakes(nextjs-no-manual-script-tags)",
+    "column": 7,
+    "file": "eslint-plugin/nextjs-structured-data/fixture/app/page.tsx",
+    "line": 9,
+    "message": "Use <StructuredData> instead of a raw JSON-LD <script> tag."
+  }
+]

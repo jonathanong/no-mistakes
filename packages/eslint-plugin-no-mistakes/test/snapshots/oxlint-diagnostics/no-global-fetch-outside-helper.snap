@@ -1,0 +1,142 @@
+[
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 1,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 1,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 1,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 2,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 1,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 3,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 1,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 4,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 1,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 5,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 1,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 8,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 1,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 11,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 1,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 14,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 1,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 18,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 10,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 21,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 2,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 26,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 2,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 27,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 1,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 28,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 1,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 29,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 2,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 30,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 1,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 31,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 1,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 34,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 3,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 38,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 3,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 43,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  },
+  {
+    "code": "no-mistakes(no-global-fetch-outside-helper)",
+    "column": 1,
+    "file": "eslint-plugin/no-global-fetch-outside-helper/fixture/invalid.ts",
+    "line": 48,
+    "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+  }
+]
