@@ -1,6 +1,7 @@
 "use strict";
 
 const { canonicalAttribute, options, rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { selectorAttributeVisitors } = require("../selector-visitor");
 
 module.exports = rule(
@@ -19,15 +20,17 @@ module.exports = rule(
     ],
     messages: { attribute: "Use '{{expected}}' instead of '{{actual}}' for test IDs." },
   },
-  (context) =>
-    selectorAttributeVisitors(context, (node, name) => {
+  (context) => {
+    const suppressed = ruleSuppression(context, "playwright-consistent-attribute");
+    return selectorAttributeVisitors(context, (node, name) => {
       const expected = canonicalAttribute(options(context));
-      if (name !== expected) {
+      if (name !== expected && !suppressed(node.name)) {
         context.report({
           node: node.name,
           messageId: "attribute",
           data: { actual: name, expected },
         });
       }
-    }),
+    });
+  },
 );
