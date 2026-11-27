@@ -14,7 +14,7 @@ pub(crate) trait TsFactLookup: Sync {
     fn integration_route_links(
         &self,
         _source: &crate::config::v2::schema::RouteCoverageSource,
-    ) -> Option<&Result<Vec<crate::playwright::integration_routes::RouteLink>, String>> {
+    ) -> Option<&Result<Vec<crate::codebase::playwright_facts::integration::RouteLink>, String>> {
         None
     }
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts>;
@@ -74,7 +74,7 @@ pub(crate) trait TsFactLookup: Sync {
     fn get_playwright_test_files(
         &self,
         _project: Option<&str>,
-    ) -> Option<Arc<Vec<crate::playwright::analysis::context::DiscoveredTestFile>>> {
+    ) -> Option<Arc<Vec<crate::codebase::playwright_facts::DiscoveredTestFile>>> {
         None
     }
 
@@ -96,10 +96,10 @@ pub(crate) trait TsFactLookup: Sync {
     /// override this with an invocation-scoped DashMap.
     fn get_or_compute_app_selector_occurrences(
         &self,
-        _settings: &crate::playwright::config::Settings,
+        _settings: &crate::codebase::playwright_facts::Settings,
         _scan_html_ids: bool,
-        compute: &dyn Fn() -> Result<Vec<crate::playwright::selectors::AppSelector>>,
-    ) -> Result<Arc<Vec<crate::playwright::selectors::AppSelector>>> {
+        compute: &dyn Fn() -> Result<Vec<crate::codebase::playwright_facts::selectors::AppSelector>>,
+    ) -> Result<Arc<Vec<crate::codebase::playwright_facts::selectors::AppSelector>>> {
         compute().map(Arc::new)
     }
 
@@ -108,7 +108,7 @@ pub(crate) trait TsFactLookup: Sync {
     /// different frontend roots and rewrite sets remain isolated.
     fn get_or_compute_playwright_routes(
         &self,
-        _settings: &crate::playwright::config::Settings,
+        _settings: &crate::codebase::playwright_facts::Settings,
         compute: &dyn Fn() -> Vec<crate::routes::Route>,
     ) -> Arc<Vec<crate::routes::Route>> {
         Arc::new(compute())
@@ -118,9 +118,9 @@ pub(crate) trait TsFactLookup: Sync {
     /// (`collect_app_text_targets`), keyed by exact Playwright settings.
     fn get_or_compute_app_text_targets(
         &self,
-        _settings: &crate::playwright::config::Settings,
-        compute: &dyn Fn() -> Result<Vec<crate::playwright::analysis::text_types::AppTextTarget>>,
-    ) -> Result<Arc<Vec<crate::playwright::analysis::text_types::AppTextTarget>>> {
+        _settings: &crate::codebase::playwright_facts::Settings,
+        compute: &dyn Fn() -> Result<Vec<crate::codebase::playwright_facts::text::AppTextTarget>>,
+    ) -> Result<Arc<Vec<crate::codebase::playwright_facts::text::AppTextTarget>>> {
         compute().map(Arc::new)
     }
 
@@ -131,7 +131,7 @@ pub(crate) trait TsFactLookup: Sync {
     /// scoped by exact Playwright settings as well.
     fn get_or_compute_route_reachable_files(
         &self,
-        _settings: &crate::playwright::config::Settings,
+        _settings: &crate::codebase::playwright_facts::Settings,
         compute: &dyn Fn() -> Result<RouteReachableFiles>,
     ) -> Result<Arc<RouteReachableFiles>> {
         compute().map(Arc::new)

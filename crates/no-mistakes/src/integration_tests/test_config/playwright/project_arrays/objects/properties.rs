@@ -1,4 +1,5 @@
 use super::{shared, Ctx, Options};
+use crate::codebase::playwright_facts::test_patterns::Patterns;
 use crate::integration_tests::test_config::deadlines;
 use anyhow::Result;
 use oxc_ast::ast::Expression;
@@ -20,7 +21,7 @@ pub(super) fn merge_property(
             options.test_dir = Some(shared::required_string(value, ctx.source, "testDir")?);
         }
         Some("testMatch") => {
-            options.test_match = Some(crate::playwright::test_patterns::Patterns::parse(
+            options.test_match = Some(Patterns::parse(
                 value,
                 ctx.source,
                 ctx.path,
@@ -29,7 +30,7 @@ pub(super) fn merge_property(
             ));
         }
         Some("testIgnore") => {
-            options.test_ignore = Some(crate::playwright::test_patterns::Patterns::parse(
+            options.test_ignore = Some(Patterns::parse(
                 value,
                 ctx.source,
                 ctx.path,

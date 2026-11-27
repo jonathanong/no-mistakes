@@ -1,5 +1,7 @@
-use super::{PlaywrightFactPlan, PlaywrightTestFacts};
-use crate::playwright::test_file_occurrences::{CommonOccurrences, VariantOccurrences};
+use crate::codebase::check_facts::{PlaywrightFactPlan, PlaywrightTestFacts};
+use crate::codebase::playwright_facts::test_file_occurrences::{
+    CommonOccurrences, VariantOccurrences,
+};
 use oxc_ast::ast::Program;
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -9,10 +11,9 @@ pub(crate) fn collect_playwright_facts(
     path: &Path,
     program: &Program<'_>,
     source: &str,
-    plan: Option<&PlaywrightFactPlan>,
+    fact_plan: &PlaywrightFactPlan,
     semantic: &Option<oxc_semantic::SemanticBuilderReturn<'_>>,
 ) -> Option<PlaywrightTestFacts> {
-    let fact_plan = plan?;
     let plan = fact_plan.file(path)?;
     let static_templates = crate::playwright::playwright_urls::static_templates_from_semantic(
         &semantic

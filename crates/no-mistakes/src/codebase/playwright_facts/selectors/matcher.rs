@@ -1,6 +1,4 @@
-use super::types::{
-    AppSelector, AppSelectorValue, PlaywrightSelector, SelectorMatcher, TemplatePattern,
-};
+use super::{AppSelector, AppSelectorValue, PlaywrightSelector, SelectorMatcher, TemplatePattern};
 
 impl SelectorMatcher {
     pub(crate) fn matches_value(&self, value: &str) -> bool {

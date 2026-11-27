@@ -101,7 +101,7 @@ pub(crate) fn collect_check_facts_with_precollected_graph_facts(
     precollected_ts: crate::codebase::ts_source::facts::TsFactMap,
     precollected_routes: std::collections::BTreeMap<
         PathBuf,
-        Vec<crate::playwright::integration_routes::RouteOccurrence>,
+        Vec<crate::codebase::playwright_facts::integration::RouteOccurrence>,
     >,
 ) -> CheckFactMap {
     if plan.graph_context.visible_files.is_none() {

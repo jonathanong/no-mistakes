@@ -1,8 +1,6 @@
 use super::super::file::{collect_file_fact_variants_with_session, CheckFactVariant};
 use super::{collect_file_facts, CheckFactPlan};
-use crate::codebase::check_facts::{
-    playwright_aggregate_facts, CheckFactMap, CheckFileFacts, PlaywrightSettingsKey,
-};
+use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts, PlaywrightSettingsKey};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
@@ -82,7 +80,7 @@ fn aggregate_resolves_deferred_selectors_from_precollected_exports() {
         },
     );
 
-    let (selectors, _) = playwright_aggregate_facts(&facts);
+    let (selectors, _) = (crate::codebase::playwright_hooks::hooks().aggregate_facts)(&facts);
     let resolved = selectors
         .get(&(settings_key, false))
         .expect("settings cache is populated")

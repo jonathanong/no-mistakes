@@ -1,3 +1,4 @@
+use crate::codebase::playwright_facts::integration::validate;
 use crate::playwright::{report_json, PlaywrightReportKind, PlaywrightReportOptions};
 use std::path::PathBuf;
 
@@ -88,7 +89,7 @@ fn source_configuration_fails_closed_for_missing_owners_and_noncanonical_routes(
     ] {
         let mut sources = settings.route_coverage_sources.clone();
         sources[0].routes = vec![route.to_string()];
-        assert!(super::validate(&sources).is_err(), "{route}");
+        assert!(validate(&sources).is_err(), "{route}");
     }
     for missing in ["project", "include", "routes", "helpers"] {
         let mut sources = settings.route_coverage_sources.clone();
@@ -98,7 +99,7 @@ fn source_configuration_fails_closed_for_missing_owners_and_noncanonical_routes(
             "routes" => sources[0].routes.clear(),
             _ => sources[0].helpers.clear(),
         }
-        assert!(super::validate(&sources).is_err(), "{missing}");
+        assert!(validate(&sources).is_err(), "{missing}");
     }
     for field in ["module", "export", "method"] {
         let mut sources = settings.route_coverage_sources.clone();
@@ -107,7 +108,7 @@ fn source_configuration_fails_closed_for_missing_owners_and_noncanonical_routes(
             "export" => sources[0].helpers[0].export.clear(),
             _ => sources[0].helpers[0].method = Some(String::new()),
         }
-        assert!(super::validate(&sources).is_err(), "{field}");
+        assert!(validate(&sources).is_err(), "{field}");
     }
     let mut invalid_glob = settings.clone();
     invalid_glob.route_coverage_sources[0].include = vec!["[".to_string()];

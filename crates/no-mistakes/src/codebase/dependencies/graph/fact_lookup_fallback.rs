@@ -61,7 +61,7 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
     fn integration_route_links(
         &self,
         source: &crate::config::v2::schema::RouteCoverageSource,
-    ) -> Option<&Result<Vec<crate::playwright::integration_routes::RouteLink>, String>> {
+    ) -> Option<&Result<Vec<crate::codebase::playwright_facts::integration::RouteLink>, String>> {
         self.primary
             .integration_route_links(source)
             .or_else(|| self.fallback.integration_route_links(source))
@@ -135,7 +135,7 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
     fn get_playwright_test_files(
         &self,
         project: Option<&str>,
-    ) -> Option<Arc<Vec<crate::playwright::analysis::context::DiscoveredTestFile>>> {
+    ) -> Option<Arc<Vec<crate::codebase::playwright_facts::DiscoveredTestFile>>> {
         if self.reuse_primary_playwright_cache {
             self.primary.get_playwright_test_files(project)
         } else {
@@ -161,17 +161,17 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
 
     fn get_or_compute_app_selector_occurrences(
         &self,
-        settings: &crate::playwright::config::Settings,
+        settings: &crate::codebase::playwright_facts::Settings,
         scan_html_ids: bool,
-        compute: &dyn Fn() -> Result<Vec<crate::playwright::selectors::AppSelector>>,
-    ) -> Result<Arc<Vec<crate::playwright::selectors::AppSelector>>> {
+        compute: &dyn Fn() -> Result<Vec<crate::codebase::playwright_facts::selectors::AppSelector>>,
+    ) -> Result<Arc<Vec<crate::codebase::playwright_facts::selectors::AppSelector>>> {
         self.playwright_scan_lookup()
             .get_or_compute_app_selector_occurrences(settings, scan_html_ids, compute)
     }
 
     fn get_or_compute_playwright_routes(
         &self,
-        settings: &crate::playwright::config::Settings,
+        settings: &crate::codebase::playwright_facts::Settings,
         compute: &dyn Fn() -> Vec<crate::routes::Route>,
     ) -> Arc<Vec<crate::routes::Route>> {
         self.playwright_scan_lookup()
@@ -180,16 +180,16 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
 
     fn get_or_compute_app_text_targets(
         &self,
-        settings: &crate::playwright::config::Settings,
-        compute: &dyn Fn() -> Result<Vec<crate::playwright::analysis::text_types::AppTextTarget>>,
-    ) -> Result<Arc<Vec<crate::playwright::analysis::text_types::AppTextTarget>>> {
+        settings: &crate::codebase::playwright_facts::Settings,
+        compute: &dyn Fn() -> Result<Vec<crate::codebase::playwright_facts::text::AppTextTarget>>,
+    ) -> Result<Arc<Vec<crate::codebase::playwright_facts::text::AppTextTarget>>> {
         self.playwright_scan_lookup()
             .get_or_compute_app_text_targets(settings, compute)
     }
 
     fn get_or_compute_route_reachable_files(
         &self,
-        settings: &crate::playwright::config::Settings,
+        settings: &crate::codebase::playwright_facts::Settings,
         compute: &dyn Fn() -> Result<RouteReachableFiles>,
     ) -> Result<Arc<RouteReachableFiles>> {
         self.playwright_scan_lookup()

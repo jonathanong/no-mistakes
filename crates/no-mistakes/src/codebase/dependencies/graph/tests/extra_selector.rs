@@ -1,3 +1,5 @@
+use crate::playwright::graph::{collect_playwright_selector_edges_with_graph, selector_dep_edge, selector_edges_from_analysis};
+use crate::codebase::playwright_hooks::PlaywrightSelectorEdgeInputs;
 // ── EdgeKind::Selector / playwright selector edges ───────────────────────
 
 fn intern() -> crate::codebase::analysis_session::PathInterner {

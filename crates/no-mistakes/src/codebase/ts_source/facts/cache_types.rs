@@ -1,6 +1,6 @@
 use crate::codebase::check_facts::PlaywrightSettingsKey;
-use crate::playwright::analysis::text_types::AppTextTarget;
-use crate::playwright::selectors::AppSelector;
+use crate::codebase::playwright_facts::selectors::AppSelector;
+use crate::codebase::playwright_facts::text::AppTextTarget;
 use dashmap::DashMap;
 use std::sync::Arc;
 

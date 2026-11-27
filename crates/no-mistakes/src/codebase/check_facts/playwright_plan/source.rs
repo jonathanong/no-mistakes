@@ -1,4 +1,9 @@
 use super::{PlaywrightFactPlan, PlaywrightSettingsKey, PlaywrightSourceFactPlan};
+use crate::codebase::playwright_facts::{
+    paths::{build_globset, relative_string},
+    DiscoveredTestFile, Settings,
+};
+use crate::codebase::playwright_hooks;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -19,11 +24,11 @@ impl PlaywrightFactPlan {
     pub(crate) fn add_source_settings(
         &mut self,
         root: &Path,
-        settings: crate::playwright::config::Settings,
+        settings: Settings,
         scan_html_ids: bool,
         snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
     ) -> anyhow::Result<()> {
-        crate::playwright::integration_routes::validate(&settings.route_coverage_sources)?;
+        crate::codebase::playwright_facts::integration::validate(&settings.route_coverage_sources)?;
         let sources = snapshot.source_store_for(root);
         let visible_files = sources
             .inventory()
@@ -53,20 +58,19 @@ impl PlaywrightFactPlan {
         merged_source_files.extend(source_files);
         self.set_source_files(merged_source_files);
 
-        let include = crate::playwright::fsutil::build_globset(&settings.selector_include)?;
-        let exclude = crate::playwright::fsutil::build_globset(&settings.selector_exclude)?;
-        let app_source_files =
-            crate::playwright::analysis::app_collect::collect_selector_source_files_from_visible(
-                root,
-                &settings,
-                &include,
-                &exclude,
-                settings.selector_include.is_empty(),
-                snapshot,
-            )
-            .into_iter()
-            .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
-            .collect();
+        let include = build_globset(&settings.selector_include)?;
+        let exclude = build_globset(&settings.selector_exclude)?;
+        let app_source_files = (playwright_hooks::hooks().selector_source_files)(
+            root,
+            &settings,
+            &include,
+            &exclude,
+            settings.selector_include.is_empty(),
+            snapshot,
+        )
+        .into_iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
+        .collect();
         let selector_regexes = self.regex_cache.get_or_compile(
             &settings.selector_attributes,
             &settings.component_selector_attributes,
@@ -76,12 +80,7 @@ impl PlaywrightFactPlan {
         let integration_sources = settings
             .route_coverage_sources
             .iter()
-            .map(|source| {
-                Ok((
-                    source.clone(),
-                    crate::playwright::fsutil::build_globset(&source.include)?,
-                ))
-            })
+            .map(|source| Ok((source.clone(), build_globset(&source.include)?)))
             .collect::<anyhow::Result<Vec<_>>>()?;
         self.merge_source_plan(PlaywrightSourceFactPlan {
             app_source_files: Arc::new(app_source_files),
@@ -95,7 +94,7 @@ impl PlaywrightFactPlan {
         Ok(())
     }
 
-    pub(crate) fn require_html_id_scan(&mut self, settings: &crate::playwright::config::Settings) {
+    pub(crate) fn require_html_id_scan(&mut self, settings: &Settings) {
         let Some(mut source_plan) = self
             .source_plans
             .iter()
@@ -108,9 +107,7 @@ impl PlaywrightFactPlan {
         self.merge_source_plan(source_plan);
     }
 
-    pub(crate) fn integration_route_settings(
-        &self,
-    ) -> impl Iterator<Item = &crate::playwright::config::Settings> {
+    pub(crate) fn integration_route_settings(&self) -> impl Iterator<Item = &Settings> {
         self.source_plans
             .iter()
             .map(|plan| plan.settings.as_ref())
@@ -123,7 +120,7 @@ impl PlaywrightFactPlan {
         path: &Path,
     ) -> impl Iterator<Item = &crate::config::v2::schema::RouteCoverageSource> {
         let normalized_root = crate::codebase::ts_resolver::normalize_path(root);
-        let relative = crate::playwright::fsutil::relative_string(&normalized_root, path);
+        let relative = relative_string(&normalized_root, path);
         self.source_plans
             .iter()
             .flat_map(|plan| plan.integration_sources.iter())
@@ -133,10 +130,7 @@ impl PlaywrightFactPlan {
 
     pub(crate) fn set_test_files_by_project(
         &mut self,
-        mut files: Vec<(
-            Option<String>,
-            Arc<Vec<crate::playwright::analysis::context::DiscoveredTestFile>>,
-        )>,
+        mut files: Vec<(Option<String>, Arc<Vec<DiscoveredTestFile>>)>,
     ) {
         files.sort_by(|left, right| left.0.cmp(&right.0));
         files.dedup_by(|left, right| left.0 == right.0);
@@ -146,7 +140,7 @@ impl PlaywrightFactPlan {
     pub(crate) fn add_test_files_for_project(
         &mut self,
         project: Option<String>,
-        files: Arc<Vec<crate::playwright::analysis::context::DiscoveredTestFile>>,
+        files: Arc<Vec<DiscoveredTestFile>>,
     ) {
         let mut test_files = self.test_files_by_project.as_ref().clone();
         match test_files

@@ -1,12 +1,16 @@
+mod matcher;
+mod template;
+
 use regex::Regex;
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 #[derive(Clone)]
 pub struct SelectorRegexes {
-    pub(super) app_attributes: Vec<String>,
-    pub(super) component_attributes: std::collections::BTreeMap<String, String>,
-    pub(super) playwright_attributes: Vec<AttributeRegex>,
-    pub(super) html_ids: bool,
+    pub(crate) app_attributes: Vec<String>,
+    pub(crate) component_attributes: std::collections::BTreeMap<String, String>,
+    pub(crate) playwright_attributes: Vec<AttributeRegex>,
+    pub(crate) html_ids: bool,
 }
 
 impl SelectorRegexes {
@@ -16,9 +20,9 @@ impl SelectorRegexes {
 }
 
 #[derive(Clone)]
-pub(super) struct AttributeRegex {
-    pub(super) attribute: String,
-    pub(super) regex: Regex,
+pub(crate) struct AttributeRegex {
+    pub(crate) attribute: String,
+    pub(crate) regex: Regex,
 }
 
 #[derive(Clone, Debug)]
@@ -70,17 +74,17 @@ pub enum AppSelectorValue {
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct TemplatePattern {
-    pub(super) raw: String,
-    pub(super) parts: Vec<String>,
-    pub(super) starts_static: bool,
-    pub(super) ends_static: bool,
+    pub(crate) raw: String,
+    pub(crate) parts: Vec<String>,
+    pub(crate) starts_static: bool,
+    pub(crate) ends_static: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 pub struct PlaywrightSelector {
     pub attribute: String,
     pub selector: String,
-    pub(super) matcher: SelectorMatcher,
+    pub(crate) matcher: SelectorMatcher,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
@@ -141,4 +145,51 @@ impl SelectorMatcher {
             Self::Regex { pattern, .. } => (4, pattern),
         }
     }
+}
+
+pub(crate) const HTML_ID_ATTRIBUTE: &str = "id";
+
+pub fn compile_selector_regexes(
+    attributes: &[String],
+    component_attributes: &BTreeMap<String, String>,
+) -> SelectorRegexes {
+    compile_selector_regexes_with_html_ids(attributes, component_attributes, false)
+}
+
+pub fn compile_selector_regexes_with_html_ids(
+    attributes: &[String],
+    component_attributes: &BTreeMap<String, String>,
+    html_ids: bool,
+) -> SelectorRegexes {
+    let mut playwright_attributes: Vec<_> = attributes
+        .iter()
+        .chain(component_attributes.values())
+        .cloned()
+        .collect();
+    if html_ids {
+        playwright_attributes.push(HTML_ID_ATTRIBUTE.to_string());
+    }
+    playwright_attributes.sort();
+    playwright_attributes.dedup();
+
+    SelectorRegexes {
+        app_attributes: attributes.to_vec(),
+        component_attributes: component_attributes.clone(),
+        playwright_attributes: playwright_attributes
+            .iter()
+            .map(|attribute| AttributeRegex {
+                attribute: attribute.clone(),
+                regex: playwright_selector_regex(attribute),
+            })
+            .collect(),
+        html_ids,
+    }
+}
+
+fn playwright_selector_regex(attribute: &str) -> Regex {
+    let pattern = format!(
+        r#"\[\s*{}\s*(=|\^=|\$=|\*=)\s*(?:"([^"]+)"|'([^']+)')\s*\]"#,
+        regex::escape(attribute)
+    );
+    Regex::new(&pattern).expect("valid Playwright selector regex")
 }

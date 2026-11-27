@@ -3,52 +3,12 @@ use oxc_ast::ast::{Argument, CallExpression, Expression};
 
 mod call_context_index;
 mod hook;
-mod occurrence;
+use crate::codebase::playwright_facts::occurrence;
 pub(crate) use call_context_index::{build_call_context_index, CallContext};
 pub(crate) use hook::{hook_callback, HookKind};
 pub(crate) use occurrence::dedup_occurrences_by_identity;
 pub use occurrence::{TestOccurrence, TestOccurrenceScope};
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub enum TestStatus {
-    Active,
-    Conditional,
-    Skipped,
-}
-
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Ord, PartialOrd)]
-pub struct TestPolicy {
-    pub assert_conditional_tests: bool,
-    pub allow_skipped_tests: bool,
-}
-
-impl TestStatus {
-    pub fn merge(self, other: Self) -> Self {
-        if self.rank() >= other.rank() {
-            self
-        } else {
-            other
-        }
-    }
-
-    fn rank(self) -> u8 {
-        match self {
-            TestStatus::Active => 0,
-            TestStatus::Conditional => 1,
-            TestStatus::Skipped => 2,
-        }
-    }
-}
-
-impl TestPolicy {
-    pub fn allows(self, status: TestStatus) -> bool {
-        match status {
-            TestStatus::Active => true,
-            TestStatus::Conditional => !self.assert_conditional_tests,
-            TestStatus::Skipped => self.allow_skipped_tests,
-        }
-    }
-}
+pub use occurrence::{TestPolicy, TestStatus};
 
 pub fn callback_argument_index(call: &CallExpression<'_>) -> Option<usize> {
     call.arguments.iter().rposition(argument_is_function)

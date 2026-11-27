@@ -1,6 +1,5 @@
 mod accepted_bounds;
 pub use accepted_bounds::AcceptedStatementBound;
-mod aggregate;
 mod batch;
 mod collect;
 mod collect_helpers;
@@ -10,7 +9,6 @@ pub(crate) use request::FactRequest;
 mod file;
 mod file_parse_error;
 pub(crate) use file_parse_error::panic_facts as panicked_file_facts;
-mod file_playwright;
 mod map;
 mod plan;
 mod playwright_facts;
@@ -101,7 +99,6 @@ pub(crate) fn into_ordered_path_exclusion(
         .collect()
 }
 
-pub(crate) use aggregate::playwright_aggregate_facts;
 pub(crate) use batch::{collect_check_fact_batch_with_session, BatchCheckFactRequest};
 pub use collect::{
     collect_check_facts, collect_check_facts_with_graph_files_and_playwright,

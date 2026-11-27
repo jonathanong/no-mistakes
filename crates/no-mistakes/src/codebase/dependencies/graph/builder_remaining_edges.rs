@@ -27,7 +27,7 @@ fn collect_unless_timed_out_or<T>(timed_out: T, collect: impl FnOnce() -> T) -> 
 /// in parallel and merge on this thread so public graph output stays stable.
 fn collect_remaining_edges(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
-    playwright_snapshot: Option<&crate::playwright::fsutil::VisiblePathSnapshot>,
+    playwright_snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
     facts: Option<&dyn TsFactLookup>,
     resolution: EdgeResolutionContext<'_>,
     maps: EdgeMaps<'_>,
@@ -126,7 +126,7 @@ fn collect_remaining_edges(
     crate::perf_trace::trace("graph.playwright_routes", || -> Result<()> {
         if plan.playwright_routes {
             let snapshot = require_playwright_route_snapshot(playwright_snapshot)?;
-            let edges = collect_playwright_route_edges_from_snapshot(
+            let edges = (crate::codebase::playwright_hooks::hooks().route_edges)(
                 root,
                 edge_inputs.config_path,
                 graph_files.all(),

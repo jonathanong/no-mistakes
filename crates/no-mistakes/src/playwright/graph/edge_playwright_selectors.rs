@@ -1,21 +1,12 @@
-/// Build selector dependencies after the initial graph exists so text-locator
-/// reachability can reuse its RouteImport edges instead of constructing a
-/// second graph.
-pub(super) struct PlaywrightSelectorEdgeInputs<'a> {
-    all_files: &'a [PathBuf],
-    facts: Option<&'a dyn TsFactLookup>,
-    partial_graph: Option<&'a DepGraph>,
-    graph_tsconfig: Option<&'a TsConfig>,
-    snapshot: &'a crate::playwright::fsutil::VisiblePathSnapshot,
-    prepared_settings: &'a [crate::playwright::config::Settings],
-    interner: &'a PathInterner,
-}
-
-impl PlaywrightSelectorEdgeInputs<'_> {
-    fn route_import(&self) -> Option<(&DepGraph, &crate::codebase::ts_resolver::TsConfig)> {
-        self.partial_graph.zip(self.graph_tsconfig)
-    }
-}
+use crate::codebase::analysis_session::PathInterner;
+use crate::codebase::dependencies::graph::{DepGraph, Edge, EdgeKind, NodeId};
+use crate::codebase::playwright_hooks::PlaywrightSelectorEdgeInputs;
+use anyhow::Result;
+use rayon::prelude::*;
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 include!("edge_playwright_selector_collect.rs");
 include!("edge_playwright_selector_collect_text.rs");
@@ -32,7 +23,7 @@ include!("edge_playwright_selector_collect_text.rs");
 /// collector (`collect_playwright_route_edges_from_snapshot`) already has —
 /// a single broken app's settings should not blank out an otherwise-working
 /// multi-app graph build.
-pub(super) fn collect_playwright_selector_edges_with_graph(
+pub(crate) fn collect_playwright_selector_edges_with_graph(
     root: &Path,
     config_path: Option<&Path>,
     inputs: PlaywrightSelectorEdgeInputs<'_>,
@@ -74,11 +65,8 @@ pub(super) fn collect_playwright_selector_edges_with_graph(
     Ok(edges)
 }
 
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "Tests compare unoptimized selector edges.")
-)]
-fn selector_edges_from_analysis(
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+pub(crate) fn selector_edges_from_analysis(
     root: &Path,
     all_files: &[PathBuf],
     analysis: &crate::playwright::analysis::types::Analysis,
@@ -108,7 +96,7 @@ fn selector_edges_from_playwright_edges(
     edges
 }
 
-fn selector_dep_edge(
+pub(crate) fn selector_dep_edge(
     root: &Path,
     edge: &crate::playwright::analysis::types::Edge,
     interner: &PathInterner,

@@ -1,5 +1,5 @@
 use super::PlaywrightOccurrenceKey;
-use crate::playwright::test_file_occurrences::{
+use crate::codebase::playwright_facts::test_file_occurrences::{
     CommonOccurrences, TestFileOccurrences, VariantOccurrences,
 };
 use std::collections::BTreeMap;

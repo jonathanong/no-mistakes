@@ -1,3 +1,4 @@
+pub(crate) use crate::codebase::playwright_facts::{DiscoveredTestFile, TestProjectContext};
 use crate::playwright::playwright_config;
 use crate::playwright::playwright_tests;
 use crate::playwright::selectors;
@@ -19,22 +20,6 @@ pub(crate) struct AppSelectorTarget<'a> {
     pub(crate) selector: &'a selectors::AppSelector,
     pub(crate) app_file: Arc<String>,
     pub(crate) value: String,
-}
-
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd)]
-pub(crate) struct TestProjectContext {
-    pub(crate) base_url: Option<String>,
-    /// The attribute(s) that `getByTestId(...)` resolves to for this project's
-    /// tests. Usually one, but the `selectors.testIds` fallback (used when the
-    /// Playwright config's `testIdAttribute` is not statically readable) can
-    /// contribute several.
-    pub(crate) test_id_attributes: Vec<String>,
-}
-
-#[derive(Clone)]
-pub(crate) struct DiscoveredTestFile {
-    pub(crate) path: PathBuf,
-    pub(crate) contexts: Vec<TestProjectContext>,
 }
 
 pub(crate) struct TestProjectDiscovery {
@@ -84,29 +69,27 @@ pub(crate) struct SelectorIndex<'a> {
     pub(crate) templates_by_attribute: HashMap<String, Vec<&'a AppSelectorTarget<'a>>>,
 }
 
-impl TestProjectContext {
-    /// Build a context for `project`, resolving the effective `getByTestId`
-    /// attribute(s) with this precedence:
-    ///
-    /// 1. `override_attribute` — the explicit `tests.playwright.testIdAttribute`.
-    /// 2. The project's statically-read `testIdAttribute`.
-    /// 3. `configured_test_ids` — the declared `tests.playwright.selectors.testIds`
-    ///    (used when the Playwright config's attribute is not statically readable,
-    ///    e.g. it is set inside a helper function).
-    /// 4. The built-in `data-testid` default.
-    pub(crate) fn from_project(
-        project: &playwright_config::TestProject,
-        override_attribute: Option<&str>,
-        configured_test_ids: &[String],
-    ) -> Self {
-        Self {
-            base_url: project.base_url.clone(),
-            test_id_attributes: resolve_test_id_attributes(
-                project.test_id_attribute.as_deref(),
-                override_attribute,
-                configured_test_ids,
-            ),
-        }
+/// Build a context for `project`, resolving the effective `getByTestId`
+/// attribute(s) with this precedence:
+///
+/// 1. `override_attribute` — the explicit `tests.playwright.testIdAttribute`.
+/// 2. The project's statically-read `testIdAttribute`.
+/// 3. `configured_test_ids` — the declared `tests.playwright.selectors.testIds`
+///    (used when the Playwright config's attribute is not statically readable,
+///    e.g. it is set inside a helper function).
+/// 4. The built-in `data-testid` default.
+pub(crate) fn test_project_context(
+    project: &playwright_config::TestProject,
+    override_attribute: Option<&str>,
+    configured_test_ids: &[String],
+) -> TestProjectContext {
+    TestProjectContext {
+        base_url: project.base_url.clone(),
+        test_id_attributes: resolve_test_id_attributes(
+            project.test_id_attribute.as_deref(),
+            override_attribute,
+            configured_test_ids,
+        ),
     }
 }
 
@@ -128,28 +111,4 @@ fn resolve_test_id_attributes(
         return attributes;
     }
     vec![playwright_config::DEFAULT_TEST_ID_ATTRIBUTE.to_string()]
-}
-
-impl DiscoveredTestFile {
-    pub(crate) fn base_urls(&self) -> Vec<String> {
-        let mut urls: Vec<String> = self
-            .contexts
-            .iter()
-            .filter_map(|context| context.base_url.clone())
-            .collect();
-        urls.sort();
-        urls.dedup();
-        urls
-    }
-
-    pub(crate) fn test_id_attributes(&self) -> Vec<String> {
-        let mut attributes: Vec<String> = self
-            .contexts
-            .iter()
-            .flat_map(|context| context.test_id_attributes.iter().cloned())
-            .collect();
-        attributes.sort();
-        attributes.dedup();
-        attributes
-    }
 }

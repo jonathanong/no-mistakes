@@ -25,7 +25,7 @@ struct EdgeResolutionContext<'a> {
 
 fn collect_and_merge_all_edges(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
-    playwright_snapshot: Option<&crate::playwright::fsutil::VisiblePathSnapshot>,
+    playwright_snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
     facts: Option<&dyn TsFactLookup>,
     resolution: EdgeResolutionContext<'_>,
     parsed_imports: &ParsedImports<'_>,

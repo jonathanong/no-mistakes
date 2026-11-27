@@ -5,7 +5,6 @@ use std::path::Path;
 use std::sync::Arc;
 mod embedded_sql;
 mod plan;
-mod playwright_source;
 mod prepared_program;
 pub(crate) mod production_imports;
 mod program;

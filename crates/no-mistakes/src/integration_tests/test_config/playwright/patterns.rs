@@ -1,5 +1,5 @@
+use crate::codebase::playwright_facts::test_patterns::Patterns;
 use crate::integration_tests::project_config::prefix_globs;
-use crate::playwright::test_patterns::Patterns;
 use std::path::Path;
 
 pub(super) fn materialize_patterns(

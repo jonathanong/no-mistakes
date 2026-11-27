@@ -1,4 +1,4 @@
-use crate::playwright::selectors::types::SelectorMatcher;
+use super::super::SelectorMatcher;
 
 #[test]
 fn playwright_selector_order_uses_matcher_kind_and_pattern() {

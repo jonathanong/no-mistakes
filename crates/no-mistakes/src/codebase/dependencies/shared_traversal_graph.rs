@@ -5,7 +5,7 @@ impl SharedTraversalContext {
     }
 
     pub(crate) fn ensure_facts(&mut self) {
-        if crate::playwright::integration_routes::configured(&self.config)
+        if crate::codebase::playwright_facts::integration::configured(&self.config)
             && self.facts.as_ref().is_none_or(|facts| facts.integration_route_links.is_empty())
         {
             if let Ok(Some(playwright)) = self.prepared_graph.playwright_fact_plan(

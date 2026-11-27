@@ -1,8 +1,8 @@
-use super::super::file_playwright::collect_playwright_facts;
 use super::super::{CheckFactPlan, CheckFileFacts};
 use super::plan::ts_extract_plan;
 use super::should_store_source;
 use super::CheckFactVariant;
+use crate::codebase::playwright_hooks;
 use crate::codebase::ts_source::facts::react_analysis::{self, component::FileAnalysis};
 use std::path::Path;
 use std::sync::Arc;
@@ -108,19 +108,18 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
                 plan.source_file_set(),
             )
         });
-    let playwright_source = super::playwright_source::collect(
-        root,
-        path,
-        source,
-        program,
-        playwright,
-        &ts.imported_bindings,
-    );
-    let playwright_static_exports = playwright_fetch
-        .as_ref()
-        .map(|_| crate::playwright::selectors::collect_static_export_values(program));
-    let playwright =
-        collect_playwright_facts(path, program, source, playwright, &prepared.semantic);
+    let (playwright_source, playwright_static_exports, playwright) = playwright
+        .map(|plan| {
+            let hooks = playwright_hooks::hooks();
+            let bindings = &ts.imported_bindings;
+            let source_facts = (hooks.source_facts)(root, path, source, program, plan, bindings);
+            let static_exports = playwright_fetch
+                .as_ref()
+                .map(|_| (hooks.static_exports)(program));
+            let test_facts = (hooks.test_facts)(path, program, source, plan, &prepared.semantic);
+            (source_facts, static_exports, test_facts)
+        })
+        .unwrap_or_default();
     let query_annotation = annotation::collect(root, path, source, program, plan, &embedded_sql);
     let query_annotation_heads = (plan.query_annotation_heads
         || !head_candidates.is_empty()

@@ -1,14 +1,11 @@
-use super::{CheckFileFacts, PlaywrightSettingsKey};
+use crate::codebase::check_facts::{CheckFileFacts, PlaywrightSettingsKey};
+use crate::codebase::playwright_facts::text::AppTextTarget;
+use crate::codebase::playwright_hooks::{AppSelectorOccurrencesCache, AppTextTargetsCache};
 use crate::codebase::ts_source::FileIdMap;
-use crate::playwright::analysis::text_types::AppTextTarget;
 use crate::playwright::selectors::{AppSelector, AppSelectorValue};
 use dashmap::DashMap;
 use std::collections::HashMap;
 use std::sync::Arc;
-
-type AppSelectorOccurrencesCache =
-    DashMap<(PlaywrightSettingsKey, bool), Result<Arc<Vec<AppSelector>>, String>>;
-type AppTextTargetsCache = DashMap<PlaywrightSettingsKey, Result<Arc<Vec<AppTextTarget>>, String>>;
 
 pub(crate) fn playwright_aggregate_facts(
     facts: &FileIdMap<CheckFileFacts>,

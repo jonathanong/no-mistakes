@@ -48,10 +48,10 @@ fn collect_playwright_selector_edges_skips_a_failing_app_but_keeps_the_others() 
 /// catch the regression this change is meant to lock in.
 #[test]
 fn collect_playwright_selector_edges_analyzes_prepared_apps_in_parallel() {
-    let source = include_str!("../edge_playwright_selectors.rs");
+    let source = include_str!("../../../../playwright/graph/edge_playwright_selectors.rs");
     let body = graph_files_source_function_body(
         source,
-        "pub(super) fn collect_playwright_selector_edges_with_graph(",
+        "fn collect_playwright_selector_edges_with_graph(",
     );
     assert!(
         body.contains("par_iter"),

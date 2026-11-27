@@ -1,11 +1,15 @@
-fn prepare_playwright_settings(
+use crate::codebase::dependencies::graph::GraphBuildPlan;
+use crate::codebase::dependencies::graph::PlaywrightPreparationFailure;
+use std::path::Path;
+
+pub(crate) fn prepare_playwright_settings(
     root: &Path,
     plan: GraphBuildPlan,
     config: &crate::config::v2::NoMistakesConfig,
     visible: &crate::codebase::ts_source::VisiblePathSnapshot,
     partial: bool,
 ) -> anyhow::Result<(
-    Vec<crate::playwright::config::Settings>,
+    Vec<crate::codebase::playwright_facts::Settings>,
     Vec<PlaywrightPreparationFailure>,
 )> {
     if !(plan.playwright_routes || plan.playwright_selectors) {

@@ -79,3 +79,11 @@ ctor::declarative::ctor! {
         queue_analysis_hooks::register(&queue::analysis_hooks::HOOKS);
     }
 }
+
+ctor::declarative::ctor! {
+    // SAFETY: Registration stores a reference to a static table through OnceLock.
+    #[ctor(unsafe)]
+    fn register_playwright_analysis() {
+        codebase::playwright_hooks::register(&playwright::prepared_facts::HOOKS);
+    }
+}

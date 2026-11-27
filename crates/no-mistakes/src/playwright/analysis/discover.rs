@@ -94,7 +94,7 @@ pub(crate) fn build_project_discovery(
     let override_attribute = settings.test_id_attribute_override.as_deref();
     for project in &playwright.projects {
         discovery.push(TestProjectDiscovery {
-            context: TestProjectContext::from_project(
+            context: super::context::test_project_context(
                 project,
                 override_attribute,
                 &settings.selector_attributes,

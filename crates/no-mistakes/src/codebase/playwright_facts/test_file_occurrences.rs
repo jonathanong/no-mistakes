@@ -1,6 +1,6 @@
-use crate::playwright::analysis::text_types::PlaywrightTextLocator;
-use crate::playwright::playwright_tests::TestOccurrence;
-use crate::playwright::selectors::{PlaywrightHelperReference, PlaywrightSelector};
+use super::occurrence::TestOccurrence;
+use super::selectors::{PlaywrightHelperReference, PlaywrightSelector};
+use super::text::PlaywrightTextLocator;
 use std::sync::Arc;
 
 #[derive(Default)]

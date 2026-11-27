@@ -1,5 +1,6 @@
 use super::{CheckFactMap, CheckFactPlan, PlaywrightFactPlan};
 use crate::codebase::ts_source::FileIdMap;
+use crate::codebase::{playwright_facts::integration::RouteOccurrence, playwright_hooks};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 mod entrypoints;
@@ -19,10 +20,7 @@ use precollect::cached_config_file_facts;
 pub(super) struct PrecollectedFacts {
     ts: crate::codebase::ts_source::facts::TsFactMap,
     files: FileIdMap<super::CheckFileFacts>,
-    routes: std::collections::BTreeMap<
-        PathBuf,
-        Vec<crate::playwright::integration_routes::RouteOccurrence>,
-    >,
+    routes: std::collections::BTreeMap<PathBuf, Vec<RouteOccurrence>>,
 }
 pub(super) fn collect_with_sources_and_session(
     session: crate::codebase::check_facts::FactRequest<'_>,
@@ -38,7 +36,7 @@ pub(super) fn collect_with_sources_and_session(
         call_sites: supplemental_call_sites,
     } = supplemental;
     module_resolution::initialize_if_missing(root, &mut playwright, &sources);
-    crate::playwright::integration_routes::runner_plan(root, &mut plan, &playwright, &sources);
+    (playwright_hooks::hooks().runner_plan)(root, &mut plan, &playwright, &sources);
     let config_facts = cached_config_file_facts(
         session,
         root,
@@ -85,7 +83,7 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         routes: mut precollected_routes,
     } = precollected;
     let (files, graph_files, graph_files_complete) = file_scope;
-    crate::playwright::integration_routes::runner_plan(root, &mut plan, &playwright, &sources);
+    (playwright_hooks::hooks().runner_plan)(root, &mut plan, &playwright, &sources);
     if playwright.integration_route_settings().next().is_some() {
         plan.graph.imports = true;
     }
@@ -167,7 +165,7 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         plan.query_annotation_catalog.as_deref(),
         &mut ts,
     );
-    let integration_route_links = crate::playwright::integration_routes::prepare_links(
+    let integration_route_links = (playwright_hooks::hooks().route_links)(
         root,
         &plan,
         &playwright,

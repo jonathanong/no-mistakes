@@ -3,8 +3,8 @@ use super::{
     PlaywrightFactPlan, PlaywrightFactSelection, PlaywrightFileFactPlan, PlaywrightOccurrenceKey,
     VariantPlan,
 };
-use crate::playwright::playwright_tests::TestOccurrenceScope;
-use crate::playwright::selectors::SelectorRegexes;
+use crate::codebase::playwright_facts::occurrence::TestOccurrenceScope;
+use crate::codebase::playwright_facts::selectors::SelectorRegexes;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;

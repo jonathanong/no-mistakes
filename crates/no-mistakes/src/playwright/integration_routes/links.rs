@@ -1,13 +1,11 @@
 use super::RouteLink;
 use crate::codebase::check_facts::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use crate::codebase::dependencies::extract::ImportKind;
+use crate::codebase::playwright_facts::integration::PreparedLinks;
 use crate::codebase::ts_source::FileIdMap;
-use crate::config::v2::schema::RouteCoverageSource;
 use crate::integration_tests::{runner_config::ParsedRunnerConfigs, types::Framework};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::Path;
-
-pub(crate) type PreparedLinks = BTreeMap<RouteCoverageSource, Result<Vec<RouteLink>, String>>;
 
 pub(crate) fn prepare_links(
     root: &Path,

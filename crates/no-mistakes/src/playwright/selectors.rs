@@ -6,20 +6,18 @@ mod extract_app;
 mod extract_playwright;
 mod helper_references;
 mod jsx_resolve;
-mod matcher;
 mod regex_mod;
 pub(crate) mod scoped_defaults;
 mod shadowing;
 mod status_visitor;
-mod template;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 mod text_locator_calls;
 mod text_locators;
-mod types;
+use crate::codebase::playwright_facts::selectors as types;
 
 pub(crate) use dynamic_values::cross_file::{
-    collect_static_export_values, resolve_deferred_import, StaticExportValues,
+    collect_static_export_values, resolve_deferred_import,
 };
 pub(crate) use extract_app::extract_app_selectors_from_program_from_visible_deferred;
 pub use extract_app::extract_app_selectors_with_regexes;
@@ -32,12 +30,10 @@ pub use regex_mod::compile_selector_regexes;
 pub use regex_mod::compile_selector_regexes_with_html_ids;
 pub(crate) use text_locators::extract_playwright_text_locator_occurrences_from_program;
 pub use types::SelectorRegexes;
-pub(crate) use types::{
-    AppSelector, AppSelectorValue, PlaywrightHelperReference, PlaywrightSelector,
-};
+pub(crate) use types::{AppSelector, AppSelectorValue, PlaywrightSelector};
 pub use types::{SelectorMatcher, TemplatePattern};
 
-pub(crate) const HTML_ID_ATTRIBUTE: &str = "id";
+pub(crate) use crate::codebase::playwright_facts::selectors::HTML_ID_ATTRIBUTE;
 
 const SOURCE_EXTS: &[&str] = &["ts", "tsx", "js", "jsx", "mts", "cts", "mjs", "cjs"];
 
