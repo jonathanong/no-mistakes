@@ -14,6 +14,9 @@ pub(super) fn check_parsed(
     polls: &[Vec<String>],
     skip_for: bool,
 ) -> Vec<RuleFinding> {
+    if polls.is_empty() {
+        return Vec::new();
+    }
     let located = step_run_lines(source, action);
     let mut findings = Vec::new();
     for body in run_scripts(action, value) {

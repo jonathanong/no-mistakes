@@ -32,10 +32,6 @@ const CHECKS: &[(&str, WorkflowCheck)] = &[
         rules::github_actions_no_poll_wait_job::diagnostics_with_files_and_sources,
     ),
     (
-        rules::github_actions_pr_diff_range::RULE_ID,
-        rules::github_actions_pr_diff_range::diagnostics_with_files_and_sources,
-    ),
-    (
         rules::github_actions_vitest_project_selection::RULE_ID,
         rules::github_actions_vitest_project_selection::diagnostics_with_files_and_sources,
     ),
@@ -109,3 +105,6 @@ pub(super) fn run<'a>(
     }
     Ok((remaining, output))
 }
+
+#[cfg(test)]
+mod tests;

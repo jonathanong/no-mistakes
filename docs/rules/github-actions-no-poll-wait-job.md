@@ -9,8 +9,8 @@ and `merge_group` for merge-queue checks.
 
 The rule is opt-in. Listing it is what turns it on. It is not part of a
 recommended or strict preset. It has no built-in command names: it reports only
-the poll commands that `options.pollCommands` lists, and an empty or missing
-list reports nothing.
+the poll commands that `options.pollCommands` lists. An empty or missing
+list produces no polling findings. Selected files still receive input diagnostics.
 
 ## What it catches
 

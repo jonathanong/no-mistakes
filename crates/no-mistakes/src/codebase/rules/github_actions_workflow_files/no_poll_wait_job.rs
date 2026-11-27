@@ -13,8 +13,7 @@ mod runs;
 
 pub const RULE_ID: &str = "github-actions-no-poll-wait-job";
 
-/// `pollCommands` is empty by default, so the rule reports nothing until a
-/// configuration names the commands that poll another job or workflow.
+/// Polling findings require configured commands. Input diagnostics apply to every selected file.
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(in crate::codebase::rules) struct Options {
@@ -52,9 +51,6 @@ pub fn diagnostics_with_files_and_sources(
         let opts: Options = rule.try_rule_options()?;
         let files = rules::selected_rule_files(root, config, rule, all_files)?;
         let polls = compile(&opts)?;
-        if polls.is_empty() {
-            continue;
-        }
         let (mut findings, failures) = super::scan_yaml_files(
             root,
             &files,

@@ -147,3 +147,37 @@ fn check_source(
     };
     super::runs::check_parsed(rel, source, &value, action, polls, skip_for)
 }
+
+#[test]
+fn empty_poll_commands_still_diagnose_invalid_selected_yaml() {
+    use crate::config::v2::{NoMistakesConfig, Unanalyzable};
+
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &crate::test_support::rule_fixture_root("github-actions-invalid-yaml"),
+    );
+    let config_path = crate::test_support::rule_fixture_root(super::RULE_ID)
+        .parent()
+        .unwrap()
+        .join("configs/unconfigured.yml");
+    let mut config: NoMistakesConfig =
+        serde_yaml::from_str(&std::fs::read_to_string(config_path).unwrap()).unwrap();
+    config.rules[0].options = serde_yaml::from_str("pollCommands: []").unwrap();
+    let files = ["broken.yml", "control.yml"].map(|name| root.join(".github/workflows").join(name));
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    for (policy, findings, advisories) in
+        [(Unanalyzable::Report, 1, 0), (Unanalyzable::Advise, 0, 1)]
+    {
+        config.unanalyzable = Some(policy);
+        let output =
+            super::diagnostics_with_files_and_sources(&root, &config, &files, &sources, false)
+                .unwrap();
+        assert_eq!(
+            (output.findings.len(), output.advisories.len()),
+            (findings, advisories)
+        );
+        for row in output.findings.iter().chain(&output.advisories) {
+            assert_eq!(row.file, ".github/workflows/broken.yml");
+            assert!(row.message.contains("YAML could not be parsed"));
+        }
+    }
+}
