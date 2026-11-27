@@ -30,7 +30,9 @@ pub(super) fn scan(
         let embedded = profile
             .map(|profile| prepared.embedded_sql(path, profile))
             .transpose()?;
-        if let Some(embedded) = embedded.filter(|_| facts.wants_sql_verdicts() || opts.advise_unanalyzable) {
+        if let Some(embedded) =
+            embedded.filter(|_| facts.wants_sql_verdicts() || opts.advise_unanalyzable)
+        {
             crate::codebase::postgres::record_sql_policy_verdicts(
                 SqlPolicyVerdictContext {
                     facts,
