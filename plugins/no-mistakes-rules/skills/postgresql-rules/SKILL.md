@@ -29,7 +29,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT read `COUNT(expr)` as a count of true rows; it counts non-NULL values. Use `COUNT(*) FILTER (WHERE expr)`.
 - SHOULD NOT use `COUNT(*) > 0` or `GROUP BY` to test existence or dedupe; use `EXISTS`.
 - SHOULD NOT cast or wrap an indexed column in a predicate (UUIDs, timestamps); compare the raw column to a bound.
-- SHOULD NOT keep predicate arms that cannot match (`AND FALSE` legs, or `col IS NULL` on a `NOT NULL` column that no outer join null-extends).
+- SHOULD NOT keep a predicate arm that cannot match when removing it leaves the result unchanged (`OR FALSE`, or `col IS NULL` on a `NOT NULL` column that no outer join null-extends). Leave an intentional empty predicate such as `AND FALSE`; removing it returns rows.
 - SHOULD NOT add `MATERIALIZED` CTEs, `LATERAL`, `UNION`, `DISTINCT`, or candidate pools unless `EXPLAIN ANALYZE` at realistic size beats the plain query.
 - SHOULD NOT upsert by overwriting every column; it resets an existing row to the inserter's values. Use `DO UPDATE SET` on the columns you own, or `DO NOTHING` then read the row.
 - SHOULD NOT upsert with `DO UPDATE SET k = EXCLUDED.k` on the conflict key only to get `RETURNING`; it writes a row version on every call. Use `DO NOTHING`, then read the row.
