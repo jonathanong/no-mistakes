@@ -397,10 +397,22 @@ using globs relative to the ESLint working directory. Numeric bounds on elapsed
 files that call Vitest or Jest fake timers are exempt. See
 [the rule reference](eslint-rules/test-no-wall-time-assertions.md).
 
+### `ts-no-const-aliases`
+
+`unanalyzable?: "finding" | "ignore"` defaults to `"finding"`. Differently
+named `const` aliases and value import-equals aliases are reported. A
+qualified or `require()` import-equals is unanalyzable instead of a silent
+pass. See [the rule reference](eslint-rules/ts-no-const-aliases.md).
+
 ### `ts-no-export-renaming`
 
-`allowDefaultReExports?: boolean` (default `false`) and
-`includePathPatterns?: string[]`.
+`allowDefaultReExports?: boolean` (default `false`),
+`includePathPatterns?: string[]`, and
+`unanalyzable?: "finding" | "ignore"` (default `"finding"`). `export import`
+and CommonJS `exports.Name` / `module.exports.Name` assignments are renames
+when the names differ. A right-hand side that is not one identifier is
+unanalyzable instead of a silent pass. See
+[the rule reference](eslint-rules/ts-no-export-renaming.md).
 
 ### `ts-preserve-null-option-defaults`
 

@@ -73,6 +73,18 @@ declare namespace plugin {
   export interface PostgresPoolRequiresErrorListenerOptions {
     extraModules?: string[];
   }
+
+  export type RuleUnanalyzable = "finding" | "ignore";
+
+  export interface TsNoConstAliasesOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface TsNoExportRenamingOptions {
+    allowDefaultReExports?: boolean;
+    includePathPatterns?: string[];
+    unanalyzable?: RuleUnanalyzable;
+  }
 }
 
 export = plugin;
