@@ -53,15 +53,12 @@ Built with `python3 evals/readme_table.py skill <reports>`.
 | `napi` | 0/12 (0-24%) | +0.11 | +0.17 | +0.00 |
 | `neg-hard` (guard) | 0/12 | n/a | n/a | +0.00 |
 
-**The description changed after this run.** Its single-arm screen
-(`--ablation none --runs 3`, same session,
-[candidate A](HISTORY.md#2026-11-26--candidate-a-load-before-answering-passes-its-gates))
-loaded the skill on 69/117 should-fire attempts against 32/117 above, with
-no `neg-hard` or per-flow negative loading, and the held-out cases 04–09
-loaded 18/18 against 0/18 for the old description
-([holdout](HISTORY.md#2026-11-26--holdout-for-candidate-a-1818-loaded-against-018)).
-The trigger and Δ columns above are the old description's; a with-without
-re-measure is needed before quoting a Δ for the new one.
+**Not re-measured for the current description.** The description changed
+after this run; the trigger and Δ columns above are the old description's.
+The single-arm screen and holdout behind the change are in HISTORY
+([candidate A](HISTORY.md#2026-11-26--candidate-a-load-before-answering-passes-its-gates),
+[holdout](HISTORY.md#2026-11-26--holdout-for-candidate-a-1818-loaded-against-018));
+re-measure with-without before quoting a Δ for the new one.
 
 Trigger rates count should-fire cases only (negative cases excluded), so
 12/18 and the like are not out of the 318 attempts. Ranges are 95% Wilson
