@@ -177,7 +177,7 @@ fn empty_poll_commands_still_diagnose_invalid_selected_yaml() {
         );
         for row in output.findings.iter().chain(&output.advisories) {
             assert_eq!(row.file, ".github/workflows/broken.yml");
-            assert!(row.message.contains("YAML could not be parsed"));
+            assert_eq!((row.line, row.target.as_deref()), (3, Some("unanalyzable")));
         }
     }
 }

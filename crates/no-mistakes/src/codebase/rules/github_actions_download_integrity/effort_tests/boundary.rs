@@ -54,7 +54,7 @@ fn low_reports_unreadable_selected_workflow() {
     .unwrap();
     assert_eq!(result.findings.len(), 1);
     assert_eq!(result.findings[0].file, ".github/workflows/removed-after-discovery.yml");
-    assert!(result.findings[0].message.contains("cannot read source"));
+    assert_eq!(result.findings[0].target.as_deref(), Some("unanalyzable"));
     assert!(result.advisories.is_empty());
 }
 

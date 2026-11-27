@@ -83,6 +83,7 @@ fn standalone_docker_and_vitest_checks_discover_and_report_selected_yaml() {
         let control = file_finding(".github/workflows/control.yml").unwrap();
         assert_ne!(control.target.as_deref(), Some("unanalyzable"));
         assert!(file_finding(".github/workflows/outside.yml").is_none());
+        assert!(file_finding(".github/workflows/suppressed.yml").is_none());
         assert_eq!(
             file_finding(".github/workflows/other-project.yml").is_some(),
             includes_other_project
@@ -132,7 +133,6 @@ fn unreadable_selected_workflow_obeys_policy_for_all_six_rules() {
             for row in output.findings.iter().chain(&output.advisories).filter(|row| row.file == missing) {
                 assert_eq!(row.target.as_deref(), Some("unanalyzable"));
                 assert_eq!(row.line, 1);
-                assert!(row.message.contains("cannot read source"));
             }
         }
     }

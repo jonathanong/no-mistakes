@@ -156,7 +156,7 @@ fn kind_selection_reports_missing_workflows() {
     assert!(findings.is_empty());
     assert_eq!(failures.len(), 1);
     assert_eq!(failures[0].file, WORKFLOW);
-    assert!(failures[0].message.contains("cannot read source"));
+    assert_eq!(failures[0].target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]

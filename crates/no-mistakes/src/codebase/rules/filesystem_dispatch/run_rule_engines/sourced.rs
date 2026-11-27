@@ -138,13 +138,13 @@ pub(super) fn run(
             )
         }
         GITHUB_ACTIONS_DOCKER_HOST_PORTS => {
-            github_actions_docker_host_ports::check_with_files_and_sources(
-                root, config, files, sources,
+            github_actions_docker_host_ports::check_with_files_sources_and_deferred_suppression(
+                root, config, files, sources, defer_suppression,
             )
         }
         GITHUB_ACTIONS_VITEST_PROJECT_SELECTION => {
-            github_actions_vitest_project_selection::check_with_files_and_sources(
-                root, config, files, sources,
+            github_actions_vitest_project_selection::check_with_files_sources_and_deferred_suppression(
+                root, config, files, sources, defer_suppression,
             )
         }
         TSCONFIG_FILE_COVERAGE => {

@@ -25,7 +25,7 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     super::check_sourced_standalone(root, config, check_with_files)
 }
 
-super::diagnostic_source_rule_entrypoints!(true);
+super::diagnostic_source_rule_entrypoints!();
 
 pub fn diagnostics_with_files_and_sources(
     root: &Path,

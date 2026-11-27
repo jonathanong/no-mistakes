@@ -197,7 +197,7 @@ fn unreadable_selected_workflow_returns_a_read_failure() {
         panic!("an unreadable workflow must return a finding");
     };
     assert_eq!(finding.file, ".github/workflows/missing.yml");
-    assert!(finding.message.contains("cannot read source"));
+    assert_eq!(finding.target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]

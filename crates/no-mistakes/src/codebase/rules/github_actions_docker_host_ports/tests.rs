@@ -118,7 +118,7 @@ fn kind_selection_reports_missing_workflows() {
     assert!(findings.is_empty());
     assert_eq!(failures.len(), 1);
     assert_eq!(failures[0].file, WORKFLOW);
-    assert!(failures[0].message.contains("cannot read source"));
+    assert_eq!(failures[0].target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]
@@ -211,7 +211,10 @@ jobs:
 #[test]
 fn suppression_directives_hide_file_line_and_next_line() {
     let (root, config, files) = load_fixture("suppression");
-    let raw = super::check_with_files(&root, &config, &files).unwrap();
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let raw = super::diagnostics_with_files_and_sources(&root, &config, &files, &sources, true)
+        .unwrap()
+        .findings;
     assert_eq!(raw.len(), 10, "{raw:?}");
     let duplicate: Vec<_> = raw
         .iter()

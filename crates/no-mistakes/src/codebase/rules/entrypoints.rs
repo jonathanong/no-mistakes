@@ -25,9 +25,6 @@ pub(crate) use prepared_rule_entrypoints;
 /// The language rules share the same source-owned and deferred-suppression entry points.
 macro_rules! borrowed_source_rule_entrypoints {
     () => {
-        super::borrowed_source_rule_entrypoints!(false);
-    };
-    ($defer_suppression:literal) => {
         pub(crate) fn check_with_files(
             root: &std::path::Path,
             config: &crate::config::v2::NoMistakesConfig,
@@ -48,11 +45,7 @@ macro_rules! borrowed_source_rule_entrypoints {
             sources: &crate::codebase::ts_source::SourceStore,
         ) -> anyhow::Result<Vec<super::RuleFinding>> {
             check_with_files_sources_and_deferred_suppression(
-                root,
-                config,
-                all_files,
-                sources,
-                $defer_suppression,
+                root, config, all_files, sources, false,
             )
         }
     };
@@ -82,8 +75,8 @@ pub(crate) use prepared_file_rule_facts;
 
 /// Required source rules expose the same two diagnostic channels at every boundary.
 macro_rules! diagnostic_source_rule_entrypoints {
-    ($($defer_suppression:literal)?) => {
-        super::borrowed_source_rule_entrypoints!($($defer_suppression)?);
+    () => {
+        super::borrowed_source_rule_entrypoints!();
 
         pub(crate) fn check_with_files_sources_and_deferred_suppression(
             root: &std::path::Path,

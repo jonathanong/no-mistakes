@@ -203,7 +203,7 @@ fn invalid_yaml_and_file_suppression_follow_policy() {
             .unwrap();
     assert_eq!(out.findings.len(), 2);
     assert!(out.findings.iter().any(|row| row.file == ".github/workflows/missing.yml"
-        && row.message.contains("cannot read source")));
+        && row.target.as_deref() == Some("unanalyzable")));
 
     let dispatched = crate::codebase::rules::github_actions_workflow_files::dispatch::run(
         RULE_ID, &root, &config, &files, &sources, false,
