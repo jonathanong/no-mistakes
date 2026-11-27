@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
+const { isMap, isSeq, parseDocument } = require("yaml");
 
 const { readWorkflow } = require("../../.github/scripts/workflow-contract.cjs");
 const { nativePackageName } = require("../../packages/no-mistakes/scripts/native-package");
@@ -48,6 +49,20 @@ test("every native optional package has a release target", () => {
   for (const [platform, arch, target] of targets) {
     assert.match(nativePackageName(platform, arch), /^no-mistakes-/);
     assert.ok(releaseTargets.includes(target), `release workflow does not build ${target}`);
+  }
+});
+
+test("release jobs declare pinned action uses outside shared steps", () => {
+  const releasePath = join(repoRoot, ".github/workflows/release.yml");
+  const workflow = parseDocument(readFileSync(releasePath, "utf8"));
+  const { jobs } = readWorkflow(releasePath);
+  for (const [name, job] of Object.entries(jobs)) {
+    const actions = job.steps?.filter((step) => step.uses) ?? [];
+    if (actions.length === 0) continue;
+    const steps = workflow.getIn(["jobs", name, "steps"], true);
+    assert.ok(isSeq(steps), name);
+    const directActions = steps.items.filter((step) => isMap(step) && step.has("uses"));
+    assert.equal(directActions.length, actions.length, name);
   }
 });
 

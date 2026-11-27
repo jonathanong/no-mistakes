@@ -535,8 +535,10 @@ jobs:
       NM_BUILD_TIMEOUT: "65"
       CARGO_PROFILE_RELEASE_LTO: thin
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
-    steps: &build-native-steps
-      - name: Exclude workspace from Microsoft Defender
+    # Action pins and their version comments stay on each uses line.
+    steps:
+      - &build-native-exclude-workspace-from-microsoft-defender
+        name: Exclude workspace from Microsoft Defender
         if: ${{ runner.os == 'Windows' }}
         timeout-minutes: 2
         continue-on-error: true
@@ -558,13 +560,14 @@ jobs:
       - name: Checkout release scripts
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
+        with: &build-native-checkout-release-scripts
           ref: ${{ github.workflow_sha }}
           path: release-scripts
           persist-credentials: false
           fetch-depth: 1
 
-      - name: Isolate release scripts
+      - &build-native-isolate-release-scripts
+        name: Isolate release scripts
         timeout-minutes: 1
         shell: bash
         run: mv -- release-scripts "$RUNNER_TEMP/release-scripts"
@@ -572,25 +575,26 @@ jobs:
       - name: Download prepared source
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
+        with: &build-native-download-prepared-source
           name: release-source
           path: prepared-release
 
-      - name: Extract prepared source
+      - &build-native-extract-prepared-source
+        name: Extract prepared source
         timeout-minutes: 2
         run: tar -xzf prepared-release/release-source.tgz
 
       - name: Install Rust
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
-        with:
+        with: &build-native-install-rust
           toolchain: stable
           targets: ${{ env.NM_TARGET }}
 
       - name: Cache Rust build artifacts
         timeout-minutes: 5
         uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
-        with:
+        with: &build-native-cache-rust-build-artifacts
           prefix-key: v1-rust-release
           shared-key: release-${{ env.NM_TARGET }}
           cache-bin: "false"
@@ -598,7 +602,8 @@ jobs:
       # Full LTO on aarch64 Linux was SIGTERMed (exit 143) on the 16 GB
       # ubuntu-22.04-arm runner (run 40325778215). ThinLTO lowers that peak.
       # Swap stays so a cold compile still has headroom.
-      - name: Add swap
+      - &build-native-add-swap
+        name: Add swap
         if: ${{ runner.os == 'Linux' }}
         timeout-minutes: 5
         shell: bash
@@ -622,17 +627,20 @@ jobs:
           sudo swapon /swapfile
           free -h
 
-      - name: Build CLI and N-API addon
+      - &build-native-build-cli-and-n-api-addon
+        name: Build CLI and N-API addon
         timeout-minutes: ${{ fromJSON(env.NM_BUILD_TIMEOUT) }}
         shell: bash
         run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/cargo-release-build.sh"
 
-      - name: Stage CLI assets
+      - &build-native-stage-cli-assets
+        name: Stage CLI assets
         timeout-minutes: 2
         shell: bash
         run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-cli.sh" "${{ needs.prepare.outputs.version }}"
 
-      - name: Generate checksum (Unix)
+      - &build-native-generate-checksum-unix
+        name: Generate checksum (Unix)
         if: runner.os != 'Windows'
         timeout-minutes: 2
         shell: bash
@@ -643,7 +651,8 @@ jobs:
             shasum -a 256 "$artifact" > "$artifact.sha256"
           done
 
-      - name: Generate checksum (Windows)
+      - &build-native-generate-checksum-windows
+        name: Generate checksum (Windows)
         if: runner.os == 'Windows'
         timeout-minutes: 2
         shell: pwsh
@@ -657,7 +666,7 @@ jobs:
       - name: Upload CLI artifact
         timeout-minutes: 5
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
+        with: &build-native-upload-cli-artifact
           name: release-cli-${{ env.NM_TARGET }}
           path: release-assets/*
           if-no-files-found: error
@@ -665,10 +674,11 @@ jobs:
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
+        with: &build-native-install-node-js
           node-version: 24
 
-      - name: Stage N-API addon
+      - &build-native-stage-n-api-addon
+        name: Stage N-API addon
         timeout-minutes: 2
         shell: bash
         run: bash "$RUNNER_TEMP/release-scripts/.github/scripts/stage-release-addon.sh" "${{ needs.prepare.outputs.version }}"
@@ -676,12 +686,13 @@ jobs:
       - name: Upload N-API artifact
         timeout-minutes: 5
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
+        with: &build-native-upload-n-api-artifact
           name: release-napi-${{ env.NM_TARGET }}
           path: no-mistakes-napi-*.node
           if-no-files-found: error
 
-      - name: Require Cargo timings report
+      - &build-native-require-cargo-timings-report
+        name: Require Cargo timings report
         timeout-minutes: 1
         shell: bash
         run: |
@@ -697,7 +708,7 @@ jobs:
         timeout-minutes: 2
         continue-on-error: true
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
+        with: &build-native-upload-cargo-timings
           name: release-timings-${{ env.NM_TARGET }}
           path: target/cargo-timings/*.html
           if-no-files-found: error
@@ -716,7 +727,67 @@ jobs:
       NM_BUILD_TIMEOUT: "65"
       CARGO_PROFILE_RELEASE_LTO: thin
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
-    steps: *build-native-steps
+    steps:
+      - *build-native-exclude-workspace-from-microsoft-defender
+
+      - name: Checkout release scripts
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *build-native-checkout-release-scripts
+
+      - *build-native-isolate-release-scripts
+
+      - name: Download prepared source
+        timeout-minutes: 5
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with: *build-native-download-prepared-source
+
+      - *build-native-extract-prepared-source
+
+      - name: Install Rust
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with: *build-native-install-rust
+
+      - name: Cache Rust build artifacts
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
+        with: *build-native-cache-rust-build-artifacts
+
+      - *build-native-add-swap
+
+      - *build-native-build-cli-and-n-api-addon
+
+      - *build-native-stage-cli-assets
+
+      - *build-native-generate-checksum-unix
+
+      - *build-native-generate-checksum-windows
+
+      - name: Upload CLI artifact
+        timeout-minutes: 5
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with: *build-native-upload-cli-artifact
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with: *build-native-install-node-js
+
+      - *build-native-stage-n-api-addon
+
+      - name: Upload N-API artifact
+        timeout-minutes: 5
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with: *build-native-upload-n-api-artifact
+
+      - *build-native-require-cargo-timings-report
+
+      - name: Upload Cargo timings
+        timeout-minutes: 2
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with: *build-native-upload-cargo-timings
 
   build-native-darwin:
     name: Build native for aarch64-apple-darwin
@@ -732,7 +803,67 @@ jobs:
       NM_BUILD_TIMEOUT: "90"
       CARGO_PROFILE_RELEASE_LTO: thin
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
-    steps: *build-native-steps
+    steps:
+      - *build-native-exclude-workspace-from-microsoft-defender
+
+      - name: Checkout release scripts
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *build-native-checkout-release-scripts
+
+      - *build-native-isolate-release-scripts
+
+      - name: Download prepared source
+        timeout-minutes: 5
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with: *build-native-download-prepared-source
+
+      - *build-native-extract-prepared-source
+
+      - name: Install Rust
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with: *build-native-install-rust
+
+      - name: Cache Rust build artifacts
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
+        with: *build-native-cache-rust-build-artifacts
+
+      - *build-native-add-swap
+
+      - *build-native-build-cli-and-n-api-addon
+
+      - *build-native-stage-cli-assets
+
+      - *build-native-generate-checksum-unix
+
+      - *build-native-generate-checksum-windows
+
+      - name: Upload CLI artifact
+        timeout-minutes: 5
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with: *build-native-upload-cli-artifact
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with: *build-native-install-node-js
+
+      - *build-native-stage-n-api-addon
+
+      - name: Upload N-API artifact
+        timeout-minutes: 5
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with: *build-native-upload-n-api-artifact
+
+      - *build-native-require-cargo-timings-report
+
+      - name: Upload Cargo timings
+        timeout-minutes: 2
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with: *build-native-upload-cargo-timings
 
   build-native-windows:
     name: Build native for x86_64-pc-windows-msvc
@@ -748,7 +879,67 @@ jobs:
       NM_BUILD_TIMEOUT: "90"
       CARGO_PROFILE_RELEASE_LTO: "false"
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
-    steps: *build-native-steps
+    steps:
+      - *build-native-exclude-workspace-from-microsoft-defender
+
+      - name: Checkout release scripts
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *build-native-checkout-release-scripts
+
+      - *build-native-isolate-release-scripts
+
+      - name: Download prepared source
+        timeout-minutes: 5
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with: *build-native-download-prepared-source
+
+      - *build-native-extract-prepared-source
+
+      - name: Install Rust
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with: *build-native-install-rust
+
+      - name: Cache Rust build artifacts
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
+        with: *build-native-cache-rust-build-artifacts
+
+      - *build-native-add-swap
+
+      - *build-native-build-cli-and-n-api-addon
+
+      - *build-native-stage-cli-assets
+
+      - *build-native-generate-checksum-unix
+
+      - *build-native-generate-checksum-windows
+
+      - name: Upload CLI artifact
+        timeout-minutes: 5
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with: *build-native-upload-cli-artifact
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with: *build-native-install-node-js
+
+      - *build-native-stage-n-api-addon
+
+      - name: Upload N-API artifact
+        timeout-minutes: 5
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with: *build-native-upload-n-api-artifact
+
+      - *build-native-require-cargo-timings-report
+
+      - name: Upload Cargo timings
+        timeout-minutes: 2
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with: *build-native-upload-cargo-timings
 
   publish-cargo:
     name: Publish Cargo crates
@@ -906,11 +1097,11 @@ jobs:
       NM_PACKAGE: no-mistakes-linux-x64-gnu
       NM_TARGET: x86_64-unknown-linux-gnu
       NM_RUNTIME: linux
-    steps: &publish-native-steps
+    steps:
       - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
+        with: &publish-native-checkout-release-commit
           fetch-depth: 1
           persist-credentials: false
           ref: ${{ needs.prepare.outputs.release-sha }}
@@ -918,49 +1109,52 @@ jobs:
       - name: Checkout publish tooling
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
+        with: &publish-native-checkout-publish-tooling
           ref: ${{ github.workflow_sha }}
           path: publish-tools
           persist-credentials: false
           fetch-depth: 1
 
-      - name: Isolate publish tooling
+      - &publish-native-isolate-publish-tooling
+        name: Isolate publish tooling
         timeout-minutes: 1
         run: mv -- publish-tools "$RUNNER_TEMP/publish-tools"
 
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
+        with: &publish-native-install-node-js
           node-version: 24
           registry-url: https://registry.npmjs.org
 
       - name: Set up pnpm
         timeout-minutes: 2
         uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
-        with:
+        with: &publish-native-set-up-pnpm
           install: false
 
       - name: Download CLI release assets
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
+        with: &publish-native-download-cli-release-assets
           name: release-cli-${{ env.NM_TARGET }}
           path: dist
 
       - name: Download N-API release assets
         timeout-minutes: 5
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
+        with: &publish-native-download-n-api-release-assets
           name: release-napi-${{ env.NM_TARGET }}
           path: dist
 
-      - name: Stage platform package
+      - &publish-native-stage-platform-package
+        name: Stage platform package
         timeout-minutes: 5
         shell: bash
         run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/stage-one-platform.sh" "${{ needs.prepare.outputs.version }}"
 
-      - name: Publish npm platform package with OIDC
+      - &publish-native-publish-npm-platform-package-with-oidc
+        name: Publish npm platform package with OIDC
         timeout-minutes: 70
         shell: bash
         run: bash "$RUNNER_TEMP/publish-tools/.github/scripts/publish-one-npm.sh" "${{ needs.prepare.outputs.version }}" "$NM_PACKAGE"
@@ -980,7 +1174,42 @@ jobs:
       NM_PACKAGE: no-mistakes-linux-arm64-gnu
       NM_TARGET: aarch64-unknown-linux-gnu
       NM_RUNTIME: linux
-    steps: *publish-native-steps
+    steps:
+      - name: Checkout release commit
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *publish-native-checkout-release-commit
+
+      - name: Checkout publish tooling
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *publish-native-checkout-publish-tooling
+
+      - *publish-native-isolate-publish-tooling
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with: *publish-native-install-node-js
+
+      - name: Set up pnpm
+        timeout-minutes: 2
+        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
+        with: *publish-native-set-up-pnpm
+
+      - name: Download CLI release assets
+        timeout-minutes: 5
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with: *publish-native-download-cli-release-assets
+
+      - name: Download N-API release assets
+        timeout-minutes: 5
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with: *publish-native-download-n-api-release-assets
+
+      - *publish-native-stage-platform-package
+
+      - *publish-native-publish-npm-platform-package-with-oidc
 
   publish-native-darwin:
     name: Publish no-mistakes-darwin-arm64
@@ -997,7 +1226,42 @@ jobs:
       NM_PACKAGE: no-mistakes-darwin-arm64
       NM_TARGET: aarch64-apple-darwin
       NM_RUNTIME: darwin
-    steps: *publish-native-steps
+    steps:
+      - name: Checkout release commit
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *publish-native-checkout-release-commit
+
+      - name: Checkout publish tooling
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *publish-native-checkout-publish-tooling
+
+      - *publish-native-isolate-publish-tooling
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with: *publish-native-install-node-js
+
+      - name: Set up pnpm
+        timeout-minutes: 2
+        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
+        with: *publish-native-set-up-pnpm
+
+      - name: Download CLI release assets
+        timeout-minutes: 5
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with: *publish-native-download-cli-release-assets
+
+      - name: Download N-API release assets
+        timeout-minutes: 5
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with: *publish-native-download-n-api-release-assets
+
+      - *publish-native-stage-platform-package
+
+      - *publish-native-publish-npm-platform-package-with-oidc
 
   publish-native-windows:
     name: Publish no-mistakes-win32-x64-msvc
@@ -1015,7 +1279,42 @@ jobs:
       NM_TARGET: x86_64-pc-windows-msvc
       NM_RUNTIME: win32
       NM_EXTENSION: ".exe"
-    steps: *publish-native-steps
+    steps:
+      - name: Checkout release commit
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *publish-native-checkout-release-commit
+
+      - name: Checkout publish tooling
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *publish-native-checkout-publish-tooling
+
+      - *publish-native-isolate-publish-tooling
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with: *publish-native-install-node-js
+
+      - name: Set up pnpm
+        timeout-minutes: 2
+        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
+        with: *publish-native-set-up-pnpm
+
+      - name: Download CLI release assets
+        timeout-minutes: 5
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with: *publish-native-download-cli-release-assets
+
+      - name: Download N-API release assets
+        timeout-minutes: 5
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with: *publish-native-download-n-api-release-assets
+
+      - *publish-native-stage-platform-package
+
+      - *publish-native-publish-npm-platform-package-with-oidc
 
   # Root publication waits for all four of these, so latest cannot point at a
   # version whose platform packages are still unverified.
@@ -1031,11 +1330,11 @@ jobs:
       contents: read
     env:
       NM_PACKAGE: no-mistakes-linux-x64-gnu
-    steps: &verify-npm-steps
+    steps:
       - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
+        with: &verify-npm-checkout-release-commit
           fetch-depth: 1
           persist-credentials: false
           ref: ${{ needs.prepare.outputs.release-sha }}
@@ -1043,10 +1342,11 @@ jobs:
       - name: Install Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        with:
+        with: &verify-npm-install-node-js
           node-version: 24
 
-      - name: Install and load published package
+      - &verify-npm-install-and-load-published-package
+        name: Install and load published package
         timeout-minutes: 12
         shell: bash
         run: |
@@ -1072,7 +1372,18 @@ jobs:
       contents: read
     env:
       NM_PACKAGE: no-mistakes-linux-arm64-gnu
-    steps: *verify-npm-steps
+    steps:
+      - name: Checkout release commit
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *verify-npm-checkout-release-commit
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with: *verify-npm-install-node-js
+
+      - *verify-npm-install-and-load-published-package
 
   verify-npm-darwin:
     name: Verify npm no-mistakes-darwin-arm64
@@ -1085,7 +1396,18 @@ jobs:
       contents: read
     env:
       NM_PACKAGE: no-mistakes-darwin-arm64
-    steps: *verify-npm-steps
+    steps:
+      - name: Checkout release commit
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *verify-npm-checkout-release-commit
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with: *verify-npm-install-node-js
+
+      - *verify-npm-install-and-load-published-package
 
   verify-npm-windows:
     name: Verify npm no-mistakes-win32-x64-msvc
@@ -1098,7 +1420,18 @@ jobs:
       contents: read
     env:
       NM_PACKAGE: no-mistakes-win32-x64-msvc
-    steps: *verify-npm-steps
+    steps:
+      - name: Checkout release commit
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *verify-npm-checkout-release-commit
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with: *verify-npm-install-node-js
+
+      - *verify-npm-install-and-load-published-package
 
   publish-js:
     name: Publish root npm package
@@ -1177,7 +1510,18 @@ jobs:
       contents: read
     env:
       NM_PACKAGE: no-mistakes
-    steps: *verify-npm-steps
+    steps:
+      - name: Checkout release commit
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *verify-npm-checkout-release-commit
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with: *verify-npm-install-node-js
+
+      - *verify-npm-install-and-load-published-package
 
   verify-npm-root-linux-arm:
     name: Verify npm no-mistakes (ubuntu-22.04-arm)
@@ -1190,7 +1534,18 @@ jobs:
       contents: read
     env:
       NM_PACKAGE: no-mistakes
-    steps: *verify-npm-steps
+    steps:
+      - name: Checkout release commit
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *verify-npm-checkout-release-commit
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with: *verify-npm-install-node-js
+
+      - *verify-npm-install-and-load-published-package
 
   verify-npm-root-windows:
     name: Verify npm no-mistakes (windows-2025)
@@ -1203,7 +1558,18 @@ jobs:
       contents: read
     env:
       NM_PACKAGE: no-mistakes
-    steps: *verify-npm-steps
+    steps:
+      - name: Checkout release commit
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *verify-npm-checkout-release-commit
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with: *verify-npm-install-node-js
+
+      - *verify-npm-install-and-load-published-package
 
   verify-npm-root-darwin:
     name: Verify npm no-mistakes (macos-15)
@@ -1217,7 +1583,18 @@ jobs:
       contents: read
     env:
       NM_PACKAGE: no-mistakes
-    steps: *verify-npm-steps
+    steps:
+      - name: Checkout release commit
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: *verify-npm-checkout-release-commit
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with: *verify-npm-install-node-js
+
+      - *verify-npm-install-and-load-published-package
 
   publish-eslint:
     name: Publish ESLint package
