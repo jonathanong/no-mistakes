@@ -1,5 +1,12 @@
-const { assert, test, readFileSync, join, packageRoot, repositoryRoot } = require("./context");
-const { createRequire } = require("node:module");
+const {
+  assert,
+  test,
+  readFileSync,
+  join,
+  packageRoot,
+  repositoryRoot,
+  assertFixturesCompile,
+} = require("./context");
 
 test("download integrity exports scoped shell, sequencing and annotation options", () => {
   const declaration = readFileSync(
@@ -27,11 +34,9 @@ test("download integrity exports scoped shell, sequencing and annotation options
 });
 
 test("download integrity annotation scope is a named public union", () => {
-  const dependencyRequire = createRequire(require.resolve("@storybook/react"));
-  const ts = dependencyRequire("typescript");
-  const program = ts.createProgram(
+  assertFixturesCompile(
     [join(repositoryRoot, "fixtures/node-api/download-integrity-types/options.ts")],
-    {
+    (ts) => ({
       strict: true,
       skipLibCheck: true,
       noEmit: true,
@@ -42,12 +47,6 @@ test("download integrity annotation scope is a named public union", () => {
       paths: { "no-mistakes": ["packages/no-mistakes/index.d.ts"] },
       ignoreDeprecations: "6.0",
       types: [],
-    },
-  );
-  assert.deepEqual(
-    ts
-      .getPreEmitDiagnostics(program)
-      .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
-    [],
+    }),
   );
 });

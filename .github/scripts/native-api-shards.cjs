@@ -25,16 +25,27 @@ function partition(inventory, index, count, platform = process.platform) {
     throw new Error("native API inventory must contain collected test names and files");
   const keys = [...new Set(inventory.map((row) => key(row.name)))].sort();
   const selected = new Set(keys.filter((_, offset) => offset % count === index - 1));
-  const names = [
-    ...new Set(inventory.filter((row) => selected.has(key(row.name))).map((row) => row.name)),
-  ];
+  const selectedRows = inventory.filter((row) => selected.has(key(row.name)));
+  const names = [...new Set(selectedRows.map((row) => row.name))];
+  const files = [...new Set(selectedRows.map((row) => row.file))];
   if (!names.length) throw new Error("native API shard has no collected tests");
   const pattern = `^(?:${names.map((name) => name.split(" > ").map(escape).join("(?: > | )")).join("|")})$`;
   const argumentBudget = platform === "win32" ? 24000 : 120000;
   const argumentSize = platform === "win32" ? pattern.length : Buffer.byteLength(pattern);
   if (argumentSize > argumentBudget)
     throw new Error("native API shard pattern exceeds argument budget; increase shard count");
-  return { pattern, names, total: inventory.length };
+  return { pattern, names, files, total: inventory.length };
+}
+
+function selectRunFiles(files, selectedFiles) {
+  const known = new Map(files.map((file) => [path.resolve(file), file]));
+  const matched = new Set();
+  for (const file of selectedFiles) {
+    const resolved = known.get(path.resolve(file));
+    if (!resolved) return files;
+    matched.add(resolved);
+  }
+  return matched.size ? files.filter((file) => matched.has(file)) : files;
 }
 
 function run(
@@ -50,10 +61,10 @@ function run(
     throw new Error("native API suite must be platform or linux");
   const files = suite === "linux" ? linuxFiles : platformFiles;
   fs.mkdirSync("target", { recursive: true });
-  const invoke = (args) => {
+  const invoke = (args, extraEnv = {}) => {
     const result = execute(process.execPath, [cli, ...args], {
       stdio: "inherit",
-      env: process.env,
+      env: { ...process.env, ...extraEnv },
     });
     if (result.error) throw result.error;
     if (result.status !== 0) {
@@ -62,22 +73,26 @@ function run(
       throw error;
     }
   };
-  invoke([
-    "list",
-    ...files,
-    "--no-static-parse",
-    "--json=target/native-api-inventory.json",
-    "--coverage=false",
-  ]);
+  invoke(
+    [
+      "list",
+      ...files,
+      "--no-static-parse",
+      "--json=target/native-api-inventory.json",
+      "--coverage=false",
+    ],
+    { NO_MISTAKES_VITEST_LIST: "1" },
+  );
   const inventory = JSON.parse(fs.readFileSync("target/native-api-inventory.json", "utf8"));
   const plan = partition(inventory, index, count);
+  const runFiles = selectRunFiles(files, plan.files);
   fs.writeFileSync(
     "target/native-api-shard.json",
     `${JSON.stringify({ index, count, ...plan }, null, 2)}\n`,
   );
   invoke([
     "run",
-    ...files,
+    ...runFiles,
     `--testNamePattern=${plan.pattern}`,
     "--reporter=default",
     "--reporter=json",

@@ -1,16 +1,20 @@
-const { assert, test, readFileSync, join, packageRoot, repositoryRoot } = require("./context");
+const {
+  assert,
+  test,
+  readFileSync,
+  join,
+  packageRoot,
+  repositoryRoot,
+  assertFixturesCompile,
+} = require("./context");
 
 test(
   "timeout policy public type contracts compile without losing option fields",
   { timeout: 20_000 },
   () => {
-    const { createRequire } = require("node:module");
-    // Resolve the compiler through an existing direct dependency, without adding a test dependency.
-    const dependencyRequire = createRequire(require.resolve("@storybook/react"));
-    const ts = dependencyRequire("typescript");
-    const program = ts.createProgram(
+    assertFixturesCompile(
       [join(repositoryRoot, "fixtures", "test-timeout-policy", "type-contracts", "public.mts")],
-      {
+      (ts) => ({
         noEmit: true,
         strict: true,
         skipLibCheck: true,
@@ -28,14 +32,7 @@ test(
           ],
         },
         ignoreDeprecations: "6.0",
-      },
-    );
-    const diagnostics = ts.getPreEmitDiagnostics(program);
-    assert.deepEqual(
-      diagnostics.map((diagnostic) =>
-        ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"),
-      ),
-      [],
+      }),
     );
   },
 );
@@ -112,12 +109,9 @@ test("forbidden-call predicates export bounded literal and unknown-policy declar
 });
 
 test("analysis object result metadata compiles while pure and array APIs stay unchanged", () => {
-  const { createRequire } = require("node:module");
-  const dependencyRequire = createRequire(require.resolve("@storybook/react"));
-  const ts = dependencyRequire("typescript");
-  const program = ts.createProgram(
+  assertFixturesCompile(
     [join(repositoryRoot, "fixtures/node-api/jobs-pool-result-types/public.mts")],
-    {
+    (ts) => ({
       noEmit: true,
       strict: true,
       skipLibCheck: true,
@@ -125,13 +119,7 @@ test("analysis object result metadata compiles while pure and array APIs stay un
       target: ts.ScriptTarget.ESNext,
       module: ts.ModuleKind.NodeNext,
       moduleResolution: ts.ModuleResolutionKind.NodeNext,
-    },
-  );
-  assert.deepEqual(
-    ts
-      .getPreEmitDiagnostics(program)
-      .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
-    [],
+    }),
   );
   const declarations = readFileSync(join(packageRoot, "invocation-types.d.ts"), "utf8");
   assert.match(declarations, /export interface InvocationResultMetadata/);

@@ -1,7 +1,6 @@
-import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { expect, it } from "vitest";
-import { __dirname, fixture } from "./helpers.mjs";
+import { __dirname, fixture, runOxlint } from "./helpers.mjs";
 import { pluginFindings, snapshotCases, snapshotDocument } from "./diagnostic-snapshot.mjs";
 
 const rule = "no-locale-less-date-format";
@@ -224,23 +223,14 @@ it("snapshots configured locale checks and scope boundaries", async () => {
 
 it("keeps real Oxlint and ESLint scope diagnostics identical", () => {
   const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", rule);
-  for (const { file, options, lines: expectedLines, sourceType } of cases.filter(
-    (item) => item.oxlint,
-  )) {
-    const result = spawnSync(
-      process.execPath,
-      [
-        resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-        "--config",
-        resolve(root, ".oxlintrc.json"),
-        "--format",
-        "json",
-        resolve(root, file),
-      ],
-      { encoding: "utf8" },
-    );
-    expect(result.status, `${file}: ${result.stderr}`).toBe(expectedLines.length ? 1 : 0);
-    const diagnostics = JSON.parse(result.stdout).diagnostics;
+  const oxlintCases = cases.filter((item) => item.oxlint);
+  const result = runOxlint({
+    config: resolve(root, ".oxlintrc.json"),
+    files: oxlintCases.map(({ file }) => resolve(root, file)),
+  });
+  expect(result.status, result.stderr).toBe(1);
+  for (const { file, options, lines: expectedLines, sourceType } of oxlintCases) {
+    const diagnostics = result.forFile(resolve(root, file));
     expect(
       diagnostics.map((finding) => finding.code),
       file,

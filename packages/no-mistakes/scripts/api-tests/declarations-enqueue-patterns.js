@@ -1,11 +1,17 @@
-const { assert, test, readFileSync, join, packageRoot, repositoryRoot } = require("./context");
-const { createRequire } = require("node:module");
+const {
+  assert,
+  test,
+  readFileSync,
+  join,
+  packageRoot,
+  repositoryRoot,
+  assertFixturesCompile,
+} = require("./context");
 
 test("single-enqueue option types compile from the public package root", () => {
-  const ts = createRequire(require.resolve("@storybook/react"))("typescript");
-  const program = ts.createProgram(
+  assertFixturesCompile(
     [join(repositoryRoot, "fixtures/node-api/no-single-enqueue-in-loop-types/options.ts")],
-    {
+    (ts) => ({
       strict: true,
       skipLibCheck: true,
       noEmit: true,
@@ -16,20 +22,12 @@ test("single-enqueue option types compile from the public package root", () => {
       paths: { "no-mistakes": ["packages/no-mistakes/index.d.ts"] },
       ignoreDeprecations: "6.0",
       types: [],
-    },
-  );
-  assert.deepEqual(
-    ts
-      .getPreEmitDiagnostics(program)
-      .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
-    [],
+    }),
   );
 });
 
 function assertPublicNodeNextFixtureCompiles(...fixtureParts) {
-  const dependencyRequire = createRequire(require.resolve("@storybook/react"));
-  const ts = dependencyRequire("typescript");
-  const program = ts.createProgram([join(repositoryRoot, ...fixtureParts)], {
+  assertFixturesCompile([join(repositoryRoot, ...fixtureParts)], (ts) => ({
     noEmit: true,
     strict: true,
     skipLibCheck: true,
@@ -40,13 +38,7 @@ function assertPublicNodeNextFixtureCompiles(...fixtureParts) {
     baseUrl: repositoryRoot,
     paths: { "no-mistakes": ["packages/no-mistakes/index.d.ts"] },
     ignoreDeprecations: "6.0",
-  });
-  assert.deepEqual(
-    ts
-      .getPreEmitDiagnostics(program)
-      .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
-    [],
-  );
+  }));
 }
 
 test("queue wait kinds compile when imported from the package root", { timeout: 20_000 }, () => {

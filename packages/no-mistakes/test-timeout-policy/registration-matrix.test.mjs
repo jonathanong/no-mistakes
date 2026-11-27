@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { fixture } from "../../../fixtures/test-timeout-policy/timeout-policy-child.mjs";
 import { captureOwnedChild } from "../../../fixtures/test-timeout-policy/owned-sdk-child.mjs";
 describe.skipIf(process.platform !== "linux")("supported Vitest registration matrix", () => {
-  it.each([
+  it.concurrent.each([
     fixtureTemplate("registration-matrix.test-template-11.txt"),
     fixtureTemplate("registration-matrix.test-template-10.txt"),
     fixtureTemplate("registration-matrix.test-template-9.txt"),
@@ -22,15 +22,18 @@ describe.skipIf(process.platform !== "linux")("supported Vitest registration mat
     expect(result.marker).toBeUndefined();
     expect(result.forcedCleanup).toBe(false);
   });
-  it.each(["override", "scoped"])("preserves %s data and inherited context", async (method) => {
-    const result = await fixture(
-      fixtureTemplate("registration-matrix.test-template-5.txt", [method]),
-    );
-    expect(result.code, result.output).toBe(0);
-    expect(result.marker).toBe("continued");
-    expect(result.forcedCleanup).toBe(false);
-  });
-  it.each(["each", "for"])(
+  it.concurrent.each(["override", "scoped"])(
+    "preserves %s data and inherited context",
+    async (method) => {
+      const result = await fixture(
+        fixtureTemplate("registration-matrix.test-template-5.txt", [method]),
+      );
+      expect(result.code, result.output).toBe(0);
+      expect(result.marker).toBe("continued");
+      expect(result.forcedCleanup).toBe(false);
+    },
+  );
+  it.concurrent.each(["each", "for"])(
     "preserves shuffled suite.%s with inclusive deadlines",
     async (method) => {
       const result = await fixture(
@@ -41,21 +44,24 @@ describe.skipIf(process.platform !== "linux")("supported Vitest registration mat
       expect(result.forcedCleanup).toBe(false);
     },
   );
-  it.each(["file", "worker"])("retains actual %s fixture setup and teardown", async (scope) => {
-    const result = await fixture(
-      fixtureTemplate("registration-matrix.test-template-3.txt", [scope]),
-    );
-    expect(result.code, result.output).toBe(0);
-    expect(result.lifecycle).toBe("setup;body;body;teardown;");
-    expect(result.forcedCleanup).toBe(false);
-  });
-  it("preserves native rejection of unsupported suite fixture scope", async () => {
+  it.concurrent.each(["file", "worker"])(
+    "retains actual %s fixture setup and teardown",
+    async (scope) => {
+      const result = await fixture(
+        fixtureTemplate("registration-matrix.test-template-3.txt", [scope]),
+      );
+      expect(result.code, result.output).toBe(0);
+      expect(result.lifecycle).toBe("setup;body;body;teardown;");
+      expect(result.forcedCleanup).toBe(false);
+    },
+  );
+  it.concurrent("preserves native rejection of unsupported suite fixture scope", async () => {
     const result = await fixture(fixtureSource("registration-matrix.test-27.txt"));
     expect(result.code).toBe(1);
     expect(result.output).toContain('unknown scope "suite"');
     expect(result.marker).toBeUndefined();
   });
-  it.each([false, true])(
+  it.concurrent.each([false, true])(
     "routes a listed transitive registrar with symlinks=%s",
     async (preserveSymlinks) => {
       const result = await fixture(
@@ -75,7 +81,7 @@ describe.skipIf(process.platform !== "linux")("supported Vitest registration mat
       expect(result.forcedCleanup).toBe(false);
     },
   );
-  it("demonstrates an omitted externalized transitive registrar is an adoption gap", async () => {
+  it.concurrent("demonstrates an omitted externalized transitive registrar is an adoption gap", async () => {
     const result = await fixture(fixtureSource("registration-matrix.test-29.txt"), undefined, "", {
       preserveSymlinks: true,
       inlineTransitive: false,
@@ -88,7 +94,7 @@ describe.skipIf(process.platform !== "linux")("supported Vitest registration mat
   });
 });
 describe.skipIf(process.platform !== "linux")("started SDK child failure finalization", () => {
-  it.each(["capture", "watchdog", "both"])(
+  it.concurrent.each(["capture", "watchdog", "both"])(
     "awaits final output and drain after %s failure",
     async (failure) => {
       const original = new TypeError("injected ownership capture failure");
@@ -129,7 +135,7 @@ describe.skipIf(process.platform !== "linux")("started SDK child failure finaliz
       expect(finalized).toBe(true);
     },
   );
-  it("reports a watchdog signal kill with signal name, deadline and elapsed time", async () => {
+  it.concurrent("reports a watchdog signal kill with signal name, deadline and elapsed time", async () => {
     await expect(
       fixture(fixtureSource("registration-matrix.test-30.txt"), undefined, "", undefined, {
         watchdogMs: 1,

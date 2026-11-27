@@ -35,7 +35,7 @@ for (const mode of ["pass", "reject", "startup-stall", "shutdown-stall"]) {
       let terminate;
       try {
         const outcome = await observeSdkChild(child, {
-          watchdogMs: 5000,
+          watchdogMs: mode.endsWith("-stall") ? 1000 : 5000,
           capture: (value) => (terminate = captureOwnedChild(value)),
         });
         const stalled = mode.endsWith("-stall");

@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const test = globalThis.test || require("node:test").test;
 const { existsSync, readFileSync, writeFileSync, mkdtempSync } = require("node:fs");
+const { createRequire } = require("node:module");
 const { join, resolve } = require("node:path");
 const { tmpdir } = require("node:os");
 const { pathToFileURL } = require("node:url");
@@ -83,6 +84,42 @@ function nativeExportNameForApi(apiName) {
   return RAW_NATIVE_EXPORTS[apiName] || `${apiName}Json`;
 }
 
+let cachedTs;
+const cachedSourceFiles = new Map();
+
+function loadTypeScript() {
+  if (!cachedTs) {
+    // Resolve the compiler through an existing direct dependency, without adding a test dependency.
+    cachedTs = createRequire(require.resolve("@storybook/react"))("typescript");
+  }
+  return cachedTs;
+}
+
+function assertFixturesCompile(rootNames, compilerOptions) {
+  const ts = loadTypeScript();
+  const options = typeof compilerOptions === "function" ? compilerOptions(ts) : compilerOptions;
+  const host = ts.createCompilerHost(options);
+  const originalGetSourceFile = host.getSourceFile.bind(host);
+  host.getSourceFile = (fileName, languageVersionOrOptions, ...rest) => {
+    const version =
+      typeof languageVersionOrOptions === "object" && languageVersionOrOptions !== null
+        ? languageVersionOrOptions.languageVersion
+        : languageVersionOrOptions;
+    const cacheKey = `${version}:${fileName}`;
+    if (cachedSourceFiles.has(cacheKey)) return cachedSourceFiles.get(cacheKey);
+    const sourceFile = originalGetSourceFile(fileName, languageVersionOrOptions, ...rest);
+    if (sourceFile) cachedSourceFiles.set(cacheKey, sourceFile);
+    return sourceFile;
+  };
+  const program = ts.createProgram(rootNames, options, host);
+  assert.deepEqual(
+    ts
+      .getPreEmitDiagnostics(program)
+      .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
+    [],
+  );
+}
+
 module.exports = {
   assert,
   test,
@@ -106,4 +143,5 @@ module.exports = {
   nativeExportNames,
   declarationExportNames,
   nativeExportNameForApi,
+  assertFixturesCompile,
 };

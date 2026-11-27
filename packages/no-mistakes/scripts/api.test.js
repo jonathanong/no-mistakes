@@ -24,7 +24,14 @@ require("./api-tests/declarations-sql");
 require("./api-tests/declarations-audit");
 require("./api-tests/declarations-runtime");
 
-const { assert, test, readFileSync, join, packageRoot } = require("./api-tests/context");
+const {
+  assert,
+  test,
+  readFileSync,
+  join,
+  packageRoot,
+  assertFixturesCompile,
+} = require("./api-tests/context");
 
 test("cache setup policy exports both workflow selectors", () => {
   const options = readFileSync(
@@ -215,11 +222,8 @@ test("shell compatibility rules expose optional path globs", () => {
 });
 
 test("check rule options compile from the package root", () => {
-  const { createRequire } = require("node:module");
-  const dependencyRequire = createRequire(require.resolve("@storybook/react"));
-  const ts = dependencyRequire("typescript");
   const repositoryRoot = join(packageRoot, "..", "..");
-  const program = ts.createProgram(
+  assertFixturesCompile(
     [
       join(repositoryRoot, "fixtures/node-api/dependabot-cooldown-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts"),
@@ -234,7 +238,7 @@ test("check rule options compile from the package root", () => {
       join(repositoryRoot, "fixtures/node-api/vitest-default-excludes/public.mts"),
       join(repositoryRoot, "fixtures/node-api/vitest-project-policy/public.mts"),
     ],
-    {
+    (ts) => ({
       noEmit: true,
       strict: true,
       skipLibCheck: true,
@@ -245,13 +249,7 @@ test("check rule options compile from the package root", () => {
       baseUrl: repositoryRoot,
       paths: { "no-mistakes": ["packages/no-mistakes/index.d.ts"] },
       ignoreDeprecations: "6.0",
-    },
-  );
-  assert.deepEqual(
-    ts
-      .getPreEmitDiagnostics(program)
-      .map((row) => ts.flattenDiagnosticMessageText(row.messageText, "\n")),
-    [],
+    }),
   );
 });
 

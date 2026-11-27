@@ -1,6 +1,11 @@
-const { assert, test, readFileSync, join, packageRoot } = require("./context");
-const { createRequire } = require("node:module");
-const ts = createRequire(require.resolve("@storybook/react"))("typescript");
+const {
+  assert,
+  test,
+  readFileSync,
+  join,
+  packageRoot,
+  assertFixturesCompile,
+} = require("./context");
 
 const declarations =
   readFileSync(join(packageRoot, "diagnostics-types.d.ts"), "utf8") +
@@ -94,7 +99,7 @@ test("diagnostics collector overloads retain required arguments and correlated r
     "diagnostics-types",
     "public.mts",
   );
-  const program = ts.createProgram([fixture], {
+  assertFixturesCompile([fixture], (ts) => ({
     noEmit: true,
     strict: true,
     skipLibCheck: true,
@@ -102,11 +107,5 @@ test("diagnostics collector overloads retain required arguments and correlated r
     target: ts.ScriptTarget.ESNext,
     module: ts.ModuleKind.NodeNext,
     moduleResolution: ts.ModuleResolutionKind.NodeNext,
-  });
-  assert.deepEqual(
-    ts
-      .getPreEmitDiagnostics(program)
-      .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")),
-    [],
-  );
+  }));
 }, 20_000);

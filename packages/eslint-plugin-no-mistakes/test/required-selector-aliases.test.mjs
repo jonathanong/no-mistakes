@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { describe, it } from "vitest";
-import { fixture, lint, __dirname } from "./helpers.mjs";
+import { fixture, lint, runOxlintAsync, __dirname } from "./helpers.mjs";
 import { runInNewContext } from "node:vm";
 const id = "require-options-on-imported-call";
 const requirement = { optionsPosition: 2, requiredProperties: ["safe"] };
@@ -111,7 +110,7 @@ describe("required global and receiver selector aliases", () => {
       );
     }
   });
-  it("matches real Oxlint diagnostics for the saved aliases and controls", () => {
+  it("matches real Oxlint diagnostics for the saved aliases and controls", async () => {
     const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", id);
     const entries = [
       "selector-aliases",
@@ -146,26 +145,36 @@ describe("required global and receiver selector aliases", () => {
         ],
       },
     ]);
+    const byConfig = new Map();
     for (const [name, config, overrides] of entries) {
-      const expected = check(name, overrides);
-      const result = spawnSync(
-        process.execPath,
-        [
-          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-          "--config",
-          resolve(root, config),
-          "--format",
-          "json",
-          resolve(root, `${name}.mjs`),
-        ],
-        { encoding: "utf8" },
-      );
-      assert.equal(result.status, expected.length ? 1 : 0, result.stderr);
-      const actual = JSON.parse(result.stdout).diagnostics.filter((d) => d.code.includes(id));
-      assert.deepEqual(
-        actual.map((d) => d.labels[0].span.line).sort((a, b) => a - b),
-        expected.map((d) => d.line),
-      );
+      const list = byConfig.get(config) || [];
+      list.push([name, overrides]);
+      byConfig.set(config, list);
+    }
+    const batches = new Map(
+      await Promise.all(
+        [...byConfig.entries()].map(async ([config, group]) => {
+          const result = await runOxlintAsync({
+            config: resolve(root, config),
+            files: group.map(([name]) => resolve(root, `${name}.mjs`)),
+          });
+          return [config, result];
+        }),
+      ),
+    );
+    for (const [config, group] of byConfig.entries()) {
+      const result = batches.get(config);
+      let anyExpected = false;
+      for (const [name, overrides] of group) {
+        const expected = check(name, overrides);
+        if (expected.length) anyExpected = true;
+        const actual = result.forFile(resolve(root, `${name}.mjs`), id);
+        assert.deepEqual(
+          actual.map((d) => d.labels[0].span.line).sort((a, b) => a - b),
+          expected.map((d) => d.line),
+        );
+      }
+      assert.equal(result.status, anyExpected ? 1 : 0, result.stderr);
     }
   });
   it("deduplicates overlapping requirements on aliased calls", () => {
