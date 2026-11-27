@@ -1,0 +1,21 @@
+name: caller-violations
+on: push
+jobs:
+  inherit_only:
+    uses: ./.github/workflows/callee.yml
+    secrets: inherit
+  missing_optional_secret:
+    uses: ./.github/workflows/callee.yml
+    with:
+      target_env: staging
+    secrets:
+      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+  missing_all:
+    uses: ./.github/workflows/callee.yml
+  empty_secret:
+    uses: ./.github/workflows/callee.yml
+    with:
+      target_env: staging
+    secrets:
+      DEPLOY_KEY:
+      AUDIT_TOKEN: ${{ secrets.AUDIT_TOKEN }}

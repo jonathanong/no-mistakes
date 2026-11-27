@@ -1,0 +1,11 @@
+version: 2
+rules:
+- rule: github-actions-action-timeout-pair
+  scope: repository
+  options:
+    include:
+    - '['
+    uses:
+    - sample/example@
+  include:
+  - src/**

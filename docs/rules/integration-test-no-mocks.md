@@ -54,7 +54,7 @@ that scope does not filter the import facts needed by this rule.
 The rule matches literal module specifiers in `from`, `import`, `require(`,
 and dynamic `import(`. It skips unreadable files and does not resolve
 computed specifiers. It does not use `options.unanalyzable`. Configure
-call bans on `forbidden-calls`. [Source scanning](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/integration_test_no_mocks.rs#L139-L164) and [module patterns](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/integration_test_no_mocks/patterns.rs#L1-L6).
+call bans on `forbidden-calls`. [Source scanning](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/integration_test_no_mocks.rs#L139-L164) and [module patterns](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/integration_test_no_mocks/patterns.rs#L1-L6).
 
 ## Related rules
 

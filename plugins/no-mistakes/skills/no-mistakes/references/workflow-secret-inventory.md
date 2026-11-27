@@ -42,5 +42,5 @@ input or environment variable. Only actions reached through `uses: ./...`
 by remote callers, or invoked by a path in a script, are not scanned. Job and
 step `if:` keys are bare expressions; `with.if` is not.
 
-See the [full configuration guide](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/workflow-topology-policy.md)
-and the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/workflow-topology-policy.md).
+See the [full configuration guide](https://github.com/jongleberry/no-mistakes/blob/main/docs/configuration/workflow-topology-policy.md)
+and the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/workflow-topology-policy.md).

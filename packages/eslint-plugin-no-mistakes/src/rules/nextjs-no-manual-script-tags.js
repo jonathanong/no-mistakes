@@ -1,6 +1,7 @@
 "use strict";
 
 const { literalString, rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 
 const NEXT_FILE_PATTERN = /(?:^|[/\\])(?:app|pages)(?:[/\\]|$)/;
 
@@ -90,7 +91,12 @@ module.exports = Object.assign(
     (context) => {
       const options = context.options[0] || {};
       const patterns = allowedIdPatterns(options);
+      const suppressed = ruleSuppression(context, "nextjs-no-manual-script-tags");
       let isNextFile = isNextPath(context.filename);
+      function report(node, messageId, data) {
+        if (suppressed(node)) return;
+        context.report(data ? { node, messageId, data } : { node, messageId });
+      }
       return {
         ImportDeclaration(node) {
           if (typeof node.source.value === "string" && node.source.value.startsWith("next/")) {
@@ -102,20 +108,16 @@ module.exports = Object.assign(
           if (node.name.type !== "JSXIdentifier" || node.name.name !== "script") return;
           if (isJsonLdScript(node)) {
             if (options.structuredDataComponent || options.structuredDataMessage) {
-              context.report({
-                node,
-                messageId: "structuredData",
-                data: {
-                  message:
-                    options.structuredDataMessage ||
-                    `Use <${options.structuredDataComponent}> instead of a raw JSON-LD <script> tag.`,
-                },
+              report(node, "structuredData", {
+                message:
+                  options.structuredDataMessage ||
+                  `Use <${options.structuredDataComponent}> instead of a raw JSON-LD <script> tag.`,
               });
             }
             return;
           }
           if (isAllowedInlineScript(node, options, patterns)) return;
-          context.report({ node, messageId: "script" });
+          report(node, "script");
         },
       };
     },
