@@ -1,6 +1,6 @@
 "use strict";
 
-const { staticMemberName } = require("./ts-no-function-aliases-ast");
+const { staticMemberName, unwrapExpression } = require("./ts-no-function-aliases-ast");
 const { resolveVariable } = require("./ts-no-function-aliases-self");
 const {
   unassertedPath,
@@ -19,16 +19,36 @@ function unassertedCall(node, call) {
   );
 }
 
+function moduleObject(root, sourceCode) {
+  const def = resolveVariable(sourceCode, root)?.defs[0];
+  if (!def) return false;
+  if (def.node?.type === "ImportNamespaceSpecifier") return true;
+  if (def.node?.type === "TSImportEqualsDeclaration" && def.node.importKind !== "type") return true;
+  if (
+    def.type !== "Variable" ||
+    def.parent?.kind !== "const" ||
+    def.node?.id?.type !== "Identifier"
+  ) {
+    return false;
+  }
+  const call = unwrapExpression(def.node.init);
+  const callee = unwrapExpression(call?.callee);
+  return (
+    call?.type === "CallExpression" &&
+    callee?.type === "Identifier" &&
+    callee.name === "require" &&
+    !resolveVariable(sourceCode, callee)?.defs.length
+  );
+}
+
 function directIntrinsic(target, sourceCode) {
   if (target.type !== "MemberExpression") return false;
   const name = staticMemberName(target);
   if (name !== "call" && name !== "apply") return false;
-  // A namespace is not callable: namespace.call is an actual module export.
-  // Other imported values could expose Function.prototype.call/apply instead.
-  const root = target.object;
-  if (root.type !== "Identifier") return true;
-  const variable = resolveVariable(sourceCode, root);
-  return variable?.defs[0]?.node.type !== "ImportNamespaceSpecifier";
+  // A namespace or require() module is not callable: .call is a module export.
+  const root = unwrapExpression(target.object);
+  if (root?.type !== "Identifier") return true;
+  return !moduleObject(root, sourceCode);
 }
 
 function documentedSignature(node, sourceCode) {

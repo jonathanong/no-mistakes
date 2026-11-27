@@ -49,7 +49,7 @@ application code.
 
 ## Limits
 
-`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. `.apply` with a non-literal argument list is not rewritten. A computed identifier key is not the `fetch` property:
+`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. `.apply` with a non-literal argument list is not rewritten. A static computed key such as `globalThis["fetch" as const]`, `fetch["call" as const]`, or `const { ["fetch" as const]: fetchAlias } = globalThis` is still `fetch`. A cast around an immediately invoked function that assigns `fetch` does not hide the later call. A computed identifier key is not the `fetch` property:
 
 ```js
 const fetch = "setTimeout";

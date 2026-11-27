@@ -12,6 +12,7 @@ const {
   findContainingFunction,
   isFunction,
   isTransparentExpression,
+  unwrapExpression,
   unwrapTransparentParent,
 } = require("./async-ast");
 
@@ -23,7 +24,9 @@ function directlyDisposed(node, context, consumers, origin = node) {
     return returnedFromFunction(fn, context, consumers);
   }
   if (parent?.type === "ArrowFunctionExpression" && parent.body === expression) {
-    if (isCallCallee(parent)) return directlyDisposed(parent.parent, context, consumers);
+    if (isCallCallee(parent)) {
+      return directlyDisposed(unwrapTransparentParent(parent).parent, context, consumers);
+    }
     return returnedFromFunction(parent, context, consumers);
   }
   return (
@@ -47,11 +50,16 @@ function isCallArgument(node) {
 }
 
 function isCallCallee(node) {
-  return node?.parent?.type === "CallExpression" && node.parent.callee === node;
+  const wrapped = unwrapTransparentParent(node);
+  const parent = wrapped?.parent;
+  return parent?.type === "CallExpression" && unwrapExpression(parent.callee) === node;
 }
 
 function isPromiseAllIterable(node, promiseAll) {
-  return promiseAll.arguments[0] === node && (node.type === "ArrayExpression" || isMapCall(node));
+  const argument = unwrapExpression(promiseAll.arguments?.[0]);
+  const value = unwrapExpression(node);
+  if (!argument || (argument !== value && promiseAll.arguments[0] !== node)) return false;
+  return value.type === "ArrayExpression" || isMapCall(value);
 }
 
 function canReachPromiseAll(node, promiseAll, collectionRole) {
@@ -105,14 +113,14 @@ function observedExpression(node, context) {
     }
     if (
       parent.type === "MemberExpression" &&
-      parent.object === current &&
+      unwrapExpression(parent.object) === unwrapExpression(current) &&
       parent.parent?.type === "CallExpression" &&
-      parent.parent.callee === parent
+      unwrapExpression(parent.parent.callee) === parent
     ) {
       current = parent;
       continue;
     }
-    if (parent.type === "CallExpression" && parent.callee === current) {
+    if (parent.type === "CallExpression" && unwrapExpression(parent.callee) === current) {
       current = parent;
       continue;
     }

@@ -1,4 +1,6 @@
 "use strict";
+const { unwrapExpression } = require("./async-ast");
+const { literalString } = require("./module-mock-helpers");
 const ARGV = 1;
 // Strings and [prefix, suffix] fragments stay separate from path identities.
 // Keeping the fragment until the comparison lets nested concatenations fold once.
@@ -22,4 +24,45 @@ function fileUrlArgument(target, read) {
   const argument = read(target.arguments[0]);
   return Array.isArray(argument) && identity(argument) === ARGV ? argument : 0;
 }
-module.exports = { ARGV, identity, concatenate, fileUrlArgument };
+function staticIndexOne(node) {
+  const current = unwrapExpression(node);
+  if (!current) return false;
+  if (current.type === "Literal") return current.value === 1 || current.value === "1";
+  return literalString(current) === "1";
+}
+function objectPatternKey(pattern, name) {
+  for (const property of pattern.properties) {
+    if (property.type !== "Property") continue;
+    const value =
+      property.value.type === "AssignmentPattern" ? property.value.left : property.value;
+    if (value.type !== "Identifier" || value.name !== name) continue;
+    const key = unwrapExpression(property.key);
+    if (!property.computed && key?.type === "Identifier") return key.name;
+    if (key?.type === "Literal") return String(key.value);
+    return literalString(key);
+  }
+  return null;
+}
+function isProcessSpecifier(node) {
+  return ["process", "node:process"].includes(literalString(unwrapExpression(node)));
+}
+function isProcessRequire(node, context, isLocalRequire) {
+  const callee = unwrapExpression(node?.callee);
+  return (
+    node?.type === "CallExpression" &&
+    callee?.type === "Identifier" &&
+    callee.name === "require" &&
+    !isLocalRequire(callee, context) &&
+    isProcessSpecifier(node.arguments?.[0])
+  );
+}
+module.exports = {
+  ARGV,
+  identity,
+  concatenate,
+  fileUrlArgument,
+  staticIndexOne,
+  objectPatternKey,
+  isProcessSpecifier,
+  isProcessRequire,
+};

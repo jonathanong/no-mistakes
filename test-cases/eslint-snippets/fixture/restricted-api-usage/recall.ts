@@ -36,7 +36,7 @@ require("@example/other");
 import(moduleName);
 require(moduleName);
 require();
-const { [key]: unknown } = api;
+const { [key]: unknown } = api; // non-literal key is unanalyzable
 function param({ paginateEntries }: any) {}
 const { paginateEntries: empty } = unrelated;
 // Whole-namespace aliases must request a static import before the origin is hidden.

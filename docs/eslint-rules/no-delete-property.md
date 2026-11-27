@@ -25,7 +25,8 @@ This rule has no options.
 ## Limits
 
 Every property deletion is checked directly, including aliases, static string
-or expression-free template keys, optional members, and dynamic keys:
+or expression-free template keys, optional members, `satisfies` and instantiation
+wrappers around the operand, and dynamic keys:
 `delete rows[key]` is a property deletion regardless of the key's value.
 The rule does not infer deletion inside called functions: `remove.call(null,
 rows)` and an imported `remove(rows)` do not prove a deletion from this file.

@@ -1,20 +1,8 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { unwrapExpression } = require("./async-ast");
 const { ruleSuppression } = require("../rule-suppression");
-
-function unwrapExpression(node) {
-  let current = node;
-  while (
-    current &&
-    ["ChainExpression", "TSAsExpression", "TSNonNullExpression", "TSTypeAssertion"].includes(
-      current.type,
-    )
-  ) {
-    current = current.expression;
-  }
-  return current;
-}
 
 module.exports = rule(
   {

@@ -1,19 +1,13 @@
 "use strict";
 
-const { literalString, rule } = require("../helpers");
+const { rule } = require("../helpers");
 const { unwrapExpression } = require("./async-ast");
-const { logicalCall } = require("./module-mock-helpers");
+const { logicalCall, memberPropertyName } = require("./module-mock-helpers");
 
 const BANNED_METHODS = new Set(["sort", "toSorted", "every", "findIndex", "slice", "toSpliced"]);
 
 function methodName(callee) {
-  if (!callee.computed) return callee.property.type === "Identifier" ? callee.property.name : null;
-  if (callee.property.type === "Literal") return String(callee.property.value);
-  return literalString(callee.property);
-}
-
-function unwrapChain(node) {
-  return node?.type === "ChainExpression" ? node.expression : node;
+  return memberPropertyName(callee);
 }
 
 function findVariable(node, context) {
@@ -46,7 +40,8 @@ function isKnownArrayReceiver(node, context, seen = new Set()) {
   seen.add(variable);
   return variable.defs.some((def) => {
     if (def.type !== "Variable" || def.node?.id?.type !== "Identifier") return false;
-    if (def.node.init?.type === "ArrayExpression") return true;
+    const init = unwrapExpression(def.node.init);
+    if (init?.type === "ArrayExpression") return true;
     return def.parent?.kind === "const" && isKnownArrayReceiver(def.node.init, context, seen);
   });
 }
@@ -67,8 +62,8 @@ module.exports = rule(
   (context) => {
     return {
       AwaitExpression(node) {
-        const argument = unwrapChain(node.argument);
-        if (argument.type !== "CallExpression") return;
+        const argument = unwrapExpression(node.argument);
+        if (argument?.type !== "CallExpression") return;
         const invoked = logicalCall(argument);
         if (invoked?.callee?.type !== "MemberExpression") return;
         const method = methodName(invoked.callee);

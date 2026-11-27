@@ -47,6 +47,13 @@ function visitNew(state, node, scope, role) {
 }
 
 function visitCall(state, node, scope, role) {
+  const callee = unwrap(node.callee);
+  if (callee?.type === "Identifier" && callee.name === "require" && !lookup(scope, "require")) {
+    for (const argument of node.arguments) visitArgument(state, argument, scope, "read");
+    const tag = shared("import");
+    escapeResult(state, tag, scope, role);
+    return tag;
+  }
   const mutation = mutationCall(node, scope);
   if (mutation) {
     const thisArg = node.arguments[0];
@@ -87,7 +94,6 @@ function visitCall(state, node, scope, role) {
   if (known !== undefined && !known.fallbackCalleeTag) {
     return known;
   }
-  const callee = unwrap(node.callee);
   const forward = callee.type === "MemberExpression" ? memberKey(callee) : null;
   const forwarded = forward === "call" || forward === "apply";
   const calleeTag =

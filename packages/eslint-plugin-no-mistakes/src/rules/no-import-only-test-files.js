@@ -2,7 +2,8 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
-const { literalString } = require("./module-mock-helpers");
+const { unwrapExpression } = require("./async-ast");
+const { literalString, memberPropertyName } = require("./module-mock-helpers");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 const TEST_FILE_PATTERN = /\.(?:mock\.)?(?:test|spec)\.[cm]?[jt]sx?$/;
@@ -17,15 +18,9 @@ function isTestImportSource(source) {
 }
 
 function stringArgument(node) {
-  const source = literalString(node) ?? node?.value;
+  const current = unwrapExpression(node);
+  const source = literalString(current) ?? current?.value;
   return typeof source === "string" ? source : null;
-}
-
-function forwardedName(member) {
-  if (member?.type !== "MemberExpression") return null;
-  if (member.computed && member.property?.type === "Identifier") return null;
-  if (!member.computed && member.property?.type === "Identifier") return member.property.name;
-  return literalString(member.property);
 }
 
 function requireBinding(node, context, seen = new Set()) {
@@ -41,7 +36,7 @@ function requireBinding(node, context, seen = new Set()) {
     def.node?.parent?.kind === "const" &&
     def.node.id.type === "Identifier" &&
     !variable.references.some((ref) => ref.isWrite() && !ref.init) &&
-    requireBinding(def.node.init, context, seen)
+    requireBinding(unwrapExpression(def.node.init), context, seen)
   );
 }
 
@@ -58,22 +53,21 @@ function isRequireAlias(statement, context) {
 }
 
 function requireSource(call, context) {
-  let current = call;
-  while (current?.type === "ChainExpression") current = current.expression;
+  const current = unwrapExpression(call);
   if (current?.type !== "CallExpression") return null;
-  let callee = current.callee;
+  let callee = unwrapExpression(current.callee);
   let args = current.arguments;
-  while (callee?.type === "ChainExpression") callee = callee.expression;
-  if (callee?.type === "SequenceExpression") callee = callee.expressions.at(-1);
-  const name = forwardedName(callee);
+  if (callee?.type === "SequenceExpression") callee = unwrapExpression(callee.expressions.at(-1));
+  const name = callee?.type === "MemberExpression" ? memberPropertyName(callee) : null;
   if (name === "call") {
-    callee = callee.object;
+    callee = unwrapExpression(callee.object);
     args = args.slice(1);
-  } else if (name === "apply" && args[1]?.type === "ArrayExpression") {
-    callee = callee.object;
-    args = args[1].elements;
+  } else if (name === "apply") {
+    const list = unwrapExpression(args?.[1]);
+    if (list?.type !== "ArrayExpression") return null;
+    callee = unwrapExpression(callee.object);
+    args = list.elements;
   }
-  while (callee?.type === "ChainExpression") callee = callee.expression;
   if (!requireBinding(callee, context)) return null;
   return stringArgument(args?.[0]);
 }
@@ -94,8 +88,23 @@ function isTestRequire(statement, context) {
   );
 }
 
+function importEqualsSource(node) {
+  if (node.importKind === "type") return null;
+  const ref = node.moduleReference;
+  if (ref?.type !== "TSExternalModuleReference") return null;
+  return stringArgument(ref.expression);
+}
+
 function isTestImport(statement) {
-  return statement.type === "ImportDeclaration" && isTestImportSource(statement.source?.value);
+  if (statement.type === "ImportDeclaration" || statement.type === "ExportAllDeclaration") {
+    return isTestImportSource(statement.source?.value);
+  }
+  if (statement.type === "ExportNamedDeclaration" && statement.source) {
+    return isTestImportSource(statement.source.value);
+  }
+  if (statement.type === "TSImportEqualsDeclaration")
+    return isTestImportSource(importEqualsSource(statement));
+  return false;
 }
 
 module.exports = Object.assign(
