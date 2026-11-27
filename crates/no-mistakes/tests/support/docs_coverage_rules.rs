@@ -1,9 +1,18 @@
+use std::collections::BTreeSet;
+use std::path::Path;
+
 use super::{read, repo_root, rule_ids_from_source, rule_inventory};
+
+fn documented_rule_ids(root: &Path) -> BTreeSet<String> {
+    let mut ids = rule_ids_from_source(root);
+    ids.extend(no_mistakes::codebase::rules::rule_ids::configurable_rule_ids().map(str::to_owned));
+    ids
+}
 
 #[test]
 fn no_mistakes_rules_have_docs() {
     let root = repo_root();
-    let rule_ids = rule_ids_from_source(&root);
+    let rule_ids = documented_rule_ids(&root);
     rule_inventory::assert_inventory(&root, &rule_ids);
     for rule_id in rule_ids {
         let file = format!("{rule_id}.md");
