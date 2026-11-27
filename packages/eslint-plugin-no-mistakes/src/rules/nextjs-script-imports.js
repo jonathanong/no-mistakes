@@ -43,7 +43,6 @@ function visit(node, context, state, seen) {
     if (node.importKind !== "type") {
       const moduleName = externalModule(node);
       if (moduleName !== undefined) noteModule(moduleName, state);
-      else noteFact(node.id ? importFact(node.id, context) : null, state);
     }
   } else if (node.type === "CallExpression") {
     noteFact(importFact(node, context), state);
