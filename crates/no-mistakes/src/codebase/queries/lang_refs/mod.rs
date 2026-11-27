@@ -132,4 +132,6 @@ mod lines_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod native_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod reference_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
