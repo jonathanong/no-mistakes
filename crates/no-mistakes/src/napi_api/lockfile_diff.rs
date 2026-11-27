@@ -77,47 +77,17 @@ pub(crate) fn lockfile_diff_json_impl(options: serde_json::Value) -> napi::Resul
 
     let mut entries = Vec::new();
     let mut warnings = Vec::new();
-
     for lf_path in &lf_paths {
-        let basename = lf_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-        let rel = lf_path
-            .strip_prefix(&git_root)
-            .unwrap_or(lf_path)
-            .to_string_lossy()
-            .replace('\\', "/");
-        let Some(manager) = lockfile::detect_manager(basename) else {
-            if lockfile::is_binary_lockfile(basename) {
-                let message = lockfile::binary_lockfile_warning(basename);
-                if !options.include_warnings {
-                    return Err(napi::Error::from_reason(message));
-                }
-                warnings.push(LockfileDiffWarning {
-                    code: "binary-lockfile",
-                    lockfile: rel,
-                    message,
-                });
+        match diff_one_lockfile(lf_path, &git_root, options.head.as_deref(), &base)? {
+            LockfileOutcome::Entry(entry) => entries.push(entry),
+            LockfileOutcome::Warning(warning) if options.include_warnings => {
+                warnings.push(warning);
             }
-            continue;
-        };
-        let new_content = match options.head.as_deref() {
-            Some(head) => git_lockfile_content(&git_root, head, &rel, "head")?,
-            None => std::fs::read_to_string(lf_path).unwrap_or_default(),
-        };
-        let old_content = git_lockfile_content(&git_root, &base, &rel, "base")?;
-        let old_pkgs = lockfile::packages_for_diff(manager, &old_content).map_err(|error| {
-            napi::Error::from_reason(format!("`{rel}` has {}", error.description))
-        })?;
-        let new_pkgs = lockfile::packages_for_diff(manager, &new_content).map_err(|error| {
-            napi::Error::from_reason(format!("`{rel}` has {}", error.description))
-        })?;
-        let diff = lockfile::diff(&old_pkgs, &new_pkgs);
-        entries.push(LockfileDiffEntry {
-            lockfile: rel,
-            manager: manager_name(manager).to_string(),
-            added: diff.added,
-            removed: diff.removed,
-            changed: diff.changed,
-        });
+            LockfileOutcome::Warning(warning) => {
+                return Err(napi::Error::from_reason(warning.message));
+            }
+            LockfileOutcome::Unsupported => {}
+        }
     }
 
     if options.include_warnings {
@@ -145,6 +115,61 @@ fn git_lockfile_content(
         )));
     }
     Ok(String::new())
+}
+
+enum LockfileOutcome {
+    Entry(LockfileDiffEntry),
+    Warning(LockfileDiffWarning),
+    Unsupported,
+}
+
+fn diff_one_lockfile(
+    lf_path: &Path,
+    git_root: &Path,
+    head: Option<&str>,
+    base: &str,
+) -> napi::Result<LockfileOutcome> {
+    let basename = lf_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+    let rel = lf_path
+        .strip_prefix(git_root)
+        .unwrap_or(lf_path)
+        .to_string_lossy()
+        .replace('\\', "/");
+    let Some(manager) = lockfile::detect_manager(basename) else {
+        return Ok(if lockfile::is_binary_lockfile(basename) {
+            LockfileOutcome::Warning(LockfileDiffWarning {
+                code: "binary-lockfile",
+                lockfile: rel,
+                message: lockfile::binary_lockfile_warning(basename),
+            })
+        } else {
+            LockfileOutcome::Unsupported
+        });
+    };
+    let new_content = match head {
+        Some(head) => git_lockfile_content(git_root, head, &rel, "head")?,
+        None => std::fs::read_to_string(lf_path).unwrap_or_default(),
+    };
+    let old_content = git_lockfile_content(git_root, base, &rel, "base")?;
+    let old_pkgs = packages_for_entry(manager, &rel, &old_content)?;
+    let new_pkgs = packages_for_entry(manager, &rel, &new_content)?;
+    let diff = lockfile::diff(&old_pkgs, &new_pkgs);
+    Ok(LockfileOutcome::Entry(LockfileDiffEntry {
+        lockfile: rel,
+        manager: manager_name(manager).to_string(),
+        added: diff.added,
+        removed: diff.removed,
+        changed: diff.changed,
+    }))
+}
+
+fn packages_for_entry(
+    manager: PackageManager,
+    rel: &str,
+    content: &str,
+) -> napi::Result<Vec<lockfile::ResolvedPackage>> {
+    lockfile::packages_for_diff(manager, content)
+        .map_err(|error| napi::Error::from_reason(format!("`{rel}` has {}", error.description)))
 }
 
 fn manager_name(m: PackageManager) -> &'static str {

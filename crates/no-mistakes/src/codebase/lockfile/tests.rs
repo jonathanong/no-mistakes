@@ -155,8 +155,13 @@ fn detect_manager_known() {
         detect_manager("composer.lock"),
         Some(PackageManager::Composer)
     );
-    assert_eq!(PackageManager::Cargo.as_str(), "cargo");
+    assert_eq!(PackageManager::Poetry.as_str(), "poetry");
+    assert_eq!(PackageManager::Uv.as_str(), "uv");
+    assert_eq!(PackageManager::Pipfile.as_str(), "pipfile");
     assert_eq!(PackageManager::Go.as_str(), "go");
+    assert_eq!(PackageManager::Cargo.as_str(), "cargo");
+    assert_eq!(PackageManager::Gemfile.as_str(), "gemfile");
+    assert_eq!(PackageManager::Composer.as_str(), "composer");
 }
 
 #[test]

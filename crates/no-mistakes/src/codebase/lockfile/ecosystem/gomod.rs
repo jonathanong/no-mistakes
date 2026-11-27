@@ -28,11 +28,7 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
             continue;
         }
         if let Some(rest) = line.strip_prefix("require ") {
-            if rest == "(" {
-                in_require = true;
-            } else {
-                push_require(rest, &mut out)?;
-            }
+            push_require(rest, &mut out)?;
             continue;
         }
         if in_require {
