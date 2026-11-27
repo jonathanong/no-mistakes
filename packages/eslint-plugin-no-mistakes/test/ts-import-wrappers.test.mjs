@@ -352,6 +352,37 @@ describe("typescript import wrappers", () => {
         "react-nullish-alias-chain.tsx",
         "react-no-nullish-react-node",
       ),
+      eslintCase(
+        "computed member of a namespace import",
+        "nullable-computed-member.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "unresolved wrapper is not inside",
+        "nullable-unresolved-wrapper.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "ignored unresolved wrapper",
+        "nullable-unresolved-wrapper.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+          unanalyzable: "ignore",
+        },
+      ),
     ];
 
     expect(cases.find((item) => item.name === "ignored unresolved react require").findings).toEqual(
@@ -544,6 +575,25 @@ describe("typescript import wrappers", () => {
       [17, "nullish"],
       [23, "unanalyzable"],
     ]);
+    expect(
+      cases
+        .find((item) => item.name === "computed member of a namespace import")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [6, "unanalyzable"],
+      [10, "wrapper"],
+      [14, "wrapper"],
+    ]);
+    expect(
+      cases
+        .find((item) => item.name === "unresolved wrapper is not inside")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [6, "unanalyzable"],
+      [6, "unanalyzable"],
+      [12, "unanalyzable"],
+    ]);
+    expect(cases.find((item) => item.name === "ignored unresolved wrapper").findings).toEqual([]);
 
     const oxlint = {
       "react-use": oxlintOn(".oxlintrc-react-use.json", [
@@ -595,10 +645,13 @@ describe("typescript import wrappers", () => {
         "nullable-member-alias.ts",
         "nullable-forwarded-member.ts",
         "nullable-unresolved-name.ts",
+        "nullable-computed-member.ts",
+        "nullable-unresolved-wrapper.ts",
       ]),
       "nullable-ignore": oxlintOn(".oxlintrc-nullable-ignore.json", [
         "nullable-relay-getter.ts",
         "nullable-unresolved-name.ts",
+        "nullable-unresolved-wrapper.ts",
       ]),
       "nullable-user": oxlintOn(".oxlintrc-nullable-user.json", ["nullable-satisfies.ts"]),
       "nullable-overload": oxlintOn(".oxlintrc-nullable-widget.json", ["nullable-overload.ts"]),

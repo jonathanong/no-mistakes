@@ -28,6 +28,24 @@ function calleePath(node) {
   return object && property ? `${object}.${property}` : null;
 }
 
+function dynamicComputedMember(node) {
+  let current = unwrapExpression(node);
+  while (current?.type === "MemberExpression") {
+    if (current.computed && !memberPropertyName(current)) return true;
+    current = unwrapExpression(current.object);
+  }
+  return false;
+}
+
+function argumentContains(argument, target) {
+  return (
+    argument?.range &&
+    target?.range &&
+    argument.range[0] <= target.range[0] &&
+    argument.range[1] >= target.range[1]
+  );
+}
+
 function unwrapType(node) {
   let current = node;
   while (
@@ -177,7 +195,9 @@ function collectFunctionOverloadReturnTypes(program, functionTypes = new Map()) 
 }
 
 module.exports = {
+  argumentContains,
   calleePath,
+  dynamicComputedMember,
   collectExportedNames,
   collectFunctionTypeReturns,
   collectFunctionOverloadReturnTypes,

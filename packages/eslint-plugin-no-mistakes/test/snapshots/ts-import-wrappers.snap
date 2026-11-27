@@ -848,6 +848,55 @@
       "rule": "server-require-nullable-fetch-wrapper"
     },
     {
+      "file": "nullable-computed-member.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 26,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-computed-member.ts",
+          "line": 6,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 31,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-computed-member.ts",
+          "line": 10,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 14,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-computed-member.ts",
+          "line": 14,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "computed member of a namespace import",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
       "file": "nullable-unresolved-name.ts",
       "findings": [
         {
@@ -970,6 +1019,22 @@
       "file": "nullable-relay-getter.ts",
       "findings": [],
       "name": "ignored unresolved relay around a getter",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable",
+        "unanalyzable": "ignore"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-unresolved-wrapper.ts",
+      "findings": [],
+      "name": "ignored unresolved wrapper",
       "options": {
         "getterCalleePatterns": [
           "^getWidget$"
@@ -1229,6 +1294,55 @@
         "requiredWrapperCallee": "wrapNullable"
       },
       "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-unresolved-wrapper.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved-wrapper.ts",
+          "line": 6,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 34,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved-wrapper.ts",
+          "line": 6,
+          "message": "Could not resolve whether 'getWidget' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 27,
+          "endColumn": 38,
+          "endLine": 12,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved-wrapper.ts",
+          "line": 12,
+          "message": "Could not resolve whether 'getWidget' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "unresolved wrapper is not inside",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
     }
   ],
   "oxlint": {
@@ -1346,6 +1460,12 @@
         "findings": [],
         "name": "nullable-unresolved-name.ts",
         "options": null
+      },
+      {
+        "file": "nullable-unresolved-wrapper.ts",
+        "findings": [],
+        "name": "nullable-unresolved-wrapper.ts",
+        "options": null
       }
     ],
     "nullable-outer": [
@@ -1421,6 +1541,34 @@
           }
         ],
         "name": "nullable-cjs.ts",
+        "options": null
+      },
+      {
+        "file": "nullable-computed-member.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-computed-member.ts",
+            "line": 6,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-computed-member.ts",
+            "line": 10,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-computed-member.ts",
+            "line": 14,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          }
+        ],
+        "name": "nullable-computed-member.ts",
         "options": null
       },
       {
@@ -1553,6 +1701,34 @@
           }
         ],
         "name": "nullable-unresolved-name.ts",
+        "options": null
+      },
+      {
+        "file": "nullable-unresolved-wrapper.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-unresolved-wrapper.ts",
+            "line": 6,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 23,
+            "file": "nullable-unresolved-wrapper.ts",
+            "line": 6,
+            "message": "Could not resolve whether 'getWidget' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 27,
+            "file": "nullable-unresolved-wrapper.ts",
+            "line": 12,
+            "message": "Could not resolve whether 'getWidget' is the configured getter or wrapper. Use a static import."
+          }
+        ],
+        "name": "nullable-unresolved-wrapper.ts",
         "options": null
       },
       {

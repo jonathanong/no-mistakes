@@ -4,6 +4,7 @@ const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { logicalCall, memberPropertyName, pathAllowed } = require("./module-mock-helpers");
 const {
+  importFact,
   importSpellings,
   reportsUnanalyzable,
   requiredMember,
@@ -12,7 +13,9 @@ const {
 const helpers = require("./nullable-fetch-wrapper-helpers");
 
 const {
+  argumentContains,
   calleePath,
+  dynamicComputedMember,
   collectExportedNames,
   collectFunctionOverloadReturnTypes,
   collectFunctionTypeReturns,
@@ -24,31 +27,17 @@ const {
   typeMatchesNullableHint,
 } = helpers;
 
-function isFunctionBoundary(node) {
-  return (
-    node.type === "FunctionDeclaration" ||
-    node.type === "FunctionExpression" ||
-    node.type === "ArrowFunctionExpression"
-  );
-}
-
 function calleeNames(callee, context) {
   const path = calleePath(callee);
   const spelled = importSpellings(rootIdentifier(callee), path, context);
   const required = requiredMember(callee, context);
   return {
     names: [...new Set([path, ...spelled.names, required?.name].filter(Boolean))],
-    unresolved: spelled.unresolved || required?.unresolved === true,
+    unresolved:
+      spelled.unresolved ||
+      required?.unresolved === true ||
+      Boolean(dynamicComputedMember(callee) && importFact(rootIdentifier(callee), context)),
   };
-}
-
-function argumentContains(argument, target) {
-  return (
-    argument?.range &&
-    target?.range &&
-    argument.range[0] <= target.range[0] &&
-    argument.range[1] >= target.range[1]
-  );
 }
 
 function wrapperState(node, wrapper, context) {
@@ -60,8 +49,9 @@ function wrapperState(node, wrapper, context) {
       const invoked = logicalCall(current);
       const forwarded = invoked ? calleeNames(invoked.callee, context) : null;
       const matched =
-        info.names.includes(wrapper) ||
+        (info.names.includes(wrapper) && !info.unresolved) ||
         (forwarded?.names.includes(wrapper) &&
+          !forwarded.unresolved &&
           invoked.arguments.some((argument) => argumentContains(argument, node)));
       if (matched) return "inside";
       const holds =
@@ -69,7 +59,12 @@ function wrapperState(node, wrapper, context) {
         (invoked?.arguments ?? []).some((argument) => argumentContains(argument, node));
       if (holds && (info.unresolved || forwarded?.unresolved)) unresolved = true;
     }
-    if (isFunctionBoundary(current)) return unresolved ? "unresolved" : "outside";
+    if (
+      current.type === "FunctionDeclaration" ||
+      current.type === "FunctionExpression" ||
+      current.type === "ArrowFunctionExpression"
+    )
+      return unresolved ? "unresolved" : "outside";
     current = current.parent;
   }
   return unresolved ? "unresolved" : "outside";
