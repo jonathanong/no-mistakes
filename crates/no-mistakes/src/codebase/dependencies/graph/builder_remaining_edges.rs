@@ -69,6 +69,12 @@ fn collect_remaining_edges(
 
     crate::invocation::check_timeout()?;
     let sources = graph_edge_sources(session, edge_inputs);
+    let dotnet = prepare_dotnet_http_facts(edge_inputs, &sources);
+    let edge_inputs = &GraphEdgeBuildInputs {
+        dotnet_facts: edge_inputs.dotnet_facts.or(dotnet.as_ref()),
+        interner: edge_inputs.interner.clone(),
+        ..*edge_inputs
+    };
     let independent = collect_independent_remaining_edges(edge_inputs, facts, session, &sources);
     merge_independent_remaining_edges(forward, reverse, independent);
 

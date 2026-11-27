@@ -16,6 +16,7 @@ pub(crate) fn parse_csharp_file_with_sources(
 ) -> Option<DotnetFileFacts> {
     let source = crate::codebase::ts_source::SourceStore::read_optional(sources, path)?;
     let stripped = strip_comments_and_strings(&source);
+    let kept = strip_comments_keep_strings(&source);
     Some(DotnetFileFacts {
         path: path.to_path_buf(),
         project,
@@ -25,7 +26,8 @@ pub(crate) fn parse_csharp_file_with_sources(
         references: extract_references(&stripped),
         has_xunit_tests: has_xunit_tests(&stripped),
         methods: extract_methods(&stripped),
-        route_handlers: csharp_http::extract_http_routes(&strip_comments_keep_strings(&source)),
+        route_handlers: csharp_http::extract_http_routes(&kept),
+        http_calls: crate::codebase::lang_frontends::extract_dotnet(&kept),
     })
 }
 

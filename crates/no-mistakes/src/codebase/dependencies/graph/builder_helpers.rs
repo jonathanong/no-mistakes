@@ -60,10 +60,8 @@ fn parsed_imports_for_plan<'a>(
 fn collect_http_process_edges(
     inputs: &GraphEdgeBuildInputs<'_>,
     facts: Option<&dyn TsFactLookup>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Vec<Edge> {
-    // HTTP and process collectors consume shared TS facts in this path.
-    // Keep the file-content fallback empty so graph builds do not add a
-    // second source read pass.
     let mut edges = Vec::new();
     if inputs.plan.http {
         edges.extend(collect_http_call_edges(
@@ -75,6 +73,7 @@ fn collect_http_process_edges(
             inputs.config_options,
             &inputs.interner,
         ));
+        edges.extend(collect_lang_http_client_edges(inputs, session));
     }
     if inputs.plan.process {
         edges.extend(collect_process_spawn_edges(

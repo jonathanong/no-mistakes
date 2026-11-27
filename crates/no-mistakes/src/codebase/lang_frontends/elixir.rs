@@ -47,6 +47,8 @@ fn parse_elixir_file(
     declarations.extend(tails);
     declarations.sort();
     declarations.dedup();
+    let (route_handlers, http_calls) =
+        http::routes_and_clients(&text, elixir_test_tree(path, roots));
     Some(LangFileFacts {
         path: path.to_path_buf(),
         package: owning_package(path, roots, apps),
@@ -54,11 +56,8 @@ fn parse_elixir_file(
         imports: extract_elixir_imports(&symbols),
         declarations,
         references: extract_named(&symbols, elixir_ref_re()),
-        route_handlers: if elixir_test_tree(path, roots) {
-            Vec::new()
-        } else {
-            http::extract_http_routes(&text)
-        },
+        route_handlers,
+        http_calls,
         queue_enqueues: Vec::new(),
         queue_workers: Vec::new(),
         mods: Vec::new(),

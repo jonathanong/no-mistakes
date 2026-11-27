@@ -10,6 +10,7 @@ pub(crate) struct LangFileFacts {
     pub declarations: Vec<String>,
     pub references: Vec<String>,
     pub route_handlers: Vec<(String, String)>,
+    pub http_calls: Vec<String>,
     pub queue_enqueues: Vec<String>,
     pub queue_workers: Vec<String>,
     pub mods: Vec<String>,

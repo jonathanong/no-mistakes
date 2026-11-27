@@ -114,6 +114,6 @@ src/other.mts
 - `route-import` is excluded from unfiltered traversal and `all`; request it by
   name because its deliberately conservative closure is an alternate view.
 - Route/queue edges are only active when `.no-mistakes.yml` defines the relevant config
-- `http` edges connect static HTTP client paths, including non-interpolated template literals, to backend route-definition files
+- `http` edges connect static HTTP client paths, including non-interpolated template literals and configured Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and .NET client literals, to the file that stores the matching route. Computed URLs are non-edges
 - `process` edges connect `spawn`/`exec`/Playwright `webServer` entries to their entry files
 - Patterns ending in `/` in `--filter` collapse results to that folder level

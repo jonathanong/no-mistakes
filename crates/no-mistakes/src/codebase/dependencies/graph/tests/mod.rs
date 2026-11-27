@@ -75,6 +75,7 @@ include!("compatibility_adapters.rs");
 include!("core_resolution.rs");
 include!("core.rs");
 include!("language_frontends.rs");
+include!("lang_http_clients.rs");
 include!("language_frontends_more.rs");
 include!("lang_facts_once.rs");
 mod node_sort;

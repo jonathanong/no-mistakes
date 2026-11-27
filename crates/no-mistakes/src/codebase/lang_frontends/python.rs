@@ -53,6 +53,7 @@ fn parse_python_file(
         declarations: extract_named(&symbols, python_decl_re()),
         references: extract_named(&symbols, python_ref_re()),
         route_handlers: http::extract_http_routes(&text),
+        http_calls: super::http_clients::extract_python(&text, &symbols),
         queue_enqueues,
         queue_workers,
         mods: Vec::new(),

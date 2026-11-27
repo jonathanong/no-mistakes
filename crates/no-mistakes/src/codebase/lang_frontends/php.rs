@@ -75,6 +75,7 @@ fn parse_php_file(
         declarations: classes,
         references: extract_named(&text, php_use_re()),
         route_handlers: http::extract_php_routes(&text, laravel, symfony),
+        http_calls: super::http_clients::extract_php(&text),
         queue_enqueues: if laravel {
             queue::extract_laravel_dispatches(&text)
         } else if symfony {

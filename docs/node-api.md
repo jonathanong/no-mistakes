@@ -460,6 +460,14 @@ or arrays use the same contract-level unanalyzable policy in `check()` and
 remain failures. See
 [its Effort section](rules/declared-payload-compatibility.md#effort).
 
+`dependents({ relationships: ["http"] })` includes static language HTTP
+client literals for configured Python, Go, Rust, Rails, PHP, Java, Kotlin,
+Elixir, and .NET packages. Root-relative paths and literal HTTP(S) URLs on
+loopback hosts create `http` edges to matching routes across configured
+languages. `serverRouteEdges` reports those same literals as `client-call`.
+Computed URLs and URLs on other hosts produce no edge. Both entrypoints are the async functions the CLI JSON commands
+call.
+
 | CLI                                        | Node API                                                                                                                                                                                                                                                                   |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dependencies`                             | `dependencies(options)`                                                                                                                                                                                                                                                    |

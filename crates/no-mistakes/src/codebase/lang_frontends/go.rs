@@ -45,6 +45,7 @@ fn parse_go_file(
         declarations: extract_go_declarations(&symbols),
         references: extract_named(&symbols, go_ref_re()),
         route_handlers: http::extract_http_routes(&text),
+        http_calls: super::http_clients::extract_go(&text),
         queue_enqueues: extract_named(&text, asynq_task_re()),
         queue_workers: extract_named(&text, asynq_handle_re()),
         mods: Vec::new(),
@@ -180,9 +181,7 @@ fn go_decl_re() -> &'static Regex {
 
 fn go_group_decl_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(r"(?m)^\s*(?:const|var|type)\s*\((?s)(.*?)\)").expect("group decl")
-    })
+    RE.get_or_init(|| Regex::new(r"(?m)^\s*(?:const|var|type)\s*\((?s)(.*?)\)").expect("group"))
 }
 
 fn go_exported_ident_re() -> &'static Regex {
