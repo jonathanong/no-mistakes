@@ -99,7 +99,9 @@ fn run(shared: bool) -> Outcome {
         )
         .unwrap()
     });
-    let invalid = &facts.ts[&root.join("invalid.ts")].sql_identifier_syntax;
+    let invalid = &facts.ts[&root.join("invalid.ts")]
+        .postgres()
+        .sql_identifier_syntax;
     assert!(
         invalid
             .transformed_literals
@@ -111,9 +113,13 @@ fn run(shared: bool) -> Outcome {
     );
     for name in ["embedded.ts", "invalid.ts"] {
         let file = &facts.ts[&root.join(name)];
-        assert!(file.embedded_sql.is_empty());
+        assert!(file.postgres().embedded_sql.is_empty());
         assert_eq!(
-            file.sql_identifier_syntax.policy_direct.get().is_some(),
+            file.postgres()
+                .sql_identifier_syntax
+                .policy_direct
+                .get()
+                .is_some(),
             shared
         );
     }

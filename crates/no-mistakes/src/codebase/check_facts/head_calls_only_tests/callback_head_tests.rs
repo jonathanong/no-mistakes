@@ -22,13 +22,14 @@ fn exact_imported_callback_proofs_stay_in_low_prepared_calls() {
         let file = facts.ts.get(&caller).unwrap();
         if efforts == ["max"] {
             assert!(file
+                .postgres()
                 .query_annotation_heads
                 .as_ref()
                 .is_none_or(|heads| heads.pending_callbacks.is_empty()));
             continue;
         }
-        let heads = file.query_annotation_heads.as_ref().unwrap();
-        let proofs = file.embedded_sql[0]
+        let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
+        let proofs = file.postgres().embedded_sql[0]
             .1
             .call_spans
             .iter()
@@ -39,7 +40,7 @@ fn exact_imported_callback_proofs_stay_in_low_prepared_calls() {
         assert_eq!(&proofs[2..10], &[Some(HeadProof::Unproven); 8]);
         assert_eq!(proofs[10], Some(HeadProof::Missing));
         if efforts == ["low"] {
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert!(
                 !observer
                     .snapshot()

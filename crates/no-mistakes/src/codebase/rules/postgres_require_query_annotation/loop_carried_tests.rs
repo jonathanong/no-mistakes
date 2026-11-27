@@ -103,7 +103,7 @@ fn max_without_loop_keeps_the_head_visitor_and_binding_index_cold() {
     assert!(facts
         .ts
         .values()
-        .all(|file| file.query_annotation_heads.is_none()));
+        .all(|file| file.postgres().query_annotation_heads.is_none()));
 }
 
 #[test]

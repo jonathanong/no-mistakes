@@ -18,16 +18,16 @@ fn conditional_effect_groups_share_each_exact_builders_lifetime_requirements() {
         )
     });
     let file = facts.ts.get(&caller).unwrap();
-    assert!(file.query_annotation.is_empty());
-    let heads = file.query_annotation_heads.as_ref().unwrap();
+    assert!(file.postgres().query_annotation.is_empty());
+    let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
     let source = std::fs::read_to_string(&caller).unwrap();
     let mut accepted = 0;
     let mut rejected = 0;
-    for (call, span) in file.embedded_sql[0]
+    for (call, span) in file.postgres().embedded_sql[0]
         .1
         .calls
         .iter()
-        .zip(&file.embedded_sql[0].1.call_spans)
+        .zip(&file.postgres().embedded_sql[0].1.call_spans)
     {
         let line = source.lines().nth(call.line as usize - 1).unwrap();
         let expected = if line.contains("// accepted") {

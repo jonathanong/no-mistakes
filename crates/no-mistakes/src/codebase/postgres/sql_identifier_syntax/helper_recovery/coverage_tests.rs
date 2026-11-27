@@ -35,7 +35,11 @@ fn variant_limits_keep_known_sql_and_debug_output_private() {
             super::super::tests::collect(program, &ts, &source, &[super::tests::profile()]);
         CheckFileFacts {
             ts: Arc::new(ts),
-            sql_identifier_syntax: syntax,
+            postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                sql_identifier_syntax: syntax,
+                ..Default::default()
+            }
+            .into_payload(),
             ..Default::default()
         }
     })
@@ -49,6 +53,7 @@ fn variant_limits_keep_known_sql_and_debug_output_private() {
         resolve: &|_, _| None,
     };
     let call = files[&path]
+        .postgres()
         .sql_identifier_syntax
         .recovery
         .calls

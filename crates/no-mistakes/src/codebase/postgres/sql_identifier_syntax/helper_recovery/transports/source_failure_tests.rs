@@ -19,12 +19,14 @@ fn failed_helper_observation_requires_matching_application_demand() {
     files
         .get_mut(&path)
         .unwrap()
+        .postgres_mut()
         .sql_identifier_syntax
         .low_applications = vec![(profile.clone(), "postgres-no-offset".into(), 2)];
     assert!(!failed_source_is_demanded(&files, &path, &application));
     files
         .get_mut(&path)
         .unwrap()
+        .postgres_mut()
         .sql_identifier_syntax
         .low_applications
         .push((profile, "postgres-no-offset".into(), 3));
@@ -67,13 +69,15 @@ fn failed_shared_transport_owner_replays_failure_for_both_executor_arguments() {
     files
         .get_mut(&path)
         .unwrap()
+        .postgres_mut()
         .sql_identifier_syntax
         .low_applications = vec![(profile.clone(), "postgres-no-offset".into(), 0)];
     let mut failed = CheckFileFacts {
         parse_error: Some(error.to_string()),
         ..Default::default()
     };
-    failed.sql_identifier_syntax.low_applications = vec![(profile, "postgres-no-offset".into(), 0)];
+    failed.postgres_mut().sql_identifier_syntax.low_applications =
+        vec![(profile, "postgres-no-offset".into(), 0)];
     files.insert(helper.clone(), failed);
     let (updates, failures) = super::project(&files, &|specifier, _| {
         (specifier == "./failed-helper.mjs").then(|| helper.clone())

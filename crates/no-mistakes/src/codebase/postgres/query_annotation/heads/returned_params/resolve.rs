@@ -29,7 +29,7 @@ pub(crate) fn project(
         }
         proven &= files
             .get(&target)
-            .and_then(|file| file.query_annotation_heads.as_deref())
+            .and_then(|file| file.postgres().query_annotation_heads.as_deref())
             .is_some_and(|heads| heads.exported_returned_params.contains(imported));
     }
     (proven, failed)

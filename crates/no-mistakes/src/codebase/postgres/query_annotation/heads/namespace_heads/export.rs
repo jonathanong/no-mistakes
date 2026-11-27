@@ -73,6 +73,7 @@ fn export(
     }
     files
         .get(file)?
+        .postgres()
         .query_annotation_heads
         .as_deref()?
         .exported_helpers

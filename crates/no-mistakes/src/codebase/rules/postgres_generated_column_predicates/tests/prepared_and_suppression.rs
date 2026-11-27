@@ -15,7 +15,7 @@ fn verdict_recording_errors_when_embedded_path_has_no_statement_facts() {
     let mut facts = crate::codebase::check_facts::CheckFactMap::default();
     facts.enable_sql_verdicts();
     let mut file = crate::codebase::check_facts::CheckFileFacts::default();
-    file.embedded_sql.push((
+    file.postgres_mut().embedded_sql.push((
         opts.embedded.clone(),
         crate::codebase::postgres::EmbeddedSqlFileFacts {
             lock_helper_summaries: Default::default(),
@@ -43,7 +43,7 @@ fn verdict_recording_errors_when_embedded_path_has_no_statement_facts() {
         },
     ));
     facts.ts.insert(listed.clone(), std::sync::Arc::new(file));
-    facts.postgres.embedded.insert(
+    facts.postgres_mut().embedded.insert(
         (listed.clone(), opts.embedded.clone()),
         Ok(std::sync::Arc::new(Vec::new())),
     );

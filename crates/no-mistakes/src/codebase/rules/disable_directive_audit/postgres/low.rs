@@ -11,7 +11,7 @@ pub(super) fn collect(
     let Some(file) = facts.ts.get(path) else {
         return;
     };
-    let Some(calls) = file.sql_identifier_syntax.calls_for(key) else {
+    let Some(calls) = file.postgres().sql_identifier_syntax.calls_for(key) else {
         return;
     };
     for call in calls {

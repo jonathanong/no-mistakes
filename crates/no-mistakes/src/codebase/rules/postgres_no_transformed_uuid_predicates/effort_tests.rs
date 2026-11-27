@@ -30,7 +30,10 @@ fn low_literals_are_parsed_once_across_rule_applications() {
             None,
             sources.clone(),
         );
-    assert!(facts.ts.values().all(|file| file.embedded_sql.is_empty()));
+    assert!(facts
+        .ts
+        .values()
+        .all(|file| file.postgres().embedded_sql.is_empty()));
     let observer = crate::diagnostics::InvocationObserver::new(true);
     crate::diagnostics::with_observer(Some(observer.clone()), || {
         check_with_files_sources_and_facts(&root, &config, &files, &sources, &facts).unwrap();

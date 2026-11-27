@@ -19,12 +19,14 @@ fn failed_helper_observation_requires_matching_application_demand() {
     files
         .get_mut(&path)
         .unwrap()
+        .postgres_mut()
         .sql_identifier_syntax
         .low_applications = vec![(profile.clone(), "postgres-no-offset".into(), 2)];
     assert!(!failed_source_is_demanded(&files, &path, &application));
     files
         .get_mut(&path)
         .unwrap()
+        .postgres_mut()
         .sql_identifier_syntax
         .low_applications
         .push((profile, "postgres-no-offset".into(), 3));
@@ -63,13 +65,18 @@ fn partial_prepared_sinks_without_executor_metadata_stay_unknown() {
     let start = source.find("read(text)").unwrap() as u32;
     let span = (start, start + "read(text)".len() as u32);
     let file = files.get_mut(&path).unwrap();
-    file.sql_identifier_syntax.low_applications =
+    file.postgres_mut().sql_identifier_syntax.low_applications =
         vec![(profile.clone(), "postgres-no-offset".into(), 0)];
-    assert!(file.sql_identifier_syntax.recovery.sinks[&profile].contains(&span));
-    file.sql_identifier_syntax.recovery.executors.clear();
+    assert!(file.postgres().sql_identifier_syntax.recovery.sinks[&profile].contains(&span));
+    file.postgres_mut()
+        .sql_identifier_syntax
+        .recovery
+        .executors
+        .clear();
     super::project(&mut files, |_, _| None);
     let application = ApplicationKey::new(&profile, "postgres-no-offset", 0);
     let calls = files[&path]
+        .postgres()
         .sql_identifier_syntax
         .calls_for(&application)
         .unwrap();

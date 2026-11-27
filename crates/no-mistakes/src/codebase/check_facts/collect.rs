@@ -112,17 +112,12 @@ fn collect_check_facts_inner(
         .values()
         .filter(|facts| facts.parse_error.is_some())
         .count();
-    let unproven_member_query_sql = super::relative_scope::project_relative_executor_scopes(
+    let unproven_member_query_sql = (crate::codebase::postgres_analysis::hooks().project)(
         session.session,
         root,
         &sources,
         plan.query_annotation_catalog.as_deref(),
         &mut ts,
-    );
-    let postgres_schema_catalogs = crate::codebase::postgres::load_schema_catalogs(
-        root,
-        &sources,
-        &plan.postgres_schema_catalog_paths,
     );
     let mut map = CheckFactMap {
         postgres_executor_warning_scans: Arc::clone(&plan.postgres_executor_warning_scans),
@@ -132,7 +127,7 @@ fn collect_check_facts_inner(
         accepted_statement_bounds: super::accepted_bounds::empty_sink(),
         companion_import_plans: Arc::clone(&plan.companion_import_plans),
         call_site_paths: Arc::clone(&plan.call_site_paths),
-        postgres: Default::default(),
+        postgres_payload: Default::default(),
         integration_route_links: Default::default(),
         files,
         graph_files,
@@ -154,10 +149,9 @@ fn collect_check_facts_inner(
         playwright_routes_cache: Arc::new(DashMap::new()),
         app_text_targets_cache: Arc::new(DashMap::new()),
         route_reachable_files_cache: Arc::new(DashMap::new()),
-        postgres_schema_catalogs,
         unproven_member_query_sql,
     };
-    map.postgres =
-        crate::codebase::postgres::prepared::prepare(root, &map.files, &sources, &plan, &map);
+    map.postgres_payload =
+        (crate::codebase::postgres_analysis::hooks().prepare)(root, &sources, &plan, &map);
     map
 }

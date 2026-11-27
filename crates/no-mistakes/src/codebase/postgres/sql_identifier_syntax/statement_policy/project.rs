@@ -23,6 +23,7 @@ pub(super) fn build(
         .as_deref()
         .ok_or_else(|| anyhow::anyhow!("{}: prepared low SQL source missing", key.rule))?;
     let syntax = file
+        .postgres()
         .sql_identifier_syntax
         .calls_for(key)
         .ok_or_else(|| anyhow::anyhow!("{}: prepared low SQL syntax missing", key.rule))?;

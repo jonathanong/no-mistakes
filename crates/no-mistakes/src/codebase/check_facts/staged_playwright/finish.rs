@@ -54,11 +54,6 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
     integration_runner_configs.extend(super::super::runner_config_facts(&ts));
     let (app_selector_occurrences_cache, app_text_targets_cache) =
         (crate::codebase::playwright_hooks::hooks().aggregate_facts)(&ts);
-    let postgres_schema_catalogs = crate::codebase::postgres::load_schema_catalogs(
-        &root,
-        &sources,
-        &plan.postgres_schema_catalog_paths,
-    );
     let mut map = CheckFactMap {
         postgres_executor_warning_scans: Arc::clone(&plan.postgres_executor_warning_scans),
         sql_application: None,
@@ -67,7 +62,7 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         accepted_statement_bounds: super::super::accepted_bounds::empty_sink(),
         companion_import_plans: Arc::clone(&plan.companion_import_plans),
         call_site_paths: Arc::clone(&plan.call_site_paths),
-        postgres: Default::default(),
+        postgres_payload: Default::default(),
         integration_route_links,
         files,
         graph_files,
@@ -93,10 +88,9 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         playwright_routes_cache: Arc::new(DashMap::new()),
         app_text_targets_cache: Arc::new(app_text_targets_cache),
         route_reachable_files_cache: Arc::new(DashMap::new()),
-        postgres_schema_catalogs,
         unproven_member_query_sql: 0,
     };
-    map.postgres =
-        crate::codebase::postgres::prepared::prepare(&root, &map.files, &sources, &plan, &map);
+    map.postgres_payload =
+        (crate::codebase::postgres_analysis::hooks().prepare)(&root, &sources, &plan, &map);
     map
 }

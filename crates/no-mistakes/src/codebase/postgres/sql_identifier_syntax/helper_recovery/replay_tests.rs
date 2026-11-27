@@ -23,6 +23,7 @@ fn pure_sql_siblings_survive_failed_members_appends_templates_and_statements() {
     for call in &files
         .get(&path)
         .unwrap()
+        .postgres()
         .sql_identifier_syntax
         .recovery
         .calls
@@ -69,6 +70,7 @@ fn generated_bind_placements_are_checked_structurally_and_authored_text_is_liter
     for call in &files
         .get(&path)
         .unwrap()
+        .postgres()
         .sql_identifier_syntax
         .recovery
         .calls
@@ -103,7 +105,12 @@ fn caller_replay_finds_only_the_actual_sink_and_rejects_closure_mutation() {
         profile: Some(&profile),
         resolve: &resolve,
     };
-    let models = &files.get(&path).unwrap().sql_identifier_syntax.recovery;
+    let models = &files
+        .get(&path)
+        .unwrap()
+        .postgres()
+        .sql_identifier_syntax
+        .recovery;
     let source = std::fs::read_to_string(&path).unwrap();
     let mut checked = 0;
     for call in &models.calls {
@@ -142,7 +149,8 @@ fn broader_other_rule_facts_cannot_change_existing_application_calls() {
     let caller = fixture().join("src/query.mts");
     for (path, file) in &mut files {
         if path != &helper {
-            file.sql_identifier_syntax
+            file.postgres_mut()
+                .sql_identifier_syntax
                 .low_applications
                 .push((profile.clone(), a.rule.clone(), 0));
         }
@@ -155,18 +163,20 @@ fn broader_other_rule_facts_cannot_change_existing_application_calls() {
         files
             .get(&caller)
             .unwrap()
+            .postgres()
             .sql_identifier_syntax
             .calls_for(&a)
     );
     for (_, file) in &mut files {
-        file.sql_identifier_syntax
+        file.postgres_mut()
+            .sql_identifier_syntax
             .low_applications
             .push((profile.clone(), b.rule.clone(), 0));
     }
     super::project(&mut files, |specifier, _| {
         (specifier == "./helpers.mjs").then(|| helper.clone())
     });
-    let syntax = &files.get(&caller).unwrap().sql_identifier_syntax;
+    let syntax = &files.get(&caller).unwrap().postgres().sql_identifier_syntax;
     assert_eq!(before, format!("{:?}", syntax.calls_for(&a)));
     assert!(syntax
         .calls_for(&b)

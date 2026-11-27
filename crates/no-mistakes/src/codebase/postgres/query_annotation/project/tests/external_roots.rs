@@ -29,8 +29,9 @@ fn resolved_external_edges_keep_only_reachable_executor_roots() {
         ],
     );
     for (_, file) in &mut files {
-        file.query_annotation.truncate(1);
-        file.embedded_sql.truncate(1);
+        let postgres = file.postgres_mut();
+        postgres.query_annotation.truncate(1);
+        postgres.embedded_sql.truncate(1);
     }
     let root = root();
     let config = load_tsconfig(&root.join("tsconfig.json")).unwrap();
@@ -46,8 +47,13 @@ fn resolved_external_edges_keep_only_reachable_executor_roots() {
                 path.clone(),
                 super::super::File {
                     module: Arc::new(super::super::Module::new(Arc::clone(&file.ts))),
-                    facts: &file.query_annotation[0].1,
-                    executors: file.embedded_sql[0].1.call_spans.iter().copied().collect(),
+                    facts: &file.postgres().query_annotation[0].1,
+                    executors: file.postgres().embedded_sql[0]
+                        .1
+                        .call_spans
+                        .iter()
+                        .copied()
+                        .collect(),
                 },
             )
         })

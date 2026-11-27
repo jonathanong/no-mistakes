@@ -16,8 +16,12 @@ fn returned_builder_third_options_use_prepared_low_facts_only() {
             collect_check_facts(root, vec![path.clone()], plan(root, &config(&efforts)))
         });
         let file = facts.ts.get(&path).expect("prepared file");
-        let embedded = &file.embedded_sql[0].1;
-        let heads = file.query_annotation_heads.as_ref().expect("low heads");
+        let embedded = &file.postgres().embedded_sql[0].1;
+        let heads = file
+            .postgres()
+            .query_annotation_heads
+            .as_ref()
+            .expect("low heads");
         let proofs = embedded
             .call_spans
             .iter()
@@ -34,7 +38,7 @@ fn returned_builder_third_options_use_prepared_low_facts_only() {
             assert_eq!(&heads.trusted_append_calls, appends);
         } else {
             low = Some((proofs, heads.trusted_append_calls.clone()));
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert!(embedded.calls.iter().all(|call| call.variants.is_empty()));
             assert_eq!(
                 observer
@@ -64,9 +68,9 @@ fn captured_text_reads_keep_low_proofs_under_mixed_demand() {
             collect_check_facts(root, vec![path.clone()], plan(root, &config(&efforts)))
         });
         let file = facts.ts.get(&path).expect("prepared file");
-        let embedded = &file.embedded_sql[0].1;
+        let embedded = &file.postgres().embedded_sql[0].1;
         if efforts == ["max"] {
-            assert!(file.query_annotation_heads.is_none());
+            assert!(file.postgres().query_annotation_heads.is_none());
             max_variants = Some(
                 embedded
                     .calls
@@ -76,7 +80,11 @@ fn captured_text_reads_keep_low_proofs_under_mixed_demand() {
             );
             continue;
         }
-        let heads = file.query_annotation_heads.as_ref().expect("low heads");
+        let heads = file
+            .postgres()
+            .query_annotation_heads
+            .as_ref()
+            .expect("low heads");
         let proofs = embedded
             .call_spans
             .iter()
@@ -99,7 +107,7 @@ fn captured_text_reads_keep_low_proofs_under_mixed_demand() {
             );
         } else {
             low = Some(proofs);
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert!(embedded.calls.iter().all(|call| call.variants.is_empty()));
             assert_eq!(
                 observer

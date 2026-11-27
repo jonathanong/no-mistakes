@@ -32,7 +32,7 @@ fn contextual_imported_calls_retain_only_their_actual_root_prerequisites() {
         }
         for name in ["sink", "healthy-sink"] {
             let file = &files[&broken.with_file_name(format!("{name}.mts"))];
-            for (options, _) in &file.query_annotation {
+            for (options, _) in &file.postgres().query_annotation {
                 let key = SqlSourceKey::profile(SqlProjection::AnnotationMax, options);
                 let failures = file
                     .sql_source_prerequisites
@@ -60,8 +60,8 @@ fn discarded_generic_events_do_not_add_contextual_fact_prerequisites() {
         let broken = path.with_file_name("broken.mts");
         assert!(broken.is_file());
         let file = &files[&path];
-        let profile = file.query_annotation[0].0.clone();
-        let span = file.embedded_sql[0].1.call_spans[0];
+        let profile = file.postgres().query_annotation[0].0.clone();
+        let span = file.postgres().embedded_sql[0].1.call_spans[0];
         let events = ExecutionEvents::from([(
             (path.clone(), span),
             vec![(true, Value::Unknown), (false, Value::Unknown)],

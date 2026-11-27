@@ -20,7 +20,7 @@ fn call(sql: &str) -> EmbeddedSqlCall {
 fn facts(path: &Path, profile: &EmbeddedSqlOptions, calls: Vec<EmbeddedSqlCall>) -> CheckFactMap {
     let mut facts = CheckFactMap::default();
     let mut file = CheckFileFacts::default();
-    file.embedded_sql.push((
+    file.postgres_mut().embedded_sql.push((
         profile.clone(),
         EmbeddedSqlFileFacts {
             lock_helper_summaries: Default::default(),
@@ -48,7 +48,7 @@ fn facts(path: &Path, profile: &EmbeddedSqlOptions, calls: Vec<EmbeddedSqlCall>)
         },
     ));
     facts.ts.insert(path.to_path_buf(), Arc::new(file));
-    facts.postgres.embedded.insert(
+    facts.postgres_mut().embedded.insert(
         (path.to_path_buf(), profile.clone()),
         Ok(Arc::new(Vec::new())),
     );

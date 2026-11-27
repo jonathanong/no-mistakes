@@ -25,7 +25,11 @@ fn runtime_helper_imports_require_real_callable_exports_through_reexports() {
         profile: None,
         resolve: &resolve,
     };
-    let calls = &files[&caller].sql_identifier_syntax.recovery.calls;
+    let calls = &files[&caller]
+        .postgres()
+        .sql_identifier_syntax
+        .recovery
+        .calls;
     let mut checked = 0;
     let mut mismatches = Vec::new();
     for call in calls {

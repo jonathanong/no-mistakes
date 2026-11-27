@@ -21,14 +21,15 @@ pub(super) fn record(
         return;
     };
     let mut spans = std::collections::BTreeSet::from([span]);
-    if let Some(heads) = &file.query_annotation_heads {
+    if let Some(heads) = &file.postgres().query_annotation_heads {
         for condition in &heads.conditional_effects {
             if condition.required.contains(&span) {
                 spans.extend(condition.spans.iter().copied());
             }
         }
     }
-    for (profile, embedded) in &file.embedded_sql {
+    let (postgres, prerequisites) = file.postgres_and_source_prerequisites();
+    for (profile, embedded) in &postgres.embedded_sql {
         for span in spans.iter().copied().filter(|span| {
             embedded.call_spans.contains(span)
                 || embedded
@@ -37,7 +38,7 @@ pub(super) fn record(
                     .values()
                     .any(|value| value == span)
         }) {
-            file.sql_source_prerequisites.record(
+            prerequisites.record(
                 &SqlSourceKey::profile(SqlProjection::AnnotationHeads, profile),
                 span,
                 failures.iter().cloned(),

@@ -5,31 +5,7 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-/// Filesystem rules whose configured executor projections must be declared at
-/// the request boundary before TS/JS fact collection begins.
-#[doc(hidden)]
-pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] = &[
-    "postgres-idempotent-insert",
-    "postgres-conflict-ordering",
-    "postgres-lock-written-rows-only",
-    "postgres-lock-inventory",
-    "postgres-lock-ordering",
-    "postgres-required-predicates",
-    "postgres-generated-column-predicates",
-    "postgres-explicit-columns",
-    "postgres-no-test-state-mutation",
-    "postgres-bounded-statements",
-    "postgres-no-offset",
-    "postgres-no-transformed-uuid-predicates",
-    "postgres-no-mutable-sql-registry",
-    "postgres-no-unbounded-sql-identifier",
-    "postgres-sql-shape-policy",
-    "postgres-sql-statement-policy",
-    "postgres-no-generated-column-writes",
-    "postgres-require-query-annotation",
-    "postgres-json-relation-ids",
-    "postgres-grouping-not-aggregation",
-];
+pub use crate::config::v2::schema::postgres_executors::PREPARED_EMBEDDED_SQL_RULE_IDS;
 
 /// Rules whose `schemaCatalogPath` is loaded for the request.
 ///

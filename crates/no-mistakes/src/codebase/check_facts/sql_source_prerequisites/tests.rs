@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::postgres::check_analysis::source_demand::source_demanded;
 use crate::codebase::{
     analysis_session::AnalysisSession,
     check_facts::{
@@ -68,6 +69,7 @@ fn assert_membership(files: &FileIdMap<CheckFileFacts>, path: &Path) {
         files
             .get(path)
             .unwrap()
+            .postgres()
             .sql_identifier_syntax
             .low_applications
             .len(),
@@ -86,14 +88,19 @@ fn failed_parse_and_read_preserve_planned_profile_and_application_membership() {
             CheckFileFacts {
                 parse_error: facts.ts[&path].parse_error.clone(),
                 sql_source_prerequisites: facts.ts[&path].sql_source_prerequisites.clone(),
-                sql_identifier_syntax:
-                    crate::codebase::postgres::sql_identifier_syntax::FileFacts {
-                        low_applications: facts.ts[&path]
-                            .sql_identifier_syntax
-                            .low_applications
-                            .clone(),
-                        ..Default::default()
-                    },
+                postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                    sql_identifier_syntax:
+                        crate::codebase::postgres::sql_identifier_syntax::FileFacts {
+                            low_applications: facts.ts[&path]
+                                .postgres()
+                                .sql_identifier_syntax
+                                .low_applications
+                                .clone(),
+                            ..Default::default()
+                        },
+                    ..Default::default()
+                }
+                .into_payload(),
                 ..Default::default()
             },
         )]);

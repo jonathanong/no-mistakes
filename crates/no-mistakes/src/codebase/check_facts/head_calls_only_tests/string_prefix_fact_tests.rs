@@ -16,14 +16,14 @@ fn string_prefix_censuses_cache_success_and_failure_in_prepared_low_and_mixed() 
             collect_check_facts(root, vec![path.clone()], plan(root, &config(&efforts)))
         });
         let file = facts.ts.get(&path).unwrap();
-        let embedded = &file.embedded_sql[0].1;
+        let embedded = &file.postgres().embedded_sql[0].1;
         let work = observer.snapshot().work;
         if efforts == ["max"] {
             assert!(!work.contains_key("postgres.annotation.string_prefix_owner_censuses"));
             max_calls = Some(format!("{:?}", embedded.calls));
             continue;
         }
-        let heads = file.query_annotation_heads.as_ref().unwrap();
+        let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
         let decisions = embedded
             .call_spans
             .iter()
@@ -51,7 +51,7 @@ fn string_prefix_censuses_cache_success_and_failure_in_prepared_low_and_mixed() 
                     .unwrap_or(0),
                 0
             );
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert!(embedded.calls.iter().all(|call| call.variants.is_empty()));
         } else {
             assert_eq!(Some(format!("{:?}", embedded.calls)), max_calls);
@@ -79,8 +79,8 @@ fn real_prepared_branch_and_interpolation_proofs_match_the_saved_oracles() {
     for efforts in [vec!["low"], vec!["low", "max"]] {
         let facts = collect_check_facts(root, vec![path.clone()], plan(root, &config(&efforts)));
         let file = facts.ts.get(&path).unwrap();
-        let heads = file.query_annotation_heads.as_ref().unwrap();
-        let decisions = file.embedded_sql[0]
+        let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
+        let decisions = file.postgres().embedded_sql[0]
             .1
             .call_spans
             .iter()
@@ -110,7 +110,7 @@ fn string_wanted_expansion_is_lazy_and_once_per_repeated_owner() {
                 collect_check_facts(root, vec![path.clone()], plan(root, &config(&efforts)))
             });
             let file = facts.ts.get(&path).unwrap();
-            let embedded = &file.embedded_sql[0].1;
+            let embedded = &file.postgres().embedded_sql[0].1;
             let work = observer.snapshot().work;
             if efforts == ["max"] {
                 max_calls = Some(format!("{:?}", embedded.calls));
@@ -124,7 +124,7 @@ fn string_wanted_expansion_is_lazy_and_once_per_repeated_owner() {
                 continue;
             }
             assert_eq!(embedded.call_spans.len(), calls);
-            let heads = file.query_annotation_heads.as_ref().unwrap();
+            let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
             let decisions = embedded
                 .call_spans
                 .iter()
@@ -163,7 +163,7 @@ fn string_wanted_expansion_is_lazy_and_once_per_repeated_owner() {
                 );
             }
             if efforts == ["low"] {
-                assert!(file.query_annotation.is_empty());
+                assert!(file.postgres().query_annotation.is_empty());
                 assert_eq!(
                     work.get("postgres.sql.variants_composed")
                         .copied()

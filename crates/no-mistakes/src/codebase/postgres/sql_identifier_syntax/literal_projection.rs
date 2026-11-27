@@ -33,7 +33,7 @@ pub(crate) fn project_literals<T: Clone>(
     let observer = crate::diagnostics::current();
     // Borrow a max consumer's completed SQL projection; never evaluate it here.
     let mut prepared = BTreeMap::new();
-    for (profile, embedded) in &file.embedded_sql {
+    for (profile, embedded) in &file.postgres().embedded_sql {
         let Ok(statements) = facts.postgres_statements(path, Some(profile)) else {
             continue;
         };
@@ -70,7 +70,7 @@ pub(crate) fn project_literals<T: Clone>(
         prepared.insert(profile, calls);
     }
     let mut direct = BTreeMap::new();
-    for (profile, calls) in &file.sql_identifier_syntax.profiles {
+    for (profile, calls) in &file.postgres().sql_identifier_syntax.profiles {
         for call in calls {
             let Input::Sql {
                 source_span,
@@ -152,8 +152,12 @@ pub(crate) fn project_literals<T: Clone>(
         out.insert((None, span), literal);
     }
     let recovered = recovered_statements(file);
-    for application in file.sql_identifier_syntax.application_keys() {
-        let Some(calls) = file.sql_identifier_syntax.calls_for(&application) else {
+    for application in file.postgres().sql_identifier_syntax.application_keys() {
+        let Some(calls) = file
+            .postgres()
+            .sql_identifier_syntax
+            .calls_for(&application)
+        else {
             continue;
         };
         for call in calls {

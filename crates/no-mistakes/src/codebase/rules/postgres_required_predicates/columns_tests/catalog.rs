@@ -14,7 +14,7 @@ fn prepared_catalog_is_used_instead_of_loading_a_missing_file() {
     let catalog = SchemaCatalog::load(&root, "schema.json", &sources).unwrap();
     let mut facts = crate::codebase::postgres::prepare_rule_sql_facts(&root, std::slice::from_ref(&sql), Arc::clone(&sources), &config_yaml("sqlInclude: [sql/**/*.sql]\nrelations: [{table: events, requireColumns: [account_id]}]\n"), &[RULE_ID]).unwrap();
     facts
-        .postgres_schema_catalogs
+        .postgres_catalogs_mut()
         .insert("missing/schema.json".to_string(), Ok(Arc::new(catalog)));
     let findings = check_with_files_sources_and_facts(
         &root,
@@ -44,7 +44,7 @@ fn prepared_catalog_is_used_instead_of_loading_a_missing_file() {
         "load path must fail when the catalog file is absent"
     );
     let mut failed = facts;
-    failed.postgres_schema_catalogs.insert(
+    failed.postgres_catalogs_mut().insert(
         "missing/schema.json".to_string(),
         Err(Arc::<str>::from("catalog failed")),
     );

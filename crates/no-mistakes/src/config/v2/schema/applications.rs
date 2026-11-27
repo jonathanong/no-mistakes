@@ -54,7 +54,7 @@ impl RuleDef {
             serde_path_to_error::deserialize(WithKnownFields {
                 options,
                 postgres: self.rule.starts_with("postgres-"),
-                embedded_sql: crate::codebase::postgres::PREPARED_EMBEDDED_SQL_RULE_IDS
+                embedded_sql: super::postgres_executors::PREPARED_EMBEDDED_SQL_RULE_IDS
                     .contains(&self.rule.as_str()),
                 unknown: &unknown,
             })

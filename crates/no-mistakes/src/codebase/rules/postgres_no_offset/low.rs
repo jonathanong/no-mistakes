@@ -4,10 +4,10 @@ use crate::codebase::postgres::{
     sql_identifier_syntax::SqlCall, SqlObligationVerdict, SqlVerdictStatus,
 };
 use crate::codebase::rules::PostgresFindings;
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::schema::RuleDef;
 use anyhow::Result;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::path::{Path, PathBuf};
 
 mod cache;
@@ -50,7 +50,7 @@ pub(super) fn scan(
             .ts
             .get(path)
             .ok_or_else(|| anyhow::anyhow!("{RULE_ID}: prepared facts missing for {rel}"))?;
-        let calls = file.sql_identifier_syntax.calls_for(&key);
+        let calls = file.postgres().sql_identifier_syntax.calls_for(&key);
         let Some(calls) = calls else {
             if file.parse_error.is_some() || file.ts.parse_error.is_some() {
                 continue;

@@ -1,5 +1,5 @@
 use super::CheckFactPlan;
-use crate::codebase::postgres::EmbeddedSqlOptions;
+use crate::codebase::postgres_analysis::options::EmbeddedSqlOptions;
 
 impl CheckFactPlan {
     pub(in crate::codebase::check_facts) fn with_production_files(

@@ -131,8 +131,8 @@ fn shape_only_preparation_does_not_extract_schema_facts() {
         &["postgres-sql-shape-policy"],
     )
     .unwrap();
-    assert!(shape.postgres.schema.is_empty());
-    let statements = shape.postgres.statements(&file, None).unwrap();
+    assert!(shape.postgres().schema.is_empty());
+    let statements = shape.postgres().statements(&file, None).unwrap();
     assert!(statements.iter().any(|facts| {
         facts
             .selects
@@ -147,7 +147,12 @@ fn shape_only_preparation_does_not_extract_schema_facts() {
         &["postgres-identifier-length"],
     )
     .unwrap();
-    assert!(!identified.postgres.schema(&file).unwrap().tables.is_empty());
+    assert!(!identified
+        .postgres()
+        .schema(&file)
+        .unwrap()
+        .tables
+        .is_empty());
 }
 
 fn rule_config(rule: &str) -> NoMistakesConfig {

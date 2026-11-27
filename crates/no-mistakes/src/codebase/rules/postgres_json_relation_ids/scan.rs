@@ -1,11 +1,11 @@
 use super::{CompiledOptions, SourceStore, RULE_ID};
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::postgres::statements::{SqlFactSite, SqlJsonWriteFact};
 use crate::codebase::postgres::{CatalogTable, SchemaCatalog, SqlWriteColumns};
 use crate::codebase::rules::{PostgresFindings, VariantFindingDedup};
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::path::{Path, PathBuf};
 
 pub(super) fn scan(
@@ -34,7 +34,7 @@ pub(super) fn scan(
         let profile = (!rel.ends_with(".sql")).then_some(&opts.embedded);
         let statements = match facts.postgres_statements(path, profile) {
             Ok(statements) => statements,
-            Err(_) if profile.is_none() && facts.postgres.sql_source_not_found(path) => continue,
+            Err(_) if profile.is_none() && facts.postgres().sql_source_not_found(path) => continue,
             Err(error) => return Err(error),
         };
         let source = sources.read_source_path(path)?;

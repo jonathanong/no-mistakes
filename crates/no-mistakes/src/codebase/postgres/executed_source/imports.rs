@@ -82,8 +82,13 @@ pub(super) fn extract_source_with_imports(
                 path.to_path_buf(),
                 CheckFileFacts {
                     ts: Arc::new(ts),
-                    embedded_sql: vec![(options.clone(), embedded)],
-                    query_annotation: vec![(options.clone(), annotation)],
+                    postgres_file:
+                        crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                            embedded_sql: vec![(options.clone(), embedded)],
+                            query_annotation: vec![(options.clone(), annotation)],
+                            ..Default::default()
+                        }
+                        .into_payload(),
                     ..Default::default()
                 },
             )

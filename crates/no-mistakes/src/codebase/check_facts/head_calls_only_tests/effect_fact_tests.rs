@@ -19,13 +19,13 @@ fn imported_append_only_helpers_require_every_prepared_effect() {
         )
     });
     let file = facts.ts.get(&caller).unwrap();
-    let heads = file.query_annotation_heads.as_ref().unwrap();
+    let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
     let source = std::fs::read_to_string(&caller).unwrap();
-    for (call, span) in file.embedded_sql[0]
+    for (call, span) in file.postgres().embedded_sql[0]
         .1
         .calls
         .iter()
-        .zip(&file.embedded_sql[0].1.call_spans)
+        .zip(&file.postgres().embedded_sql[0].1.call_spans)
     {
         let line = source.lines().nth(call.line as usize - 1).unwrap();
         let expected = if line.contains("// accepted") {
@@ -60,9 +60,9 @@ fn mixed_effort_keeps_append_only_effect_out_of_max_fallback() {
         plan(root, &config(&["low", "max"])),
     );
     let file = facts.ts.get(&caller).unwrap();
-    let heads = file.query_annotation_heads.as_ref().unwrap();
+    let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
     let source = std::fs::read_to_string(&caller).unwrap();
-    let first_after_helper = file.embedded_sql[0]
+    let first_after_helper = file.postgres().embedded_sql[0]
         .1
         .call_spans
         .iter()

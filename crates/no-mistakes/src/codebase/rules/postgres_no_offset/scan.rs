@@ -3,10 +3,10 @@ use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{
     recovered_sql_may_select, EmbeddedSqlCall, OffsetUse, SqlOffsetFact,
 };
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::fx::FxHashMap;
 use anyhow::Result;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::path::{Path, PathBuf};
 
 pub(super) fn scan(
@@ -24,7 +24,7 @@ pub(super) fn scan(
         let profile = (!rel.ends_with(".sql")).then_some(&opts.embedded);
         let statements = match prepared.postgres_statements(path, profile) {
             Ok(statements) => statements,
-            Err(_) if rel.ends_with(".sql") && prepared.postgres.sql_source_not_found(path) => {
+            Err(_) if rel.ends_with(".sql") && prepared.postgres().sql_source_not_found(path) => {
                 continue
             }
             Err(error) => return Err(error),

@@ -19,12 +19,16 @@ fn direct_imported_string_heads_use_prepared_value_exports() {
         plan(root, &config(&["low"])),
     );
     let file = facts.ts.get(&caller).expect("caller prepared");
-    let heads = file.query_annotation_heads.as_ref().expect("low heads");
-    let statuses = file.embedded_sql[0]
+    let heads = file
+        .postgres()
+        .query_annotation_heads
+        .as_ref()
+        .expect("low heads");
+    let statuses = file.postgres().embedded_sql[0]
         .1
         .calls
         .iter()
-        .zip(&file.embedded_sql[0].1.call_spans)
+        .zip(&file.postgres().embedded_sql[0].1.call_spans)
         .map(|(call, span)| (call.line, heads.calls.get(span).copied()))
         .collect::<Vec<_>>();
     assert_eq!(
@@ -44,5 +48,5 @@ fn direct_imported_string_heads_use_prepared_value_exports() {
             (22, Some(HeadProof::Unproven)),
         ]
     );
-    assert!(file.query_annotation.is_empty());
+    assert!(file.postgres().query_annotation.is_empty());
 }

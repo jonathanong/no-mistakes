@@ -83,7 +83,7 @@ fn truncated_variant_ledger_uses_prepared_prefix_and_unknown_policy() {
         );
         let file = Arc::get_mut(facts.ts.get_mut(&path).unwrap())
             .expect("fixture facts have one request owner");
-        let embedded = file.embedded_sql[0].1.clone();
+        let embedded = file.postgres().embedded_sql[0].1.clone();
         assert_eq!(embedded.calls.len(), 3);
         assert!(embedded.calls.iter().all(|call| call.variants_truncated()));
         let prefixes = [None, Some("/* fixed */ SELECT 2".to_string()), None];
@@ -96,7 +96,10 @@ fn truncated_variant_ledger_uses_prepared_prefix_and_unknown_policy() {
             // Truncated alternatives retain their source classification; the
             // composition diagnostic owns their unconditional advisory.
             assert_eq!(call.kind, EmbeddedSqlKind::Dynamic);
-            file.query_annotation[0].1.calls.insert(*span, prefix);
+            file.postgres_mut().query_annotation[0]
+                .1
+                .calls
+                .insert(*span, prefix);
         }
         facts.enable_sql_verdicts();
         let options =

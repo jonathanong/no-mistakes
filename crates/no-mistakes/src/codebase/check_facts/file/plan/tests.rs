@@ -299,7 +299,7 @@ fn unproven_member_spans_follow_rule_path_filters() {
     let path = Path::new("/repo/src/legacy/old.ts");
     let profile =
         crate::codebase::postgres::EmbeddedSqlOptions::configured("@example/db", &["pool".into()]);
-    let direct = super::super::embedded_sql::prepared_embedded_sql(
+    let direct = crate::codebase::postgres::check_analysis::file::embedded::prepared_embedded_sql(
         root,
         path,
         source,
@@ -318,7 +318,7 @@ fn unproven_member_spans_follow_rule_path_filters() {
         &["src/legacy/**".into()],
     )
     .unwrap();
-    let dropped = super::super::embedded_sql::prepared_embedded_sql(
+    let dropped = crate::codebase::postgres::check_analysis::file::embedded::prepared_embedded_sql(
         root,
         path,
         source,
@@ -343,7 +343,7 @@ fn unproven_member_spans_follow_rule_path_filters() {
         &[],
     )
     .unwrap();
-    let counted = super::super::embedded_sql::prepared_embedded_sql(
+    let counted = crate::codebase::postgres::check_analysis::file::embedded::prepared_embedded_sql(
         root,
         path,
         source,

@@ -1,6 +1,6 @@
 pub(super) fn merge_embedded_sql_rule_ids(
-    existing: &mut crate::codebase::postgres::EmbeddedSqlRuleScans,
-    additional: crate::codebase::postgres::EmbeddedSqlRuleScans,
+    existing: &mut crate::codebase::postgres_analysis::scans::EmbeddedSqlRuleScans,
+    additional: crate::codebase::postgres_analysis::scans::EmbeddedSqlRuleScans,
 ) {
     for (options, scans) in additional {
         let slot = existing.entry(options).or_default();

@@ -65,8 +65,11 @@ fn assert_projected(files: &FileIdMap<CheckFileFacts>, root: &Path, name: &str, 
     let path = root.join(name);
     let source = std::fs::read_to_string(&path).unwrap();
     let file = &files[&path];
-    let heads = file.query_annotation_heads.as_ref().unwrap();
-    let key = SqlSourceKey::profile(SqlProjection::AnnotationHeads, &file.embedded_sql[0].0);
+    let heads = file.postgres().query_annotation_heads.as_ref().unwrap();
+    let key = SqlSourceKey::profile(
+        SqlProjection::AnnotationHeads,
+        &file.postgres().embedded_sql[0].0,
+    );
     let failures: BTreeSet<_> = file
         .sql_source_prerequisites
         .failures(&key)
@@ -112,6 +115,7 @@ fn namespace_projection_follows_runtime_aliases_and_bounds_reexport_walks() {
     let (mut files, root) = prepared();
     let caller = root.join("namespace.mts");
     let pending = &files[&caller]
+        .postgres()
         .query_annotation_heads
         .as_ref()
         .unwrap()

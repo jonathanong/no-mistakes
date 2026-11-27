@@ -27,22 +27,26 @@ pub(super) fn apply(
             continue;
         };
         if !file
+            .postgres()
             .sql_identifier_syntax
             .application_calls
             .contains_key(&application)
         {
             let Some(calls) = file
+                .postgres()
                 .sql_identifier_syntax
                 .calls_for(&application)
                 .map(<[_]>::to_vec)
             else {
                 continue;
             };
-            file.sql_identifier_syntax
+            file.postgres_mut()
+                .sql_identifier_syntax
                 .application_calls
                 .insert(application.clone(), calls);
         }
         let calls = file
+            .postgres_mut()
             .sql_identifier_syntax
             .application_calls
             .get_mut(&application)

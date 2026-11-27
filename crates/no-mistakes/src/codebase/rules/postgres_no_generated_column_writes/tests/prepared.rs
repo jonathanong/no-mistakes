@@ -65,7 +65,7 @@ fn write_rule_projects_prepared_targets_without_reparsing() {
     // Keep the disk source unchanged: only a consumer that borrows prepared facts sees this.
     std::sync::Arc::make_mut(
         facts
-            .postgres
+            .postgres_mut()
             .statements
             .get_mut(&paths[1])
             .unwrap()
@@ -80,7 +80,7 @@ fn write_rule_projects_prepared_targets_without_reparsing() {
             .is_empty()
     );
     assert_eq!(sources.physical_read_count(), 2);
-    facts.postgres.statements.insert(
+    facts.postgres_mut().statements.insert(
         paths[1].clone(),
         Err(std::sync::Arc::new(
             crate::codebase::postgres::prepared::PreparationError {
@@ -94,7 +94,7 @@ fn write_rule_projects_prepared_targets_without_reparsing() {
             .unwrap()
             .is_empty()
     );
-    facts.postgres.statements.remove(&paths[1]);
+    facts.postgres_mut().statements.remove(&paths[1]);
     assert!(check_with_files_sources_and_facts(&root, &config, &paths, &sources, &facts).is_err());
     assert_eq!(sources.physical_read_count(), 2);
 }
@@ -116,7 +116,7 @@ fn prepared_wildcard_and_non_sql_projection_remain_catalog_scoped() {
     .unwrap();
     let writes = &mut std::sync::Arc::make_mut(
         facts
-            .postgres
+            .postgres_mut()
             .statements
             .get_mut(&paths[1])
             .unwrap()

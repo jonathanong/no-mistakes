@@ -50,7 +50,7 @@ fn missing_prepared_conflict_locations_return_contextual_errors() {
             variants
         );
         // Simulate an incomplete prepared projection without re-reading or parsing.
-        for entry in facts.postgres.embedded.values_mut() {
+        for entry in facts.postgres_mut().embedded.values_mut() {
             for statement in Arc::make_mut(entry.as_mut().unwrap()) {
                 statement.variant_locations = None;
             }

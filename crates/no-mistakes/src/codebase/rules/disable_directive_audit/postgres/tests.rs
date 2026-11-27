@@ -83,7 +83,7 @@ fn postgres_low_directive_audit_skips_missing_fact_profiles_and_source_inputs() 
     low::collect(&mut comments, &scope, &facts, &path, &key);
     assert!(comments.is_empty());
     let mut file = CheckFileFacts::default();
-    file.sql_identifier_syntax.profiles.push((
+    file.postgres_mut().sql_identifier_syntax.profiles.push((
         profile,
         vec![SqlCall {
             span: (0, 1),

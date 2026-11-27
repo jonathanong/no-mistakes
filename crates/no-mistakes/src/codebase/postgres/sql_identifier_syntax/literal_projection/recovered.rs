@@ -9,11 +9,11 @@ pub(crate) type RawStatements = BTreeMap<Key, Vec<Arc<SqlStatementFileFacts>>>;
 
 /// Preserve partial facts for policy findings; invalid SQL never becomes a clear proof.
 pub(crate) fn raw_statements(file: &CheckFileFacts) -> &RawStatements {
-    file.sql_identifier_syntax.recovered_raw.get_or_init(|| {
+    file.postgres_for_policy().sql_identifier_syntax.recovered_raw.get_or_init(|| {
         let mut recovered = BTreeMap::new();
         let mut parsed = BTreeMap::<String, Arc<SqlStatementFileFacts>>::new();
-        for application in file.sql_identifier_syntax.application_keys() {
-            let Some(calls) = file.sql_identifier_syntax.calls_for(&application) else { continue; };
+        for application in file.postgres().sql_identifier_syntax.application_keys() {
+            let Some(calls) = file.postgres().sql_identifier_syntax.calls_for(&application) else { continue; };
             for call in calls {
                 let Input::Recovered(value) = &call.input else { continue; };
                 recovered.entry((application.clone(), call.span)).or_insert_with(|| {
@@ -36,7 +36,8 @@ pub(crate) fn raw_statements(file: &CheckFileFacts) -> &RawStatements {
 
 /// The older specialized policies retain their invalid-input contract.
 pub(crate) fn recovered_statements(file: &CheckFileFacts) -> &RecoveredStatements {
-    file.sql_identifier_syntax
+    file.postgres_for_policy()
+        .sql_identifier_syntax
         .recovered_statements
         .get_or_init(|| {
             if !rich(file) {
@@ -64,7 +65,8 @@ pub(crate) fn recovered_statements(file: &CheckFileFacts) -> &RecoveredStatement
 }
 
 fn rich(file: &CheckFileFacts) -> bool {
-    file.sql_identifier_syntax
+    file.postgres()
+        .sql_identifier_syntax
         .low_applications
         .iter()
         .any(|(_, rule, _)| super::super::statement_policy::supports(rule))
@@ -74,8 +76,12 @@ fn rich(file: &CheckFileFacts) -> bool {
 fn legacy(file: &CheckFileFacts) -> RecoveredStatements {
     let mut recovered = BTreeMap::new();
     let mut parsed = BTreeMap::<String, Result<Arc<SqlStatementFileFacts>, ()>>::new();
-    for application in file.sql_identifier_syntax.application_keys() {
-        let Some(calls) = file.sql_identifier_syntax.calls_for(&application) else {
+    for application in file.postgres().sql_identifier_syntax.application_keys() {
+        let Some(calls) = file
+            .postgres()
+            .sql_identifier_syntax
+            .calls_for(&application)
+        else {
             continue;
         };
         for call in calls {

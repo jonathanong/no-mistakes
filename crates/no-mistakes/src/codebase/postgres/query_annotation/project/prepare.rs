@@ -1,10 +1,9 @@
 use super::{demand, File, Module};
 use crate::codebase::check_facts::{
-    sql_source_prerequisites::{
-        source_demanded, source_error, FailedSqlSources, SqlProjection, SqlSourceKey,
-    },
+    sql_source_prerequisites::{source_error, FailedSqlSources, SqlProjection, SqlSourceKey},
     CheckFileFacts,
 };
+use crate::codebase::postgres::check_analysis::source_demand::source_demanded;
 use crate::codebase::postgres::EmbeddedSqlOptions;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::FileIdMap;
@@ -33,7 +32,8 @@ pub(super) fn profiles<'a>(
     let mut profiles = files
         .into_iter()
         .flat_map(|(_, file)| {
-            file.query_annotation
+            file.postgres()
+                .query_annotation
                 .iter()
                 .map(|(options, _)| options.clone())
         })
@@ -44,7 +44,9 @@ pub(super) fn profiles<'a>(
     let module_ids = Arc::new(super::super::module_ids::ModuleIds::new(
         files
             .into_iter()
-            .filter(|(_, file)| file.parse_error.is_none() && !file.query_annotation.is_empty())
+            .filter(|(_, file)| {
+                file.parse_error.is_none() && !file.postgres().query_annotation.is_empty()
+            })
             .map(|(path, _)| normalize_path(path)),
     ));
     if let Some(observer) = &observer {
@@ -53,7 +55,9 @@ pub(super) fn profiles<'a>(
     let modules = crate::perf_trace::trace("postgres.annotation.prepare.modules", || {
         files
             .into_iter()
-            .filter(|(_, file)| file.parse_error.is_none() && !file.query_annotation.is_empty())
+            .filter(|(_, file)| {
+                file.parse_error.is_none() && !file.postgres().query_annotation.is_empty()
+            })
             .map(|(path, file)| {
                 (
                     path.clone(),
@@ -86,10 +90,12 @@ pub(super) fn profiles<'a>(
                         return None;
                     }
                     let (_, facts) = file
+                        .postgres()
                         .query_annotation
                         .iter()
                         .find(|(profile, _)| profile == &options)?;
                     let (_, embedded) = file
+                        .postgres()
                         .embedded_sql
                         .iter()
                         .find(|(profile, _)| profile == &options)

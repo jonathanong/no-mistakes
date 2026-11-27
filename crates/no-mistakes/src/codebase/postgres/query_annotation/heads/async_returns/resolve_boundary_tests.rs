@@ -22,7 +22,11 @@ fn async_projection_skips_headless_files_and_unresolved_factory_targets() {
         (
             path.clone(),
             CheckFileFacts {
-                query_annotation_heads: Some(Arc::new(heads)),
+                postgres_file: crate::codebase::postgres::check_analysis::file::PostgresFileFacts {
+                    query_annotation_heads: Some(Arc::new(heads)),
+                    ..Default::default()
+                }
+                .into_payload(),
                 ..Default::default()
             },
         ),
@@ -40,6 +44,7 @@ fn async_projection_skips_headless_files_and_unresolved_factory_targets() {
         files
             .get(&path)
             .unwrap()
+            .postgres()
             .query_annotation_heads
             .as_ref()
             .unwrap()
@@ -49,6 +54,7 @@ fn async_projection_skips_headless_files_and_unresolved_factory_targets() {
     assert!(files
         .get(std::path::Path::new("headless.mts"))
         .unwrap()
+        .postgres()
         .query_annotation_heads
         .is_none());
 }
@@ -83,6 +89,7 @@ fn failed_second_hop_effect_is_reported_and_unresolved_effect_stays_unproven() {
     let factory = root.join("async-factory.mts");
     assert_eq!(
         files[&caller]
+            .postgres()
             .query_annotation_heads
             .as_ref()
             .unwrap()
@@ -91,6 +98,7 @@ fn failed_second_hop_effect_is_reported_and_unresolved_effect_stays_unproven() {
         1
     );
     let summary = &files[&factory]
+        .postgres()
         .query_annotation_heads
         .as_ref()
         .unwrap()

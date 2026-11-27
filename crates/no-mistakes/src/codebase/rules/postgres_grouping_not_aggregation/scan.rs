@@ -32,7 +32,7 @@ fn scan_file(
     let profile = (!file.ends_with(".sql")).then_some(&opts.embedded);
     let statements = match facts.postgres_statements(path, profile) {
         Ok(value) => value,
-        Err(_) if profile.is_none() && facts.postgres.sql_source_not_found(path) => {
+        Err(_) if profile.is_none() && facts.postgres().sql_source_not_found(path) => {
             return Ok(findings)
         }
         Err(error) => return Err(error),

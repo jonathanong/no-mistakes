@@ -107,10 +107,10 @@ fn low_uses_prepared_syntax_and_keeps_unproved_calls_visible() {
     };
     let (low, facts) = run("low.yml");
     assert!(
-        facts.postgres.embedded.is_empty(),
+        facts.postgres().embedded.is_empty(),
         "low must not run max embedded extraction"
     );
-    let low_models = &facts.ts[&path].sql_identifier_syntax.recovery;
+    let low_models = &facts.ts[&path].postgres().sql_identifier_syntax.recovery;
     assert!(
         !low_models.calls.is_empty() && !low_models.functions.is_empty(),
         "selected test-state files must lower bounded helper models"
@@ -237,7 +237,7 @@ fn mixed_low_sql_shares_bounded_helper_recovery_with_test_state() {
         &[RULE_ID, "postgres-no-offset"],
     )
     .unwrap();
-    let syntax = &facts.ts[&path].sql_identifier_syntax;
+    let syntax = &facts.ts[&path].postgres().sql_identifier_syntax;
     assert!(!syntax.recovery.calls.is_empty() && !syntax.recovery.functions.is_empty());
     let source = std::fs::read_to_string(&path).unwrap();
     let mixed_line = source

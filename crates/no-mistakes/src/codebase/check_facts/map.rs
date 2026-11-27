@@ -2,11 +2,6 @@ mod access;
 #[path = "map_views.rs"]
 mod views;
 
-mod fragments;
-mod postgres_catalog;
-mod postgres_readable;
-mod sql_locations;
-mod sql_verdicts;
 use super::{CheckFactStats, PlaywrightSettingsKey, PlaywrightTestFacts};
 use crate::codebase::playwright_facts::text::AppTextTarget;
 use crate::codebase::playwright_facts::{selectors::AppSelector, StaticExportValues};
@@ -21,7 +16,6 @@ use crate::codebase::ts_source::FileIdMap;
 use crate::codebase::ts_symbols::FileSymbols;
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
 use dashmap::DashMap;
-pub use sql_verdicts::{SqlApplicationFacts, SqlFactContext};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -47,18 +41,20 @@ type RouteReachableFilesCache = Arc<
 #[derive(Default)]
 pub struct CheckFactMap {
     pub(crate) postgres_executor_warning_scans:
-        Arc<Vec<crate::codebase::postgres::ExecutorWarningScan>>,
-    pub(crate) sql_application: Option<crate::codebase::postgres::SqlRuleApplication>,
+        Arc<Vec<crate::codebase::postgres_analysis::executor_warning_scan::ExecutorWarningScan>>,
+    pub(crate) sql_application:
+        Option<crate::codebase::postgres_analysis::verdict::SqlRuleApplication>,
     pub(crate) sql_verdicts:
-        Option<Arc<Mutex<Vec<crate::codebase::postgres::SqlObligationVerdict>>>>,
-    pub(crate) sql_advisories:
-        Arc<OnceLock<Mutex<Vec<crate::codebase::postgres::SqlObligationVerdict>>>>,
+        Option<Arc<Mutex<Vec<crate::codebase::postgres_analysis::verdict::SqlObligationVerdict>>>>,
+    pub(crate) sql_advisories: Arc<
+        OnceLock<Mutex<Vec<crate::codebase::postgres_analysis::verdict::SqlObligationVerdict>>>,
+    >,
     pub(crate) accepted_statement_bounds:
         Arc<Mutex<Vec<super::accepted_bounds::AcceptedStatementBound>>>,
     pub(crate) companion_import_plans: Arc<
         Vec<Arc<crate::codebase::rules::required_companion_imports::PreparedCompanionImportPlan>>,
     >,
-    pub(crate) postgres: crate::codebase::postgres::prepared::PreparedPostgresFacts,
+    pub(crate) postgres_payload: crate::codebase::postgres_analysis::MapPayload,
     pub(crate) integration_route_links:
         crate::codebase::playwright_facts::integration::PreparedLinks,
     pub(crate) files: Vec<PathBuf>,
@@ -86,10 +82,6 @@ pub struct CheckFactMap {
     pub(crate) playwright_routes_cache: PlaywrightRoutesCache,
     pub(crate) app_text_targets_cache: AppTextTargetsCache,
     pub(crate) route_reachable_files_cache: RouteReachableFilesCache,
-    pub(crate) postgres_schema_catalogs: std::collections::BTreeMap<
-        String,
-        Result<Arc<crate::codebase::postgres::SchemaCatalog>, Arc<str>>,
-    >,
 }
 
 impl CheckFactMap {
@@ -162,17 +154,7 @@ pub(crate) struct CheckFileFacts {
     pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,
     pub nextjs_caching_low: Option<Vec<NextjsCachingFinding>>,
     pub storybook: Option<StorybookFileFacts>,
-    pub(crate) embedded_sql: Vec<(
-        crate::codebase::postgres::EmbeddedSqlOptions,
-        crate::codebase::postgres::EmbeddedSqlFileFacts,
-    )>,
-    pub(crate) sql_identifier_syntax: crate::codebase::postgres::sql_identifier_syntax::FileFacts,
-    pub(crate) query_annotation_heads:
-        Option<Arc<crate::codebase::postgres::query_annotation::heads::AnnotationHeads>>,
-    pub(crate) query_annotation: Vec<(
-        crate::codebase::postgres::EmbeddedSqlOptions,
-        crate::codebase::postgres::query_annotation::QueryAnnotationFileFacts,
-    )>,
+    pub(crate) postgres_file: crate::codebase::postgres_analysis::FilePayload,
     pub(crate) server_route_client_boundary:
         Option<crate::codebase::rules::server_route_client_boundary::FileFacts>,
     pub(crate) playwright: Option<PlaywrightTestFacts>,

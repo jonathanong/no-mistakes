@@ -19,8 +19,12 @@ fn composed_effects_keep_low_heads_without_variant_work_or_max_widening() {
         if efforts == ["max"] {
             continue;
         }
-        let heads = file.query_annotation_heads.as_ref().expect("low heads");
-        let spans = &file.embedded_sql[0].1.call_spans;
+        let heads = file
+            .postgres()
+            .query_annotation_heads
+            .as_ref()
+            .expect("low heads");
+        let spans = &file.postgres().embedded_sql[0].1.call_spans;
         let proofs = spans
             .iter()
             .map(|span| heads.calls.get(span).copied())
@@ -36,7 +40,7 @@ fn composed_effects_keep_low_heads_without_variant_work_or_max_widening() {
         }
         low_proofs = Some(proofs);
         if efforts == ["low"] {
-            assert!(file.query_annotation.is_empty());
+            assert!(file.postgres().query_annotation.is_empty());
             assert_eq!(
                 observer
                     .snapshot()

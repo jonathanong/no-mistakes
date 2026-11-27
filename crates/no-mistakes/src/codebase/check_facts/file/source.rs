@@ -75,13 +75,6 @@ fn collect_file_facts_from_source(
                                     format!("failed to parse {}: {parse_error}", path.display()),
                                 )
                             });
-                        let embedded_sql = embedded_sql::prepared_embedded_sql(
-                            root,
-                            path,
-                            parsed_source,
-                            program,
-                            plan,
-                        );
                         return CheckFileFacts {
                             lint_suppressions: plan.collect_lint_suppressions(
                                 path,
@@ -91,18 +84,21 @@ fn collect_file_facts_from_source(
                             sql_source_prerequisites: super::SqlSourcePrerequisites::failed_source(
                                 root, path, plan,
                             ),
-                            sql_identifier_syntax: sql_identifier::invalid(
-                                root,
-                                path,
-                                parsed_source,
-                                program,
-                                plan,
+                            postgres_file: (crate::codebase::postgres_analysis::hooks()
+                                .recover_program)(
+                                crate::codebase::postgres_analysis::FileInput {
+                                    root,
+                                    path,
+                                    source: parsed_source,
+                                    program,
+                                    plan,
+                                },
+                                crate::codebase::postgres_analysis::RecoveryPath::Single,
                             ),
                             ts: Arc::new(ts),
                             source: stored_source,
                             symbols,
                             integration_runner_config,
-                            embedded_sql,
                             parse_error: Some(parse_error),
                             parsed: true,
                             server_route_client_boundary: plan
@@ -123,7 +119,9 @@ fn collect_file_facts_from_source(
                         parsed_source,
                         program,
                         (should_store_source(plan, path)
-                            || sql_identifier::policy_selected(root, path, plan))
+                            || (crate::codebase::postgres_analysis::hooks().retain_source)(
+                                root, path, plan,
+                            ))
                         .then(|| Arc::clone(&source)),
                     )
                 };
@@ -144,22 +142,26 @@ fn collect_file_facts_from_source(
                         } else {
                             format!("unsupported file type: {}", path.display())
                         };
-                        let facts = CheckFileFacts {
-                            ts: Arc::new(TsFileFacts {
-                                fatal_parse_error: legacy_symbols,
-                                parse_error: Some(parse_error.clone()),
-                                source: (plan.graph.source || stored_source.is_some())
-                                    .then(|| Arc::clone(&source)),
-                                ..TsFileFacts::default()
-                            }),
-                            source: stored_source,
-                            parse_error: Some(parse_error),
-                            server_route_client_boundary: plan
-                                .server_route_client_boundary
-                                .then(Default::default),
-                            ..CheckFileFacts::default()
-                        };
-                        Some(with_failed_source(root, path, plan, facts))
+                        Some(with_failed_source(
+                            root,
+                            path,
+                            plan,
+                            CheckFileFacts {
+                                ts: Arc::new(TsFileFacts {
+                                    fatal_parse_error: legacy_symbols,
+                                    parse_error: Some(parse_error.clone()),
+                                    source: (plan.graph.source || stored_source.is_some())
+                                        .then(|| Arc::clone(&source)),
+                                    ..TsFileFacts::default()
+                                }),
+                                source: stored_source,
+                                parse_error: Some(parse_error),
+                                server_route_client_boundary: plan
+                                    .server_route_client_boundary
+                                    .then(Default::default),
+                                ..CheckFileFacts::default()
+                            },
+                        ))
                     }
                 };
                 if !retain_parse {

@@ -67,7 +67,7 @@ fn malformed_loop_and_source_false_positive_do_not_build_a_binding_index() {
         assert!(facts
             .ts
             .values()
-            .all(|file| file.query_annotation_heads.is_none()));
+            .all(|file| file.postgres().query_annotation_heads.is_none()));
         assert_eq!(
             facts.ts.values().any(|file| file.parse_error.is_some()),
             expect_error

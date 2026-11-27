@@ -16,7 +16,7 @@ fn prepared_read_errors_are_not_silenced_except_missing_raw_sources() {
         (std::io::ErrorKind::NotFound, true),
         (std::io::ErrorKind::InvalidData, false),
     ] {
-        facts.postgres.statements.insert(
+        facts.postgres_mut().statements.insert(
             path.clone(),
             Err(Arc::new(PreparationError {
                 message: Arc::from("saved source cannot be read"),
@@ -29,7 +29,7 @@ fn prepared_read_errors_are_not_silenced_except_missing_raw_sources() {
         );
     }
     facts
-        .postgres
+        .postgres_mut()
         .statements
         .insert(path.clone(), Ok(Arc::new(Vec::new())));
     assert!(scan_file(&root, &opts, &path, &sources, &facts, &catalog).is_err());

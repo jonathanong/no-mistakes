@@ -139,14 +139,14 @@ fn standalone_explain_write_rule_prepares_only_selected_sql() {
         .unwrap();
     assert_eq!(
         facts
-            .postgres
+            .postgres()
             .explain_write_rollback(&selected)
             .unwrap()
             .writes
             .len(),
         11
     );
-    assert!(facts.postgres.explain_write_rollback(&outside).is_err());
+    assert!(facts.postgres().explain_write_rollback(&outside).is_err());
     assert_eq!(sources.physical_read_count(), 1);
     let findings = crate::codebase::rules::run_filesystem_rules_with_config_and_snapshot(
         &root, &config, &files, &snapshot,

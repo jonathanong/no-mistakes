@@ -12,8 +12,12 @@ fn missing_prepared_inputs_fail_while_cached_parser_errors_remain_authoritative(
     let file = std::sync::Arc::get_mut(facts.ts.get_mut(&path).unwrap()).unwrap();
     // Keep the recovered helper override: it cannot substitute for missing
     // canonical syntax facts even though it contains a valid literal proof.
-    assert!(!file.sql_identifier_syntax.application_calls.is_empty());
-    file.sql_identifier_syntax.profiles.clear();
+    assert!(!file
+        .postgres()
+        .sql_identifier_syntax
+        .application_calls
+        .is_empty());
+    file.postgres_mut().sql_identifier_syntax.profiles.clear();
     let projection =
         check_with_files_sources_and_facts(&root(), &cfg, &files, &sources, &facts).unwrap_err();
     assert!(projection.to_string().contains("syntax projection missing"));
@@ -63,10 +67,14 @@ fn mixed_invalid_sql_abstains_and_unavailable_max_statements_fall_back_to_litera
     let (mut cfg, files, sources, mut facts) = prepared(cfg);
     cfg.rules.truncate(1);
     // A profile without prepared statement demand must not suppress low analysis.
-    facts.postgres.embedded.clear();
+    facts.postgres_mut().embedded.clear();
     let mut findings =
         check_with_files_sources_and_facts(&root(), &cfg, &files, &sources, &facts).unwrap();
-    no_mistakes_rule_kernel::suppression::suppress_rule_findings_with_sources(&root(), &mut findings, &sources);
+    no_mistakes_rule_kernel::suppression::suppress_rule_findings_with_sources(
+        &root(),
+        &mut findings,
+        &sources,
+    );
     assert_eq!(findings, run(".no-mistakes.low-ignore.yml"));
 }
 
@@ -77,7 +85,7 @@ fn stale_application_override_cannot_outlive_its_prepared_owner() {
     let source = sources.read_path(&path).unwrap();
     let helper_call = source.find("query(build())").unwrap() as u32;
     let file = std::sync::Arc::get_mut(facts.ts.get_mut(&path).unwrap()).unwrap();
-    let syntax = &mut file.sql_identifier_syntax;
+    let syntax = &mut file.postgres_mut().sql_identifier_syntax;
     let key = syntax.application_keys().into_iter().next().unwrap();
     let input = |calls: &[crate::codebase::postgres::sql_identifier_syntax::SqlCall]| {
         calls

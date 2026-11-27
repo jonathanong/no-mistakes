@@ -12,6 +12,7 @@ pub(super) fn proof(
     facts
         .ts
         .get(path)?
+        .postgres()
         .query_annotation_heads
         .as_deref()?
         .annotation_helper(span, &opts.embedded.sql_literal_helpers)
@@ -54,6 +55,7 @@ pub(super) fn prefix<'a>(
     facts
         .ts
         .get(path)?
+        .postgres()
         .query_annotation_heads
         .as_deref()?
         .annotation_helper_prefix(span)

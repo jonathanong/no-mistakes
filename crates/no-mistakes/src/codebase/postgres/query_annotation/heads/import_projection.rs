@@ -21,7 +21,7 @@ pub(crate) fn project(
     let mut callbacks = Vec::new();
     let mut failed_sources = Vec::<(PathBuf, Span, FailedSqlSources)>::new();
     for (path, file) in files.iter() {
-        let Some(heads) = file.query_annotation_heads.as_deref() else {
+        let Some(heads) = file.postgres().query_annotation_heads.as_deref() else {
             continue;
         };
         for pending in &heads.pending_imports {
@@ -34,7 +34,7 @@ pub(crate) fn project(
             }
             let Some(proof) = files
                 .get(&target)
-                .and_then(|target| target.query_annotation_heads.as_deref())
+                .and_then(|target| target.postgres().query_annotation_heads.as_deref())
                 .and_then(|heads| match pending.kind {
                     super::helper_heads::Kind::Helper => {
                         heads.exported_helpers.get(&pending.imported).copied()
@@ -100,7 +100,7 @@ pub(crate) fn project(
             }
             let Some(summary) = files
                 .get(&target)
-                .and_then(|target| target.query_annotation_heads.as_deref())
+                .and_then(|target| target.postgres().query_annotation_heads.as_deref())
                 .and_then(|heads| heads.exported_callbacks.get(&pending.imported))
             else {
                 continue;
@@ -127,6 +127,7 @@ pub(crate) fn project(
     for (path, span, proof) in completed {
         let Some(heads) = files
             .get_mut(&path)
+            .and_then(CheckFileFacts::postgres_if_present_mut)
             .and_then(|file| file.query_annotation_heads.as_mut())
         else {
             continue;
@@ -139,6 +140,7 @@ pub(crate) fn project(
     for (path, span) in callbacks {
         let Some(heads) = files
             .get_mut(&path)
+            .and_then(CheckFileFacts::postgres_if_present_mut)
             .and_then(|file| file.query_annotation_heads.as_mut())
         else {
             continue;
@@ -151,6 +153,7 @@ pub(crate) fn project(
     for (path, approved) in effects {
         let Some(heads) = files
             .get_mut(&path)
+            .and_then(CheckFileFacts::postgres_if_present_mut)
             .and_then(|file| file.query_annotation_heads.as_mut())
         else {
             continue;

@@ -1,11 +1,11 @@
 //! Missing executor configuration is an abstention, never proof of execution.
 use super::RuleGlobFilter;
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::{EmbeddedSqlOptions, SqlObligationVerdict, SqlVerdictStatus};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -94,7 +94,8 @@ pub(crate) fn check(
                 .get(&path)
                 .filter(|_| low)
                 .and_then(|file| {
-                    file.sql_identifier_syntax
+                    file.postgres()
+                        .sql_identifier_syntax
                         .profiles
                         .iter()
                         .find(|(selected, _)| selected == &profile)
