@@ -47,6 +47,7 @@ for (const platform of ["Windows", "macOS"]) {
         CARGO_TARGET_DIR: path.join(directory, "target"),
         PATH: `${path.join(directory, "bin")}${path.delimiter}${process.env.PATH}`,
       };
+      delete env.NO_MISTAKES_BUILD_NAPI;
       const options = { cwd: directory, env, encoding: "utf8", timeout: 20000 };
       try {
         const compiled = spawnSync(

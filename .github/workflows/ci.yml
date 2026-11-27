@@ -1250,7 +1250,6 @@ jobs:
             target/native-build-diagnostics
 
 
-  # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   native-test-build:
     name: Native Rust compile (${{ matrix.name }})
     needs: changes
@@ -1706,6 +1705,8 @@ jobs:
             target/native-api-tests-durations.csv
             target/native-api-tests-summary.md
 
+  # Keep the cold-build and test budgets on one runner. The existing step deadlines still apply.
+  # no-mistakes-disable-next-line github-actions-job-timeouts -- #3514 cold-build bounds are checked by rust-build-deadlines.test.cjs.
   native-api-tests-macos:
     name: Native API tests (${{ matrix.os }}, ${{ matrix.shard }}/${{ matrix.total }})
     needs: changes
