@@ -10,7 +10,7 @@ function namespaceSource(node, context) {
   const binding = resolveModuleBinding(node, context);
   if (!binding || (binding.kind !== "default" && binding.kind !== "namespace")) return null;
   if (binding.status === "resolved") return binding.source;
-  return binding.source ? { unresolved: true, source: binding.source } : "unresolved";
+  return { unresolved: true, source: binding.source };
 }
 
 function poolMemberSource(node, context) {
@@ -68,8 +68,9 @@ function localPoolSource(identifier, context) {
 }
 
 function poolSourceResult(source, modules) {
-  if (source?.unresolved) return modules.has(source.source) ? "unresolved" : false;
-  if (source === "unresolved") return "unresolved";
+  if (source?.unresolved) {
+    return source.source == null || modules.has(source.source) ? "unresolved" : false;
+  }
   return modules.has(source);
 }
 
@@ -80,7 +81,9 @@ function isPoolConstructor(node, context, modules) {
     const binding = resolveModuleBinding(callee, context);
     if (binding?.kind === "named" && binding.name === "Pool") {
       return poolSourceResult(
-        binding.status === "unresolved" ? "unresolved" : binding.source,
+        binding.status === "unresolved"
+          ? { unresolved: true, source: binding.source }
+          : binding.source,
         modules,
       );
     }

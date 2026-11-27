@@ -108,7 +108,8 @@ module object are the same `Pool` as a named import. A computed key that is a
 string after a TypeScript assertion, such as `pg["Pool" as const]` or
 `pool["on" as const]("error", handler)`, is that static name. A `let` binding,
 a reassignment, a shadowed `require`, and a static import of another module are
-not a pool.
+not a pool. A resolved specifier is matched by that string, including a module
+named `unresolved`.
 
 `unanalyzable` is `advise` (the default), `report`, or `ignore`. A dynamic
 specifier such as `require(flag)` used as `new pg.Pool()` is reported with

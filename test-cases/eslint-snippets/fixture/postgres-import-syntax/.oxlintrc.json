@@ -20,7 +20,8 @@
         "pool-import-equals.ts",
         "pool-computed.ts",
         "pool-dynamic.ts",
-        "pool-edges.ts"
+        "pool-edges.ts",
+        "pool-named-unresolved.ts"
       ],
       "rules": {
         "no-mistakes/postgres-pool-requires-error-listener": "error"

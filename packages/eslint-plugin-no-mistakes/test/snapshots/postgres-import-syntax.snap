@@ -1162,6 +1162,12 @@
       ]
     },
     {
+      "file": "postgres-import-syntax/pool-named-unresolved.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "postgres-import-syntax/pool-import-equals.ts",
       "findings": [
         {
@@ -1309,6 +1315,41 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "postgres-import-syntax/pool-named-unresolved.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 11,
+          "endLine": 2,
+          "file": "postgres-import-syntax/pool-named-unresolved.ts",
+          "line": 2,
+          "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+          "messageId": "missingErrorListener",
+          "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 5,
+          "file": "postgres-import-syntax/pool-named-unresolved.ts",
+          "line": 5,
+          "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process.",
+          "messageId": "missingErrorListener",
+          "ruleId": "no-mistakes/postgres-pool-requires-error-listener",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "extraModules": [
+            "unresolved"
+          ]
+        }
+      ]
     }
   ]
 }
