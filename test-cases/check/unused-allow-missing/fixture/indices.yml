@@ -5,7 +5,7 @@ rules:
     options:
       include: [src/**]
       allow:
-        - {job: malformed}
+        - {job: 'src/excluded.yml#build'}
         - {job: 'src/deleted.yml#build'}
   - rule: github-actions-step-timeouts
     scope: repository

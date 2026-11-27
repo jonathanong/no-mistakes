@@ -311,28 +311,12 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
     }
   },
   "empty-ignore-invalid.yml": {
-    "exitCode": 0,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: empty-ignore-invalid.yml:11: invalid options for rule `github-actions-test-timeout-literals` at options.include[0]: error parsing glob '[': unclosed character class; missing ']'\n"
   },
   "empty-report-invalid.yml": {
-    "exitCode": 0,
-    "report": {
-      "advisories": [],
-      "codebase": [],
-      "integration": [],
-      "queues": [],
-      "react": [],
-      "rules": [],
-      "warnings": []
-    }
+    "exitCode": 2,
+    "stderr": "error: empty-report-invalid.yml:11: invalid options for rule `github-actions-test-timeout-literals` at options.include[0]: error parsing glob '[': unclosed character class; missing ']'\n"
   },
   "empty-scope.yml": {
     "exitCode": 1,
