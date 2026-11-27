@@ -427,9 +427,50 @@
           "messageId": "nullish",
           "ruleId": "no-mistakes/react-no-nullish-react-node",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 33,
+          "endLine": 32,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-assertions.ts",
+          "line": 32,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
         }
       ],
       "name": "assertions classify the asserted type",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
+      "file": "react-nullish-computed-props.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-computed-props.tsx",
+          "line": 10,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 23,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-computed-props.tsx",
+          "line": 23,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "computed type keys are static literals only",
       "options": null,
       "rule": "react-no-nullish-react-node"
     },
@@ -532,6 +573,47 @@
         }
       ],
       "name": "import-equals and wrapped ReactNode",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
+      "file": "react-nullish-let-require.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-let-require.tsx",
+          "line": 5,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-let-require.tsx",
+          "line": 10,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 16,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-let-require.tsx",
+          "line": 16,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "let require registers a React namespace",
       "options": null,
       "rule": "react-no-nullish-react-node"
     },
@@ -1403,6 +1485,33 @@
       "rule": "server-require-nullable-fetch-wrapper"
     },
     {
+      "file": "nullable-qualified-member.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 31,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-qualified-member.ts",
+          "line": 5,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "unresolved qualified getter terminal",
+      "options": {
+        "getterCalleePatterns": [
+          "^api\\.getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
       "file": "nullable-relay-getter.ts",
       "findings": [
         {
@@ -1500,6 +1609,55 @@
         }
       ],
       "name": "unresolved wrapper is not inside",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-binding-shapes.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 16,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-binding-shapes.ts",
+          "line": 6,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 17,
+          "endLine": 13,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-binding-shapes.ts",
+          "line": 13,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 34,
+          "endLine": 17,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-binding-shapes.ts",
+          "line": 17,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "var require and inline require calls",
       "options": {
         "getterCalleePatterns": [
           "^getWidget$"
@@ -1651,6 +1809,22 @@
         "options": null
       }
     ],
+    "nullable-qualified": [
+      {
+        "file": "nullable-qualified-member.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-qualified-member.ts",
+            "line": 5,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          }
+        ],
+        "name": "nullable-qualified-member.ts",
+        "options": null
+      }
+    ],
     "nullable-user": [
       {
         "file": "nullable-satisfies.ts",
@@ -1682,6 +1856,34 @@
       }
     ],
     "nullable-widget": [
+      {
+        "file": "nullable-binding-shapes.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-binding-shapes.ts",
+            "line": 6,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-binding-shapes.ts",
+            "line": 13,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-binding-shapes.ts",
+            "line": 17,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          }
+        ],
+        "name": "nullable-binding-shapes.ts",
+        "options": null
+      },
       {
         "file": "nullable-cjs.ts",
         "findings": [
@@ -1985,9 +2187,65 @@
             "file": "react-nullish-assertions.ts",
             "line": 27,
             "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-assertions.ts",
+            "line": 32,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
           }
         ],
         "name": "react-nullish-assertions.ts",
+        "options": null
+      },
+      {
+        "file": "react-nullish-computed-props.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-computed-props.tsx",
+            "line": 10,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-computed-props.tsx",
+            "line": 23,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          }
+        ],
+        "name": "react-nullish-computed-props.tsx",
+        "options": null
+      },
+      {
+        "file": "react-nullish-let-require.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-let-require.tsx",
+            "line": 5,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-let-require.tsx",
+            "line": 10,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-let-require.tsx",
+            "line": 16,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          }
+        ],
+        "name": "react-nullish-let-require.tsx",
         "options": null
       },
       {

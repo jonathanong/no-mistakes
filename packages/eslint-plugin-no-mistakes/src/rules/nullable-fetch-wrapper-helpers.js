@@ -194,6 +194,14 @@ function collectFunctionOverloadReturnTypes(program, functionTypes = new Map()) 
   return types;
 }
 
+function memberCouldBeQualifiedGetter(patterns, member, unresolved) {
+  if (!unresolved || !member) return false;
+  return (patterns ?? []).some((pattern) => {
+    const match = /(?:^|\\.)([A-Za-z_$][\w$]*)\$$/.exec(pattern);
+    return match?.[1] === member;
+  });
+}
+
 module.exports = {
   argumentContains,
   calleePath,
@@ -207,5 +215,6 @@ module.exports = {
   functionTypeReturn,
   hasCheckedPath,
   isExportedFunction,
+  memberCouldBeQualifiedGetter,
   typeMatchesNullableHint,
 };

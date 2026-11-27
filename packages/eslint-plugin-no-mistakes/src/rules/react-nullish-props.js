@@ -1,5 +1,6 @@
 "use strict";
 
+const { literalString } = require("./module-mock-helpers");
 const { keyName, reactTypeStatus, typeAnnotation, typeName } = require("../react-node-types");
 
 function classifiedProps(type, facts) {
@@ -8,7 +9,7 @@ function classifiedProps(type, facts) {
     const unresolved = new Set();
     for (const member of type.members) {
       if (member.type !== "TSPropertySignature") continue;
-      const name = keyName(member.key);
+      const name = member.computed ? literalString(member.key) : keyName(member.key);
       if (!name) continue;
       const status = reactTypeStatus(typeAnnotation(member), facts);
       if (status === "yes") props.add(name);

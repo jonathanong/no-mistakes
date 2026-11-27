@@ -166,13 +166,8 @@ function importFact(node, context, seen = new Set()) {
   );
   if (direct) return written && !direct.unresolved ? { unresolved: true } : direct;
   const kind = def.parent?.kind;
-  if (
-    def.type === "Variable" &&
-    (kind === "const" || kind === "let") &&
-    def.node?.id?.type === "Identifier" &&
-    def.node.init
-  ) {
-    if (kind === "let" && written) return { unresolved: true };
+  if (def.type === "Variable" && def.node?.id?.type === "Identifier" && def.node.init) {
+    if (kind !== "const" && written) return { unresolved: true };
     return importFact(def.node.init, context, seen);
   }
   return null;

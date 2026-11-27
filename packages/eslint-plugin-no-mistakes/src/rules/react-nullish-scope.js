@@ -71,10 +71,8 @@ function createNullishState(context) {
 
   function variableScope(node) {
     if (!node.parent || node.parent.kind !== "var") return currentScope();
-    return (
-      scopes.findLast((scope) => scope.kind === "function" || scope.kind === "program") ||
-      currentScope()
-    );
+    const outer = (scope) => scope.kind === "function" || scope.kind === "program";
+    return scopes.findLast(outer) ?? currentScope();
   }
 
   function variableStatus(name) {
@@ -133,7 +131,7 @@ function createNullishState(context) {
     if (isIdentifier(target)) {
       noteType(target.name, type);
       defineObjectType(target, type);
-    } else if (target.type === "ArrayPattern") {
+    } else if (target.type === "ArrayPattern" || target.type === "RestElement") {
       bindPatternNames(target, defineBinding);
     } else if (isObjectPattern(target)) {
       const classified = classifiedProps(type, facts);
@@ -172,6 +170,8 @@ function createNullishState(context) {
       }
       return;
     }
+    if (node.id.type === "ArrayPattern")
+      return bindPatternNames(node.id, (name) => defineBinding(name, scope));
     if (!isObjectPattern(node.id)) return;
     const init = unwrapSequence(node.init);
     const initProps = isIdentifier(init) ? lookupMembers(init, "objectTypes") : null;

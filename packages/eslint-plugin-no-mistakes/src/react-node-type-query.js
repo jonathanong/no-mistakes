@@ -68,7 +68,16 @@ function assertedType(node) {
   let current = node;
   while (current) {
     if (current.type === "TSAsExpression" || current.type === "TSTypeAssertion") {
-      return current.typeAnnotation ?? null;
+      const type = current.typeAnnotation;
+      const constAssertion =
+        type?.type === "TSTypeReference" &&
+        type.typeName?.type === "Identifier" &&
+        type.typeName.name === "const";
+      if (constAssertion) {
+        current = current.expression;
+        continue;
+      }
+      return type ?? null;
     }
     if (TYPE_PRESERVING.has(current.type)) {
       current = current.expression;

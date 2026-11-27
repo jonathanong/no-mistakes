@@ -26,3 +26,8 @@ export function kept(child: ReactNode) {
 export function nonNull(child: ReactNode) {
   return child! ?? null;
 }
+
+export function constAssert(child: ReactNode) {
+  const text = child as const;
+  return (text as const) ?? null;
+}

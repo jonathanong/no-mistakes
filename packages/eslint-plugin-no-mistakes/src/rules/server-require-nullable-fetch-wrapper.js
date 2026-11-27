@@ -7,6 +7,7 @@ const {
   importFact,
   importSpellings,
   reportsUnanalyzable,
+  requireModule,
   requiredMember,
   rootIdentifier,
 } = require("./import-resolution");
@@ -36,6 +37,7 @@ function calleeNames(callee, context) {
     unresolved:
       spelled.unresolved ||
       required?.unresolved === true ||
+      requireModule(callee, context) === null ||
       Boolean(dynamicComputedMember(callee) && importFact(rootIdentifier(callee), context)),
   };
 }
@@ -128,17 +130,10 @@ module.exports = Object.assign(
         );
       }
 
-      function enterFunction(node) {
+      const currentFunctionChecked = () => functionStack.at(-1) === true;
+      const enterFunction = (node) =>
         functionStack.push(currentFunctionChecked() || checkedFunction(node));
-      }
-
-      function exitFunction() {
-        functionStack.pop();
-      }
-
-      function currentFunctionChecked() {
-        return functionStack[functionStack.length - 1] === true;
-      }
+      const exitFunction = () => functionStack.pop();
 
       return {
         Program(node) {
@@ -174,7 +169,9 @@ module.exports = Object.assign(
           if (suppressed(node)) return;
           const member = memberPropertyName(invoked ? invoked.callee : node.callee);
           const knownOtherMember =
-            Boolean(member) && !getterPatterns.some((pattern) => pattern.test(member));
+            Boolean(member) &&
+            !getterPatterns.some((pattern) => pattern.test(member)) &&
+            !helpers.memberCouldBeQualifiedGetter(options.getterCalleePatterns, member, unresolved);
           const uncertainGetter =
             (Boolean(name) && (wrapped === "unresolved" || unresolved)) ||
             (!name && unresolved && !knownOtherMember);

@@ -60,7 +60,7 @@ function createReactNodeFacts(program, context) {
     const unresolved = new Set();
     for (const member of members || []) {
       if (member.type !== "TSPropertySignature") continue;
-      const name = keyName(member.key);
+      const name = member.computed ? literalString(member.key) : keyName(member.key);
       if (!name) continue;
       const status = reactTypeStatus(typeAnnotation(member), typeFacts());
       if (status === "yes") props.add(name);
@@ -98,11 +98,16 @@ function createReactNodeFacts(program, context) {
 
   for (const statement of program.body || []) {
     const declaration = topLevelDeclaration(statement);
-    if (declaration.type !== "VariableDeclaration" || declaration.kind !== "const") continue;
+    if (
+      declaration.type !== "VariableDeclaration" ||
+      (declaration.kind !== "const" && declaration.kind !== "let")
+    ) {
+      continue;
+    }
     for (const declarator of declaration.declarations || []) {
       if (declarator.id?.type !== "Identifier") continue;
       const fact = context?.sourceCode?.getScope
-        ? importFact(declarator.init, context)
+        ? importFact(declarator.id, context)
         : syntacticRequire(declarator.init);
       if (!fact || fact.typeOnly) continue;
       if (fact.unresolved) unresolvedNamespaces.add(declarator.id.name);

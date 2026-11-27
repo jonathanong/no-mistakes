@@ -368,6 +368,36 @@ describe("typescript import wrappers", () => {
         "react-no-nullish-react-node",
       ),
       eslintCase(
+        "let require registers a React namespace",
+        "react-nullish-let-require.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
+        "computed type keys are static literals only",
+        "react-nullish-computed-props.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
+        "var require and inline require calls",
+        "nullable-binding-shapes.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "unresolved qualified getter terminal",
+        "nullable-qualified-member.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^api\\.getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
         "computed member of a namespace import",
         "nullable-computed-member.ts",
         "server-require-nullable-fetch-wrapper",
@@ -608,6 +638,7 @@ describe("typescript import wrappers", () => {
       [15, "nullish"],
       [23, "nullish"],
       [27, "nullish"],
+      [32, "nullish"],
     ]);
     expect(
       cases
@@ -617,6 +648,37 @@ describe("typescript import wrappers", () => {
       [5, "nullish"],
       [9, "nullish"],
     ]);
+    expect(
+      cases
+        .find((item) => item.name === "let require registers a React namespace")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [5, "nullish"],
+      [10, "unanalyzable"],
+      [16, "unanalyzable"],
+    ]);
+    expect(
+      cases
+        .find((item) => item.name === "computed type keys are static literals only")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [10, "nullish"],
+      [23, "nullish"],
+    ]);
+    expect(
+      cases
+        .find((item) => item.name === "var require and inline require calls")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [6, "wrapper"],
+      [13, "unanalyzable"],
+      [17, "unanalyzable"],
+    ]);
+    expect(
+      cases
+        .find((item) => item.name === "unresolved qualified getter terminal")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([[5, "unanalyzable"]]);
     expect(
       cases
         .find((item) => item.name === "computed member of a namespace import")
@@ -659,6 +721,8 @@ describe("typescript import wrappers", () => {
         "react-nullish-pattern-shadows.tsx",
         "react-nullish-assertions.ts",
         "react-nullish-named-default.tsx",
+        "react-nullish-let-require.tsx",
+        "react-nullish-computed-props.tsx",
       ]),
       "nullish-ignore": oxlintOn(".oxlintrc-nullish-ignore.json", ["react-nullish-unresolved.tsx"]),
       fetch: oxlintOn(".oxlintrc-fetch.json", [
@@ -694,6 +758,10 @@ describe("typescript import wrappers", () => {
         "nullable-unresolved-name.ts",
         "nullable-computed-member.ts",
         "nullable-unresolved-wrapper.ts",
+        "nullable-binding-shapes.ts",
+      ]),
+      "nullable-qualified": oxlintOn(".oxlintrc-nullable-qualified.json", [
+        "nullable-qualified-member.ts",
       ]),
       "nullable-ignore": oxlintOn(".oxlintrc-nullable-ignore.json", [
         "nullable-relay-getter.ts",
