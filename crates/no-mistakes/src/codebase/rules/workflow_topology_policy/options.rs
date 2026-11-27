@@ -1,4 +1,6 @@
-use super::{concurrency_compile, secret_inventory, ArtifactEdgeRule, ForbiddenActivityTypes, StepOrderRule};
+use super::{
+    concurrency_compile, secret_inventory, ArtifactEdgeRule, ForbiddenActivityTypes, StepOrderRule,
+};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -12,6 +14,7 @@ pub(crate) struct Options {
     pub(crate) forbidden_activity_types: Vec<ForbiddenActivityTypes>,
     pub(crate) forbidden_events: Vec<String>,
     pub(crate) forbid_secrets_inherit: bool,
+    pub(crate) require_explicit_workflow_call_bindings: bool,
     pub(crate) required_direct_edges: Vec<[String; 2]>,
     pub(crate) forbidden_direct_edges: Vec<[String; 2]>,
     pub(crate) required_transitive_edges: Vec<[String; 2]>,

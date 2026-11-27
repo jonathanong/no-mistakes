@@ -22,6 +22,9 @@ rule's scope.
 
 ## Options
 
+The optional `maxMinutes` must be positive. Each `allow` entry accepts `step`,
+`reason`, and an optional `maxMinutes` between 1 and 360.
+
 `include` replaces the default workflow globs. `maxMinutes` sets an optional
 cap below GitHub's 360-minute maximum. The effective cap never exceeds 360.
 `allow` accepts a reasoned exception for a specific step, identified as

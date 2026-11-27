@@ -1,0 +1,9 @@
+version: 2
+rules:
+- rule: github-actions-step-timeouts
+  scope: repository
+  options:
+    allow:
+    - step: .github/workflows/sample.yml#build#run-sample
+      reason: reason
+      unexpectedField: true

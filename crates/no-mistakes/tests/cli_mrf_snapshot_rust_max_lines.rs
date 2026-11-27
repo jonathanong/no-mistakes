@@ -17,6 +17,11 @@ fn rust_max_lines_per_file_json_matches_snapshot() {
         ("excludes", "respects-excludes", "excludes.yml"),
         ("relative_roots", "roots", "roots-sub.yml"),
         ("disable_file", "disable-file", "disable-file.yml"),
+        (
+            "line_budget_suppressions",
+            "line-budget-suppressions",
+            "line-budget-suppressions.yml",
+        ),
         ("physical_over_code_limit", "unit", "physical-max-2.yml"),
         ("physical_at_code_limit", "unit", "physical-max-3.yml"),
         ("line_count_empty", "line-counts", "line-count-empty.yml"),

@@ -1,0 +1,40 @@
+name: consistent
+on: pull_request
+jobs:
+  merge_commit_diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git diff --name-only HEAD^1 HEAD
+  three_dot_pr_diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
+  three_dot_baseref_merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git diff --name-only origin/${{ github.base_ref }}...${{ github.sha }}
+  pr_head_checkout_three_dot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - run: git diff --name-only ${{ github.event.pull_request.base.sha }}...HEAD
+  consistent_pairs:
+    runs-on: ubuntu-latest
+    env:
+      DIFF_BASE: ${{ github.event.pull_request.base.sha }}
+      DIFF_HEAD: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/analyze
+        with:
+          base-rev: HEAD^1
+          head-rev: HEAD
+      - run: node scripts/check.mjs --base "$DIFF_BASE" --head "$DIFF_HEAD"

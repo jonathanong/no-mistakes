@@ -1,0 +1,21 @@
+name: callee
+on:
+  workflow_call:
+    inputs:
+      target_env:
+        type: string
+        required: true
+      dry_run:
+        type: boolean
+        required: false
+        default: false
+    secrets:
+      DEPLOY_KEY:
+        required: true
+      AUDIT_TOKEN:
+        required: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo deploy

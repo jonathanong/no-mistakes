@@ -13,6 +13,8 @@ and Node actions are outside the rule.
 
 ## Options
 
+Each `include` entry must be a valid glob.
+
 `include` defaults to `.github/actions/**/action.{yml,yaml}`. An empty
 `allowedKeys` uses GitHub's built-in composite-step allowlist; `extraForbiddenKeys`
 adds explicit denials. No other rule-specific options exist.

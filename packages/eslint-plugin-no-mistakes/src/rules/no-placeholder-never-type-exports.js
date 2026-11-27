@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 
 function specifierName(specifier) {
   return specifier.local?.name || specifier.exported?.name || specifier.exported?.value;
@@ -18,8 +19,12 @@ module.exports = Object.assign(
       },
     },
     (context) => {
+      const suppressed = ruleSuppression(context, "no-placeholder-never-type-exports");
       const neverTypes = new Set();
       const exportSpecifiers = [];
+      function report(node) {
+        if (!suppressed(node)) context.report({ node, messageId: "placeholder" });
+      }
       return {
         "Program > TSTypeAliasDeclaration"(node) {
           if (node.typeAnnotation?.type === "TSNeverKeyword") neverTypes.add(node.id.name);
@@ -27,7 +32,7 @@ module.exports = Object.assign(
         "Program:exit"() {
           for (const node of exportSpecifiers) {
             if (node.specifiers.some((specifier) => neverTypes.has(specifierName(specifier)))) {
-              context.report({ node, messageId: "placeholder" });
+              report(node);
             }
           }
         },
@@ -35,7 +40,7 @@ module.exports = Object.assign(
           const declaration = node.declaration;
           if (declaration?.type === "TSTypeAliasDeclaration") {
             if (declaration.typeAnnotation?.type !== "TSNeverKeyword") return;
-            context.report({ node, messageId: "placeholder" });
+            report(node);
             return;
           }
           if (
