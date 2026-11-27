@@ -7,9 +7,7 @@ const source = readFileSync(path.join(__dirname, "../workflows/ci.yml"), "utf8")
 const producers = [
   "linux-runtime",
   "native-build",
-  "native-build-macos",
   "native-test-build",
-  "native-test-build-macos",
   "standalone-build",
   "rust-coverage-build",
 ];
@@ -17,9 +15,7 @@ const consumers = {
   "linux-api-tests": "linux-runtime",
   "ast-analysis": "linux-runtime",
   "native-rust-tests": "native-test-build",
-  "native-rust-tests-macos": "native-test-build-macos",
   "native-api-tests": "native-build",
-  "native-api-tests-macos": "native-build-macos",
   "standalone-shards": "standalone-build",
   "rust-coverage-shards": "rust-coverage-build",
   tests: "rust-coverage-build",
@@ -108,4 +104,45 @@ test("warm validation installs LLVM tools before retaining the profile pooling t
   assert.match(install, /components: llvm-tools-preview/);
   assert.ok(body.indexOf("name: Install Rust") < body.indexOf("rust-profile-pooling.test.cjs"));
   assert.match(body, /node --test[^\n]*rust-profile-pooling.test.cjs/);
+});
+
+test("full macOS tests run on their builders and download only validated reused artifacts", () => {
+  for (const [name, build, upload, download, run] of [
+    [
+      "native-api-tests-macos",
+      "Build native CLI and N-API addon",
+      "Upload native-runtime",
+      "Download native-runtime",
+      "Run real N-API API test",
+    ],
+    [
+      "native-rust-tests-macos",
+      "Precompile native Rust test targets",
+      "Upload native-rust-archive",
+      "Download native-rust-archive",
+      "Run platform-specific Rust tests",
+    ],
+  ]) {
+    const body = workflowJob(source, name);
+    const phases = steps(body);
+    const index = (title) => phases.findIndex((step) => step.startsWith(`${title}\n`));
+    for (const title of ["Validate build artifact source", build, upload, download, run])
+      assert.ok(index(title) >= 0, `${name}: ${title}`);
+    assert.match(body, /^    needs: changes$/m);
+    assert.ok(body.includes("timeout-minutes: 65"), name);
+    assert.ok(index("Validate build artifact source") < index(build), name);
+    assert.ok(index(build) < index(upload) && index(upload) < index(run), name);
+    assert.ok(index(download) < index(run), name);
+    assert.match(phases[index(build)], /steps\.build-artifact-source.outputs.reuse != 'true'/);
+    assert.match(phases[index(upload)], /steps\.build-artifact-source.outputs.reuse != 'true'/);
+    assert.match(phases[index(download)], /steps\.build-artifact-source.outputs.reuse == 'true'/);
+    assert.match(phases[index(download)], /steps\.build-artifact-source.outputs.run_id/);
+    assert.doesNotMatch(phases[index(run)], /if:|outputs\.reuse|continue-on-error/);
+    for (const phase of phases.filter((step) =>
+      /uses: actions\/cache\/restore@|uses: Swatinem\/rust-cache@/.test(step),
+    )) {
+      assert.match(phase, /env.COLD_BUILD != 'true'/);
+      assert.match(phase, /outputs.reuse != 'true'/);
+    }
+  }
 });
