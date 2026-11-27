@@ -30,7 +30,14 @@ impl Locations {
                 });
                 finding.line = document
                     .as_ref()
-                    .and_then(|locations| locations.line(&located.path))
+                    .and_then(|locations| {
+                        locations.line(&located.path).or_else(|| {
+                            located
+                                .fallback_path
+                                .as_ref()
+                                .and_then(|fallback| locations.line(fallback))
+                        })
+                    })
                     .unwrap_or(1);
                 finding
             })

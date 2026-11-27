@@ -1,0 +1,14 @@
+name: suppressed
+on: push
+jobs:
+  suppressed_missing_secret:
+    uses: ./.github/workflows/callee.yml
+    with:
+      target_env: staging
+    # no-mistakes-disable-next-line workflow-topology-policy
+    secrets:
+      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+  suppressed_remote:
+    uses: example/platform/.github/workflows/release.yml@v1 # no-mistakes-disable-line workflow-topology-policy
+    secrets:
+      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}

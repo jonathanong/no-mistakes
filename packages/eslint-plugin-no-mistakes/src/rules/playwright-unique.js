@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule, selectorLiteral } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { selectorAttributeVisitors } = require("../selector-visitor");
 
 module.exports = rule(
@@ -23,13 +24,14 @@ module.exports = rule(
   },
   (context) => {
     const seen = new Map();
+    const suppressed = ruleSuppression(context, "playwright-unique");
     return selectorAttributeVisitors(context, (node) => {
       const value = selectorLiteral(node);
       if (value === null) {
         return;
       }
       if (seen.has(value)) {
-        context.report({ node, messageId: "duplicate", data: { value } });
+        if (!suppressed(node)) context.report({ node, messageId: "duplicate", data: { value } });
       } else {
         seen.set(value, node);
       }

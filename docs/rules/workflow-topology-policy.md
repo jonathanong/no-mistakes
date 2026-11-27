@@ -125,6 +125,15 @@ no requirement. `secretInventory` is separately opt-in:
 - `forbidSecretsInherit`: when `true`, report reusable-workflow calls that set
   `secrets: inherit`. `false` reports nothing. See
   [secrets inherit](../configuration/workflow-topology-policy-secrets-inherit.md).
+- `requireExplicitWorkflowCallBindings`: when `true`, require every reusable
+  workflow caller to avoid `secrets: inherit`, map every secret declared in a
+  local callee's `on.workflow_call.secrets` (both required and optional) under
+  `secrets:`, and pass every `required: true` input declared in
+  `on.workflow_call.inputs` under `with:`. `false` (default) reports nothing.
+  Unverifiable calls (remote targets, missing or non-callable local targets,
+  malformed workflow YAML, non-mapping `secrets`/`with`, or case-colliding
+  keys) are routed through `options.unanalyzable` (`advise` by default). See
+  [secrets inherit](../configuration/workflow-topology-policy-secrets-inherit.md#requireexplicitworkflowcallbindings).
 - `forbidReusableWorkflowConcurrency`: `false` by default. When enabled, ban
   workflow-level locks on workflows triggered by `workflow_call`, including
   inherited triggers and workflows with additional triggers. Job-level locks
@@ -203,6 +212,27 @@ Map each secret by name. A missing `secrets` key and `secrets: {}` pass. A job
 without a reusable-workflow `uses` is ignored. Findings point to the `secrets`
 key. See the
 [configuration guide](../configuration/workflow-topology-policy-secrets-inherit.md).
+
+### `requireExplicitWorkflowCallBindings`
+
+`false` by default, which reports nothing. `true` extends `forbidSecretsInherit`
+to verify that reusable-workflow callers explicitly map every secret declared in
+a local callee's `on.workflow_call.secrets` (including optional secrets) and
+pass every `required: true` input declared in `on.workflow_call.inputs`:
+
+- `secrets: inherit` is reported at `secrets:` (emitted once if
+  `forbidSecretsInherit: true` is also set).
+- Missing or empty (`null`) declared secrets are reported at `secrets:` (or the
+  caller job key when `secrets:` is absent).
+- Missing or empty (`null`) required inputs are reported at `with:` (or the
+  caller job key when `with:` is absent).
+- Remote calls, missing/malformed/non-callable local targets, non-mapping
+  `secrets:` / `with:` expressions, non-scalar entry values, and case-colliding
+  declarations or bindings are reported through `options.unanalyzable`
+  (`advise` by default, or `report` / `ignore`).
+
+See the
+[configuration guide](../configuration/workflow-topology-policy-secrets-inherit.md#requireexplicitworkflowcallbindings).
 
 ### `forbidReusableWorkflowConcurrency`
 
@@ -330,7 +360,8 @@ a path in a script. See the
 
 ### Unanalyzable inputs
 
-- Parsed topology findings are ordinary findings. An unprovable secret reference is an ordinary finding only when `secretInventory.reportUnused` is true; otherwise it is omitted. Those diagnostics are not routed through `options.unanalyzable`.
+- Parsed topology findings are ordinary findings. An unprovable secret reference is an ordinary finding only when `secretInventory.reportUnused` is true; otherwise it is omitted.
+- When `requireExplicitWorkflowCallBindings` is `true`, calls whose contract or bindings cannot be verified statically (remote reusable workflows, missing or non-callable local targets, malformed workflow YAML, non-mapping `secrets`/`with` values, non-scalar binding values, or case-colliding keys) are routed through `options.unanalyzable` (`advise` by default; `report` turns them into failing findings; `ignore` omits them). Line, next-line, and file suppressions apply to both findings and advisories.
 
 ## Suppression
 
