@@ -28,6 +28,7 @@ pub(super) use applications::{
     collect_config_errors, indexed_rule_applications, push_application_errors,
 };
 
+pub(super) mod checks;
 mod compiled;
 mod compiled_misc;
 mod locations;

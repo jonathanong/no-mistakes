@@ -54,11 +54,11 @@ test("native Rust and historical aggregate deadlines retain censored Windows pro
     historicalApi +
     observed.postJobReserveSeconds;
   assert.ok(
-    required > jobBudgetSeconds(workflowJob("native-tests")),
+    required > jobBudgetSeconds(workflowJob("tests-gate")),
     "historical serial work is not a shard deadline",
   );
   assert.ok(jobBudgetSeconds(job) >= rust + observed.postJobReserveSeconds);
-  const gate = workflowJob("native-tests");
+  const gate = workflowJob("tests-gate");
   assert.ok(jobBudgetSeconds(gate) <= 180);
   assert.match(gate, /native-rust-tests/);
   assert.match(gate, /native-api-tests/);

@@ -296,6 +296,8 @@ mod cli_config_strict_load;
 
 #[path = "cli_rule_options_audit.rs"]
 mod cli_rule_options_audit;
+#[path = "cli_workflow_option_validation.rs"]
+mod cli_workflow_option_validation;
 
 #[path = "cli_gha_snapshot_activity_types.rs"]
 mod cli_gha_snapshot_activity_types;
