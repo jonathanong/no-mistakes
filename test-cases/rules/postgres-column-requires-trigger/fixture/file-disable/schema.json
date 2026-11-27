@@ -1,0 +1,16 @@
+// no-mistakes-disable-file postgres-column-requires-trigger
+{
+  "formatVersion": 2, "coverage": "complete",
+  "tables": {
+    "orders": {
+      "relationKind": "table",
+      "columns": {
+        "updated_at": {
+          "nullable": false,
+          "ordinalPosition": 1,
+          "dataType": "timestamp with time zone"
+        }
+      }
+    }
+  }
+}

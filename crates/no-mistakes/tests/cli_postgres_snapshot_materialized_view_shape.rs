@@ -59,6 +59,7 @@ fn postgres_materialized_view_shape_check_json_snapshot() {
         ("table_view_identity", "collision", "collision.yml"),
         ("legacy_index_data", "legacy-index-data", "advisory.yml"),
         ("empty_index_data", "empty-index-data", "advisory.yml"),
+        ("line_disable", "line-disable", "advisory.yml"),
         ("view_read_path", "view-read-path", "advisory.yml"),
         ("mixed_severities", "mixed", "mixed.yml"),
         ("excluded_error_application", "mixed", "excluded-error.yml"),

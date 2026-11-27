@@ -101,6 +101,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "malformed_disable_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/control/package.json",
+          "line": 1,
+          "message": "packages/control/package.json: cannot verify required package fields because the manifest could not be read or parsed: expected value at line 1 column 10. Repair the JSON or restore read access.",
+          "rule": "package-json-required-fields",
+          "sourceLine": "{\"name\": }",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "nested_companion": {
     "exitCode": 1,
     "report": {

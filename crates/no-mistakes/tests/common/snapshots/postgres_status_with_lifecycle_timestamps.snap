@@ -149,7 +149,31 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "file_disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "include_misses_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line_disable": {
     "exitCode": 0,
     "report": {
       "advisories": [],
@@ -400,6 +424,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-status-with-lifecycle-timestamps",
           "sourceLine": "{",
           "target": "table:precise_events"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unsuppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:deliveries: table stores status column state next to lifecycle timestamps sent_at, failed_at; keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table",
+          "rule": "postgres-status-with-lifecycle-timestamps",
+          "sourceLine": "{",
+          "target": "table:deliveries"
         }
       ],
       "warnings": []

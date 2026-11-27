@@ -4,12 +4,18 @@ const RULE: &str = "package-json-export-target-prefix";
 
 #[test]
 fn package_json_export_target_prefix_matches_snapshot() {
-    let root = rules_path(RULE, "fixture", "");
-    let cases = ["default", "advisory", "disabled", "invalid-options"].map(|case| {
+    let cases = [
+        ("default", "fixture", "default"),
+        ("advisory", "fixture", "advisory"),
+        ("disabled", "fixture", "disabled"),
+        ("invalid-options", "fixture", "invalid-options"),
+        ("malformed_disable_line", "suppression", "default"),
+    ]
+    .map(|(case, root, config)| {
         (
             case,
-            root.clone(),
-            rules_path(RULE, "configs", &format!("{case}.yml")),
+            rules_path(RULE, root, ""),
+            rules_path(RULE, "configs", &format!("{config}.yml")),
         )
     });
     assert_saved_fixture("package_json_export_target_prefix", &cases);

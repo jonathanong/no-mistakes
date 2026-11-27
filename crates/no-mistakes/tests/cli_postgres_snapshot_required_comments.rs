@@ -14,6 +14,9 @@ fn postgres_required_comments_check_json_snapshot() {
     let rule = "postgres-required-comments";
     let root = catalog();
     let config = |name: &str| rules_path(rule, "configs", name);
+    let fixture = |name| rules_path(rule, "fixture", name);
+    let fail = fixture("fail");
+    let suppression_config = fail.join(".no-mistakes.yml");
     // repeated_runs_are_identical is the jobs 1 vs 2 check on all_objects.
     // finding_text_helpers_cover_each_listed_sentence is the same case: these
     // sentences remain, each containing " Add COMMENT ON ":
@@ -72,6 +75,13 @@ fn postgres_required_comments_check_json_snapshot() {
             // remains.
             ("allow_stale", root.clone(), config("allow.yml")),
             ("include_misses_catalog", root, config("include-misses.yml")),
+            ("unsuppressed", fail, suppression_config.clone()),
+            (
+                "line_disable",
+                fixture("line-disable"),
+                suppression_config.clone(),
+            ),
+            ("file_disable", fixture("file-disable"), suppression_config),
         ],
     );
 }

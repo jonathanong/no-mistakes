@@ -221,7 +221,31 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "file_disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "include_misses_catalog": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "line_disable": {
     "exitCode": 0,
     "report": {
       "advisories": [],
@@ -486,6 +510,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-table-shape",
           "sourceLine": "{",
           "target": "table:partial"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unsuppressed": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: table:order_history: table name matches banned pattern _(history|change_logs|audit_logs)$: use a *_revisions table",
+          "rule": "postgres-table-shape",
+          "sourceLine": "{",
+          "target": "table:order_history"
         }
       ],
       "warnings": []
