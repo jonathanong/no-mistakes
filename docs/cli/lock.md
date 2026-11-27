@@ -1,7 +1,7 @@
 # lock
 
-Inspect the machine-wide invocation lock that serializes `no-mistakes`
-analyses. Each analysis uses every core, so the lock is global by design.
+Inspect the per-user invocation lock that serializes `no-mistakes`
+analyses. Analyses can use every core, so invocations sharing a lock run serially.
 
 ## Subcommands
 

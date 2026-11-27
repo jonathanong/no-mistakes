@@ -1,4 +1,5 @@
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use no_mistakes::invocation::LockState;
 use std::process::ExitCode;
 
 #[derive(Parser, Clone)]
@@ -9,7 +10,7 @@ pub struct LockArgs {
 
 #[derive(Subcommand, Clone)]
 enum LockCommand {
-    /// Report whether another invocation holds the lock, and who (read-only, never waits).
+    /// Report whether another invocation holds the lock, and who (never waits).
     Status(StatusArgs),
 }
 
@@ -30,13 +31,20 @@ pub fn run(args: LockArgs) -> anyhow::Result<ExitCode> {
     let report = no_mistakes::invocation::lock_status()?;
     match status.format {
         StatusFormat::Json => println!("{}", serde_json::to_string(&report)?),
-        StatusFormat::Text => match &report.holder {
-            Some(holder) => println!("held by {}", holder.describe()),
-            None if report.state == no_mistakes::invocation::LockState::Held => {
-                println!("held by another no-mistakes invocation (holder details unavailable)")
+        StatusFormat::Text => {
+            let state = match (&report.state, &report.holder) {
+                (LockState::Held, Some(holder)) => format!("held by {}", holder.describe()),
+                (LockState::Held, None) => {
+                    "held by another no-mistakes invocation (holder details unavailable)".into()
+                }
+                (LockState::Free, _) => "free".into(),
+                (LockState::Unavailable, _) => "unavailable (no invocation lock selected)".into(),
+            };
+            println!("{state}");
+            if let Some(path) = report.lock_file {
+                println!("lock file: {path}");
             }
-            None => println!("free"),
-        },
+        }
     }
     Ok(ExitCode::SUCCESS)
 }

@@ -75,3 +75,7 @@ mod cli_gitignore_tsconfig;
 mod cli_workspace_tsconfig;
 
 include!("suite_cli_test_plans.rs");
+
+#[cfg(target_os = "linux")]
+#[path = "cli_lock_fallback.rs"]
+mod cli_lock_fallback;

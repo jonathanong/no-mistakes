@@ -16,7 +16,7 @@ impl InvocationGuard {
         options: InvocationOptions,
         output: CliErrorOutput,
     ) -> Result<Self> {
-        Self::acquire_resolving_path_with_output(options, true, lock_path, output)
+        Self::acquire_resolving_lock(options, true, || Ok(LockTarget::Current), output)
     }
     #[doc(hidden)]
     pub fn acquire_for_cli_at_path(

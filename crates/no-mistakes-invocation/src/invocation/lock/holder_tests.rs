@@ -1,12 +1,13 @@
 use super::acquire_lock;
 use crate::invocation::holder::LockHolder;
-use crate::invocation::lock_status::{status_at, LockState};
+use crate::invocation::lock_status::{status_for_file, LockState};
 use crate::invocation::test_worker_process::run_isolated;
 use crate::invocation::{
     error_report, exit_code, timeout_exit_code, InvocationError, InvocationErrorKind,
     EXIT_TEMPFAIL, EXIT_TIMEOUT,
 };
 use serde_json::json;
+use std::fs::File;
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -109,41 +110,24 @@ fn deadline_errors_keep_exit_124_and_report_their_phase() {
 }
 
 #[test]
-fn status_reports_held_free_and_missing_lock_files() {
+fn status_reports_held_and_free_lock_files() {
     run_isolated(
         module_path!(),
-        "status_reports_held_free_and_missing_lock_files",
+        "status_reports_held_and_free_lock_files",
         "NO_MISTAKES_LOCK_STATUS_CONTROL",
         || {
             let directory = tempfile::tempdir().unwrap();
             let path = directory.path().join("invocation.lock");
-            let missing = status_at(&path).unwrap();
-            assert_eq!((missing.state, missing.holder), (LockState::Free, None));
             let held = acquire_lock(&path, None, false).unwrap();
-            let status = status_at(&path).unwrap();
+            let status = status_for_file(&path, File::open(&path).unwrap()).unwrap();
             assert_eq!(status.state, LockState::Held);
             assert_eq!(status.holder.unwrap().pid, std::process::id());
             drop(held);
             // The record outlives the lock, but a free lock never reports a holder.
-            let status = status_at(&path).unwrap();
+            let status = status_for_file(&path, File::open(&path).unwrap()).unwrap();
             assert_eq!((status.state, status.holder), (LockState::Free, None));
         },
     );
-}
-
-// Windows reports a path below a file as "not found", which is a free lock.
-#[cfg(unix)]
-#[test]
-fn status_surfaces_unopenable_lock_paths() {
-    let directory = tempfile::tempdir().unwrap();
-    let blocked = directory.path().join("file.txt").join("invocation.lock");
-    std::fs::copy(
-        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/invocation/lock-holder/invocation.lock.holder"),
-        directory.path().join("file.txt"),
-    )
-    .unwrap();
-    assert!(status_at(&blocked).is_err());
 }
 
 #[test]

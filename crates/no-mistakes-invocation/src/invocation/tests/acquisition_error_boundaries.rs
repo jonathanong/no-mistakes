@@ -76,7 +76,7 @@ fn lock_classifier_preserves_existing_command_errors_under_shared_deadlines() {
                 "existing child command deadline",
             )
             .with_phase("command.child");
-            let error = super::super::acquisition::classify_lock_result(
+            let error = super::super::acquisition::classify_lock_result::<File>(
                 Err(error.into()),
                 Some(deadline),
                 invocation_limited,

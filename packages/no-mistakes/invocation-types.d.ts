@@ -95,10 +95,14 @@ export interface LockHolder {
   ageSeconds: number | null;
 }
 
+/** State of the selected per-user invocation lock. */
+export type LockState = "held" | "free" | "unavailable";
+
 /** Result of `lockStatus()` / `no-mistakes lock status --format json`. */
 export interface LockStatus {
-  state: "held" | "free";
-  lockFile: string;
+  state: LockState;
+  /** Null when no writable lock location is available. */
+  lockFile: string | null;
   /** Present only while the lock is held. */
   holder: LockHolder | null;
 }

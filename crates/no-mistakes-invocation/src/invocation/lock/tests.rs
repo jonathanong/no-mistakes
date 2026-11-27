@@ -1,7 +1,5 @@
-use super::{
-    acquire_lock, acquire_lock_from, classify_try_lock, create_lock_directory, lock_file_path,
-    lock_path, TryLockOutcome,
-};
+use super::{acquire_lock, acquire_lock_from, classify_try_lock, TryLockOutcome};
+use crate::invocation::lock_location::{create_lock_directory, open_current_lock};
 use crate::invocation::{InvocationError, InvocationErrorKind};
 use std::fs::TryLockError;
 use std::path::Path;
@@ -9,7 +7,7 @@ use std::time::Duration;
 
 #[test]
 fn cargo_test_binaries_use_a_per_process_lock_file() {
-    let path = lock_file_path(true).unwrap();
+    let path = open_current_lock().unwrap().path;
     assert_eq!(
         path.file_name().unwrap().to_string_lossy(),
         format!("{}.lock", std::process::id())
@@ -51,23 +49,15 @@ fn lock_busy_errors_surface_when_fail_on_lock_is_set() {
 }
 
 #[test]
-fn user_lock_files_live_under_the_project_dirs_cache() {
-    let path = lock_file_path(false).unwrap();
-    assert_eq!(
-        path.file_name().unwrap().to_string_lossy(),
-        "invocation.lock"
-    );
-}
-
-#[test]
 fn create_lock_directory_reports_when_the_path_is_a_file() {
-    let tmp = tempfile::tempdir().unwrap();
-    let file = tmp.path().join("not-a-directory");
-    std::fs::write(&file, b"lock").unwrap();
-    let error = create_lock_directory(&file).unwrap_err();
-    assert!(error
-        .to_string()
-        .contains("creating no-mistakes invocation lock directory"));
+    let file = Path::new(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/invocation/not-a-directory/not-a-directory"
+    ));
+    let error = create_lock_directory(file).unwrap_err();
+    let error = error.to_string();
+    assert!(error.contains("creating no-mistakes invocation lock directory"));
+    assert!(error.contains(&file.display().to_string()));
 }
 
 #[test]
@@ -75,13 +65,6 @@ fn acquire_lock_reports_when_the_path_is_a_directory() {
     let tmp = tempfile::tempdir().unwrap();
     let error = acquire_lock(tmp.path(), Some(Duration::from_millis(1)), false).unwrap_err();
     assert!(error.to_string().contains("opening invocation lock"));
-}
-
-#[test]
-fn standalone_unit_tests_use_the_per_process_lock_without_a_cli_binary() {
-    let path = lock_path().unwrap();
-    assert_eq!(path, lock_file_path(true).unwrap());
-    assert!(path.extension().is_some_and(|ext| ext == "lock"));
 }
 
 #[test]

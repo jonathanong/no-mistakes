@@ -192,18 +192,6 @@ fn lock_system_errors_include_the_path() {
 }
 
 #[test]
-fn lock_path_and_directory_errors_are_contextualized() {
-    // This case owns the user invocation path. CLI fixture tests also set
-    // CARGO_BIN_EXE_*, which deliberately selects a process-isolated lock.
-    let path = super::lock::lock_file_path(false).unwrap();
-    assert_eq!(path.file_name().unwrap(), "invocation.lock");
-
-    let file = fixture_path("not-a-directory");
-    let error = super::lock::create_lock_directory(&file).unwrap_err();
-    assert!(error.to_string().contains(&file.display().to_string()));
-}
-
-#[test]
 fn lock_released_after_deadline_still_times_out() {
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("invocation.lock");
