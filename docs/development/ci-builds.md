@@ -78,7 +78,7 @@ The current validation graph is organized as follows:
   artifacts separately. Each platform has its own producer and consumer jobs,
   so its tests start when its artifacts are ready without waiting for the other
   platform. Contract tests keep their build and test commands aligned.
-  On `main`, Windows runs two Rust shards and two real-addon API shards.
+  On `main`, Windows runs two Rust shards and one real-addon API shard.
   The main macOS suite runs one Rust test job and one real-addon API
   test job. Each downloads its archive once and runs every selected case.
   Folding the shards saves runner setup and download time. The test
@@ -157,9 +157,9 @@ The current validation graph is organized as follows:
   and requires `Windows smoke` when the Rust scope requests it on a pull request, and the smoke jobs are not separate required checks. The release
   workflow does not use these outputs.
   A pull request likewise runs one `Windows smoke` job (`windows-smoke`,
-  windows-2025) instead of the six full Windows jobs (`native-build`,
-  `native-test-build`, two `native-rust-tests` and two `native-api-tests`
-  shards), so a push starts at most one Windows job. It restores the Windows
+  windows-2025) instead of the five full Windows jobs (`native-build`,
+  `native-test-build`, two `native-rust-tests` shards and one `native-api-tests`
+  job), so a push starts at most one Windows job. It restores the Windows
   workspace cache that `main` builds, builds the CLI and N-API addon, runs
   `check` on one saved fixture, runs `analyzeProject` through the built addon,
   and runs the Windows list in `.github/scripts/smoke-tests.cjs`: the Job
@@ -520,9 +520,10 @@ spent a combined 422 seconds running the Windows Rust shards, 336 seconds runnin
 the Windows API shards, and 184 seconds running the Linux N-API shards. Dividing
 the test time evenly across two runners projects a setup share of 25% for
 Windows Rust (70 / 281 seconds) and 23% for Linux N-API (28 / 120 seconds) at
-the maximum observed setup times. The Windows API estimate is 29% with median
-setup (68.5 / 236.5 seconds) and just under 30% with maximum setup and five
-seconds of reporting and cleanup (73 / 246 seconds). JavaScript projects
+the maximum observed setup times. Windows API uses one shard because one of two
+measured shards spent 47 of 150 seconds on setup. With the full 336-second
+baseline API test time, the maximum observed setup projects to 18%
+(73 / 409 seconds). JavaScript projects
 27% (24 / 89 seconds, using 130 seconds of combined test execution). Use observed per-shard timings to check the balance.
 
 The full macOS Rust job caches Cargo dependencies and rebuilds its workspace

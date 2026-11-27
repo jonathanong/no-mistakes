@@ -33,10 +33,7 @@ test("native API timeout leaves startup and teardown room after the observed Win
     entries
       .filter((entry) => entry[1] === "windows-2025")
       .map((entry) => [Number(entry[2]), Number(entry[3])]),
-    [
-      [1, 2],
-      [2, 2],
-    ],
+    [[1, 1]],
   );
   assert.deepEqual(
     entries

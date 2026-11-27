@@ -44,14 +44,14 @@ test("the macOS jobs retain the Windows build and test phases on parallel runner
   }
 });
 
-test("native jobs keep two Windows shards and one macOS job per test suite", () => {
-  for (const [name, macosCount] of [
-    ["native-rust-tests", 1],
+test("native jobs use two Windows Rust shards and one job for each other native suite", () => {
+  for (const [name, windowsCount] of [
+    ["native-rust-tests", 2],
     ["native-api-tests", 1],
   ]) {
     for (const [suffix, count] of [
-      ["", 2],
-      ["-macos", macosCount],
+      ["", windowsCount],
+      ["-macos", 1],
     ]) {
       const body = job(name + suffix);
       const partitions = [...body.matchAll(/shard:\s+(\d+)\s+total:\s+(\d+)/g)].map((row) => [
