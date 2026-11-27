@@ -51,7 +51,7 @@ fn collect_playwright_selector_edges_analyzes_prepared_apps_in_parallel() {
     let source = include_str!("../../../../playwright/graph/edge_playwright_selectors.rs");
     let body = graph_files_source_function_body(
         source,
-        "pub(super) fn collect_playwright_selector_edges_with_graph(",
+        "fn collect_playwright_selector_edges_with_graph(",
     );
     assert!(
         body.contains("par_iter"),
