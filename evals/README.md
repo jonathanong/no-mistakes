@@ -23,41 +23,47 @@ Nothing here measures real-session behavior (see
 
 ## Current results
 
-Two tables from two runs. Each names its run. A row with no run in
-[HISTORY.md](HISTORY.md) is marked "not re-measured".
+Two tables from two runs on the same day. Each names its run. A row with no
+run in [HISTORY.md](HISTORY.md) is marked "not re-measured".
 
 ### Tool skill (`no-mistakes`)
 
 **Description:** the `description:` line in `plugins/no-mistakes/skills/no-mistakes/SKILL.md`
-today. **Measured:** 2026-11-21 on `d44efa910e` (skill body and
-`names-graph-command` graders as of that commit), Claude CLI 2.1.330, agent
-`claude-sonnet-5-5`, judge `claude-opus-5-5`, all eleven routine flows,
-`runs: 3`, `--ablation with-without -j 4`, one invocation per flow, 318
-attempts, zero errored runs and `partial: false` on every flow. The `heldout`
-flow is not measured for this description; cases 07-09 are reserved, unrun,
-for the next candidate.
+today. **Measured:** 2026-11-26 on main `24768fa692` plus #4742's reporting
+scripts (skill and cases are main's), Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge
+`claude-opus-5-5`, all eleven routine flows, `runs: 3`, `--ablation
+with-without -j 4`, one invocation per flow, 318 attempts, zero errored and
+`partial: false` on every flow. Cost `$49.83`: `$31.36` agent and `$18.46`
+judge. Reports outside git at `~/.cache/no-mistakes/evals/2026-11-26-skill-control/`.
+Run entry: [tool-skill control](HISTORY.md#2026-11-26--tool-skill-control-all-eleven-flows-re-measured).
+Built with `python3 evals/readme_table.py skill <reports>`. The `heldout` flow
+is not measured for this description; cases 07-09 are reserved, unrun, for
+the next candidate.
 
-| flow | trigger (with-arm) | should-fire Δ | negatives Δ |
-| --- | --- | --- | --- |
-| `before-edit` | **7/18 (39%)** | +0.08 | +0.00 |
-| `after-edit` | **6/12 (50%)** | +0.08 | +0.00 |
-| `lang-graph` ⚠️ synthetic fixture | **6/12 (50%)** | +0.28 | +0.00 |
-| `usage` | **4/12 (33%)** | +0.11 | — |
-| `signature` | **0/12** | +0.00 | +0.00 |
-| `queues` | **0/12** | +0.00 | +0.00 |
-| `ci` | **0/12** | +0.00 | +0.00 |
-| `duplication` | **0/9** | −0.07 | +0.00 |
-| `safety` | **0/6** | −0.33 | +0.33 |
-| `napi` | **0/12** | +0.06 | +0.00 |
-| `neg-hard` — over-trigger guard, lower is better | **0/12** | n/a | +0.00 |
+| flow | trigger (with-arm) | should-fire Δ | content-only Δ | negatives Δ |
+| --- | --- | --- | --- | --- |
+| `before-edit` | 12/18 (44-84%) | +0.23 | +0.15 | +0.00 |
+| `after-edit` | 7/12 (32-81%) | +0.11 | +0.00 | +0.00 |
+| `signature` | 0/12 (0-24%) | +0.06 | +0.08 | +0.00 |
+| `lang-graph` | 7/12 (32-81%) | +0.25 | +0.08 | +0.00 |
+| `usage` | 5/12 (19-68%) | +0.31 | +0.33 | — |
+| `queues` | 0/12 (0-24%) | +0.11 | +0.17 | +0.00 |
+| `ci` | 1/12 (1-35%) | +0.03 | +0.00 | +0.00 |
+| `duplication` | 0/9 (0-30%) | +0.00 | +0.00 | +0.00 |
+| `safety` | 0/6 (0-39%) | -0.17 | -0.17 | +0.00 |
+| `napi` | 0/12 (0-24%) | +0.11 | +0.17 | +0.00 |
+| `neg-hard` (guard) | 0/12 | n/a | n/a | +0.00 |
 
 Trigger rates count should-fire cases only (negative cases excluded), so
-7/18 and the like are not out of the 318 attempts.
+12/18 and the like are not out of the 318 attempts. Ranges are 95% Wilson
+intervals.
 
 Δ is the mean weighted grader score per run, with-skill minus without-skill,
-`skill-fired` excluded. On `neg-hard` the skill never fired and none of the 12
-non-firing plans invented a `no-mistakes` command (`summarize.py --mentions`:
-7 no mention, 5 named without a command; `power.py --fabrication`: 0/12).
+`skill-fired` excluded. "Content-only Δ" also leaves out the
+`names-graph-command` regex, which passes when the plan names a command from
+`SKILL.md`: it records that the skill was used, not that the plan was better.
+On `neg-hard` the skill never fired, and 2 of the 12 non-firing plans used an
+invented `no-mistakes` command form (`power.py --fabrication`).
 
 ### Rules plugin (`no-mistakes-rules`)
 
@@ -278,15 +284,14 @@ One line per rules case:
 
 ## How to read these numbers
 
-- **Differences of 2-3 counts are not results.** At `runs: 3`, `power.py` on
-  the 2026-11-21 control gives the wrong-way gap a gate must tolerate between
-  two measurements of the *same* description (`allowed`): **3** on
-  `before-edit`, `usage` and `lang-graph`; **2** on `after-edit`, `signature`,
-  `queues`, `ci`, `napi` and `neg-hard`. These come from a control whose
-  rates are mostly 0, so they understate the spread at a higher trigger rate;
-  the Opus-era margins (4 on `before-edit`) are retired with its numbers
+- **Differences of 2-4 counts are not results.** At `runs: 3`, `power.py`
+  `a|obs` on the 2026-11-26 control gives the wrong-way gap a gate comparing a
+  candidate with that run must tolerate: **4** on `before-edit`; **3** on
+  `after-edit` and `lang-graph`; **2** on `usage`; **4** on `neg-hard`
+  loading and on its invented command forms. The flows at 0 have no room to
+  drop. Summed over the 39 should-fire cases, a rise must reach **16** counts
+  to clear noise. Run [`power.py`](power.py) before writing any gate
   ([derivation](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025)).
-  Run [`power.py`](power.py) before writing any gate.
 - **A zero is not certain.** The exact one-sided 95% upper bounds on 0/12
   (`signature`, `queues`, `ci`, `napi`, `neg-hard`), `duplication` 0/9 and
   `safety` 0/6 are 22%, 28% and 39%. A zero rules out a high rate, nothing
@@ -302,52 +307,32 @@ One line per rules case:
   nothing about the skill's guidance. Decompose per grader before claiming
   uplift: if Δ is carried by the `names-graph-command` regex, the honest
   reading is "the skill got used", not "the plan got better".
-- **Negative-case Δ of −0.33** (`ci`, `safety`, `signature`, from the prior
-  Opus-agent run; it did not recur on 2026-11-21) is one run flipping on one
-  case at n=3 — a thing to re-measure, not a finding.
+- **`safety` reads −0.17** from one with-arm attempt on
+  `safety-01-no-blind-exec` that never loaded the skill; it says nothing
+  about the skill's text.
 - **Every number is Claude's.** Codex reads the same `description:`, but the
   suite has no Codex arm.
 
 - **Rules rows report loading and passing apart.** Unloaded attempts are
   graded on content too and often pass on the model's own judgment, so read
   "passed (without plugin)" as the content baseline and "loaded" as the
-  description's job. Fix low loading (`queue-exception-*`, the `testing`
-  review and exception cases) in the `description:`, not the body.
+  description's job. Fix low loading (on 2026-11-26:
+  `queue-exception-enqueue-in-tx-receipt`, the two coverage-floor cases,
+  `testing-write-flaky-response-wait`, `postgresql-write-advisory-lock`) in
+  the `description:`, not the body.
 - **Ceiling cases show the skill fires and does no harm.** A rules case with
   3/3 in the without-plugin arm cannot show the skill helps.
 - **Rules rows are 3 attempts per arm.** One attempt is a third of a row, and
   the 95% interval on 3 of 3 runs from 44% to 100%.
 
-**Per-grader decomposition of Δ.** Across the five flows with a positive
-should-fire Δ (sum +0.61), the `names-graph-command` regex carries +0.35 (57%)
-and content graders +0.26. On `before-edit` and `after-edit` it is nearly all
-of Δ. The regex only passes when the plan names a command from `SKILL.md`, so
-it records that the skill was used, not that the plan was better:
-
-| flow | should-fire Δ | from `names-graph-command` | from content graders |
-| --- | --- | --- | --- |
-| `before-edit` | +0.08 | +0.07 | +0.01 |
-| `after-edit` | +0.08 | +0.08 | +0.00 |
-| `lang-graph` | +0.28 | +0.17 | +0.11 |
-| `usage` | +0.11 | +0.03 | +0.08 |
-| `napi` | +0.06 | +0.00 | +0.06 |
-| `duplication` | −0.07 | +0.00 | −0.07 |
-| `safety` | −0.33 | +0.00 | −0.33 |
-| `signature`, `queues`, `ci` | +0.00 | +0.00 | +0.00 |
-
-Content-grader gains with the skill fired in every with-arm run are
-`before-edit-03-full-suite` `produces-reduced-test-set` (1/3 vs 0/3) and
-`usage-04-paths-in-ci` `paths-is-not-the-parseable-contract` (3/3 vs 0/3).
-`lang-graph-02-cross-lang` `covers-both-language-graphs` gained 2/3 vs 0/3 with
-the skill firing in only 1 of 3 runs (one pass came from a run that never
-loaded it), so that gain is not attributable to the skill. The `napi` gain
-is one run on `napi-02-repeated-calls` with the skill never fired, so it is
-noise. `before-edit-05-where-used` fired 3/3 and scored 3/3 on both content
-graders in both arms: its +0.20 is the regex alone. The four `REGRESSION` rows
-are explained in [HISTORY.md](HISTORY.md#2026-11-21--re-baseline-under-the-sonnet-agent-and-opus-judge);
-each is within the margins above. The earlier negative-case Δ of −0.33 on `ci`,
-`safety` and `signature` did not recur (those flows read 0.00, 0.00 and
-+0.33).
+**Where Δ comes from.** The content-only column is lower than should-fire
+Δ on `before-edit` (+0.15 of +0.23), `after-edit` (+0.00 of +0.11) and
+`lang-graph` (+0.08 of +0.25): there, much of the gain is the regex. On
+`usage` (loaded 5/12) the content graders carry it. `queues`, `signature` and
+`napi` show content gains with the skill never loaded in the with arm, so
+those are noise between two arms that ran the same way. The
+per-grader table for the 2026-11-21 run is in
+[HISTORY.md](HISTORY.md#2026-11-21--re-baseline-under-the-sonnet-agent-and-opus-judge).
 
 ## What this suite does NOT measure
 
@@ -429,14 +414,14 @@ The plugin arm must never score below the baseline arm. `summarize.py` prints a
 Explain every row before merging: an unfired loss points at the description or
 a grader, a fired one at the skill's content.
 
-**Cost:** the 2026-11-21 re-baseline (318 attempts, Sonnet agent, Opus judge)
-reported $28.29 in the per-flow `costUsd` fields, $0.089 per attempt, plus
-$16.21 of judge cost in the per-run `judgeCostUsd` fields: $44.50 and $0.140
-per attempt together. Plan with ~$0.14 per case × run × arm at `-j 4`, judge
+**Cost:** the 2026-11-26 control (318 attempts, Sonnet agent, Opus judge)
+reported $31.36 in the per-flow `costUsd` fields, $0.099 per attempt, plus
+$18.46 of judge cost in the per-run `judgeCostUsd` fields: $49.83 and $0.157
+per attempt together. Plan with ~$0.16 per case × run × arm at `-j 4`, judge
 included (2026-11-14 smoke: 8 `before-edit` cases, `--runs 1`, both arms, 16
 runs, $2.38); budget `--max-cost-usd` against the agent figure unless you have
 checked whether the cap counts judge cost. A 17-case single-arm screen is ~$7;
-the full 53-case both-arm re-baseline is ~320 runs and ~$45. Opus-agent runs
+the full 53-case both-arm re-baseline is ~320 runs and ~$50. Opus-agent runs
 cost $0.16-0.19. A total far below the estimate means runs errored — see
 [METHODOLOGY](METHODOLOGY.md#running-a-measurement).
 

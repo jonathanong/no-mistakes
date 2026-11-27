@@ -67,8 +67,8 @@ A candidate that misses G1, G2 or G3 is rejected and recorded here only.
 
 ## 2026-11-26 — tool-skill control: all eleven flows re-measured
 
-**Run:** `6047da1b16` (the `no-mistakes` skill and its cases as on main
-`24768fa692`), Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge
+**Run:** main `24768fa692` plus #4742's reporting scripts; the `no-mistakes`
+skill and its cases are main's. Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge
 `claude-opus-5-5`, `runs: 3` per arm, `--ablation with-without -j 4`, one
 invocation per flow, 318 attempts, zero errored and `partial: false` on all
 eleven. Cost `$49.83`: `$31.36` agent and `$18.46` judge. Reports outside git
