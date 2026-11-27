@@ -3,6 +3,9 @@ use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
+#[path = "php_http_resources.rs"]
+mod resources;
+
 pub(super) fn yaml_route_facts(
     path: &Path,
     roots: &[PathBuf],
@@ -61,6 +64,7 @@ fn extract_laravel_routes(source: &str) -> Vec<(String, String)> {
         })
         .collect::<Vec<_>>();
     routes.extend(extract_laravel_resources(source));
+    routes.extend(resources::extract_filtered_resources(source));
     routes.sort();
     routes.dedup();
     routes

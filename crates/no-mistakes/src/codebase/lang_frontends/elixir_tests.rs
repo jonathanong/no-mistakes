@@ -107,6 +107,22 @@ fn elixir_collects_aliases_and_phoenix_routes() {
         .route_handlers
         .iter()
         .any(|(route, handler)| route == "/aliased" && handler.ends_with(".index")));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| { route == "/accounts/:id" && handler.ends_with(".show") }));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| { route == "/accounts/new" && handler.ends_with(".new") }));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| { route == "/v1/members" && handler.ends_with(".index") }));
+    assert!(router
+        .route_handlers
+        .iter()
+        .any(|(route, handler)| { route == "/v1/members/:id/edit" && handler.ends_with(".edit") }));
     assert!(router.route_handlers.iter().all(|(route, _)| {
         route != "/api/after-comment-end"
             && route != "/e/z"
