@@ -116,8 +116,9 @@ and the [`github-actions` and off-topic run](#2026-11-26--github-actions-and-off
 | 4. passed overall, all should-fire (read) | — | 60/66 | 60/66 | same |
 
 The rise is on the targeted cases: both coverage-floor cases went from 0/3 to
-3/3 loaded. The other `testing` cases held (parsed-usage 3/3, error-text 3/3,
-real-email 2/3, flaky-wait 0/3). `postgresql-write-advisory-lock` went from
+3/3 loaded. Of the other `testing` cases, parsed-usage (3/3), error-text (3/3)
+and flaky-wait (0/3) held, and real-email fell from 3/3 to 2/3.
+`postgresql-write-advisory-lock` went from
 0/3 to 3/3 loaded with its description unchanged, the same-day swing the
 control entry already shows on that case.
 
