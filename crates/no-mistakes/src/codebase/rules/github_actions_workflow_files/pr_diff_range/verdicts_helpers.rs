@@ -186,20 +186,3 @@ pub(super) fn base_with_merge_verdict(
     }
     None
 }
-
-pub(super) fn is_same_side(a: Revision, b: Revision) -> bool {
-    let is_base = |r: Revision| {
-        r.is_pr_base() || matches!(r, Revision::MergeGroupBaseSha | Revision::CheckedOutPrBase)
-    };
-    let is_head = |r: Revision| {
-        r.is_pr_head()
-            || matches!(
-                r,
-                Revision::GithubSha
-                    | Revision::MergeCommitHead
-                    | Revision::MergeGroupHeadSha
-                    | Revision::CheckedOutMergeGroupHead
-            )
-    };
-    (is_base(a) && is_base(b)) || (is_head(a) && is_head(b))
-}
