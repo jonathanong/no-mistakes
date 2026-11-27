@@ -310,3 +310,23 @@ fn invalid_shell_source_glob_identifies_the_rule_option() {
         "github-actions-download-integrity shellSourceInclude contains invalid glob `[`",
     );
 }
+
+#[test]
+fn shell_source_membership_ignores_unnormalized_file_spellings() {
+    // Windows inventories mix `\` and `/`; a `.` component is the same
+    // normalization gap on every platform.
+    let index = std::sync::Arc::new(vec![PathBuf::from("/repo/scripts/download.sh")]);
+    let indexes = [index];
+    assert!(super::effort::indexed(
+        &indexes,
+        Path::new("/repo/scripts/download.sh")
+    ));
+    assert!(super::effort::indexed(
+        &indexes,
+        Path::new("/repo/scripts/./download.sh")
+    ));
+    assert!(!super::effort::indexed(
+        &indexes,
+        Path::new("/repo/scripts/other.sh")
+    ));
+}
