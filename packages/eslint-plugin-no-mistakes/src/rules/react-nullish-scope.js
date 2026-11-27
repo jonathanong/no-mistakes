@@ -146,7 +146,7 @@ function createNullishState(context) {
       scope.bindings.add(node.id.name);
       noteType(node.id.name, type, scope);
       const initStatus = expressionStatus(node.init);
-      if (initStatus === "yes") defineReactNode(node.id.name, scope);
+      if (!type && initStatus === "yes") defineReactNode(node.id.name, scope);
       else if (!type && initStatus === "unresolved") defineUnresolved(node.id.name, scope);
       defineObjectType(node.id, type, scope);
       if (!type) {

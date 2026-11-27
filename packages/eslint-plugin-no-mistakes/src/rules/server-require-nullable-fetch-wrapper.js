@@ -3,7 +3,12 @@
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { logicalCall, memberPropertyName, pathAllowed } = require("./module-mock-helpers");
-const { importSpellings, reportsUnanalyzable, rootIdentifier } = require("./import-resolution");
+const {
+  importSpellings,
+  reportsUnanalyzable,
+  requiredMember,
+  rootIdentifier,
+} = require("./import-resolution");
 const helpers = require("./nullable-fetch-wrapper-helpers");
 
 const {
@@ -30,9 +35,10 @@ function isFunctionBoundary(node) {
 function calleeNames(callee, context) {
   const path = calleePath(callee);
   const spelled = importSpellings(rootIdentifier(callee), path, context);
+  const required = requiredMember(callee, context);
   return {
-    names: [...new Set([path, ...spelled.names].filter(Boolean))],
-    unresolved: spelled.unresolved,
+    names: [...new Set([path, ...spelled.names, required?.name].filter(Boolean))],
+    unresolved: spelled.unresolved || required?.unresolved === true,
   };
 }
 

@@ -22,17 +22,29 @@ function externalModule(node) {
   return literalString(reference.expression);
 }
 
+function typeOnlyImportNode(node) {
+  if (node.importKind === "type") return true;
+  const specifiers = node.specifiers;
+  return (
+    Array.isArray(specifiers) &&
+    specifiers.length > 0 &&
+    specifiers.every((specifier) => specifier.importKind === "type")
+  );
+}
+
 function visit(node, context, state, seen) {
   if (!node || typeof node !== "object" || seen.has(node)) return;
   seen.add(node);
   if (node.type === "ImportDeclaration" && typeof node.source?.value === "string") {
-    noteModule(node.source.value, state);
+    if (!typeOnlyImportNode(node)) noteModule(node.source.value, state);
   } else if (node.type === "ImportExpression") {
     noteModule(node.source ? literalString(node.source) : null, state);
   } else if (node.type === "TSImportEqualsDeclaration") {
-    const moduleName = externalModule(node);
-    if (moduleName !== undefined) noteModule(moduleName, state);
-    else noteFact(node.id ? importFact(node.id, context) : null, state);
+    if (node.importKind !== "type") {
+      const moduleName = externalModule(node);
+      if (moduleName !== undefined) noteModule(moduleName, state);
+      else noteFact(node.id ? importFact(node.id, context) : null, state);
+    }
   } else if (node.type === "CallExpression") {
     noteFact(importFact(node, context), state);
   }

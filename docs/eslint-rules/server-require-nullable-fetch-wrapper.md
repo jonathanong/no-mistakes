@@ -59,7 +59,7 @@ only that uncertain report. A known member that matches no getter pattern stays
 quiet. An unresolved call between a getter and its wrapper does not hide that
 wrapper.
 
-An import rename is spelled back to the imported name before the getter pattern is tested. `require("./api")`, `import Api = require("./api")`, and `import * as api` spell the member the same way. An optional call, a comma callee, `satisfies` or `as` around the exported function or the receiver, and `.call` or a literal-array `.apply` inside the wrapper are the same call.
+An import rename is spelled back to the imported name before the getter pattern is tested. `require("./api")`, `import Api = require("./api")`, and `import * as api` spell the member the same way. `require("./api").getWidget("1")` is that getter; a dynamic module or member stays unanalyzable, and a local function named `require` is not the loader. An optional call, a comma callee, `satisfies` or `as` around the exported function or the receiver, and `.call` or a literal-array `.apply` inside the wrapper are the same call.
 
 ## Fix
 

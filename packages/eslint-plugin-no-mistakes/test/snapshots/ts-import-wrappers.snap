@@ -71,6 +71,25 @@
       "rule": "nextjs-no-manual-script-tags"
     },
     {
+      "file": "src/mixed-script-import.tsx",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 49,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/src/mixed-script-import.tsx",
+          "line": 2,
+          "message": "Use next/script instead of a raw <script> tag.",
+          "messageId": "script",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        }
+      ],
+      "name": "mixed type and value next import",
+      "options": null,
+      "rule": "nextjs-no-manual-script-tags"
+    },
+    {
       "file": "src/require-head.tsx",
       "findings": [
         {
@@ -129,6 +148,20 @@
         ],
         "structuredDataComponent": "StructuredData"
       },
+      "rule": "nextjs-no-manual-script-tags"
+    },
+    {
+      "file": "src/type-import-head.tsx",
+      "findings": [],
+      "name": "type-only import-equals is not next",
+      "options": null,
+      "rule": "nextjs-no-manual-script-tags"
+    },
+    {
+      "file": "src/type-specifier-script.tsx",
+      "findings": [],
+      "name": "type-only specifier is not next",
+      "options": null,
       "rule": "nextjs-no-manual-script-tags"
     },
     {
@@ -291,6 +324,13 @@
       "name": "wrapped jsx iife",
       "options": null,
       "rule": "react-no-iife-in-jsx"
+    },
+    {
+      "file": "react-nullish-annotated.tsx",
+      "findings": [],
+      "name": "annotated string is not a ReactNode",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
     },
     {
       "file": "react-nullish-unresolved.tsx",
@@ -561,6 +601,25 @@
       "rule": "react-no-use-promise-resolve"
     },
     {
+      "file": "react-use-type-require.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 43,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-type-require.tsx",
+          "line": 4,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "name": "type-only require is the loader",
+      "options": null,
+      "rule": "react-no-use-promise-resolve"
+    },
+    {
       "file": "react-use-unresolved.tsx",
       "findings": [
         {
@@ -576,6 +635,13 @@
         }
       ],
       "name": "unresolved react require",
+      "options": null,
+      "rule": "react-no-use-promise-resolve"
+    },
+    {
+      "file": "react-use-value-require.tsx",
+      "findings": [],
+      "name": "value require shadows the loader",
       "options": null,
       "rule": "react-no-use-promise-resolve"
     },
@@ -669,6 +735,113 @@
         }
       ],
       "name": "commonjs nullable getter",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-dynamic-require.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-dynamic-require.ts",
+          "line": 4,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 34,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-dynamic-require.ts",
+          "line": 7,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "dynamic require member stays unanalyzable",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-known-member.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-known-member.ts",
+          "line": 4,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "known member under an unresolved call",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-local-require.ts",
+      "findings": [],
+      "name": "local require is not the getter loader",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-member-require.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 39,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-member-require.ts",
+          "line": 2,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "member require getter",
       "options": {
         "getterCalleePatterns": [
           "^getWidget$"
@@ -963,6 +1136,61 @@
         "options": null
       },
       {
+        "file": "nullable-dynamic-require.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-dynamic-require.ts",
+            "line": 4,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-dynamic-require.ts",
+            "line": 7,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          }
+        ],
+        "name": "nullable-dynamic-require.ts",
+        "options": null
+      },
+      {
+        "file": "nullable-known-member.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-known-member.ts",
+            "line": 4,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          }
+        ],
+        "name": "nullable-known-member.ts",
+        "options": null
+      },
+      {
+        "file": "nullable-local-require.ts",
+        "findings": [],
+        "name": "nullable-local-require.ts",
+        "options": null
+      },
+      {
+        "file": "nullable-member-require.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-member-require.ts",
+            "line": 2,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          }
+        ],
+        "name": "nullable-member-require.ts",
+        "options": null
+      },
+      {
         "file": "nullable-unresolved.ts",
         "findings": [
           {
@@ -978,6 +1206,12 @@
       }
     ],
     "nullish": [
+      {
+        "file": "react-nullish-annotated.tsx",
+        "findings": [],
+        "name": "react-nullish-annotated.tsx",
+        "options": null
+      },
       {
         "file": "react-nullish-local-require.tsx",
         "findings": [],
@@ -1149,6 +1383,20 @@
         "options": null
       },
       {
+        "file": "react-use-type-require.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-type-require.tsx",
+            "line": 4,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          }
+        ],
+        "name": "react-use-type-require.tsx",
+        "options": null
+      },
+      {
         "file": "react-use-unresolved.tsx",
         "findings": [
           {
@@ -1160,6 +1408,12 @@
           }
         ],
         "name": "react-use-unresolved.tsx",
+        "options": null
+      },
+      {
+        "file": "react-use-value-require.tsx",
+        "findings": [],
+        "name": "react-use-value-require.tsx",
         "options": null
       },
       {
@@ -1234,6 +1488,20 @@
         "options": null
       },
       {
+        "file": "src/mixed-script-import.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(nextjs-no-manual-script-tags)",
+            "column": 27,
+            "file": "src/mixed-script-import.tsx",
+            "line": 2,
+            "message": "Use next/script instead of a raw <script> tag."
+          }
+        ],
+        "name": "src/mixed-script-import.tsx",
+        "options": null
+      },
+      {
         "file": "src/plain.tsx",
         "findings": [],
         "name": "src/plain.tsx",
@@ -1265,6 +1533,18 @@
           }
         ],
         "name": "src/script-exempt.tsx",
+        "options": null
+      },
+      {
+        "file": "src/type-import-head.tsx",
+        "findings": [],
+        "name": "src/type-import-head.tsx",
+        "options": null
+      },
+      {
+        "file": "src/type-specifier-script.tsx",
+        "findings": [],
+        "name": "src/type-specifier-script.tsx",
         "options": null
       }
     ],

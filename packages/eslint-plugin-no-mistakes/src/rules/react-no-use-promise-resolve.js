@@ -49,6 +49,7 @@ module.exports = Object.assign(
         CallExpression(node) {
           if (suppressed(node)) return;
           const status = reactUseStatus(node.callee, context, useNames);
+          if (status === "no") return;
           const argument = forwardedArgument(node);
           const resolved =
             isPromiseResolve(argument) ||

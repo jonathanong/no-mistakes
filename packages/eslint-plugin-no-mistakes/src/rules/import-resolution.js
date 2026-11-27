@@ -1,7 +1,7 @@
 "use strict";
 
 const { unwrapExpression, unwrapSequence } = require("./async-ast");
-const { literalString } = require("./logical-call");
+const { literalString, memberPropertyName } = require("./logical-call");
 const { resolveVariable } = require("./async-target-bindings");
 
 function reportsUnanalyzable(context) {
@@ -14,7 +14,21 @@ function isFreeRequire(node, context) {
   if (!context?.sourceCode?.getScope) return true;
   const variable = resolveVariable(current, context);
   if (!variable || variable.defs.length === 0) return true;
-  return !variable.defs.some((def) => def.type && def.type !== "ImplicitGlobalVariable");
+  return !variable.defs.some(
+    (def) => def.type && def.type !== "ImplicitGlobalVariable" && !typeOnlyImport(def),
+  );
+}
+
+function requiredMember(callee, context) {
+  const current = unwrapExpression(callee);
+  if (current?.type !== "MemberExpression") return null;
+  const object = unwrapExpression(current.object);
+  if (object?.type !== "CallExpression") return null;
+  const moduleName = requireModule(object, context);
+  if (moduleName === undefined) return null;
+  const property = memberPropertyName(current);
+  if (moduleName === null || !property) return { unresolved: true };
+  return { name: property };
 }
 
 // undefined: not a require. null: require whose module is not a static string.
@@ -189,6 +203,8 @@ module.exports = {
   importFact,
   importSpellings,
   reportsUnanalyzable,
+  requireModule,
+  requiredMember,
   rootIdentifier,
   typeOnlyImport,
 };

@@ -205,6 +205,76 @@ describe("typescript import wrappers", () => {
         "nextjs-no-manual-script-tags",
         { structuredDataComponent: "StructuredData", allowInlineScriptIds: ["theme"] },
       ),
+      eslintCase(
+        "type-only require is the loader",
+        "react-use-type-require.tsx",
+        "react-no-use-promise-resolve",
+      ),
+      eslintCase(
+        "value require shadows the loader",
+        "react-use-value-require.tsx",
+        "react-no-use-promise-resolve",
+      ),
+      eslintCase(
+        "annotated string is not a ReactNode",
+        "react-nullish-annotated.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
+        "member require getter",
+        "nullable-member-require.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "local require is not the getter loader",
+        "nullable-local-require.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "known member under an unresolved call",
+        "nullable-known-member.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "dynamic require member stays unanalyzable",
+        "nullable-dynamic-require.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "type-only import-equals is not next",
+        "src/type-import-head.tsx",
+        "nextjs-no-manual-script-tags",
+      ),
+      eslintCase(
+        "type-only specifier is not next",
+        "src/type-specifier-script.tsx",
+        "nextjs-no-manual-script-tags",
+      ),
+      eslintCase(
+        "mixed type and value next import",
+        "src/mixed-script-import.tsx",
+        "nextjs-no-manual-script-tags",
+      ),
     ];
 
     expect(cases.find((item) => item.name === "ignored unresolved react require").findings).toEqual(
@@ -296,6 +366,49 @@ describe("typescript import wrappers", () => {
         .find((item) => item.name === "structured JSON-LD stays uncertain")
         .findings.map((finding) => finding.line),
     ).toEqual([3, 7]);
+    expect(
+      cases
+        .find((item) => item.name === "type-only require is the loader")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([[4, "resolve"]]);
+    expect(cases.find((item) => item.name === "value require shadows the loader").findings).toEqual(
+      [],
+    );
+    expect(
+      cases.find((item) => item.name === "annotated string is not a ReactNode").findings,
+    ).toEqual([]);
+    expect(
+      cases
+        .find((item) => item.name === "member require getter")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([[2, "wrapper"]]);
+    expect(
+      cases.find((item) => item.name === "local require is not the getter loader").findings,
+    ).toEqual([]);
+    expect(
+      cases
+        .find((item) => item.name === "known member under an unresolved call")
+        .findings.map((finding) => [finding.line, finding.column, finding.messageId]),
+    ).toEqual([[4, 10, "unanalyzable"]]);
+    expect(
+      cases
+        .find((item) => item.name === "dynamic require member stays unanalyzable")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [4, "unanalyzable"],
+      [7, "unanalyzable"],
+    ]);
+    expect(
+      cases.find((item) => item.name === "type-only import-equals is not next").findings,
+    ).toEqual([]);
+    expect(cases.find((item) => item.name === "type-only specifier is not next").findings).toEqual(
+      [],
+    );
+    expect(
+      cases
+        .find((item) => item.name === "mixed type and value next import")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([[2, "script"]]);
 
     const oxlint = {
       "react-use": oxlintOn(".oxlintrc-react-use.json", [
@@ -304,12 +417,15 @@ describe("typescript import wrappers", () => {
         "react-use-unresolved.tsx",
         "react-use-bindings.tsx",
         "promise-type-query.tsx",
+        "react-use-type-require.tsx",
+        "react-use-value-require.tsx",
       ]),
       nullish: oxlintOn(".oxlintrc-nullish.json", [
         "react-nullish.tsx",
         "react-nullish-unresolved.tsx",
         "react-nullish-members.tsx",
         "react-nullish-local-require.tsx",
+        "react-nullish-annotated.tsx",
       ]),
       "nullish-ignore": oxlintOn(".oxlintrc-nullish-ignore.json", ["react-nullish-unresolved.tsx"]),
       fetch: oxlintOn(".oxlintrc-fetch.json", [
@@ -324,12 +440,19 @@ describe("typescript import wrappers", () => {
         "src/dynamic-next.tsx",
         "src/plain.tsx",
         "src/script-exempt.tsx",
+        "src/type-import-head.tsx",
+        "src/type-specifier-script.tsx",
+        "src/mixed-script-import.tsx",
       ]),
       "script-structured": oxlintOn(".oxlintrc-script-structured.json", ["src/script-exempt.tsx"]),
       "script-ignore": oxlintOn(".oxlintrc-script-ignore.json", ["src/dynamic-next.tsx"]),
       "nullable-widget": oxlintOn(".oxlintrc-nullable-widget.json", [
         "nullable-cjs.ts",
         "nullable-unresolved.ts",
+        "nullable-member-require.ts",
+        "nullable-local-require.ts",
+        "nullable-dynamic-require.ts",
+        "nullable-known-member.ts",
       ]),
       "nullable-user": oxlintOn(".oxlintrc-nullable-user.json", ["nullable-satisfies.ts"]),
       "nullable-overload": oxlintOn(".oxlintrc-nullable-widget.json", ["nullable-overload.ts"]),
