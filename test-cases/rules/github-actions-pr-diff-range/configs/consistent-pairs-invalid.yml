@@ -1,0 +1,7 @@
+rules:
+  - rule: github-actions-pr-diff-range
+    scope: repository
+    options:
+      revisionPairs:
+        - baseEnv: DIFF_BASE
+          headFlag: --head

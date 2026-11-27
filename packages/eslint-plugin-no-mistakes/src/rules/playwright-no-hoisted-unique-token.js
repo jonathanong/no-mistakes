@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { isFunctionNode } = require("./test-no-shared-state-helpers");
 const { hasProperty, resolveVariable } = require("./test-no-shared-state-aliases");
 const {
@@ -113,6 +114,7 @@ module.exports = rule(
     let isPlaywrightFile = isPlaywrightPath(context.filename);
     const tokenFactories = context.options?.[0]?.tokenFactories;
     if (!tokenFactories || tokenFactories.length === 0) return {};
+    const suppressed = ruleSuppression(context, "playwright-no-hoisted-unique-token");
     const factoryNames = new Set(tokenFactories);
 
     // declarator node -> factory name, for declarations not already shielded inside their own hook/test.
@@ -187,7 +189,7 @@ module.exports = rule(
               if (refreshes) refreshed.add(declarator);
               continue;
             }
-            if (refreshed.has(declarator)) continue;
+            if (refreshed.has(declarator) || suppressed(event.node)) continue;
             context.report({
               node: event.node,
               messageId: "hoisted",

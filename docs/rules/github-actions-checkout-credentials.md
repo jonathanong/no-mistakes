@@ -122,9 +122,8 @@ stays unknown when the option is on. Unknown option keys are rejected.
 branch. It has no default. For example, `defaultBranch: integration` accepts
 `with.ref: integration` and `with.ref: refs/heads/integration` when the checkout
 repository is statically the base repository. A `refs/heads/` prefix on the
-option is normalized. Empty names, expression-valued names, and `refs/pull/*`
-conventions are configuration errors; a PR ref cannot be whitelisted by this
-option. Bare 40- or 64-character hex values remain unknown because checkout
+option is normalized. Use a literal name that Git accepts as a branch. The
+loader rejects expressions, PR refs, and malformed branch names. Bare 40- or 64-character hex values remain unknown because checkout
 can interpret them as commit IDs; use `refs/heads/<configured-name>` for such
 a branch name. The semantic `${{ github.event.repository.default_branch }}` works
 without configuring a literal name. This option does not infer token permissions.
