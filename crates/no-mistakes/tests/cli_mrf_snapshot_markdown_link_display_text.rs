@@ -40,7 +40,6 @@ fn markdown_link_display_text_json_matches_snapshot() {
         ("escaped_backtick_in_code", "escaped-backtick-code"),
         ("indented_opening_fence", "indented-opening-fence"),
         ("fence_info_backtick", "fence-info-backtick"),
-        ("disable_file", "disable-file"),
         ("disable_lines", "disable-lines"),
         ("code_before_html_mask", "code-before-html-mask"),
         ("reference_edge_resolved", "reference-edge-resolved"),
@@ -57,6 +56,11 @@ fn markdown_link_display_text_json_matches_snapshot() {
         .into_iter()
         .map(|(label, name)| (label, unit_root(name), docs.clone()))
         .collect();
+    cases.push((
+        "disable_file",
+        unit_root("disable-file"),
+        config("disable-file.yml"),
+    ));
     cases.push((
         "custom_mdx_extension",
         unit_root("custom"),

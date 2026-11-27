@@ -8,6 +8,27 @@ fn fixture(rule: &str) -> PathBuf {
         .join("fixture/unanalyzable")
 }
 
+#[test]
+fn pnpm_manifest_unanalyzable_check_json_snapshot() {
+    for (rule, snapshot) in [
+        ("pnpm-overrides-ban", "pnpm_overrides_ban_unanalyzable"),
+        (
+            "pnpm-release-age-policy",
+            "pnpm_release_age_policy_unanalyzable",
+        ),
+    ] {
+        let root = fixture(rule);
+        let cases = ["report", "advise", "ignore"]
+            .map(|policy| (policy, root.clone(), root.join(format!("max-{policy}.yml"))));
+        super::check_json_snapshot::assert_saved_fixture_with_env_and_args(
+            snapshot,
+            &cases,
+            &[],
+            &["--include-suppressed"],
+        );
+    }
+}
+
 // Both CLI channels and suppression auditing use the prepared source session.
 #[test]
 fn manifest_failures_follow_policy_without_hiding_definite_findings() {

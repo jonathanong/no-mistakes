@@ -1,3 +1,4 @@
+import type { PostgresLegacyUnanalyzableSql } from "./postgres-bounded-statements-types";
 import type { Effort, Unanalyzable } from "./traversal-types";
 
 /** A trusted throwing validator for one SQL identifier argument and its returned value. */
@@ -32,5 +33,5 @@ export interface PostgresNoUnboundedSqlIdentifierOptions {
   identifierSources?: PostgresSqlIdentifierSource[];
   effort?: Effort;
   unanalyzable?: Unanalyzable;
-  unanalyzableSql?: Unanalyzable;
+  unanalyzableSql?: PostgresLegacyUnanalyzableSql;
 }

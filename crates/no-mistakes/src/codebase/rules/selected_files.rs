@@ -30,6 +30,21 @@ pub(crate) fn discovered_rule_files(
     super::path_filter::filter_rule_files(root, config, rule, &files)
 }
 
+pub(super) fn run_parallel_rule_applications(
+    config: &NoMistakesConfig,
+    rule_id: &str,
+    check: &(dyn Fn(&RuleDef) -> Result<Vec<RuleFinding>> + Sync),
+) -> Result<Vec<RuleFinding>> {
+    let groups: Result<Vec<_>> = config
+        .rule_applications(rule_id)
+        .into_par_iter()
+        .map(check)
+        .collect();
+    let mut findings = groups?.into_iter().flatten().collect();
+    super::sort_findings(&mut findings);
+    Ok(findings)
+}
+
 /// Run a filesystem-only rule over either standalone discovery or a prepared inventory.
 pub(crate) fn run_filesystem_rule<O: DeserializeOwned + Default + Send>(
     root: &Path,
@@ -38,21 +53,14 @@ pub(crate) fn run_filesystem_rule<O: DeserializeOwned + Default + Send>(
     rule_id: &str,
     scan: impl Fn(&Path, &O, &[PathBuf]) -> Result<Vec<RuleFinding>> + Send + Sync,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(rule_id)
-        .into_par_iter()
-        .map(|rule| {
-            let options: O = rule.try_rule_options()?;
-            let files = match all_files {
-                Some(all_files) => selected_rule_files(root, config, rule, all_files)?,
-                None => discovered_rule_files(root, config, rule)?,
-            };
-            scan(root, &options, &files)
-        })
-        .collect();
-    let mut findings = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    run_parallel_rule_applications(config, rule_id, &|rule| {
+        let options: O = rule.try_rule_options()?;
+        let files = match all_files {
+            Some(all_files) => selected_rule_files(root, config, rule, all_files)?,
+            None => discovered_rule_files(root, config, rule)?,
+        };
+        scan(root, &options, &files)
+    })
 }
 
 pub(crate) fn check_indexed_standalone(
