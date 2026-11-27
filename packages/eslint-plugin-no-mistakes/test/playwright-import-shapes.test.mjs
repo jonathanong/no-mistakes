@@ -32,6 +32,7 @@ const cases = [
     expected: [
       [4, "timeout"],
       [7, "timeout"],
+      [8, "timeout"],
     ],
   },
   {
@@ -222,6 +223,13 @@ const cases = [
     expected: [[5, "unanalyzable"]],
   },
   {
+    name: "file directive suppresses an opaque beforeAll",
+    rule: "playwright-no-hoisted-unique-token",
+    file: "e2e/hoisted-opaque-suppressed.spec.ts",
+    options: { tokenFactories: ["makeToken"] },
+    expected: [],
+  },
+  {
     name: "it and describe beforeAll read a hoisted token",
     rule: "playwright-no-hoisted-unique-token",
     file: "e2e/hoisted-aliases.spec.ts",
@@ -303,6 +311,12 @@ const cases = [
     expected: [[3, "semantic"]],
   },
   {
+    name: "selector before a CommonJS Playwright require",
+    rule: "playwright-selector-priority",
+    file: "src/selector-before-require.ts",
+    expected: [[4, "semantic"]],
+  },
+  {
     name: "defaulted test ids through wrappers (#4368)",
     rule: "playwright-defaults",
     file: "src/defaults.tsx",
@@ -327,6 +341,13 @@ const cases = [
     name: "opaque interactive component",
     rule: "playwright-require-interactive-test-id",
     file: "src/interactive-opaque.tsx",
+    options: { interactiveComponents: ["Button"] },
+    expected: [[4, "unanalyzable"]],
+  },
+  {
+    name: "opaque JSX member root",
+    rule: "playwright-require-interactive-test-id",
+    file: "src/interactive-member.tsx",
     options: { interactiveComponents: ["Button"] },
     expected: [[4, "unanalyzable"]],
   },

@@ -45,7 +45,7 @@ selector-presence behavior. Use `playwright-literals` to validate their values.
 - `unanalyzable` is `finding` or `ignore`. It defaults to `finding`. A JSX tag
   whose component is a dynamic member of a `require` or import reports
   `unanalyzable` when the element is not otherwise interactive and has no
-  selector.
+  selector. `<UI.Action />` does too when `UI` is `require(componentPackage)`.
 
 The slot example above uses the default slot prop and selector attributes:
 

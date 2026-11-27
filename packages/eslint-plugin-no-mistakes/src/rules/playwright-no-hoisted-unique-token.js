@@ -176,7 +176,8 @@ module.exports = rule(
           const readsCandidate = events.some((event) =>
             resolveVariable(event.node, context)?.defs?.some((def) => candidates.has(def.node)),
           );
-          if (readsCandidate) context.report({ node, messageId: "unanalyzable" });
+          if (readsCandidate && !suppressed(node))
+            context.report({ node, messageId: "unanalyzable" });
         }
         for (const callback of beforeAllCallbacks) {
           const events = [];

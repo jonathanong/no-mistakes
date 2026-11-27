@@ -58,7 +58,7 @@ use a test ID only when a semantic locator is not appropriate.
 
 ## Limits
 
-`require("@playwright/test")` and `import pw = require("@playwright/test")` admit the file outside an `e2e/` path. A locator argument wrapped in `as`, `satisfies`, `!`, or parentheses is still that selector.
+`require("@playwright/test")` and `import pw = require("@playwright/test")` admit the file outside an `e2e/` path, including a locator that appears before that require. A locator argument wrapped in `as`, `satisfies`, `!`, or parentheses is still that selector.
 
 A string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. A computed identifier key is not a static name. Only unresolved bare names or single-write aliases establish bare method calls; parameters, reassigned bindings, cycles, and local function or class declarations do not.
 

@@ -93,7 +93,7 @@ function isTestCall(node, testCallees = TEST_CALLEES, namespaces) {
 function setupHook(callee) {
   callee = unwrapExpression(callee);
   if (callee?.type === "SequenceExpression" && callee.expressions?.length) {
-    callee = callee.expressions.at(-1);
+    callee = unwrapExpression(callee.expressions.at(-1));
   }
   if (callee?.type === "MemberExpression" && !callee.computed) {
     const forwarded = staticPropertyName(callee.property);

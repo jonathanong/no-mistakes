@@ -54,7 +54,7 @@
       }
     },
     {
-      "files": ["e2e/hoisted-imports.spec.ts", "src/hoisted-require.ts", "e2e/hoisted-opaque.spec.ts", "e2e/hoisted-aliases.spec.ts", "e2e/hoisted-opaque-quiet.spec.ts"],
+      "files": ["e2e/hoisted-imports.spec.ts", "src/hoisted-require.ts", "e2e/hoisted-opaque.spec.ts", "e2e/hoisted-opaque-suppressed.spec.ts", "e2e/hoisted-aliases.spec.ts", "e2e/hoisted-opaque-quiet.spec.ts"],
       "rules": {
         "no-mistakes/playwright-no-hoisted-unique-token": ["error", { "tokenFactories": ["makeToken"] }]
       }
@@ -76,7 +76,7 @@
       }
     },
     {
-      "files": ["src/selector-require.ts", "src/selector-equals.ts", "e2e/selector-calls.spec.ts", "src/selector-plain.ts", "src/selector-statement.ts"],
+      "files": ["src/selector-require.ts", "src/selector-equals.ts", "e2e/selector-calls.spec.ts", "src/selector-plain.ts", "src/selector-statement.ts", "src/selector-before-require.ts"],
       "rules": { "no-mistakes/playwright-selector-priority": "error" }
     },
     {
@@ -84,7 +84,7 @@
       "rules": { "no-mistakes/playwright-defaults": "error" }
     },
     {
-      "files": ["src/interactive-imports.tsx", "src/interactive-opaque.tsx", "src/interactive-redeclare.tsx"],
+      "files": ["src/interactive-imports.tsx", "src/interactive-opaque.tsx", "src/interactive-member.tsx", "src/interactive-redeclare.tsx"],
       "rules": {
         "no-mistakes/playwright-require-interactive-test-id": ["error", { "interactiveComponents": ["Button"] }]
       }

@@ -64,6 +64,8 @@ module.exports = rule(
         const imported = mappedImport(name, node, context, importedNames);
         return imported && imported !== name ? [name, imported] : [name];
       });
+      const root = jsxRootName(node.name);
+      if (root && componentBinding(root, node, context)?.status === "opaque") opaque = true;
       return { names, opaque };
     }
     function openingInfo(node) {
@@ -133,6 +135,12 @@ module.exports = rule(
     };
   },
 );
+
+function jsxRootName(name) {
+  let current = name;
+  while (current?.type === "JSXMemberExpression") current = current.object;
+  return current?.type === "JSXIdentifier" ? current.name : null;
+}
 
 function compileMatchers(values) {
   if (!Array.isArray(values)) return [];

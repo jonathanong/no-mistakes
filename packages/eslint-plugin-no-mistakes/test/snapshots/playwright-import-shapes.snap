@@ -207,6 +207,17 @@
           "messageId": "timeout",
           "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
           "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 58,
+          "endLine": 8,
+          "file": "e2e/assertion-soft.spec.ts",
+          "line": 8,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
         }
       ],
       "name": "assertion soft chains on CommonJS bindings",
@@ -400,6 +411,17 @@
       "name": "defaulted test ids through wrappers (#4368)",
       "options": null,
       "rule": "playwright-defaults"
+    },
+    {
+      "file": "e2e/hoisted-opaque-suppressed.spec.ts",
+      "findings": [],
+      "name": "file directive suppresses an opaque beforeAll",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
     },
     {
       "file": "e2e/hoisted-imports.spec.ts",
@@ -839,6 +861,29 @@
       "rule": "playwright-require-interactive-test-id"
     },
     {
+      "file": "src/interactive-member.tsx",
+      "findings": [
+        {
+          "column": 29,
+          "endColumn": 38,
+          "endLine": 4,
+          "file": "src/interactive-member.tsx",
+          "line": 4,
+          "message": "Cannot tell whether this component is a configured interactive component. Import it with a static name.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "opaque JSX member root",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ]
+      },
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
       "file": "src/interactive-redeclare.tsx",
       "findings": [
         {
@@ -906,6 +951,25 @@
       "file": "src/selector-plain.ts",
       "findings": [],
       "name": "locator outside a Playwright file stays quiet",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-before-require.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 24,
+          "endLine": 4,
+          "file": "src/selector-before-require.ts",
+          "line": 4,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText().",
+          "messageId": "semantic",
+          "ruleId": "no-mistakes/playwright-selector-priority",
+          "severity": 2
+        }
+      ],
+      "name": "selector before a CommonJS Playwright require",
       "options": null,
       "rule": "playwright-selector-priority"
     },
@@ -1345,6 +1409,13 @@
           "file": "e2e/assertion-soft.spec.ts",
           "line": 7,
           "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-soft.spec.ts",
+          "line": 8,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
         }
       ],
       "name": "assertion soft chains on CommonJS bindings",
@@ -1488,6 +1559,13 @@
       "name": "defaulted test ids through wrappers (#4368)",
       "options": null,
       "rule": "playwright-defaults"
+    },
+    {
+      "file": "e2e/hoisted-opaque-suppressed.spec.ts",
+      "findings": [],
+      "name": "file directive suppresses an opaque beforeAll",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
     },
     {
       "file": "e2e/hoisted-imports.spec.ts",
@@ -1782,6 +1860,21 @@
       "rule": "playwright-require-interactive-test-id"
     },
     {
+      "file": "src/interactive-member.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 29,
+          "file": "src/interactive-member.tsx",
+          "line": 4,
+          "message": "Cannot tell whether this component is a configured interactive component. Import it with a static name."
+        }
+      ],
+      "name": "opaque JSX member root",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
       "file": "src/interactive-redeclare.tsx",
       "findings": [
         {
@@ -1829,6 +1922,21 @@
       "file": "src/selector-plain.ts",
       "findings": [],
       "name": "locator outside a Playwright file stays quiet",
+      "options": null,
+      "rule": "playwright-selector-priority"
+    },
+    {
+      "file": "src/selector-before-require.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-selector-priority)",
+          "column": 3,
+          "file": "src/selector-before-require.ts",
+          "line": 4,
+          "message": "Prefer a semantic locator such as getByRole(), getByLabel(), or getByText()."
+        }
+      ],
+      "name": "selector before a CommonJS Playwright require",
       "options": null,
       "rule": "playwright-selector-priority"
     },

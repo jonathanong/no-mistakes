@@ -110,6 +110,25 @@ describe("exported helper early returns", () => {
         },
       }),
     ).toEqual("once");
+    expect(
+      setupCallbackKind({
+        callee: {
+          type: "SequenceExpression",
+          expressions: [
+            { type: "Literal", value: 0 },
+            {
+              type: "TSAsExpression",
+              expression: {
+                type: "MemberExpression",
+                computed: false,
+                object: { type: "Identifier", name: "test" },
+                property: { name: "beforeEach" },
+              },
+            },
+          ],
+        },
+      }),
+    ).toEqual("per-test");
   });
 
   it("covers postgres, mock, and nullable helper fallbacks", () => {
