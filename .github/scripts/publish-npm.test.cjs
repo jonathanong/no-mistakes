@@ -99,10 +99,10 @@ test("platform publishers stage artifacts without installing or building the wor
 });
 
 test("npm publishers use workflow-owned tooling and allow for upload retries and tarball verification", () => {
-  // Two failed attempts can use four two-minute npm commands each. An
-  // accepted attempt can use three commands, plus 30 seconds of retry delays.
-  const publishMinutes = 2 * 4 * 2 + 3 * 2 + 0.5;
-  const tarballMinutes = 45;
+  // The third attempt can succeed via the post-failure version lookup.
+  const publishMinutes = 3 * 4 * 2 + 0.5;
+  const tarballMinutes = 25;
+  const cleanupMinutes = 2;
   for (const name of [...platformPublishers, "publish-js", "publish-eslint"]) {
     const job = jobs[name];
     const tooling = job.steps.find((step) => step.name === "Checkout publish tooling");
@@ -117,7 +117,13 @@ test("npm publishers use workflow-owned tooling and allow for upload retries and
 
     const stepTimeouts = job.steps.map((step) => step["timeout-minutes"]);
     assert.ok(stepTimeouts.every(Number.isInteger), name);
-    assert.ok(job["timeout-minutes"] >= publishStep["timeout-minutes"] + 10, name);
+    const setupMinutes = job.steps
+      .slice(0, job.steps.indexOf(publishStep))
+      .reduce((sum, step) => sum + step["timeout-minutes"], 0);
+    assert.ok(
+      job["timeout-minutes"] >= setupMinutes + publishMinutes + tarballMinutes + cleanupMinutes,
+      `${name} must leave time for verification after setup and the final version lookup`,
+    );
     assert.ok(job["timeout-minutes"] < stepTimeouts.reduce((sum, minutes) => sum + minutes, 0), name);
   }
 });
