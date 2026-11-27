@@ -465,3 +465,20 @@ fn fragment_deserialize_ignores_provenance_for_another_file() {
         "{error}"
     );
 }
+
+#[test]
+fn empty_change_category_test_glob_fails_at_load() {
+    let mut config = NoMistakesConfig::default();
+    config.changes.categories.insert(
+        "api".to_string(),
+        crate::changes::config::ChangeCategory {
+            paths: vec!["src/**".to_string()],
+            tests: vec![String::new()],
+            ..crate::changes::config::ChangeCategory::default()
+        },
+    );
+    let error = validate_v2_config(&config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("empty glob"), "{error}");
+}
