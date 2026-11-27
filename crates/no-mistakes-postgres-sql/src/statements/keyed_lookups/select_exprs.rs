@@ -7,16 +7,16 @@ use sqlparser::ast::{
     CastKind, Distinct, Expr, GroupByExpr, Ident, Query, Select, SelectItem, SetExpr, VisitMut,
     VisitorMut,
 };
-use std::cell::OnceCell;
+use std::cell::{OnceCell, RefCell};
 use std::ops::ControlFlow;
 
 #[derive(Default)]
-pub(super) struct ProjectionTargets<'a> {
+pub(super) struct SelectTargets<'a> {
     projection: &'a [SelectItem],
-    keys: OnceCell<FxHashSet<Expr>>,
+    keys: OnceCell<RefCell<FxHashSet<Expr>>>,
 }
 
-impl<'a> ProjectionTargets<'a> {
+impl<'a> SelectTargets<'a> {
     pub(super) fn new(projection: &'a [SelectItem]) -> Self {
         Self {
             projection,
@@ -24,27 +24,27 @@ impl<'a> ProjectionTargets<'a> {
         }
     }
 
-    fn contains(&self, key: &Expr) -> bool {
-        self.keys
-            .get_or_init(|| {
-                self.projection
-                    .iter()
-                    .filter_map(select_item_expr)
-                    .map(target_identity)
-                    .collect()
-            })
-            .contains(key)
-    }
-
     pub(super) fn reuses(&self, expr: &Expr) -> bool {
-        !self.projection.is_empty() && self.contains(&target_identity(expr))
+        !self
+            .keys
+            .get_or_init(|| {
+                RefCell::new(
+                    self.projection
+                        .iter()
+                        .filter_map(select_item_expr)
+                        .map(target_identity)
+                        .collect(),
+                )
+            })
+            .borrow_mut()
+            .insert(target_identity(expr))
     }
 }
 
 pub(super) fn inspectable<'a>(
     select: &'a Select,
     order_by: &'a [&'a Expr],
-    projection_targets: &'a ProjectionTargets<'a>,
+    select_targets: &'a SelectTargets<'a>,
 ) -> impl Iterator<Item = &'a Expr> {
     let distinct_on = match &select.distinct {
         Some(Distinct::On(expressions)) => expressions.as_slice(),
@@ -58,7 +58,6 @@ pub(super) fn inspectable<'a>(
     }
 
     let projection = select.projection.iter().filter_map(select_item_expr);
-    let mut targets = FxHashSet::default();
 
     let clause_target = |expr| (expr, true);
     let independent = |expr| (expr, false);
@@ -72,13 +71,7 @@ pub(super) fn inspectable<'a>(
         .chain(referenced_expressions(select, distinct_on, order_by))
         .chain(order_by.iter().copied().map(clause_target))
         .filter_map(move |(expr, can_reuse)| {
-            if can_reuse {
-                let key = target_identity(expr);
-                if projection_targets.contains(&key) || !targets.insert(key) {
-                    return None;
-                }
-            }
-            Some(expr)
+            (!can_reuse || !select_targets.reuses(expr)).then_some(expr)
         })
 }
 
@@ -93,7 +86,7 @@ fn group_targets<'a>(expr: &'a Expr, targets: &mut Vec<&'a Expr>) {
     }
 }
 
-fn target_identity(expr: &Expr) -> Expr {
+pub(super) fn target_identity(expr: &Expr) -> Expr {
     struct Identifiers;
     impl VisitorMut for Identifiers {
         type Break = ();

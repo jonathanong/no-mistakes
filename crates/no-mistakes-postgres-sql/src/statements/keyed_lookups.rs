@@ -1,6 +1,7 @@
 mod builtins;
 mod dml;
 mod expr_norm;
+mod function_clauses;
 mod join;
 mod normalize;
 mod query;
@@ -115,7 +116,7 @@ fn walk_select(
         register_table_with_joins(table, scopes, &mut seen, out);
     }
     let outer = scopes.snapshot();
-    let targets = select_exprs::ProjectionTargets::new(&select.projection);
+    let targets = select_exprs::SelectTargets::new(&select.projection);
     for expr in select_exprs::inspectable(select, order_exprs, &targets) {
         subquery::inspect_expr(expr, &outer, &targets, &mut seen, out);
         walk_nested_queries(expr, scopes, out);
@@ -142,7 +143,7 @@ fn inspect_exprs<'a>(
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
     let outer = scopes.snapshot();
-    let targets = select_exprs::ProjectionTargets::default();
+    let targets = select_exprs::SelectTargets::default();
     for expr in exprs {
         subquery::inspect_expr(expr, &outer, &targets, seen, out);
         walk_nested_queries(expr, scopes, out);

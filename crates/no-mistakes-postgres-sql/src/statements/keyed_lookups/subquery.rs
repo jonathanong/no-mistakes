@@ -1,9 +1,10 @@
 use super::expr_norm::types::projection_expr_is_unproven;
 use super::expr_norm::ExprNormalizer;
+use super::function_clauses::visit_argument_clauses;
 use super::join::record_lookup;
 use super::normalize::{extract_lookup_key, LookupKey};
 use super::scope::ScopeSnapshot;
-use super::select_exprs::ProjectionTargets;
+use super::select_exprs::SelectTargets;
 use super::table::lookup_table;
 use super::windows::window_expressions;
 use crate::idents::{
@@ -12,8 +13,8 @@ use crate::idents::{
 };
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{
-    Expr, FunctionArguments, GroupByExpr, LimitClause, OrderByKind, Query, Select, SetExpr,
-    Spanned, Visit, Visitor, WindowType,
+    Expr, GroupByExpr, LimitClause, OrderByKind, Query, Select, SetExpr, Spanned, Visit, Visitor,
+    WindowType,
 };
 use std::collections::BTreeMap;
 use std::ops::ControlFlow;
@@ -21,7 +22,7 @@ use std::ops::ControlFlow;
 pub(super) fn inspect_expr(
     expr: &Expr,
     outer: &ScopeSnapshot,
-    targets: &ProjectionTargets<'_>,
+    targets: &SelectTargets<'_>,
     seen: &mut BTreeMap<LookupKey, (usize, usize)>,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
@@ -61,9 +62,7 @@ pub(super) fn inspect_expr(
             visit_child_exprs(other, &mut visit);
             if let Expr::Function(function) = other {
                 for arguments in [&function.parameters, &function.args] {
-                    if let FunctionArguments::List(list) = arguments {
-                        visit_shallow_exprs(&list.clauses, &mut visit);
-                    }
+                    visit_argument_clauses(arguments, &mut visit);
                 }
                 if let Some(WindowType::WindowSpec(spec)) = &function.over {
                     for (expr, can_reuse) in window_expressions(spec) {

@@ -235,3 +235,18 @@ fn reuses_resolved_grouping_and_order_targets_and_visits_distinct_window_referen
         ]
     );
 }
+
+#[test]
+fn retains_lookup_identity_across_sorts_merge_categories_and_reused_targets() {
+    let facts = fixture_facts("review-clause-identity");
+    assert!(!facts.parse_failed);
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+    assert_eq!(
+        sites,
+        [(3, 6), (18, 19), (24, 25), (31, 32), (47, 48), (64, 65)]
+    );
+}

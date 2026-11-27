@@ -46,7 +46,9 @@ The rule stays silent when the lookups are not proven to read the same row:
   `addr.kind = 'shipping'`).
 - Scalar subqueries ordered by a bare name or ordinal position. Use a
   qualified column reference such as `ORDER BY accounts.priority` to identify
-  the input column explicitly.
+  the input column explicitly. Omitted sort direction and null placement
+  use PostgreSQL defaults. Sort operators in `ORDER BY ... USING` are
+  excluded.
 - A lookup paired with a correlated aggregate (`COUNT(*)`, `SUM(...)`, etc.) or
   an `EXISTS (...)` test.
 - Mutually exclusive `CASE WHEN ... THEN (SELECT ...) ELSE (SELECT ...) END`
@@ -64,7 +66,8 @@ The rule stays silent when the lookups are not proven to read the same row:
 
 PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
 (including grouping sets), `ORDER BY`, and window partition and ordering
-clauses. The rule counts an identical reused expression once.
+clauses. An aggregate can also reuse an argument in its ordering clause. The
+rule counts an identical reused expression once.
 
 Findings point at the duplicate join or scalar subquery and name the line of the
 first lookup.

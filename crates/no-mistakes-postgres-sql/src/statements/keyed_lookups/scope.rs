@@ -4,9 +4,7 @@ use sqlparser::ast::{Ident, ObjectName, TableAlias};
 #[derive(Clone)]
 struct Binding {
     id: usize,
-    relation: String,
     qualifier: String,
-    has_alias: bool,
 }
 
 #[derive(Default)]
@@ -29,12 +27,11 @@ impl ScopeStack {
     }
 
     pub(super) fn add_table_alias(&mut self, name: &ObjectName, alias: Option<&Ident>) -> usize {
-        let relation = object_name_identity(name);
-        let (qualifier, has_alias) = match alias {
-            Some(alias) => (ident_key(alias), true),
-            None => (relation_suffix_name(&relation), false),
-        };
-        self.add_binding(relation, qualifier, has_alias)
+        let qualifier = alias.map_or_else(
+            || relation_suffix_name(&object_name_identity(name)),
+            ident_key,
+        );
+        self.add_named_alias(qualifier)
     }
 
     pub(super) fn add_alias_only(&mut self, alias: Option<&TableAlias>) -> Option<usize> {
@@ -42,21 +39,12 @@ impl ScopeStack {
     }
 
     pub(super) fn add_named_alias(&mut self, qualifier: String) -> usize {
-        self.add_binding(qualifier.clone(), qualifier, true)
-    }
-
-    fn add_binding(&mut self, relation: String, qualifier: String, has_alias: bool) -> usize {
         let id = self.next_id;
         self.next_id += 1;
         self.frames
             .last_mut()
             .expect("bindings require a query scope")
-            .push(Binding {
-                id,
-                relation,
-                qualifier,
-                has_alias,
-            });
+            .push(Binding { id, qualifier });
         id
     }
 
@@ -75,9 +63,7 @@ pub(super) struct ScopeSnapshot {
 impl ScopeSnapshot {
     pub(super) fn resolve_qualifier(&self, qualifier: &str) -> Option<usize> {
         for frame in self.frames.iter().rev() {
-            let mut matches = frame
-                .iter()
-                .filter(|b| b.qualifier == qualifier || (!b.has_alias && b.relation == qualifier));
+            let mut matches = frame.iter().filter(|b| b.qualifier == qualifier);
             if let Some(first) = matches.next() {
                 return matches.next().is_none().then_some(first.id);
             }

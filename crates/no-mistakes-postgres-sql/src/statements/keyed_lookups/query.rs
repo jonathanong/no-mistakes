@@ -49,7 +49,7 @@ fn inspect_limits(
         return;
     }
     let outer = scopes.snapshot();
-    let targets = super::select_exprs::ProjectionTargets::default();
+    let targets = super::select_exprs::SelectTargets::default();
     let mut visit = |expr: &Expr| subquery::inspect_expr(expr, &outer, &targets, seen, out);
     visit_shallow_exprs(&query.limit_clause, &mut visit);
     visit_shallow_exprs(&query.fetch, &mut visit);

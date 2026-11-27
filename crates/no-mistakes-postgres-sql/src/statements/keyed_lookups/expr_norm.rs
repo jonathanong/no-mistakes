@@ -3,6 +3,7 @@ pub(super) mod types;
 
 use super::scope::ScopeSnapshot;
 use crate::idents::{ident_key, unwrap_expr};
+use crate::order::canonical_order_options;
 use sqlparser::ast::{CastKind, Expr, Ident, InTarget, OrderByExpr, Value};
 
 pub(super) struct ExprNormalizer<'a> {
@@ -163,10 +164,8 @@ impl<'a> ExprNormalizer<'a> {
             return None;
         }
         let expr = self.normalize(expr)?;
-        Some(format!(
-            "{expr}:{:?}:{:?}",
-            item.options.sort, item.options.nulls_first
-        ))
+        let (ascending, nulls_first) = canonical_order_options(&item.options)?;
+        Some(format!("{expr}:{ascending}:{nulls_first}"))
     }
 }
 

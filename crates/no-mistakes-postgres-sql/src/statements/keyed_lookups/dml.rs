@@ -3,8 +3,8 @@ use super::scope::ScopeStack;
 use super::{inspect_exprs, returning_exprs};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{
-    Delete, Expr, FromTable, Insert, Merge, MergeAction, MergeInsertKind, MergeUpdateKind,
-    OnConflict, OnConflictAction, OnInsert, OutputClause, TableObject, Update,
+    Delete, Expr, FromTable, Insert, Merge, MergeAction, MergeClauseKind, MergeInsertKind,
+    MergeUpdateKind, OnConflict, OnConflictAction, OnInsert, OutputClause, TableObject, Update,
 };
 use std::collections::BTreeMap;
 
@@ -119,10 +119,14 @@ pub(super) fn walk_merge(
     register_table_factor(&merge.table, scopes, &mut base_seen, out);
     register_table_factor(&merge.source, scopes, &mut base_seen, out);
     inspect_exprs(std::iter::once(&*merge.on), scopes, &mut base_seen, out);
-    let mut category_seen: BTreeMap<String, _> = BTreeMap::new();
+    let mut category_seen = BTreeMap::new();
     for clause in &merge.clauses {
+        let category = match clause.clause_kind {
+            MergeClauseKind::NotMatchedByTarget => MergeClauseKind::NotMatched,
+            kind => kind,
+        };
         let pred_seen = category_seen
-            .entry(clause.clause_kind.to_string())
+            .entry(category)
             .or_insert_with(|| base_seen.clone());
         if let Some(predicate) = &clause.predicate {
             inspect_exprs(std::iter::once(predicate), scopes, pred_seen, out);
