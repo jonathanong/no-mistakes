@@ -79,3 +79,60 @@ SELECT a.name, b.tier
 FROM JSON_TABLE('[1,2]'::jsonb, '$[*]' COLUMNS (id integer PATH '$')) AS u
 JOIN accounts a ON a.id = u.id
 JOIN accounts b ON b.id = u.id;
+
+SELECT (
+    SELECT a.name FROM accounts a
+    WHERE a.id = o.account_id AND EXISTS (
+        SELECT 1 FROM details d
+        WHERE d.account_id = a.id
+          AND (SELECT x.active FROM flags x WHERE x.id = d.flag_id)
+          AND (SELECT y.verified FROM flags y WHERE y.id = d.flag_id)
+    )
+)
+FROM orders o
+ORDER BY (
+    SELECT name FROM accounts a
+    WHERE id = o.account_id AND EXISTS (
+        SELECT 1 FROM details d
+        WHERE d.account_id = a.id
+          AND (SELECT x.active FROM flags x WHERE x.id = d.flag_id)
+          AND (SELECT y.verified FROM flags y WHERE y.id = d.flag_id)
+    )
+);
+
+WITH account_keys AS (SELECT 1 AS id)
+SELECT ROW(
+    (SELECT 1),
+    (SELECT a.id FROM accounts a JOIN teams t ON a.team_id = t.id LIMIT 1),
+    (SELECT id FROM (VALUES (1)) v(id)),
+    (SELECT * FROM account_keys WHERE id = o.account_id),
+    (SELECT name FROM accounts WHERE id = o.account_id)
+)
+FROM orders o
+ORDER BY ROW(
+    (SELECT 1),
+    (SELECT a.id FROM accounts a JOIN teams t ON a.team_id = t.id LIMIT 1),
+    (SELECT id FROM (VALUES (1)) v(id)),
+    (SELECT * FROM account_keys WHERE id = o.account_id),
+    (SELECT accounts.name FROM accounts WHERE accounts.id = o.account_id)
+);
+
+SELECT (
+    SELECT a.name FROM accounts a
+    WHERE a.id = o.account_id AND EXISTS (
+        SELECT 1 FROM details d
+        WHERE d.account_id = a.id
+          AND (SELECT x.active FROM flags x WHERE x.id = d.flag_id)
+          AND (SELECT y.verified FROM flags y WHERE y.id = d.flag_id)
+    )
+)
+FROM orders o
+ORDER BY (
+    SELECT name FROM accounts a
+    WHERE id = o.account_id AND EXISTS (
+        SELECT 1 FROM details d
+        WHERE d.account_id = d.id
+          AND (SELECT x.active FROM flags x WHERE x.id = d.flag_id)
+          AND (SELECT y.verified FROM flags y WHERE y.id = d.flag_id)
+    )
+);

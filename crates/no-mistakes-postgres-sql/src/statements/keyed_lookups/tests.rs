@@ -231,7 +231,10 @@ fn reuses_resolved_grouping_and_order_targets_and_visits_distinct_window_referen
             (47, 48),
             (59, 60),
             (65, 66),
-            (73, 74)
+            (73, 74),
+            (88, 89),
+            (125, 126),
+            (135, 136)
         ]
     );
 }

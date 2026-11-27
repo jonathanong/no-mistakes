@@ -835,6 +835,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "queries/check.sql",
+          "line": 126,
+          "message": "queries/check.sql:126: duplicate keyed lookup of `flags` on `id = d.flag_id` (already looked up at line 125). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "AND (SELECT y.verified FROM flags y WHERE y.id = d.flag_id)",
+          "target": "flags"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 136,
+          "message": "queries/check.sql:136: duplicate keyed lookup of `flags` on `id = d.flag_id` (already looked up at line 135). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "AND (SELECT y.verified FROM flags y WHERE y.id = d.flag_id)",
+          "target": "flags"
+        },
+        {
+          "file": "queries/check.sql",
           "line": 17,
           "message": "queries/check.sql:17: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 16). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
@@ -896,6 +912,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT b.tier FROM accounts b WHERE b.id = o.account_id)",
           "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 89,
+          "message": "queries/check.sql:89: duplicate keyed lookup of `flags` on `id = d.flag_id` (already looked up at line 88). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "AND (SELECT y.verified FROM flags y WHERE y.id = d.flag_id)",
+          "target": "flags"
         }
       ],
       "warnings": []
