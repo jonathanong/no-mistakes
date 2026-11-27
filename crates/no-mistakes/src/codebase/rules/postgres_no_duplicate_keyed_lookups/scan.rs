@@ -22,7 +22,7 @@ pub(super) fn scan(
         let profile = (!rel.ends_with(".sql")).then_some(&opts.embedded);
         let statements = match prepared.postgres_statements(path, profile) {
             Ok(statements) => statements,
-            Err(_) if rel.ends_with(".sql") && prepared.postgres.sql_source_not_found(path) => {
+            Err(_) if rel.ends_with(".sql") && prepared.postgres().sql_source_not_found(path) => {
                 continue
             }
             Err(error) => return Err(error),

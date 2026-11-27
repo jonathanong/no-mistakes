@@ -1,7 +1,7 @@
-use super::expr_norm::{canonical_type, normalize_expr, normalize_function, normalize_order_by};
+use super::expr_norm::ExprNormalizer;
 use super::scope::ScopeSnapshot;
-use crate::codebase::postgres::idents::{ident_key, unwrap_expr};
-use sqlparser::ast::{BinaryOperator, Expr, OrderByExpr, Value};
+use crate::idents::{ident_key, unwrap_expr};
+use sqlparser::ast::{BinaryOperator, Expr, OrderByExpr};
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub(super) struct LookupKey {
@@ -21,6 +21,7 @@ pub(super) fn extract_lookup_key(
     order_by: &[OrderByExpr],
     limit: Option<String>,
 ) -> Option<(LookupKey, String)> {
+    let mut normalizer = ExprNormalizer::new(Some(self_qualifier), single_table_subquery, outer);
     let mut conjuncts = Vec::new();
     flatten_and(predicate, &mut conjuncts);
     let mut equalities = Vec::new();
@@ -35,15 +36,13 @@ pub(super) fn extract_lookup_key(
             equalities.push((col.clone(), norm_rhs));
             display_pairs.push((col, display_rhs));
         } else {
-            let residual =
-                normalize_expr(conjunct, Some(self_qualifier), single_table_subquery, outer)?;
-            residuals.push(residual);
+            residuals.push(normalizer.normalize(conjunct)?);
         }
     }
     if equalities.is_empty() || !has_key_anchor {
         return None;
     }
-    let norm_order = normalize_order_by(order_by, self_qualifier, single_table_subquery, outer)?;
+    let norm_order = normalizer.order_by(order_by)?;
     equalities.sort();
     equalities.dedup();
     residuals.sort();
@@ -106,7 +105,7 @@ fn try_oriented(
 ) -> Option<(String, String, bool, String)> {
     let (self_col, was_unqualified) =
         self_column(self_side, self_qualifier, single_table_subquery)?;
-    let (norm_rhs, anchor) = normalize_outer(outer_side, self_qualifier, outer)?;
+    let (norm_rhs, anchor) = ExprNormalizer::outer_key(outer_side, self_qualifier, outer)?;
     if was_unqualified && !anchor {
         return None;
     }
@@ -128,69 +127,6 @@ fn self_column(
             (ident_key(&parts[0]) == self_qualifier).then(|| (ident_key(&parts[1]), false))
         }
         Expr::Identifier(ident) if single_table_subquery => Some((ident_key(ident), true)),
-        _ => None,
-    }
-}
-
-fn normalize_outer(
-    expr: &Expr,
-    self_qualifier: &str,
-    outer: &ScopeSnapshot,
-) -> Option<(String, bool)> {
-    let mut anchor = false;
-    let text = normalize_outer_inner(expr, self_qualifier, outer, &mut anchor)?;
-    Some((text, anchor))
-}
-
-fn normalize_outer_inner(
-    expr: &Expr,
-    self_qualifier: &str,
-    outer: &ScopeSnapshot,
-    anchor: &mut bool,
-) -> Option<String> {
-    match unwrap_expr(expr) {
-        Expr::CompoundIdentifier(parts) if parts.len() == 2 => {
-            let qual = ident_key(&parts[0]);
-            if qual == self_qualifier {
-                return None;
-            }
-            let binding = outer.resolve_qualifier(&qual)?;
-            *anchor = true;
-            Some(format!("b{binding}.{}", ident_key(&parts[1])))
-        }
-        Expr::Identifier(_) => None,
-        Expr::Value(value) => {
-            if matches!(value.value, Value::Placeholder(_)) {
-                *anchor = true;
-            }
-            Some(format!("val:{value}"))
-        }
-        Expr::Cast {
-            expr, data_type, ..
-        } => {
-            let inner = normalize_outer_inner(expr, self_qualifier, outer, anchor)?;
-            Some(format!("cast({inner},{})", canonical_type(data_type)))
-        }
-        Expr::TypedString(typed) => {
-            *anchor = true;
-            Some(format!(
-                "typed({},{})",
-                canonical_type(&typed.data_type),
-                typed.value
-            ))
-        }
-        Expr::UnaryOp { op, expr } => {
-            let inner = normalize_outer_inner(expr, self_qualifier, outer, anchor)?;
-            Some(format!("unary({op},{inner})"))
-        }
-        Expr::BinaryOp { left, op, right } => {
-            let l = normalize_outer_inner(left, self_qualifier, outer, anchor)?;
-            let r = normalize_outer_inner(right, self_qualifier, outer, anchor)?;
-            Some(format!("bin({op},{l},{r})"))
-        }
-        Expr::Function(function) => normalize_function(function, |arg| {
-            normalize_outer_inner(arg, self_qualifier, outer, anchor)
-        }),
         _ => None,
     }
 }

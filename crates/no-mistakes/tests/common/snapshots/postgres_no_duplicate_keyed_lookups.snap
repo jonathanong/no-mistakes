@@ -221,6 +221,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "normalization": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries/check.sql",
+          "line": 24,
+          "message": "queries/check.sql:24: duplicate keyed lookup of `accounts` on `id = abs(-o.account_id + 1)` (already looked up at line 16); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT b.tier FROM accounts b",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 45,
+          "message": "queries/check.sql:45: duplicate keyed lookup of `accounts` on `created_on = DATE '2020-01-01'` (already looked up at line 44); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "LEFT JOIN accounts b ON b.created_on = DATE '2020-01-01';",
+          "target": "accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "scalar_subqueries": {
     "exitCode": 1,
     "report": {

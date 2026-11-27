@@ -1,12 +1,10 @@
 use super::builtins::AGGREGATE_FUNCTIONS;
-use super::expr_norm::normalize_expr;
+use super::expr_norm::ExprNormalizer;
 use super::join::record_lookup;
 use super::normalize::{extract_lookup_key, LookupKey};
 use super::scope::ScopeSnapshot;
-use crate::codebase::postgres::idents::{
-    ident_key, object_name_identity, relation_suffix_name, unwrap_expr,
-};
-use crate::codebase::postgres::statement_facts::SqlDuplicateKeyedLookupFact;
+use crate::idents::{ident_key, object_name_identity, relation_suffix_name, unwrap_expr};
+use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{
     Expr, GroupByExpr, LimitClause, ObjectNamePart, OrderByKind, Query, Select, SetExpr, Spanned,
     TableFactor, Visit, Visitor,
@@ -52,7 +50,7 @@ pub(super) fn inspect_expr(
             }
         }
         other => {
-            crate::codebase::postgres::idents::visit_child_exprs(other, &mut |child| {
+            crate::idents::visit_child_exprs(other, &mut |child| {
                 inspect_expr(child, outer, seen, out);
             });
         }
@@ -134,7 +132,9 @@ fn normalize_limit(limit: Option<&LimitClause>, outer: &ScopeSnapshot) -> Option
             limit: Some(expr),
             offset: None,
             ..
-        }) => Some(Some(normalize_expr(expr, None, false, outer)?)),
+        }) => Some(Some(
+            ExprNormalizer::new(None, false, outer).normalize(expr)?,
+        )),
         _ => None,
     }
 }

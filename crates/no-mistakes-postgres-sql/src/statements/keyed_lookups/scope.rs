@@ -1,4 +1,4 @@
-use crate::codebase::postgres::idents::{ident_key, object_name_identity, relation_suffix_name};
+use crate::idents::{ident_key, object_name_identity, relation_suffix_name};
 use sqlparser::ast::{Ident, ObjectName, TableAlias};
 use std::collections::BTreeMap;
 

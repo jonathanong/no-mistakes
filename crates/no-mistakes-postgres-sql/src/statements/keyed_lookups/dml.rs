@@ -1,7 +1,7 @@
 use super::join::{register_table_factor, register_table_with_joins};
 use super::scope::ScopeStack;
 use super::{inspect_exprs, returning_exprs};
-use crate::codebase::postgres::statement_facts::SqlDuplicateKeyedLookupFact;
+use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{
     Delete, Expr, FromTable, Insert, Merge, MergeAction, MergeInsertKind, MergeUpdateKind,
     OutputClause, TableObject, Update,

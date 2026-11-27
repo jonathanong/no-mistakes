@@ -6,7 +6,7 @@ mod normalize;
 mod scope;
 mod subquery;
 
-use crate::codebase::postgres::statement_facts::SqlDuplicateKeyedLookupFact;
+use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use join::{inspect_join, register_table_factor};
 use normalize::LookupKey;
 use scope::ScopeStack;
@@ -172,3 +172,6 @@ fn walk_nested_queries_in_expr(
     };
     let _ = expr.visit(&mut visitor);
 }
+
+#[cfg(test)]
+mod tests;

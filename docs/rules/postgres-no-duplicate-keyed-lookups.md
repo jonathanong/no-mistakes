@@ -39,6 +39,9 @@ The rule stays silent when the lookups are not proven to read the same row:
   casts (`o.raw_id::uuid` vs `o.raw_id::text`).
 - Different additional filter predicates (such as `addr.kind = 'billing'` vs
   `addr.kind = 'shipping'`).
+- Scalar subqueries ordered by a bare name or ordinal position. Use a
+  qualified column reference such as `ORDER BY accounts.priority` to identify
+  the input column explicitly.
 - A lookup paired with a correlated aggregate (`COUNT(*)`, `SUM(...)`, etc.) or
   an `EXISTS (...)` test.
 - Mutually exclusive `CASE WHEN ... THEN (SELECT ...) ELSE (SELECT ...) END`

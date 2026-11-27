@@ -1,8 +1,8 @@
 use super::normalize::{extract_lookup_key, LookupKey};
 use super::scope::{ScopeSnapshot, ScopeStack};
 use super::{inspect_exprs, walk_query};
-use crate::codebase::postgres::idents::{ident_key, object_name_identity, relation_suffix_name};
-use crate::codebase::postgres::statement_facts::SqlDuplicateKeyedLookupFact;
+use crate::idents::{ident_key, object_name_identity, relation_suffix_name};
+use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{
     Join, JoinConstraint, JoinOperator, ObjectName, Spanned, TableAlias, TableFactor,
     TableWithJoins,
