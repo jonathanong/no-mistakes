@@ -106,9 +106,11 @@ fn shared_traversal_reuses_runner_helpers_for_lazy_symbols_and_test_filters() {
     let mut symbol = traverse_args(root.clone(), vec![PathBuf::from("src/unit.ts#unit")]);
     symbol.relationships = vec![RelationshipArg::Import];
     symbol.tests = vec!["vitest".to_string()];
-    let _symbol_result =
+    let symbol_result =
         collect_and_filter_entries_shared(&symbol, Direction::Dependents, &cwd, &mut shared)
             .unwrap();
+    let included_test = root.join("src/unit.test.ts");
+    assert!(symbol_result.file_paths().any(|path| path == included_test));
 
     let mut excluded = traverse_args(
         root.clone(),
