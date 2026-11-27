@@ -28,7 +28,7 @@ fn expand_call(source: &str, kind: &str, args_at: usize) -> Option<Vec<(String, 
         return expand_api_resources(&args, tail);
     }
     let call = positional_or_named(&args, kind == "apiResource")?;
-    if !expand::static_path(&call.path) {
+    if !expand::static_path(&call.path) || (call.path.contains('.') && has_shallow(tail)) {
         return None;
     }
     let filters = expand::filters(&call.options, tail)?;
@@ -85,7 +85,8 @@ fn options_arg(args: &[&str]) -> String {
 }
 
 fn expand_api_resources(args: &[&str], tail: &str) -> Option<Vec<(String, String)>> {
-    if args.len() != 1 || tail.contains("->only") || tail.contains("->except") {
+    if args.len() != 1 || tail.contains("->only") || tail.contains("->except") || has_shallow(tail)
+    {
         return None;
     }
     let body = args[0].trim().strip_prefix('[')?.strip_suffix(']')?;
@@ -102,6 +103,15 @@ fn expand_api_resources(args: &[&str], tail: &str) -> Option<Vec<(String, String
         routes.extend(expand::expand_actions(path, &handler, expand::API_ACTIONS));
     }
     (!routes.is_empty()).then_some(routes)
+}
+
+fn has_shallow(tail: &str) -> bool {
+    tail.split("->").skip(1).any(|member| {
+        member
+            .trim_start()
+            .strip_prefix("shallow")
+            .is_some_and(|rest| rest.trim_start().starts_with('('))
+    })
 }
 
 fn named_value<'a>(args: &'a [&'a str], key: &str) -> Option<&'a str> {

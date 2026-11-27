@@ -813,7 +813,8 @@ after `->names([...])`), nested dotted names such as `photos.comments`,
 named `name:` / `controller:` arguments, and `Route::apiResources` maps
 emit one route fact per remaining standard action and omit excluded actions.
 `Route::apiResource` omits `create` and `edit`. Computed prefixes, computed
-names, and `__DIR__` concatenation stay non-edges. A call that sets both
+names, nested routes using `->shallow()`, and `__DIR__` concatenation stay
+non-edges. A call that sets both
 `only` and `except`, or names an action outside that call's set, stays a
 non-edge. Missing `tests.php.framework` still enables neither Laravel nor
 Symfony extractors.
@@ -1086,8 +1087,8 @@ shipped for configured Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and D
 Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
 `Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients besides
-Dart/Flutter `Uri.parse` / `http.*` literals, Laravel resource routes with computed options or arguments, Phoenix
-resource routes with options, Kafka outside TS/Python literal shapes, language
+Dart/Flutter `Uri.parse` / `http.*` literals, Laravel resource routes with
+computed options or arguments, Phoenix resource routes with options, Kafka outside TS/Python literal shapes, language
 `symbols`/`call-sites`, and rule families that apply only to TS/JS or `.sql`
 ([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)).
 

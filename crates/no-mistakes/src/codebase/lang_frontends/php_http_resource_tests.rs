@@ -127,6 +127,14 @@ fn deeper_nesting_and_unterminated_resources_expand() {
 }
 
 #[test]
+fn shallow_nested_resources_do_not_emit_incorrect_member_paths() {
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let fixture = root.join("test-cases/php-routes/shallow-resources.php");
+    let source = std::fs::read_to_string(fixture).unwrap();
+    assert!(route_pairs(&source).is_empty());
+}
+
+#[test]
 fn malformed_static_resource_forms_stay_non_edges() {
     let sources = [
         "Route::resource('photos.comments', UserController::class",
