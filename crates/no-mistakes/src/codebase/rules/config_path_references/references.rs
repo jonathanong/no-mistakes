@@ -16,7 +16,7 @@ pub(super) fn reference_exists(
         config_file.parent().unwrap_or(root).to_path_buf()
     };
     let target = normalize_path(&base.join(reference));
-    if target.starts_with(root) && tracked_reference_exists(root, &target, rel_files) {
+    if target.starts_with(normalize_path(root)) && tracked_reference_exists(root, &target, rel_files) {
         return Ok(true);
     }
     if opts.allow_globs && has_glob_metachar(reference) {

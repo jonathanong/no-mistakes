@@ -30,7 +30,7 @@ pub(super) fn collect(
             continue;
         }
         let path = crate::codebase::ts_resolver::normalize_path(&root.join(key));
-        if !path.starts_with(root)
+        if !path.starts_with(crate::codebase::ts_resolver::normalize_path(root))
             || !files
                 .iter()
                 .any(|file| crate::codebase::ts_resolver::normalize_path(file) == path)

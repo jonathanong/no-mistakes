@@ -70,7 +70,7 @@ impl Selection {
                 bail!("{RULE_ID}: options.platformConsumedExports file must be a nonempty root-relative file path");
             }
             let file = normalize_path(&root.join(&entry.file));
-            if !file.starts_with(root) {
+            if !file.starts_with(normalize_path(root)) {
                 bail!("{RULE_ID}: options.platformConsumedExports file must stay within the root");
             }
             if entry.exports.is_empty() || entry.exports.iter().any(|name| name.trim().is_empty()) {

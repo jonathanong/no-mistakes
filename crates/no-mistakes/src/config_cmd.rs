@@ -33,7 +33,9 @@ enum ConfigView {
 
 pub fn run(args: ConfigArgs) -> anyhow::Result<ExitCode> {
     match args.command {
-        ConfigCommand::Resolve(resolve) => {
+        ConfigCommand::Resolve(mut resolve) => {
+            let cwd = std::env::current_dir()?;
+            resolve.root = no_mistakes::cli::resolve_root(&resolve.root, &cwd);
             let output = match resolve.view {
                 ConfigView::Resolved => serde_json::to_string(&resolve_config(
                     &resolve.root,

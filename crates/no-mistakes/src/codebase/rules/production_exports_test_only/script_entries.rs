@@ -96,7 +96,7 @@ fn resolve_entry(package_dir: &Path, root: &Path, raw: &str) -> Option<PathBuf> 
         package_dir.join(raw_path)
     };
     let path = normalize_path(&joined);
-    (path.starts_with(root) && path.is_file()).then_some(path)
+    (path.starts_with(normalize_path(root)) && path.is_file()).then_some(path)
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
