@@ -37,7 +37,7 @@ function namespaceImportMember(context, node, helpers, config) {
   const member = helpers.unwrap(node);
   if (member?.type !== "MemberExpression") return null;
   const object = helpers.unwrap(member.object);
-  if (object?.type !== "Identifier") return null;
+  if (!object) return null;
   return namespaceCursorImport(context, object, helpers, config) === true ? member : null;
 }
 
