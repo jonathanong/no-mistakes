@@ -20,7 +20,7 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 pub use super::testing_analysis::plan::FrameworkPreparationPlan;
-pub(crate) use filters::fallback_runner_match;
+pub(crate) use filters::{compile_project_filter, fallback_runner_match};
 pub use filters::{fallback_test_path, ProjectTestFilter};
 use ownership::owning_projects;
 pub use project_patterns::project_dependency_patterns;

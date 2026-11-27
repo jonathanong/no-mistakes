@@ -356,9 +356,7 @@ fn owner_tests(root: &Path, project: &ConfigProject, discovered: &DiscoveredTest
     let scope_filter = project
         .runner_project_arg
         .is_none()
-        .then(|| {
-            no_mistakes::codebase::test_discovery::ProjectTestFilter::from_project_ref(project).ok()
-        })
+        .then(|| no_mistakes::codebase::test_discovery::compile_project_filter(project).ok())
         .flatten();
     discovered
         .tests

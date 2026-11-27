@@ -10,7 +10,7 @@ impl PreparedTestProjects {
         projects
             .iter()
             .filter_map(|project| {
-                let filter = ProjectTestFilter::from_project_ref(project).ok()?;
+                let filter = compile_project_filter(project).ok()?;
                 let mut setups = project
                     .vitest_setup
                     .iter()

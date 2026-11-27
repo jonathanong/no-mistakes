@@ -54,7 +54,7 @@ pub(super) fn runner_projects_from_visible_with_catalog(
     let mut projects =
         crate::integration_tests::project_config::load_projects_from_visible_with_catalog(
             root,
-            runner.framework(),
+            super::types::framework(runner),
             configs,
             visible_paths,
             tsconfig_catalog,
@@ -99,7 +99,7 @@ pub(super) fn runner_projects_lossy_from_visible_with_catalog(
     let mut projects =
         crate::integration_tests::project_config::load_projects_from_visible_with_catalog(
             root,
-            runner.framework(),
+            super::types::framework(runner),
             configs,
             visible_paths,
             tsconfig_catalog,

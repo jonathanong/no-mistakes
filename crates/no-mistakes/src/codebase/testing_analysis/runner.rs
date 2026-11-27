@@ -1,5 +1,3 @@
-use crate::integration_tests::types::Framework;
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TestRunner {
     Dotnet,
@@ -71,24 +69,5 @@ impl TestRunner {
                 | Self::Elixir
                 | Self::Dart
         )
-    }
-
-    pub(crate) fn framework(self) -> Framework {
-        match self {
-            Self::Dotnet => Framework::Dotnet,
-            Self::Playwright => Framework::Playwright,
-            Self::Vitest => Framework::Vitest,
-            Self::Swift => Framework::Swift,
-            Self::Python => Framework::Python,
-            Self::Go => Framework::Go,
-            Self::Cargo => Framework::Cargo,
-            Self::Rails => Framework::Rails,
-            Self::Php => Framework::Php,
-            Self::Java => Framework::Java,
-            Self::Kotlin => Framework::Kotlin,
-            Self::Elixir => Framework::Elixir,
-            Self::Dart => Framework::Dart,
-            Self::Jest => Framework::Jest,
-        }
     }
 }

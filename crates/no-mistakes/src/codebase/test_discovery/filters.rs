@@ -1,4 +1,5 @@
 use super::types::TestRunner;
+use crate::integration_tests::types::ConfigProject;
 
 pub use crate::codebase::testing_analysis::project_filter::{
     fallback_test_path, ProjectTestFilter,
@@ -6,6 +7,10 @@ pub use crate::codebase::testing_analysis::project_filter::{
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
+
+pub(crate) fn compile_project_filter(project: &ConfigProject) -> anyhow::Result<ProjectTestFilter> {
+    ProjectTestFilter::from_patterns(&project.include, &project.exclude)
+}
 
 pub(crate) fn fallback_runner_match(runner: TestRunner, rel: &str) -> bool {
     match runner {

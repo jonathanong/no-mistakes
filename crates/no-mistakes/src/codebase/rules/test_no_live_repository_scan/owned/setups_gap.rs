@@ -2,7 +2,7 @@
 use super::Project;
 use crate::codebase::check_outcome::CheckInputFailure;
 use crate::codebase::rules::PreparedVitestProjectCatalog;
-use crate::codebase::test_discovery::ProjectTestFilter;
+use crate::codebase::test_discovery::{compile_project_filter, ProjectTestFilter};
 use crate::codebase::ts_resolver::normalize_path;
 use crate::integration_tests::types::{ConfigProject, VitestSetupField};
 use std::path::{Path, PathBuf};
@@ -33,7 +33,7 @@ pub(super) fn select(
     for project in projects {
         let config = project_config(root, &project);
         configs.push(config.clone());
-        let Ok(filter) = ProjectTestFilter::from_project_ref(&project) else {
+        let Ok(filter) = compile_project_filter(&project) else {
             config_gap = earlier(config_gap, config);
             continue;
         };

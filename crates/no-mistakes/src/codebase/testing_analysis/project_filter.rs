@@ -1,4 +1,3 @@
-use crate::integration_tests::types::ConfigProject;
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};
 
@@ -9,14 +8,10 @@ pub struct ProjectTestFilter {
 }
 
 impl ProjectTestFilter {
-    pub(crate) fn from_project(project: ConfigProject) -> Option<Self> {
-        Self::from_project_ref(&project).ok()
-    }
-
-    pub(crate) fn from_project_ref(project: &ConfigProject) -> Result<Self> {
+    pub(crate) fn from_patterns(include: &[String], exclude: &[String]) -> Result<Self> {
         Ok(Self {
-            include: compile_globset(&project.include)?,
-            exclude: compile_optional_globset(&project.exclude)?,
+            include: compile_globset(include)?,
+            exclude: compile_optional_globset(exclude)?,
         })
     }
 

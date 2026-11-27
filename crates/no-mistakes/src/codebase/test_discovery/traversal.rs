@@ -30,7 +30,7 @@ pub(crate) fn excluded_config_paths(
                 || {
                     crate::integration_tests::project_config::discovered_config_paths(
                         root,
-                        runner.framework(),
+                        super::types::framework(runner),
                         visible_paths,
                     )
                 },
