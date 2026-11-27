@@ -34,6 +34,10 @@ treated as a proof of uniqueness.
 const fixture = <><i data-pw="item" /><i data-pw="item" /></>;
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`playwright-naming-convention`](playwright-naming-convention.md) keeps the

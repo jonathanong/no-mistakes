@@ -38,6 +38,10 @@ at the JSX site.
 return <button data-pw={testId}>Save</button>;
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`playwright-literals`](playwright-literals.md) controls which dynamic forms
