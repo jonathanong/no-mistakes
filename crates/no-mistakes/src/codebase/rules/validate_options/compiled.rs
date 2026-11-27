@@ -28,6 +28,11 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
         )
         .map(drop)
     }),
+    (rules::GITHUB_ACTIONS_PR_DIFF_RANGE, |rule, _| {
+        rules::github_actions_workflow_files::pr_diff_range::validate_options(
+            &rule.strict_rule_options()?,
+        )
+    }),
     (rules::GITHUB_ACTIONS_RUN_COMMAND_POLICY, |rule, _| {
         rules::filesystem_dispatch::github_actions_run_command_policy::options::compile(
             rule.strict_rule_options()?,
