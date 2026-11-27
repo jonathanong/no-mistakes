@@ -18,7 +18,7 @@ pub(crate) struct Options {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(crate) struct Group {
     pub(crate) parents: Vec<String>,
     pub(crate) children: Vec<String>,

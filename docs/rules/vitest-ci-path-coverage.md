@@ -105,6 +105,9 @@ triggers are checked against their named runner projects.
 `sourceGlobsByProject`, `workflows`, and `explicitProjectsOnly` are optional;
 `includeVitestProjectGlobs` and `includeFullSuiteTriggers` default to `true`.
 
+Each `workflows` entry accepts `path`, `job`, and `stepId`. Unknown fields
+in an entry are configuration errors.
+
 ## Valid example
 
 ```yaml

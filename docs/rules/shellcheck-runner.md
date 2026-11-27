@@ -46,6 +46,10 @@ not silently make the rule pass.
 defaults to `[]`. `shebangDirs` adds non-`.sh` files below the listed
 repository-relative directories when their first line is a supported Bash or
 sh shebang; it also defaults to `[]`. Selected `.sh` files are always checked.
+Use `.` to look below the repository root for shebangs. Config loading rejects
+absolute paths and parent-directory segments in `shellFiles`, `shebangDirs`,
+and `skillsLockfile`. Each `shellFiles` entry must resolve to a file within
+the repository. A `shebangDirs` directory can be absent.
 
 `trackedOnly` defaults to `false`. When `true`, the rule selects only files
 present in the Git index and working tree, including modified or staged files.
@@ -63,6 +67,8 @@ shebangs, and `shellFiles`.
 
 `shellcheck.severity` sets ShellCheck's minimum severity and defaults to
 `warning`; accepted values are `error`, `warning`, `info`, and `style`.
+Config loading rejects blank severity values and unknown keys inside
+`shellcheck`, including when no scripts match the rule.
 `options.unanalyzable` accepts `report`, `advise`, or `ignore`. It inherits the
 repository `unanalyzable` policy and defaults to `report` when neither scope
 sets a value. It applies when selected scripts cannot be checked because the

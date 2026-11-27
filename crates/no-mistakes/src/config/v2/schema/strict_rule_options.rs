@@ -7,6 +7,23 @@ pub(crate) use no_mistakes_rule_kernel::validate_options::OptionLocation;
 
 use super::RuleDef;
 
+pub(crate) fn invalid_option(
+    rule: &RuleDef,
+    path: ConfigPath,
+    detail: impl std::fmt::Display,
+) -> anyhow::Error {
+    let name = rule
+        .name
+        .as_deref()
+        .map(|name| format!(" application `{name}`"))
+        .unwrap_or_default();
+    let message = format!(
+        "invalid options for rule `{}`{name} at {path}: {detail}",
+        rule.rule
+    );
+    OptionLocation::semantic(path, message)
+}
+
 pub(super) fn option_location_from_error(
     rule: &RuleDef,
     error: serde_path_to_error::Error<serde_yaml::Error>,

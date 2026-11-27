@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: vitest-ci-path-coverage
+    scope: repository
+    options:
+      workflows:
+        - path: .github/workflows/ci.yml
+          stepId: filter
+          jo: detect-changes

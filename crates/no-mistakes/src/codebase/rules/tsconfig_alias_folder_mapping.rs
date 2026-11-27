@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 pub const RULE_ID: &str = "tsconfig-alias-folder-mapping";
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct AliasMapping {
     pub(crate) prefix: String,
     pub(crate) root: String,

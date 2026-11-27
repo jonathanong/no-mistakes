@@ -15,6 +15,8 @@ including repository-scoped matches below normal source-discovery skips.
 Each `bannedPaths` entry requires `glob` and may set a custom `message`.
 There are no defaults or other rule-specific options.
 
+Config loading rejects unknown keys in `bannedPaths` entries.
+
 ## Valid example
 
 A repository without `web/pages/**` files passes the configuration below.

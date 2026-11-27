@@ -12,7 +12,7 @@ pub(in crate::codebase::rules) mod matching;
 pub const RULE_ID: &str = "banned-renamed-files";
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(crate) struct BannedBasename {
     pub(crate) name: String,
     pub(crate) extensions: Option<Vec<String>>,

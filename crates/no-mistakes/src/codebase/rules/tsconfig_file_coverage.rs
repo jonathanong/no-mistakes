@@ -11,14 +11,14 @@ pub const RULE_ID: &str = "tsconfig-file-coverage";
 pub(super) const DEFAULT_AUXILIARY_BASENAME: &str = "tsconfig.dependency-cruiser.json";
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ReasonedPath {
     pub(crate) path: String,
     pub(crate) reason: String,
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct AuxiliaryConfig {
     pub(crate) path: String,
     pub(crate) reason: String,

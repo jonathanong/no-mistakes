@@ -2,36 +2,18 @@ use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{SourceStore, VisiblePathSnapshot};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "shellcheck-runner";
-
-const DEFAULT_SEVERITY: &str = "warning";
-const VALID_SEVERITIES: [&str; 4] = ["error", "warning", "info", "style"];
 
 mod candidates;
 mod diagnostics;
 mod execution;
 pub use diagnostics::diagnostics_with_files_sources_and_snapshot;
 use execution::run_shellcheck;
+mod options;
+pub(crate) use options::Options;
 mod selection;
-
-#[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
-pub(crate) struct ShellcheckOptions {
-    pub(crate) severity: String,
-}
-
-#[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
-pub(crate) struct Options {
-    pub(crate) shell_files: Vec<String>,
-    pub(crate) shebang_dirs: Vec<String>,
-    pub(crate) tracked_only: bool,
-    pub(crate) shellcheck: ShellcheckOptions,
-    pub(crate) skills_lockfile: Option<String>,
-}
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let rules = config.rule_applications(RULE_ID);

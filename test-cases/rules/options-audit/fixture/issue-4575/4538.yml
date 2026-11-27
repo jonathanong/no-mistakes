@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [src]
+      forbiddenModules: [fs]
+      exceptions:
+        - roots: [src/widget.ts]
+          allowedFiles: [src/fixture.ts]
+          auditUnexpectedField: true

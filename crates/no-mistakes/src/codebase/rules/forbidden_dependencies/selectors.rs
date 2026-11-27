@@ -2,54 +2,13 @@ use super::{helpers, Options, RULE_ID};
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::dependencies::graph::{DepGraph, NodeId};
 use crate::codebase::rules::config_diagnostic::ConfigAnchor;
-use crate::codebase::ts_resolver::normalize_path;
-use globset::{Glob, GlobMatcher, GlobSet};
+use globset::{Glob, GlobSet};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
-enum PathSelector {
-    Literal(PathBuf),
-    Pattern {
-        matcher: GlobMatcher,
-        relative: bool,
-    },
-}
-
-impl PathSelector {
-    fn new(root: &Path, raw: &str) -> anyhow::Result<Self> {
-        let path = normalize_path(&root.join(raw));
-        // Existing files and directories retain their literal meaning, even with glob syntax.
-        if path.is_file() || path.is_dir() || !raw.contains(['*', '?', '[', '{']) {
-            return Ok(Self::Literal(path));
-        }
-        // Keep the invocation root out of glob syntax (it may itself contain brackets).
-        let (pattern, relative) = match path.strip_prefix(root) {
-            Ok(relative) => (relative, true),
-            Err(_) => (path.as_path(), false),
-        };
-        let pattern = pattern.to_string_lossy();
-        #[cfg(windows)]
-        let pattern = pattern.replace('\\', "/");
-        Ok(Self::Pattern {
-            matcher: Glob::new(&pattern)?.compile_matcher(),
-            relative,
-        })
-    }
-
-    fn matches(&self, root: &Path, path: &Path) -> bool {
-        match self {
-            Self::Literal(prefix) => path.starts_with(prefix),
-            Self::Pattern { matcher, relative } => {
-                let candidate = if *relative {
-                    path.strip_prefix(root).unwrap_or(path)
-                } else {
-                    path
-                };
-                matcher.is_match(candidate)
-            }
-        }
-    }
-}
+mod path_selector;
+pub(in crate::codebase::rules::forbidden_dependencies) use path_selector::validate;
+use path_selector::PathSelector;
 
 mod audit;
 

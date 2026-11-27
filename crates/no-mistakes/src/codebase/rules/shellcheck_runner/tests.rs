@@ -279,19 +279,17 @@ fn has_bash_shebang_returns_false_for_nonexistent_file() {
 }
 
 #[test]
-fn run_shellcheck_uses_default_severity_when_empty() {
-    // Exercises line 145: opts.shellcheck.severity.is_empty() → DEFAULT_SEVERITY.
-    let root = fixture_root("echo-hi");
-    let sh = root.join("test.sh");
-    let opts = Options {
-        shellcheck: ShellcheckOptions {
-            severity: String::new(), // empty → DEFAULT_SEVERITY
-        },
-        ..Default::default()
-    };
-    // Missing ShellCheck is a structured incomplete result, not an invocation error.
-    let result = run_shellcheck(&root, &opts, &[sh]);
-    assert!(result.is_ok());
+fn shellcheck_severity_maps_to_cli_values() {
+    use super::options::Severity;
+
+    assert_eq!(Options::default().shellcheck.severity.as_str(), "warning");
+    for (severity, argument) in [
+        (Severity::Error, "error"),
+        (Severity::Info, "info"),
+        (Severity::Style, "style"),
+    ] {
+        assert_eq!(severity.as_str(), argument);
+    }
 }
 
 #[test]
@@ -405,28 +403,6 @@ fn parse_affected_files_deduplicates() {
     let result = parse_affected_files(&stdout, std::slice::from_ref(&sh));
     assert_eq!(result.len(), 1);
     assert_eq!(result[0], sh);
-}
-
-#[test]
-fn run_shellcheck_rejects_invalid_severity() {
-    let root = fixture_root("echo-hi");
-    let sh = root.join("test.sh");
-    let opts = Options {
-        shellcheck: ShellcheckOptions {
-            severity: "invalid_value".to_string(),
-        },
-        ..Default::default()
-    };
-    let result = run_shellcheck(&root, &opts, &[sh]);
-    assert!(result.is_err());
-    let error = result.unwrap_err().to_string();
-    assert!(error.contains("invalid shellcheck severity"));
-    assert!(
-        error.contains(r#"invalid shellcheck severity: "invalid_value"."#)
-            && error.contains("error, warning, info, style"),
-        "{}",
-        error
-    );
 }
 
 #[path = "tests/incomplete.rs"]

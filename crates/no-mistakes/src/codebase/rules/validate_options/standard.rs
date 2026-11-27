@@ -18,14 +18,12 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
         rules::file_extension_policy::RULE_ID,
         decode::<rules::file_extension_policy::Options>,
     ),
-    (
-        rules::forbidden_dependencies::RULE_ID,
-        decode::<rules::forbidden_dependencies::options::Options>,
-    ),
-    (
-        rules::forbidden_workspace_closure::RULE_ID,
-        decode::<rules::forbidden_workspace_closure::options::Options>,
-    ),
+    (rules::forbidden_dependencies::RULE_ID, |rule, context| {
+        rules::forbidden_dependencies::validate::dependencies(rule, context.root)
+    }),
+    (rules::forbidden_workspace_closure::RULE_ID, |rule, _| {
+        rules::forbidden_dependencies::validate::workspace_closure(rule)
+    }),
     (
         rules::lockfile_allowlist::RULE_ID,
         decode::<rules::lockfile_allowlist::Options>,
@@ -114,10 +112,10 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
         rules::server_route_client_boundary::RULE_ID,
         decode::<rules::server_route_client_boundary::Options>,
     ),
-    (
-        rules::shellcheck_runner::RULE_ID,
-        decode::<rules::shellcheck_runner::Options>,
-    ),
+    (rules::shellcheck_runner::RULE_ID, |rule, context| {
+        rule.strict_rule_options::<rules::shellcheck_runner::Options>()?
+            .validate_paths(rule, context.root)
+    }),
     (
         rules::strict_package_layout::RULE_ID,
         decode::<rules::strict_package_layout::Options>,

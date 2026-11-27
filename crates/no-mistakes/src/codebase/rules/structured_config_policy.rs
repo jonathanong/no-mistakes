@@ -23,7 +23,7 @@ pub(crate) struct Options {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Policy {
     pub(crate) files: Vec<String>,
     pub(crate) required_keys: Vec<String>,
@@ -33,13 +33,13 @@ pub(crate) struct Policy {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct PolicyWhen {
     pub(crate) key: String,
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ValueAssertion {
     pub(crate) key: String,
     #[serde(default, deserialize_with = "deserialize_assertion_kind")]

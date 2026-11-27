@@ -47,6 +47,9 @@ mod cli_shell_compatibility;
 #[path = "cli_shellcheck_policy.rs"]
 mod cli_shellcheck_policy;
 
+#[path = "cli_shellcheck_options.rs"]
+mod cli_shellcheck_options;
+
 // Share stateless fixture helpers across the modules in this harness.
 #[path = "common/check_json_case.rs"]
 mod check_json_case;

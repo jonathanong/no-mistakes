@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: version-pin-consistency
+    scope: repository
+    options:
+      sourceFile: version.toml
+      sourceKey: tool
+      anchors:
+        - file: setup.yml
+          pattern: 'EXAMPLE_TOOL_VERSION:\s*(\d+\.\d+\.\d+)'
+          labe: example-tool

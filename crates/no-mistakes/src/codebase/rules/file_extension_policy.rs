@@ -13,7 +13,7 @@ use allow::{audited, file_extension};
 pub const RULE_ID: &str = "file-extension-policy";
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, deny_unknown_fields, rename_all = "camelCase")]
 pub(crate) struct ScopeSpec {
     pub(crate) path: String,
     pub(crate) banned_extensions: Vec<String>,

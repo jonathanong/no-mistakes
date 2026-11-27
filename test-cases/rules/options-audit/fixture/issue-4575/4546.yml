@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: pnpm-release-age-policy
+    scope: repository
+    options:
+      temporaryGroups:
+      - selectors: ['example-package@1.0.0']
+        reason: Upstream release regression.
+        eligibleForRemovalAt: '2000-01-02T03:04:05Z'
+        auditUnexpectedField: true

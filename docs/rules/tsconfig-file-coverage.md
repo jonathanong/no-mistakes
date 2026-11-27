@@ -98,6 +98,9 @@ above.
 not declare compiler `files`, `include`, `exclude`, or `references`; paths must
 be repository-relative and reasons non-empty.
 
+Unknown fields in `allow` and `auxiliaryConfigs` entries are configuration
+errors.
+
 ## Valid example
 
 ```json

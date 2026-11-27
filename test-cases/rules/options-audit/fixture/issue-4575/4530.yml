@@ -1,0 +1,8 @@
+version: 2
+rules:
+  - rule: banned-paths
+    scope: repository
+    options:
+      bannedPaths:
+      - glob: src/legacy/**
+        messag: Move the file out of the legacy directory.
