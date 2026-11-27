@@ -49,6 +49,10 @@ lock failures and deadlines (including a `--timeout` firing mid-command) write
 stdout no longer means a hang. Do not treat exit `75` as "no impact"; wait and
 retry.
 
+If a lock directory is unwritable, the CLI tries the next per-user location
+and emits an `invocation_lock_fallback` warning to stderr. Its `lockFile`
+names the selected file. A null path means analysis proceeded without a lock.
+
 If a process is killed while writing holder metadata, `.tmp*` staging files can
 remain beside the lock. They are ignored by lock status and do not mean the
 invocation lock is held.

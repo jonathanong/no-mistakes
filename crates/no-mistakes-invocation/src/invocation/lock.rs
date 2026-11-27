@@ -1,44 +1,11 @@
 use super::holder::LockHolder;
 use super::{clock, InvocationError, InvocationErrorKind};
 use anyhow::{Context, Result};
-use directories::ProjectDirs;
 use std::fs::{File, OpenOptions, TryLockError};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::time::{Duration, Instant};
 
 const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(50);
-
-pub(super) fn lock_path() -> Result<PathBuf> {
-    lock_file_path(cfg!(test) || std::env::var_os("CARGO_BIN_EXE_no-mistakes").is_some())
-}
-
-pub(super) fn lock_file_path(isolate_per_process: bool) -> Result<PathBuf> {
-    // Unit-test helpers also spawn the current executable, without Cargo's
-    // integration-test binary variable. Both harnesses need process isolation
-    // from the user's lock and from parallel test subprocesses.
-    if isolate_per_process {
-        let directory = std::env::temp_dir().join("no-mistakes-test-locks");
-        create_lock_directory(&directory)?;
-        return Ok(directory.join(format!("{}.lock", std::process::id())));
-    }
-    let project_dirs = ProjectDirs::from("", "", "no-mistakes")
-        .context("could not determine the current user's invocation lock directory")?;
-    let directory = project_dirs
-        .runtime_dir()
-        .unwrap_or(project_dirs.cache_dir())
-        .to_path_buf();
-    create_lock_directory(&directory)?;
-    Ok(directory.join("invocation.lock"))
-}
-
-pub(super) fn create_lock_directory(directory: &Path) -> Result<()> {
-    std::fs::create_dir_all(directory).with_context(|| {
-        format!(
-            "creating no-mistakes invocation lock directory {}",
-            directory.display()
-        )
-    })
-}
 
 pub(super) fn acquire_lock(
     path: &Path,
@@ -56,13 +23,32 @@ pub(super) fn acquire_lock_from(
     fail_on_lock: bool,
     acquisition_started: Option<Instant>,
 ) -> Result<File> {
-    let file = OpenOptions::new()
+    acquire_open_lock(
+        path,
+        open_lock_file(path)?,
+        timeout,
+        fail_on_lock,
+        acquisition_started,
+    )
+}
+
+pub(super) fn open_lock_file(path: &Path) -> Result<File> {
+    OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)
         .truncate(false)
         .open(path)
-        .with_context(|| format!("opening invocation lock {}", path.display()))?;
+        .with_context(|| format!("opening invocation lock {}", path.display()))
+}
+
+pub(super) fn acquire_open_lock(
+    path: &Path,
+    file: File,
+    timeout: Option<Duration>,
+    fail_on_lock: bool,
+    acquisition_started: Option<Instant>,
+) -> Result<File> {
     let started = acquisition_started.unwrap_or_else(clock::now);
     let mut first_attempt = true;
     let mut last_reported_secs = None;

@@ -18,6 +18,8 @@ mod error;
 mod holder;
 #[path = "invocation/lock.rs"]
 mod lock;
+#[path = "invocation/lock_location.rs"]
+mod lock_location;
 #[path = "invocation/lock_status.rs"]
 mod lock_status;
 #[path = "invocation/napi_options.rs"]
@@ -142,7 +144,7 @@ impl InvocationArgs {
 pub struct InvocationGuard {
     _deadline: DeadlineGuard,
     _parent_signals: child::ParentSignalForwardingGuard,
-    _lock: File,
+    _lock: Option<File>,
 }
 
 pub(super) fn nonzero_seconds(seconds: u64) -> Option<Duration> {

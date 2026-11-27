@@ -41,7 +41,9 @@ test("errors without a report, or with an unreadable one, are left untouched", (
 test("lockStatus and structured invocation errors have public declarations", () => {
   const types = readFileSync(join(packageRoot, "invocation-types.d.ts"), "utf8");
   assert.match(types, /export interface LockStatus \{/);
-  assert.match(types, /state: "held" \| "free";/);
+  assert.match(types, /export type LockState = "held" \| "free" \| "unavailable";/);
+  assert.match(types, /state: LockState;/);
+  assert.match(types, /lockFile: string \| null;/);
   assert.match(types, /export interface LockHolder \{/);
   assert.match(
     types,

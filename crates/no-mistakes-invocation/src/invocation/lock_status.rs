@@ -1,7 +1,7 @@
-//! Read-only report of the machine-wide invocation lock and its holder.
+//! Nonblocking report of the selected per-user invocation lock and its holder.
 use super::holder::LockHolder;
-use super::lock::lock_path;
-use anyhow::{Context, Result};
+use super::lock_location::{open_current_lock, OpenedLock};
+use anyhow::Result;
 use serde::Serialize;
 use std::fs::{File, TryLockError};
 use std::path::Path;
@@ -11,13 +11,14 @@ use std::path::Path;
 pub enum LockState {
     Held,
     Free,
+    Unavailable,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LockStatus {
     pub state: LockState,
-    pub lock_file: String,
+    pub lock_file: Option<String>,
     /// Best-effort metadata while held; a handoff can briefly expose the prior holder.
     pub holder: Option<LockHolder>,
 }
@@ -28,24 +29,21 @@ pub struct LockStatus {
 /// never waits or changes the holder record. A simultaneous fail-fast exclusive
 /// acquisition can observe this brief probe as contention.
 pub fn lock_status() -> Result<LockStatus> {
-    status_at(&lock_path()?)
+    match open_current_lock() {
+        Some(OpenedLock { path, file }) => status_for_file(&path, file),
+        None => Ok(LockStatus {
+            state: LockState::Unavailable,
+            lock_file: None,
+            holder: None,
+        }),
+    }
 }
 
-pub(super) fn status_at(path: &Path) -> Result<LockStatus> {
+pub(super) fn status_for_file(path: &Path, file: File) -> Result<LockStatus> {
     let report = |state, holder| LockStatus {
         state,
-        lock_file: path.display().to_string(),
+        lock_file: Some(path.display().to_string()),
         holder,
-    };
-    let file = match File::open(path) {
-        Ok(file) => file,
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-            return Ok(report(LockState::Free, None));
-        }
-        Err(error) => {
-            return Err(error)
-                .with_context(|| format!("opening invocation lock {}", path.display()))
-        }
     };
     match file.try_lock_shared() {
         Ok(()) => {

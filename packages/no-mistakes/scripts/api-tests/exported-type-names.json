@@ -197,6 +197,7 @@
   "LockInventoryBaselineSite",
   "LockInventoryReport",
   "LockInventorySite",
+  "LockState",
   "LockStatus",
   "LockfileDiffEntry",
   "LockfileDiffOptions",

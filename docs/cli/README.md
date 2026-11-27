@@ -139,7 +139,7 @@ after the command name. See [Performance diagnostics](diagnostics.md).
 | [`registry-extension`](registry-extension.md) | Summarize how entries register in a registry file. |
 | [`check`](check.md) | Configured project-wide checks. |
 | [`config`](config.md) | Dump the effective resolved configuration ([`config resolve`](config-resolve.md)). |
-| [`lock`](lock.md) | Read-only status of the machine-wide invocation lock and its holder ([`lock status`](lock-status.md)). |
+| [`lock`](lock.md) | Status of the per-user invocation lock and its holder, without waiting ([`lock status`](lock-status.md)). |
 | [`lockfile`](lockfile.md) | Show which packages changed between two lockfile versions. |
 | [`tests`](tests.md) | Test plan, impact, explanation, comments, and graphs. |
 | [`playwright`](playwright.md) | Playwright route, selector, and assertion coverage. |
