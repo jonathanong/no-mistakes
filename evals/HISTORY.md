@@ -19,6 +19,35 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-26 — receipt case: fixture fix piloted and abandoned
+
+**Run:** a local, uncommitted edit to `rules-queue-exception-enqueue-in-tx-receipt`
+in `evals/rules_cases.py`, regenerated, then `--case
+rules-queue-exception-enqueue-in-tx-receipt --runs 1 --ablation with-without
+--no-scaffold -j 2`. Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge
+`claude-opus-5-5`, 2 attempts, zero errored. Cost `$0.26`: `$0.18` agent and
+`$0.07` judge. Report outside git at
+`~/.cache/no-mistakes/evals/2026-11-26-receipt/pilot.json`.
+
+The edit added a `src/queues.ts` with `attempts: 10`, exponential backoff,
+`removeOnComplete` and `removeOnFail`, and rewrote the comment to say a
+redelivery collides only while the first job is queued or retrying. That
+closes the gap the [rules control](#2026-11-26--rules-control-postgresql-queue-testing-re-measured)
+found: the snippet never showed the queue's options, so its "collides
+harmlessly" claim could not be checked.
+
+Both arms failed `leaves-enqueue-inside-tx` again (with 0/1, without 0/1), and
+the with arm did not load `queue-rules`. Both found new, real holes. Once
+retries run out, `removeOnFail` deletes the job while the provider already has
+its 2xx, so with no reconciler the event is lost. And because
+`receiveWebhook` enqueues on every delivery, conflicting insert or not,
+"commit, then enqueue, return 500 on failure" is already safe. The with arm
+said exactly that. The queue-rules exception does not apply to this snippet.
+
+**Abandoned.** Another patch would tune the case until the model agrees, so
+the edit was dropped and the arms were not run at 3. The case stays as it
+was; the ROADMAP says what a redesign needs.
+
 ## 2026-11-26 — candidate B ("or planning how to answer"): passes its gates, not shipped
 
 **Run:** `evals/variants/nm-load-plan/`, set up the same way as candidate A
@@ -238,8 +267,8 @@ Rows that moved against the 2026-11-26 entries below (same day, earlier):
   loaded in the with arm. The case's own comment ("a duplicate delivery
   collides harmlessly") is true only if finished jobs are retained, and the
   fixture never shows the queue's options, so the grader asks for a judgment
-  the prompt does not give enough to make. The case is rewritten in its own
-  PR.
+  the prompt does not give enough to make. A fixture fix was piloted and
+  abandoned ([receipt pilot](#2026-11-26--receipt-case-fixture-fix-piloted-and-abandoned)).
 - `queue-review-entity-only-dedup-id`: the loaded failure and the unloaded
   one both found the retained-id drop and proposed removing `jobId` or using
   BullMQ's `deduplication` option instead of adding the event to the id. The

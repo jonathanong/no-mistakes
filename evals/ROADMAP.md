@@ -92,8 +92,9 @@ showed about where the next work is.
   can move content as well as loading, so read the content column too.
 - **Read failing attempts before blaming the description.** Both arms of
   `queue-exception-enqueue-in-tx-receipt` failed for the same, correct reason:
-  the fixture kept failed jobs, so the `jobId` collision it called harmless
-  could drop a redelivery. The case was wrong, not the skill.
+  the snippet never showed the queue's job retention, so the `jobId`
+  collision it called harmless could drop a redelivery. The case was wrong, not the skill, and one fixture
+  fix exposed the next hole, so the case needs a redesign rather than patches.
 - **A loading grader can be right when another skill held the rule.**
   `testing-write-flaky-response-wait` loaded `playwright-rules` and passed,
   but `testing-rules` holds the no-retries rule the case also checks, so the
@@ -141,9 +142,12 @@ Grader weaknesses seen in failing attempts:
 
 - `rules-queue-exception-enqueue-in-tx-receipt` fails in both arms and the
   skill never loads: answers call the enqueue a defect and raise a hazard the
-  snippet does not close (a commit failing after `add`, then a `jobId`
-  collision on redelivery). Rewrite the snippet so the exception is airtight,
-  then re-pilot. Details: [HISTORY](HISTORY.md#2026-11-26--queue-and-testing-rules-measured-4187-4623).
+  snippet does not close. Making the snippet airtight did not work
+  ([pilot](HISTORY.md#2026-11-26--receipt-case-fixture-fix-piloted-and-abandoned)):
+  the snippet enqueues on every delivery, so enqueue-after-commit is already
+  safe and the exception never applies. Redesign it so the code enqueues only
+  when the insert inserted, and give it a reconciler for exhausted retries, or
+  remove the case.
 - `rules-testing-exception-raised-coverage-floor`: both arms raise a
   merge-order warning. Grade only whether the answer accepts the higher floor.
 - `names-graph-command` records that the skill was used, not that the plan was
