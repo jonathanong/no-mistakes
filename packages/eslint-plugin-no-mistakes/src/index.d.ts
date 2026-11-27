@@ -59,8 +59,6 @@ declare namespace plugin {
     sentinelTestIds?: string[];
   }
 
-  export type RuleUnanalyzable = "finding" | "ignore";
-
   export interface NoVitestSequentialOptions {
     unanalyzable?: RuleUnanalyzable;
   }
