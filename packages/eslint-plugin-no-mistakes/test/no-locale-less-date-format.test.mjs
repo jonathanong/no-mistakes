@@ -227,7 +227,7 @@ const cases = [
       ],
       unknownValues: "finding",
     },
-    lines: [7, 11, 15, 17, 21, 29, 33],
+    lines: [7, 11, 15, 17, 21, 29, 33, 38],
     messageIds: [
       "unanalyzable",
       "unanalyzable",
@@ -236,6 +236,7 @@ const cases = [
       "unanalyzable",
       "unanalyzable",
       "unknownLocale",
+      "unanalyzable",
     ],
   },
   {

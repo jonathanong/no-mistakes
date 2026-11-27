@@ -1042,6 +1042,17 @@
         "messageId": "unknownLocale",
         "ruleId": "no-mistakes/no-locale-less-date-format",
         "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 24,
+        "endLine": 38,
+        "file": "no-locale-less-date-format/module-namespace.ts",
+        "line": 38,
+        "message": "Cannot tell whether Intl.DateTimeFormat is the configured constructor. Its namespace is an import or require this file cannot read, so a missing locale is not proved.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
       }
     ],
     "name": "unknownValues finding reports an import, import equals require, and require as unanalyzable",

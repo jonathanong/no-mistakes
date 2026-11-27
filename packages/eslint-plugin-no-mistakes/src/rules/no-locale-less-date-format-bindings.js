@@ -63,9 +63,12 @@ function globalResolution(identifier, sourceCode, evalScopes) {
   }
   const variable = reference?.resolved;
   if (variable?.scope?.type === "global" && variable.defs.length === 0) return "global";
+  const definitions = variable?.defs.filter(
+    (def) => !(def.type === "Variable" && def.parent.kind === "var" && !def.node.init),
+  );
   if (
-    variable?.defs.length &&
-    variable.defs.every((def) => isUnreadModuleDef(def, sourceCode)) &&
+    definitions?.length &&
+    definitions.every((def) => isUnreadModuleDef(def, sourceCode)) &&
     !hasProvenLocalAssignment(variable, reference)
   ) {
     return "module";
