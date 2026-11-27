@@ -18,7 +18,7 @@ if grep -Eq \
   -e $'^!\t[^\t]+:refs/heads/main\t\\[remote rejected\\] \\(protected branch hook declined\\)$' \
   -e '^remote: error: GH013: Repository rule violations found for refs/heads/main\.' \
   <<< "$output"; then
-  echo "::error::The release GitHub App could not push the release commit and tag. Verify that the App is installed on this repository with Contents write access and is a bypass actor on main's ruleset." >&2
+  echo "::error::The release GitHub App could not push the release commit and tag. Verify that the App is installed on this repository with Contents write access, is a bypass actor on main's ruleset, and is allowed to bypass main's branch protection rule." >&2
 elif grep -Eq $'^!\t[^\t]+:refs/heads/main\t\\[rejected\\] \\((non-fast-forward|fetch first)\\)$' <<< "$output"; then
   echo "::error::main moved while the release commit was being prepared. Re-run the release workflow from current main." >&2
 fi
