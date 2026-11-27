@@ -46,15 +46,17 @@ fn platform_consumption_follows_relays_but_not_execution_dependencies() {
 
 #[test]
 fn platform_exports_with_empty_normalized_root_reject_parent_escapes() {
-    let select = |file: &str| {
+    let select_in = |root: &str, file: &str| {
         let options = serde_json::from_value(serde_json::json!({
             "productionRoots": ["worker/src"],
             "testGlobs": ["tests/**"],
             "platformConsumedExports": [{ "file": file, "exports": ["CachedOrigin"] }],
         }))
         .unwrap();
-        Selection::from_options(std::path::Path::new("."), options)
+        Selection::from_options(std::path::Path::new(root), options)
     };
+    let select = |file: &str| select_in(".", file);
+    assert!(select_in("../repo", "worker/src/index.mts").is_ok());
     assert!(select("worker/src/index.mts").is_ok());
     let error = select("../outside.ts").err().unwrap();
     assert!(error.to_string().contains("must stay within the root"));
