@@ -2,6 +2,7 @@
 
 const { rule, selectorValueNode } = require("../helpers");
 const { isDefaultedPropReference } = require("../defaulted-props");
+const { ruleSuppression } = require("../rule-suppression");
 const { selectorAttributeVisitors } = require("../selector-visitor");
 
 module.exports = rule(
@@ -22,11 +23,17 @@ module.exports = rule(
       default: "Test ID prop passthrough must have a literal default.",
     },
   },
-  (context) =>
-    selectorAttributeVisitors(context, (node) => {
+  (context) => {
+    const suppressed = ruleSuppression(context, "playwright-defaults");
+    return selectorAttributeVisitors(context, (node) => {
       const valueNode = selectorValueNode(node);
-      if (valueNode?.type === "Identifier" && !isDefaultedPropReference(valueNode, context)) {
+      if (
+        valueNode?.type === "Identifier" &&
+        !isDefaultedPropReference(valueNode, context) &&
+        !suppressed(node)
+      ) {
         context.report({ node, messageId: "default" });
       }
-    }),
+    });
+  },
 );

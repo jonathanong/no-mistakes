@@ -16,9 +16,9 @@ const paths = (step) =>
 const producers = [
   "linux-runtime",
   "native-build",
-  "native-build-macos",
+  "native-api-tests-macos",
   "native-test-build",
-  "native-test-build-macos",
+  "native-rust-tests-macos",
   "standalone-build",
   "rust-coverage-build",
 ];
@@ -72,7 +72,7 @@ test("all large workspace snapshots restore on PRs but save only successful main
 });
 
 test("macOS snapshots prefer CGU64, then fall back across manifest changes", () => {
-  for (const name of ["native-build-macos", "native-test-build-macos"]) {
+  for (const name of ["native-api-tests-macos", "native-rust-tests-macos"]) {
     const restore = steps(job(name)).find((step) => /uses: actions\/cache\/restore@/.test(step));
     assert.match(restore, /key: [^\n]+-cgu64-\$\{\{ hashFiles\('crates\/\*\*\/\*\.rs'\) \}\}/);
     const fallback = restore
@@ -108,14 +108,14 @@ test("dependency caches are main-only, dependency-only and shared across compati
     job("quality-rust"),
     /shared-key: \$\{\{ matrix.name == 'release warnings' && 'rust-quality-release-check-v1' \|\| 'linux-runtime-v1' \}\}/,
   );
-  assert.match(job("quality-rust"), /matrix.name != 'formatting'/);
+  assert.match(job("quality-rust"), /Check Rust formatting/);
   assert.match(job("quality-rust"), /flags: -D warnings --cfg coverage/);
   assert.match(job("docs-tests"), /shared-key: rust-doctests-v1/);
   for (const name of [
     "native-build",
-    "native-build-macos",
+    "native-api-tests-macos",
     "native-test-build",
-    "native-test-build-macos",
+    "native-rust-tests-macos",
     "rust-coverage-build",
     "standalone-build",
   ]) {
@@ -144,7 +144,7 @@ test("pnpm stores restore on PRs but save only on main", () => {
     /if: .*steps\.pnpm-setup\.outcome == 'failure'/.test(step),
   );
   const firsts = setups.filter((step) => !retries.includes(step));
-  assert.equal(setups.length, 34);
+  assert.equal(setups.length, 30);
   assert.equal(firsts.length, retries.length);
   for (const step of firsts) {
     assert.match(step, /cache: true/);

@@ -23,7 +23,7 @@ selection. Common `include` and `exclude` add further rule-path scoping.
 ## Options and defaults
 
 `options.include` uses `.github/workflows/**` and `.github/actions/**`
-when omitted or empty. [Include selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/no_sparse_checkout.rs#L83-L96).
+when omitted or empty. [Include selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/no_sparse_checkout.rs#L83-L96).
 
 ## Valid example
 
@@ -72,7 +72,7 @@ options:
 ### Unanalyzable inputs
 
 Unreadable files and steps without a statically recognized checkout and
-a `with:` mapping are skipped. The rule does not use `options.unanalyzable`. [File reading](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/no_sparse_checkout/scan.rs#L14-L32) and [step scanning](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/no_sparse_checkout/scan.rs#L77-L91).
+a `with:` mapping are skipped. The rule does not use `options.unanalyzable`. [File reading](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/no_sparse_checkout/scan.rs#L14-L32) and [step scanning](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/no_sparse_checkout/scan.rs#L77-L91).
 
 ## Suppression
 

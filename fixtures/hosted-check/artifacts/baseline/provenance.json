@@ -11,7 +11,7 @@
   "rustflags": "-D warnings",
   "refs": {
     "schemaVersion": 1,
-    "repository": "jonathanong/no-mistakes",
+    "repository": "jongleberry/no-mistakes",
     "harnessCommit": "1111111111111111111111111111111111111111",
     "compiler": "1.99.1",
     "resolvedAt": "2026-10-21T00:00:00Z",
@@ -29,8 +29,8 @@
       "release": {
         "id": 123,
         "tag": "v0.94.0",
-        "url": "https://github.com/jonathanong/no-mistakes/releases/tag/v0.94.0",
-        "endpoint": "repos/jonathanong/no-mistakes/releases/latest"
+        "url": "https://github.com/jongleberry/no-mistakes/releases/tag/v0.94.0",
+        "endpoint": "repos/jongleberry/no-mistakes/releases/latest"
       }
     }
   },

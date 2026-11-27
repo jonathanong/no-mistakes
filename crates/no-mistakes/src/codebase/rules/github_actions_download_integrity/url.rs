@@ -53,11 +53,24 @@ pub(super) fn configured_host(raw: &str) -> Option<String> {
     if raw.is_empty() || raw.contains(['/', '?', '#', ' ', '@']) {
         return None;
     }
-    let (host, path) = split_host(raw);
-    if host.is_empty() || !path.is_empty() {
+    let (host, suffix) = if let Some(body) = raw.strip_prefix('[') {
+        let (host, after) = body.split_once(']')?;
+        host.parse::<std::net::Ipv6Addr>().ok()?;
+        (host, after)
+    } else {
+        let end = raw.find(':').unwrap_or(raw.len());
+        (&raw[..end], &raw[end..])
+    };
+    if host.is_empty() || host.contains(char::is_whitespace) {
         return None;
     }
-    Some(host)
+    if !suffix.is_empty() {
+        let port = suffix.strip_prefix(':')?;
+        if !port.chars().all(|ch| ch.is_ascii_digit()) || port.parse::<u16>().is_err() {
+            return None;
+        }
+    }
+    Some(host.to_ascii_lowercase())
 }
 
 fn split_host(rest: &str) -> (String, &str) {

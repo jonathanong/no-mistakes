@@ -62,25 +62,25 @@ follows `unanalyzable`.
 recovery; SQL-template interpolations in configured bind templates are values,
 not SQL text. Unsupported shapes follow `unanalyzable`, and selected `.sql`
 files retain their existing checks. See the
-[bounded helper contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-facts/low-helper-recovery.md).
+[bounded helper contract](https://github.com/jongleberry/no-mistakes/blob/main/docs/postgres-facts/low-helper-recovery.md).
 `postgres-no-test-state-mutation` supports `low` for configured test SQL,
 bounded source helpers, and finite inline Vitest row selections;
 complete banned statements before opaque SQL remain findings, while unknown
 tails follow `unanalyzable`. See its
-[Effort section](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-test-state-mutation.md#effort).
+[Effort section](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-no-test-state-mutation.md#effort).
 `postgres-explicit-columns` and `postgres-required-predicates` also support
 `low` for literal SQL and the bounded helper subset; unsupported or residual
 inputs follow `unanalyzable`. See the
-[explicit-columns](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-explicit-columns.md#effort) and
-[required-predicates](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-required-predicates.md#effort)
+[explicit-columns](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-explicit-columns.md#effort) and
+[required-predicates](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-required-predicates.md#effort)
 Effort sections and the
-[bounded helper contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-facts/low-helper-recovery.md).
+[bounded helper contract](https://github.com/jongleberry/no-mistakes/blob/main/docs/postgres-facts/low-helper-recovery.md).
 If a low-effort rule's required partner check is missing or outside its
 configured scope, the check warns and falls back to `max` for that rule.
 JSON reports include `analysisFallbacks` for these partner fallbacks and omit
 the field when none occurred. A rule without a low implementation emits a
 named, non-failing warning when low was requested and stays at `max`.
-[`github-actions-job-timeouts`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-job-timeouts.md#effort)
+[`github-actions-job-timeouts`](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-job-timeouts.md#effort)
 is the example: `low` needs a covering `github-actions-step-timeouts` partner,
 and otherwise warns and falls back to `max`.
 
@@ -154,7 +154,7 @@ invalid byte's line, and cached bytes preserve suppression directives. Other
 read failures use line 1; configure exclusions when the file is unavailable.
 
 Grouped residual advice, including a `target` that may list several checks, is described in
-[SQL verdicts](https://github.com/jonathanong/no-mistakes/blob/main/docs/postgres-sql-verdicts.md).
+[SQL verdicts](https://github.com/jongleberry/no-mistakes/blob/main/docs/postgres-sql-verdicts.md).
 
 For Next.js routes, pages, selectors, or Playwright tests, also run
 `no-mistakes tests plan playwright --changed-file <file> --format json` and
@@ -177,8 +177,8 @@ context, option propagation, and safe command execution.
 - `--verbose-timings` adds Unix resource samples for sequential top-level phases
   and bounded expensive-file summaries. RSS is a process-lifetime high-water
   mark; elapsed rankings can vary between runs. See
-  [diagnostics](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/diagnostics.md) and
-  [heap profiling](https://github.com/jonathanong/no-mistakes/blob/main/docs/development/heap-profiling.md).
+  [diagnostics](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/diagnostics.md) and
+  [heap profiling](https://github.com/jongleberry/no-mistakes/blob/main/docs/development/heap-profiling.md).
 - `--timings` and `--verbose-timings` write diagnostics to stderr, leaving
   successful stdout machine-readable. Add `--progress` for flushed live phase
   snapshots in long or externally killed jobs; `--progress-interval <ms>`
@@ -203,7 +203,7 @@ API calls rebuild analysis; see the upstream Node API documentation linked from
 the repository docs. `analyzeProject` batches about 50 report types (see the
 `AnalyzeProjectReportType` export in `analyze-project-types.d.ts`), which covers
 almost every CLI command; see
-[getting started](https://github.com/jonathanong/no-mistakes/blob/main/docs/node-api/getting-started.md).
+[getting started](https://github.com/jongleberry/no-mistakes/blob/main/docs/node-api/getting-started.md).
 
 ## Quick command selection
 
@@ -225,7 +225,7 @@ almost every CLI command; see
 | Playwright coverage or related tests                   | `no-mistakes playwright check --json`; `no-mistakes playwright related <file> --json`                                                                                                                                                                                         |
 | React callers and component traits                     | `no-mistakes react usages <file>#Component --format json`; `no-mistakes react analyze <glob> --format json`                                                                                                                                                                   |
 | Next.js page-to-API coupling                           | `no-mistakes fetches <route-or-file> --format json`                                                                                                                                                                                                                           |
-| Queue/server graph                                     | `no-mistakes queues related <file> --format json`; `no-mistakes server related <file> --format json`; `no-mistakes server contracts --format json`. `queues check --config <path>` can select queue policy. `queues check` reports `missing-job-option` for configured `queues.requiredJobOptions`; an empty list changes nothing. A known flow-object spread is judged, and an unresolved `.add` receiver abstains ([queues check](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/queues-check.md)). |
+| Queue/server graph                                     | `no-mistakes queues related <file> --format json`; `no-mistakes server related <file> --format json`; `no-mistakes server contracts --format json`. `queues check --config <path>` can select queue policy. `queues check` reports `missing-job-option` for configured `queues.requiredJobOptions`; an empty list changes nothing. A known flow-object spread is judged, and an unresolved `.add` receiver abstains ([queues check](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/queues-check.md)). |
 | CI or workflow impact                                  | `no-mistakes ci impact <file> --format json`; `no-mistakes ci env <NAME> --format json`; `no-mistakes ci topology --format json`; `no-mistakes ci topology-impact --root . --base "$BASE_SHA" --head "$HEAD_SHA" --entry-workflow ci.yml`                                     |
 | Private CI planning artifacts (npm package)            | `no-mistakes planning-impact --changed-files <manifest> --output-dir <directory>`                                                                                                                                                                                             |
 | Terraform/OpenTofu or Swift                            | `no-mistakes infra resource-refs <type.name> --format json`; `no-mistakes infra outputs <module-dir> --format json`; `no-mistakes infra test-for <file.tf> --format json`; `no-mistakes swift importers <file> --format json`; `no-mistakes swift test-targets <file> --json` |
@@ -293,7 +293,7 @@ Generate the catalog with the role that executes the analyzed SQL. An absent
 was missing or the role lacked `USAGE`. If a required inventory is unavailable,
 retain the rule's conservative findings and regenerate with appropriate schema
 access rather than treating unavailable evidence as an empty schema. Schema
-inventories remain explicit opt-in. See [catalog options](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/postgres.md).
+inventories remain explicit opt-in. See [catalog options](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/postgres.md).
 
 Generated catalogs also record the exact connected database in `currentDatabase`.
 Older catalogs omit that evidence, so database qualification stays conservative.
@@ -304,12 +304,12 @@ To keep test SQL from changing shared PostgreSQL state, enable
 selected project's `postgres` block). It bans schema DDL, `TRUNCATE`,
 `ALTER SYSTEM`, replication-role changes, and `pg_sleep` in executed test SQL.
 Move schema setup into migrations and inject a throwing executor for failure
-tests. See [test state mutation](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-test-state-mutation.md).
+tests. See [test state mutation](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-no-test-state-mutation.md).
 For other statement policies, configure `postgres-sql-statement-policy` with
 `bannedStatements`, `bannedSettings`, or `bannedClauses`. Use
 `bannedClauses: [create-extension-version, drop-cascade]` to ban version pins
 and cascading drops. `sqlInclude` selects raw SQL files.
-See the [statement policy](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-statement-policy.md).
+See the [statement policy](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-sql-statement-policy.md).
 
 To catch cross-file SQL identifier registries and unbounded env/config/parameter
 sources, enable `postgres-no-mutable-sql-registry` and
@@ -317,28 +317,28 @@ sources, enable `postgres-no-mutable-sql-registry` and
 `projects.<name>.postgres` instead of restating it on the rule. They use
 prepared import, value-flow, and embedded-SQL facts. Unknown provenance stays
 silent.
-See [mutable SQL registries](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-mutable-sql-registry.md)
-and [unbounded SQL identifiers](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-unbounded-sql-identifier.md).
+See [mutable SQL registries](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-no-mutable-sql-registry.md)
+and [unbounded SQL identifiers](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-no-unbounded-sql-identifier.md).
 `postgres-sql-fragment-escape` reports cross-file writes, rebinds, and namespace
 escapes of exported trusted SQL const fragments and does not change the registry
-rule. See [SQL fragment escapes](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-fragment-escape.md).
+rule. See [SQL fragment escapes](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-sql-fragment-escape.md).
 
 To ban SQL sleeps or another configured function family, enable
 `postgres-sql-shape-policy` with `bannedShapes: [banned-function-call]` and a
 nonempty `shapeOptions.bannedFunctionCall.functions` list. Calls in expressions,
 CTEs, subqueries, and recoverable PL/pgSQL bodies use the same prepared facts.
 Configure `trustedSqlTags` for custom named SQL tag imports. See
-[shape policy](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-sql-shape-policy.md).
+[shape policy](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-sql-shape-policy.md).
 
 To keep catalog-resolved UUID columns bare in WHERE, JOIN ON, and HAVING, use
 `postgres-no-transformed-uuid-predicates` with `schemaCatalogPath`. It rejects
 column-side casts and functions while allowing parameter casts and precomputed
 bounds. Literal SQL supports `effort: low`; see the rule's
-[analysis contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-no-transformed-uuid-predicates.md#analysis).
+[analysis contract](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-no-transformed-uuid-predicates.md#analysis).
 
 To review row identifiers stored in top-level JSON keys or unique fingerprint
 columns, configure the advisory
-[`postgres-json-relation-ids`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-json-relation-ids.md)
+[`postgres-json-relation-ids`](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-json-relation-ids.md)
 rule. It is silent with no configured patterns; use `schemaCatalogPath` when
 you configure `keyColumnMap` or `fingerprintNamePattern`.
 
@@ -348,7 +348,7 @@ It checks Vitest/Playwright modifiers and bound Vitest context `skip()` calls;
 `allow` permits named exceptions such as `todo`. Same-file `.extend()` wrappers
 stay bound; `testModules` names Playwright fixture modules whose exported
 `test` should be checked. See
-[the plugin options reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-plugin.md#test-no-skips). This is a
+[the plugin options reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/eslint-plugin.md#test-no-skips). This is a
 single-file plugin rule, so invoke the configured linter rather than a
 `no-mistakes check` catalog scan.
 
@@ -356,18 +356,18 @@ Enable ESLint/Oxlint `no-mistakes/vitest-timeout-cap` with explicit test and
 Vitest config/project `files` globs to cap defaults (`defaultMax`, `5000` ms)
 and test/hook/suite overrides (`overrideMax`, `30000` ms). Same-module numeric
 constants resolve; `unknownValues: "finding"` reports unresolved values.
-See [plugin options](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-plugin.md#vitest-timeout-cap).
+See [plugin options](https://github.com/jongleberry/no-mistakes/blob/main/docs/eslint-plugin.md#vitest-timeout-cap).
 This file-specific capability uses the configured linter rather than a
 repository catalog scan.
 
 For `github-actions-max-inline-script-lines`, `maxLines` (default 10) counts non-blank
 body lines, joining backslash continuations, in workflow/composite `run` and `actions/github-script` scripts.
 Move oversized scripts into files and invoke them; see the
-[rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-max-inline-script-lines.md).
+[rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-max-inline-script-lines.md).
 
 For `github-actions-cache-setup-policy`, configure action families and literal
 paths with ordered `keyPattern` templates, or set per-family `setup` deadline
-caps. [Rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-setup-policy.md)
+caps. [Rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-cache-setup-policy.md)
 
 For `github-actions-cache-key-policy`, list each portable cache path with its lockfile and
 required key fragments such as `runner.os`, or list paths to ban entirely in `forbiddenPaths`
@@ -403,14 +403,14 @@ is required. `>&2`, `>& 2`, and `2>&1` are not writes. Single quotes do not expa
 filename, an escaped `$` is literal, and empty quotes do not make a single-quoted `$OUT`
 expand. Joining `"$"` to a name is not an expansion. A local
 composite `uses: ./...` counts when its declared output reads that proof. See the
-[rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
+[rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
 
 Use `test-no-retries` and `playwright-no-serial` through `check --root <root>
 --format json` to detect flaky-test workarounds. Set `testCommands` to the literal
 command prefixes that identify tests in workflow scripts. Document a deliberate
 exception in `allowlist` with a `path` or `project` and a `reason`. See the
-[retry rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/test-no-retries.md)
-and [serial rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/playwright-no-serial.md).
+[retry rule](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/test-no-retries.md)
+and [serial rule](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/playwright-no-serial.md).
 
 For `test-fixture-size-cap`, set `threshold` to cap literal `Array.from` lengths
 and single-argument `Array` and `new Array` lengths in `scopes.tests` and
@@ -419,7 +419,7 @@ elements are cardinalities for scale or size tables. `eachTableMode` defaults
 to `per-element`. Use `all-elements` to report once when every numeric cell
 in a table exceeds the threshold and none are exempt. Omitting `threshold`
 reports nothing. See the
-[rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/test-fixture-size-cap.md).
+[rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/test-fixture-size-cap.md).
 
 For `vite-optimize-deps-nested-imports`, set required `configFiles` and `packages`.
 Optional `includeSources` reads a static `parent > child` array from a named export,
@@ -428,14 +428,14 @@ const. A subpath import matches that
 exact specifier. A Node built-in still matches by package name.
 Optional `ignorePackages` skips uncovered imports of those package names. A chain
 `a > b > c` is checked one step at a time. See the
-[rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/vite-optimize-deps-nested-imports.md).
+[rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/vite-optimize-deps-nested-imports.md).
 
 Use `postgres-column-check-constraints` with a catalog path and explicit column
 globs, integer types, and `require: non-negative` to check schema lower bounds.
 Use application-level `severity: advisory` for adoption; the default error
 severity enforces failures. Exceptions
 need an exact `table.column` and reason. See
-[the rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-column-check-constraints.md).
+[the rule](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-column-check-constraints.md).
 
 Use `postgres-materialized-view-shape` to require refresh and read indexes and
 bounded base-table reads. Adopt with application-level `severity: advisory`;
@@ -443,7 +443,7 @@ the default severity is `error`. See the catalog configuration and examples in
 [PostgreSQL source analysis](references/postgres-source.md).
 
 For catalog-backed grouping review, configure
-[`postgres-grouping-not-aggregation`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-grouping-not-aggregation.md)
+[`postgres-grouping-not-aggregation`](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-grouping-not-aggregation.md)
 and run `no-mistakes check --root <root> --format json`. Read `advisories` and
 filter their `target` by the five shape codes. No catalog means no findings.
 The rule is always advisory; use normal source disable directives for measured
@@ -452,7 +452,7 @@ exceptions and async `check()` / `analyzeProject()` for repeated in-process work
 For `github-actions-pinned-hash`, enable `options.images: true` to require
 SHA-256 digests on service images, job containers, and `docker://` action
 steps. Expression-valued images follow `unanalyzable`. See the
-[rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-pinned-hash.md).
+[rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-pinned-hash.md).
 
 For `github-actions-download-integrity`, use `shellSourceInclude` root-relative
 globs to opt into Git-tracked shell-source scanning and `strictSequencing: true` to require
@@ -461,4 +461,4 @@ step `env` URL bindings resolve at max effort, as do independent uppercase
 assignments and partly literal URL values with a fixed host. Use
 `skipAnnotationScope: line` for one-line exceptions; the default remains
 whole-step / whole-selected-file. See the
-[rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-download-integrity.md).
+[rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-download-integrity.md).

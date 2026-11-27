@@ -1,0 +1,63 @@
+version: 2
+rules:
+- rule: github-actions-action-timeout-pair
+  scope: repository
+  options:
+    uses: [sample/example@]
+    nestedInput: action-timeout-s
+    nestedTimeoutSeconds: 90
+    nestedBelowStepTimeout: true
+- rule: github-actions-composite-step-schema
+  scope: repository
+  options:
+    include: [.github/actions/**]
+- rule: github-actions-download-integrity
+  scope: repository
+  options:
+    trustedHosts: [example.invalid:443, "[::1]:443"]
+- rule: github-actions-job-timeouts
+  scope: repository
+  options:
+    maxMinutes: 10
+    allow:
+    - job: .github/workflows/sample.yml#build
+      maxMinutes: 12
+- rule: github-actions-step-timeouts
+  scope: repository
+  options:
+    maxMinutes: 10
+    allow:
+    - step: .github/workflows/sample.yml#build#run-sample
+      reason: An example exception.
+      maxMinutes: 360
+- rule: github-actions-test-timeout-literals
+  scope: repository
+  options:
+    allow:
+    - file: .github/workflows/sample.test.ts
+      text: expect(job.timeoutMinutes).toBe(12);
+      reason: An example exception.
+- rule: github-actions-env-policy
+  scope: repository
+  options:
+    required:
+      WIDGET_MODE: safe
+    forbidden: [UNSAFE_EXAMPLE]
+- rule: github-actions-checkout-credentials
+  scope: repository
+  options:
+    defaultBranch: refs/heads/release/example
+- rule: github-actions-pinned-hash
+  scope: repository
+  options:
+    excludePaths: [.github/actions/**]
+- rule: workflow-topology-policy
+  scope: repository
+  options:
+    requiredJobs: [.github/workflows/sample.yml#build]
+    forbiddenJobs: [.github/workflows/sample.yml#missing]
+    stepOrders:
+    - jobId: .github/workflows/sample.yml#build
+      steps:
+      - id: run-sample
+      - id: sample-action

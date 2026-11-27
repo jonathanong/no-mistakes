@@ -222,7 +222,7 @@ no-mistakes rsc-callers app/ui/Button.tsx --root . --format json
   component only conditionally may be missing from `callers`.
 - A missing component path is an error; an unimported one gives empty `callers`.
 
-See [rsc-callers](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/rsc-callers.md).
+See [rsc-callers](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/rsc-callers.md).
 
 ## Diff test impact planning
 
@@ -297,7 +297,7 @@ trace the shared TS type/schema file each generated target is derived from.
 For the native test targets themselves, use the framework-specific planners
 (`tests plan swift` / `tests plan dotnet`, which read the configured
 `tests.swift.packages` / `tests.dotnet.projects` graphs — see
-[`tests plan`](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/tests-plan.md)),
+[`tests plan`](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/tests-plan.md)),
 and treat native/generated-fixture drift as something to verify by running the
 project's contract or codegen check, not something no-mistakes proves by
 itself.
@@ -327,7 +327,7 @@ Caveat: side-effect-only imports (`import "shared-utils/register"`) and dynamic
 `import()` calls are not counted by `importers` or `exports-of`. For those, or
 for non-import edges (CommonJS `require`, cross-package resolution via a
 `workspace:*` dependency name), use
-[`dependents`](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/dependents.md)
+[`dependents`](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/dependents.md)
 instead — it follows the full typed edge set, not just static ES imports.
 
 ## Shared-helper dependent test discovery
@@ -444,7 +444,7 @@ Cross-reference this output against the full call-site list: any call site
 candidate. The regex is a convenience, not authoritative beyond that: it can
 also miss multiline or aliased calls and produce a false positive when a
 later expression shares the same statement as `Promise.all`. The
-[`no-mistakes/async-call-disposition`](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-rules/async-call-disposition.md)
+[`no-mistakes/async-call-disposition`](https://github.com/jongleberry/no-mistakes/blob/main/docs/eslint-rules/async-call-disposition.md)
 eslint rule enforces disposition going forward on configured enqueue APIs, but
 it is not a discovery graph — existing callers still need this manual pass.
 For imported APIs that adopt callback returns, configure `awaitingConsumers`
@@ -456,7 +456,7 @@ and `module.exports` stay unproven on that path, and a `require()` consumer
 stays unproven in either mode. Unknown callback APIs remain reported.
 
 For file-local API prevention policies, configure the opt-in
-[`restricted-api-usage`](https://github.com/jonathanong/no-mistakes/blob/main/docs/eslint-rules/restricted-api-usage.md)
+[`restricted-api-usage`](https://github.com/jongleberry/no-mistakes/blob/main/docs/eslint-rules/restricted-api-usage.md)
 ESLint/Oxlint rule with exact sources and exported-name patterns. Add a lexical
 call-name pattern only when all bindings with that spelling are intentionally
 restricted. Scope files and contract-test exclusions in the linter configuration.

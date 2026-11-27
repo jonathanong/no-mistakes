@@ -387,7 +387,7 @@ rules:
 
 ## Upgrading
 
-The constructor-target fix for [#2734 section 2](https://github.com/jonathanong/no-mistakes/issues/2734)
+The constructor-target fix for [#2734 section 2](https://github.com/jongleberry/no-mistakes/issues/2734)
 removes false failures introduced by #2699:
 
 - Resolvable alias and package constructors reuse the existing resolver and
@@ -418,7 +418,7 @@ reported class or construction site.
 See the [migration note](../migrations/unconstructed-error-class-constructor-targets.md)
 for CLI and Node report behavior.
 
-The [#2758 constructor fix](https://github.com/jonathanong/no-mistakes/issues/2758)
+The [#2758 constructor fix](https://github.com/jongleberry/no-mistakes/issues/2758)
 also follows compatible conditional declaration entries in the re-exporter's
 package context, including runtime packages with separate `@types` declarations.
 Proven non-Error targets become silent. An otherwise-unused exported subclass
