@@ -72,9 +72,11 @@ artifacts and run the package dry run without installing workspace dependencies.
 Before each upload, the helper checks the exact version with
 `npm view --prefer-online`. It also rechecks after a failed upload because
 npm may have accepted the write before returning an error. A visible version
-skips the upload. Sigstore `TLOG_CREATE_ENTRY_ERROR`, rate limits, server errors,
-process timeouts, and transient connection errors allow bounded retries.
-Other lookup errors fail closed before another upload.
+moves the job to tarball verification. If the version is still missing after
+a timeout, the result is ambiguous and the helper may retry the upload.
+Sigstore `TLOG_CREATE_ENTRY_ERROR`, rate limits, server errors, and transient
+connection errors use the same bounded retry policy. Other lookup errors fail
+closed before another upload.
 
 After an accepted or skipped upload, the publisher checks npm's install
 metadata and downloads the tarball to verify its checksum. The same deadline
@@ -86,11 +88,12 @@ the root can publish.
 
 ### Staged publication recovery
 
-An upload can be accepted without npm making the version publicly available.
-The tarball deadline fails the job in that case, with the most recent lookup
-or checksum error and the same-tag recovery instruction. A registry response
-saying `previously staged version` also fails if an exact-version check cannot
-see that version. In either case the job avoids resending the accepted upload.
+npm can return a successful publish response before making the version
+publicly available. The job proceeds directly to tarball verification.
+If the tarball deadline expires, the job reports the most recent lookup or
+checksum error and the same-tag recovery instruction. A publish error saying
+`previously staged version` stops the job if the exact-version check still
+returns no version.
 
 On either error, inspect npm publication status and package settings, and retain
 the registry response in the release logs. Check the exact version's metadata
