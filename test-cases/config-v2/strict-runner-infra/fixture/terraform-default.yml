@@ -1,0 +1,4 @@
+infra:
+  terraform:
+    test:
+      testRoot: tests

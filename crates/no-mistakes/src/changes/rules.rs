@@ -1,7 +1,9 @@
-use super::config::{ChangesConfig, IdRule};
+use super::config::{
+    compile_selection_glob, validate_category_name, ChangesConfig, IdRule, IdSource,
+};
 use crate::codebase::keyed_diff::KeyOptions;
 use anyhow::{bail, Context, Result};
-use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
+use globset::{GlobSet, GlobSetBuilder};
 
 pub(super) struct Rules<'a> {
     pub excludes: Vec<GlobSet>,
@@ -42,21 +44,15 @@ impl<'a> Rules<'a> {
         let mut rules = Vec::new();
         let mut keyed = Vec::new();
         for (name, category) in &config.categories {
-            if name.is_empty()
-                || matches!(
-                    name.as_str(),
-                    "schemaVersion" | "complete" | "unclassified" | "changedFiles" | "reasons"
-                )
-            {
-                bail!("invalid changes category name {name:?}");
-            }
+            validate_category_name(name)?;
             let exclude = if category.exclude.is_empty() {
                 None
             } else {
                 let mut builder = GlobSetBuilder::new();
                 for pattern in &category.exclude {
-                    add_glob(&mut builder, pattern)
+                    let glob = compile_selection_glob(pattern)
                         .with_context(|| format!("changes category {name:?} exclude"))?;
+                    builder.add(glob);
                 }
                 let index = excludes.len();
                 excludes.push(builder.build()?);
@@ -77,8 +73,9 @@ impl<'a> Rules<'a> {
                 let id = compile_id(id, &mut keyed)
                     .with_context(|| format!("changes category {name:?} ID rule"))?;
                 for pattern in paths {
-                    add_glob(&mut selectors, pattern)
+                    let glob = compile_selection_glob(pattern)
                         .with_context(|| format!("changes category {name:?} paths"))?;
+                    selectors.add(glob);
                     rules.push(Rule {
                         category: name,
                         exclude,
@@ -97,33 +94,25 @@ impl<'a> Rules<'a> {
     }
 }
 
-fn add_glob(builder: &mut GlobSetBuilder, pattern: &str) -> Result<()> {
-    if pattern.is_empty() {
-        bail!("empty glob");
-    }
-    builder.add(GlobBuilder::new(pattern).literal_separator(true).build()?);
-    Ok(())
-}
+#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
+#[path = "rules_compile_tests.rs"]
+mod compile_tests;
 
 fn compile_id<'a>(id: Option<&'a IdRule>, keyed: &mut Vec<KeyOptions>) -> Result<Id<'a>> {
     let Some(id) = id else {
         return Ok(Id::Path);
     };
-    match (id.from_path.as_deref(), id.keys_of.as_ref()) {
-        (Some(template), None) => {
-            let (prefix, suffix) = template
-                .split_once("{id}")
-                .filter(|(_, suffix)| !suffix.contains("{id}"))
-                .context("fromPath requires exactly one {id} placeholder")?;
-            Ok(Id::FromPath {
-                prefix,
-                suffix,
-                separator: id.separator.as_deref(),
-            })
-        }
-        (None, Some(keys)) if id.separator.is_none() => {
-            let options = keys.options();
-            options.validate()?;
+    match id.source().map_err(|invalid| invalid.error)? {
+        IdSource::FromPath {
+            prefix,
+            suffix,
+            separator,
+        } => Ok(Id::FromPath {
+            prefix,
+            suffix,
+            separator,
+        }),
+        IdSource::Keys(options) => {
             let index = keyed
                 .iter()
                 .position(|existing| existing == &options)
@@ -134,6 +123,5 @@ fn compile_id<'a>(id: Option<&'a IdRule>, keyed: &mut Vec<KeyOptions>) -> Result
                 });
             Ok(Id::Keys(index))
         }
-        _ => bail!("declare either fromPath or keysOf, with separator only for fromPath"),
     }
 }

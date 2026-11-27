@@ -37,8 +37,9 @@ file without a registered entry owner receives no credit. Type-only and dynamic
 imports do not establish registration ownership.
 
 `routes` contains exact canonical page route identifiers in the bound app,
-including named parameter routes such as `/user/:id/posts/saved`. Wildcard
-exemptions, query strings, fragments, and undeclared app routes are errors.
+including named parameter routes such as `/user/:id/posts/saved`. Configuration
+loading rejects wildcard exemptions, query strings, and fragments. Route
+coverage also checks that each identifier is declared in the bound app.
 Literal and template request paths use normal route matching and specificity;
 only the most specific actual route may receive credit, and its canonical
 identifier must appear in this finite list. A wrong suffix cannot cover a
@@ -46,7 +47,8 @@ declared route, and a more specific literal page cannot credit a parameter route
 
 Each helper identifies an exact repository-relative module file or resolvable
 module specifier and an exported binding. Import aliases are supported. Set
-`method` for an imported class instance method; omit it for an imported function.
+`method` for an imported class instance method or omit it for an imported
+function. Configuration loading rejects empty helper fields.
 `urlArgument` is the zero-based argument containing the route string. Class
 receivers must have a concrete imported constructor. Shadowed, reassigned, or
 ambiguous bindings receive no credit.

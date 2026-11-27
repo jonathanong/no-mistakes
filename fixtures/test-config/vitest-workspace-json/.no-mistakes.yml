@@ -3,10 +3,3 @@ tests:
     configs:
       - vitest.workspace.json
       - vitest.projects.json
-    projects:
-      json-inline:
-        integrationSuites:
-          openai: []
-      json-string:
-        integrationSuites:
-          openai: []

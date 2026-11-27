@@ -1,0 +1,7 @@
+changes:
+  categories:
+    example:
+      rules:
+        - paths: ["src/**/*.ts"]
+          id:
+            fromPath: "src/example.ts"

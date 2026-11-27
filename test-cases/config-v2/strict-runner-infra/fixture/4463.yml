@@ -1,0 +1,1 @@
+tests: {playwright: {selectors: {test_ids: [example]}}}

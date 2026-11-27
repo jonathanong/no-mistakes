@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 /// Top-level `infra` configuration block. Holds non-JS infrastructure analysis
 /// settings. Currently only Terraform/OpenTofu.
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct InfraConfig {
     pub terraform: TerraformConfig,
 }
@@ -13,7 +13,7 @@ pub struct InfraConfig {
 /// No Terraform analysis happens unless `moduleRoots` is non-empty — there are
 /// no default-on global conventions (per the "explicit opt-in" design rule).
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct TerraformConfig {
     /// Directories (relative to the repo root) that contain Terraform/OpenTofu
     /// modules — both root modules and reusable child modules. Each directory is
@@ -40,7 +40,7 @@ impl TerraformConfig {
 /// Configuration for the `infra test-for` test-file convention. The convention is
 /// always supplied here — no test directory or suffix is hardcoded.
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct TerraformTestConvention {
     /// Globs locating a module's test files, anchored at the module directory by
     /// default (e.g. `["__tests__/*.test.mts"]`).

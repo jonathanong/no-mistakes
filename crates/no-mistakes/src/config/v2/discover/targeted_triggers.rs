@@ -1,3 +1,4 @@
+use crate::config::source_locations::ConfigPath;
 use crate::config::v2::schema::{
     NamedFullSuiteTrigger, NoMistakesConfig, TestPlanProjectDependency,
 };
@@ -23,18 +24,45 @@ pub(super) fn validate(config: &NoMistakesConfig, path: &Path) -> Result<()> {
         ("dart", &config.test_plan.dart),
         ("jest", &config.test_plan.jest),
     ] {
+        let framework_path = ConfigPath::default().key("testPlan").key(framework);
+        for (environment, policy) in &plan.environments {
+            super::test_config::validate_environment(
+                policy,
+                &framework_path.clone().key("environments").key(environment),
+            )?;
+        }
         validate_named_triggers(&plan.full_suite_triggers.triggers, path, framework)?;
         for (project, dependency) in &plan.full_suite_triggers.projects {
-            let TestPlanProjectDependency::Targeted(targeted) = dependency else {
-                continue;
-            };
-            let base = format!(
-                "{}.testPlan.{framework}.fullSuiteTriggers.projects.{project}",
-                path.display()
-            );
+            let field = framework_path
+                .clone()
+                .key("fullSuiteTriggers")
+                .key("projects")
+                .key(project);
             if !config.projects.contains_key(project) {
-                anyhow::bail!("{base} references missing top-level projects.{project}");
+                return Err(super::path_globs::field_error(
+                    field.clone(),
+                    format!("{field} references missing top-level projects.{project}"),
+                ));
             }
+            let targeted = match dependency {
+                TestPlanProjectDependency::All(_) => continue,
+                TestPlanProjectDependency::Patterns(patterns) => {
+                    if let Some(index) = patterns
+                        .iter()
+                        .position(|pattern| glob_body(pattern).is_empty())
+                    {
+                        let field = field.index(index);
+                        return Err(super::path_globs::field_error(
+                            field.clone(),
+                            format!("{field} must not be blank"),
+                        ));
+                    }
+                    super::test_config::validate_paths(patterns, &field)?;
+                    continue;
+                }
+                TestPlanProjectDependency::Targeted(targeted) => targeted,
+            };
+            let base = format!("{}.{field}", path.display());
             validate_paths(&targeted.paths, &base)?;
             if targeted.targets.is_empty() {
                 anyhow::bail!("{base}.targets must not be empty");
@@ -69,8 +97,7 @@ fn validate_paths(paths: &[String], base: &str) -> Result<()> {
         anyhow::bail!("{base}.paths must not be empty");
     }
     for (index, pattern) in paths.iter().enumerate() {
-        let normalized = pattern.trim();
-        let normalized = normalized.strip_prefix('!').unwrap_or(normalized).trim();
+        let normalized = glob_body(pattern);
         if normalized.is_empty() {
             anyhow::bail!("{base}.paths[{index}] must not be blank");
         }
@@ -82,6 +109,11 @@ fn validate_paths(paths: &[String], base: &str) -> Result<()> {
             })?;
     }
     Ok(())
+}
+
+fn glob_body(pattern: &str) -> &str {
+    let pattern = pattern.trim();
+    pattern.strip_prefix('!').unwrap_or(pattern).trim()
 }
 
 fn validate_targets(targets: &[String], base: &str) -> Result<()> {

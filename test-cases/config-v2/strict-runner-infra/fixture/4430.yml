@@ -1,0 +1,1 @@
+testPlan: {vitest: {environments: {pre-push: {limit: {percent: "twenty"}}}}}

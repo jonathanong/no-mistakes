@@ -1,0 +1,35 @@
+projects:
+  example:
+    root: .
+tests:
+  impact:
+    registries: ["src/**/*.ts"]
+    alwaysIncludeTests: ["tests/**/*.mock.ts"]
+  vitest:
+    configs: vitest.config.ts
+test_plan:
+  vitest:
+    dependencies:
+      projects:
+        example: ["src/**/*.ts"]
+    environments:
+      pre-push:
+        include: ["*.ts"]
+        limit:
+          percent: "25%"
+        groups:
+          - type: direct
+            limit:
+              percent: 100
+infra:
+  terraform:
+    test:
+      match: module
+      testGlobs: ["tests/*.test.ts"]
+changes:
+  categories:
+    example:
+      id: {fromPath: "src/{id}.ts"}
+      paths: ["src/*.ts"]
+      tests: ["tests/*.test.ts"]
+      match: "loadExample(<id>)"

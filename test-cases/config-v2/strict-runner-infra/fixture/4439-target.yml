@@ -1,0 +1,9 @@
+projects:
+  example: {root: .}
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        example:
+          paths: ["src/**"]
+          targets: [unit, unit]

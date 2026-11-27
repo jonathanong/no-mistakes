@@ -6,7 +6,7 @@ projects:
       - api/**
 tests:
   vitest:
-    suites:
-      - name: backend
+    projects:
+      backend:
         include:
           - backend/**/*.test.ts

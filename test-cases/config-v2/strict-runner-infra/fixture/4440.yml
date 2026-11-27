@@ -1,0 +1,2 @@
+projects: {example: {root: .}}
+testPlan: {vitest: {fullSuiteTriggers: {projects: {example: ["[broken"]}}}}

@@ -32,24 +32,19 @@ pub(crate) type PreparedLinks = BTreeMap<RouteCoverageSource, Result<Vec<RouteLi
 pub(crate) fn validate(sources: &[RouteCoverageSource]) -> anyhow::Result<()> {
     for source in sources {
         anyhow::ensure!(
-            !source.project.is_empty()
-                && !source.include.is_empty()
-                && !source.routes.is_empty()
-                && !source.helpers.is_empty(),
+            source.empty_required_field().is_none(),
             "routeCoverageSources requires project, include, routes, and helpers"
         );
-        for route in &source.routes {
-            anyhow::ensure!(
-                route.starts_with('/')
-                    && !route.contains(['*', '[', ']', '{', '}', '?', '#'])
-                    && !route.starts_with("//"),
+        if let Some((_, route)) = source.first_noncanonical_route() {
+            anyhow::bail!(
                 "routeCoverageSources.routes requires exact canonical route identifiers: {route}"
             );
         }
         for helper in &source.helpers {
-            anyhow::ensure!(!helper.module.is_empty() && !helper.export.is_empty()
-                && helper.method.as_ref().is_none_or(|method| !method.is_empty()),
-                "routeCoverageSources.helpers requires a module, export, and a nonempty optional method");
+            anyhow::ensure!(
+                helper.empty_field().is_none(),
+                "routeCoverageSources.helpers requires a module, export, and a nonempty optional method"
+            );
         }
     }
     Ok(())

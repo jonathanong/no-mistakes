@@ -1,0 +1,1 @@
+testPlan: {vitest: {fullSuiteTriggers: {projects: {missing: true}}}}

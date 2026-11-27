@@ -1,0 +1,8 @@
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      triggers:
+        - name: example
+          paths: ["src/**"]
+        - name: example
+          paths: ["lib/**"]

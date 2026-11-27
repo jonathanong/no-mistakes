@@ -27,5 +27,3 @@ dart:
   dependencies: []
 jest:
   dependencies: []
-custom:
-  dependencies: []

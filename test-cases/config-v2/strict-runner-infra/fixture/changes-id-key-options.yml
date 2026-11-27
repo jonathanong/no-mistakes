@@ -1,0 +1,6 @@
+changes:
+  categories:
+    example:
+      rules:
+        - paths: ["**/*.json"]
+          id: {keysOf: {format: json, array: items}}

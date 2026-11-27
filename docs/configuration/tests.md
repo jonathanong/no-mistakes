@@ -5,6 +5,11 @@
 `tests` config describes runner configs, project policies, and Playwright
 selector extraction.
 
+Test and runner mappings reject unknown keys when any command loads the
+configuration. The loader also validates fixture registry and always-include
+globs. Playwright route coverage sources require nonempty `include`, `routes`,
+and `helpers` lists and valid include globs, including sources declared per app.
+
 For opt-in canonical route credit from registered Vitest integration tests, see
 [integration route coverage](integration-route-coverage.md).
 
@@ -124,6 +129,16 @@ matrix and known narrower surfaces.
 `phpunit` / `php artisan test`, `mvn test [-f <package>/pom.xml] -Dtest=`,
 `gradle [-p <package>] test --tests`, `mix test <path>`, or `dart test` / `dart pub --directory <package> run test` targets. Untraceable source under those
 roots falls back to discovered tests in the owning package, module, or app.
+
+## Unsupported Vitest keys
+
+Configuration loading rejects these keys. Use the supported fields below.
+
+| Unsupported key | Supported configuration |
+| --- | --- |
+| `tests.vitest.config` | Put the path or list of paths in `tests.vitest.configs`. |
+| `tests.vitest.suites` | Put each suite under `tests.vitest.projects.<name>` and use the suite name as the mapping key. |
+| `tests.vitest.projects.<name>.integrationSuites` | Use the field name `integration_suites` on that project. |
 
 ## Explicit Vitest projects
 

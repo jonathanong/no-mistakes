@@ -272,7 +272,7 @@ fn impact_emits_no_registry_hint_when_target_has_no_importers() {
 }
 
 #[test]
-fn impact_tolerates_malformed_registry_glob() {
+fn impact_rejects_malformed_registry_glob_before_analysis() {
     let root = fixture("tests-impact-registry");
     let config = root.join("malformed-registry.no-mistakes.yml");
     let config = config.to_str().unwrap();
@@ -287,14 +287,10 @@ fn impact_tolerates_malformed_registry_glob() {
         config,
         "--json",
     ]);
-    assert!(
-        output.status.success(),
-        "stderr: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    // A malformed glob degrades to no registries, so no hints (but no crash).
-    assert!(registry_hints(&plan).is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert_eq!(output.status.code(), Some(2), "{stderr}");
+    assert!(output.stdout.is_empty(), "published a partial impact plan");
+    assert!(stderr.contains("tests.impact.registries[0]"), "{stderr}");
 }
 
 #[test]

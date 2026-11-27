@@ -36,6 +36,15 @@ Group types:
 Global full-suite fallback is explicit opt-in through config or
 `--global-config-fallback true`.
 
+Configuration loading validates environment and legacy trigger globs. A legacy
+project trigger must name a project declared at the root. An environment or
+group percentage limit accepts a number from 0 to 100 or a string such as
+`"25%"`.
+
+Configuration loading rejects unrecognized framework names such as
+`testPlan.custom`. Move the settings under the supported framework key for
+the runner. Configure standalone validation commands under `checks.commands`.
+
 ## Named triggers
 
 Prefer a list of named triggers when the matching paths are not owned by a
@@ -86,8 +95,8 @@ testPlan:
 ## Project-keyed triggers (deprecated)
 
 `fullSuiteTriggers.projects` accepts legacy broad triggers and target-scoped
-triggers. A target-scoped trigger selects only tests owned by the named runner
-projects:
+triggers. A negated path must include a pattern after `!`. A target-scoped
+trigger selects only tests owned by the named runner projects:
 
 ```yaml
 testPlan:
