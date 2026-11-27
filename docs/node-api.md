@@ -517,7 +517,11 @@ call.
 | `impacted-checks`                          | `impactedChecks(options)`                                                                                                                                                                                                                                                  |
 | `planning-impact` (npm package only)       | `writePlanningImpactArtifacts(options)`                                                                                                                                                                                                                                   |
 
-Swift, .NET, Java, Kotlin, Elixir, and Dart do not emit `queue-enqueue` or `queue-worker` edges: those docs name no static producer or worker. Rust facts record no jobs, so configured globs publish no Rust job edges. Async `queueEdges()`, `queueRelated()`, and `queueCheck()` share that limit with the CLI. See [feature parity](feature-parity.md).
+Swift, .NET, Java, Kotlin, Elixir, Dart, and Rust frontends record no
+language-specific queue jobs. The shared Kafka scanner checks configured
+globs for supported literal shapes regardless of the file extension.
+Async `queueEdges()`, `queueRelated()`, and `queueCheck()` use the same
+queue facts as the CLI. See [feature parity](feature-parity.md).
 
 `queueCheck()` reports `shared-queue-rate-limit` when a processor throws `RateLimitError` or calls `.rateLimit()` on a queue that carries more than one known job name, and abstains when that set is unknown.
 `queueCheck()` also reports `worker-rate-limit-per-process` when `.rateLimit()` is called on a binding that resolves to a `Worker`, a `Worker` subclass, or a configured worker factory, and abstains with a diagnostic on `QueueReport.diagnostics` only when an unresolved receiver's binding originates from a queue module or worker construction. On a multi-job queue, calling `worker.rateLimit()` inside a processor emits both `shared-queue-rate-limit` and `worker-rate-limit-per-process`.

@@ -519,11 +519,9 @@ Job, Sidekiq, Laravel, and Symfony Messenger emit the same `queue-enqueue` /
 `queue-worker` edges into `DepGraph`; query those with
 `dependents --relationship queue`. The dedicated `queues` commands project
 those language edges into the existing report. They do not get private graph
-shapes. Swift, .NET, Java, Kotlin, Elixir, and Dart do not emit
-`queue-enqueue` or `queue-worker` edges: those docs name no static producer
-or worker. Rust facts record no jobs, so configured globs publish no Rust
-job edges. The shared Kafka scanner stays limited to the TypeScript and
-Python literal shapes below; other Kafka literals are out of scope.
+shapes. Swift, .NET, Java, Kotlin, Elixir, Dart, and Rust frontends
+record no language-specific queue jobs. The shared Kafka scanner still
+checks files under configured globs for the literal shapes below.
 
 Configured TypeScript queue enqueue wrappers support object-argument property
 selectors, immutable returned-callable aliases with per-call options, and
@@ -708,8 +706,11 @@ string literal produce no edge. `go/ast` in-process is acceptable; invoking the
 
 ## Kafka
 
-Kafka is a queue backend, not a language. Producers and consumers in any
-supported language emit the existing `queue-enqueue` and `queue-worker` edges.
+The Kafka scanner looks for the supported literal shapes in files selected
+by the configured producer and consumer globs. It emits the existing
+`queue-enqueue` and `queue-worker` edges. For example, a Java producer calling
+`kafkaTemplate.send("mail.welcome", payload)` under an enqueue glob has a
+queue edge.
 The virtual job identity is `<cluster>:<topic>` when a configured logical
 cluster or broker namespace is present and non-empty, and the bare topic
 otherwise. The queue name falls back to `default` when no cluster is set; that
@@ -753,9 +754,8 @@ registrations emit `route` edges. Language `symbols` / `call-sites`,
 | Lockfile         | npm-family          | later (`lockfile diff` is npm-family; `Cargo.lock` diffs are not started)                                                                    |
 | Checks           | `unique-exports`    | keep the existing `rust-*` filesystem rules                                                                                                  |
 
-Configured enqueue and worker globs publish only job names the Rust fact pass
-records. That pass records none, so those globs do not create Rust job edges.
-Kafka literals outside TypeScript and Python are out of scope.
+The Rust fact pass records no language-specific queue jobs. Rust files
+selected by a queue glob are still eligible for the shared Kafka scanner.
 
 `ci` remains the narrow workflow-file → Rust-binary Cargo edge. Do not overload
 it with `use`/`mod` edges. `workflow` already resolves supported Cargo
@@ -1032,12 +1032,9 @@ The CLI and async Node check APIs share the opt-in
 [`swift-no-unguarded-darwin-import`](rules/swift-no-unguarded-darwin-import.md)
 rule for portable Swift files.
 
-Route, queue, and Kafka extractors are language-specific visitors. Route
-visitors emit `route` edges. HTTP callers emit `http`. Queue and Kafka
-visitors emit `queue-enqueue` and `queue-worker`. Swift, .NET, Java, Kotlin,
-Elixir, and Dart do not emit those queue edges: those docs name no static
-producer or worker. Rust facts record no jobs, so configured globs publish
-no Rust job edges. `server-route` and
+Language route visitors emit `route` edges. HTTP callers emit `http`.
+Language queue visitors and the shared Kafka scanner emit
+`queue-enqueue` and `queue-worker`. `server-route` and
 `client-call` are server-report kinds, not language graph edges. A Celery
 producer in Python and an Asynq producer in Go must be traversable with
 `--relationship queue`.
@@ -1121,7 +1118,9 @@ v1 module graphs and `tests plan <lang>` are shipped for configured Python,
 Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and Dart packages. Named route
 extractors are shipped where the status table names them. Named queue
 extractors are shipped for TypeScript, Python, Go, Kafka, Rails, and PHP.
-Swift, .NET, Java, Kotlin, Elixir, Dart, and Rust queue cells are declined.
+Swift, .NET, Java, Kotlin, Elixir, Dart, and Rust have declined
+language-specific queue cells. Those files remain eligible for shared Kafka
+literal scanning under configured globs.
 One invocation covers every configured language. Use `dependents --relationship <lang|route|queue|http>` and
 `tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart` for the shipped
 questions instead of `rg`.
@@ -1136,7 +1135,7 @@ Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
 `Cargo.lock`, `Gemfile.lock`, `composer.lock`), Laravel resource routes with
 computed options or arguments, Phoenix resource routes with options,
-Kafka outside TS/Python literal shapes, language
+Kafka calls outside the documented literal shapes, language
 `symbols`/`call-sites`, and rule families that apply only to TS/JS or `.sql`
 ([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)).
 

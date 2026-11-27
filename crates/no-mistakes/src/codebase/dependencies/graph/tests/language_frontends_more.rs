@@ -62,6 +62,20 @@ fn empty_language_config_still_emits_kafka_queue_edges() {
 }
 
 #[test]
+fn configured_kafka_glob_matches_a_java_producer_without_language_queue_facts() {
+    let root = lang_fixture("kafka-scoped-java");
+    let options = GraphConfigOptions {
+        queue_enqueues: vec!["**/*.java".into()],
+        ..GraphConfigOptions::default()
+    };
+    let edges = collect_language_frontend_edges_for_test(&root, &lang_files(&root), Some(&options));
+    assert!(edges.iter().any(|(from, _, kind)| {
+        *kind == EdgeKind::QueueEnqueue
+            && from.as_file().is_some_and(|path| path.ends_with("Publisher.java"))
+    }));
+}
+
+#[test]
 fn rust_path_deps_emit_package_and_mod_edges() {
     let root = lang_fixture("rust-path-deps");
     let options = GraphConfigOptions {
