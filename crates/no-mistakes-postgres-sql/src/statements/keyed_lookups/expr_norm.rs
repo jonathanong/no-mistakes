@@ -1,8 +1,9 @@
 pub(super) mod function;
+mod types;
 
 use super::scope::ScopeSnapshot;
-use crate::idents::{ident_key, object_name_identity, unwrap_expr};
-use sqlparser::ast::{ArrayElemTypeDef, DataType, Expr, Ident, InTarget, OrderByExpr, Value};
+use crate::idents::{ident_key, unwrap_expr};
+use sqlparser::ast::{BinaryOperator, CastKind, Expr, Ident, InTarget, OrderByExpr, Value};
 
 pub(super) struct ExprNormalizer<'a> {
     self_qualifier: Option<&'a str>,
@@ -56,29 +57,40 @@ impl<'a> ExprNormalizer<'a> {
                 self.mark_anchor();
                 Some(format!(
                     "typed({},{})",
-                    atom(&canonical_type(&typed.data_type)),
+                    atom(&types::cast_type(&typed.data_type)?),
                     atom(&typed.value.to_string())
                 ))
             }
             Expr::Cast {
-                expr, data_type, ..
+                kind: CastKind::Cast | CastKind::DoubleColon,
+                expr,
+                data_type,
+                format: None,
+                ..
             } => {
                 let inner = self.normalize(expr)?;
                 Some(format!(
                     "cast({},{})",
                     atom(&inner),
-                    atom(&canonical_type(data_type))
+                    atom(&types::cast_type(data_type)?)
                 ))
             }
             Expr::UnaryOp { op, expr } => {
                 let inner = self.normalize(expr)?;
                 Some(format!("unary({op},{})", atom(&inner)))
             }
-            Expr::BinaryOp { left, op, right } => Some(format!(
-                "bin({op},{},{})",
-                atom(&self.normalize(left)?),
-                atom(&self.normalize(right)?)
-            )),
+            Expr::BinaryOp { left, op, right }
+                if !matches!(
+                    op,
+                    BinaryOperator::Custom(_) | BinaryOperator::PGCustomBinaryOperator(_)
+                ) =>
+            {
+                Some(format!(
+                    "bin({op},{},{})",
+                    atom(&self.normalize(left)?),
+                    atom(&self.normalize(right)?)
+                ))
+            }
             Expr::Function(function) => function::normalize(function, |arg| self.normalize(arg)),
             predicate if self.key_anchor.is_none() => self.predicate(predicate),
             _ => None,
@@ -171,29 +183,4 @@ fn atom(value: &str) -> String {
 
 fn argument_list(items: &[String]) -> String {
     items.iter().map(|item| atom(item)).collect()
-}
-
-fn canonical_type(data_type: &DataType) -> String {
-    match data_type {
-        DataType::Custom(name, mods) => {
-            let base = object_name_identity(name);
-            if mods.is_empty() {
-                base
-            } else {
-                let mods = mods
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(",");
-                format!("{base}({mods})")
-            }
-        }
-        DataType::Array(
-            ArrayElemTypeDef::AngleBracket(inner)
-            | ArrayElemTypeDef::SquareBracket(inner, _)
-            | ArrayElemTypeDef::Parenthesis(inner)
-            | ArrayElemTypeDef::Qualified(inner, _),
-        ) => format!("{}[]", canonical_type(inner)),
-        other => other.to_string().to_ascii_lowercase(),
-    }
 }

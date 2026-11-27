@@ -2,7 +2,7 @@ use super::select_item_expr;
 use super::windows::referenced_expressions;
 use crate::fx::FxHashSet;
 use crate::idents::{ident_key, unwrap_expr};
-use sqlparser::ast::{Distinct, Expr, GroupByExpr, Ident, Select, VisitMut, VisitorMut};
+use sqlparser::ast::{CastKind, Distinct, Expr, GroupByExpr, Ident, Select, VisitMut, VisitorMut};
 use std::ops::ControlFlow;
 
 pub(super) fn inspectable<'a>(
@@ -48,6 +48,17 @@ fn target_identity(expr: &Expr) -> Expr {
     struct Identifiers;
     impl VisitorMut for Identifiers {
         type Break = ();
+
+        fn pre_visit_expr(&mut self, expr: &mut Expr) -> ControlFlow<()> {
+            if let Expr::Cast {
+                kind: kind @ CastKind::DoubleColon,
+                ..
+            } = expr
+            {
+                *kind = CastKind::Cast;
+            }
+            ControlFlow::Continue(())
+        }
 
         fn pre_visit_ident(&mut self, ident: &mut Ident) -> ControlFlow<()> {
             ident.value = ident_key(ident);

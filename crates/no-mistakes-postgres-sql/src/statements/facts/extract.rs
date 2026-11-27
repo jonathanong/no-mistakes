@@ -89,7 +89,9 @@ pub(super) fn extract_from_parsed_and_sources(
             if sources.policy.collect_json_writes {
                 super::super::json_writes::collect(statement, &mut json_writes);
             }
-            if sources.policy.collect_duplicate_keyed_lookups {
+            if sources.policy.collect_duplicate_keyed_lookups
+                && sources.statement_is_complete(index)
+            {
                 super::super::keyed_lookups::collect(statement, &mut duplicate_keyed_lookups);
             }
             super::super::transformed_predicates::collect(

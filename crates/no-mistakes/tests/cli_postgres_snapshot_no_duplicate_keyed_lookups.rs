@@ -13,6 +13,17 @@ fn postgres_no_duplicate_keyed_lookups_check_json_snapshot() {
         ("query_scopes", "query-scopes", "enabled-sql.yml"),
         ("query_clauses", "query-clauses", "enabled-sql.yml"),
         ("target_list", "target-list", "enabled-sql.yml"),
+        (
+            "recovered_siblings",
+            "recovered-siblings",
+            "enabled-sql.yml",
+        ),
+        (
+            "recovered_siblings_advise",
+            "recovered-siblings",
+            "unanalyzable-native-advise.yml",
+        ),
+        ("review_planning", "review-planning", "enabled-sql.yml"),
         ("review_edges", "review-edges", "enabled-sql.yml"),
         ("review_soundness", "review-soundness", "enabled-sql.yml"),
         ("distinct_and_clean", "pass", "enabled-sql.yml"),

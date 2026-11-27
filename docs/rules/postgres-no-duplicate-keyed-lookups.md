@@ -54,7 +54,8 @@ The rule stays silent when the lookups are not proven to read the same row:
   or unrecognized functions in keys or scalar projections, unresolved table
   column alias lists, distinct `LIMIT` clauses, or ambiguous expressions.
 - Function calls require a vetted built-in qualified with `pg_catalog` or
-  PostgreSQL syntax such as `COALESCE`.
+  PostgreSQL syntax such as `COALESCE`. Custom cast targets and custom
+  operators are excluded when their behavior is unknown.
 - Sampled table scans, `ONLY` table scans, or scalar subqueries that lock rows.
 
 PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`,
@@ -98,7 +99,8 @@ rules:
 - `unanalyzable`: shared uncertainty policy (`report`, `advise`, or `ignore`;
   default `report`). `report` fails on dynamically constructed or unparseable
   SQL, `advise` emits a non-failing advisory, and `ignore` omits residual
-  diagnostics. Legacy `unanalyzableSql` (`fail`, `advise`, `ignore`) is accepted
+  diagnostics. Complete statements can still produce findings when another
+  statement in the file cannot be parsed. Legacy `unanalyzableSql` (`fail`, `advise`, `ignore`) is accepted
   as an alias when `unanalyzable` is not set.
 
 A `projects: [<name>]` entry inherits

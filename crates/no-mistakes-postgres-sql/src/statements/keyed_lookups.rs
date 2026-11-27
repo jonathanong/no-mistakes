@@ -3,6 +3,7 @@ mod dml;
 mod expr_norm;
 mod join;
 mod normalize;
+mod query;
 mod scope;
 mod select_exprs;
 mod subquery;
@@ -12,9 +13,10 @@ mod windows;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use join::register_table_with_joins;
 use normalize::LookupKey;
+use query::walk_query;
 use scope::ScopeStack;
 use sqlparser::ast::{
-    CopySource, Expr, OrderByKind, Query, Select, SelectItem, SetExpr, Statement, Visit, Visitor,
+    CopySource, Expr, Query, Select, SelectItem, SetExpr, Statement, Visit, Visitor,
 };
 use std::collections::BTreeMap;
 use std::ops::ControlFlow;
@@ -58,21 +60,6 @@ fn walk_statement(
     }
 }
 
-fn walk_query(query: &Query, scopes: &mut ScopeStack, out: &mut Vec<SqlDuplicateKeyedLookupFact>) {
-    if let Some(with) = &query.with {
-        for cte in &with.cte_tables {
-            walk_query(&cte.query, scopes, out);
-        }
-    }
-    let order_exprs: Vec<&Expr> = match query.order_by.as_ref().map(|order| &order.kind) {
-        Some(OrderByKind::Expressions(exprs)) => exprs.iter().map(|e| &e.expr).collect(),
-        _ => Vec::new(),
-    };
-    walk_set_expr(&query.body, &order_exprs, scopes, out);
-    walk_nested_queries(&query.limit_clause, scopes, out);
-    walk_nested_queries(&query.fetch, scopes, out);
-}
-
 fn walk_set_expr(
     body: &SetExpr,
     order_exprs: &[&Expr],
@@ -81,7 +68,7 @@ fn walk_set_expr(
 ) {
     match body {
         SetExpr::Select(select) => walk_select(select, order_exprs, scopes, out),
-        SetExpr::Query(query) => walk_query(query, scopes, out),
+        SetExpr::Query(query) => query::walk_query_ordered(query, order_exprs, scopes, out),
         SetExpr::Values(values) => {
             scopes.push_frame();
             let mut seen = BTreeMap::new();

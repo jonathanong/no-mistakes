@@ -132,3 +132,47 @@ fn resolves_function_and_join_scopes_without_merging_distinct_predicates() {
         ]
     );
 }
+
+#[test]
+fn distinguishes_evaluated_order_and_limit_lookups_from_unproven_operations() {
+    let facts = fixture_facts("review-planning");
+    assert!(!facts.parse_failed);
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+    assert_eq!(sites, [(3, 4), (10, 11), (29, 30), (33, 34)]);
+}
+
+#[test]
+fn skips_only_incomplete_statements_during_lookup_extraction() {
+    let root = crate::test_support::rule_fixture_root("postgres-no-duplicate-keyed-lookups")
+        .join("statement-completeness");
+    let sql = std::fs::read_to_string(root.join("queries/check.sql")).unwrap();
+    let complete: Vec<bool> =
+        serde_json::from_slice(&std::fs::read(root.join("complete.json")).unwrap()).unwrap();
+    let prepared = crate::parse::PreparedSql::new(&sql);
+    let statements = prepared.parse_policy().unwrap();
+    assert_eq!(statements.len(), complete.len());
+    let facts = crate::statements::extract_from_parsed_with_recovered_placeholders(
+        &sql,
+        &prepared,
+        &statements,
+        true,
+        false,
+        None,
+        StatementPolicySources {
+            collect_duplicate_keyed_lookups: true,
+            statement_complete: Some(&complete),
+            ..Default::default()
+        },
+    );
+    let lines: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| fact.line)
+        .collect();
+    assert!(facts.parse_failed);
+    assert_eq!(lines, [1, 3]);
+}
