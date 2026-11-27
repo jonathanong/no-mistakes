@@ -16,11 +16,12 @@ pub(super) fn reference_exists(
         config_file.parent().unwrap_or(root).to_path_buf()
     };
     let target = normalize_path(&base.join(reference));
-    if target.starts_with(normalize_path(root)) && tracked_reference_exists(root, &target, rel_files) {
+    let root = normalize_path(root);
+    if target.starts_with(&root) && tracked_reference_exists(&root, &target, rel_files) {
         return Ok(true);
     }
     if opts.allow_globs && has_glob_metachar(reference) {
-        let pattern = reference_pattern(root, config_file, opts, reference);
+        let pattern = reference_pattern(&root, config_file, opts, reference);
         let glob = Glob::new(&pattern)?;
         let matcher = glob.compile_matcher();
         return Ok(rel_files.iter().any(|rel| matcher.is_match(rel)));
