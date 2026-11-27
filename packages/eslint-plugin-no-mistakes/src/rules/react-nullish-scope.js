@@ -131,7 +131,8 @@ function createNullishState(context) {
   }
 
   function defineParam(param) {
-    const target = param.type === "AssignmentPattern" ? param.left : param;
+    const parameter = param.type === "TSParameterProperty" ? param.parameter : param;
+    const target = parameter.type === "AssignmentPattern" ? parameter.left : parameter;
     const type = typeAnnotation(param) || typeAnnotation(target);
     if (isIdentifier(target)) {
       noteType(target.name, type);
