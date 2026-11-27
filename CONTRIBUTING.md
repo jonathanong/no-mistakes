@@ -199,17 +199,15 @@ test rejects omitted or duplicate sources. For example, run query cases with
 .NET test-plan cases with
 `cargo test --locked -p no-mistakes --test suite_cli_queries cli_test_plan_dotnet::`.
 Use the full module-qualified name with `-- --exact` for a single test.
-`windows_job_object` and `windows_invocation` remain separate platform harnesses in `crates/no-mistakes`,
-while `macos_invocation` lives in `crates/no-mistakes-invocation` alongside `src/invocation*` (re-exported by `crates/no-mistakes` as `invocation`). The native macOS job also runs
+`windows_job_object`, `windows_invocation`, and `macos_invocation` live in
+`crates/no-mistakes-invocation` beside the invocation code. The native macOS
+harness runs `blocked_fifo`. Linux Rust coverage also runs
 `cargo test --locked -p no-mistakes --bin no-mistakes invocation::tests::blocked_check::`
-for the blocked-check timeout regression. This binary subprocess test opens the
-configuration FIFO from the writer side to prove the real check reader reached
-config loading, then waits for the parent to arm its one-second production
-watchdog. Startup and readiness have their own bounded wait, so coverage startup
-load cannot consume the deadline intended for blocked check execution. The parent
-also verifies the blocked helper survives longer than its command budget while
-the start gate remains closed. It always kills and reaps the helper when readiness
-or timeout assertions fail.
+against a real repository check. Both tests share the start gate and the
+one-second watchdog assertions in `tests/support/blocked_watchdog.rs` in the
+invocation crate. The worker starts reading its configuration FIFO before the
+parent opens the gate and arms the deadline. The parent verifies that the worker
+survives with the gate closed and cleans up the helper on failure.
 
 Mermaid validation tests require the default `mermaid-validation` feature. The
 suites gate only those modules, so other tests remain available without default

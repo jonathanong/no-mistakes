@@ -109,6 +109,10 @@ The current validation graph is organized as follows:
   Windows runs a real check with drive-qualified paths and a deadline. Both
   run the saved CLI fixture to check that it reports `agents-md-max-size` at
   `AGENTS.md:1`, then load the platform addon through `analyzeProject`.
+  The native API jobs on main and manual dispatch reuse the same CLI cases
+  with their built or downloaded runtime. Linux coverage owns the portable
+  help text, flag placement, invalid timeout inputs, and successful millisecond
+  budget checks.
   Addon smoke also exercises cross-process lock handoff, lock release after
   process termination, and rename behavior. macOS retains CLI and addon
   parity for invocation diagnostics. Windows CRLF and UTF-16 console

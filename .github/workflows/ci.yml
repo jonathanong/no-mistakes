@@ -1673,6 +1673,18 @@ jobs:
           chmod +x target/debug/no-mistakes* || true
           ./target/debug/no-mistakes${{ runner.os == 'Windows' && '.exe' || '' }} --version
 
+      - name: Install Rust
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
+        with:
+          toolchain: stable
+
+      - name: Run platform CLI invocation tests
+        timeout-minutes: 5
+        env:
+          NO_MISTAKES_CLI_BIN: ${{ github.workspace }}/target/debug/no-mistakes.exe
+        run: node .github/scripts/smoke.cjs windows cli-rust
+
       - name: Run real N-API API test
         timeout-minutes: 10
         id: real-napi
@@ -1779,7 +1791,6 @@ jobs:
           install: false
 
       - name: Install Rust
-        if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
         id: native-rust-toolchain
         timeout-minutes: 5
         uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # 2026.10.09
@@ -1902,6 +1913,12 @@ jobs:
         run: |
           chmod +x target/debug/no-mistakes* || true
           ./target/debug/no-mistakes${{ runner.os == 'Windows' && '.exe' || '' }} --version
+
+      - name: Run platform CLI invocation tests
+        timeout-minutes: 5
+        env:
+          NO_MISTAKES_CLI_BIN: ${{ github.workspace }}/target/debug/no-mistakes
+        run: node .github/scripts/smoke.cjs macos cli-rust
 
       - name: Run real N-API API test
         timeout-minutes: 10

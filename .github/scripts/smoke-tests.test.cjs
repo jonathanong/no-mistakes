@@ -8,6 +8,7 @@ const {
   assertCliResult,
   buildCommand,
   cargoCommands,
+  cliCargoCommands,
   vitestArgs,
 } = require("./smoke.cjs");
 const { cliFixture, napiFixture, platforms } = require("./smoke-tests.cjs");
@@ -144,4 +145,26 @@ test("native smoke builds invocation-only harnesses and exercises selected real 
   }
   assert.ok(platforms.macos.rust.some(({ selector }) => selector.includes("macos_invocation")));
   assert.ok(platforms.windows.rust.some(({ selector }) => selector.includes("windows_job_object")));
+});
+
+test("native API jobs run the same CLI cases with the platform runtime on main and dispatch", () => {
+  const source = read(".github/workflows/ci.yml");
+  for (const [os, id, binary, flag] of [
+    ["macos", "native-api-tests-macos", "no-mistakes", "macos"],
+    ["windows", "native-api-tests", "no-mistakes.exe", "windows"],
+  ]) {
+    const body = workflowJob(source, id);
+    assert.ok(body.includes(`needs.changes.outputs.${flag} == 'true'`));
+    const step = body
+      .split("      - name: Run platform CLI invocation tests\n")[1]
+      .split("\n      - ")[0];
+    assert.match(step, /NO_MISTAKES_CLI_BIN:/);
+    assert.ok(step.includes(`/target/debug/${binary}\n`));
+    assert.ok(step.includes(`smoke.cjs ${os} cli-rust`));
+    assert.doesNotMatch(step, /if:|continue-on-error/);
+    assert.deepEqual(
+      cliCargoCommands(os),
+      cargoCommands(os).filter((args) => args.includes("cli_smoke")),
+    );
+  }
 });
