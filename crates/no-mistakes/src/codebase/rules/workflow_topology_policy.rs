@@ -1,5 +1,6 @@
 use super::RuleFinding;
 use crate::codebase::analysis_session::AnalysisSession;
+use crate::codebase::workflow_topology::artifact_types::ArtifactMatchKind;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use serde::Deserialize;
@@ -25,6 +26,7 @@ pub(crate) use options::Options;
 #[cfg(test)]
 mod prepare;
 mod secret_inventory;
+mod validate;
 
 pub const RULE_ID: &str = "workflow-topology-policy";
 
@@ -36,24 +38,24 @@ pub(crate) struct ForbiddenActivityTypes {
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ArtifactEdgeRule {
     pub(crate) from: String,
     pub(crate) to: String,
     pub(crate) name: String,
     #[serde(rename = "match")]
-    pub(crate) match_kind: Option<String>,
+    pub(crate) match_kind: Option<ArtifactMatchKind>,
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct StepOrderRule {
     pub(crate) job_id: String,
     pub(crate) steps: Vec<StepSelector>,
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct StepSelector {
     pub(crate) id: Option<String>,
     pub(crate) uses: Option<String>,
@@ -126,6 +128,7 @@ mod tests;
 mod secret_inventory_tests;
 
 pub(super) fn validate_options(opts: &Options) -> Result<()> {
+    validate::selectors(opts)?;
     concurrency_compile::compile(&opts.concurrency_policy)?;
     opts.secret_inventory
         .as_ref()

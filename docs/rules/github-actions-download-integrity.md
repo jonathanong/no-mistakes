@@ -123,6 +123,9 @@ with the same step scanner as `github-actions-script-expressions`, so
 
 ## Options
 
+A `trustedHosts` entry can include a decimal port in the range 0–65535. Write
+IPv6 addresses in brackets, for example `[::1]:443`.
+
 `trustedHosts` is a list of host names. Ports are stripped before comparison,
 and comparison is case-insensitive. Subdomains are different hosts. When the
 rule is enabled and `trustedHosts` is omitted, the default is:

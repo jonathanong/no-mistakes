@@ -5,7 +5,7 @@ use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Deserialize, Clone, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ConcurrencyIntent {
     pub(crate) pending: Option<String>,
     pub(crate) cancellation: Option<String>,

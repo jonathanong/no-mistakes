@@ -30,7 +30,7 @@ pub(crate) struct Options {
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct AllowEntry {
     pub(crate) job: String,
     pub(crate) max_minutes: Option<u64>,
