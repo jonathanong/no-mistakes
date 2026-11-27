@@ -36,7 +36,7 @@ a `git diff` whose range is:
   pairing when neither event is declared. For example, a `pull_request`-only
   workflow can use
   `git diff origin/${{ github.base_ref }}...${{ github.sha }}` to diff against
-  the PR merge commit. [Event gating](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_workflow_files/pr_diff_range/runs.rs#L128-L137).
+  the PR merge commit. [Event gating](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_workflow_files/pr_diff_range/runs.rs#L128-L137).
 
 In a workflow triggered by `merge_group`, it reports a step that reads
 `github.event.pull_request.*`, which is empty there. A read through an `env`
@@ -98,7 +98,7 @@ BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.bas
 A range end is recognized when it is the expression itself, optionally behind
 `origin/` or `refs/remotes/origin/`, or a `$NAME` / `${NAME}` variable that
 a workflow, job, or step `env` assigns to that expression. This includes
-the supported pull-request and merge-group fallbacks above. [Revision extraction](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_workflow_files/pr_diff_range/exprs.rs#L32-L90). Anything not recognized as a diff range is
+the supported pull-request and merge-group fallbacks above. [Revision extraction](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_workflow_files/pr_diff_range/exprs.rs#L32-L90). Anything not recognized as a diff range is
 silent: another command, a `git diff` flag that takes a separate value
 (`-U 3`, `--output file`), more than two revisions, a revision the rule does
 not know, here-document bodies, and invalid YAML. The scanner skips
@@ -108,14 +108,68 @@ The fetch depth behind a three-dot diff is not judged.
 
 ## Options
 
-This rule has no options, so there is no configurable default. Listing the rule
-is what turns it on.
+All options are optional and opt-in. Listing the rule with no options turns on
+the default pull-request diff-range and `merge_group` checks:
 
 ```yaml
 rules:
   - rule: github-actions-pr-diff-range
     scope: repository
 ```
+
+To enforce consistent base/merge and base/head revision pairs across PR
+analysis jobs, enable `requireConsistentRevisionPairs` and optionally configure
+`revisionPairs` for env vars, `with:` inputs, or CLI flags:
+
+```yaml
+rules:
+  - rule: github-actions-pr-diff-range
+    scope: repository
+    options:
+      requireConsistentRevisionPairs: true
+      revisionPairs:
+        - baseEnv: DIFF_BASE
+          headEnv: DIFF_HEAD
+        - baseInput: base-rev
+          headInput: head-rev
+        - baseFlag: --base
+          headFlag: --head
+      unanalyzable: advise # report | advise | ignore
+```
+
+- `requireConsistentRevisionPairs`: `false` by default. When `true`, `git diff`
+  ranges on `pull_request`, `pull_request_target`, and `merge_group` workflows
+  must use a consistent revision pair, tracking each job's `actions/checkout`
+  `with.ref`:
+  - Consistent pairs: `HEAD^1` with `HEAD` (or `HEAD^2`) after a merge-commit
+    or `merge_group` checkout; three-dot `<base>...<head>` between PR base (`base.sha` or
+    `origin/${{ github.base_ref }}`) and PR head (`head.sha`, `head_ref`, or
+    `HEAD` after checking out `pull_request.head.sha`); three-dot
+    `origin/${{ github.base_ref }}...${{ github.sha }}` (or `HEAD`) on
+    pull-request-only merge-commit checkouts; `merge_group.base_sha` with
+    `merge_group.head_sha` (or `HEAD`/`github.sha` on `merge_group`-only
+    workflows); and matching `||` fallbacks on both ends.
+  - Mismatched pairs (reported as findings): pairing `pull_request.base.sha`
+    with `github.sha` or merge-commit `HEAD` (even in a three-dot diff on a
+    pull-request-only workflow); two-dot or two-argument
+    `origin/${{ github.base_ref }}` with `head.sha`, `github.sha`, or `HEAD`;
+    pairing `HEAD^1` with `pull_request.head.sha` or with `HEAD` after checking
+    out `pull_request.head.sha` / `github.head_ref`; mixing `pull_request` and
+    `merge_group` ends; or pairing two bases or two heads.
+- `revisionPairs`: `[]` by default. Each entry specifies exactly one matching
+  pair of non-empty distinct names: `{ baseEnv, headEnv }`,
+  `{ baseInput, headInput }`, or `{ baseFlag, headFlag }`. Wherever both names
+  appear in a job/step `env:`, an action or reusable-workflow `with:`, or a
+  `run:` command's flags, their revisions must form a consistent pair.
+- `unanalyzable`: `report | advise | ignore` (defaults to `advise` when
+  `requireConsistentRevisionPairs` is `true` or `revisionPairs` is non-empty).
+  Controls diagnostics for dynamic/unrecognized revisions in a configured pair
+  or half-known `git diff` range, non-mapping or YAML-merged `env:` / `with:`
+  blocks when matching `revisionPairs` are configured, `HEAD`/`HEAD^1` after an
+  unknown `actions/checkout` `with.ref`, and invalid workflow YAML.
+- Unknown option keys and malformed `revisionPairs` entries (missing side,
+  mixed kinds, duplicate names, invalid env or flag syntax) fail at config load
+  with exit code 2.
 
 ## Valid example
 
@@ -163,8 +217,15 @@ In a workflow that also runs on `push` or `merge_group`, do not pair
 
 ### Unanalyzable inputs
 
-Invalid YAML and commands the parser does not read produce no finding. They
-are not sent through `options.unanalyzable`.
+With no options set, invalid YAML and unrecognized commands produce no finding.
+When `requireConsistentRevisionPairs` is `true` or `revisionPairs` is
+non-empty, dynamic/unrecognized revisions in configured pairs or half-known
+`git diff` ranges, non-mapping or YAML-merged `env:` / `with:` blocks when
+matching `revisionPairs` are configured, `HEAD`/`HEAD^1` under an unresolved
+`actions/checkout` `with.ref`, and invalid workflow YAML are routed through
+`options.unanalyzable` (`advise` by default; `report` fails the check; `ignore`
+omits them). Line, next-line, and file suppression directives apply to both
+findings and advisories.
 
 ## Suppression
 

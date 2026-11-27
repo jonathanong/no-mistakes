@@ -35,6 +35,10 @@ Rename recognized non-canonical attributes to the configured canonical name.
 const vendorButton = <button data-testid="vendor-save">Save</button>;
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`playwright-literals`](playwright-literals.md) requires static test-id

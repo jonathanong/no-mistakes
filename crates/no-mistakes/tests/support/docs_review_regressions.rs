@@ -242,6 +242,7 @@ fn reviewed_commands_and_rule_options_stay_accurate() {
                 "`forbidConcurrencyGroupCollisions`",
                 "`forbiddenEvents`",
                 "`forbidSecretsInherit`",
+                "`requireExplicitWorkflowCallBindings`",
             ][..],
         ),
     ];

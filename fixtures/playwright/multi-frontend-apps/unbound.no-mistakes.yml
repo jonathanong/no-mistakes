@@ -1,4 +1,4 @@
-# Reproduces https://github.com/jonathanong/no-mistakes/issues/624 exactly:
+# Reproduces https://github.com/jongleberry/no-mistakes/issues/624 exactly:
 # two `type: nextjs` projects, each Playwright project scoped only via
 # `tests.playwright`, with no `projects:` binding and no `apps:` override.
 # `agent-web` sorts before `control-web`, which is what made `agent-web`

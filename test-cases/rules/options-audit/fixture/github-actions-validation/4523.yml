@@ -1,0 +1,9 @@
+version: 2
+rules:
+- rule: github-actions-test-timeout-literals
+  scope: repository
+  options:
+    include:
+    - '['
+  include:
+  - src/**

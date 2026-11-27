@@ -1,0 +1,9 @@
+version: 2
+rules:
+- rule: github-actions-composite-step-schema
+  scope: repository
+  options:
+    include:
+    - '['
+  include:
+  - src/**

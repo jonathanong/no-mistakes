@@ -103,6 +103,11 @@ fn tsconfig_file_coverage_json_matches_snapshot() {
                 config("auxiliary-array.yml"),
             ),
             (
+                "disable_file_auxiliary_array",
+                fixture("disable-file-auxiliary-array"),
+                config("disable-file-auxiliary-array.yml"),
+            ),
+            (
                 "tracked_auxiliary",
                 fixture("tracked-auxiliary"),
                 config("tracked-auxiliary.yml"),

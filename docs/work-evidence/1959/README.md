@@ -1,6 +1,6 @@
 # Nested imported receiver writes: work evidence
 
-Issue: <https://github.com/jonathanong/no-mistakes/issues/1959>.
+Issue: <https://github.com/jongleberry/no-mistakes/issues/1959>.
 Source base: `917c9ea1c2f2400e8a5d3d50c18c0a52fe21ad4a`.
 
 The saved fixture is
@@ -305,7 +305,7 @@ bindings without adding RHS heap tracking. Existing expectations remain intact;
 new semantic and quality validation is pending after this correction.
 
 The pre-existing mutable object-initializer boundary is tracked separately in
-[issue #2019](https://github.com/jonathanong/no-mistakes/issues/2019), queued until
+[issue #2019](https://github.com/jongleberry/no-mistakes/issues/2019), queued until
 this PR merges. Its exact failed975 graph evidence and frozen917 comparison are
 distinguished from the corrected supported immutable-holder controls.
 

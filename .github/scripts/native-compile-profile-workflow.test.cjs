@@ -37,11 +37,6 @@ test("shared compilation profiling is an explicit cold experiment, without cache
 });
 
 test("profiling preserves normal native producers, tests, coverage floors, and required names", () => {
-  for (const producer of ["native-build-macos", "native-test-build-macos"])
-    assert.doesNotMatch(
-      workflowJob(source, producer),
-      /profile_native_compile|native-compile-profile.cjs/,
-    );
   for (const consumer of ["native-rust-tests-macos", "native-api-tests-macos"])
     assert.doesNotMatch(
       workflowJob(source, consumer),

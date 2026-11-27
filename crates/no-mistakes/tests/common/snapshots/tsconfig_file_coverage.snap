@@ -243,6 +243,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_file_auxiliary_array": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "control/tsconfig.dependency-cruiser.json",
+          "line": 1,
+          "message": "control/tsconfig.dependency-cruiser.json: auxiliary tsconfig is not a JSON object",
+          "rule": "tsconfig-file-coverage",
+          "sourceLine": "[]",
+          "target": "control/tsconfig.dependency-cruiser.json"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "empty_allow_path": {
     "exitCode": 0,
     "report": {

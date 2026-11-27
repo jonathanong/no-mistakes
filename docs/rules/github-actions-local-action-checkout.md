@@ -26,7 +26,7 @@ use a positive directory list so coverage is statically provable.
 An unconditional root checkout invalidates readiness for every local action
 path if `with.repository` names another repository or does not identify the
 current repository statically. This includes a different expression or an
-explicit null. [Readiness tracking](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_local_action_checkout/scan.rs#L53-L63) and [repository selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_local_action_checkout/scan.rs#L84-L89).
+explicit null. [Readiness tracking](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_local_action_checkout/scan.rs#L53-L63) and [repository selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_local_action_checkout/scan.rs#L84-L89).
 Conditional checkouts, checkouts into another directory, and self checkouts
 that do not cover an action path leave that path's previous state unchanged.
 A conditional self checkout therefore cannot prepare a previously unprepared
@@ -86,7 +86,7 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 A missing or non-mapping `jobs`, invalid YAML, and unreadable or non-UTF-8
 workflow files follow `options.unanalyzable`. The option inherits the
-repository policy and defaults to `report`. [Workflow shape check](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_local_action_checkout/scan.rs#L14-L19), [read and parse diagnostics](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_local_action_checkout/diagnostics.rs#L47-L79), and [policy precedence](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/config/v2/analysis_policy.rs#L86-L96).
+repository policy and defaults to `report`. [Workflow shape check](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_local_action_checkout/scan.rs#L14-L19), [read and parse diagnostics](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_local_action_checkout/diagnostics.rs#L47-L79), and [policy precedence](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/config/v2/analysis_policy.rs#L86-L96).
 
 ## Suppression
 

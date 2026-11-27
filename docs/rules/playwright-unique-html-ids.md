@@ -76,8 +76,8 @@ configured at `max`, its demand also keeps shared selector recovery enabled.
 ### Unanalyzable inputs
 
 The rule uses `options.unanalyzable` for unresolved selector values only at
-effective low effort. [Policy selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/playwright/rules.rs#L187-L191). At max effort, a value that cannot be resolved exactly supplies no
-duplicate evidence. [Duplicate selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/playwright/analysis/duplicates.rs#L29-L55).
+effective low effort. [Policy selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/playwright/rules.rs#L187-L191). At max effort, a value that cannot be resolved exactly supplies no
+duplicate evidence. [Duplicate selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/playwright/analysis/duplicates.rs#L29-L55).
 
 - Inputs this rule cannot prove (at low effort, an `id` given by an identifier or helper result) follow `options.unanalyzable`:
   - `report` (default): fails as a finding, e.g. `web/app/page.tsx:12: selector [id="{id}"] is unanalyzable at effort low`.

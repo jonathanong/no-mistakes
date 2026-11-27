@@ -35,8 +35,10 @@ impl Options {
             .unwrap_or(branch.trim());
         anyhow::ensure!(
             !branch.is_empty() && !branch.contains("${{")
-                && branch != "refs/pull" && !branch.starts_with("refs/pull/"),
-            "{RULE_ID}: options.defaultBranch must be a nonempty literal base branch name, not an expression or PR ref"
+                && branch != "refs/pull" && !branch.starts_with("refs/pull/")
+                && branch != "HEAD" && !branch.starts_with('-')
+                && git2::Reference::is_valid_name(&format!("refs/heads/{branch}")),
+            "{RULE_ID}: options.defaultBranch must be a nonempty literal base branch name accepted by Git"
         );
         Ok(Some(branch))
     }
