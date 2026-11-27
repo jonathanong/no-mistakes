@@ -1,7 +1,7 @@
 #[derive(Default)]
 struct PreparedGraphOptions {
     test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
-    workspace: Option<std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>>,
+    workspace: Option<std::sync::Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>>,
     partial: bool,
 }
 
@@ -51,7 +51,7 @@ pub(crate) fn prepare_graph_config_with_test_filter_and_workspace(
     config: &crate::config::v2::NoMistakesConfig,
     visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
     test_filter: crate::codebase::test_filter::TestFileFilter,
-    workspace: std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+    workspace: std::sync::Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
 ) -> anyhow::Result<PreparedGraphConfig> {
     prepare_graph_config_inner(
         root,

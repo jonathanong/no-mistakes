@@ -3,7 +3,7 @@ fn import_file_pass(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     reachable: &std::collections::HashSet<crate::codebase::dependencies::extract::CallableId>,
     resolver: &dyn ImportResolution,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
     interner: &PathInterner,
 ) -> (PathBuf, Vec<Edge>, Vec<(String, ImportTarget)>) {
@@ -38,7 +38,7 @@ fn import_target_for(
     resolver: &dyn ImportResolution,
     importer: &Path,
     specifier: &str,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
 ) -> ImportTarget {
     if let Some(target) = resolved {
@@ -64,7 +64,7 @@ fn specifier_is_project(
     importer: &Path,
     specifier: &str,
     classification: &crate::codebase::ts_resolver::ImportClassification,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
 ) -> bool {
     specifier_is_local(specifier)
         || resolver.matches_paths_alias(specifier, importer)

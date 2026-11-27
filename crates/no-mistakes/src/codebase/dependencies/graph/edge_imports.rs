@@ -16,7 +16,7 @@ fn collect_parsed_imports_from_facts<'a>(
 fn collect_import_edges(
     parsed_imports: &ParsedImports<'_>,
     resolver: &dyn ImportResolution,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
     interner: &PathInterner,
 ) -> ImportPass {
@@ -82,7 +82,7 @@ fn collect_asset_edges(
 fn collect_workspace_edges(
     parsed_imports: &ParsedImports<'_>,
     resolver: &dyn ImportResolution,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
     interner: &PathInterner,
 ) -> Vec<Edge> {

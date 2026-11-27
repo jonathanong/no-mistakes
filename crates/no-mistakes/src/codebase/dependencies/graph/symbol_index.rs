@@ -67,7 +67,7 @@ impl SymbolIndex {
         tsconfig_catalog: Option<&crate::codebase::ts_resolver::TsConfigCatalog>,
         graph_files: &GraphFiles,
         facts: &dyn TsFactLookup,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
         import_resolution_cache: Option<&crate::codebase::ts_resolver::ImportResolutionCache>,
         session: &crate::codebase::analysis_session::AnalysisSession,
     ) -> Self {

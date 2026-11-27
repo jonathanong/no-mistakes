@@ -29,7 +29,7 @@ pub(crate) struct Target {
 pub(crate) struct ReversePrepared {
     pub graph_files: crate::codebase::dependencies::graph::GraphFiles,
     pub tsconfig_catalog: crate::codebase::ts_resolver::TsConfigCatalog,
-    pub workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+    pub workspace: Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
 }
 
 pub(crate) fn resolve_target(

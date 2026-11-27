@@ -40,7 +40,7 @@ impl SharedTraversalContext {
 
     pub(crate) fn workspace_arc(
         &self,
-    ) -> std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap> {
+    ) -> std::sync::Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap> {
         self.dataset.workspace()
     }
 

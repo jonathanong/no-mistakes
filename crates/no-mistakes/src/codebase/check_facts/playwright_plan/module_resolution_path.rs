@@ -53,7 +53,7 @@ pub(super) fn identity_from_resolver(
     resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
     specifier: &str,
     importing_file: &Path,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     visible_files: &PathSet,
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Option<ModuleIdentity> {

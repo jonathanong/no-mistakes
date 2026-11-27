@@ -86,7 +86,7 @@ fn selector_wrapper_resolution(
             None, root, &paths, &sources,
         )?,
     };
-    let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, &sources)
+    let workspace = crate::codebase::package_analysis::load_indexed_from_source_store(root, &sources)
         .unwrap_or_default();
     Ok(Some(
         crate::codebase::check_facts::PlaywrightModuleResolution::new(

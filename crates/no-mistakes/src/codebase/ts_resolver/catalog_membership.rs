@@ -6,7 +6,7 @@ impl TsConfigCatalog {
         config_paths: &[PathBuf],
         visible_paths: &[PathBuf],
         sources: &crate::codebase::ts_source::SourceStore,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     ) -> BTreeMap<PathBuf, BTreeSet<PathBuf>> {
         let requested = config_paths
             .iter()
@@ -40,7 +40,7 @@ impl TsConfigCatalog {
         config_paths: &[PathBuf],
         visible_paths: &[PathBuf],
         sources: &crate::codebase::ts_source::SourceStore,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     ) -> BTreeSet<PathBuf> {
         let requested = config_paths
             .iter()

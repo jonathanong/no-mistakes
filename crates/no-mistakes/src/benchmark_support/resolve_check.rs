@@ -78,7 +78,7 @@ pub fn run_prepared_resolve_check(fixture: &PreparedResolveCheckFixture) -> usiz
             source_store: &fixture.source_store,
             explicit_tsconfig: None,
             session: &session,
-            workspace: &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
+            workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap::default(),
         },
     )
     .expect("prepared resolve-check benchmark should succeed");

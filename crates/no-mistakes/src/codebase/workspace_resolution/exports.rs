@@ -1,4 +1,4 @@
-fn exports_to_entry_path(exports: &serde_json::Value) -> Option<String> {
+pub(super) fn exports_to_entry_path(exports: &serde_json::Value) -> Option<String> {
     match exports {
         serde_json::Value::String(s) => Some(s.clone()),
         serde_json::Value::Object(map) => {
@@ -14,7 +14,7 @@ fn exports_to_entry_path(exports: &serde_json::Value) -> Option<String> {
 }
 
 #[inline(never)]
-fn resolve_export_subpath(exports: &serde_json::Value, subpath: &str) -> Option<String> {
+pub(super) fn resolve_export_subpath(exports: &serde_json::Value, subpath: &str) -> Option<String> {
     let serde_json::Value::Object(map) = exports else {
         return None;
     };
@@ -66,7 +66,7 @@ fn compare_export_patterns(
 }
 
 #[inline(never)]
-fn package_name_and_subpath(specifier: &str) -> Option<(String, Option<String>)> {
+pub(super) fn package_name_and_subpath(specifier: &str) -> Option<(String, Option<String>)> {
     if specifier.starts_with('.') || specifier.starts_with('/') {
         return None;
     }

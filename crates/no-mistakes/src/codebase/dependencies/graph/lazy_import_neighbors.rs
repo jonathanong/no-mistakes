@@ -1,7 +1,7 @@
 fn import_neighbors(
     path: &Path,
     resolver: &dyn ImportResolution,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     visibility: ImportNeighborVisibility<'_>,
     allowed: Option<&HashSet<EdgeKind>>,
     fact_source: LazyImportFacts<'_>,
@@ -103,7 +103,7 @@ fn import_neighbors_from_facts(
     path: &Path,
     file_facts: &TsFileFacts,
     resolver: &dyn ImportResolution,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     visibility: ImportNeighborVisibility<'_>,
     allowed: Option<&HashSet<EdgeKind>>,
     interner: &PathInterner,

@@ -3,7 +3,7 @@ impl SymbolIndex {
         resolver: &dyn ImportResolution,
         graph_files: &GraphFiles,
         facts: &dyn TsFactLookup,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     ) -> Self {
         let source_buckets = graph_files
             .indexable()

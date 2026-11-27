@@ -30,7 +30,8 @@ impl std::ops::Deref for IndexedWorkspaceMap {
     }
 }
 
-impl IndexedWorkspaceMap {    fn new(
+impl IndexedWorkspaceMap {
+    pub(crate) fn new(
         workspace: WorkspaceMap,
         root_dependency_names: std::collections::HashSet<String>,
         manifest_dependency_names: std::collections::BTreeMap<PathBuf, Vec<String>>,

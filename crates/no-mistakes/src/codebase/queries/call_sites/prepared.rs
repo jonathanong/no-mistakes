@@ -53,7 +53,7 @@ fn build_graph(
     target: &Target,
     graph_files: &crate::codebase::dependencies::graph::GraphFiles,
     catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
-    workspace: std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+    workspace: std::sync::Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
     facts: &crate::codebase::ts_source::facts::TsFactMap,
 ) -> anyhow::Result<DepGraph> {
     let plan = GraphBuildPlan {

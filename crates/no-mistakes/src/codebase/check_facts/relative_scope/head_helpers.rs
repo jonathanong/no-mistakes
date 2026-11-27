@@ -2,7 +2,7 @@
 use super::CheckFileFacts;
 use crate::codebase::ts_resolver::ScopedImportResolver;
 use crate::codebase::ts_source::FileIdMap;
-use crate::codebase::workspaces::IndexedWorkspaceMap;
+use crate::codebase::workspace_resolution::IndexedWorkspaceMap;
 use crate::fx::PathSet;
 
 pub(super) fn has_candidates(files: &FileIdMap<CheckFileFacts>) -> bool {

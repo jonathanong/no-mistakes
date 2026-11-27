@@ -16,7 +16,7 @@ mod tests;
 
 pub(crate) struct PlaywrightModuleResolution {
     tsconfig: PlaywrightTsConfig,
-    workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+    workspace: Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
     visible_files: Arc<PathSet>,
     remapper: Arc<crate::codebase::ts_source::FrozenPathRemapper>,
     cache: Arc<crate::codebase::ts_resolver::ImportResolutionCache>,
@@ -33,7 +33,7 @@ include!("module_resolution_routes.rs");
 impl PlaywrightModuleResolution {
     pub(crate) fn new(
         tsconfig: Arc<crate::codebase::ts_resolver::TsConfig>,
-        workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+        workspace: Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
         visible_files: Arc<PathSet>,
     ) -> Self {
         let remapper = Arc::new(crate::codebase::ts_source::FrozenPathRemapper::from_paths(
@@ -51,7 +51,7 @@ impl PlaywrightModuleResolution {
 
     pub(crate) fn with_catalog(
         tsconfig_catalog: Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
-        workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+        workspace: Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
         visible_files: Arc<PathSet>,
     ) -> Self {
         let remapper = Arc::new(crate::codebase::ts_source::FrozenPathRemapper::from_paths(
@@ -116,7 +116,7 @@ impl PlaywrightFactPlan {
     pub(crate) fn configure_module_resolution(
         &mut self,
         tsconfig: Arc<crate::codebase::ts_resolver::TsConfig>,
-        workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+        workspace: Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
         visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
         root: &Path,
     ) {
@@ -137,7 +137,7 @@ impl PlaywrightFactPlan {
     pub(crate) fn configure_module_resolution_with_catalog(
         &mut self,
         tsconfig_catalog: Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
-        workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+        workspace: Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
         visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
         root: &Path,
     ) {

@@ -55,7 +55,7 @@ pub(crate) struct LazyImportBuild<'a> {
     pub(crate) resolution_visible: Option<&'a dyn crate::codebase::ts_resolver::VisiblePathLookup>,
     pub(crate) allowed: Option<&'a HashSet<EdgeKind>>,
     pub(crate) facts: LazyImportFacts<'a>,
-    pub(crate) workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+    pub(crate) workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     pub(crate) import_resolution_cache:
         Option<&'a crate::codebase::ts_resolver::ImportResolutionCache>,
 }

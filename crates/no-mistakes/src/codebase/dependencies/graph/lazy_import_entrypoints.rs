@@ -50,7 +50,7 @@ pub(crate) fn lazy_import_deps_of_with_files_and_facts(
     allowed: Option<&HashSet<EdgeKind>>,
     facts: LazyImportFacts<'_>,
 ) -> (Vec<NodeEntry>, Vec<(PathBuf, TsFileFacts)>) {
-    let workspace = crate::codebase::workspaces::load_indexed_from_files(root, graph_files.all())
+    let workspace = crate::codebase::package_analysis::load_indexed_from_files(root, graph_files.all())
         .unwrap_or_default();
     lazy_import_deps_of_with_files_facts_and_workspace(
         roots,
@@ -70,7 +70,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_and_workspace(
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
     facts: LazyImportFacts<'_>,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
 ) -> (Vec<NodeEntry>, Vec<(PathBuf, TsFileFacts)>) {
     lazy_import_deps_of_with_files_facts_workspace_and_resolution_cache(LazyImportBuild {
         roots,

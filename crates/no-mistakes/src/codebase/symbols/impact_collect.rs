@@ -7,7 +7,7 @@ struct PreparedReportContext<'a> {
     session: &'a crate::codebase::analysis_session::AnalysisSession,
     graph_files: &'a GraphFiles,
     test_filter: &'a TestFileFilter,
-    workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     graph: &'a DepGraph,
     facts: &'a TsFactMap,
 }
@@ -160,7 +160,7 @@ include!("impact_collect_failures.rs");
 /// `signature-impact` run and reused for both the production and test passes.
 struct LocalCallerContext<'a> {
     facts: &'a TsFactMap,
-    workspace: &'a crate::codebase::workspaces::WorkspaceMap,
+    workspace: &'a crate::codebase::workspace_resolution::WorkspaceMap,
     visible_files: &'a dyn crate::codebase::ts_resolver::VisiblePathLookup,
     remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
 }
@@ -175,7 +175,7 @@ struct LocalCallerContext<'a> {
 /// parser pass or repository discovery while serving production and test callers.
 fn prepare_local_caller_context<'a>(
     facts: &'a TsFactMap,
-    workspace: &'a crate::codebase::workspaces::WorkspaceMap,
+    workspace: &'a crate::codebase::workspace_resolution::WorkspaceMap,
     visible_files: &'a dyn crate::codebase::ts_resolver::VisiblePathLookup,
     remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
 ) -> LocalCallerContext<'a> {

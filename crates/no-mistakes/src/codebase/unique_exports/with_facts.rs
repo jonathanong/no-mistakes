@@ -1,5 +1,5 @@
+use super::normalize_path;
 use super::{analyze_unique_exports, filter_source_files, load_codebase_config_with_path};
-use super::{normalize_path, workspaces};
 use super::{
     ImportResolver, PreparedUniqueExportFinding, UniqueExportFinding, UniqueExportsOptions,
 };
@@ -113,8 +113,12 @@ fn analyze_project_roots_with_facts(
         .iter()
         .map(|path| normalize_path(path))
         .collect::<crate::fx::PathSet>();
-    let workspace = workspaces::load_from_files_with_session(root, &workspace_files, Some(session))
-        .unwrap_or_default();
+    let workspace = crate::codebase::package_analysis::load_from_files_with_session(
+        root,
+        &workspace_files,
+        Some(session),
+    )
+    .unwrap_or_default();
     let remix_roots = super::remix::configured_roots(root, config, inferred_roots);
     let source_files = super::scan::collect_source_files_from_facts_with_sources(
         root,

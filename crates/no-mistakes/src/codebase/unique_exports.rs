@@ -1,7 +1,6 @@
 use crate::codebase::config::load_codebase_config_with_path;
 use crate::codebase::ts_resolver::{normalize_path, ImportResolver, ImportResolverFacade};
 use crate::codebase::ts_source::discover_files;
-use crate::codebase::workspaces;
 use anyhow::Result;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -69,7 +68,7 @@ fn analyze_unique_exports<R: ImportResolverFacade>(
     source_files: Vec<SourceFile>,
     options: UniqueExportsOptions,
     resolver: R,
-    workspace: crate::codebase::workspaces::WorkspaceMap,
+    workspace: crate::codebase::workspace_resolution::WorkspaceMap,
 ) -> Result<Vec<PreparedUniqueExportFinding>> {
     let by_path: HashMap<PathBuf, SourceFile> = source_files
         .into_iter()

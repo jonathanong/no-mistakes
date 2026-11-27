@@ -1,4 +1,5 @@
 pub mod bun;
+pub(crate) mod keyed_diff;
 pub mod npm;
 pub mod pnpm;
 pub(crate) mod pnpm_alias;
@@ -85,7 +86,7 @@ pub fn parse_lockfile(manager: PackageManager, content: &str) -> Vec<ResolvedPac
 }
 
 pub fn diff(old: &[ResolvedPackage], new: &[ResolvedPackage]) -> LockfileDiff {
-    let changes = super::keyed_diff::diff_packages(old, new);
+    let changes = keyed_diff::diff_packages(old, new);
     LockfileDiff {
         added: changes.added,
         removed: changes.removed,

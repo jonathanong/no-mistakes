@@ -60,7 +60,7 @@ impl ImportResolution for ProjectImportResolver<'_> {
         &self,
         specifier: &str,
         importing_file: &Path,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
         visible_files: &dyn VisiblePathLookup,
     ) -> ImportClassification {
         match self {

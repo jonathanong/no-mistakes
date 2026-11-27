@@ -3,7 +3,7 @@ fn target_local_names(
     file: &Path,
     target_symbols: &BTreeMap<PathBuf, BTreeSet<String>>,
     resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::WorkspaceMap,
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> BTreeSet<String> {
     let mut names = BTreeSet::new();
@@ -43,7 +43,7 @@ fn imported_target_local_names(
     file: &Path,
     target_symbols: &BTreeMap<PathBuf, BTreeSet<String>>,
     resolver: &dyn crate::codebase::ts_resolver::ImportResolution,
-    workspace: &crate::codebase::workspaces::WorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::WorkspaceMap,
     remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> BTreeSet<String> {
     symbols

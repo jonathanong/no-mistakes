@@ -4,7 +4,7 @@ fn class_ancestry_for_graph(
     resolver: &dyn ImportResolution,
     session: &crate::codebase::analysis_session::AnalysisSession,
     constructors: &[ResolvedCallSite],
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
 ) -> Arc<crate::codebase::analysis_session::class_ancestry::ClassAncestry> {
     use crate::codebase::analysis_session::class_ancestry::AncestryRequest;
     let resolver = crate::codebase::ts_resolver::WorkspaceFallbackResolver::new(

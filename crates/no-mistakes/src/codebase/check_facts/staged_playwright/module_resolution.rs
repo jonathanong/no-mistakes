@@ -26,7 +26,7 @@ pub(super) fn initialize_if_missing(
             .collect(),
     );
     let workspace = Arc::new(
-        crate::codebase::workspaces::load_indexed_from_source_store(root, sources)
+        crate::codebase::package_analysis::load_indexed_from_source_store(root, sources)
             .unwrap_or_default(),
     );
     playwright.set_module_resolution(Arc::new(PlaywrightModuleResolution::new(

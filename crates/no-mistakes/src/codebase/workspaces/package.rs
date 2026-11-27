@@ -135,13 +135,3 @@ fn resolve_entry_with_visibility(
 
     None
 }
-
-fn resolve_workspace_path(
-    path: &Path,
-    visible_files: Option<&dyn VisiblePathLookup>,
-) -> Option<PathBuf> {
-    match visible_files {
-        Some(visible) => try_resolve_from_visible(path, visible),
-        None => try_resolve(path),
-    }
-}

@@ -2,7 +2,7 @@ fn collect_symbol_edges_for_core(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     facts: Option<&dyn TsFactLookup>,
     resolver: &dyn ImportResolution,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> (Vec<Edge>, SelectorImportSites) {
     let mut selectors = if edge_inputs.plan.symbol_import_selectors {

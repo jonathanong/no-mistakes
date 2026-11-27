@@ -29,7 +29,7 @@ fn collect_and_merge_all_edges(
     facts: Option<&dyn TsFactLookup>,
     resolution: EdgeResolutionContext<'_>,
     parsed_imports: &ParsedImports<'_>,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     maps: EdgeMaps<'_>,
 ) -> Result<ImportTargetMap> {
     let EdgeMaps {
@@ -109,7 +109,7 @@ fn collect_import_edges_for_core(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     parsed_imports: &ParsedImports<'_>,
     resolver: &dyn ImportResolution,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
 ) -> ImportPass {
     if !edge_inputs.plan.imports {
         return ImportPass::default();
@@ -145,7 +145,7 @@ fn collect_workspace_edges_for_core(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     parsed_imports: &ParsedImports<'_>,
     resolver: &dyn ImportResolution,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
 ) -> Vec<Edge> {
     if !edge_inputs.plan.workspace {
         return Vec::new();
@@ -161,12 +161,12 @@ fn collect_workspace_edges_for_core(
 
 fn collect_package_edges_for_core(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
 ) -> Vec<Edge> {
     if !edge_inputs.plan.package {
         return Vec::new();
     }
-    collect_workspace_manifest_edges(
+    (crate::codebase::package_analysis::hooks().manifest_edges)(
         edge_inputs.graph_files.all(),
         workspace,
         edge_inputs.graph_files,

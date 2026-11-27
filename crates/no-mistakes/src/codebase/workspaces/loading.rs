@@ -11,21 +11,7 @@ pub fn load(root: &Path) -> Result<WorkspaceMap> {
 }
 
 pub fn load_from_files(root: &Path, files: &[PathBuf]) -> Result<WorkspaceMap> {
-    load_indexed_from_files(root, files).map(|indexed| indexed.workspace.as_ref().clone())
-}
-
-pub(crate) fn load_from_files_with_session(
-    root: &Path,
-    files: &[PathBuf],
-    session: Option<&crate::codebase::analysis_session::AnalysisSession>,
-) -> Result<WorkspaceMap> {
-    let Some(session) = session else {
-        return load_from_files(root, files);
-    };
-    let snapshot = session.visible_paths(root);
-    let sources = snapshot.source_store_for(root);
-    load_from_files_with_sources(root, files, WorkspaceSources::Store(&sources))
-        .map(|indexed| indexed.workspace.as_ref().clone())
+    load_indexed_from_files(root, files).map(|indexed| WorkspaceMap::clone(&indexed))
 }
 
 pub(crate) fn load_indexed_from_files(
@@ -40,7 +26,7 @@ pub fn load_from_source_store(
     root: &Path,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<WorkspaceMap> {
-    load_indexed_from_source_store(root, sources).map(|indexed| indexed.workspace.as_ref().clone())
+    load_indexed_from_source_store(root, sources).map(|indexed| WorkspaceMap::clone(&indexed))
 }
 
 pub(crate) fn load_indexed_from_source_store(
@@ -49,7 +35,15 @@ pub(crate) fn load_indexed_from_source_store(
 ) -> Result<IndexedWorkspaceMap> {
     let root = normalize_path(root);
     let files = sources.inventory().paths();
-    load_from_files_with_sources(&root, &files, WorkspaceSources::Store(sources))
+    load_indexed_with_sources(&root, &files, sources)
+}
+
+pub(crate) fn load_indexed_with_sources(
+    root: &Path,
+    files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<IndexedWorkspaceMap> {
+    load_from_files_with_sources(root, files, WorkspaceSources::Store(sources))
 }
 
 fn load_from_files_with_sources(

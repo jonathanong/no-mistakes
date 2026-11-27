@@ -21,7 +21,7 @@ pub(crate) struct ProjectionKey {
     root: PathBuf,
     visible: ResolverCacheScopeKey,
     catalog: Option<super::CatalogProjectionKey>,
-    workspace: Option<crate::codebase::workspaces::WorkspaceProjectionKey>,
+    workspace: Option<crate::codebase::workspace_resolution::WorkspaceProjectionKey>,
     workspace_visible: Option<ResolverCacheScopeKey>,
 }
 pub(crate) type DeclarationResults = DashMap<(PathBuf, String), Arc<OnceLock<Option<PathBuf>>>>;
@@ -36,7 +36,7 @@ pub(crate) struct DeclarationResolver<'a> {
     type_ambient: OnceLock<ambient::AmbientModules>,
     facts: Option<&'a dyn crate::codebase::dependencies::graph::TsFactLookup>,
     catalog: Option<&'a TsConfigCatalog>,
-    workspace: Option<&'a crate::codebase::workspaces::IndexedWorkspaceMap>,
+    workspace: Option<&'a crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
 }
 
 impl<'a> DeclarationResolver<'a> {
@@ -47,7 +47,7 @@ impl<'a> DeclarationResolver<'a> {
         tsconfig: &TsConfig,
         catalog: Option<&'a TsConfigCatalog>,
         sources: &'a SourceStore,
-        workspace: Option<&'a crate::codebase::workspaces::IndexedWorkspaceMap>,
+        workspace: Option<&'a crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
     ) -> Self {
         // Select the complete catalog/visibility projection once, before any
         // importer or class traversal. Individual lookups reuse this result map.

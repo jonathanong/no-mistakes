@@ -18,7 +18,7 @@ fn collect_independent_core_edges(
     resolver: &dyn ImportResolution,
     session: &crate::codebase::analysis_session::AnalysisSession,
     parsed_imports: &ParsedImports<'_>,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
 ) -> CoreIndependentEdges {
     let observer = session.observer().cloned();
     let ((imports, route_imports), ((workspace_edges, package), (assets, (symbols, tests)))) =

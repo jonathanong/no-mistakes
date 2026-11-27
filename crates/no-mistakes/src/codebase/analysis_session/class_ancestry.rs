@@ -30,7 +30,7 @@ pub(super) struct ProjectionKey {
     resolve_bases: bool,
     catalog: Option<crate::codebase::ts_resolver::CatalogProjectionKey>,
     constructors: Vec<crate::codebase::dependencies::graph::ResolvedCallSite>,
-    workspace: crate::codebase::workspaces::WorkspaceProjectionKey,
+    workspace: crate::codebase::workspace_resolution::WorkspaceProjectionKey,
     workspace_visible: Option<ResolverCacheScopeKey>,
 }
 
@@ -43,7 +43,7 @@ pub(crate) struct AncestryRequest<'a> {
     pub tsconfig: &'a TsConfig,
     pub catalog: Option<&'a TsConfigCatalog>,
     pub constructors: &'a [crate::codebase::dependencies::graph::ResolvedCallSite],
-    pub workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+    pub workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
 }
 
 impl AnalysisSession {

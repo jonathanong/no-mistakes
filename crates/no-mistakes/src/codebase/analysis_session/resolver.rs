@@ -1,7 +1,13 @@
 use super::*;
 use crate::codebase::ts_resolver::VisiblePathLookup;
+use crate::codebase::workspace_resolution::IndexedWorkspaceMap;
 
 impl AnalysisSession {
+    #[doc(hidden)]
+    pub fn workspace(&self, root: &Path) -> Arc<IndexedWorkspaceMap> {
+        self.dataset(root).workspace()
+    }
+
     /// Return the invocation-owned result cache for one exact resolver scope.
     pub(crate) fn resolver_cache(
         &self,

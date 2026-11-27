@@ -113,11 +113,6 @@ impl AnalysisSession {
         dataset.visible_paths_arc()
     }
 
-    #[doc(hidden)]
-    pub fn workspace(&self, root: &Path) -> Arc<crate::codebase::workspaces::IndexedWorkspaceMap> {
-        self.dataset(root).workspace()
-    }
-
     /// Seed a snapshot prepared by an enclosing pipeline. This is used by
     /// compatibility adapters while callers migrate to session discovery.
     pub fn insert_visible_paths(&self, root: &Path, snapshot: Arc<VisiblePathSnapshot>) {

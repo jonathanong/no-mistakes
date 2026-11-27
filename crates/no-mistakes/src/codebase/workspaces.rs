@@ -1,9 +1,12 @@
 use anyhow::Result;
 use globset::{GlobBuilder, GlobSetBuilder};
 use serde::Deserialize;
-use std::cmp::Ordering;
 use std::path::{Path, PathBuf};
 
+use super::workspace_resolution::{
+    exports_to_entry_path, resolve_workspace_path, workspace_path_is_file,
+};
+pub use super::workspace_resolution::{IndexedWorkspaceMap, WorkspaceMap, WorkspacePackage};
 use crate::codebase::ts_resolver::VisiblePathLookup;
 use crate::codebase::{glob_normalize, ts_resolver::normalize_path};
 #[cfg(not(test))]
@@ -13,10 +16,6 @@ macro_rules! workspace_load_metrics {
 #[cfg(test)]
 #[macro_use]
 pub(crate) mod load_metrics_tests;
-include!("workspaces/models.rs");
-include!("workspaces/indexed.rs");
-include!("workspaces/projection_key.rs");
-include!("workspaces/package_model.rs");
 include!("workspaces/types.rs");
 include!("workspaces/globs.rs");
 include!("workspaces/pnpm_include.rs");
@@ -25,10 +24,9 @@ include!("workspaces/pnpm_include_settings.rs");
 include!("workspaces/pnpm_include_catalog.rs");
 include!("workspaces/loading.rs");
 include!("workspaces/package.rs");
+pub(crate) mod edge_package_manifest;
 mod manual;
 pub(crate) use manual::{load_manual_workspace_from_source_store, ManualWorkspace};
-include!("workspaces/exports.rs");
-include!("workspaces/path.rs");
 
 #[cfg(test)]
 mod tests;

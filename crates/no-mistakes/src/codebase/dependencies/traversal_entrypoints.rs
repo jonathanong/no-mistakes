@@ -7,7 +7,7 @@ struct EntrypointResolution<'a> {
     graph_files: &'a graph::GraphFiles,
     visible_lookup: Option<&'a dyn crate::codebase::ts_resolver::VisiblePathLookup>,
     include_symbols: bool,
-    workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     interner: &'a PathInterner,
 }
 
@@ -89,7 +89,7 @@ fn resolve_entrypoints_with_files_and_workspace(
 fn resolve_entrypoint_node(
     raw: &str,
     path: &Path,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     root_dependencies: &std::collections::HashSet<String>,
     visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     interner: &PathInterner,
@@ -154,7 +154,7 @@ fn raw_package_name(raw: &str) -> Option<String> {
 
 fn package_dir_entry(
     dir: &Path,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
     visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> Option<PathBuf> {
     workspace

@@ -5,7 +5,7 @@ use crate::codebase::postgres::{
 };
 use crate::codebase::ts_resolver::{ImportResolver, ScopedImportResolver, TsConfigCatalog};
 use crate::codebase::ts_source::{FileIdMap, SourceStore};
-use crate::codebase::workspaces::IndexedWorkspaceMap;
+use crate::codebase::workspace_resolution::IndexedWorkspaceMap;
 use crate::fx::PathSet;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

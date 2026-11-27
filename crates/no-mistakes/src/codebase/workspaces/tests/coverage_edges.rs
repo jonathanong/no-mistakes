@@ -1,12 +1,13 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+use crate::codebase::package_analysis::load_from_files_with_session;
 use crate::codebase::ts_resolver::VisiblePathLookup;
 use crate::codebase::ts_source::{FileInventory, SourceStore};
 use crate::codebase::workspaces::{
-    load_from_files, load_from_files_with_session, load_from_source_store,
-    load_root_package_from_source_store, load_workspace_globs_from_files,
-    load_workspace_globs_from_source_store, IndexedWorkspaceMap, WorkspaceMap, WorkspacePackage,
+    load_from_files, load_from_source_store, load_root_package_from_source_store,
+    load_workspace_globs_from_files, load_workspace_globs_from_source_store, IndexedWorkspaceMap,
+    WorkspaceMap, WorkspacePackage,
 };
 
 fn fixture(name: &str) -> PathBuf {
