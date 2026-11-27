@@ -67,6 +67,10 @@ A computed identifier key on a framework alias is not a method name: `const { [n
 vi.mock("@app/payments", () => ({ charge: vi.fn() }));
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`module-mock-boundary`](module-mock-boundary.md) decides whether an internal

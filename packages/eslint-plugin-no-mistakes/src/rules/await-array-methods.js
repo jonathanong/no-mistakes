@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression } = require("./async-ast");
 const { logicalCall, memberPropertyName } = require("./module-mock-helpers");
 
@@ -60,6 +61,7 @@ module.exports = rule(
     },
   },
   (context) => {
+    const suppressed = ruleSuppression(context, "await-array-methods");
     return {
       AwaitExpression(node) {
         const argument = unwrapExpression(node.argument);
@@ -69,6 +71,7 @@ module.exports = rule(
         const method = methodName(invoked.callee);
         if (!BANNED_METHODS.has(method)) return;
         if (!isKnownArrayReceiver(invoked.callee.object, context)) return;
+        if (suppressed(node)) return;
         context.report({ node, messageId: "awaited", data: { method } });
       },
     };

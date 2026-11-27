@@ -31,7 +31,9 @@ function ruleSuppression(context, ruleId, suppressionOptions) {
       }
     }
   }
-  return (node) => file || lines.has(node.loc.start.line);
+  const suppressed = (node) => file || lines.has(node.loc.start.line);
+  suppressed.file = file;
+  return suppressed;
 }
 
 function directiveReason(tail) {

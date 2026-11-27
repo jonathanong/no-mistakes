@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { logicalCall, pathAllowed } = require("./module-mock-helpers");
 const { resolveVariable } = require("./async-target-bindings");
 const helpers = require("./nullable-fetch-wrapper-helpers");
@@ -116,6 +117,7 @@ module.exports = Object.assign(
     (context) => {
       const options = context.options?.[0] ?? {};
       if (!pathAllowed(context.filename, options)) return {};
+      const suppressed = ruleSuppression(context, "server-require-nullable-fetch-wrapper");
       const getterPatterns = compilePatterns(options.getterCalleePatterns);
       const nullableNames = new Set(options.nullableReturnTypeNames ?? []);
       const exportedNames = new Set();
@@ -178,6 +180,7 @@ module.exports = Object.assign(
           );
           if (!name) return;
           if (insideWrapper(node, options.requiredWrapperCallee, context)) return;
+          if (suppressed(node)) return;
           context.report({
             node,
             messageId: "wrapper",

@@ -78,6 +78,10 @@ aliases one. Review the error-boundary intent before applying it.
 return enqueueEmail(user.id);
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`async-call-disposition`](async-call-disposition.md) for all configured

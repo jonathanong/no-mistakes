@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const {
   findContainingFunction,
   isUnconditionalBeforeReturn,
@@ -121,6 +122,7 @@ module.exports = rule(
   (context) => {
     const matcher = createTargetMatcher(context, "handlers");
     if (!matcher.hasTargets) return {};
+    const suppressed = ruleSuppression(context, "async-try-catch-return-await");
 
     function catchCallsHandler(catchClause) {
       let matches = false;
@@ -131,6 +133,7 @@ module.exports = rule(
     }
 
     function reportReturn(node) {
+      if (suppressed(node)) return;
       context.report({
         node,
         messageId: "awaitReturn",

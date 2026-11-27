@@ -16,9 +16,22 @@ it("snapshots remaining diagnostics", async () => {
   await expect(
     snapshotDocument({
       "react-no-iife-in-jsx": snapshotSuite("react-no-iife-in-jsx", languageOptions, {
+        valid: [
+          {
+            code: snippet("react-no-iife-in-jsx/suppressed-line.jsx"),
+            filename: "suppressed-line.jsx",
+          },
+          {
+            code: snippet("react-no-iife-in-jsx/suppressed-file.jsx"),
+            filename: "suppressed-file.jsx",
+          },
+        ],
         invalid: [
           // 5 iife diagnostics. messages() default filename is fixture.jsx.
+          // Hidden() keeps the next-line directive and does not add a sixth finding.
           { code: snippet("react-no-iife-in-jsx/recall.tsx"), filename: "fixture.jsx" },
+          // 1 diagnostic. Same IIFE as the suppressed fixtures, with no directive.
+          { code: snippet("react-no-iife-in-jsx/unsuppressed.jsx"), filename: "unsuppressed.jsx" },
         ],
       }),
       "react-no-nullish-react-node": snapshotSuite("react-no-nullish-react-node", languageOptions, {

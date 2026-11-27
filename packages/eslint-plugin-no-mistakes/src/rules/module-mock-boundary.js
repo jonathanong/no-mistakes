@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { baselineKey, baselineMap } = require("./module-mock-baseline");
 const { matchDirectMockCallApply } = require("./module-mock-call-apply");
 const { integrationAllows } = require("./module-mock-integration");
@@ -70,6 +71,7 @@ module.exports = rule(
     const tracker = createBaselineTracker(filename, options.baseline);
     const mockAliases = createMockAliases(context, MODULE_MOCK_METHODS);
     if (!pathAllowed(filename, options)) return {};
+    const suppressed = ruleSuppression(context, "module-mock-boundary");
 
     function reportIfDisallowed(
       node,
@@ -79,13 +81,13 @@ module.exports = rule(
     ) {
       const { dynamic, specifier } = moduleMockSpecifierArgument(specifierNode);
       if (dynamic) {
-        if (options.requireLiteralSpecifiers === false) return;
+        if (options.requireLiteralSpecifiers === false || suppressed(node)) return;
         context.report({ node, messageId: "boundary", data: { message: reportMessage(true) } });
         return;
       }
       if (!specifier || !isInternalSpecifier(specifier, options)) return;
       if (integrationAllows(specifier, factory, mock, context, options)) return;
-      if (tracker.allowed(specifier)) return;
+      if (tracker.allowed(specifier) || suppressed(node)) return;
       context.report({
         node,
         messageId: "boundary",
@@ -131,6 +133,7 @@ module.exports = rule(
         reportIfDisallowed(node, alias.mock);
       },
       "Program:exit"(node) {
+        if (suppressed.file) return;
         for (const entry of tracker.stale()) {
           context.report({
             node,

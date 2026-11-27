@@ -1,6 +1,18 @@
 {
   "react-no-iife-in-jsx": [
     {
+      "file": "suppressed-line.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "suppressed-file.jsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "fixture.jsx",
       "findings": [
         {
@@ -53,6 +65,24 @@
           "endLine": 22,
           "file": "fixture.jsx",
           "line": 20,
+          "message": "Avoid IIFEs in JSX; extract the logic into a variable or component.",
+          "messageId": "iife",
+          "ruleId": "no-mistakes/react-no-iife-in-jsx",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "unsuppressed.jsx",
+      "findings": [
+        {
+          "column": 17,
+          "endColumn": 28,
+          "endLine": 2,
+          "file": "unsuppressed.jsx",
+          "line": 2,
           "message": "Avoid IIFEs in JSX; extract the logic into a variable or component.",
           "messageId": "iife",
           "ruleId": "no-mistakes/react-no-iife-in-jsx",
