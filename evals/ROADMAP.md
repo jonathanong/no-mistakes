@@ -13,11 +13,10 @@ until it has a `runs: 3` measurement
 
 ### 1. Fresh held-out cases — needed before any description change
 
-The holdout is the only number that generalizes, and it has
-[not been measured](README.md#current-results) for the current description.
-Cases 01–03 are spent, 04–06 were seen by #981's screen, and `after-edit`
-became tuning-visible when #985 was screened on it. Cases 07–09 are unspent
-but cover only three subjects.
+The holdout is the only number that generalizes. All nine held-out cases
+are spent: 01–03 earlier, 04–06 seen by #981's screen, and 04–09 run on
+[candidate A's holdout](HISTORY.md#2026-11-26--holdout-for-candidate-a-1818-loaded-against-018).
+`after-edit` became tuning-visible when #985 was screened on it.
 
 Write a new held-out batch **before** the next candidate is drafted, in the
 real register, worded so it reuses no clause of any variant description, and
