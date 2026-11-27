@@ -16,3 +16,10 @@ mod edge_tests;
 mod source_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
+
+fn source_fingerprint(pin: &str, selector: &str, value: Option<&str>) -> String {
+    match value.filter(|value| !value.is_empty()) {
+        Some(value) => format!("{pin}#{selector}={value}"),
+        None => pin.to_string(),
+    }
+}

@@ -8,6 +8,8 @@ struct CargoLock {
     version: Option<i64>,
     #[serde(default)]
     package: Vec<CargoPackage>,
+    #[serde(default)]
+    metadata: toml::Table,
 }
 
 #[derive(Deserialize)]
@@ -25,11 +27,23 @@ pub(super) fn parse(content: &str) -> Result<Vec<ResolvedPackage>, TomlError> {
     if lock.version.is_none() && lock.package.is_empty() {
         return Err(TomlError);
     }
-    Ok(lock.package.into_iter().map(package).collect())
+    Ok(lock
+        .package
+        .into_iter()
+        .map(|pkg| package(pkg, &lock.metadata))
+        .collect())
 }
 
-fn package(pkg: CargoPackage) -> ResolvedPackage {
-    let (kind, fingerprint) = resolution(pkg.source.as_deref(), pkg.checksum);
+fn package(pkg: CargoPackage, metadata: &toml::Table) -> ResolvedPackage {
+    let checksum = pkg.checksum.as_deref().or_else(|| {
+        let source = pkg.source.as_deref()?;
+        let key = format!("checksum {} {} ({source})", pkg.name, pkg.version);
+        metadata
+            .get(&key)?
+            .as_str()
+            .filter(|value| *value != "<none>")
+    });
+    let (kind, fingerprint) = resolution(pkg.source.as_deref(), checksum.map(str::to_string));
     ResolvedPackage {
         name: pkg.name,
         version: pkg.version,

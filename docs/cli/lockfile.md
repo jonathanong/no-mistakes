@@ -44,7 +44,8 @@ for explicit binary lockfiles and returns an array for supported lockfiles.
 `poetry.lock`, `uv.lock`, and `Cargo.lock` are parsed as TOML. Each
 `[[package]]` table contributes one package: name, version, and a fingerprint.
 A `[package.dependencies]` table stays on that package. Cargo `registry+` and
-`sparse+` sources are registry and use `checksum`. `git+` is git and uses
+`sparse+` sources are registry and use `checksum`, including legacy
+checksums recorded in `[metadata]`. `git+` is git and uses
 `checksum` or the source string. `path+` is a directory. A package with no
 source is the workspace. Poetry git uses `resolved_reference`, then
 `reference`. A Git subdirectory selector contributes to that fingerprint.
@@ -56,16 +57,19 @@ includes the Git subdirectory selector. uv
 `editable`, `directory`, and `virtual` sources use the directory path as
 their fingerprint and may omit `version`. uv uses the first wheel hash or
 falls back to the source-distribution hash. Direct URLs and local archives
-are tarballs. `Pipfile.lock` reads `default`,
+are tarballs. A direct URL subdirectory selector contributes to its
+fingerprint. `Pipfile.lock` reads `default`,
 `develop`, and custom package categories. The object key is the name. A leading `==` is
 removed from `version`. A git or path entry may omit `version`; its
-fingerprint is `ref` or `path`. File, URL, and other version-control sources
+fingerprint is `ref` or `path`. A Git subdirectory selector contributes to
+that fingerprint. File, URL, and other version-control sources
 may omit `version`. Their source URL and any non-Git revision form the fingerprint. A registry entry
 requires `version` and uses the first hash. `go.mod` reads `require` lines, including `// indirect`, and accepts
 both inline and block module declarations.
 `replace`, `exclude`, `retract`, and `go.sum`
 are not packages. `Gemfile.lock` reads specs indented four spaces; deeper
-lines are dependencies. A `GIT` revision and a `CHECKSUMS` `sha256` are
+lines are dependencies. A `GIT` revision, its optional `glob` selector, and
+a `CHECKSUMS` `sha256` are
 fingerprints. A `PATH` entry uses its `remote` value as the directory
 fingerprint. `PLUGIN SOURCE` specs use the plugin remote as their
 fingerprint. `composer.lock` reads `packages` and `packages-dev`. A null development section contributes no packages.

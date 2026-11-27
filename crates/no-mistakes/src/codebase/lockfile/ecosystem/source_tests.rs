@@ -355,3 +355,56 @@ fn python_git_subdirectories_contribute_to_dependency_identity() {
         packages_for_diff(PackageManager::Uv, &fixture("uv", "invalid-registry.lock")).is_err()
     );
 }
+
+#[test]
+fn legacy_cargo_checksums_match_inline_checksums() {
+    let old =
+        packages_for_diff(PackageManager::Cargo, &fixture("cargo", "checksum-v1.lock")).unwrap();
+    let new =
+        packages_for_diff(PackageManager::Cargo, &fixture("cargo", "checksum-v2.lock")).unwrap();
+    assert_eq!(old, new);
+    assert!(diff(&old, &new).changed.is_empty());
+}
+
+#[test]
+fn source_selectors_change_packages_without_changing_the_pin_or_hash() {
+    let cases = [
+        (
+            PackageManager::Pipfile,
+            "pipfile",
+            "subdirectory",
+            "abc123#subdirectory=packages/sample",
+            ResolutionKind::Git,
+        ),
+        (
+            PackageManager::Uv,
+            "uv",
+            "archive-subdirectory",
+            "sha256:same#subdirectory=packages/sample",
+            ResolutionKind::Tarball,
+        ),
+        (
+            PackageManager::Gemfile,
+            "gemfile",
+            "git-glob",
+            "abc123#glob=packages/sample/sample.gemspec",
+            ResolutionKind::Git,
+        ),
+    ];
+    for (manager, dir, stem, fingerprint, kind) in cases {
+        let base = packages_for_diff(manager, &fixture(dir, &format!("{stem}-base.lock"))).unwrap();
+        let head = packages_for_diff(manager, &fixture(dir, &format!("{stem}-head.lock"))).unwrap();
+        expect(
+            &base,
+            "sample",
+            if manager == PackageManager::Pipfile {
+                ""
+            } else {
+                "1.0.0"
+            },
+            fingerprint,
+            kind,
+        );
+        assert_eq!(diff(&base, &head).changed, ["sample"]);
+    }
+}

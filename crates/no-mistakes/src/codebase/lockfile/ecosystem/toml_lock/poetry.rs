@@ -87,7 +87,11 @@ fn fingerprint(
         if let Some(source) = source {
             let pin = nonempty(&source.resolved_reference).or_else(|| nonempty(&source.reference));
             if let Some(pin) = pin {
-                return super::git_fingerprint(pin, source.subdirectory.as_deref());
+                return super::super::source_fingerprint(
+                    &pin,
+                    "subdirectory",
+                    source.subdirectory.as_deref(),
+                );
             }
         }
     }

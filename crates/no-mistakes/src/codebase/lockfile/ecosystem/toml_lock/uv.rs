@@ -34,6 +34,8 @@ struct UvSource {
     #[serde(default)]
     url: Option<String>,
     #[serde(default)]
+    subdirectory: Option<String>,
+    #[serde(default)]
     path: Option<String>,
     #[serde(default)]
     editable: Option<String>,
@@ -101,7 +103,11 @@ fn resolution(
     if let Some(archive) = source.url.as_deref().or(source.path.as_deref()) {
         return (
             ResolutionKind::Tarball,
-            distribution_hash.unwrap_or(archive).to_string(),
+            super::super::source_fingerprint(
+                distribution_hash.unwrap_or(archive),
+                "subdirectory",
+                source.subdirectory.as_deref(),
+            ),
         );
     }
     (
@@ -115,13 +121,12 @@ fn git_pin(url: &str, rev: Option<&str>) -> String {
         .split_once('#')
         .map(|(_, fragment)| fragment)
         .filter(|fragment| !fragment.is_empty())
-        .unwrap_or_else(|| rev.unwrap_or_default())
-        .to_string();
+        .unwrap_or_else(|| rev.unwrap_or_default());
     let parsed = url::Url::parse(url).ok();
     let subdirectory = parsed.as_ref().and_then(|url| {
         url.query_pairs()
             .find(|(key, _)| key == "subdirectory")
             .map(|(_, value)| value)
     });
-    super::git_fingerprint(pin, subdirectory.as_deref())
+    super::super::source_fingerprint(pin, "subdirectory", subdirectory.as_deref())
 }

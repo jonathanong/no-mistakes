@@ -1,0 +1,7 @@
+version = 1
+
+[[package]]
+name = "sample"
+version = "1.0.0"
+source = { url = "https://example.invalid/sample.tar.gz", subdirectory = "packages/sample" }
+sdist = { hash = "sha256:same" }

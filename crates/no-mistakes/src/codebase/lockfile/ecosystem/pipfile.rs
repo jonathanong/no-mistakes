@@ -36,7 +36,11 @@ fn parse_entry(name: &str, entry: &serde_json::Value) -> Result<ResolvedPackage,
     }
     let version = text(obj, "version").map(|raw| raw.strip_prefix("==").unwrap_or(raw).to_string());
     let (kind, fingerprint, version_optional) = if let Some(git) = text(obj, "git") {
-        let fingerprint = text(obj, "ref").unwrap_or(git).to_string();
+        let fingerprint = super::source_fingerprint(
+            text(obj, "ref").unwrap_or(git),
+            "subdirectory",
+            text(obj, "subdirectory"),
+        );
         (ResolutionKind::Git, fingerprint, true)
     } else if let Some(path) = text(obj, "path") {
         (ResolutionKind::Directory, path.to_string(), true)

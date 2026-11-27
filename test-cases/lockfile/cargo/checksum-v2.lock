@@ -1,0 +1,12 @@
+version = 2
+
+[[package]]
+name = "sample"
+version = "1.0.0"
+source = "registry+https://packages.example.invalid/index"
+checksum = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+[[package]]
+name = "sample-git"
+version = "1.0.0"
+source = "git+https://example.invalid/sample#abc123"

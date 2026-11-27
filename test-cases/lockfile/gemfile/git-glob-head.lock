@@ -1,0 +1,6 @@
+GIT
+  remote: https://example.invalid/sample.git
+  revision: abc123
+  glob: packages/other/sample.gemspec
+  specs:
+    sample (1.0.0)
