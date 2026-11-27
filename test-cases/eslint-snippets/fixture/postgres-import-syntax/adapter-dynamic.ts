@@ -6,3 +6,6 @@ function run(query: (sql: string) => Promise<unknown>) {
 }
 
 run(db.read);
+run(flag ? db.read : undefined);
+let { read } = require(flag);
+run(read);

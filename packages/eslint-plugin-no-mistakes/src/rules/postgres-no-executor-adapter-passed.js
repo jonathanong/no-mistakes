@@ -69,6 +69,7 @@ function passedForm(direct, alias) {
 function combineConditional(consequent, alternate) {
   const known = [consequent, alternate].filter((part) => part);
   if (known.length === 0) return null;
+  if (known.some((part) => part.unanalyzable)) return { unanalyzable: true };
   const names = [
     ...new Set(
       known.flatMap((part) =>

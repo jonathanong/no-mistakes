@@ -9,28 +9,17 @@ const {
   isCursorExecutor,
   isCursorModule,
   namedCursorImport,
-  namespaceCursorImport,
   namespaceCursorMember,
-  namespaceImportMember,
 } = require("./postgres-cursor-imports");
-const { reportUnanalyzable, unanalyzablePolicy } = require("./postgres-unanalyzable");
 const {
-  UNRESOLVED_QUERY,
-  directCallParent,
-  isTypeQuery,
-  queryHead,
-  transparentParent,
-} = require("./postgres-cursor-query");
+  reportDynamic,
+  reportFinding,
+  visitCursorIdentifier,
+  visitNamespaceMember,
+} = require("./postgres-cursor-call-visits");
+const { UNRESOLVED_QUERY, queryHead } = require("./postgres-cursor-query");
 
 const helpers = { findVariable, propertyName, unwrap };
-
-function isTypeOnlyExport(identifier) {
-  const specifier = identifier.parent;
-  return (
-    specifier?.type === "ExportSpecifier" &&
-    (specifier.exportKind === "type" || specifier.parent?.exportKind === "type")
-  );
-}
 
 function reExportsCursor(node, context, config) {
   if (node.exportKind === "type") return false;
@@ -50,65 +39,6 @@ function reExportsCursor(node, context, config) {
       return specifier.exportKind !== "type" && isCursorExecutor(name, config);
     }) === true
   );
-}
-
-function reportFinding(context, suppressed, descriptor) {
-  if (suppressed(descriptor.node)) return;
-  context.report(descriptor);
-}
-
-function visitCursorIdentifier(context, node, options, reportedDirectUses, suppressed) {
-  const namedImport = namedCursorImport(context, node, helpers, options);
-  const namespaceImport = namespaceCursorImport(context, node, helpers, options);
-  if (namedImport === "unresolved") {
-    const variable = helpers.findVariable(context, node);
-    const reference = variable?.references.find((item) => item.identifier === node);
-    if (reference && !reference.init && !directCallParent(node) && !suppressed(node)) {
-      reportUnanalyzable(context, node, unanalyzablePolicy(context.options?.[0]));
-    }
-    return;
-  }
-  if (namedImport == null && namespaceImport !== true) return;
-  if (
-    node.parent?.type === "ImportSpecifier" ||
-    node.parent?.type === "ImportNamespaceSpecifier" ||
-    (node.parent?.type === "TSImportEqualsDeclaration" && node.parent.id === node) ||
-    isTypeQuery(node) ||
-    isTypeOnlyExport(node)
-  ) {
-    return;
-  }
-  const variable = helpers.findVariable(context, node);
-  const reference = variable?.references.find((item) => item.identifier === node);
-  if (!reference || reference.init) return;
-  const expression = transparentParent(node);
-  if (namespaceImport && namespaceImportMember(context, expression.parent, helpers, options)) {
-    return;
-  }
-  if (!directCallParent(node) && !reportedDirectUses.has(node)) {
-    reportedDirectUses.add(node);
-    reportFinding(context, suppressed, { messageId: "directUse", node });
-  }
-}
-
-function visitNamespaceMember(context, node, options, suppressed) {
-  if (isTypeQuery(node)) return;
-  const cursorMember = namespaceCursorMember(context, node, helpers, options);
-  if (cursorMember === "unresolved") {
-    if (!directCallParent(node) && !suppressed(node)) {
-      reportUnanalyzable(context, node, unanalyzablePolicy(context.options?.[0]));
-    }
-    return;
-  }
-  const namespaceMember = namespaceImportMember(context, node, helpers, options);
-  if (!namespaceMember) return;
-  if (namespaceMember.computed && helpers.propertyName(namespaceMember) == null) {
-    reportFinding(context, suppressed, { messageId: "staticNamespaceMember", node });
-    return;
-  }
-  if (cursorMember && !directCallParent(node)) {
-    reportFinding(context, suppressed, { messageId: "directUse", node });
-  }
 }
 
 module.exports = rule(
@@ -168,9 +98,7 @@ module.exports = rule(
         const named = namedCursorImport(context, callee, helpers, options);
         const member = namespaceCursorMember(context, callee, helpers, options);
         if (named === "unresolved" || member === "unresolved") {
-          if (!suppressed(node)) {
-            reportUnanalyzable(context, node, unanalyzablePolicy(context.options?.[0]));
-          }
+          reportDynamic(context, suppressed, node);
           return;
         }
         const executor = named || member;
@@ -179,9 +107,7 @@ module.exports = rule(
         const reportNode = argument ?? node;
         const head = argument ? queryHead(context, argument, helpers, options) : null;
         if (head === UNRESOLVED_QUERY) {
-          if (!suppressed(reportNode)) {
-            reportUnanalyzable(context, reportNode, unanalyzablePolicy(context.options?.[0]));
-          }
+          reportDynamic(context, suppressed, reportNode);
           return;
         }
         if (head === null) {
@@ -193,10 +119,10 @@ module.exports = rule(
         }
       },
       Identifier(node) {
-        visitCursorIdentifier(context, node, options, reportedDirectUses, suppressed);
+        visitCursorIdentifier(context, node, options, reportedDirectUses, suppressed, helpers);
       },
       MemberExpression(node) {
-        visitNamespaceMember(context, node, options, suppressed);
+        visitNamespaceMember(context, node, options, suppressed, helpers);
       },
       ExportAllDeclaration(node) {
         if (reExportsCursor(node, context, options)) {

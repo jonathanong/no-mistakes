@@ -4,3 +4,5 @@ declare const dyn: string;
 
 cur.runCursor(dyn);
 rc(dyn);
+require("@example/cursors").runCursor;
+require("@example/cursors").runCursor(dyn);

@@ -33,6 +33,7 @@ function inlineTypeMembers(annotation, owner, types, context, options) {
   const members = [];
   for (const member of literal.members) {
     if (member.type !== "TSPropertySignature") continue;
+    if (member.computed && unwrapExpression(member.key)?.type !== "Literal") continue;
     const key = propertyKeyName(member.key);
     if (key && typeMatches(member.typeAnnotation, types, context, options)) {
       // The type checker has not confirmed this member. The adapter ignores it.

@@ -9,6 +9,13 @@
   {
     "code": "no-mistakes(postgres-no-executor-adapter)",
     "column": 5,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/adapter-dynamic.ts",
+    "line": 9,
+    "message": "This passed executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the adapter can be judged. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-no-executor-adapter)",
+    "column": 5,
     "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/adapter-named.ts",
     "line": 9,
     "message": "This passed executor is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the adapter can be judged. A dynamic module is not a clean result."
@@ -129,14 +136,14 @@
     "code": "no-mistakes(postgres-cursor-call-contract)",
     "column": 6,
     "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
-    "line": 14,
-    "message": "This PostgreSQL cursor value is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the SQL can be checked. A dynamic module is not a clean result."
+    "line": 15,
+    "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding."
   },
   {
     "code": "no-mistakes(postgres-cursor-call-contract)",
     "column": 6,
     "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
-    "line": 17,
+    "line": 18,
     "message": "This PostgreSQL cursor value is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the SQL can be checked. A dynamic module is not a clean result."
   },
   {
@@ -144,20 +151,27 @@
     "column": 6,
     "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
     "line": 21,
-    "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding."
-  },
-  {
-    "code": "no-mistakes(postgres-cursor-call-contract)",
-    "column": 6,
-    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
-    "line": 26,
     "message": "This PostgreSQL cursor value is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the SQL can be checked. A dynamic module is not a clean result."
   },
   {
     "code": "no-mistakes(postgres-cursor-call-contract)",
     "column": 6,
     "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
-    "line": 29,
+    "line": 25,
+    "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 6,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
+    "line": 30,
+    "message": "This PostgreSQL cursor value is not a static import, require, or import-equals binding. Write the module specifier as a string literal so the SQL can be checked. A dynamic module is not a clean result."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 6,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-edges.ts",
+    "line": 33,
     "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding."
   },
   {
@@ -172,6 +186,20 @@
     "column": 4,
     "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-require.ts",
     "line": 6,
+    "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 1,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-require.ts",
+    "line": 7,
+    "message": "PostgreSQL cursor helpers must be called directly so their SQL can be verified."
+  },
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 39,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/cursor-require.ts",
+    "line": 8,
     "message": "PostgreSQL cursor SQL must be visible at the callsite or in one immutable local binding."
   },
   {
@@ -242,6 +270,13 @@
     "column": 3,
     "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/manual-pattern.ts",
     "line": 4,
+    "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 3,
+    "file": "test-cases/eslint-snippets/fixture/postgres-import-syntax/manual-pattern.ts",
+    "line": 16,
     "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle."
   },
   {

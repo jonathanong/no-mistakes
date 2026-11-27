@@ -127,6 +127,7 @@ function boundExecutor(call, resolve) {
   if (propertyText(callee) !== "bind") return null;
   if (call.arguments.length > 1) return null;
   const object = resolve(callee.object);
+  if (object?.unanalyzable) return { unanalyzable: true };
   if (!object || object.adapter) return null;
   if (object.definite) {
     return {
@@ -145,6 +146,7 @@ function andPassed(node, resolve, context) {
   if (truth === false) return null;
   if (truth === true) return resolve(node.right);
   const left = resolve(node.left);
+  if (left?.unanalyzable) return { unanalyzable: true };
   if (left?.definite) return resolve(node.right);
   return asPossible(resolve(node.right));
 }

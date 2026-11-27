@@ -589,7 +589,8 @@ run(0 ?? read, account);
   `import db = require("@example/db")`, and `const { read: r } = db` are the
   same namespace executors as `import * as db`. Passing `db.read` or `r`
   reports `passed`. A dynamic `require(flag)` passed as `db.read` is
-  `unanalyzable`. A local function with the same name stays quiet. `advise`
+  `unanalyzable`, including when a conditional selects it. A `let` destructure
+  of that require stays quiet. A local function with the same name stays quiet. `advise`
   and `report` use the same message.
 - `executorNames` lists checked executor names. It defaults to `["query",
   "read", "write"]` with a configured module. Without a module, supply
@@ -601,7 +602,8 @@ run(0 ?? read, account);
   defaults to `[]`. `var` is not a scoped executor.
 - `executorTypeNames` lists imported type names whose annotated parameters
   (including optional and inline-destructured ones) are executors inside the
-  declaring function. It also proves supported helper argument slots described
+  declaring function. A computed type key is a member only when that key is a
+  literal. It also proves supported helper argument slots described
   above, including proven required options-object fields with typed linting.
   It defaults to `[]`.
 - `mode` is `"all"` by default. Set `"forwarding-only"` to report forwarding

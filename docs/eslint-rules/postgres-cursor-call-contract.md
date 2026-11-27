@@ -37,7 +37,9 @@ runCursor("/* users */ SELECT * FROM users");
   either empty list disables the rule. TypeScript `import ns = require("...")`
   bindings from a configured module are checked the same as `import * as ns from
   "..."`. `const cur = require("...")` and `const { runCursor } = require("...")`
-  are checked the same way. The binding declaration is not a use.
+  are checked the same way, including `require("...").runCursor` used as a value.
+  A `let` or `var` alias stays quiet. The binding declaration, a type query, and
+  a type-only export are not uses.
   `export import ns = require("...")` is rejected; `import type ns =
   require("...")` is ignored. A dynamic specifier is `unanalyzable` rather than
   a trusted cursor. A parenthesized callee and a type-argument callee
@@ -55,8 +57,9 @@ runCursor("/* users */ SELECT * FROM users");
   rebound local fails closed. The same name from another module stays untrusted.
   An empty `module` or `name` matches nothing. A namespace member
   (`import * as s` then `s.sql`) and `const { sql } = require(module)` match
-  the same entry. A parenthesized type-argument tag is that tag. An unresolved
-  tag is not trusted.
+  the same entry. A `const` alias of that named import stays trusted; a `let`
+  or written alias does not. A parenthesized type-argument tag is that tag. An
+  unresolved tag is not trusted.
 - `unanalyzable` is `advise` (the default), `report`, or `ignore`. `advise` and
   `report` use the same message. `ignore` omits only that finding.
 

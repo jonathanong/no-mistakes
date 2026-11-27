@@ -9,6 +9,10 @@ const cur = require(flag);
 const member = cur.runCursor;
 
 import { runCursor as open } from "@example/cursors";
+import { sql as namedSql } from "@example/sql";
+
+let loose = namedSql;
+open(loose`SELECT 1`);
 
 const { sql } = require(flag);
 open(sql`SELECT 1`);

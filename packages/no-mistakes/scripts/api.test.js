@@ -82,10 +82,11 @@ test("postgres eslint options name the unanalyzable policy", () => {
     declarations,
     /export type PostgresUnanalyzable = "advise" \| "report" \| "ignore";/,
   );
-  assert.match(
-    declarations,
-    /export interface PostgresNoExecutorAdapterOptions \{[\s\S]*?unanalyzable\?: PostgresUnanalyzable;/,
+  const adapterOptions = declarations.match(
+    /export interface PostgresNoExecutorAdapterOptions \{([\s\S]*?)\n  \}/,
   );
+  assert.ok(adapterOptions, "PostgresNoExecutorAdapterOptions must be exported");
+  assert.match(adapterOptions[1], /unanalyzable\?: PostgresUnanalyzable;/);
   assert.match(
     declarations,
     /export interface PostgresPoolRequiresErrorListenerOptions \{[\s\S]*?unanalyzable\?: PostgresUnanalyzable;/,
