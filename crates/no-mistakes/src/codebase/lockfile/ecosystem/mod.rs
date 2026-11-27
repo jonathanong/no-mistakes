@@ -23,3 +23,10 @@ fn source_fingerprint(pin: &str, selector: &str, value: Option<&str>) -> String 
         None => pin.to_string(),
     }
 }
+
+fn hash_fingerprint<'a>(hashes: impl Iterator<Item = &'a str>) -> String {
+    let mut hashes: Vec<_> = hashes.filter(|hash| !hash.is_empty()).collect();
+    hashes.sort_unstable();
+    hashes.dedup();
+    hashes.join(",")
+}

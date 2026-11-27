@@ -49,14 +49,14 @@ checksums recorded in `[metadata]`. `git+` is git and uses
 `checksum` or the source string. `path+` is a directory. A package with no
 source is the workspace. Poetry git uses `resolved_reference`, then
 `reference`. A Git subdirectory selector contributes to that fingerprint.
-Other Poetry packages use the first file hash, including
-`[metadata.files]`. A Poetry directory uses its source path as the fingerprint.
+Other Poetry packages use sorted file hashes, including the legacy
+`[metadata.files]` representation. A Poetry directory uses its source path as the fingerprint.
 Poetry `url` and `file` sources are tarballs.
 uv git uses the commit in the URL fragment after `#`, then `rev`, and
 includes the Git subdirectory selector. uv
 `editable`, `directory`, and `virtual` sources use the directory path as
-their fingerprint and may omit `version`. uv uses the first wheel hash or
-falls back to the source-distribution hash. Direct URLs and local archives
+their fingerprint and may omit `version`. uv combines sorted wheel and
+source-distribution hashes. Direct URLs and local archives
 are tarballs. A direct URL subdirectory selector contributes to its
 fingerprint. `Pipfile.lock` reads `default`,
 `develop`, and custom package categories. The object key is the name. A leading `==` is
@@ -64,8 +64,9 @@ removed from `version`. A git or path entry may omit `version`; its
 fingerprint is `ref` or `path`. A Git subdirectory selector contributes to
 that fingerprint. File, URL, and other version-control sources
 may omit `version`. Their source URL and any non-Git revision form the fingerprint. A registry entry
-requires `version` and uses the first hash. `go.mod` reads `require` lines, including `// indirect`, and accepts
-both inline and block module declarations.
+requires `version` and uses all sorted hashes. `go.mod` requires a module
+declaration and reads `require` lines, including `// indirect` and revision
+names written in place of canonical versions.
 `replace`, `exclude`, `retract`, and `go.sum`
 are not packages. `Gemfile.lock` reads specs indented four spaces; deeper
 lines are dependencies. A `GIT` revision, its optional `glob` selector, and

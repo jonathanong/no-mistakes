@@ -221,7 +221,7 @@ fn pipfile_reads_default_and_develop() {
         &packages,
         "sample-alpha",
         "1.2.3",
-        "sha256:aaaa",
+        "sha256:aaaa,sha256:bbbb",
         ResolutionKind::Registry,
     );
     expect(
@@ -472,8 +472,9 @@ fn pipfile_and_composer_reject_entries_without_identity() {
             .kind,
         "lockfile-composer-malformed"
     );
-    let gomod = "module example.com/sample\n\nrequire example.com/sample-alpha 1.2.3\n";
-    assert!(validate_for_planning(PackageManager::Go, gomod).is_err());
+    assert!(
+        validate_for_planning(PackageManager::Go, &fixture("gomod", "extra-token.mod")).is_err()
+    );
 }
 
 #[test]

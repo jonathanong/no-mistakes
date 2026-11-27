@@ -231,7 +231,10 @@ fn uv_uses_source_hash_without_wheels_and_classifies_direct_archives() {
         "sha256:same",
         ResolutionKind::Tarball,
     );
-    assert_eq!(diff(&base, &head).changed, ["sample-local", "sample-sdist"]);
+    assert_eq!(
+        diff(&base, &head).changed,
+        ["sample-local", "sample-sdist", "sample-wheel"]
+    );
     assert!(packages_for_diff(PackageManager::Uv, &fixture("uv", "missing-version.lock")).is_err());
     assert!(packages_for_diff(PackageManager::Uv, &fixture("uv", "invalid-source.lock")).is_err());
 }
@@ -407,4 +410,40 @@ fn source_selectors_change_packages_without_changing_the_pin_or_hash() {
         );
         assert_eq!(diff(&base, &head).changed, ["sample"]);
     }
+}
+
+#[test]
+fn distribution_hash_changes_are_visible_and_reordering_is_ignored() {
+    for (manager, dir, stem) in [
+        (PackageManager::Pipfile, "pipfile", "artifact"),
+        (PackageManager::Poetry, "poetry", "artifact"),
+        (PackageManager::Poetry, "poetry", "legacy-artifact"),
+        (PackageManager::Uv, "uv", "artifact"),
+    ] {
+        let packages = |variant| {
+            packages_for_diff(manager, &fixture(dir, &format!("{stem}-{variant}.lock"))).unwrap()
+        };
+        let base = packages("base");
+        assert_eq!(base, packages("reordered"), "{dir}/{stem}");
+        assert_eq!(diff(&base, &packages("changed")).changed, ["sample"]);
+    }
+}
+
+#[test]
+fn go_requires_a_module_and_retains_requested_revision_names() {
+    assert!(
+        packages_for_diff(PackageManager::Go, &fixture("gomod", "missing-module.mod")).is_err()
+    );
+    let packages = packages_for_diff(
+        PackageManager::Go,
+        &fixture("gomod", "requested-revision.mod"),
+    )
+    .unwrap();
+    expect(
+        &packages,
+        "example.invalid/library",
+        "release/sample",
+        "",
+        ResolutionKind::Registry,
+    );
 }

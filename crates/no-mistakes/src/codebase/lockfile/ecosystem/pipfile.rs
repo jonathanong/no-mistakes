@@ -56,13 +56,13 @@ fn parse_entry(name: &str, entry: &serde_json::Value) -> Result<ResolvedPackage,
     } else if editable.is_some() {
         (ResolutionKind::Directory, String::new(), true)
     } else {
-        let fingerprint = obj
+        let hashes = obj
             .get("hashes")
             .and_then(|value| value.as_array())
-            .and_then(|hashes| hashes.first())
-            .and_then(|value| value.as_str())
-            .unwrap_or("")
-            .to_string();
+            .into_iter()
+            .flatten()
+            .filter_map(|value| value.as_str());
+        let fingerprint = super::hash_fingerprint(hashes);
         (ResolutionKind::Registry, fingerprint, false)
     };
     let version = version.ok_or(PipfileError).or_else(|err| {

@@ -52,7 +52,8 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
         let rest = rest.trim();
         match directive {
             "module" if rest == "(" => block = Some(Block::Module(false)),
-            "module" | "go" if has_one_token(rest) => saw_module = true,
+            "module" if has_one_token(rest) => saw_module = true,
+            "go" if has_one_token(rest) => {}
             "toolchain" if has_one_token(rest) => {}
             "require" if rest == "(" => block = Some(Block::Requirements),
             "require" => push_require(rest, &mut out)?,
@@ -64,7 +65,7 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoMod
             _ => return Err(GoModError),
         }
     }
-    if block.is_some() || (out.is_empty() && !saw_module) {
+    if block.is_some() || !saw_module {
         return Err(GoModError);
     }
     Ok(out)
@@ -82,7 +83,11 @@ fn push_require(rest: &str, out: &mut Vec<ResolvedPackage>) -> Result<(), GoModE
     let mut parts = rest.split_whitespace();
     let name = token(parts.next().ok_or(GoModError)?)?;
     let version = token(parts.next().ok_or(GoModError)?)?;
-    if name.is_empty() || !version.starts_with('v') || parts.next().is_some() {
+    if name.is_empty()
+        || version.is_empty()
+        || matches!(version.as_str(), "(" | ")" | "=>")
+        || parts.next().is_some()
+    {
         return Err(GoModError);
     }
     out.push(ResolvedPackage {

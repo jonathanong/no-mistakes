@@ -60,11 +60,13 @@ pub(super) fn parse(content: &str) -> Result<Vec<ResolvedPackage>, TomlError> {
 }
 
 fn package(pkg: UvPackage) -> Result<ResolvedPackage, TomlError> {
-    let distribution_hash = pkg
+    let hashes = pkg
         .wheels
         .iter()
-        .find_map(|wheel| wheel.hash.as_deref())
-        .or_else(|| pkg.sdist.as_ref().and_then(|sdist| sdist.hash.as_deref()));
+        .chain(&pkg.sdist)
+        .filter_map(|distribution| distribution.hash.as_deref());
+    let fingerprint = super::super::hash_fingerprint(hashes);
+    let distribution_hash = (!fingerprint.is_empty()).then_some(fingerprint.as_str());
     let (kind, fingerprint) = resolution(pkg.source.as_ref(), distribution_hash);
     let version = match pkg.version {
         Some(version) => version,

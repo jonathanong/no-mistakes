@@ -100,7 +100,7 @@ fn fingerprint(
             return path;
         }
     }
-    first_hash(files)
+    artifact_hashes(files)
 }
 
 fn fill_metadata(packages: &mut [ResolvedPackage], files: &BTreeMap<String, Vec<PoetryFile>>) {
@@ -109,7 +109,7 @@ fn fill_metadata(packages: &mut [ResolvedPackage], files: &BTreeMap<String, Vec<
             continue;
         };
         if package.fingerprint.is_empty() {
-            let hash = first_hash(entries);
+            let hash = artifact_hashes(entries);
             if !hash.is_empty() {
                 package.fingerprint = hash;
             }
@@ -117,11 +117,8 @@ fn fill_metadata(packages: &mut [ResolvedPackage], files: &BTreeMap<String, Vec<
     }
 }
 
-fn first_hash(files: &[PoetryFile]) -> String {
-    files
-        .iter()
-        .find_map(|file| nonempty(&file.hash))
-        .unwrap_or_default()
+fn artifact_hashes(files: &[PoetryFile]) -> String {
+    super::super::hash_fingerprint(files.iter().filter_map(|file| file.hash.as_deref()))
 }
 
 fn nonempty(value: &Option<String>) -> Option<String> {
