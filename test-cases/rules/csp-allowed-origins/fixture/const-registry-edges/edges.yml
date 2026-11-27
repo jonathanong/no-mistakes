@@ -1,0 +1,13 @@
+version: 2
+rules:
+  - rule: csp-allowed-origins
+    scope: repository
+    include:
+      - src/edges.ts
+      - src/origins.ts
+    options:
+      cspFiles:
+        - src/edges.ts
+      selfOrigins:
+        - https://app.example.com
+      unanalyzable: report

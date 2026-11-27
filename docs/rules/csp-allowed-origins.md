@@ -40,6 +40,7 @@ Policy parsing follows browser CSP3 semantics:
 
 - Within a single policy (including `[...].join("; ")` arrays, static or `'nonce-${...}'` / `'sha256-${...}'` template literals, and multi-line YAML block scalars), the **first** occurrence of a duplicate directive wins and later duplicates of the same directive are ignored.
 - Across multiple policies (separate policy strings in a JS/TS module, multiple `Content-Security-Policy` headers, comma-separated serialized policies, or multiple files in `options.cspFiles`), policies are **intersected**: an origin is allowed only when every enforced policy allows it.
+- A module-level `const` array of string literals is a static origin list. Elements may be string literals, empty templates, or `+` of those, including an `as const` assertion. A policy may call `.join` with a static separator, spread the array into an array that is then joined, or interpolate that join in a template. The array may live in the same module or arrive through one named value import from another module the check parses. `let`, `var`, a later write, any method other than `.join`, a second import hop, a re-export, a default or namespace import, and any array the check cannot trace stay unanalyzable. A nested binding of the same name (a parameter, catch binding, inner declaration, loop binding, class static block, or namespace) makes that module-level const untraceable for every use in the file.
 - Non-static JS/TS CSP expressions that cannot be statically resolved (such as `[...].join("; ")` with opaque dynamic elements or separators, `.filter(...).join(...)`, non-static `+` concatenations, non-nonce template interpolations, conditional/logical policy branches, calls to helper CSP builders, spreads of runtime arrays, object maps of directive sources, or CSP-named builders/exports returning unresolvable expressions) are never dropped silently or split into separate intersected policies; instead each produces an unanalyzable diagnostic at that expression through `options.unanalyzable`.
 - While any configured policy in `options.cspFiles` is unanalyzable, the rule abstains from judging browser origins against the remaining static policies alone, because the unread dynamic policy may allow them; only the unanalyzable policy diagnostic (plus any unanalyzable target URLs) is emitted, and same-origin and relative URLs stay silent.
 - Unquoted non-JS CSP lines (such as YAML block scalars containing `img-src https://cdn.example.com;`) keep directive names intact and strip a `Header:` / key prefix only when the prefix before `:` has no whitespace, is not a URL scheme, and is not followed by `//`.
@@ -50,7 +51,7 @@ Dynamic URLs whose origin cannot be statically determined (for example `fetch(ur
 
 The configuration loader rejects unknown option names before scanning any files.
 
-- `cspFiles` (`string[]`, **required**): Non-empty list of repository-relative paths declaring static CSP directives. Supports JS/TS/JSX/TSX modules (read from static string/template literals, `+` concatenations, and `[...].join(...)` expressions in the prepared AST) as well as non-JS/TS files such as JSON, HTML, YAML, and `_headers`. Missing, unreadable, or directive-free files are reported as incomplete check inputs.
+- `cspFiles` (`string[]`, **required**): Non-empty list of repository-relative paths declaring static CSP directives. Supports JS/TS/JSX/TSX modules (read from static string/template literals, `+` concatenations, `[...].join(...)` expressions, and module-level `const` string arrays joined or spread in the prepared AST, including a named import of such an array from a module the check parses) as well as non-JS/TS files such as JSON, HTML, YAML, and `_headers`. Missing, unreadable, or directive-free files are reported as incomplete check inputs.
 - `selfOrigins` (`string[]`, optional, default: `[]`): First-party origins (for example `https://app.example.com`) that satisfy `'self'` in the parsed CSP.
 - `unanalyzable` (`"report" | "advise" | "ignore"`, optional, default: `"report"`): Controls how dynamic URLs, malformed network URLs, dynamic `<link>` `rel`/`as` attributes, target files with parse errors, and unresolvable dynamic CSP policy expressions are handled. `report` emits failing findings, `advise` emits non-failing advisories, and `ignore` omits unanalyzable diagnostics. Definite origin violations remain failing findings when all configured policies are statically resolved.
 
@@ -72,6 +73,25 @@ export function Page(id: string) {
   void fetch("http://[::1]:3000/health");
   return <img src="//cdn.example.com/logo.png" alt="" />;
 }
+```
+
+A module-level const array is the same kind of static list. A `let`, or a `const` that is written later, stays unanalyzable:
+
+```ts
+// src/origins.ts
+export const registeredOrigins = [
+  "https://" + "api.example.com",
+  "https://cdn.example.com",
+] as const;
+
+// src/registry.ts
+import { registeredOrigins } from "./origins";
+
+export function buildCsp() {
+  return `connect-src 'self' ${registeredOrigins.join(" ")}`;
+}
+
+export const spreadPolicy = ["connect-src", "'self'", ...registeredOrigins].join(" ");
 ```
 
 ## Counterexample

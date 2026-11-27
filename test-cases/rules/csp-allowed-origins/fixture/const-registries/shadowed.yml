@@ -1,0 +1,12 @@
+version: 2
+rules:
+  - rule: csp-allowed-origins
+    scope: repository
+    include:
+      - src/**/*.{ts,tsx}
+    options:
+      cspFiles:
+        - src/shadowed.ts
+      selfOrigins:
+        - https://app.example.com
+      unanalyzable: report

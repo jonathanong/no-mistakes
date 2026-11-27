@@ -1,4 +1,7 @@
+use super::super::findings::{CollectedOrigins, DeferredPolicy};
 use super::super::CspDirective;
+use super::registries::ConstArrays;
+use crate::codebase::ts_source::line_number;
 use oxc_ast::ast::{
     ArrayExpression, BinaryExpression, BinaryOperator, ConditionalExpression, LogicalExpression,
     TemplateLiteral,
@@ -10,12 +13,12 @@ mod detect;
 mod eval;
 
 pub(super) use builders::{is_dynamic_policy_candidate, try_collect_call, try_collect_object};
-pub(super) use detect::{is_csp_identifier, is_static_csp_policy_string};
 use detect::{
     array_contains_csp_fragment, expr_contains_csp_fragment, template_contains_csp_fragment,
 };
-pub(super) use eval::{eval_static_string, static_template_text};
+pub(super) use detect::{is_csp_identifier, is_static_csp_policy_string};
 use eval::{csp_array_strings, eval_csp_binary, eval_csp_template};
+pub(super) use eval::{eval_csp_text, eval_static_string, static_template_text};
 
 pub(super) enum CspExprResult {
     Resolved,
@@ -25,18 +28,19 @@ pub(super) enum CspExprResult {
 
 pub(super) fn try_collect_array(
     array: &ArrayExpression<'_>,
-    out: &mut Vec<String>,
+    out: &mut CollectedOrigins,
+    arrays: &ConstArrays,
 ) -> CspExprResult {
-    if let Some(items) = csp_array_strings(array) {
+    if let Some(items) = csp_array_strings(array, arrays) {
         if items.iter().any(|item| is_static_csp_policy_string(item)) {
             if has_overlapping_directives(&items) {
                 for item in items {
                     if is_static_csp_policy_string(&item) {
-                        out.push(item);
+                        out.csp_strings.push(item);
                     }
                 }
             } else {
-                out.push(items.join("; "));
+                out.csp_strings.push(items.join("; "));
             }
         }
         return CspExprResult::Resolved;
@@ -50,14 +54,15 @@ pub(super) fn try_collect_array(
 
 pub(super) fn try_collect_binary(
     expr: &BinaryExpression<'_>,
-    out: &mut Vec<String>,
+    out: &mut CollectedOrigins,
+    arrays: &ConstArrays,
 ) -> CspExprResult {
     if expr.operator != BinaryOperator::Addition {
         return CspExprResult::Ignored;
     }
-    if let Some(combined) = eval_csp_binary(expr) {
+    if let Some(combined) = eval_csp_binary(expr, arrays) {
         if is_static_csp_policy_string(&combined) {
-            out.push(combined);
+            out.csp_strings.push(combined);
         }
         return CspExprResult::Resolved;
     }
@@ -70,12 +75,21 @@ pub(super) fn try_collect_binary(
 
 pub(super) fn try_collect_template(
     template: &TemplateLiteral<'_>,
-    out: &mut Vec<String>,
+    source: &str,
+    out: &mut CollectedOrigins,
+    arrays: &ConstArrays,
 ) -> CspExprResult {
-    if let Some(value) = eval_csp_template(template) {
+    if let Some(value) = eval_csp_template(template, arrays) {
         if is_static_csp_policy_string(&value) {
-            out.push(value.into_owned());
+            out.csp_strings.push(value.into_owned());
         }
+        return CspExprResult::Resolved;
+    }
+    if let Some(parts) = arrays.defer_template(template) {
+        out.deferred_policies.push(DeferredPolicy {
+            line: line_number(source, template.span.start),
+            parts,
+        });
         return CspExprResult::Resolved;
     }
     if template_contains_csp_fragment(template) {
