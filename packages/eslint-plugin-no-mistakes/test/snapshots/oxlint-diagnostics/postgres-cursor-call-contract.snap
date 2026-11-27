@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(postgres-cursor-call-contract)",
+    "column": 11,
+    "file": "eslint-plugin/oxlint-snapshots/fixture/src/raw-string.js",
+    "line": 2,
+    "message": "PostgreSQL cursor SQL must start with a static /* name */ annotation."
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "code": "no-mistakes(playwright-require-exported-component-attribute)",
+    "column": 10,
+    "file": "eslint-snippets/fixture/playwright-require-exported-component-attribute/recall.tsx",
+    "line": 2,
+    "message": "Exported component 'Save' must return JSX containing one of: data-pw."
+  },
+  {
+    "code": "no-mistakes(playwright-require-exported-component-attribute)",
+    "column": 10,
+    "file": "eslint-snippets/fixture/playwright-require-exported-component-attribute/recall.tsx",
+    "line": 8,
+    "message": "Exported component 'Memoed' must return JSX containing one of: data-pw."
+  },
+  {
+    "code": "no-mistakes(playwright-require-exported-component-attribute)",
+    "column": 10,
+    "file": "eslint-snippets/fixture/playwright-require-exported-component-attribute/recall.tsx",
+    "line": 12,
+    "message": "Exported component 'Forwarded' must return JSX containing one of: data-pw."
+  },
+  {
+    "code": "no-mistakes(playwright-require-exported-component-attribute)",
+    "column": 12,
+    "file": "eslint-snippets/fixture/playwright-require-exported-component-attribute/recall.tsx",
+    "line": 17,
+    "message": "Exported component 'Applied' must return JSX containing one of: data-pw."
+  },
+  {
+    "code": "no-mistakes(playwright-require-exported-component-attribute)",
+    "column": 17,
+    "file": "eslint-snippets/fixture/playwright-require-exported-component-attribute/recall.tsx",
+    "line": 22,
+    "message": "Exported component 'Other' must return JSX containing one of: data-pw."
+  },
+  {
+    "code": "no-mistakes(playwright-require-exported-component-attribute)",
+    "column": 10,
+    "file": "eslint-snippets/fixture/playwright-require-exported-component-attribute/recall.tsx",
+    "line": 26,
+    "message": "Exported component 'Later' must return JSX containing one of: data-pw."
+  }
+]

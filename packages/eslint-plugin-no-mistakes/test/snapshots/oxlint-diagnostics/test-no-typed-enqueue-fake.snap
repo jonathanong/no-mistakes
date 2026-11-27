@@ -1,0 +1,86 @@
+[
+  {
+    "code": "no-mistakes(test-no-typed-enqueue-fake)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-typed-enqueue-fake/extended-forms.test.ts",
+    "line": 9,
+    "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue."
+  },
+  {
+    "code": "no-mistakes(test-no-typed-enqueue-fake)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-typed-enqueue-fake/extended-forms.test.ts",
+    "line": 10,
+    "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue."
+  },
+  {
+    "code": "no-mistakes(test-no-typed-enqueue-fake)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-typed-enqueue-fake/extended-forms.test.ts",
+    "line": 11,
+    "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue."
+  },
+  {
+    "code": "no-mistakes(test-no-typed-enqueue-fake)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-typed-enqueue-fake/extended-forms.test.ts",
+    "line": 12,
+    "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue."
+  },
+  {
+    "code": "no-mistakes(test-no-typed-enqueue-fake)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-typed-enqueue-fake/extended-forms.test.ts",
+    "line": 13,
+    "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue."
+  },
+  {
+    "code": "no-mistakes(test-no-typed-enqueue-fake)",
+    "column": 12,
+    "file": "eslint-snippets/fixture/test-no-typed-enqueue-fake/extended-forms.test.ts",
+    "line": 14,
+    "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue."
+  },
+  {
+    "code": "no-mistakes(test-no-typed-enqueue-fake)",
+    "column": 12,
+    "file": "eslint-snippets/fixture/test-no-typed-enqueue-fake/extended-forms.test.ts",
+    "line": 15,
+    "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue."
+  },
+  {
+    "code": "no-mistakes(test-no-typed-enqueue-fake)",
+    "column": 12,
+    "file": "eslint-snippets/fixture/test-no-typed-enqueue-fake/extended-forms.test.ts",
+    "line": 16,
+    "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue."
+  },
+  {
+    "code": "no-mistakes(test-no-typed-enqueue-fake)",
+    "column": 12,
+    "file": "eslint-snippets/fixture/test-no-typed-enqueue-fake/extended-forms.test.ts",
+    "line": 17,
+    "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue."
+  },
+  {
+    "code": "no-mistakes(test-no-typed-enqueue-fake)",
+    "column": 15,
+    "file": "eslint-snippets/fixture/test-no-typed-enqueue-fake/extended-forms.test.ts",
+    "line": 18,
+    "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue."
+  },
+  {
+    "code": "no-mistakes(test-no-typed-enqueue-fake)",
+    "column": 15,
+    "file": "eslint-snippets/fixture/test-no-typed-enqueue-fake/extended-forms.test.ts",
+    "line": 19,
+    "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue."
+  },
+  {
+    "code": "no-mistakes(test-no-typed-enqueue-fake)",
+    "column": 15,
+    "file": "eslint-snippets/fixture/test-no-typed-enqueue-fake/extended-forms.test.ts",
+    "line": 20,
+    "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue."
+  }
+]

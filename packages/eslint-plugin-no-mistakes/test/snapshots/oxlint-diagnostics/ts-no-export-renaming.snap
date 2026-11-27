@@ -1,0 +1,23 @@
+[
+  {
+    "code": "no-mistakes(ts-no-export-renaming)",
+    "column": 10,
+    "file": "eslint-plugin/ts-no-export-renaming/fixture/invalid.ts",
+    "line": 5,
+    "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly."
+  },
+  {
+    "code": "no-mistakes(ts-no-export-renaming)",
+    "column": 10,
+    "file": "eslint-plugin/ts-no-export-renaming/fixture/invalid.ts",
+    "line": 6,
+    "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly."
+  },
+  {
+    "code": "no-mistakes(ts-no-export-renaming)",
+    "column": 10,
+    "file": "eslint-plugin/ts-no-export-renaming/fixture/invalid.ts",
+    "line": 7,
+    "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly."
+  }
+]

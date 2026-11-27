@@ -1,0 +1,44 @@
+[
+  {
+    "code": "no-mistakes(ts-no-const-aliases)",
+    "column": 7,
+    "file": "eslint-plugin/ts-no-const-aliases/fixture/invalid.ts",
+    "line": 3,
+    "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection."
+  },
+  {
+    "code": "no-mistakes(ts-no-const-aliases)",
+    "column": 14,
+    "file": "eslint-plugin/ts-no-const-aliases/fixture/invalid.ts",
+    "line": 4,
+    "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection."
+  },
+  {
+    "code": "no-mistakes(ts-no-const-aliases)",
+    "column": 7,
+    "file": "eslint-plugin/ts-no-const-aliases/fixture/invalid.ts",
+    "line": 5,
+    "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection."
+  },
+  {
+    "code": "no-mistakes(ts-no-const-aliases)",
+    "column": 3,
+    "file": "eslint-plugin/ts-no-const-aliases/fixture/invalid.ts",
+    "line": 6,
+    "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection."
+  },
+  {
+    "code": "no-mistakes(ts-no-const-aliases)",
+    "column": 7,
+    "file": "eslint-plugin/ts-no-const-aliases/fixture/invalid.ts",
+    "line": 9,
+    "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection."
+  },
+  {
+    "code": "no-mistakes(ts-no-const-aliases)",
+    "column": 7,
+    "file": "eslint-plugin/ts-no-const-aliases/fixture/invalid.ts",
+    "line": 10,
+    "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection."
+  }
+]

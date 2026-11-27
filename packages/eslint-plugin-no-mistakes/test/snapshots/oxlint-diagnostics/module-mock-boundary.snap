@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(module-mock-boundary)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/module-mock-boundary/dynamic-key.mjs",
+    "line": 8,
+    "message": "Module mock boundary does not allow mocking internal module \"./internal\"."
+  }
+]

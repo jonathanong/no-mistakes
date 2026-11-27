@@ -1,0 +1,233 @@
+[
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 2,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 6,
+    "message": "Reachable use of banned import \"createWatchProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 9,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 13,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 16,
+    "message": "Reachable use of banned import \"default\" from \"@acme/rate-limit\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 19,
+    "message": "Reachable use of banned import \"invalidateAll\" from \"@acme/rate-limit\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 22,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 25,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 30,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 3,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 38,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 3,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 43,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 52,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 3,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 56,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 61,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 10,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 63,
+    "message": "Do not re-export banned import \"createProgram\" from \"typescript\"; it stays reachable outside allowed paths."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 10,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 66,
+    "message": "Do not re-export banned import \"createWatchProgram\" from \"typescript\"; it stays reachable outside allowed paths."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 69,
+    "message": "Do not re-export banned import \"*\" from \"@acme/rate-limit\"; it stays reachable outside allowed paths."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 71,
+    "message": "Do not re-export banned import \"*\" from \"typescript\"; it stays reachable outside allowed paths."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 75,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 78,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 5,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 85,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 10,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 93,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 110,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 3,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 117,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 10,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 132,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 10,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 144,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 10,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 154,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 10,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 160,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 10,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 166,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 7,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 181,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 1,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 188,
+    "message": "Reachable use of banned import \"createProgram\" from \"typescript\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 14,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 193,
+    "message": "Do not re-export banned import \"createProgram\" from \"typescript\"; it stays reachable outside allowed paths."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 5,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 198,
+    "message": "Reachable use of banned import \"default\" from \"@acme/rate-limit\" outside allowed paths. Move it into an allowed helper path."
+  }
+]

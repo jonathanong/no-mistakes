@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(require-top-level-registration)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/client-contracts/registration-invalid.ts",
+    "line": 1,
+    "message": "Import the configured runtime registrar and call it with the configured callback unconditionally at module top level."
+  }
+]

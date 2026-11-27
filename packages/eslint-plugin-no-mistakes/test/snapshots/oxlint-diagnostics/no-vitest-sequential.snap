@@ -1,0 +1,114 @@
+[
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 2,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 4,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 2,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 5,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 6,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 2,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 7,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 2,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 8,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 9,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 10,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 11,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 2,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 12,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 14,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 15,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 16,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 17,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 18,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 19,
+    "message": "Use parallel tests instead of .sequential."
+  },
+  {
+    "code": "no-mistakes(no-vitest-sequential)",
+    "column": 2,
+    "file": "eslint-snippets/fixture/no-vitest-sequential/typed-wrappers.test.ts",
+    "line": 21,
+    "message": "Use parallel tests instead of .sequential."
+  }
+]
