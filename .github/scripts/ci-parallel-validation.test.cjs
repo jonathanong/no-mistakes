@@ -236,7 +236,7 @@ test("standalone library deadline reserves cold-cache time beyond the censored p
   assert.equal(Math.max(...beforeStep), 42);
   const build = workflowJob("standalone-build");
   const shards = workflowJob("standalone-shards");
-  const gate = workflowJob("tests-standalone-lib");
+  const gate = workflowJob("tests-gate");
   const compileSteps = [
     "Build standalone library without a CLI",
     "Build standalone library shard 2",
@@ -253,7 +253,8 @@ test("standalone library deadline reserves cold-cache time beyond the censored p
   assert.equal(jobBudgetSeconds(build), current.standaloneBuildJob);
   assert.equal(jobBudgetSeconds(shards), 480);
   assert.equal(jobBudgetSeconds(gate), 180);
-  assert.match(gate, /needs: \[changes, standalone-build, standalone-shards\]/);
+  for (const dep of ["changes", "standalone-build", "standalone-shards"])
+    assert.ok(gate.includes(dep), dep);
   assert.match(shards, /shard: \[1, 2, 3\]/);
   assert.match(shards, /fail-fast: false/);
   assert.match(shards, /standalone-shards\.cjs run/);
@@ -317,20 +318,10 @@ test("package verification remains independent and required", () => {
 });
 
 test("every required aggregate rejects failed, cancelled and skipped dependencies", () => {
-  for (const name of [
-    "quality",
-    "javascript-tests",
-    "native-tests",
-    "tests-standalone-lib",
-    "tests-gate",
-  ]) {
+  for (const name of ["quality", "tests-gate"]) {
     const body = workflowJob(name);
     assert.equal(jobBudgetSeconds(body), 180);
-    const condition =
-      name === "tests-standalone-lib"
-        ? "${{ !cancelled() && needs.changes.outputs.rust == 'true' }}"
-        : "${{ !cancelled() }}";
-    assert.ok(body.includes(`\n    if: ${condition}\n`));
+    assert.ok(body.includes("\n    if: ${{ !cancelled() }}\n"));
     assert.match(body, /RESULTS: \$\{\{ toJSON\(needs\) \}\}/);
     const needs = body
       .match(/needs:\s*\[([^\]]+)\]/)[1]
@@ -365,11 +356,20 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
     "quality",
     "docs-tests",
     "packages",
-    "javascript-tests",
+    "javascript-coverage",
+    "linux-api-tests",
     "timeout-policy-browser-tests",
-    "native-tests",
+    "native-build",
+    "native-test-build",
+    "native-rust-tests",
+    "native-rust-tests-macos",
+    "native-api-tests",
+    "native-api-tests-macos",
+    "macos-smoke",
+    "windows-smoke",
     "tests",
-    "tests-standalone-lib",
+    "standalone-build",
+    "standalone-shards",
   ])
     assert.ok(gate.includes(job));
   const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
@@ -441,9 +441,9 @@ test("v2 workspace producers prefer matching manifests before compatible compile
   const producers = [
     "linux-runtime",
     "native-build",
-    "native-build-macos",
+    "native-api-tests-macos",
     "native-test-build",
-    "native-test-build-macos",
+    "native-rust-tests-macos",
     "standalone-build",
     "rust-coverage-build",
   ];
@@ -481,9 +481,9 @@ test("v2 workspace producers prefer matching manifests before compatible compile
   );
   for (const name of [
     "native-build",
-    "native-build-macos",
+    "native-api-tests-macos",
     "native-test-build",
-    "native-test-build-macos",
+    "native-rust-tests-macos",
   ]) {
     const body = workflowJob(name);
     assert.match(body, /key: [^\n]*\$\{\{ matrix\.target \}\}/);

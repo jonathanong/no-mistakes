@@ -262,8 +262,8 @@ the diff can differ on macOS: native bindings, platform packages, Cargo
 manifests, the toolchain file, build scripts, path and filesystem modules, or
 CI workflows. A docs-only or postgres-rule-only pull request skips those jobs.
 The pull request diff starts at the merge base with the base branch, so a
-workflow edit that exists only on the base does not count. `Native tests` and
-`Tests with coverage` treat that skip as success. Pushes to
+workflow edit that exists only on the base does not count. `Tests with coverage`
+treats that skip as success. Pushes to
 `main` and the release workflow always run the macOS jobs. Markdown under
 `crates/`, `packages/`, `plugins/`, `fixtures/`, `test-cases/`, `tests/`,
 `evals/`, `.ast-grep/`, and `docs/eslint-rules/`, plus pages read by unit and

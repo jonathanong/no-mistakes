@@ -144,7 +144,7 @@ for (const platform of ["Windows", "macOS"]) {
   );
 }
 
-test("native workflow compiles independent archives and consumers never build Rust", () => {
+test("native workflow keeps independent runtime and Rust archive builds", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
   const job = (name) => workflowJob(workflow, name);
   const runtime = job("native-build");

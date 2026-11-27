@@ -1,0 +1,7 @@
+version: 2
+rules:
+- rule: github-actions-download-integrity
+  scope: repository
+  options:
+    trustedHosts:
+    - '[::bogus]:443'

@@ -76,7 +76,7 @@ source: crates/no-mistakes/tests/cli_rule_options_audit.rs
   },
   "timeout-literals-missing-file": {
     "exitCode": 2,
-    "stderr": "error: .no-mistakes.yml:4: github-actions-test-timeout-literals: allow[0].file is required and must not be empty\n"
+    "stderr": "error: .no-mistakes.yml:5: invalid options for rule `github-actions-test-timeout-literals` at options.allow[0].file: must be nonblank\n"
   },
   "vitest-project-duplicate": {
     "exitCode": 2,
