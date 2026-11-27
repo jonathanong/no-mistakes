@@ -178,7 +178,7 @@ no-mistakes flow src/api/users.mts#handler --direction both --depth 2 --format j
 no-mistakes flow .github/workflows/ci.yml --direction deps --relationship workflow --format json
 ```
 
-See [flow](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/flow.md).
+See [flow](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/flow.md).
 
 ## Output format selection
 
@@ -243,7 +243,7 @@ each source uses its owning package config.
 Check if the import uses a bare external specifier, a non-literal dynamic `import()` / `require()` (those are unresolved in `resolve-check` but are not graph edges), or an alias that requires a specific package `tsconfig`. See `limits-and-fallbacks.md` for workarounds.
 
 **Graph edge caveats:**
-See https://github.com/jonathanong/no-mistakes/blob/main/docs/graph-edges.md for
+See https://github.com/jongleberry/no-mistakes/blob/main/docs/graph-edges.md for
 every edge kind. Dynamic route paths, fetch URLs,
 queue names, process commands, and selector values are not guessed. Text-based
 selector coverage is approximate; exact configured test ID edges are stronger.

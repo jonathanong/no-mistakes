@@ -346,4 +346,4 @@ Both efforts decode executor source and standalone SQL lossily. Both skip a
 standalone SQL file that disappeared after selection and propagate other read
 errors. Low effort routes malformed embedded SQL through `unanalyzableSql`.
 Max effort skips malformed SQL, and low effort skips malformed standalone
-SQL. [Max effort scan](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_no_offset/scan.rs#L63-L86) and [low effort scan](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_no_offset/low.rs#L66-L95).
+SQL. [Max effort scan](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_no_offset/scan.rs#L63-L86) and [low effort scan](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_no_offset/low.rs#L66-L95).

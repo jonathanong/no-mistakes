@@ -6,7 +6,7 @@ Later status: [the bounded #1972 conclusion](no-writes-investigation.md) preserv
 this historical record and closes the investigation without claiming a runtime fix.
 The open-issue language below describes this earlier evidence submission.
 
-This transformed public evidence copy references [#1972](https://github.com/jonathanong/no-mistakes/issues/1972).
+This transformed public evidence copy references [#1972](https://github.com/jongleberry/no-mistakes/issues/1972).
 The issue remains open: the historical unoptimized slowdown is unexplained,
 and optimized native CPU impact is not established reliably on this host.
 No runtime source, semantic assertion, or sharing bound changes in this PR.

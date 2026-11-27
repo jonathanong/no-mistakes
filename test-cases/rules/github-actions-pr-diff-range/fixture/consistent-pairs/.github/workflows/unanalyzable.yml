@@ -1,0 +1,32 @@
+name: unanalyzable
+on: pull_request
+jobs:
+  unknown_checkout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.custom_ref }}
+      - run: git diff --name-only HEAD^1 HEAD
+  dynamic_diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git diff --name-only ${{ github.event.pull_request.base.sha }} "$DYNAMIC_HEAD"
+  dynamic_env:
+    runs-on: ubuntu-latest
+    env:
+      DIFF_BASE: ${{ steps.resolve.outputs.base }}
+      DIFF_HEAD: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - run: echo "$DIFF_BASE $DIFF_HEAD"
+  non_mapping_env:
+    runs-on: ubuntu-latest
+    env: ${{ inputs.env }}
+    steps:
+      - run: echo ok
+  non_mapping_with:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/analyze
+        with: ${{ inputs.with }}

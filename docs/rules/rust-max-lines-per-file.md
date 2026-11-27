@@ -43,9 +43,10 @@ git ls-files -z '*.rs' | xargs -0 wc -l
 A passing check proves only the configured code-line limits, scopes, exclusions,
 and suppressions. For example, a nine-line file with six blank/comment-only
 lines and three code lines passes `srcMax: 3`, but fails `srcMax: 2`.
-File suppressions can also hide code-line overages;
-`check --include-suppressed --format json` exposes suppression accounting. This distinction does not change
-the rule's thresholds or counting behavior.
+The rule anchors the file-wide finding at line 1. Use a leading
+`no-mistakes-disable-file rust-max-lines-per-file` comment for an intentional
+file exception. `check --include-suppressed --format json` shows the
+suppression record.
 
 ## Options and defaults
 

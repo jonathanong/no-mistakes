@@ -477,7 +477,7 @@ typecheck gate. It can block later steps and dependent jobs from counting.
 When the rule can prove `continue-on-error: true` for that step, analysis
 can continue to later candidates. An unproven gate is reported as missing
 coverage. `options.unanalyzable` does not apply. Move the `tsc` command into
-a supported `run:` step on a path the rule can verify. [Opaque step handling](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/tsconfig_gate_coverage/workflow/reusable/steps/run.rs#L97-L139).
+a supported `run:` step on a path the rule can verify. [Opaque step handling](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/tsconfig_gate_coverage/workflow/reusable/steps/run.rs#L97-L139).
 
 ## Suppression
 

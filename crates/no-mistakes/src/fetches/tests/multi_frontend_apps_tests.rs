@@ -1,5 +1,5 @@
 //! `no-mistakes fetches` regression coverage for
-//! <https://github.com/jonathanong/no-mistakes/issues/624>, using the shared
+//! <https://github.com/jongleberry/no-mistakes/issues/624>, using the shared
 //! fixture at `fixtures/playwright/multi-frontend-apps/`.
 
 use crate::fetches::cli::Cli;

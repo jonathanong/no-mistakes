@@ -545,6 +545,193 @@ RULES_FLOWS = [
                     ),
                 ],
             ),
+            (
+                "review-duplicate-row-lookup",
+                """
+                Review this PostgreSQL query before it merges.
+
+                ```sql
+                CREATE TABLE members (
+                  id uuid PRIMARY KEY,
+                  display_name text NOT NULL,
+                  avatar_url text,
+                  deleted_at timestamptz
+                );
+
+                CREATE TABLE tickets (
+                  id uuid PRIMARY KEY,
+                  project_id uuid NOT NULL,
+                  assignee_id uuid REFERENCES members(id),
+                  reviewer_id uuid REFERENCES members(id),
+                  created_at timestamptz NOT NULL DEFAULT now()
+                );
+
+                SELECT t.id,
+                       (SELECT m.display_name FROM members m WHERE m.id = t.assignee_id AND m.deleted_at IS NULL) AS assignee_name,
+                       (SELECT m.avatar_url   FROM members m WHERE m.id = t.assignee_id AND m.deleted_at IS NULL) AS assignee_avatar,
+                       r.display_name AS reviewer_name
+                FROM tickets t
+                LEFT JOIN members r ON r.id = t.reviewer_id AND r.deleted_at IS NULL
+                WHERE t.project_id = $1
+                  AND (t.created_at, t.id) < ($2, $3)
+                ORDER BY t.created_at DESC, t.id DESC
+                LIMIT 50;
+                ```
+                """,
+                [
+                    (
+                        "flags-duplicate-row-lookup",
+                        _r(
+                            """
+                            Grade only the review in the final message. Two checks.
+
+                            1. Passing: the review flags that the two scalar
+                            subqueries look up the same `members` row twice per
+                            output row via `t.assignee_id` and recommends
+                            replacing them with a single join (for example a
+                            `LEFT JOIN members a ON a.id = t.assignee_id AND
+                            a.deleted_at IS NULL`) that projects both
+                            `display_name` and `avatar_url`. Failing: the review
+                            does not identify the duplicate lookup on
+                            `t.assignee_id` or does not recommend collapsing it
+                            into one join.
+
+                            2. Passing: the review does NOT claim the `LEFT JOIN
+                            members r ON r.id = t.reviewer_id` is a duplicate of
+                            the `assignee_id` lookup or ask to merge
+                            `reviewer_id` and `assignee_id` into one join.
+                            Failing: it treats the distinct `reviewer_id` join as
+                            a duplicate of `assignee_id`.
+
+                            Both checks must pass.
+                            """,
+                            review=True,
+                        ),
+                    ),
+                ],
+            ),
+            (
+                "review-narrow-view-lookup",
+                """
+                Review this PostgreSQL query before it merges.
+
+                ```sql
+                CREATE TABLE users (
+                  id uuid PRIMARY KEY,
+                  handle text NOT NULL,
+                  org_id uuid NOT NULL REFERENCES organizations(id),
+                  deleted_at timestamptz
+                );
+
+                CREATE VIEW user_directory AS
+                SELECT u.id,
+                       u.handle,
+                       o.name AS org_name,
+                       (SELECT count(*) FROM team_memberships tm WHERE tm.user_id = u.id) AS team_count
+                FROM users u
+                JOIN organizations o ON o.id = u.org_id
+                WHERE u.deleted_at IS NULL;
+
+                SELECT n.id,
+                       n.title,
+                       ud.handle AS author_handle
+                FROM notes n
+                LEFT JOIN user_directory ud ON ud.id = n.author_id
+                WHERE n.workspace_id = $1
+                  AND (n.created_at, n.id) < ($2, $3)
+                ORDER BY n.created_at DESC, n.id DESC
+                LIMIT 50;
+                ```
+                """,
+                [
+                    (
+                        "flags-narrow-view-lookup",
+                        _r(
+                            """
+                            Grade only the review in the final message.
+
+                            Passing: the review flags joining `user_directory`
+                            when the query only reads `handle` from the base
+                            `users` table (pulling in the view's extra join to
+                            `organizations` and/or correlated `team_memberships`
+                            subquery unnecessarily), and recommends joining
+                            `users` directly while keeping the view's
+                            `deleted_at IS NULL` predicate.
+
+                            Failing: the review leaves the `user_directory` join
+                            in place, misses that the view carries extra
+                            joins/subqueries for a single base-table column, or
+                            recommends joining `users` directly without
+                            preserving the `deleted_at IS NULL` predicate.
+                            """,
+                            review=True,
+                        ),
+                    ),
+                ],
+            ),
+            (
+                "exception-view-uses-joined-columns",
+                """
+                Review this PostgreSQL query before it merges.
+
+                ```sql
+                CREATE TABLE users (
+                  id uuid PRIMARY KEY,
+                  handle text NOT NULL,
+                  org_id uuid NOT NULL REFERENCES organizations(id),
+                  deleted_at timestamptz
+                );
+
+                CREATE VIEW user_directory AS
+                SELECT u.id,
+                       u.handle,
+                       o.name AS org_name,
+                       (SELECT count(*) FROM team_memberships tm WHERE tm.user_id = u.id) AS team_count
+                FROM users u
+                JOIN organizations o ON o.id = u.org_id
+                WHERE u.deleted_at IS NULL;
+
+                SELECT n.id,
+                       n.title,
+                       ud.handle AS author_handle,
+                       ud.org_name AS author_org,
+                       ud.team_count AS author_team_count
+                FROM notes n
+                LEFT JOIN user_directory ud ON ud.id = n.author_id
+                WHERE n.workspace_id = $1
+                  AND (n.created_at, n.id) < ($2, $3)
+                ORDER BY n.created_at DESC, n.id DESC
+                LIMIT 50;
+                ```
+                """,
+                [
+                    (
+                        "leaves-full-view-read",
+                        _r(
+                            """
+                            Grade only the review in the final message.
+
+                            Passing: the review leaves the `user_directory` join
+                            in place (or notes it is justified because the query
+                            projects the view's joined `org_name` and computed
+                            `team_count`, not just one or two base-table
+                            columns). Unrelated remarks (for example noting that
+                            `team_count` is a correlated subquery in the view
+                            definition itself) are fine as long as it does not
+                            tell the caller to replace the view join with a
+                            direct `users`-only join because only base-table
+                            columns are read.
+
+                            Failing: the review tells the author to replace the
+                            `user_directory` join with a direct join to `users`
+                            alone, or claims the query only reads one or two
+                            base-table columns from the view.
+                            """,
+                            review=True,
+                        ),
+                    ),
+                ],
+            ),
         ],
     ),
     (
