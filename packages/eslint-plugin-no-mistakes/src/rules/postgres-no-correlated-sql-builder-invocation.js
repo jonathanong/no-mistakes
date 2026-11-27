@@ -30,10 +30,10 @@ function appendInvocation(call, methods, context) {
   // Configured receiver methods win over Function.prototype forwarding.
   if (!name) return null;
   if (methods.has(name)) {
-    const object = unwrapTs(node.object);
-    if (object?.type !== "Identifier" || call.arguments.length !== 1) return null;
+    if (call.arguments.length !== 1) return null;
     const piece = call.arguments[0];
-    return piece.type === "SpreadElement" ? null : { object, piece };
+    if (piece.type === "SpreadElement") return null;
+    return { object: unwrapTs(node.object), piece };
   }
   if (name !== "call" && name !== "apply") return null;
   if (!methodReference(node.object, methods, context)) return null;

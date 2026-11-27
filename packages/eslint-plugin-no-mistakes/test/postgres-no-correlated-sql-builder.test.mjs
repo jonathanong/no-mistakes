@@ -70,6 +70,9 @@ const suite = {
     correlatedFile("static-calls.ts"),
     // One correlated finding.
     correlatedFile("call-method.ts", { builderMethods: ["call"], tagNames: ["sql"] }),
+    // Unanalyzable member, require(), and import-equals member receivers.
+    // Identifier query.append stays correlated. One suppressed append stays quiet.
+    correlatedFile("unanalyzable-receivers.ts"),
   ],
 };
 

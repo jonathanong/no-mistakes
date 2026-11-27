@@ -15,7 +15,7 @@ publishes nothing.
 
 This rule is opt-in. It is not part of `configs.recommended` or `configs.strict`.
 It does not autofix. Ordinary object mutation stays in
-[issue #2219](https://github.com/jonathanong/no-mistakes/issues/2219).
+[issue #2219](https://github.com/jongleberry/no-mistakes/issues/2219).
 
 ## Disallowed
 
@@ -87,9 +87,16 @@ the method names that append SQL, such as `["append"]`. A string literal or
 expression-free template is that method (`query["append"]` and
 ``query[`append`]``). A computed identifier key is not. `query.append.call(query, text)` forwards to `append`. The SQL text is the
 second argument, and the builder is the receiver in the first argument. A
-receiver that is not an identifier, a spread argument, or a different object
-on each guard does not count as one builder. A configured method whose name
-is `call` or `apply` stays that method. Literal-array forwarding
+direct append whose receiver is not one resolved identifier reports
+`unanalyzable` on that append. A member (`db.query.append`), a `require()`
+call (`require("@example/db").append`), and an import-equals member
+(`import query = require("@example/db")`, then `query.builder.append`) are
+that report. An unresolved identifier receiver is the same report. One
+resolved identifier in two or more incomplete branches stays the correlated
+finding, including `import query = require("@example/db"); query.append(...)`.
+A spread argument does not match. Two different resolved identifiers are two
+builders. One resolved-identifier append has no finding. A configured method
+whose name is `call` or `apply` stays that method. Literal-array forwarding
 `query.append.apply(query, [text])` uses the same explicit receiver. Immutable
 same-file method aliases (`const append = query.append; append.call(query,
 text)`) and comma method references (`(0, query.append).call(query, text)`)

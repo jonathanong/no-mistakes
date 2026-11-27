@@ -474,5 +474,175 @@
         ]
       }
     ]
+  },
+  {
+    "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+    "findings": [
+      {
+        "column": 21,
+        "endColumn": 51,
+        "endLine": 8,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+        "line": 8,
+        "message": "Cannot tell whether this append uses one builder. Its receiver is not one resolved identifier. Name the builder with one identifier, or return a complete statement from one switch with a throwing default.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 21,
+        "endColumn": 51,
+        "endLine": 12,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+        "line": 12,
+        "message": "Cannot tell whether this append uses one builder. Its receiver is not one resolved identifier. Name the builder with one identifier, or return a complete statement from one switch with a throwing default.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 21,
+        "endColumn": 51,
+        "endLine": 13,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+        "line": 13,
+        "message": "Cannot tell whether this append uses one builder. Its receiver is not one resolved identifier. Name the builder with one identifier, or return a complete statement from one switch with a throwing default.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 21,
+        "endColumn": 65,
+        "endLine": 17,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+        "line": 17,
+        "message": "Cannot tell whether this append uses one builder. Its receiver is not one resolved identifier. Name the builder with one identifier, or return a complete statement from one switch with a throwing default.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 21,
+        "endColumn": 65,
+        "endLine": 18,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+        "line": 18,
+        "message": "Cannot tell whether this append uses one builder. Its receiver is not one resolved identifier. Name the builder with one identifier, or return a complete statement from one switch with a throwing default.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 21,
+        "endColumn": 56,
+        "endLine": 22,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+        "line": 22,
+        "message": "Cannot tell whether this append uses one builder. Its receiver is not one resolved identifier. Name the builder with one identifier, or return a complete statement from one switch with a throwing default.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 21,
+        "endColumn": 56,
+        "endLine": 23,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+        "line": 23,
+        "message": "Cannot tell whether this append uses one builder. Its receiver is not one resolved identifier. Name the builder with one identifier, or return a complete statement from one switch with a throwing default.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 49,
+        "endLine": 27,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+        "line": 27,
+        "message": "Independent appends on query can leave an unknown or empty path for kind. Return a complete statement from one switch (case \"a\": case \"b\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 49,
+        "endLine": 32,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+        "line": 32,
+        "message": "Independent appends on query can leave an unknown or empty path for kind. Return a complete statement from one switch (case \"a\": case \"b\":) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+        "messageId": "correlated",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 21,
+        "endColumn": 51,
+        "endLine": 39,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+        "line": 39,
+        "message": "Cannot tell whether this append uses one builder. Its receiver is not one resolved identifier. Name the builder with one identifier, or return a complete statement from one switch with a throwing default.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 21,
+        "endColumn": 57,
+        "endLine": 43,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+        "line": 43,
+        "message": "Cannot tell whether this append uses one builder. Its receiver is not one resolved identifier. Name the builder with one identifier, or return a complete statement from one switch with a throwing default.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 21,
+        "endColumn": 57,
+        "endLine": 44,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+        "line": 44,
+        "message": "Cannot tell whether this append uses one builder. Its receiver is not one resolved identifier. Name the builder with one identifier, or return a complete statement from one switch with a throwing default.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 23,
+        "endColumn": 53,
+        "endLine": 49,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+        "line": 49,
+        "message": "Cannot tell whether this append uses one builder. Its receiver is not one resolved identifier. Name the builder with one identifier, or return a complete statement from one switch with a throwing default.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      },
+      {
+        "column": 21,
+        "endColumn": 51,
+        "endLine": 51,
+        "file": "test-cases/eslint-snippets/fixture/postgres-no-correlated-sql-builder/unanalyzable-receivers.ts",
+        "line": 51,
+        "message": "Cannot tell whether this append uses one builder. Its receiver is not one resolved identifier. Name the builder with one identifier, or return a complete statement from one switch with a throwing default.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/postgres-no-correlated-sql-builder",
+        "severity": 2
+      }
+    ],
+    "kind": "invalid",
+    "options": [
+      {
+        "builderMethods": [
+          "append"
+        ],
+        "tagNames": [
+          "sql"
+        ]
+      }
+    ]
   }
 ]

@@ -38,30 +38,36 @@ function selectorOf(test) {
 
 function readGuards(statement, methods, tags, context) {
   const selector = selectorOf(unwrapTs(statement.test));
-  if (!selector) return [];
-  const builders = findAppends(statement.consequent, methods, tags, context);
+  if (!selector) return { guards: [], unknown: [] };
+  const found = findAppends(statement.consequent, methods, tags, context);
   const test = unwrapTs(statement.test);
   const value = stringText(test.left) ?? stringText(test.right);
-  return builders.map((builder) => ({
-    node: statement,
-    selector,
-    builder: builder.object,
-    call: builder.call,
-    value,
-  }));
+  return {
+    guards: found.builders.map((builder) => ({
+      node: statement,
+      selector,
+      builder: builder.object,
+      call: builder.call,
+      value,
+    })),
+    unknown: found.unknown,
+  };
 }
 
 function guardsOf(func, methods, tags, context) {
-  const found = [];
+  const guards = [];
+  const unknown = [];
   const visit = (node) => {
     if (!node || typeof node !== "object" || isFunction(node)) return;
     if (node.type === "IfStatement") {
-      found.push(...readGuards(node, methods, tags, context));
+      const read = readGuards(node, methods, tags, context);
+      guards.push(...read.guards);
+      unknown.push(...read.unknown);
     }
     for (const child of childNodes(node)) visit(child);
   };
   visit(func.body);
-  return found;
+  return { guards, unknown };
 }
 
 function groupGuards(guards, context) {
@@ -103,6 +109,8 @@ module.exports = rule(
     messages: {
       correlated:
         "Independent appends on {{builder}} can leave an unknown or empty path for {{selector}}. Return a complete statement from one switch ({{cases}}) with a throwing default. A runtime own-key check, or a default that does not throw, is not judged.",
+      unanalyzable:
+        "Cannot tell whether this append uses one builder. Its receiver is not one resolved identifier. Name the builder with one identifier, or return a complete statement from one switch with a throwing default.",
     },
   },
   (context) => {
@@ -113,7 +121,14 @@ module.exports = rule(
     const suppressed = ruleSuppression(context, RULE_ID);
 
     function check(func) {
-      for (const group of groupGuards(guardsOf(func, methods, tags, context), context)) {
+      const found = guardsOf(func, methods, tags, context);
+      const reported = new Set();
+      for (const call of found.unknown) {
+        if (reported.has(call) || suppressed(call)) continue;
+        reported.add(call);
+        context.report({ node: call, messageId: "unanalyzable" });
+      }
+      for (const group of groupGuards(found.guards, context)) {
         if (group.length < 2 || completeGuards(group, func) || suppressed(group[0].node)) continue;
         context.report({
           node: group[0].node,
