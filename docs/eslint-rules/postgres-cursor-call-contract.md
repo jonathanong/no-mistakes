@@ -59,9 +59,12 @@ template, supported SQL tag, or one immutable local binding.
 ## Suppression
 
 ```ts
-// eslint-disable-next-line no-mistakes/postgres-cursor-call-contract -- compatibility adapter passes a validated query object
+// no-mistakes-disable-next-line postgres-cursor-call-contract -- compatibility adapter passes a validated query object
 runCursor(query);
 ```
+
+`no-mistakes-disable-line` on the finding and a leading `no-mistakes-disable-file`
+work the same way. Standard ESLint and Oxlint disable comments also apply.
 
 ## Related rules
 

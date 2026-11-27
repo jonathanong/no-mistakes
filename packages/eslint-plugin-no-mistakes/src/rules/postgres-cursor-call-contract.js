@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { findVariable, propertyName, unwrap } = require("./postgres-cursor-ast");
 const { matchesCursorFile, resolveCursorContractOptions } = require("./postgres-cursor-options");
 const {
@@ -44,7 +45,12 @@ function reExportsCursor(node, config) {
   );
 }
 
-function visitCursorIdentifier(context, node, options, reportedDirectUses) {
+function reportFinding(context, suppressed, descriptor) {
+  if (suppressed(descriptor.node)) return;
+  context.report(descriptor);
+}
+
+function visitCursorIdentifier(context, node, options, reportedDirectUses, suppressed) {
   const namedImport = namedCursorImport(context, node, helpers, options);
   const namespaceImport = namespaceCursorImport(context, node, helpers, options);
   if (!namedImport && !namespaceImport) return;
@@ -65,19 +71,19 @@ function visitCursorIdentifier(context, node, options, reportedDirectUses) {
   }
   if (!directCallParent(node) && !reportedDirectUses.has(node)) {
     reportedDirectUses.add(node);
-    context.report({ messageId: "directUse", node });
+    reportFinding(context, suppressed, { messageId: "directUse", node });
   }
 }
 
-function visitNamespaceMember(context, node, options) {
+function visitNamespaceMember(context, node, options, suppressed) {
   const namespaceMember = namespaceImportMember(context, node, helpers, options);
   if (!namespaceMember || isTypeQuery(node)) return;
   if (namespaceMember.computed && helpers.propertyName(namespaceMember) == null) {
-    context.report({ messageId: "staticNamespaceMember", node });
+    reportFinding(context, suppressed, { messageId: "staticNamespaceMember", node });
     return;
   }
   if (namespaceCursorMember(context, node, helpers, options) && !directCallParent(node)) {
-    context.report({ messageId: "directUse", node });
+    reportFinding(context, suppressed, { messageId: "directUse", node });
   }
 }
 
@@ -127,6 +133,7 @@ module.exports = rule(
   (context) => {
     const options = resolveCursorContractOptions(context.options[0]);
     if (!options || !matchesCursorFile(context, options)) return {};
+    const suppressed = ruleSuppression(context, "postgres-cursor-call-contract");
     const reportedDirectUses = new WeakSet();
     return {
       CallExpression(node) {
@@ -139,24 +146,28 @@ module.exports = rule(
         const reportNode = argument ?? node;
         const head = argument ? queryHead(context, argument, helpers, options) : null;
         if (head === null) {
-          context.report({ messageId: "staticQuery", node: reportNode });
+          reportFinding(context, suppressed, { messageId: "staticQuery", node: reportNode });
           return;
         }
         if (!options.annotation.test(head)) {
-          context.report({ messageId: "annotation", node: reportNode });
+          reportFinding(context, suppressed, { messageId: "annotation", node: reportNode });
         }
       },
       Identifier(node) {
-        visitCursorIdentifier(context, node, options, reportedDirectUses);
+        visitCursorIdentifier(context, node, options, reportedDirectUses, suppressed);
       },
       MemberExpression(node) {
-        visitNamespaceMember(context, node, options);
+        visitNamespaceMember(context, node, options, suppressed);
       },
       ExportAllDeclaration(node) {
-        if (reExportsCursor(node, options)) context.report({ messageId: "directUse", node });
+        if (reExportsCursor(node, options)) {
+          reportFinding(context, suppressed, { messageId: "directUse", node });
+        }
       },
       ExportNamedDeclaration(node) {
-        if (reExportsCursor(node, options)) context.report({ messageId: "directUse", node });
+        if (reExportsCursor(node, options)) {
+          reportFinding(context, suppressed, { messageId: "directUse", node });
+        }
       },
     };
   },

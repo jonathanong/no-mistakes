@@ -380,6 +380,18 @@
       "options": null
     },
     {
+      "file": "suppress-line.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "suppress-file.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "recall.test.ts",
       "findings": [
         {
@@ -408,6 +420,24 @@
           "line": 1,
           "message": "Tests without module mocking (vi.mock/vi.doMock) must not use a .mock.test.<ext> filename.",
           "messageId": "unnecessaryMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "open.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 3,
+          "file": "open.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
           "ruleId": "no-mistakes/vitest-mock-test-file-naming",
           "severity": 2
         }

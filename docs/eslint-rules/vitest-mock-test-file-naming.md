@@ -52,14 +52,16 @@ installMocks();
 ## Suppression
 
 ```ts
-// eslint-disable-next-line no-mistakes/vitest-mock-test-file-naming -- fixture deliberately checks legacy filename detection
+// no-mistakes-disable-next-line vitest-mock-test-file-naming -- fixture deliberately checks legacy filename detection
 vi.mock("@app/mail");
 ```
 
 `no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
 `no-mistakes-disable-file` also suppress this rule when the comment names
 `vitest-mock-test-file-naming` or `no-mistakes/vitest-mock-test-file-naming`.
-Directive-looking string literals do not.
+Directive-looking string literals do not. Place a line directive on the mock
+call that makes the file a module-mocking test. Standard ESLint and Oxlint
+disable comments also apply.
 
 ## Related rules
 

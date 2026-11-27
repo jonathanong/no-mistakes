@@ -62,7 +62,7 @@ module.exports = rule(
             continue;
           const initializer = unwrapExpression(declarator.init);
           if (initializer.type === "Identifier" && declarator.id.name !== initializer.name) {
-            context.report({ node: declarator, messageId: "alias" });
+            report(declarator, "alias");
           }
         }
       },

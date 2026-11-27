@@ -64,12 +64,18 @@ describe("test and react same-file recall", () => {
           "vitest-mock-test-file-naming",
           languageOptions,
           {
-            valid: [tsCase("vitest-mock-test-file-naming", "suppressed.test.ts")],
+            valid: [
+              tsCase("vitest-mock-test-file-naming", "suppressed.test.ts"),
+              tsCase("vitest-mock-test-file-naming", "suppress-line.test.ts"),
+              tsCase("vitest-mock-test-file-naming", "suppress-file.test.ts"),
+            ],
             invalid: [
               // Namespace module mocks require a .mock.test name.
               tsCase("vitest-mock-test-file-naming", "recall.test.ts"),
               // The default export is not a module mock.
               tsCase("vitest-mock-test-file-naming", "default.mock.test.ts"),
+              // The same module mock reports without a directive.
+              tsCase("vitest-mock-test-file-naming", "open.test.ts"),
             ],
           },
         ),

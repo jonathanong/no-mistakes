@@ -3613,6 +3613,24 @@
       "options": null
     },
     {
+      "file": "disable-line.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "disable-next-line.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "disable-file.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "invalid.ts",
       "findings": [
         {
@@ -3713,11 +3731,47 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "open.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 25,
+          "endLine": 2,
+          "file": "open.ts",
+          "line": 2,
+          "message": "Do not create a differently named const alias. Use the original name directly so readers and tooling can trace symbols without indirection.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-const-aliases",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "ts-no-export-renaming": [
     {
       "file": "valid.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "disable-line.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "disable-next-line.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "disable-file.ts",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -3806,6 +3860,24 @@
           "endLine": 5,
           "file": "coverage.ts",
           "line": 5,
+          "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+          "messageId": "renamed",
+          "ruleId": "no-mistakes/ts-no-export-renaming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "open.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 31,
+          "endLine": 2,
+          "file": "open.ts",
+          "line": 2,
           "message": "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
           "messageId": "renamed",
           "ruleId": "no-mistakes/ts-no-export-renaming",
