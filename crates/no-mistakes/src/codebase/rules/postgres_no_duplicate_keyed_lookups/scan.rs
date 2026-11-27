@@ -107,7 +107,7 @@ fn finding(file: &str, lookup: &SqlDuplicateKeyedLookupFact) -> RuleFinding {
         file: file.to_owned(),
         line,
         message: format!(
-            "{file}:{line}: duplicate keyed lookup of `{}` on `{}` (already looked up at line {first_line}); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+            "{file}:{line}: duplicate keyed lookup of `{}` on `{}` (already looked up at line {first_line}). Verify that consolidation preserves row multiplicity and unmatched rows.",
             lookup.relation, lookup.key_display
         ),
         import: None,

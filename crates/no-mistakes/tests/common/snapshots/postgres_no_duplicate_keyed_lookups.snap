@@ -14,7 +14,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 4,
-          "message": "Merge duplicate table lookups: queries/check.sql:4: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 3); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "Merge duplicate table lookups: queries/check.sql:4: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 3). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT tier FROM accounts WHERE id = o.account_id) AS account_tier,",
           "target": "accounts"
@@ -22,7 +22,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 6,
-          "message": "Merge duplicate table lookups: queries/check.sql:6: duplicate keyed lookup of `profiles` on `id = o.owner_id` (already looked up at line 5); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "Merge duplicate table lookups: queries/check.sql:6: duplicate keyed lookup of `profiles` on `id = o.owner_id` (already looked up at line 5). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT p2.handle FROM profiles p2 WHERE o.owner_id = p2.id) AS owner_handle",
           "target": "profiles"
@@ -79,7 +79,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 14,
-          "message": "queries/check.sql:14: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 13); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:14: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 13). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "AND (SELECT a2.archived FROM accounts a2 WHERE a2.id = o.account_id)",
           "target": "accounts"
@@ -87,7 +87,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 25,
-          "message": "queries/check.sql:25: duplicate keyed lookup of `accounts` on `id = s.account_id` (already looked up at line 24); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:25: duplicate keyed lookup of `accounts` on `id = s.account_id` (already looked up at line 24). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "cached_tier = (SELECT a2.tier FROM accounts a2 WHERE a2.id = s.account_id);",
           "target": "accounts"
@@ -95,7 +95,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 7,
-          "message": "queries/check.sql:7: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 6); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:7: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 6). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "cached_tier = (SELECT a2.tier FROM accounts a2 WHERE a2.id = o.account_id)",
           "target": "accounts"
@@ -125,7 +125,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/queries.ts",
           "line": 8,
-          "message": "src/queries.ts:8: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 7); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "src/queries.ts:8: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 7). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT a2.tier FROM accounts a2 WHERE a2.id = o.account_id) AS account_tier",
           "target": "accounts"
@@ -146,7 +146,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/queries.ts",
           "line": 8,
-          "message": "src/queries.ts:8: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 7); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "src/queries.ts:8: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 7). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT a2.tier FROM accounts a2 WHERE a2.id = o.account_id) AS account_tier",
           "target": "accounts"
@@ -175,7 +175,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/queries.ts",
           "line": 8,
-          "message": "src/queries.ts:8: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 7); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "src/queries.ts:8: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 7). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT a2.tier FROM accounts a2 WHERE a2.id = o.account_id) AS account_tier",
           "target": "accounts"
@@ -196,7 +196,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 12,
-          "message": "queries/check.sql:12: duplicate keyed lookup of `profiles` on `id = o.owner_id` (already looked up at line 14); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:12: duplicate keyed lookup of `profiles` on `id = o.owner_id` (already looked up at line 14). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT p2.avatar_url FROM profiles p2 WHERE p2.id = o.owner_id) AS owner_avatar",
           "target": "profiles"
@@ -204,7 +204,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 22,
-          "message": "queries/check.sql:22: duplicate keyed lookup of `accounts` on `id = CAST(o.raw_account_id AS UUID)` (already looked up at line 21); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:22: duplicate keyed lookup of `accounts` on `id = CAST(o.raw_account_id AS UUID)` (already looked up at line 21). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "LEFT JOIN accounts a2 ON a2.id = CAST(o.raw_account_id AS uuid);",
           "target": "accounts"
@@ -212,7 +212,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 7,
-          "message": "queries/check.sql:7: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 6); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:7: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 6). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "LEFT JOIN accounts a2 ON o.account_id = a2.id;",
           "target": "accounts"
@@ -233,7 +233,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 24,
-          "message": "queries/check.sql:24: duplicate keyed lookup of `accounts` on `id = abs(-o.account_id + 1)` (already looked up at line 16); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:24: duplicate keyed lookup of `accounts` on `id = abs(-o.account_id + 1)` (already looked up at line 16). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT b.tier FROM accounts b",
           "target": "accounts"
@@ -241,7 +241,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 45,
-          "message": "queries/check.sql:45: duplicate keyed lookup of `accounts` on `created_on = DATE '2020-01-01'` (already looked up at line 44); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:45: duplicate keyed lookup of `accounts` on `created_on = DATE '2020-01-01'` (already looked up at line 44). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "LEFT JOIN accounts b ON b.created_on = DATE '2020-01-01';",
           "target": "accounts"
@@ -262,7 +262,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 11,
-          "message": "queries/check.sql:11: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 10); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:11: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 10). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "JOIN accounts b ON b.id = o.account_id)",
           "target": "accounts"
@@ -270,7 +270,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 16,
-          "message": "queries/check.sql:16: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 15); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:16: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 15). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "JOIN accounts b ON b.id = o.account_id;",
           "target": "accounts"
@@ -278,7 +278,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 21,
-          "message": "queries/check.sql:21: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 20); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:21: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 20). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT b.tier FROM accounts b WHERE b.id = o.account_id);",
           "target": "accounts"
@@ -286,7 +286,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 27,
-          "message": "queries/check.sql:27: duplicate keyed lookup of `accounts` on `id = p.account_id` (already looked up at line 26); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:27: duplicate keyed lookup of `accounts` on `id = p.account_id` (already looked up at line 26). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT b.tier FROM accounts b WHERE b.id = p.account_id);",
           "target": "accounts"
@@ -294,7 +294,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 40,
-          "message": "queries/check.sql:40: duplicate keyed lookup of `accounts` on `id = t.account_id` (already looked up at line 39); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:40: duplicate keyed lookup of `accounts` on `id = t.account_id` (already looked up at line 39). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "LEFT JOIN accounts b ON b.id = t.account_id",
           "target": "accounts"
@@ -302,7 +302,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 47,
-          "message": "queries/check.sql:47: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 46); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:47: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 46). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "JOIN accounts b ON b.id = o.account_id;",
           "target": "accounts"
@@ -310,7 +310,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 5,
-          "message": "queries/check.sql:5: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 4); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:5: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 4). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "JOIN accounts b ON b.id = o.account_id;",
           "target": "accounts"
@@ -318,7 +318,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 53,
-          "message": "queries/check.sql:53: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 52); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:53: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 52). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "JOIN accounts b ON b.id = o.account_id",
           "target": "accounts"
@@ -339,7 +339,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 10,
-          "message": "queries/check.sql:10: duplicate keyed lookup of `accounts` on `id = src.account_id` (already looked up at line 9); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:10: duplicate keyed lookup of `accounts` on `id = src.account_id` (already looked up at line 9). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "JOIN accounts b ON b.id = src.account_id;",
           "target": "accounts"
@@ -347,7 +347,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 15,
-          "message": "queries/check.sql:15: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 14); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:15: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 14). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "JOIN accounts b ON b.id = o.account_id;",
           "target": "accounts"
@@ -355,7 +355,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 21,
-          "message": "queries/check.sql:21: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 20); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:21: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 20). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "JOIN accounts b ON b.id = o.account_id;",
           "target": "accounts"
@@ -363,7 +363,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 3,
-          "message": "queries/check.sql:3: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 2); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:3: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 2). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT tier FROM accounts WHERE id = o.account_id)",
           "target": "accounts"
@@ -371,7 +371,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 55,
-          "message": "queries/check.sql:55: duplicate keyed lookup of `accounts` on `USING (id)` (already looked up at line 55); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:55: duplicate keyed lookup of `accounts` on `USING (id)` (already looked up at line 55). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "extras x JOIN accounts b USING (id) JOIN accounts c USING (id);",
           "target": "accounts"
@@ -379,7 +379,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 69,
-          "message": "queries/check.sql:69: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 68); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:69: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 68). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT b.tier FROM accounts b WHERE b.id = o.account_id)",
           "target": "accounts"
@@ -400,7 +400,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 4,
-          "message": "queries/check.sql:4: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 3); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:4: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 3). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT tier FROM accounts WHERE id = o.account_id) AS account_tier,",
           "target": "accounts"
@@ -408,7 +408,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 6,
-          "message": "queries/check.sql:6: duplicate keyed lookup of `profiles` on `id = o.owner_id` (already looked up at line 5); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:6: duplicate keyed lookup of `profiles` on `id = o.owner_id` (already looked up at line 5). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT p2.handle FROM profiles p2 WHERE o.owner_id = p2.id) AS owner_handle",
           "target": "profiles"
@@ -429,10 +429,31 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 15,
-          "message": "queries/check.sql:15: duplicate keyed lookup of `profiles` on `id = o.owner_id` (already looked up at line 14); PostgreSQL runs each join or scalar subquery as a separate probe per row. Combine them into one join projecting every needed column.",
+          "message": "queries/check.sql:15: duplicate keyed lookup of `profiles` on `id = o.owner_id` (already looked up at line 14). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "LEFT JOIN profiles p2 ON p2.id = o.owner_id;",
           "target": "profiles"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "target_list": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries/check.sql",
+          "line": 21,
+          "message": "queries/check.sql:21: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 19). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "ORDER BY (SELECT tier FROM accounts WHERE id = o.account_id);",
+          "target": "accounts"
         }
       ],
       "warnings": []

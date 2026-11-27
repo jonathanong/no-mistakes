@@ -53,6 +53,9 @@ The rule stays silent when the lookups are not proven to read the same row:
   column alias lists, distinct `LIMIT` clauses, or ambiguous expressions.
 - Sampled table scans, `ONLY` table scans, or scalar subqueries that lock rows.
 
+PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`,
+and `ORDER BY`. The rule counts an identical reused expression once.
+
 Findings point at the duplicate join or scalar subquery and name the line of the
 first lookup.
 

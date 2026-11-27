@@ -4,6 +4,7 @@ mod expr_norm;
 mod join;
 mod normalize;
 mod scope;
+mod select_exprs;
 mod subquery;
 mod table;
 
@@ -12,8 +13,7 @@ use join::register_table_with_joins;
 use normalize::LookupKey;
 use scope::ScopeStack;
 use sqlparser::ast::{
-    CopySource, Distinct, Expr, GroupByExpr, OrderByKind, Query, Select, SelectItem, SetExpr,
-    Statement, Visit, Visitor,
+    CopySource, Expr, OrderByKind, Query, Select, SelectItem, SetExpr, Statement, Visit, Visitor,
 };
 use std::collections::BTreeMap;
 use std::ops::ControlFlow;
@@ -113,22 +113,12 @@ fn walk_select(
     for table in &select.from {
         register_table_with_joins(table, scopes, &mut seen, out);
     }
-    let distinct_on = match &select.distinct {
-        Some(Distinct::On(exprs)) => exprs.as_slice(),
-        _ => &[],
-    };
-    let group_by_exprs: &[Expr] = match &select.group_by {
-        GroupByExpr::Expressions(exprs, _) => exprs.as_slice(),
-        GroupByExpr::All(_) => &[],
-    };
-    let exprs = distinct_on
-        .iter()
-        .chain(select.projection.iter().filter_map(select_item_expr))
-        .chain(select.selection.iter())
-        .chain(group_by_exprs.iter())
-        .chain(select.having.iter())
-        .chain(order_exprs.iter().copied());
-    inspect_exprs(exprs, scopes, &mut seen, out);
+    inspect_exprs(
+        select_exprs::inspectable(select, order_exprs),
+        scopes,
+        &mut seen,
+        out,
+    );
     scopes.pop_frame();
 }
 
