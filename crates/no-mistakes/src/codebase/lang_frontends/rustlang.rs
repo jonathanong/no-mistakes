@@ -67,6 +67,7 @@ fn parse_rust_file(
         declarations: extract_named(&text, rust_decl_re()),
         references: extract_named(&text, rust_ref_re()),
         route_handlers: http::extract_http_routes(&text),
+        http_calls: super::http_clients::extract_rust(&text),
         queue_enqueues: Vec::new(),
         queue_workers: Vec::new(),
         mods: rust_mod_names(&text, path, src_root.as_deref()),

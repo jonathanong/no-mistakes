@@ -1,0 +1,2 @@
+<?php
+Http::get($url);

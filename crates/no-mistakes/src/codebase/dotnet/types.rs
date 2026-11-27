@@ -34,6 +34,7 @@ pub(crate) struct DotnetFileFacts {
     pub has_xunit_tests: bool,
     pub methods: Vec<String>,
     pub route_handlers: Vec<(String, String)>,
+    pub http_calls: Vec<String>,
 }
 
 #[derive(Debug, Clone, Default)]

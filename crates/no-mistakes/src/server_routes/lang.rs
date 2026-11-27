@@ -51,6 +51,13 @@ fn merge_configured_lang_routes(
                 config_route_filter.as_ref(),
                 Some(&test_filter),
             );
+            merge_http_clients(
+                &prepared.root,
+                &file.path,
+                &file.http_calls,
+                facts,
+                Some(&test_filter),
+            );
         }
     }
 }
@@ -93,7 +100,31 @@ fn merge_dotnet_routes(
             config_route_filter.as_ref(),
             Some(&test_filter),
         );
+        merge_http_clients(
+            &prepared.root,
+            &file.path,
+            &file.http_calls,
+            facts,
+            Some(&test_filter),
+        );
     }
+}
+
+fn merge_http_clients(
+    root: &Path,
+    path: &Path,
+    calls: &[String],
+    facts: &mut HashMap<PathBuf, FileFacts>,
+    test_filter: Option<&TestFileFilter>,
+) {
+    if calls.is_empty() || test_filter.is_some_and(|filter| filter.is_match(root, path)) {
+        return;
+    }
+    facts
+        .entry(path.to_path_buf())
+        .or_default()
+        .client_calls
+        .extend(calls.iter().cloned());
 }
 
 fn merge_file_routes(

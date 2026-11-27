@@ -49,6 +49,7 @@ fn parse_java_file(
         declarations,
         references: extract_named(&symbols, java_ref_re()),
         route_handlers: http::extract_http_routes(&text),
+        http_calls: super::http_clients::extract_jvm(&text),
         queue_enqueues: Vec::new(),
         queue_workers: Vec::new(),
         mods: Vec::new(),

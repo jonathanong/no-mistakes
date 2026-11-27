@@ -65,6 +65,7 @@ fn parse_dart_file(
         declarations: extract_named(&symbols, dart_decl_re()),
         references: extract_named(&symbols, dart_ref_re()),
         route_handlers: Vec::new(),
+        http_calls: Vec::new(),
         queue_enqueues: Vec::new(),
         queue_workers: Vec::new(),
         mods: Vec::new(),

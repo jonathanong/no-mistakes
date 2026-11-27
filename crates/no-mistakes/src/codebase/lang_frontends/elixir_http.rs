@@ -4,6 +4,16 @@ use std::sync::OnceLock;
 #[path = "elixir_http_resources.rs"]
 mod resources;
 
+pub(super) fn routes_and_clients(source: &str, skip: bool) -> (Vec<(String, String)>, Vec<String>) {
+    if skip {
+        return (Vec::new(), Vec::new());
+    }
+    (
+        extract_http_routes(source),
+        super::super::http_clients::extract_elixir(source),
+    )
+}
+
 pub(super) fn extract_http_routes(source: &str) -> Vec<(String, String)> {
     let source = super::super::strip::mask_triple_quoted_strings(source);
     let mut prefixes: Vec<(usize, Option<String>)> = Vec::new();

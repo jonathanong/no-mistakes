@@ -34,6 +34,12 @@ including imports inside functions whose call reachability is unknown. It
 excludes type-only imports and `require()` and is distinct from the URL-routing
 edges selected by `--relationship route`.
 
+Use `--relationship http` for static HTTP client literals. That includes
+TypeScript `fetch`, Swift `Endpoint` literals, Dart `Uri.parse` / `http.*`
+literals, and configured Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir,
+and .NET client literals. The edge targets the file that already stores the
+matching route. Computed, concatenated, and interpolated URLs are non-edges.
+
 Use `--relationship trpc` for reverse impact through static tRPC procedure
 calls and the router files that declared them. Virtual IDs are
 `src/router.ts#procedure:user.get`. Empty `projects.*.trpc.routers` lists

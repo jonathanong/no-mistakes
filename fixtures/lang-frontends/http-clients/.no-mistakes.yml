@@ -1,0 +1,22 @@
+tests:
+  python:
+    packages: ["python"]
+  go:
+    modules: ["go"]
+  rust:
+    packages: ["rust"]
+  rails:
+    apps: ["rails"]
+  php:
+    framework: laravel
+    apps: ["php"]
+  java:
+    packages: ["java"]
+  kotlin:
+    packages: ["kotlin"]
+  elixir:
+    apps: ["elixir"]
+  dotnet:
+    projects:
+      api:
+        project: dotnet/Api.csproj

@@ -54,6 +54,7 @@ pub(crate) struct FileFacts {
     pub exports: HashMap<String, String>,
     pub imports: Vec<ImportBinding>,
     pub routes: Vec<RouteSite>,
+    pub client_calls: Vec<String>,
     pub mounts: Vec<MountSite>,
     pub diagnostics: Vec<(usize, String)>,
 }

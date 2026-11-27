@@ -93,6 +93,7 @@ fn build_report_and_relationships(
     if let Some(inputs) = client_inputs {
         relationships.extend(client_call_relationships(inputs, &routes));
     }
+    relationships.extend(stored_client_call_relationships(facts, &routes));
     relationships.sort();
     relationships.dedup();
     let mut edges = relationships

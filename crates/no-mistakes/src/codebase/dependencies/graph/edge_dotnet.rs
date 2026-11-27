@@ -33,6 +33,7 @@ fn collect_dotnet_edges(
     collect_dotnet_project_edges(facts, &mut edges, interner);
     collect_dotnet_dependency_file_edges(facts, all_files, sources, &mut edges, interner);
     collect_dotnet_route_edges(root, facts, config_options, &mut edges, interner);
+    edges.extend(dotnet_http_client_edges(facts, interner));
     edges
 }
 

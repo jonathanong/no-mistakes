@@ -44,6 +44,7 @@ fn parse_ruby_file(
         declarations: extract_ruby_declarations(&text),
         references: extract_static_consts(&text),
         route_handlers: http::extract_routes(&text),
+        http_calls: super::http_clients::extract_ruby(&text),
         queue_enqueues: queue::extract_enqueues(&text),
         queue_workers: queue::extract_workers(&text),
         mods: Vec::new(),

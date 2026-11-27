@@ -54,7 +54,7 @@ fn collect_fact_domain_remaining_edges(
                         with_observer_and_timing(observer.clone(), timing_kind, || {
                             collect_unless_timed_out(|| {
                                 crate::perf_trace::trace("graph.http_process", || {
-                                    collect_http_process_edges(edge_inputs, facts)
+                                    collect_http_process_edges(edge_inputs, facts, session)
                                 })
                             })
                         })

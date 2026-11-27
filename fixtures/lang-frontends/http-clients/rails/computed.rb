@@ -1,0 +1,1 @@
+Faraday.get(path)

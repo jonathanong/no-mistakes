@@ -43,3 +43,30 @@ fn client_call_relationships(
     }
     relationships
 }
+
+fn stored_client_call_relationships(
+    facts: &HashMap<PathBuf, FileFacts>,
+    routes: &[ServerRoute],
+) -> Vec<RelationshipEdge> {
+    let mut relationships = Vec::new();
+    for (path, file_facts) in facts {
+        for reference in &file_facts.client_calls {
+            relationships.extend(
+                routes
+                    .iter()
+                    .filter(|route| {
+                        crate::codebase::lang_frontends::client_matches_route(
+                            reference,
+                            &route.route,
+                        )
+                    })
+                    .map(|route| RelationshipEdge {
+                        from: RelationshipNode::File(path.clone()),
+                        to: RelationshipNode::Route(route.route.clone()),
+                        kind: EdgeKind::ClientCall,
+                    }),
+            );
+        }
+    }
+    relationships
+}

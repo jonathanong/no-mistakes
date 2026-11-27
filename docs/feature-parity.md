@@ -528,7 +528,14 @@ producer/worker edges and option checks with positional factories; unresolved,
 spread, and mutable definitions abstain. See [queue configuration](configuration/queues.md).
 
 **HTTP clients.** Static client calls produce `http` edges to matching route
-files, the same way TS `fetch` and Swift `Endpoint` literals do.
+files, the same way TS `fetch` and Swift `Endpoint` literals do. Configured
+Python (`requests` / `httpx`), Go (`net/http`), Rust (`reqwest`), Rails
+(`Faraday`, `HTTParty`, `RestClient`, `Net::HTTP`), PHP (`Http::` and
+`->request`), Java and Kotlin (`getForObject` / `URI.create` / `.uri`), Elixir
+(`HTTPoison` / `Req` / `Tesla`), and .NET (`GetAsync` / `HttpRequestMessage`)
+literals do the same. `server edges` reports them as `client-call`. Computed,
+concatenated, and interpolated URLs stay non-edges. Dart stays on `Uri.parse` /
+`http.*` literals aimed at configured TypeScript backends.
 
 **Lockfiles.** `lockfile diff` parses npm-family lockfiles. Test planning also
 understands SwiftPM `Package.resolved` pins and NuGet `packages.lock.json`
@@ -594,6 +601,12 @@ Computed paths, lambdas, `[HttpGet]` with no template, `[HttpGet(Name = …)]`,
 `MapGroup` prefixes, and conventional `{controller}/{action}` routing produce
 no edge. Same-file controller attributes still appear in `server routes`.
 
+Static `client.GetAsync("/users")`, `PostAsync`, `PutAsync`, `PatchAsync`,
+`DeleteAsync`, `GetFromJsonAsync`, `PostAsJsonAsync`, and
+`new HttpRequestMessage(HttpMethod.Get, "/users")` literals emit `http` edges
+to the file that already stores the matching route, and `client-call` edges in
+`server edges`. Interpolated `$"..."` URLs stay non-edges.
+
 ```csharp
 app.MapGet("/users", UserHandlers.ListUsers);
 [HttpGet("/orders")]
@@ -616,6 +629,7 @@ are configured domain extractors on top of it.
 | Symbols          | exports and importers     | module-level `def` / `class` and qualified references                                            |
 | Tests            | `tests plan vitest`       | `tests plan python` over pytest / unittest files                                                 |
 | HTTP routes      | Express / Hono / Koa      | Django URLconf → view, plus configured Flask / FastAPI decorator literals                        |
+| HTTP clients     | `fetch` `http` edge       | `requests` / `httpx` static literals; computed URLs are non-edges                                 |
 | Queues           | BullMQ / glide-mq         | Celery `@shared_task` / `@app.task`, `.delay(` / `.apply_async(`                                 |
 | Lockfile         | pnpm / npm / yarn / bun   | later (`lockfile diff` is npm-family; `poetry.lock` / `uv.lock` / `Pipfile.lock` are not parsed) |
 
@@ -667,6 +681,7 @@ Go support is the language frontend. Asynq is the queue extractor. Configured
 | Symbols          | named exports       | exported (`Uppercase`) funcs/types and references                                                                |
 | Tests            | `tests plan vitest` | `tests plan go` → `go test` in owning packages                                                                   |
 | HTTP routes      | `server routes`     | configured `net/http`, Chi, Gin, Echo, or Fiber registrations                                                    |
+| HTTP clients     | `fetch` `http` edge | `http.Get` / `http.NewRequest` static literals; computed URLs are non-edges                                      |
 | Queues           | BullMQ job name     | Asynq `NewTask("mail:welcome", …)` / `HandleFunc("mail:welcome", …)`                                             |
 | Lockfile         | npm-family          | later (`lockfile diff` is npm-family; test planning reads the selected module graph from `go.mod`, not `go.sum`) |
 
@@ -727,6 +742,7 @@ registrations emit `route` edges. Language `symbols` / `call-sites`,
 | Symbols          | named exports       | `pub fn` / `pub struct` / `pub enum` and `use` paths                                                                                         |
 | Tests            | `tests plan vitest` | `tests plan cargo` → `cargo test -p <pkg>` for sibling `tests.rs`; `cargo test -p <pkg> --test <name>` only for `tests/` integration targets |
 | HTTP routes      | `server routes`     | configured Axum, Actix, or Rocket registrations                                                                                              |
+| HTTP clients     | `fetch` `http` edge | `reqwest::get` / `reqwest::Client::new().get` static literals; computed URLs are non-edges                                                   |
 | Queues           | BullMQ              | configured enqueue/worker globs; Kafka when present                                                                                          |
 | Lockfile         | npm-family          | later (`lockfile diff` is npm-family; `Cargo.lock` diffs are not started)                                                                    |
 | Checks           | `unique-exports`    | keep the existing `rust-*` filesystem rules                                                                                                  |
@@ -761,6 +777,7 @@ Sidekiq extractors.
 | Package identity | workspace packages  | configured engine/app roots and `Gemfile` path gems                                                     |
 | Tests            | `tests plan vitest` | `tests plan rails` over Minitest / RSpec files                                                          |
 | HTTP routes      | `server routes`     | configured `config/routes.rb` (and engine routes) → controller#action, including bare `resources :name` |
+| HTTP clients     | `fetch` `http` edge | `Faraday` / `HTTParty` / `RestClient` / `Net::HTTP.get` static literals; computed URLs are non-edges  |
 | Queues           | BullMQ              | Active Job `SomeJob.perform_later` or Sidekiq `SomeWorker.perform_async` → job class                    |
 | Lockfile         | npm-family          | later (`lockfile diff` is npm-family; `Gemfile.lock` diffs are not started)                             |
 
@@ -790,6 +807,7 @@ framework from files, and do not enable both extractors from a missing value.
 | Package identity | workspace packages  | configured Composer packages / path repositories                                                              |
 | Tests            | `tests plan vitest` | `tests plan php` over PHPUnit / Pest files                                                                    |
 | HTTP routes      | `server routes`     | configured Laravel `Route::` / static `Route::resource` / `Route::apiResource` / `Route::apiResources` or Symfony attribute/YAML routes |
+| HTTP clients     | `fetch` `http` edge | Laravel `Http::get` or `->request("GET", ...)` static literals; computed URLs are non-edges                  |
 | Queues           | BullMQ              | Laravel `SomeJob::dispatch()` / `ShouldQueue`, or Symfony Messenger handlers                                  |
 | Lockfile         | npm-family          | later (`lockfile diff` is npm-family; `composer.lock` diffs are not started)                                  |
 
@@ -840,6 +858,7 @@ wildcard translation are non-edges. Same-file controller methods do not emit
 | Package identity | workspace packages  | configured `tests.java.packages`                                                                            |
 | Tests            | `tests plan vitest` | `tests plan java` over `*Test.java` / `*Tests.java` / `*IT.java`; `mvn test [-f <package>/pom.xml] -Dtest=` |
 | HTTP routes      | `server routes`     | Spring `@RequestMapping` + `@GetMapping` literals                                                           |
+| HTTP clients     | `fetch` `http` edge | `getForObject` / `URI.create` / `.uri` static literals; computed URLs are non-edges                         |
 | Queues           | BullMQ              | no                                                                                                          |
 | Lockfile         | npm-family          | later (`pom.xml` native fallback only)                                                                      |
 
@@ -877,6 +896,7 @@ Spring HTTP v1 reuses the Java mapping literals on `.kt` files, matching
 | Package identity | workspace packages  | configured `tests.kotlin.packages`                                                                 |
 | Tests            | `tests plan vitest` | `tests plan kotlin` over `*Test.kt` / `*Tests.kt` / `*IT.kt`; `gradle [-p <package>] test --tests` |
 | HTTP routes      | `server routes`     | Spring `@RequestMapping` + `@GetMapping` literals on `.kt`                                         |
+| HTTP clients     | `fetch` `http` edge | `getForObject` / `URI.create` / `.uri` static literals; computed URLs are non-edges                |
 | Queues           | BullMQ              | no                                                                                                 |
 | Lockfile         | npm-family          | later (`build.gradle.kts` native fallback only)                                                    |
 
@@ -924,6 +944,7 @@ non-edge.
 | Package identity | workspace packages  | configured `tests.elixir.apps`                                                                                               |
 | Tests            | `tests plan vitest` | `tests plan elixir` over `*_test.exs`; `mix test <path>` from the Mix project root (umbrella child paths stay repo-relative) |
 | HTTP routes      | `server routes`     | Phoenix verb literals, literal `scope` prefixes, and static `resources` macros                                                |
+| HTTP clients     | `fetch` `http` edge | `HTTPoison` / `Req` / `Tesla` static literals; computed URLs are non-edges                                                       |
 | Queues           | BullMQ              | no                                                                                                                           |
 | Lockfile         | npm-family          | later (`mix.exs` native fallback only)                                                                                       |
 
@@ -1086,9 +1107,9 @@ shipped for configured Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and D
 
 Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
-`Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients besides
-Dart/Flutter `Uri.parse` / `http.*` literals, Laravel resource routes with
-computed options or arguments, Phoenix resource routes with options, Kafka outside TS/Python literal shapes, language
+`Cargo.lock`, `Gemfile.lock`, `composer.lock`), Laravel resource routes with
+computed options or arguments, Phoenix resource routes with options,
+Kafka outside TS/Python literal shapes, language
 `symbols`/`call-sites`, and rule families that apply only to TS/JS or `.sql`
 ([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)).
 

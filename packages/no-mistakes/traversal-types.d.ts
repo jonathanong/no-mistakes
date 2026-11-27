@@ -21,6 +21,7 @@ export type Relationship =
   | "workflow-uses"
   | "workflow-run"
   | "workflow-artifact"
+  /** Static HTTP client literal, including configured language clients. Computed URLs are not edges. */
   | "http"
   | "process"
   | "asset"
