@@ -26,6 +26,42 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "line_budget_suppressions": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "next_line.rs",
+          "line": 1,
+          "message": "directive for `rust-max-lines-per-file` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line rust-max-lines-per-file",
+          "target": "rust-max-lines-per-file"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "control.rs",
+          "line": 1,
+          "message": "2 code lines (max 1) - split into smaller modules",
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "fn first() {}"
+        },
+        {
+          "file": "next_line.rs",
+          "line": 1,
+          "message": "2 code lines (max 1) - split into smaller modules",
+          "rule": "rust-max-lines-per-file",
+          "sourceLine": "// no-mistakes-disable-next-line rust-max-lines-per-file"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "line_count_blank_and_comment": {
     "exitCode": 0,
     "report": {

@@ -1,0 +1,9 @@
+version: 2
+rules:
+- rule: workflow-topology-policy
+  scope: repository
+  options:
+    stepOrders:
+    - jobId: .github/workflows/sample.yml#build
+      steps:
+      - {}

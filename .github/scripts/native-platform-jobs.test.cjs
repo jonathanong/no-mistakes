@@ -5,48 +5,31 @@ const { test } = require("node:test");
 const { workflowJob } = require("./workflow-contract.cjs");
 const source = readFileSync(path.resolve(__dirname, "../workflows/ci.yml"), "utf8");
 const job = (name) => workflowJob(source, name);
-const nativeSteps = (name) =>
-  job(name)
-    .split("    steps:\n")[1]
-    .replace(/^  #[^\n]*(?:\n|$)/gm, "")
-    .trim();
+const stepNames = (body) => [...body.matchAll(/^      - name: (.+)$/gm)].map((match) => match[1]);
 const families = ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"];
 
-test("each platform retains equivalent native steps without sharing a producer barrier", () => {
-  for (const name of families) {
-    const windows = nativeSteps(name);
-    let macos = nativeSteps(`${name}-macos`);
-    if (name === "native-rust-tests") {
-      const deadline = "- name: Run platform-specific Rust tests\n        timeout-minutes: ";
-      assert.ok(macos.includes(`${deadline}15\n`));
-      macos = macos.replace(`${deadline}15\n`, `${deadline}9\n`);
-    }
-    assert.equal(
-      windows,
-      macos
-        .replaceAll("-cgu64-", "-")
-        .replaceAll("-macos.outputs.artifact-run-id", ".outputs.artifact-run-id"),
-    );
-    for (const [suffix, os] of [
-      ["", "windows-2025"],
-      ["-macos", "macos-15"],
-    ]) {
-      const body = job(name + suffix);
-      const operatingSystems = [
-        ...body.matchAll(/^            os: (\S+)|^          - os: (\S+)/gm),
-      ].map((row) => row[1] || row[2]);
-      assert.ok(operatingSystems.length > 0);
-      assert.ok(operatingSystems.every((value) => value === os));
-      assert.match(body, /NO_MISTAKES_BUILD_NAPI: "1"/);
-      assert.doesNotMatch(body, /docs-only/);
-    }
-  }
-  for (const [consumer, producer] of [
-    ["native-rust-tests", "native-test-build"],
-    ["native-api-tests", "native-build"],
+test("the macOS jobs retain the Windows build and test phases on parallel runners", () => {
+  for (const [build, run] of [
+    ["native-build", "native-api-tests"],
+    ["native-test-build", "native-rust-tests"],
   ]) {
-    for (const suffix of ["", "-macos"])
-      assert.ok(job(consumer + suffix).includes(`needs: [changes, ${producer}${suffix}]`));
+    const windows = [job(build), job(run)];
+    assert.ok(windows[1].includes(`    needs: [changes, ${build}]`));
+    const macos = job(`${run}-macos`);
+    assert.match(macos, /^    needs: changes$/m);
+    const expected = new Set(
+      windows.flatMap(stepNames).filter((name) => name !== "Exclude workspace from Microsoft Defender"),
+    );
+    const names = stepNames(macos);
+    assert.equal(names.length, expected.size, run);
+    assert.deepEqual(new Set(names), expected, run);
+    for (const [body, os] of [...windows.map((body) => [body, "windows-2025"]), [macos, "macos-15"]]) {
+      const runners = [...body.matchAll(/^          (?:- |  )os: (.+)$/gm)];
+      assert.ok(runners.length > 0);
+      assert.ok(runners.every((row) => row[1] === os));
+      assert.match(body, /^      NO_MISTAKES_BUILD_NAPI: "1"$/m);
+      assert.doesNotMatch(body, /^    if: .*docs-only/m);
+    }
   }
 });
 
@@ -86,23 +69,23 @@ test("native jobs keep six Windows shards and one macOS job per test suite", () 
   }
 });
 
-test("native aggregate requires all eight platform producer and consumer jobs and both smoke jobs", () => {
-  const body = job("native-tests");
+test("Tests with coverage requires the Windows phases and both macOS build-and-test jobs and both smoke jobs", () => {
+  const body = job("tests-gate");
   const needs = body
     .match(/needs:\s*\[([^\]]+)\]/)[1]
     .split(",")
     .map((name) => name.trim())
-    .filter(Boolean)
-    .sort();
-  assert.deepEqual(
-    needs,
-    [
-      "changes",
-      "macos-smoke",
-      "windows-smoke",
-      ...families.flatMap((name) => [name, `${name}-macos`]),
-    ].sort(),
-  );
-  assert.match(body, /name: Native tests\n/);
+    .filter(Boolean);
+  for (const name of [
+    "changes",
+    "macos-smoke",
+    "windows-smoke",
+    ...families,
+    "native-api-tests-macos",
+    "native-rust-tests-macos",
+  ]) {
+    assert.ok(needs.includes(name), name);
+  }
+  assert.match(body, /name: Tests with coverage\n/);
   assert.match(body, /^    if: \$\{\{ !cancelled\(\) \}\}$/m);
 });
