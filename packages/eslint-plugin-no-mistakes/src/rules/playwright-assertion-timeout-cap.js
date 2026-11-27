@@ -69,10 +69,6 @@ function expectFact(fact) {
   return "opaque";
 }
 
-function moduleFact(node, context) {
-  return expectFact(resolveModuleBinding(node, context, new Set()));
-}
-
 function followAlias(node, context, expectNames, seen) {
   const variable = variableFor(node, context);
   const def = variable?.defs.length === 1 ? variable.defs[0] : null;
@@ -87,22 +83,26 @@ function expectRoot(node, context, expectNames, seen = new Set()) {
   if (!node) return false;
   if (node.type === "CallExpression") return expectRoot(node.callee, context, expectNames, seen);
   if (node.type === "MemberExpression") {
-    const fact = moduleFact(node, context);
+    const fact = expectFact(resolveModuleBinding(node, context, new Set()));
     if (fact !== null && fact !== false) return fact;
     if (memberName(node) === "expect") return namespaceExpect(node.object, context);
     return expectRoot(node.object, context, expectNames, seen);
   }
   if (node.type !== "Identifier") return false;
-  const fact = moduleFact(node, context);
+  const resolved = resolveModuleBinding(node, context, new Set());
+  const fact = expectFact(resolved);
   if (fact !== null && fact !== false) return fact;
   if (fact === false) return false;
-  const followed = followAlias(node, context, expectNames, seen);
-  if (followed !== null) return followed;
+  if (!resolved) {
+    const followed = followAlias(node, context, expectNames, seen);
+    if (followed !== null) return followed;
+  }
   const variable = variableFor(node, context);
   const named = expectNames.has(node.name) || node.name === "expect";
   if (!named) return false;
   if (!variable || variable.defs.length === 0) return true;
-  return variable.defs[0]?.type === "ImportBinding";
+  if (variable.defs[0]?.type === "ImportBinding") return true;
+  return resolved?.status === "export" && resolved.exported === "expect";
 }
 
 function namespaceExpect(node, context) {

@@ -102,7 +102,10 @@ test.beforeAll(async () => {
   a project configures its own factory names.
 - `unanalyzable` is `finding` or `ignore`. It defaults to `finding`. A
   `beforeAll` whose receiver is a dynamic member of `@playwright/test` reports
-  `unanalyzable` when that callback reads a tracked token.
+  `unanalyzable` when that callback reads a tracked token. A write of the
+  token is not a read, and a callback inside
+  `test.beforeAll.apply(test, [(() => {}) as any] as const)` is still inside
+  that hook.
 
 ## Fix
 

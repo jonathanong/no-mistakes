@@ -54,7 +54,7 @@ function isSharedScopeShield(fn, testCalleeNames) {
 function isWithinBeforeAllCallback(node, beforeAll) {
   for (let fn = nearestOwnFunction(node); fn; fn = nearestOwnFunction(fn)) {
     let parent = outerParent(fn);
-    if (parent?.type === "ArrayExpression") parent = parent.parent;
+    if (parent?.type === "ArrayExpression") parent = outerParent(parent);
     if (parent?.type === "CallExpression" && beforeAll(parent)) return true;
   }
   return false;
@@ -173,8 +173,10 @@ module.exports = rule(
         for (const { node, callback } of opaqueCallbacks) {
           const events = [];
           collectEvents(callback.body, events);
-          const readsCandidate = events.some((event) =>
-            resolveVariable(event.node, context)?.defs?.some((def) => candidates.has(def.node)),
+          const readsCandidate = events.some(
+            (event) =>
+              !event.isWrite &&
+              resolveVariable(event.node, context)?.defs?.some((def) => candidates.has(def.node)),
           );
           if (readsCandidate && !suppressed(node))
             context.report({ node, messageId: "unanalyzable" });

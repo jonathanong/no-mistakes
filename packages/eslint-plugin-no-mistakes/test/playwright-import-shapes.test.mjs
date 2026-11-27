@@ -86,6 +86,24 @@ const cases = [
     expected: [[4, "timeout"]],
   },
   {
+    name: "relative require named expect keeps the cap check",
+    rule: "playwright-assertion-timeout-cap",
+    file: "e2e/assertion-relative-require.spec.ts",
+    expected: [[4, "timeout"]],
+  },
+  {
+    name: "member require of expect admits the file",
+    rule: "playwright-assertion-timeout-cap",
+    file: "src/member-require.ts",
+    expected: [[4, "timeout"]],
+  },
+  {
+    name: "local require named require stays quiet",
+    rule: "playwright-assertion-timeout-cap",
+    file: "src/member-require-local.ts",
+    expected: [],
+  },
+  {
     name: "assertion binding branches",
     rule: "playwright-assertion-timeout-cap",
     file: "e2e/assertion-branches.spec.ts",
@@ -247,6 +265,13 @@ const cases = [
     expected: [],
   },
   {
+    name: "opaque beforeAll that only writes a token stays quiet",
+    rule: "playwright-no-hoisted-unique-token",
+    file: "e2e/hoisted-opaque-write.spec.ts",
+    options: { tokenFactories: ["makeToken"] },
+    expected: [],
+  },
+  {
     name: "raw scroll require outside e2e (#4364)",
     rule: "playwright-no-raw-scroll-pagination",
     file: "src/scroll-require.ts",
@@ -350,6 +375,20 @@ const cases = [
     file: "src/interactive-member.tsx",
     options: { interactiveComponents: ["Button"] },
     expected: [[4, "unanalyzable"]],
+  },
+  {
+    name: "dynamic member of a default import stays opaque",
+    rule: "playwright-require-interactive-test-id",
+    file: "src/interactive-dynamic.tsx",
+    options: { interactiveComponents: ["Button"] },
+    expected: [[6, "unanalyzable"]],
+  },
+  {
+    name: "intrinsic tag is not an opaque component",
+    rule: "playwright-require-interactive-test-id",
+    file: "src/interactive-intrinsic.tsx",
+    options: { interactiveComponents: ["Button"] },
+    expected: [[5, "missing"]],
   },
   {
     name: "redeclared component is still interactive",

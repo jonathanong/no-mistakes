@@ -64,8 +64,8 @@ function fromImportDef(def) {
 
 function applyMember(fact, key) {
   if (!fact || fact.status === "opaque") return fact;
-  if (fact.status !== "namespace") return null;
   if (key == null) return { status: "opaque", source: fact.source, reason: "dynamic member" };
+  if (fact.status !== "namespace") return null;
   return { status: "export", source: fact.source, exported: key };
 }
 
@@ -106,6 +106,15 @@ function resolveModuleBinding(node, context, seen = new Set()) {
   return applyMember(resolveModuleBinding(def.node.init, context, seen), key);
 }
 
+function playwrightRequire(node, context) {
+  let current = unwrapExpression(node);
+  while (current?.type === "MemberExpression") {
+    if (memberKey(current) == null) break;
+    current = unwrapExpression(current.object);
+  }
+  return requireSource(current, context) === PLAYWRIGHT_TEST;
+}
+
 function admitsPlaywrightModule(node, context) {
   if (!node) return false;
   if (node.type === "ImportDeclaration") return node.source?.value === PLAYWRIGHT_TEST;
@@ -116,12 +125,9 @@ function admitsPlaywrightModule(node, context) {
       literalString(unwrapExpression(reference.expression)) === PLAYWRIGHT_TEST
     );
   }
-  if (node.type === "VariableDeclarator")
-    return requireSource(node.init, context) === PLAYWRIGHT_TEST;
-  if (node.type === "ExpressionStatement") {
-    return requireSource(node.expression, context) === PLAYWRIGHT_TEST;
-  }
-  return requireSource(node, context) === PLAYWRIGHT_TEST;
+  if (node.type === "VariableDeclarator") return playwrightRequire(node.init, context);
+  if (node.type === "ExpressionStatement") return playwrightRequire(node.expression, context);
+  return playwrightRequire(node, context);
 }
 
 function reportUnanalyzable(option) {

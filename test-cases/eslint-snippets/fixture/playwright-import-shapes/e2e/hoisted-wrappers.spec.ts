@@ -16,12 +16,15 @@ const s3 = randomSuffix();
 (test.beforeAll as typeof test.beforeAll)(() => {
   console.log(s3);
 });
-test(
-  "ok",
+test("ok", (() => {
+  const s4 = randomSuffix();
+  test.beforeAll(() => {
+    console.log(s4);
+  });
+}) as () => void);
+test.beforeAll.apply(test, [
   (() => {
-    const s4 = randomSuffix();
-    test.beforeAll(() => {
-      console.log(s4);
-    });
-  }) as () => void,
-);
+    const token = randomSuffix();
+    console.log(token);
+  }) as any,
+] as const);

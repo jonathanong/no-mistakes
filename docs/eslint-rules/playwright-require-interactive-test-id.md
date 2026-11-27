@@ -46,6 +46,9 @@ selector-presence behavior. Use `playwright-literals` to validate their values.
   whose component is a dynamic member of a `require` or import reports
   `unanalyzable` when the element is not otherwise interactive and has no
   selector. `<UI.Action />` does too when `UI` is `require(componentPackage)`.
+  `const Action = UI[componentName]` after `import UI from "./ui"` reports
+  `unanalyzable` as well. A lowercase or hyphenated tag such as `<main />` is
+  intrinsic, so a binding of that name does not make the tag unanalyzable.
 
 The slot example above uses the default slot prop and selector attributes:
 

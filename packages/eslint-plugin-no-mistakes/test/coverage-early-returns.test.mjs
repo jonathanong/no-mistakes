@@ -96,6 +96,29 @@ describe("exported helper early returns", () => {
       isTestExtendCall({ type: "CallExpression", callee: { type: "Identifier", name: "it" } }),
     ).toBe(false);
     expect(
+      isTestExtendCall({
+        type: "CallExpression",
+        callee: {
+          type: "MemberExpression",
+          computed: false,
+          property: { name: "extend" },
+          object: {
+            type: "TSAsExpression",
+            expression: {
+              type: "CallExpression",
+              callee: {
+                type: "MemberExpression",
+                computed: false,
+                object: { type: "Identifier", name: "test" },
+                property: { name: "extend" },
+              },
+              arguments: [],
+            },
+          },
+        },
+      }),
+    ).toBe(true);
+    expect(
       setupCallbackKind({
         callee: { type: "Identifier", name: "afterAll" },
       }),

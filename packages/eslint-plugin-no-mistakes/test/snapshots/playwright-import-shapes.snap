@@ -345,6 +345,32 @@
       "rule": "playwright-assertion-timeout-cap"
     },
     {
+      "file": "src/member-require-local.ts",
+      "findings": [],
+      "name": "local require named require stays quiet",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/member-require.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "src/member-require.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "member require of expect admits the file",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
       "file": "e2e/assertion-relative-alias.spec.ts",
       "findings": [
         {
@@ -379,6 +405,25 @@
         }
       ],
       "name": "relative import named expect keeps the cap check",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-relative-require.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "e2e/assertion-relative-require.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "relative require named expect keeps the cap check",
       "options": null,
       "rule": "playwright-assertion-timeout-cap"
     },
@@ -616,6 +661,17 @@
       "rule": "playwright-no-hoisted-unique-token"
     },
     {
+      "file": "e2e/hoisted-opaque-write.spec.ts",
+      "findings": [],
+      "name": "opaque beforeAll that only writes a token stays quiet",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
       "file": "src/scroll-equals.ts",
       "findings": [
         {
@@ -770,6 +826,29 @@
       "rule": "playwright-no-swallowed-visibility"
     },
     {
+      "file": "src/interactive-dynamic.tsx",
+      "findings": [
+        {
+          "column": 29,
+          "endColumn": 35,
+          "endLine": 6,
+          "file": "src/interactive-dynamic.tsx",
+          "line": 6,
+          "message": "Cannot tell whether this component is a configured interactive component. Import it with a static name.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "dynamic member of a default import stays opaque",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ]
+      },
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
       "file": "src/interactive-imports.tsx",
       "findings": [
         {
@@ -818,6 +897,29 @@
         }
       ],
       "name": "interactive CommonJS and string imports (#4369)",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ]
+      },
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-intrinsic.tsx",
+      "findings": [
+        {
+          "column": 26,
+          "endColumn": 32,
+          "endLine": 5,
+          "file": "src/interactive-intrinsic.tsx",
+          "line": 5,
+          "message": "Interactive elements should have a test ID.",
+          "messageId": "missing",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "intrinsic tag is not an opaque component",
       "options": {
         "interactiveComponents": [
           "Button"
@@ -1509,6 +1611,28 @@
       "rule": "playwright-assertion-timeout-cap"
     },
     {
+      "file": "src/member-require-local.ts",
+      "findings": [],
+      "name": "local require named require stays quiet",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "src/member-require.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "src/member-require.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        }
+      ],
+      "name": "member require of expect admits the file",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
       "file": "e2e/assertion-relative-alias.spec.ts",
       "findings": [
         {
@@ -1535,6 +1659,21 @@
         }
       ],
       "name": "relative import named expect keeps the cap check",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-relative-require.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-relative-require.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        }
+      ],
+      "name": "relative require named expect keeps the cap check",
       "options": null,
       "rule": "playwright-assertion-timeout-cap"
     },
@@ -1692,6 +1831,13 @@
       "rule": "playwright-no-hoisted-unique-token"
     },
     {
+      "file": "e2e/hoisted-opaque-write.spec.ts",
+      "findings": [],
+      "name": "opaque beforeAll that only writes a token stays quiet",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
       "file": "src/scroll-equals.ts",
       "findings": [
         {
@@ -1802,6 +1948,21 @@
       "rule": "playwright-no-swallowed-visibility"
     },
     {
+      "file": "src/interactive-dynamic.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 29,
+          "file": "src/interactive-dynamic.tsx",
+          "line": 6,
+          "message": "Cannot tell whether this component is a configured interactive component. Import it with a static name."
+        }
+      ],
+      "name": "dynamic member of a default import stays opaque",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
       "file": "src/interactive-imports.tsx",
       "findings": [
         {
@@ -1834,6 +1995,21 @@
         }
       ],
       "name": "interactive CommonJS and string imports (#4369)",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-intrinsic.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 26,
+          "file": "src/interactive-intrinsic.tsx",
+          "line": 5,
+          "message": "Interactive elements should have a test ID."
+        }
+      ],
+      "name": "intrinsic tag is not an opaque component",
       "options": null,
       "rule": "playwright-require-interactive-test-id"
     },

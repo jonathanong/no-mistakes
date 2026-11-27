@@ -59,22 +59,22 @@ module.exports = rule(
     const suppressed = ruleSuppression(context, "playwright-require-interactive-test-id");
     function elementNames(node) {
       let opaque = false;
+      const component = isComponentTag(node.name);
       const names = jsxCandidateNames(node.name).flatMap((name) => {
-        if (componentBinding(name, node, context)?.status === "opaque") opaque = true;
+        if (component && componentBinding(name, node, context)?.status === "opaque") opaque = true;
         const imported = mappedImport(name, node, context, importedNames);
         return imported && imported !== name ? [name, imported] : [name];
       });
       const root = jsxRootName(node.name);
-      if (root && componentBinding(root, node, context)?.status === "opaque") opaque = true;
+      if (component && root && componentBinding(root, node, context)?.status === "opaque")
+        opaque = true;
       return { names, opaque };
     }
     function openingInfo(node) {
       if (!openings.has(node)) {
         const { names, opaque } = elementNames(node);
         // Intrinsic JSX tags cannot merge props onto a child, even if configured.
-        const component =
-          node.name.type === "JSXMemberExpression" ||
-          (node.name.type === "JSXIdentifier" && !/^[a-z]|-/.test(node.name.name));
+        const component = isComponentTag(node.name);
         const enabled =
           component &&
           hasSlotProp(node, slotProps) &&
@@ -135,6 +135,13 @@ module.exports = rule(
     };
   },
 );
+
+function isComponentTag(name) {
+  return (
+    name?.type === "JSXMemberExpression" ||
+    (name?.type === "JSXIdentifier" && !/^[a-z]|-/.test(name.name))
+  );
+}
 
 function jsxRootName(name) {
   let current = name;

@@ -76,6 +76,7 @@ function isKnownTestCallee(callee, testCallees = TEST_CALLEES, namespaces = new 
 }
 
 function isTestExtendCall(node, testCallees = TEST_CALLEES, namespaces) {
+  node = unwrapExpression(node);
   if (node?.type !== "CallExpression") return false;
   const callee = unwrapExpression(node.callee);
   if (callee?.type !== "MemberExpression") return false;
