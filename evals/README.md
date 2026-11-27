@@ -365,8 +365,8 @@ narrow base-table reads through composite views:
   does not over-flag a query that reads the view's joined `org_name` and
   computed `team_count` columns.
 
-**Measured:** 2026-11-26 (re-run) on `41621a7c09` (PR #4617
-head, the current SHOULD NOT wording), Claude CLI 2.1.332, agent
+**Measured:** 2026-11-26 (re-run) on `41621a7c09` (the SHOULD NOT
+wording still in this PR; later commits do not change that skill file), Claude CLI 2.1.332, agent
 `claude-sonnet-5-5`, judge `claude-opus-5-5`, `runs: 3` per arm, `-j 4`, zero
 errored attempts and `partial: false` on both invocations. "Base" is the
 `origin/main` rules (`2a69aee871`) run through `evals-variants/rules-control`
