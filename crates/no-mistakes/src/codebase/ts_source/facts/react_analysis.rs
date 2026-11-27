@@ -41,5 +41,5 @@ pub(crate) fn hooks() -> &'static Hooks {
     HOOKS
         .get()
         .copied()
-        .expect("React analysis hooks are registered when preparing the fact context")
+        .expect("React analysis hooks are registered at facade startup")
 }

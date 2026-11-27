@@ -31,6 +31,7 @@ no-mistakes-postgres-sql.workspace = true
 htmlize = { version = "1.1", features = ["unescape"] }
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
+ctor = { version = "1.0.6", default-features = false }
 dashmap = "6.2.1"
 directories = "6"
 globset = "0.4"

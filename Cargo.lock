@@ -1292,6 +1292,7 @@ dependencies = [
  "assert_cmd",
  "clap",
  "codspeed-criterion-compat",
+ "ctor",
  "dashmap",
  "directories",
  "git2",
