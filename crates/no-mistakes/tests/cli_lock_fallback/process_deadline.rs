@@ -74,6 +74,13 @@ fn unavailable_napi_lock_worker() {
         ),
         (
             InvocationOptions {
+                lock_timeout: Some(Duration::ZERO),
+                ..Default::default()
+            },
+            InvocationErrorKind::LockTimeout,
+        ),
+        (
+            InvocationOptions {
                 lock_timeout: Some(Duration::from_millis(10)),
                 ..Default::default()
             },
@@ -101,7 +108,7 @@ fn unavailable_napi_lock_worker() {
     }
     drop(first);
     let _next = InvocationGuard::acquire(InvocationOptions {
-        fail_on_lock: true,
+        lock_timeout: Some(Duration::ZERO),
         ..Default::default()
     })
     .unwrap();

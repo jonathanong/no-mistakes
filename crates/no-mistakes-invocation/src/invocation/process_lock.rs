@@ -13,12 +13,14 @@ impl ProcessLock {
         timeout: Option<Duration>,
         started: Instant,
         fail_on_lock: bool,
+        check_first_attempt: bool,
     ) -> Result<Self> {
         let mut held = HELD.lock().unwrap_or_else(PoisonError::into_inner);
         if *held && fail_on_lock {
             return Err(lock_busy_error(None));
         }
-        held = match timeout {
+        let wait_timeout = timeout.filter(|_| *held || check_first_attempt);
+        held = match wait_timeout {
             Some(timeout) => {
                 let remaining = timeout.saturating_sub(started.elapsed());
                 let (held, _) = RELEASED

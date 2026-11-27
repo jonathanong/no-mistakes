@@ -38,9 +38,10 @@ directories as needed.
    Windows, `no-mistakes` under the user's local application data `Temp`
    directory.
 
-Runs that select the same lock file serialize across processes. Use the same
-absolute override for runs that must share a lock across environments with
-different writable directories.
+Runs that select the same lock file serialize across processes. To share a lock
+across environments, point the absolute override at a directory that is shared
+and writable in each environment. Run `lock status --format json` in each
+environment and verify that `lockFile` identifies the expected shared file.
 
 If any candidate fails, the command prints one JSON warning to stderr. Its
 `kind` is `invocation_lock_fallback`, `failed` lists the attempted paths and

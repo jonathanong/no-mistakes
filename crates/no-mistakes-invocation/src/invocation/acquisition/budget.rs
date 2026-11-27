@@ -59,7 +59,12 @@ pub(super) fn acquire_lock_with_budget(
     let process = needs_process_lock
         .then(|| {
             classify_lock_result(
-                ProcessLock::acquire(lock_timeout, acquisition_started, options.fail_on_lock),
+                ProcessLock::acquire(
+                    lock_timeout,
+                    acquisition_started,
+                    options.fail_on_lock,
+                    before_open.is_some(),
+                ),
                 invocation_deadline,
                 invocation_limited,
             )
