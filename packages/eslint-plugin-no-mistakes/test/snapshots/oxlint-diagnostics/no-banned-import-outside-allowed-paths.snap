@@ -229,5 +229,12 @@
     "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
     "line": 198,
     "message": "Reachable use of banned import \"default\" from \"@acme/rate-limit\" outside allowed paths. Move it into an allowed helper path."
+  },
+  {
+    "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+    "column": 31,
+    "file": "eslint-plugin/no-banned-import-outside-allowed-paths/fixture/invalid.ts",
+    "line": 203,
+    "message": "Do not re-export banned import \"createProgram\" from \"typescript\"; it stays reachable outside allowed paths."
   }
 ]
