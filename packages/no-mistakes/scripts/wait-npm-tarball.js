@@ -82,7 +82,10 @@ async function waitForNpmTarball({
     }
     try {
       const signal = abortSignal(once ? REQUEST_TIMEOUT_MS : budget);
-      const packumentRes = await fetchImpl(`${registryRoot}/${encodeName(name)}`, { signal });
+      const packumentRes = await fetchImpl(`${registryRoot}/${encodeName(name)}`, {
+        headers: { accept: "application/vnd.npm.install-v1+json" },
+        signal,
+      });
       if (!packumentRes.ok) throw new Error(`packument HTTP ${packumentRes.status}`);
       const packument = await readWithSignal(packumentRes.json(), signal);
       const meta = packument.versions?.[version];
