@@ -1,7 +1,6 @@
 mod json_write;
 pub mod output_format;
 pub(crate) mod traversal;
-mod traversal_impls;
 
 pub(crate) use json_write::json_value;
 pub use json_write::{json_pretty, json_string, print_json, yaml_string};

@@ -4,12 +4,11 @@ use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::{
     extract_spawn_edges_from_program, extract_spawn_edges_from_program_from_visible, SpawnEdge,
 };
-use crate::codebase::ts_queues::factory::find_queue_factory_facts_from_program;
-use crate::codebase::ts_queues::usage::{extract_queue_usage_from_program, QueueUsage};
 use crate::codebase::ts_routes::defs_backend::extract_backend_routes_from_program;
 use crate::codebase::ts_routes::refs::{
     extract_route_ref_facts_from_program, RouteHelper, RouteHelperImport, RouteHelperRef, RouteRef,
 };
+use crate::queue_analysis_hooks::{self, QueueFileFacts};
 use oxc_ast::ast::Program;
 use std::path::Path;
 
@@ -32,10 +31,7 @@ pub(crate) struct DomainFacts {
     pub route_helper_imports: Vec<RouteHelperImport>,
     pub route_helper_refs: Vec<RouteHelperRef>,
     pub backend_routes: Vec<BackendRouteFact>,
-    pub queue_usage: Option<QueueUsage>,
-    pub queue_create_line: Option<u32>,
-    pub queue_name: Option<String>,
-    pub queue_project: Option<crate::queue::extract::FileFacts>,
+    pub queue: QueueFileFacts,
     pub http_calls: Vec<HttpCall>,
     pub process_spawns: Vec<SpawnEdge>,
     pub server_routes: Option<super::react_analysis::server::FileFacts>,
@@ -76,21 +72,19 @@ pub(crate) fn collect_domain_facts<'a>(
             }
         }
     }
-    let queue_usage = plan
-        .queue_usage
-        .then(|| extract_queue_usage_from_program(program, source));
-    let (queue_create_line, queue_name) = queue_factory_facts(program, path, source, plan, context);
-    let queue_project = plan.queue_project.then(|| {
-        crate::queue::extract::extract_program_with_scoping(
+    let queue = if plan.queue_usage || plan.queue_factory || plan.queue_project {
+        let collect = queue_analysis_hooks::hooks().collect;
+        collect(
+            program,
             path,
             source,
-            program,
-            &context.queue_project_factory_names,
-            &context.queue_factory_roles,
-            record_waits,
-            scoping,
+            plan,
+            context,
+            (record_waits, scoping),
         )
-    });
+    } else {
+        QueueFileFacts::default()
+    };
     let http_prefixes: Vec<&str> = context.http_prefixes.iter().map(String::as_str).collect();
     let fused = domain_walk::collect_fused_domain_calls(program, source, plan, &http_prefixes);
     let process_spawns = if plan.process_spawns {
@@ -123,10 +117,7 @@ pub(crate) fn collect_domain_facts<'a>(
         route_helper_imports: route_ref_facts.route_helper_imports,
         route_helper_refs: route_ref_facts.route_helper_refs,
         backend_routes,
-        queue_usage,
-        queue_create_line,
-        queue_name,
-        queue_project,
+        queue,
         http_calls: fused.http_calls,
         process_spawns,
         server_routes,
@@ -150,30 +141,6 @@ fn classify_rsc_environment(program: &Program<'_>) -> RscEnvironmentFact {
         (true, _) => RscEnvironmentFact::Server,
         (_, true) => RscEnvironmentFact::Client,
         _ => RscEnvironmentFact::Unknown,
-    }
-}
-
-fn queue_factory_facts<'a>(
-    program: &Program<'a>,
-    path: &Path,
-    source: &str,
-    plan: TsFactPlan,
-    context: &TsFactContext,
-) -> (Option<u32>, Option<String>) {
-    if !plan.queue_factory || !context.matches_queue_factory(path) {
-        return (None, None);
-    }
-    match (
-        context.queue_factory_specifier.as_deref(),
-        context.queue_factory_function.as_deref(),
-    ) {
-        (Some(factory_specifier), Some(factory_function)) => find_queue_factory_facts_from_program(
-            program,
-            source,
-            factory_specifier,
-            factory_function,
-        ),
-        _ => (None, None),
     }
 }
 

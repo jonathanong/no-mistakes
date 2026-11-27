@@ -29,6 +29,10 @@ mod changes_diff;
 mod filesystem;
 pub(crate) mod infra_swift;
 mod lock_status;
+pub(crate) use queue::{
+    queue_check_json_impl, queue_edges_json_impl, queue_related_json_impl, queues_json_impl,
+};
+
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod lock_status_tests;
 mod lockfile_diff;
@@ -47,6 +51,7 @@ pub use postgres_source::parse_postgres_sql_json;
 pub use typescript_modules::analyze_typescript_modules_json;
 mod project;
 pub mod queries;
+mod queue;
 
 #[cfg(not(coverage))]
 use async_task::{JsonValueTask, VersionTask};
@@ -74,8 +79,7 @@ pub(crate) use lockfile_diff::lockfile_diff_json_impl;
 #[cfg(feature = "mermaid-validation")]
 pub(crate) use mermaid::validate_mermaid_markdown_json_impl;
 pub(crate) use project::{
-    data_pw_json_impl, effects_json_impl, flow_json_impl, queue_check_json_impl,
-    queue_edges_json_impl, queue_related_json_impl, queues_json_impl, react_analyze_json_impl,
+    data_pw_json_impl, effects_json_impl, flow_json_impl, react_analyze_json_impl,
     react_check_json_impl, react_usages_json_impl, registry_extension_json_impl,
     rsc_callers_json_impl, server_contracts_json_impl, server_route_edges_json_impl,
     server_route_list_json_impl, server_route_related_json_impl, server_routes_json_impl,

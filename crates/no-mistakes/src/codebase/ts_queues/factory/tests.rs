@@ -388,16 +388,19 @@ export const wrapped = wrap(createQueue("nested")), queue = createQueue("real");
 #[test]
 fn domain_queue_factory_facts_walks_once() {
     let domain = include_str!("../../ts_source/facts/domain.rs");
-    assert!(
-        domain.contains("find_queue_factory_facts_from_program"),
-        "domain.rs should call the fused factory walker"
+    let collector = include_str!("../../../queue/analysis_hooks.rs");
+    let fused_walk = "find_queue_factory_facts_from_program(";
+    assert_eq!(
+        collector.matches(fused_walk).count(),
+        1,
+        "the registered queue collector should call the fused factory walker once"
     );
     assert!(
-        !domain.contains("find_create_queue_line_from_program"),
-        "domain.rs should not walk create-queue lines separately"
+        !domain.contains(fused_walk),
+        "shared domain collection must delegate the factory walk"
     );
-    assert!(
-        !domain.contains("find_queue_name_from_program"),
-        "domain.rs should not walk queue names separately"
-    );
+    for source in [domain, collector] {
+        assert!(!source.contains("find_create_queue_line_from_program"));
+        assert!(!source.contains("find_queue_name_from_program"));
+    }
 }

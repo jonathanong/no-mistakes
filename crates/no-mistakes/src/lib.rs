@@ -43,6 +43,7 @@ pub mod napi_api;
 pub mod perf_trace;
 pub mod playwright;
 pub mod queue;
+mod queue_analysis_hooks;
 pub mod react_traits;
 pub mod registry_extension_query;
 pub mod routes;
@@ -69,3 +70,11 @@ pub mod postgres_catalog;
 pub mod postgres_lock_inventory;
 
 mod react_analysis_registration;
+
+ctor::declarative::ctor! {
+    // SAFETY: Registration stores a reference to a static table through OnceLock.
+    #[ctor(unsafe)]
+    fn register_queue_analysis() {
+        queue_analysis_hooks::register(&queue::analysis_hooks::HOOKS);
+    }
+}

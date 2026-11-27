@@ -3,13 +3,10 @@ use super::rules::from_rule_ids;
 use super::FamilyPathScope;
 use crate::codebase::check_facts::CheckFactPlan;
 use crate::codebase::rules::{REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY};
-use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::SourceStore;
 use crate::codebase::unique_exports::RULE_ID as UNIQUE_EXPORTS;
 use crate::config::v2::NoMistakesConfig;
-use crate::queue::extract_prefilter::source_may_have_queue_facts;
 use anyhow::Result;
-use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -37,7 +34,12 @@ pub fn configure_family_path_scopes(
         plan.react_paths = FamilyPathScope::All;
     }
     if plan.queue {
-        plan.queue_paths = queue_scope(root, files, sources, plan);
+        let seeds = (crate::queue_analysis_hooks::hooks().scope_seeds)(root, files, sources, plan);
+        plan.queue_paths = if seeds.is_empty() {
+            FamilyPathScope::Only(Arc::new(seeds))
+        } else {
+            with_import_closure(root, files, sources, seeds)
+        };
     }
     if plan.integration {
         plan.integration_paths = FamilyPathScope::All;
@@ -103,47 +105,4 @@ fn scoped_or_closure(
             with_import_closure(root, files, sources, Arc::unwrap_or_clone(paths))
         }
     }
-}
-
-fn queue_scope(
-    root: &Path,
-    files: &[PathBuf],
-    sources: &SourceStore,
-    plan: &CheckFactPlan,
-) -> FamilyPathScope {
-    let mut seeds = BTreeSet::new();
-    let waits = std::cell::OnceCell::new();
-    for path in files {
-        if !matches!(
-            path.extension().and_then(|ext| ext.to_str()),
-            Some("ts" | "tsx" | "js" | "jsx" | "mts" | "cts" | "mjs" | "cjs")
-        ) {
-            continue;
-        }
-        let Ok(source) = sources.read_source_path(path) else {
-            seeds.insert(normalize_path(path));
-            continue;
-        };
-        if source_may_have_queue_facts(
-            &source,
-            &plan.queue_factory_names,
-            &plan.queue_factory_roles,
-        ) || ((!plan
-            .queue_factory_roles
-            .enqueue_and_wait_patterns
-            .is_empty()
-            || source.contains('\\'))
-            && waits
-                .get_or_init(|| {
-                    crate::queue::extract::WaitScopes::new(&plan.queue_factory_roles.wait_scopes)
-                })
-                .matches(path, root))
-        {
-            seeds.insert(normalize_path(path));
-        }
-    }
-    if seeds.is_empty() {
-        return FamilyPathScope::Only(Arc::new(BTreeSet::new()));
-    }
-    with_import_closure(root, files, sources, seeds)
 }

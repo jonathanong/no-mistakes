@@ -1,14 +1,3 @@
-pub(crate) fn parse_queue_direction(
-    value: Option<&str>,
-) -> AnyhowResult<crate::queue::RelatedDirection> {
-    match value.unwrap_or("both") {
-        "deps" => Ok(crate::queue::RelatedDirection::Deps),
-        "dependents" => Ok(crate::queue::RelatedDirection::Dependents),
-        "both" => Ok(crate::queue::RelatedDirection::Both),
-        value => bail!("unknown direction: {value}"),
-    }
-}
-
 pub(crate) fn parse_server_direction(
     value: Option<&str>,
 ) -> AnyhowResult<crate::server_routes::RelatedDirection> {

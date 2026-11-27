@@ -10,6 +10,9 @@ use serde_json::{value::RawValue, Value};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+mod queue;
+use queue::{demand_per_item_calls, QueueReports};
+
 include!("context/check_types.rs");
 include!("context/ci_topology.rs");
 include!("context/prepare_playwright_files.rs");

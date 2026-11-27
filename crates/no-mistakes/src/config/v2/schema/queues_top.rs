@@ -1,3 +1,7 @@
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[path = "allow_paths_test_hook.rs"]
+pub(crate) mod allow_paths_test_hook;
+
 use super::queues::{deserialize_factories, serialize_factories};
 use super::queues_job_state::{
     deserialize_job_state_as_record, serialize_job_state_as_record, JobStateAsRecordConfig,
@@ -24,7 +28,7 @@ pub(super) fn allow_paths_globset(patterns: &[String]) -> Option<GlobSet> {
         return None;
     }
     #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
-    crate::queue::allow_paths_test_hook::note_build();
+    allow_paths_test_hook::note_build();
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
         if let Ok(glob) = GlobBuilder::new(normalize_allow_path(pattern))

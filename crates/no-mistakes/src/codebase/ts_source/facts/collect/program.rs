@@ -4,8 +4,6 @@ use crate::codebase::ts_source::module_facts;
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use std::{path::Path, sync::Arc};
 
-mod queue_waits;
-
 pub(crate) fn collect_file_facts_from_program(
     path: &Path,
     plan: TsFactPlan,
@@ -36,8 +34,11 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
     semantic: Option<&oxc_semantic::SemanticBuilderReturn<'_>>,
 ) -> TsFileFacts {
     let (parse_error, stored_source) = source_state;
-    let (record_waits, queue_semantic) =
-        queue_waits::prepare(path, plan, context, source, program, semantic.is_none());
+    let queue_enabled = plan.queue_project;
+    let needs_semantic = semantic.is_none();
+    let (record_waits, build_queue_semantic) =
+        super::queue_semantic_demand(path, context, source, queue_enabled, needs_semantic);
+    let queue_semantic = build_queue_semantic.then(|| super::semantic_for_program(program));
     let semantic = semantic.or(queue_semantic.as_ref());
     if let (Some(index), None) = (&context.fixture_reads, &parse_error) {
         index.record(path, source, program, semantic);
@@ -166,10 +167,10 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
         route_helper_imports: domain.route_helper_imports,
         route_helper_refs: domain.route_helper_refs,
         backend_routes: domain.backend_routes,
-        queue_usage: domain.queue_usage,
-        queue_create_line: domain.queue_create_line,
-        queue_name: domain.queue_name,
-        queue_project: domain.queue_project,
+        queue_usage: domain.queue.usage,
+        queue_create_line: domain.queue.create_line,
+        queue_name: domain.queue.name,
+        queue_project: domain.queue.project,
         http_calls: domain.http_calls,
         process_spawns: domain.process_spawns,
         server_routes: domain.server_routes,

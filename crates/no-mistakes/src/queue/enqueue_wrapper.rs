@@ -1,5 +1,6 @@
 use super::extract_job_id::referenced_symbol;
-use super::extract_model::{JobOptionSite, LocalCheck, ProducerBinding};
+use super::extract_model::wrapper::{Name, Queue, Target, WrapperSite};
+use super::extract_model::JobOptionSite;
 use super::extract_visitor::QueueVisitor;
 use super::source::line_number;
 use crate::config::v2::schema::EnqueueFactory;
@@ -17,40 +18,6 @@ pub(crate) use factories::needs_scoping;
 pub(in crate::queue) use factories::{collect_exports, factories, Factories};
 pub(in crate::queue) use resolve::resolve;
 use selection::{const_value, Selected};
-
-#[derive(Debug, Clone)]
-pub(crate) struct WrapperSite {
-    target: Target,
-    pub options: JobOptionSite,
-    pub checks: Vec<LocalCheck>,
-    worker_index: Option<usize>,
-    raw_job: String,
-    priority: super::extract_model::EnqueuePriority,
-    dedup: bool,
-    current_case: Option<String>,
-}
-
-#[derive(Debug, Clone)]
-struct Target {
-    queue: Queue,
-    job: Option<Name>,
-}
-
-#[derive(Debug, Clone)]
-enum Queue {
-    Unknown,
-    Name(Name),
-    Binding(ProducerBinding),
-}
-
-#[derive(Debug, Clone)]
-enum Name {
-    Literal(String),
-    Import {
-        local: String,
-        property: Option<String>,
-    },
-}
 
 pub(in crate::queue) fn note_call<'a>(
     visitor: &mut QueueVisitor<'a>,

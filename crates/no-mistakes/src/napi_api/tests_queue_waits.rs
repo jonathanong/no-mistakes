@@ -5,7 +5,7 @@ use std::path::PathBuf;
 fn queue_check_json_recognizes_wait_values_and_respects_alias_scopes() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/queue-ast-hop/wait-forms/fixture");
-    let result = super::project::queue_check_json_impl(json!({ "root": root })).unwrap();
+    let result = super::queue_check_json_impl(json!({ "root": root })).unwrap();
     let findings: serde_json::Value = serde_json::from_str(&result).unwrap();
     let findings = findings.as_array().unwrap();
     assert_eq!(findings.len(), 16, "{findings:?}");
@@ -29,7 +29,7 @@ fn queue_check_json_recognizes_wait_values_and_respects_alias_scopes() {
 fn queue_check_json_exposes_wrapper_patterns_and_declaration_policy() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/queue-ast-hop/wait-wrappers/fixture");
-    let result = super::project::queue_check_json_impl(json!({
+    let result = super::queue_check_json_impl(json!({
         "root": root
     }))
     .unwrap();
@@ -66,11 +66,11 @@ fn queue_check_json_exposes_wrapper_patterns_and_declaration_policy() {
 fn queue_check_json_surfaces_diagnostics_when_opted_in_and_in_aggregate_check() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/queue-ast-hop/worker-rate-limit-unresolved/fixture");
-    let bare = super::project::queue_check_json_impl(json!({ "root": root })).unwrap();
+    let bare = super::queue_check_json_impl(json!({ "root": root })).unwrap();
     let bare: serde_json::Value = serde_json::from_str(&bare).unwrap();
     assert_eq!(bare, json!([]));
 
-    let with_diagnostics = super::project::queue_check_json_impl(json!({
+    let with_diagnostics = super::queue_check_json_impl(json!({
         "root": root,
         "includeDiagnostics": true,
     }))

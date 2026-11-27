@@ -168,3 +168,31 @@ pub(crate) fn collect_ts_facts_with_context_sources_and_session_serializing_path
         std::sync::Arc::clone(sources.inventory()),
     )
 }
+
+fn queue_semantic_demand(
+    path: &std::path::Path,
+    context: &TsFactContext,
+    source: &str,
+    collect_queue_project: bool,
+    needs_semantic: bool,
+) -> (bool, bool) {
+    if collect_queue_project {
+        (crate::queue_analysis_hooks::hooks().semantic_demand)(
+            path,
+            context,
+            source,
+            needs_semantic,
+        )
+    } else {
+        (false, false)
+    }
+}
+
+fn semantic_for_program<'a>(
+    program: &'a oxc_ast::ast::Program<'a>,
+) -> oxc_semantic::SemanticBuilderReturn<'a> {
+    oxc_semantic::SemanticBuilder::new()
+        .with_build_nodes(true)
+        .with_check_syntax_error(true)
+        .build(program)
+}

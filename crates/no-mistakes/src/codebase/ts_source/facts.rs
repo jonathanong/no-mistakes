@@ -4,11 +4,9 @@ use crate::codebase::dependencies::extract::{
 };
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::SpawnEdge;
-use crate::codebase::ts_queues::usage::QueueUsage;
 use crate::codebase::ts_resources::{ResourceCall, ResourceDiagnostic};
 use crate::codebase::ts_routes::refs::{RouteHelper, RouteHelperImport, RouteHelperRef, RouteRef};
 use crate::codebase::ts_symbols::FileSymbols;
-use crate::queue::extract::FileFacts as QueueProjectFacts;
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
 #[doc(hidden)]
@@ -25,6 +23,7 @@ mod collect;
 pub(crate) mod domain;
 mod map;
 mod map_iter;
+pub(crate) mod queue_facts;
 pub use map_iter::{TsFactMapIntoIter, TsFactMapIter, TsFactMapIterMut};
 mod plan;
 pub(crate) mod react_analysis;
@@ -154,10 +153,10 @@ pub struct TsFileFacts {
     pub route_helper_imports: Vec<RouteHelperImport>,
     pub route_helper_refs: Vec<RouteHelperRef>,
     pub backend_routes: Vec<BackendRouteFact>,
-    pub queue_usage: Option<QueueUsage>,
+    pub queue_usage: Option<queue_facts::usage::QueueUsage>,
     pub queue_create_line: Option<u32>,
     pub queue_name: Option<String>,
-    pub(crate) queue_project: Option<QueueProjectFacts>,
+    pub(crate) queue_project: Option<queue_facts::FileFacts>,
     pub http_calls: Vec<HttpCall>,
     pub process_spawns: Vec<SpawnEdge>,
     pub(crate) server_routes: Option<react_analysis::server::FileFacts>,

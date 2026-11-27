@@ -142,7 +142,7 @@ fn unresolved_receiver_abstains_without_queue_overrides() {
 
 #[test]
 fn each_rule_builds_its_allow_matcher_once_for_multiple_files() {
-    use crate::queue::allow_paths_test_hook::take_builds;
+    use crate::config::v2::schema::queues_top::allow_paths_test_hook::take_builds;
 
     for name in ["unbounded-retention", "job-state-as-record"] {
         take_builds();
@@ -153,7 +153,7 @@ fn each_rule_builds_its_allow_matcher_once_for_multiple_files() {
 
 #[test]
 fn empty_and_disabled_allow_lists_build_no_matcher() {
-    use crate::queue::allow_paths_test_hook::take_builds;
+    use crate::config::v2::schema::queues_top::allow_paths_test_hook::take_builds;
 
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check");
     for rule in ["queue-retention-config", "queue-job-state-config"] {

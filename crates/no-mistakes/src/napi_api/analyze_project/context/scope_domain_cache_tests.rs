@@ -32,8 +32,8 @@ fn p6_queue_reports_reuse_plain_and_indexed_analysis_without_crossing_caches() {
         first,
         serde_json::from_str::<Value>(repeated.get()).unwrap()
     );
-    assert_eq!(scope.queue_reports.lock().unwrap().len(), 1);
-    assert_eq!(scope.queue_indexed_reports.lock().unwrap().len(), 1);
+    assert_eq!(scope.queue_reports.plain.lock().unwrap().len(), 1);
+    assert_eq!(scope.queue_reports.indexed.lock().unwrap().len(), 1);
 }
 
 #[test]
