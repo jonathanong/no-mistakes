@@ -115,7 +115,11 @@ rules:
       maxMinutes: 30
   - rule: github-actions-test-timeout-literals
     scope: repository
-    options: {}
+    options:
+      allow:
+        - file: .github/workflows/ci.yml
+          text: "timeout-minutes: 5"
+          reason: workflow file is outside the test include
   - rule: github-actions-vitest-project-selection
     scope: repository
     options:
