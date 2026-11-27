@@ -309,6 +309,11 @@ codex plugin remove no-mistakes-rules@harness-plugins
 codex plugin marketplace remove harness-plugins
 ```
 
+Removing a marketplace uninstalls every plugin installed from it. Reinstall any
+other plugin you had from `harness-plugins`; see the
+[`ratchet-stack` README](https://github.com/jongleberry/ratchet-stack#readme) for
+the current plugins.
+
 ### Example recipes
 
 | Goal | Command |
