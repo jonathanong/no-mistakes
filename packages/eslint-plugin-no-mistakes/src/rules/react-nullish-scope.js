@@ -4,6 +4,7 @@ const { literalString } = require("./module-mock-helpers");
 const { unwrapSequence } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const {
+  assertedType,
   bindPatternNames,
   definePattern,
   keyName,
@@ -187,6 +188,8 @@ function createNullishState(context) {
   }
 
   function expressionStatus(node) {
+    const asserted = assertedType(node);
+    if (asserted) return reactTypeStatus(asserted, facts);
     const current = unwrapSequence(node);
     if (isIdentifier(current)) return variableStatus(current.name);
     if (current?.type !== "MemberExpression") return "no";

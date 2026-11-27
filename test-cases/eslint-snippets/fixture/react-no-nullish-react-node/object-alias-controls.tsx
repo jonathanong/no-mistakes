@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 type Props = { children: ReactNode };
 
 export function dynamic(props: Props, children: string) {
-  // The identifier key is a runtime name, even when it spells a known prop.
+  // An identifier key is not a static property name, so slot is not ReactNode.
   const { [children]: slot } = props;
   return slot ?? null;
 }

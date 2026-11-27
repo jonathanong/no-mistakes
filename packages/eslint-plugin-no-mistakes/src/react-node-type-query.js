@@ -55,6 +55,34 @@ function typeAnnotation(node) {
   return node && node.typeAnnotation ? unwrapType(node.typeAnnotation.typeAnnotation) : null;
 }
 
+const TYPE_PRESERVING = new Set([
+  "ChainExpression",
+  "ParenthesizedExpression",
+  "TSNonNullExpression",
+  "TSSatisfiesExpression",
+  "TSInstantiationExpression",
+  "TypeCastExpression",
+]);
+
+function assertedType(node) {
+  let current = node;
+  while (current) {
+    if (current.type === "TSAsExpression" || current.type === "TSTypeAssertion") {
+      return current.typeAnnotation ?? null;
+    }
+    if (TYPE_PRESERVING.has(current.type)) {
+      current = current.expression;
+      continue;
+    }
+    if (current.type === "SequenceExpression") {
+      current = current.expressions.at(-1);
+      continue;
+    }
+    return null;
+  }
+  return null;
+}
+
 function reactTypeStatus(type, facts) {
   const current = unwrapType(type);
   if (!current || !facts) return "no";
@@ -132,6 +160,7 @@ function definePattern(
 }
 
 module.exports = {
+  assertedType,
   bindPatternNames,
   definePattern,
   keyName,

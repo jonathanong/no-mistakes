@@ -860,6 +860,12 @@
   ],
   "react-no-nullish-react-node": [
     {
+      "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-controls.tsx",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-file-suppressed.tsx",
       "findings": [],
       "kind": "valid",
@@ -875,24 +881,6 @@
       "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-suppressed.tsx",
       "findings": [],
       "kind": "valid",
-      "options": null
-    },
-    {
-      "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-controls.tsx",
-      "findings": [
-        {
-          "column": 10,
-          "endColumn": 22,
-          "endLine": 7,
-          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-controls.tsx",
-          "line": 7,
-          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
-          "messageId": "nullish",
-          "ruleId": "no-mistakes/react-no-nullish-react-node",
-          "severity": 2
-        }
-      ],
-      "kind": "invalid",
       "options": null
     },
     {

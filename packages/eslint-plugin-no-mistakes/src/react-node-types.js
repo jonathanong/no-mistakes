@@ -11,6 +11,7 @@ function syntacticRequire(init) {
   return { module: moduleName, kind: "namespace", typeOnly: false };
 }
 const {
+  assertedType,
   bindPatternNames,
   definePattern,
   keyName,
@@ -76,7 +77,8 @@ function createReactNodeFacts(program, context) {
       }
       if (
         specifier.type === "ImportNamespaceSpecifier" ||
-        specifier.type === "ImportDefaultSpecifier"
+        specifier.type === "ImportDefaultSpecifier" ||
+        (specifier.type === "ImportSpecifier" && keyName(specifier.imported) === "default")
       ) {
         reactNodeNames.add(`${specifier.local.name}.ReactNode`);
       }
@@ -171,6 +173,7 @@ function createReactNodeFacts(program, context) {
 }
 
 module.exports = {
+  assertedType,
   bindPatternNames,
   createReactNodeFacts,
   definePattern,

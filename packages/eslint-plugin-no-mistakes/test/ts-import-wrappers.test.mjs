@@ -358,6 +358,16 @@ describe("typescript import wrappers", () => {
         "react-no-nullish-react-node",
       ),
       eslintCase(
+        "assertions classify the asserted type",
+        "react-nullish-assertions.ts",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
+        "named default import is the React namespace",
+        "react-nullish-named-default.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
         "computed member of a namespace import",
         "nullable-computed-member.ts",
         "server-require-nullable-fetch-wrapper",
@@ -591,6 +601,24 @@ describe("typescript import wrappers", () => {
     ).toEqual([[34, "nullish"]]);
     expect(
       cases
+        .find((item) => item.name === "assertions classify the asserted type")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [10, "nullish"],
+      [15, "nullish"],
+      [23, "nullish"],
+      [27, "nullish"],
+    ]);
+    expect(
+      cases
+        .find((item) => item.name === "named default import is the React namespace")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [5, "nullish"],
+      [9, "nullish"],
+    ]);
+    expect(
+      cases
         .find((item) => item.name === "computed member of a namespace import")
         .findings.map((finding) => [finding.line, finding.messageId]),
     ).toEqual([
@@ -629,6 +657,8 @@ describe("typescript import wrappers", () => {
         "react-nullish-annotated.tsx",
         "react-nullish-alias-chain.tsx",
         "react-nullish-pattern-shadows.tsx",
+        "react-nullish-assertions.ts",
+        "react-nullish-named-default.tsx",
       ]),
       "nullish-ignore": oxlintOn(".oxlintrc-nullish-ignore.json", ["react-nullish-unresolved.tsx"]),
       fetch: oxlintOn(".oxlintrc-fetch.json", [

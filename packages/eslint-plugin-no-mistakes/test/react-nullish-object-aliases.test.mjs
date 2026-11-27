@@ -24,6 +24,7 @@ const suite = {
     aliasCase("object-alias-rewrite"),
     aliasCase("object-alias-suppressed"),
     aliasCase("object-alias-file-suppressed"),
+    aliasCase("object-alias-controls"),
   ],
   invalid: [
     // 5 nullish.
@@ -32,8 +33,6 @@ const suite = {
     aliasCase("object-alias-loop-bindings"),
     // 8 nullish.
     aliasCase("object-alias-target-shadows"),
-    // 1 nullish.
-    aliasCase("object-alias-controls"),
   ],
 };
 
