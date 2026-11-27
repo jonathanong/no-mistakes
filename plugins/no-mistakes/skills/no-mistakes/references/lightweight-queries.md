@@ -97,7 +97,7 @@ registry file, for adding a new entry that follows the same pattern. Reports
 `medium`; `low` when no repeated pattern exists), each entry's import, and an
 approximate `template`. Namespace-imported factories and entries wrapped in a
 local helper can be misattributed; read the file before copying the template.
-See [registry-extension](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/registry-extension.md).
+See [registry-extension](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/registry-extension.md).
 
 ```bash
 no-mistakes registry-extension src/plugins/index.ts --format json
@@ -149,7 +149,7 @@ for binding-aware import aliases and namespace members. Module specifiers match
 exactly for repository callables; a different repository barrel requires its own
 selector. Explicit external re-exports resolve to the external module selector.
 Shadowed bindings are excluded from target matching. See
-[effects configuration](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/effects.md).
+[effects configuration](https://github.com/jongleberry/no-mistakes/blob/main/docs/configuration/effects.md).
 
 Static indexed properties and `NonNullable` preserve selected callable types.
 Statically invoked async callbacks preserve returned-executor metadata, and nullish

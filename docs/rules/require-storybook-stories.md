@@ -88,7 +88,7 @@ empty lists. `includeAllReactNamedExports` and
 the corresponding React exports as components without an explicit marker.
 `requiredProps` defaults to empty. When configured, it selects components
 whose source contains one of the listed names in single or double quotes,
-or immediately followed by `=`. [Prop matching](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/require_storybook_stories/types.rs#L64-L69). `allowComponents` and `allowFiles` map
+or immediately followed by `=`. [Prop matching](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/require_storybook_stories/types.rs#L64-L69). `allowComponents` and `allowFiles` map
 an exempt component key or file path to its required reason and default empty.
 `allowColocatedTests` defaults to `false`. `ignoreIndexAndPrivateFiles` also
 defaults to `false`; enable it to skip `index` and underscore-private source
@@ -206,7 +206,7 @@ Following [recall over precision](../../README.md#how-analysis-works), inputs th
 
 - A configured or reachable story with a syntax or read error follows
   `options.unanalyzable` at both efforts. When reported, its diagnostic
-  starts on line 1 at the story path. [Story input diagnostics](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/require_storybook_stories/diagnostics.rs#L69-L97). Message: `Selected Storybook story could not be analyzed ({first cause line}), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.` Coverage remains unknown
+  starts on line 1 at the story path. [Story input diagnostics](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/require_storybook_stories/diagnostics.rs#L69-L97). Message: `Selected Storybook story could not be analyzed ({first cause line}), so Storybook coverage is incomplete. Fix the source syntax or read error and rerun the check, or narrow the configured component/story input scope.` Coverage remains unknown
   for otherwise uncovered components in that rule application: a failed parse
   can hide imports, so the rule cannot claim those components have no story.
   Valid stories still establish known coverage, and other rule applications

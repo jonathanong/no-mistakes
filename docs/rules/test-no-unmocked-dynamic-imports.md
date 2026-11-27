@@ -130,7 +130,7 @@ Setup declarations retain the effective policy config's path, including
 `--config` overrides, so unrelated default configs do not trigger those tests.
 A project declaring `setupFiles` needs a nonempty `include` matcher at
 configuration load. If a declared setup file is missing from the prepared
-inputs, aggregate `check` records the application error in `incomplete`. [Setup configuration](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/config/v2/schema/tests_config/vitest_setup_files.rs#L5-L21), [setup loading](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_no_unmocked_dynamic_imports/config/project_setups.rs#L19-L42), and [application error handling](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/run/prepared/execution/independent.rs#L69-L100).
+inputs, aggregate `check` records the application error in `incomplete`. [Setup configuration](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/config/v2/schema/tests_config/vitest_setup_files.rs#L5-L21), [setup loading](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_no_unmocked_dynamic_imports/config/project_setups.rs#L19-L42), and [application error handling](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/run/prepared/execution/independent.rs#L69-L100).
 
 Caveat: only the bare `import(...)` form is recognized as a type carrier. A
 TS-wrapped specifier, e.g. `vi.mock(import('./dependency.mts') as unknown, factory)`,
@@ -219,7 +219,7 @@ These syntax proofs do not require a companion rule. Aggregate `check` runs
 applications independently, so a low-effort application keeps its setup
 policy alongside a max-effort application. In a shared strict execution
 of multiple applications, a max-effort application keeps the shared setup
-analysis at max. [Aggregate execution](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/run/prepared/execution/independent.rs#L60-L92) and [shared setup planning](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_no_unmocked_dynamic_imports/with_facts/setup_low/mod.rs#L28-L55).
+analysis at max. [Aggregate execution](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/run/prepared/execution/independent.rs#L60-L92) and [shared setup planning](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_no_unmocked_dynamic_imports/with_facts/setup_low/mod.rs#L28-L55).
 
 Suppress a low-effort shape on its own line:
 
@@ -232,7 +232,7 @@ import("./dynamic-helper.mts");
 
 A nonliteral runtime `import()` specifier, or an unresolved literal import
 without a matching mock, produces an ordinary finding. The shared policy
-below controls low-effort setup diagnostics. [Import checks](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_no_unmocked_dynamic_imports/checker.rs#L41-L79) and [unresolved imports](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_no_unmocked_dynamic_imports/checker.rs#L120-L143).
+below controls low-effort setup diagnostics. [Import checks](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_no_unmocked_dynamic_imports/checker.rs#L41-L79) and [unresolved imports](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_no_unmocked_dynamic_imports/checker.rs#L120-L143).
 
 - Inputs this rule cannot prove (at low effort, a non-literal `vi.mock` specifier, an aliased or computed mock call, `vi.doMock`, `module.require()`, or a runtime `import()` in setup) follow `options.unanalyzable`:
   - `report` (default): fails as a finding, e.g. `src/setup.mts:12: setup reachability is unanalyzable at effort low`.
