@@ -24,8 +24,7 @@ use rule_docs_helpers::{read, repo_root, rule_ids_from_source};
 #[path = "support/docs_review_regressions.rs"]
 mod docs_review_regressions;
 use cli_docs_helpers::{
-    consumer_identifier_paths, consumer_identifier_violations, enum_block, enum_variants,
-    kebab_case, reachable_cli_pages, rust_sources, subcommand_enums,
+    enum_block, enum_variants, kebab_case, reachable_cli_pages, rust_sources, subcommand_enums,
 };
 
 #[path = "support/docs_coverage_commands.rs"]
@@ -40,61 +39,9 @@ mod docs_coverage_test_reliability;
 mod docs_rule_inventory_checks;
 
 #[test]
-fn identifier_inventory_includes_root_and_agent_documents() {
-    // Saved root/agent documents protect scan scope; ignored build output stays out.
-    let source = repo_root().join("test-cases/docs/identifier-inventory/fixture");
-    let fixture = saved_fixture::materialize_path(&source);
-    let root = fixture.path();
-    std::fs::rename(root.join(".git.fixture"), root.join(".git")).unwrap();
-    assert!(root.join(".git/config").is_file());
-    assert!(root.join("ignored.md").is_file());
-    let paths: BTreeSet<_> = consumer_identifier_paths(root)
-        .into_iter()
-        .map(|path| path.strip_prefix(root).unwrap().to_owned())
-        .collect();
-    assert!(paths.contains(Path::new("README.md")));
-    assert!(paths.contains(Path::new("skills/no-mistakes/SKILL.md")));
-    assert!(paths.contains(Path::new("skills/no-mistakes/references/example.md")));
-    assert!(!paths.contains(Path::new("ignored.md")));
-    assert!(!paths.iter().any(|path| path.starts_with(".git")));
-}
-
-#[test]
-fn consumer_identifiers_stay_outside_the_denylist() {
-    const CONSUMER_TOKENS: &[&str] = &["voucha", "@data-stores/valkey", "voucha.ai"];
-    const DENYLIST_FILE: &str = "crates/no-mistakes/tests/docs_coverage.rs";
-
-    let root = repo_root();
-    let denylist = read(&root.join(DENYLIST_FILE)).to_ascii_lowercase();
-    let declaration =
-        format!("const CONSUMER_TOKENS: &[&str] = &{:?};", CONSUMER_TOKENS).to_ascii_lowercase();
-    assert!(
-        denylist.contains(&declaration),
-        "the deny-list exception must remain the documented token declaration"
-    );
-    for (token, expected_occurrences) in CONSUMER_TOKENS.iter().zip([2, 1, 1]) {
-        assert_eq!(
-            denylist.matches(token).count(),
-            expected_occurrences,
-            "the deny-list may mention each consumer token only in its declaration"
-        );
-    }
-
-    let violations = consumer_identifier_violations(&root, DENYLIST_FILE, CONSUMER_TOKENS);
-    assert!(
-        violations.is_empty(),
-        "consumer identifiers may occur only in the documented deny-list:\n{}",
-        violations.join("\n")
-    );
-}
-
-#[test]
 fn review_found_doc_regressions_stay_fixed() {
     let root = repo_root();
     let read_root = |path: &str| read(&root.join(path));
-
-    let readme = read_root("README.md");
-    assert!(readme.contains("<playwright\\|vitest>"));
 
     let configuration = read_root("docs/configuration/README.md");
     assert!(!configuration.contains("legacy.md"));
@@ -155,13 +102,6 @@ fn review_found_doc_regressions_stay_fixed() {
         "docs/README.md must link feature-parity.md"
     );
     assert!(docs_index.contains("(why.md)"));
-
-    let root_readme = read_root("README.md");
-    assert!(
-        root_readme.contains("(docs/feature-parity.md)"),
-        "README.md must link docs/feature-parity.md"
-    );
-    assert!(root_readme.contains("(docs/why.md)"));
 
     let why = read_root("docs/why.md");
     assert!(why.contains("Three jobs"));

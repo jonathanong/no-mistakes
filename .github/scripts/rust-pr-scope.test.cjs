@@ -11,7 +11,17 @@ for (const file of [
   "packages/eslint-plugin-no-mistakes/src/rules/example.js",
   "test-cases/eslint-snippets/fixture/example.ts",
   "plugins/no-mistakes-rules/skills/example/SKILL.md",
-  "docs/eslint-rules/example.md",
+  "README.md",
+  "CONTRIBUTING.md",
+  "AGENTS.md",
+  "evals/AGENTS.md",
+  "packages/no-mistakes/README.md",
+  "plugins/another-plugin/guide.MDX",
+  "plugins/no-mistakes-rules/skills/react-rules/SKILL.md",
+  "docs-sibling/example.md",
+  ".cargo/README.md",
+  "cspell.config.yaml",
+  ".lycheeignore",
 ]) {
   test(`independent lint input skips Rust: ${file}`, () => assert.equal(triggersRust(file), false));
 }
@@ -27,7 +37,11 @@ for (const file of [
   "docs/rules/example.md",
   "docs/node-api.md",
   "plugins/no-mistakes/skills/no-mistakes/SKILL.md",
-  "README.md",
+  "plugins/no-mistakes-rules/skills/github-actions-rules/SKILL.md",
+  "crates/AGENTS.md",
+  "docs/eslint-rules/example.md",
+  "fixtures/check/example.md",
+  "test-cases/eslint-snippets/fixture/example.md",
   "test-cases/eslint-snippets/Cargo.toml",
   "packages/eslint-plugin-no-mistakes/build.rs",
   "packages/eslint-plugin-no-mistakes/.cargo/config.toml",
@@ -38,7 +52,9 @@ for (const file of [
 }
 test("empty, mixed, deleted and renamed inputs stay conservative", () => {
   assert.equal(rustRequired([]), true);
-  assert.equal(rustRequired([{ path: "docs/eslint-rules/example.md", status: "D" }]), false);
+  assert.equal(rustRequired([{ path: "README.md" }, { path: "cspell.config.yaml" }]), false);
+  assert.equal(rustRequired([{ path: "README.md", status: "D" }]), false);
+  assert.equal(rustRequired([{ path: "docs/eslint-rules/example.md", status: "D" }]), true);
   assert.equal(
     rustRequired([{ path: "docs/eslint-rules/example.md" }, { path: "Cargo.lock" }]),
     true,
@@ -94,4 +110,8 @@ test("scope metadata is PR-only, fail-closed, and artifact merges skip with thei
     /^    if: \$\{\{ !cancelled\(\) && needs.changes.outputs.rust == 'true' \}\}$/m,
   );
   assert.match(workflow, /node --test[^\n]*rust-pr-scope.test.cjs/);
+  assert.match(job("tests-gate"), /name: Tests with coverage\n/);
+  assert.match(job("tests-gate"), /if: \$\{\{ !cancelled\(\) \}\}/);
+  assert.match(job("ast-analysis"), /name: AST analysis\n/);
+  assert.doesNotMatch(job("ast-analysis"), /^    if:/m);
 });

@@ -1,0 +1,49 @@
+id: no-unscoped-repository-markdown-read
+language: Rust
+severity: error
+message: >-
+  Keep repository Markdown inputs inside the Rust input folders documented in
+  docs/development/ci-builds.md. Use a saved fixture for test data and the
+  source policy job for checks on other repository Markdown.
+rule:
+  any:
+    - pattern: read_root($PATH)
+    - pattern: repo_root().join($PATH)
+    - pattern: repository_root().join($PATH)
+    - all:
+        - pattern: $ROOT.join($PATH)
+        - inside:
+            kind: function_item
+            stopBy: end
+            has:
+              any:
+                - pattern: let $ROOT = repo_root();
+                - pattern: let $ROOT = repository_root();
+              stopBy: end
+    - pattern: std::fs::read_to_string($PATH)
+    - pattern: fs::read_to_string($PATH)
+    - pattern: std::fs::read($PATH)
+    - pattern: fs::read($PATH)
+    - pattern: read_to_string($PATH)
+    - pattern: read($PATH)
+    - all:
+        - kind: macro_invocation
+        - regex: '(?i)^(?:std::|core::)?include_(?:str|bytes)![\s\S]*\.mdx?"#*\s*,?\s*\)\s*\)?$'
+        - not:
+            regex: '"/?(?:\.\.?/)*(?:docs/|plugins/no-mistakes/skills/|plugins/no-mistakes-rules/skills/github-actions-rules/|crates/|fixtures/|test-cases/)[^"]*\.[mM][dD][xX]?"#*\s*,?\s*\)\s*\)?$'
+    - pattern: PathBuf::from(env!("CARGO_MANIFEST_DIR")).join($PATH)
+    - pattern: Path::new(env!("CARGO_MANIFEST_DIR")).join($PATH)
+constraints:
+  PATH:
+    all:
+      - any:
+          - kind: string_literal
+          - kind: raw_string_literal
+      - regex: '(?i)\.mdx?"#*$'
+      - not:
+          regex: '^(?:r#*)?"/?(?:\.\.?/)*(?:docs/|plugins/no-mistakes/skills/|plugins/no-mistakes-rules/skills/github-actions-rules/|crates/|fixtures/|test-cases/)'
+files:
+  - "**/*.rs"
+ignores:
+  - "**/fixtures/**"
+  - "**/test-cases/**"

@@ -1,4 +1,6 @@
 <!-- cspell:ignore rustc -->
+Keep Rust repository Markdown inputs in the [CI input folders](../docs/development/ci-builds.md#rust-markdown-inputs).
+
 ## Workspace crates
 - `crates/no-mistakes` — CLI, N-API library, graph, and rules (`pub use no_mistakes_invocation as invocation;`; `codebase::postgres` re-exports the postgres-sql crate).
 - `crates/no-mistakes-invocation` — invocation locking, deadlines, watchdogs, process trees, and `macos_invocation` (inverted diagnostics hooks in `hooks.rs`).

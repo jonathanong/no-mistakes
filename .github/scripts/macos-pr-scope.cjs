@@ -1,5 +1,6 @@
 const { spawnSync } = require("node:child_process");
 const { readChangedFiles } = require("./pr-diff-scope.cjs");
+const { isNonRustDocumentation } = require("./rust-pr-scope.cjs");
 const { cliFixture, napiFixture } = require("./smoke-tests.cjs");
 
 const PORTABLE_PREFIXES = [
@@ -12,9 +13,6 @@ const PORTABLE_PREFIXES = [
 
 const RULES = "crates/no-mistakes/src/codebase/rules/";
 const PORTABLE_FILES = new Set([
-  "AGENTS.md",
-  "CONTRIBUTING.md",
-  "README.md",
   ".github/scripts/lychee-gateway.cjs",
   ".github/scripts/lychee-gateway.test.cjs",
   ".github/scripts/lychee-github-gateway.test.cjs",
@@ -44,6 +42,7 @@ function platformRules(base, head) {
 }
 
 function triggersMacos({ path, status }, sensitiveRules) {
+  if (isNonRustDocumentation(path)) return false;
   if (status === "T") return true;
   if ([cliFixture, napiFixture].some((fixture) => path.startsWith(`${fixture}/`))) return true;
   if (PORTABLE_FILES.has(path) || path.endsWith(".snap")) return false;

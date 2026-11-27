@@ -56,6 +56,17 @@ for (const file of [
   });
 }
 
+test("non-Rust documentation and its tool configs skip macOS smoke", () => {
+  const result = run([
+    ["M", "README.md"],
+    ["A", "evals/AGENTS.md"],
+    ["D", "cspell.config.yaml"],
+    ["T", ".lycheeignore"],
+  ]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, "macos-smoke=false\n");
+});
+
 test("unavailable diff requires smoke", () => {
   const result = run(fixtures["portable only"].changes, ["--all"]);
   assert.equal(result.status, 0, result.stderr);

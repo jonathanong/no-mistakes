@@ -97,11 +97,13 @@ The current validation graph is organized as follows:
 
   The [macOS scope](../../.github/scripts/macos-pr-scope.cjs) uses the same
   NUL-delimited merge-base diff as the Rust scope. It runs on an empty or
-  unavailable diff, file type changes, and any path outside these exclusions.
+  unavailable diff and on changes outside these exclusions. File type changes
+  trigger smoke except for documentation outside the Rust input folders and
+  the documentation-only tool configs.
 
   | Paths that can skip macOS smoke | Scope |
   | --- | --- |
-  | `docs/**`, `AGENTS.md`, `CONTRIBUTING.md`, `README.md` | Documentation |
+  | `docs/**`, Markdown outside the Rust input folders, and the documentation-only tool configs | Documentation |
   | `fixtures/**`, `test-cases/**`, `**/*.snap` | Test data. The smoke fixture directories `fixtures/check/aggregate-agents-md-max-size/` and `fixtures/napi/real-addon-dependencies/` always trigger. |
   | `packages/eslint-plugin-no-mistakes/**`, `plugins/no-mistakes-rules/**`, `packages/no-mistakes/*.d.ts` | Independent lint tooling and declaration-only changes |
   | `.github/scripts/lychee-gateway.cjs`, `.github/scripts/lychee-gateway.test.cjs`, `.github/scripts/lychee-github-gateway.test.cjs` | Documentation link-check tooling |
@@ -250,6 +252,24 @@ lint workspace targets on every run. Cargo checks dependency fingerprints
 against each command's feature graph. The other quality rows keep their
 existing cache keys. The source policy job scans tracked binaries before
 setting up pnpm and keeps running in parallel with Rust compilation.
+
+## Rust Markdown inputs
+
+Rust code and tests that read this repository's Markdown use `docs/`,
+`plugins/no-mistakes/skills/`, `plugins/no-mistakes-rules/skills/github-actions-rules/`,
+or `crates/`. Saved inputs under `fixtures/` and `test-cases/` also
+trigger Rust validation. The [AST rule](../../.ast-grep/rules/no-unscoped-repository-markdown-read.yml)
+checks literal repository Markdown paths in Rust. Use Source policy and tooling
+tests for assertions about other repository Markdown, including the root README.
+
+On a pull request, the [Rust path selector](../../.github/scripts/rust-pr-scope.cjs)
+skips the Rust test and quality jobs for Markdown outside those folders and
+for documentation-only tool configs (`cspell.config.yaml` and the
+[Lychee ignore file](../../.lycheeignore)).
+Unknown inputs and unavailable diffs run Rust validation. The `Tests with coverage`
+gate accepts intentional skips, and `AST analysis` still runs the repository
+checks using the Linux runtime. The Linux runtime and JavaScript jobs also
+run for documentation-only changes.
 
 ## Cache capacity and cold-build validation
 

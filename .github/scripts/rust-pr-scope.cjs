@@ -4,17 +4,35 @@ const INDEPENDENT_PREFIXES = [
   "packages/eslint-plugin-no-mistakes/",
   "test-cases/eslint-snippets/",
   "plugins/no-mistakes-rules/",
-  "docs/eslint-rules/",
 ];
 
+const RUST_MARKDOWN_PREFIXES = [
+  "docs/",
+  "plugins/no-mistakes/skills/",
+  "plugins/no-mistakes-rules/skills/github-actions-rules/",
+  "crates/",
+  "fixtures/",
+  "test-cases/",
+];
+const MARKDOWN = /\.mdx?$/i;
+const DOC_TOOL_CONFIG = new Set(["cspell.config.yaml", ".lycheeignore"]);
+
+function isNonRustDocumentation(path) {
+  return (
+    DOC_TOOL_CONFIG.has(path) ||
+    (MARKDOWN.test(path) && !RUST_MARKDOWN_PREFIXES.some((prefix) => path.startsWith(prefix)))
+  );
+}
+
 function triggersRust(path) {
+  if (isNonRustDocumentation(path)) return false;
   if (
     /(^|\/)\.cargo\//.test(path) ||
     /\.rs$/.test(path) ||
     /(^|\/)(?:Cargo\.(?:toml|lock)|rust-toolchain(?:\.toml)?)$/.test(path)
   )
     return true;
-  return !INDEPENDENT_PREFIXES.some((prefix) => path.startsWith(prefix));
+  return MARKDOWN.test(path) || !INDEPENDENT_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
 
 function rustRequired(changes) {
@@ -26,4 +44,4 @@ if (require.main === module) {
   process.stdout.write(`rust=${required}\n`);
 }
 
-module.exports = { rustRequired, triggersRust };
+module.exports = { isNonRustDocumentation, rustRequired, triggersRust };

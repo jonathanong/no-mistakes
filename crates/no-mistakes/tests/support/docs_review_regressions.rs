@@ -23,8 +23,7 @@ fn json_relation_ids_document_configuration_advisories_and_rewrites() {
 }
 
 fn read_root(path: &str) -> String {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-    std::fs::read_to_string(root.join(path)).unwrap()
+    super::read(&super::repo_root().join(path))
 }
 
 #[test]
@@ -36,7 +35,7 @@ fn release_tooling_is_relocated_outside_the_tagged_source_inventory() {
     let tools = fixture.path().join("runner-temp/validation-tools");
     let duplicate = source.join("validation-tools/crates/no-mistakes/tests/docs_coverage.rs");
     // Reproduce release-only pollution without exempting nested source from the audit.
-    assert!(super::cli_docs_helpers::consumer_identifier_paths(&source).contains(&duplicate));
+    assert!(duplicate.is_file());
 
     let workflow = read_root(".github/workflows/release.yml");
     let job = workflow.split("\n  validate-rust:\n").nth(1).unwrap();
@@ -61,9 +60,10 @@ fn release_tooling_is_relocated_outside_the_tagged_source_inventory() {
     };
     let moved = run(step_command("Isolate validation tooling"));
     assert!(moved.status.success(), "{moved:?}");
-    let paths = super::cli_docs_helpers::consumer_identifier_paths(&source);
-    assert!(!paths.contains(&duplicate));
-    assert!(paths.contains(&source.join("crates/no-mistakes/tests/docs_coverage.rs")));
+    assert!(!duplicate.exists());
+    assert!(source
+        .join("crates/no-mistakes/tests/docs_coverage.rs")
+        .is_file());
     assert!(tools
         .join("crates/no-mistakes/tests/docs_coverage.rs")
         .is_file());

@@ -33,5 +33,31 @@ pub(super) fn repo_root() -> PathBuf {
 }
 
 pub(super) fn read(path: &Path) -> String {
+    if path
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("md") || ext.eq_ignore_ascii_case("mdx"))
+    {
+        let resolved = path
+            .canonicalize()
+            .unwrap_or_else(|err| panic!("{}: {err}", path.display()));
+        let root = repo_root().canonicalize().unwrap();
+        if let Ok(relative) = resolved.strip_prefix(root) {
+            assert!(
+                [
+                    "docs",
+                    "plugins/no-mistakes/skills",
+                    "plugins/no-mistakes-rules/skills/github-actions-rules",
+                    "crates",
+                    "fixtures",
+                    "test-cases"
+                ]
+                .iter()
+                .any(|directory| relative.starts_with(directory)),
+                "repository Markdown is outside Rust's CI input folders: {}",
+                relative.display()
+            );
+        }
+    }
     std::fs::read_to_string(path).unwrap_or_else(|err| panic!("{}: {err}", path.display()))
 }
