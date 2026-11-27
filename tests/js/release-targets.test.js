@@ -357,9 +357,10 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   );
   assert.match(
     nativeCommands,
-    /cargo test --locked -p no-mistakes --test windows_job_object/,
+    /cargo test --locked -p no-mistakes-invocation --test windows_job_object/,
     "Windows must run the Job Object regression as an integration test",
   );
+  assert.doesNotMatch(nativeCommands, /-p no-mistakes |suite_cli_|--bin/);
   const macosInvocation = readFileSync(
     join(repoRoot, "crates", "no-mistakes-invocation", "tests", "macos_invocation.rs"),
     "utf8",
@@ -438,10 +439,11 @@ test("native CI omits debug metadata without weakening runtime checks", () => {
   for (const [, stepEnv] of stepEnvs) {
     assert.doesNotMatch(stepEnv, /CARGO_PROFILE_(?:DEV|TEST)_DEBUG:/);
   }
+  const { ci: deadlines } = require("../../.github/scripts/fixtures/rust-build-deadlines.json");
   for (const [name, minutes] of [
     ["Build native CLI and N-API addon", 35],
-    ["Precompile native Rust test targets", 35],
-    ["Run platform-specific Rust tests", 9],
+    ["Precompile native Rust test targets", deadlines.testPrecompileStep / 60],
+    ["Run platform-specific Rust tests", deadlines.platformRustStep / 60],
     ["Run real N-API API test", 10],
   ]) {
     const step = body.split(`- name: ${name}\n`)[1]?.split("\n      - name:")[0];
