@@ -1,6 +1,6 @@
 # Default export execution frequency
 
-Issue: <https://github.com/jonathanong/no-mistakes/issues/2017>.
+Issue: <https://github.com/jongleberry/no-mistakes/issues/2017>.
 Base: `ac03f595020283283c6a8fda82472aef05365389` (merged #2014).
 
 The collector assigns a synthetic callable owner to a default export expression.
@@ -106,8 +106,8 @@ system call warnings establish no cause. No runtime fix or improvement is claime
 
 - Original run: `38659029493`, attempt 1, memory job `116178414390`.
 - One rerun: same run/head, attempt 2, memory job `116180292392`.
-- Profile: <https://github.com/jonathanong/no-mistakes/pull/2020#issuecomment-6181574412>.
-- Existing harness follow-up: <https://github.com/jonathanong/no-mistakes/issues/2025>.
+- Profile: <https://github.com/jongleberry/no-mistakes/pull/2020#issuecomment-6181574412>.
+- Existing harness follow-up: <https://github.com/jongleberry/no-mistakes/issues/2025>.
 
 The final readiness check found genuine conflicts after main advanced to
 `d36ea2af42d7a2a6d20074e4cd8ac1d0bc89568a`. This merge preserves main's loop-setup

@@ -147,7 +147,7 @@ exception.
 
 The rule skips locators without a proven test-ID match. A selected
 Playwright config that fails to load is reported as an `incomplete` input.
-Neither result uses `options.unanalyzable`. [Locator matching](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/playwright/rule_findings/emit.rs#L105-L125) and [Config failure handling](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/playwright/rules/prepared/partial.rs#L90-L127).
+Neither result uses `options.unanalyzable`. [Locator matching](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/playwright/rule_findings/emit.rs#L105-L125) and [Config failure handling](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/playwright/rules/prepared/partial.rs#L90-L127).
 
 ## Suppression
 

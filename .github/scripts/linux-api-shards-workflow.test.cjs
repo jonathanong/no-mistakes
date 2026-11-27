@@ -34,13 +34,14 @@ test("each Linux N-API shard enforces the slow-test gate and uploads a unique re
   assert.equal(upload.with.name, "native-api-tests-linux-${{ matrix.shard }}");
 });
 
-test("JavaScript aggregate fails when the Linux N-API matrix fails or skips", () => {
-  const aggregate = workflow.jobs["javascript-tests"];
+test("Tests with coverage gate fails when the Linux N-API matrix fails or skips", () => {
+  const aggregate = workflow.jobs["tests-gate"];
   assert.ok(aggregate.needs.includes("linux-api-tests"));
+  assert.ok(aggregate.needs.includes("javascript-coverage"));
   assert.equal(aggregate.if, "${{ !cancelled() }}");
-  const script = aggregate.steps.find((step) => step.name === "Require all component jobs").run;
+  const script = path.join(__dirname, "tests-gate.cjs");
   for (const result of ["success", "failure", "cancelled", "skipped"]) {
-    const child = spawnSync("bash", ["-eu", "-c", script], {
+    const child = spawnSync(process.execPath, [script], {
       encoding: "utf8",
       env: {
         ...process.env,
@@ -118,10 +119,15 @@ test("native runtime download jobs outlive the download step and earlier step bo
     );
     if (downloadAt < 0) continue;
     covered.push(jobId);
+    const downloadsReusedBuildOnly =
+      steps[downloadAt].if === "${{ steps.build-artifact-source.outputs.reuse == 'true' }}";
     const required = steps.slice(0, downloadAt + 1).reduce((sum, step, index) => {
       const minutes = step["timeout-minutes"];
       assert.equal(typeof minutes, "number", `${jobId} step ${index} needs a literal timeout`);
-      return sum + minutes;
+      const skippedOnReuse = step.if?.includes(
+        "steps.build-artifact-source.outputs.reuse != 'true'",
+      );
+      return sum + (downloadsReusedBuildOnly && skippedOnReuse ? 0 : minutes);
     }, 0);
     const jobMinutes = job["timeout-minutes"];
     assert.equal(typeof jobMinutes, "number", `${jobId} needs a literal job timeout`);

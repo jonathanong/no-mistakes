@@ -33,10 +33,7 @@ fn artifact_edges(
                     artifact.from == rule.from
                         && artifact.to == rule.to
                         && artifact.name == rule.name
-                        && rule
-                            .match_kind
-                            .as_deref()
-                            .is_none_or(|kind| artifact.match_kind.as_str() == kind)
+                        && rule.match_kind.is_none_or(|kind| artifact.match_kind == kind)
                 }
                 _ => false,
             });
@@ -50,7 +47,7 @@ fn artifact_edges(
                 return None;
             }
             let label = match &rule.match_kind {
-                Some(kind) => format!("{} -> {}: {} [{kind}]", rule.from, rule.to, rule.name),
+                Some(kind) => format!("{} -> {}: {} [{}]", rule.from, rule.to, rule.name, kind.as_str()),
                 None => format!("{} -> {}: {}", rule.from, rule.to, rule.name),
             };
             Some(finding(&rule.to, format!("required artifact edge missing: {label}")))

@@ -13,6 +13,8 @@ and Node actions are outside the rule.
 
 ## Options
 
+Each `include` entry must be a valid glob.
+
 `include` defaults to `.github/actions/**/action.{yml,yaml}`. An empty
 `allowedKeys` uses GitHub's built-in composite-step allowlist; `extraForbiddenKeys`
 adds explicit denials. No other rule-specific options exist.
@@ -60,7 +62,7 @@ runs:
 
 Invalid YAML produces an ordinary finding. The rule skips non-sequence
 `runs.steps` values, non-mapping step entries, and non-string keys. It
-does not use `options.unanalyzable`. [YAML and step scanning](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_composite_step_schema/scan.rs#L30-L68).
+does not use `options.unanalyzable`. [YAML and step scanning](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_composite_step_schema/scan.rs#L30-L68).
 
 ## Suppression
 

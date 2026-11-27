@@ -674,6 +674,33 @@ test("changes diff and planner changes have exported public contracts", () => {
   );
 });
 
+test("GitHub Actions pr-diff-range and workflow call bindings export named option types", () => {
+  const prDiff = readFileSync(join(packageRoot, "github-actions-pr-diff-range-types.d.ts"), "utf8");
+  assert.match(prDiff, /export type GithubActionsRevisionPair\b/);
+  assert.match(prDiff, /export interface GithubActionsPrDiffRangeOptions \{/);
+  for (const field of [
+    "requireConsistentRevisionPairs?: boolean;",
+    "revisionPairs?: GithubActionsRevisionPair[];",
+    "unanalyzable?: Unanalyzable;",
+    "baseEnv: string; headEnv: string",
+    "baseInput: string; headInput: string",
+    "baseFlag: string; headFlag: string",
+  ]) {
+    assert.ok(prDiff.includes(field), `missing ${field}`);
+  }
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/github-actions-pr-diff-range-types";/,
+  );
+
+  const topology = readFileSync(join(packageRoot, "workflow-topology-policy-types.d.ts"), "utf8");
+  assert.ok(
+    topology.includes("requireExplicitWorkflowCallBindings?: boolean;"),
+    "missing requireExplicitWorkflowCallBindings",
+  );
+  assert.ok(topology.includes("unanalyzable?: Unanalyzable;"), "missing unanalyzable");
+});
+
 test("required PR path filters export the workflow scope type", () => {
   const declarations = readFileSync(
     join(packageRoot, "github-actions-no-required-pr-path-filters-types.d.ts"),

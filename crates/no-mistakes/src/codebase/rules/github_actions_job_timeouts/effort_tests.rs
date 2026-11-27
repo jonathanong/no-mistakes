@@ -141,8 +141,8 @@ fn all_certified_caps_are_combined_conservatively_and_defaults_are_clamped() {
     let (_, low) = job_findings("low.yml");
     let (_, included) = job_findings("options-include.yml");
     assert_eq!(included, low);
-    let (_, zero) = job_findings("zero-cap.yml");
-    assert!(!zero
+    let (_, minimum) = job_findings("minimum-cap.yml");
+    assert!(!minimum
         .iter()
         .any(|finding| finding.message.contains("step \"tighter\"")));
 }

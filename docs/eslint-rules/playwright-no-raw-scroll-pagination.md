@@ -18,7 +18,7 @@ of its name.
 The two conditions are correlated at the file level, deliberately: a raw
 scroll call anywhere in a spec is flagged when the file also contains a
 cursor-paginated `waitForRequest` or `waitForResponse` call. The rule does
-not require the promise to be awaited or the calls to share a block or test. [Wait call detection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-no-raw-scroll-pagination.js#L134-L147) and [file-level matching](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-no-raw-scroll-pagination.js#L191-L218). A spec mixing a legitimate raw scroll (testing
+not require the promise to be awaited or the calls to share a block or test. [Wait call detection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-no-raw-scroll-pagination.js#L134-L147) and [file-level matching](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-no-raw-scroll-pagination.js#L191-L218). A spec mixing a legitimate raw scroll (testing
 scroll-to-top, say) with an unrelated paginated wait elsewhere in the same
 file is a rare shape, and file-level correlation is what a single-pass
 traversal without cross-block control-flow analysis can express — the
@@ -186,6 +186,10 @@ await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 // eslint-disable-next-line no-mistakes/playwright-no-raw-scroll-pagination -- this test inspects the sentinel itself
 await sentinel.scrollIntoViewIfNeeded();
 ```
+
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
 
 ## Related rules
 

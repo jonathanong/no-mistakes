@@ -103,7 +103,7 @@ test("same-head macOS timeout keeps censored evidence and bounded build headroom
   assert.ok(data.unavailable.includes("CPU utilization samples"));
   assert.equal(nativeStepBudget(buildName), current.nativeBuildStep);
   assert.equal(nativeStepBudget(precompileName), current.testPrecompileStep);
-  assert.ok(jobBudget(job("native-tests")) <= 180);
+  assert.ok(jobBudget(job("tests-gate")) <= 180);
   assert.equal(nativeStepBudget(rustName), 540);
   assert.equal(nativeStepBudget(apiName), 600);
 });
@@ -143,8 +143,9 @@ test("JavaScript API finalization has its own artifact consumer and bounded gate
   assert.equal(jobBudget(consumer), 1500);
   assert.match(consumer, /needs: linux-runtime/);
   assert.doesNotMatch(consumer, /build-native\.cjs|cargo build/);
-  const gate = job("javascript-tests");
-  assert.match(gate, /needs: \[javascript-coverage, linux-api-tests\]/);
+  const gate = job("tests-gate");
+  assert.ok(gate.includes("javascript-coverage"));
+  assert.ok(gate.includes("linux-api-tests"));
   assert.match(gate, /^    if: \$\{\{ !cancelled\(\) \}\}$/m);
   assert.equal(jobBudget(gate), 180);
   assert.ok(
@@ -160,9 +161,7 @@ test("JavaScript API finalization has its own artifact consumer and bounded gate
 test("component job deadlines bound their steps while gates only aggregate results", () => {
   for (const name of [
     "native-build",
-    "native-build-macos",
     "native-test-build",
-    "native-test-build-macos",
     "native-rust-tests",
     "native-rust-tests-macos",
     "native-api-tests",
@@ -181,7 +180,7 @@ test("component job deadlines bound their steps while gates only aggregate resul
       assert.ok(Math.max(...budgets) <= jobBudget(body), `${name} steps must fit their job cap`);
     }
   }
-  for (const name of ["native-tests", "javascript-tests"]) {
+  for (const name of ["tests-gate"]) {
     const body = job(name);
     assert.equal(jobBudget(body), 180);
     assert.match(body, /Require all component jobs/);
@@ -297,7 +296,7 @@ test("native build and test precompile deadlines use measured censored progress"
   );
   assert.ok(precompile > failedRun.testPrecompile.observedElapsedSeconds);
   assert.ok(precompile >= maxFirstHarness);
-  assert.ok(jobBudget(job("native-tests")) < caps.job);
+  assert.ok(jobBudget(job("tests-gate")) < caps.job);
   assert.equal(
     aggregate.censoredCombinedBuildStep +
       aggregate.maximumCompletedPlatformRustStep +
@@ -307,7 +306,7 @@ test("native build and test precompile deadlines use measured censored progress"
     aggregate.required,
   );
   assert.ok(
-    aggregate.required > jobBudget(job("native-tests")),
+    aggregate.required > jobBudget(job("tests-gate")),
     "historical serial totals are not a sharded critical-path guarantee",
   );
   assert.ok(
@@ -325,7 +324,7 @@ test("native build and test precompile deadlines use measured censored progress"
 
 test("macOS cold test precompile keeps the four-target archive inside the job", () => {
   const data = observed("macos-native-test-precompile-cold-cache");
-  const body = job("native-test-build-macos");
+  const body = job("native-rust-tests-macos");
   const precompile = stepBudget(body, precompileName);
   assert.equal(data.cache, "miss");
   assert.equal(data.stepLimitSeconds, 900);

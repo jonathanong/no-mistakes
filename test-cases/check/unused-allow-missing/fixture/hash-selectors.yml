@@ -10,7 +10,6 @@ rules:
       include: [src/**]
       allow:
         - {job: 'src/excluded#hash.tsx#build'}
-        - {job: malformed}
   - rule: require-storybook-stories
     projects: [web]
     options:
