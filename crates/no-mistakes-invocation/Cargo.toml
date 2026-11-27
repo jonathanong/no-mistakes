@@ -7,7 +7,7 @@ autotests = false
 license.workspace = true
 description = "Process-wide invocation locking, deadlines, and child process-tree control for no-mistakes"
 repository.workspace = true
-documentation = "https://github.com/jonathanong/no-mistakes"
+documentation = "https://github.com/jongleberry/no-mistakes"
 exclude = ["tests/**"]
 
 [lints]

@@ -1,5 +1,9 @@
 # `postgres-no-mutable-sql-registry`
 
+The Node declaration types the legacy `unanalyzableSql` option as
+`PostgresLegacyUnanalyzableSql` (`"fail"`, `"advise"`, or `"ignore"`).
+The current `unanalyzable` option spells the failing policy `"report"`.
+
 `executorNames` replaces the default `[query, read, write]` list; it does not
 extend it. Use `extraExecutorNames: [readPool, writePool]` to keep the defaults
 and add names. Setting both options is a configuration error. When a replacement
@@ -260,7 +264,7 @@ check is required because unsupported inputs are explicitly classified.
 At low effort, registry relations such as ``query(`SELECT id FROM
 ${tables.users}`)``, unmodeled helpers, aliases, namespace executor calls,
 unsupported executor factories, and unproven type receivers follow
-`options.unanalyzable`. [Low effort routing](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_sql_cross_file/low.rs#L90-L128).
+`options.unanalyzable`. [Low effort routing](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_sql_cross_file/low.rs#L90-L128).
 
   - `report` (default): fails as a finding at the unsupported use.
   - `advise`: a non-failing advisory.
@@ -269,7 +273,7 @@ unsupported executor factories, and unproven type receivers follow
 At max effort, the rule emits no uncertainty diagnostic for a route it
 cannot tie to one canonical producer, such as a dynamic or conditional
 `require` or an ambiguous re-export. Proven cross-file writes remain
-findings under every policy. [Max effort scan](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_no_mutable_sql_registry.rs#L72-L90).
+findings under every policy. [Max effort scan](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_no_mutable_sql_registry.rs#L72-L90).
 
 ## Suppression
 

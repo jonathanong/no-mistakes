@@ -37,11 +37,15 @@ import type {
   GraphEdge,
   PlaywrightOptions,
   PlaywrightCoverageReport,
+  PlaywrightEdgesReport,
+  PlaywrightRelatedReport,
+  PlaywrightTestsReport,
   PlaywrightRelatedOptions,
   ProjectOptions,
   ReactComponentFacts,
   ReactUsagesReport,
   ReactViolation,
+  ServerRoute,
   ServerRoutesReport,
   ServerContractsReport,
   SignatureImpactResult,
@@ -161,19 +165,19 @@ export function playwrightCheck(
 ): Promise<PlaywrightCoverageReport>;
 export function playwrightEdges(
   options?: WithInvocationOptions<PlaywrightOptions>,
-): Promise<unknown>;
+): Promise<PlaywrightEdgesReport>;
 export function playwrightRelated(
   options: WithInvocationOptions<PlaywrightRelatedOptions>,
-): Promise<unknown>;
+): Promise<PlaywrightRelatedReport>;
 export function playwrightTests(
   options?: WithInvocationOptions<PlaywrightOptions>,
-): Promise<unknown>;
+): Promise<PlaywrightTestsReport>;
 export function serverRoutes(
   options?: WithInvocationOptions<ProjectOptions>,
 ): Promise<WithInvocationResult<ServerRoutesReport>>;
 export function serverRouteList(
   options?: WithInvocationOptions<ProjectOptions>,
-): Promise<unknown[]>;
+): Promise<ServerRoute[]>;
 export function serverRouteEdges(
   options?: WithInvocationOptions<ProjectOptions>,
 ): Promise<GraphEdge[]>;

@@ -1,0 +1,10 @@
+{
+  "entries": [],
+  "warnings": [
+    {
+      "code": "binary-lockfile",
+      "lockfile": "bun.lockb",
+      "message": "`bun.lockb` is a binary lockfile and cannot be parsed for dependency changes"
+    }
+  ]
+}

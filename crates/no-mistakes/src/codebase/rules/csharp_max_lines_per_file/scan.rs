@@ -22,7 +22,7 @@ pub(super) fn scan(
             }
         })
         .collect();
-    findings.sort_by(|a, b| a.file.cmp(&b.file));
+    super::super::sort_findings::sort_by_file(&mut findings);
     Ok(findings)
 }
 

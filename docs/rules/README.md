@@ -39,7 +39,9 @@ behavior.
 | --- | --- |
 | Keep agent context concise and code easy to analyze | [`agents-md-max-size`](agents-md-max-size.md), [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md), [`unconstructed-error-class`](unconstructed-error-class.md), [`unique-exports`](unique-exports.md) |
 | Check declared HTTP and queue payload compatibility | [`declared-payload-compatibility`](declared-payload-compatibility.md) |
-| Check queue producer/worker wiring, retention, and rate limits | [`queues check`](../cli/queues-check.md#producer-and-worker-matching) (all queue checks share configured `tests.*` scope exclusion and `queues.includeTests` opt-in), [Unbounded job retention](unbounded-job-retention.md), [Job state as record](job-state-as-record.md), [`no-single-enqueue-in-loop`](no-single-enqueue-in-loop.md) |
+| Trace literal route references and HTTP calls in the dependency graph | [`route-consistency`](route-consistency.md), [`http-route-static-paths`](http-route-static-paths.md), [`http-call-static-paths`](http-call-static-paths.md) |
+| Keep fetch calls out of React component trees | [`assert-no-fetch`](assert-no-fetch.md) |
+| Check queue producer/worker wiring, retention, and rate limits | [`queues check`](../cli/queues-check.md#producer-and-worker-matching) (all queue checks share configured `tests.*` scope exclusion and `queues.includeTests` opt-in), [Unbounded job retention](unbounded-job-retention.md), [Job state as record](job-state-as-record.md), [`no-single-enqueue-in-loop`](no-single-enqueue-in-loop.md), [`queue-dashboard-reachability`](queue-dashboard-reachability.md) |
 | Protect documentation structure and navigation | [`doc-consistency`](doc-consistency.md), [`markdown-reachability`](markdown-reachability.md), [`markdown-child-links`](markdown-child-links.md) |
 | Enforce package and workspace boundaries | [`forbidden-dependencies`](forbidden-dependencies.md), [`production-dependency-declarations`](production-dependency-declarations.md), [`workspace-package-cycles`](workspace-package-cycles.md) |
 | Make CI reproducible and bounded | [`github-actions-pinned-hash`](github-actions-pinned-hash.md), [`github-actions-cache-key-policy`](github-actions-cache-key-policy.md), [`github-actions-cache-setup-policy`](github-actions-cache-setup-policy.md), [`github-actions-run-command-policy`](github-actions-run-command-policy.md), [`github-actions-script-expressions`](github-actions-script-expressions.md), [`github-actions-checkout-credentials`](github-actions-checkout-credentials.md), [`github-actions-job-permissions`](github-actions-job-permissions.md), [`github-actions-local-action-checkout`](github-actions-local-action-checkout.md), [`github-actions-docker-host-ports`](github-actions-docker-host-ports.md), [`github-actions-download-integrity`](github-actions-download-integrity.md), [`github-actions-vitest-project-selection`](github-actions-vitest-project-selection.md), [`github-actions-no-poll-wait-job`](github-actions-no-poll-wait-job.md), [`github-actions-pr-diff-range`](github-actions-pr-diff-range.md), [`github-actions-job-timeouts`](github-actions-job-timeouts.md), [`github-actions-step-timeouts`](github-actions-step-timeouts.md), [`workflow-topology-policy`](workflow-topology-policy.md) |
@@ -60,6 +62,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | Rule                                                                          | Purpose                                                                         |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | [`agents-md-max-size`](agents-md-max-size.md)                                 | Keep agent instruction files small enough for context.                          |
+| [`assert-no-fetch`](assert-no-fetch.md)                                       | Report a React component whose render path fetches.                             |
 | [`ast-grep-ignore-freshness`](ast-grep-ignore-freshness.md)                   | Report ast-grep ignore entries that match no tracked path.                      |
 | [`banned-paths`](banned-paths.md)                                             | Ban tracked files matching configured path globs.                               |
 | [`banned-renamed-files`](banned-renamed-files.md)                             | Ban legacy filenames that should be renamed.                                    |
@@ -99,6 +102,8 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`github-actions-vitest-project-selection`](github-actions-vitest-project-selection.md) | Reject file and, when configured, name narrowing of a Vitest project in CI. |
 | [`github-actions-no-poll-wait-job`](github-actions-no-poll-wait-job.md) | Flag `sleep` loops that poll a configured command to wait on another run. |
 | [`github-actions-pr-diff-range`](github-actions-pr-diff-range.md) | Require merge-base diff ranges for pull-request change sets. |
+| [`http-call-static-paths`](http-call-static-paths.md)                         | Select literal HTTP client calls for `http` edges by path prefix.               |
+| [`http-route-static-paths`](http-route-static-paths.md)                       | Select the backend files and register object used for `http` edges.             |
 | [`forbidden-dependencies`](forbidden-dependencies.md)                         | Prevent configured files/modules from depending on forbidden targets.           |
 | [`forbidden-workspace-closure`](forbidden-workspace-closure.md)               | Prevent workspace package closures from reaching forbidden packages.            |
 | [`integration-test-no-mocks`](integration-test-no-mocks.md)                   | Ban mocking libraries in integration tests.                                     |
@@ -128,6 +133,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`package-json-workspace-coverage`](package-json-workspace-coverage.md)       | Require package directories to be covered by workspace config.                  |
 | [`pnpm-overrides-ban`](pnpm-overrides-ban.md)                                 | Ban pnpm dependency version overrides; keep packageExtensions.                  |
 | [`pnpm-release-age-policy`](pnpm-release-age-policy.md)                       | Keep minimumReleaseAgeExclude aligned with registries and Dependabot cooldown. |
+| [`queue-dashboard-reachability`](queue-dashboard-reachability.md)             | Record dashboard queue jobs that have both an enqueue and a worker.             |
 | [`postgres-constraint-validate`](postgres-constraint-validate.md)                 | Pair named NOT VALID constraint adds with VALIDATE CONSTRAINT.              |
 | [`postgres-explain-write-rollback`](postgres-explain-write-rollback.md) | Flag executing PostgreSQL write plans that can persist in standalone scripts. |
 | [`postgres-explicit-columns`](postgres-explicit-columns.md)                       | Require explicit column lists instead of `SELECT *` on wide tables.         |
@@ -182,6 +188,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`required-entrypoint-reachability`](required-entrypoint-reachability.md)     | Require selected sources to be runtime-reachable from configured entrypoints.   |
 | [`required-doc-section`](required-doc-section.md)                             | Require a heading in matching documentation files.                              |
 | [`required-local-docs`](required-local-docs.md)                               | Require local docs beside configured code directories.                          |
+| [`route-consistency`](route-consistency.md)                                   | Configure `route` edges from literal references, backend registrations, and page files. |
 | [`rust-max-lines-per-file`](rust-max-lines-per-file.md)                       | Cap Rust source/test file length.                                               |
 | [`rust-no-inline-allows`](rust-no-inline-allows.md)                           | Ban inline Rust `allow` attributes.                                             |
 | [`rust-no-inline-tests`](rust-no-inline-tests.md)                             | Ban inline Rust test modules.                                                   |

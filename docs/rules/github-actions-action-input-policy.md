@@ -11,7 +11,7 @@ names. A repository opts in by listing the families it cares about.
 Each configured family matches `uses:` after the ref is removed, including a
 commit SHA. Required inputs must be present as that scalar. `ban` reports
 non-null values. `allowedInputs` checks the remaining names under `with:`,
-including keys with null values. [Required and banned values](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_action_input_policy/policy.rs#L137-L164) and [allowlisted names](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_action_input_policy/policy/extra.rs#L70-L87).
+including keys with null values. [Required and banned values](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_action_input_policy/policy.rs#L137-L164) and [allowlisted names](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_action_input_policy/policy/extra.rs#L70-L87).
 Actions that are not listed stay silent. Other `with:` keys stay silent.
 
 Remote `owner/repo` families match case-insensitively, so
@@ -195,7 +195,7 @@ merge. Disagreeing required values are a configuration error. See
 `include` defaults to `.github/workflows/**/*.yml`,
 `.github/workflows/**/*.yaml`, `.github/actions/**/action.yml`, and
 `.github/actions/**/action.yaml`. A nonempty list replaces those globs.
-An empty list uses the defaults. [Include selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_action_input_policy.rs#L124-L132).
+An empty list uses the defaults. [Include selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_action_input_policy.rs#L124-L132).
 
 ```yaml
 rules:
@@ -241,7 +241,7 @@ input set to a `${{ }}` expression is a definite mismatch when that text is not
 the required scalar. The checker does not evaluate expressions. A `<<` key is
 not expanded, so keys nested under it are not inputs. A file that cannot be
 read is skipped and produces no finding. A non-mapping `with:` is treated
-as absent. It can still produce missing-required-input findings. [Input extraction](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_action_input_policy/scan.rs#L109-L118).
+as absent. It can still produce missing-required-input findings. [Input extraction](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_action_input_policy/scan.rs#L109-L118).
 
 ## Related rules
 

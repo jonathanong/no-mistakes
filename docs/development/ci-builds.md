@@ -32,7 +32,7 @@ The pull-request workflow splits compilation-heavy checks into producer and
 consumer jobs, with matrix shards for independent test work. This section
 describes the current layout and labels the measured baseline and intermediate
 heads explicitly. The original parallelization timings are recorded in
-[PR #3322](https://github.com/jonathanong/no-mistakes/pull/3322).
+[PR #3322](https://github.com/jongleberry/no-mistakes/pull/3322).
 
 The current validation graph is organized as follows:
 
@@ -228,8 +228,9 @@ never restore it independently.
 
 In macOS pull-request smoke CI, the runtime build replays timestamps when its
 workspace cache restores an exact or prefix match. When the runtime cache
-misses, Cargo uses the timestamps already prepared for the Rust test build and
-the fresh timestamp from rewriting the runtime manifest.
+misses, Cargo builds from the fresh timestamp left by rewriting the runtime
+manifest. The `no-mistakes-invocation` tests compile afterwards and need no
+timestamp replay of their own.
 
 Workspace restores require the same compiler, Rust flags, and Cargo
 configuration; only tracked Rust source bytes may differ between a primary key
@@ -563,7 +564,7 @@ with the original floors and CRAP gate passing. Every previous CI job remained
 present. These before/after samples establish the changed assignment and
 observed durations, but different cache and scheduling states prevent treating
 the overall wall times as a controlled speedup estimate. Final PR-head timings
-are recorded in [PR #3329](https://github.com/jonathanong/no-mistakes/pull/3329).
+are recorded in [PR #3329](https://github.com/jongleberry/no-mistakes/pull/3329).
 
 ### Completed parallel validation
 

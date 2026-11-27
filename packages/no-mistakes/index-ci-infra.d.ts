@@ -17,6 +17,7 @@ import type {
   CiImpactOptions,
   CiImpactReport,
   CiTopologyOptions,
+  CiTopologyMermaidOptions,
   CiTopologyImpactOptions,
   CiTopologyImpactReport,
   DataPwOptions,
@@ -28,6 +29,8 @@ import type {
   InfraOptions,
   LockfileDiffEntry,
   LockfileDiffOptions,
+  LockfileDiffReportOptions,
+  LockfileDiffReport,
   ModuleOutputsResult,
   RegistryExtensionOptions,
   RegistryExtensionReport,
@@ -47,7 +50,10 @@ import type {
 } from "./types";
 
 export function lockfileDiff(
-  options: WithInvocationOptions<LockfileDiffOptions>,
+  options: WithInvocationOptions<LockfileDiffReportOptions>,
+): Promise<WithInvocationResult<LockfileDiffReport>>;
+export function lockfileDiff(
+  options: WithInvocationOptions<LockfileDiffOptions & { includeWarnings?: false }>,
 ): Promise<LockfileDiffEntry[]>;
 export function ciImpact(
   options: WithInvocationOptions<CiImpactOptions>,
@@ -56,7 +62,10 @@ export function ciEnv(
   options: WithInvocationOptions<CiEnvOptions>,
 ): Promise<WithInvocationResult<CiEnvReport>>;
 export function ciTopology(
-  options?: WithInvocationOptions<CiTopologyOptions>,
+  options: WithInvocationOptions<CiTopologyMermaidOptions>,
+): Promise<string>;
+export function ciTopology(
+  options?: WithInvocationOptions<CiTopologyOptions & { format?: "json" }>,
 ): Promise<WithInvocationResult<WorkflowTopology>>;
 export function ciTopologyImpact(
   options: WithInvocationOptions<CiTopologyImpactOptions>,

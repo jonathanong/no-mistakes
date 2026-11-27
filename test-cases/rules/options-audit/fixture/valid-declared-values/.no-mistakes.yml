@@ -1,0 +1,22 @@
+version: 2
+rules:
+  - rule: swift-no-raw-print
+    scope: repository
+    options:
+      message: use the process logger
+  - rule: swift-viewmodel-main-actor
+    scope: repository
+    options:
+      suffix: ScreenModel
+  - rule: test-no-dependency-pins
+    scope: repository
+    options:
+      include:
+        - "**/*.test.ts"
+  - rule: test-no-live-repository-scan
+    scope: repository
+    options:
+      roots:
+        - file: tests/policy.test.ts
+      fixtureDirs:
+        - fixtures

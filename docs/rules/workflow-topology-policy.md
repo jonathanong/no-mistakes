@@ -258,7 +258,7 @@ optional whitespace inside the braces, is compared only with owners in the
 same workflow file. For example, the same
 `${{ github.workflow }}-${{ github.ref }}` text on a workflow lock and one of
 its jobs collides. The rule compares file paths for this expression, so
-it skips comparisons across files even when their declared names match. [Collision partitioning](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/workflow_topology_policy/evaluate_collisions.rs#L7-L18). A longer expression
+it skips comparisons across files even when their declared names match. [Collision partitioning](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/workflow_topology_policy/evaluate_collisions.rs#L7-L18). A longer expression
 such as `${{ github.workflow || 'x' }}` is not partitioned.
 
 `ci topology --format mermaid` still draws a separate lock for every group

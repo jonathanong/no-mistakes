@@ -57,6 +57,12 @@ fn config_path_references_json_matches_snapshot() {
                 root("suppression", "disable-line"),
                 config("sgconfig.yml"),
             ),
+            // The preset anchors missing paths at line 1, above the directive target.
+            (
+                "first_line_next_line_directive",
+                root("suppression", "disable-next-line"),
+                config("sgconfig.yml"),
+            ),
             (
                 "pnpm_invalid_yaml",
                 root("fixture", "cases/pnpm-filter-invalid-yaml"),

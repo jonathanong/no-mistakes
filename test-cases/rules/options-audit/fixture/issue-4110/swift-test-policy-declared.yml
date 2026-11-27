@@ -1,0 +1,23 @@
+version: 2
+rules:
+  - rule: swift-no-raw-print
+    scope: repository
+    options:
+      allow:
+        - "[prints"
+  - rule: swift-viewmodel-main-actor
+    scope: repository
+    options:
+      allow:
+        - "[models"
+  - rule: test-no-dependency-pins
+    scope: repository
+    options:
+      patterns:
+        - reason: broken pin
+          regex: "("
+  - rule: test-no-live-repository-scan
+    scope: repository
+    options:
+      fixtureDirs:
+        - a/b

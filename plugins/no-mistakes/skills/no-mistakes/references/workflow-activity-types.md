@@ -25,5 +25,5 @@ the `types` key, so put line/next-line suppressions there. Standard rule-level
 Async `check({ root, config })` and `analyzeProject()` check reports use the same
 configuration and findings.
 
-See the [configuration reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/workflow-topology-policy-activity-types.md)
-and [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/workflow-topology-policy.md).
+See the [configuration reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/configuration/workflow-topology-policy-activity-types.md)
+and [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/workflow-topology-policy.md).
