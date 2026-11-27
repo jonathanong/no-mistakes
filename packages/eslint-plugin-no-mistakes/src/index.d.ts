@@ -22,6 +22,7 @@ declare namespace plugin {
 
   export type PlaywrightRuleUnanalyzable = "finding" | "ignore";
 
+  /** @deprecated Use PlaywrightRuleUnanalyzable. Removed in 0.111.0. */
   export type PlaywrightNoBrowserNewPageUnanalyzable = PlaywrightRuleUnanalyzable;
 
   export interface PlaywrightNoBrowserNewPageOptions {

@@ -194,7 +194,8 @@ additional modules exporting Playwright `test` and `mergeTests`.
 fixture, browser, or callback shapes report instead of silently passing.
 `message?: string` customizes definite `browser.newPage()` diagnostics. The
 plugin exports `PlaywrightNoBrowserNewPageOptions` and
-`PlaywrightNoBrowserNewPageUnanalyzable`. See
+`PlaywrightRuleUnanalyzable`. `PlaywrightNoBrowserNewPageUnanalyzable` is a
+deprecated alias of that type and is removed in 0.111.0. See
 [the rule reference](eslint-rules/playwright-no-browser-new-page.md).
 
 ### `playwright-no-hoisted-unique-token`

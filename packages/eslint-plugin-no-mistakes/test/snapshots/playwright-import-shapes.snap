@@ -94,6 +94,66 @@
       "rule": "playwright-assertion-timeout-cap"
     },
     {
+      "file": "e2e/assertion-aliases.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 42,
+          "endLine": 5,
+          "file": "e2e/assertion-aliases.spec.ts",
+          "line": 5,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 42,
+          "endLine": 8,
+          "file": "e2e/assertion-aliases.spec.ts",
+          "line": 8,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 12,
+          "file": "e2e/assertion-aliases.spec.ts",
+          "line": 12,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion configure, soft, and factory aliases",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-other-package.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "e2e/assertion-other-package.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion expect imported from another package",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
       "file": "e2e/assertion-members.spec.ts",
       "findings": [
         {
@@ -120,6 +180,36 @@
         }
       ],
       "name": "assertion member and package roots",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-soft.spec.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "e2e/assertion-soft.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 52,
+          "endLine": 7,
+          "file": "e2e/assertion-soft.spec.ts",
+          "line": 7,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-assertion-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "assertion soft chains on CommonJS bindings",
       "options": null,
       "rule": "playwright-assertion-timeout-cap"
     },
@@ -1174,6 +1264,50 @@
       "rule": "playwright-assertion-timeout-cap"
     },
     {
+      "file": "e2e/assertion-aliases.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-aliases.spec.ts",
+          "line": 5,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-aliases.spec.ts",
+          "line": 8,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-aliases.spec.ts",
+          "line": 12,
+          "message": "Cannot tell whether this assertion is Playwright expect. Import or require @playwright/test with a static name so the timeout cap can be checked."
+        }
+      ],
+      "name": "assertion configure, soft, and factory aliases",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-other-package.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-other-package.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        }
+      ],
+      "name": "assertion expect imported from another package",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
       "file": "e2e/assertion-members.spec.ts",
       "findings": [
         {
@@ -1192,6 +1326,28 @@
         }
       ],
       "name": "assertion member and package roots",
+      "options": null,
+      "rule": "playwright-assertion-timeout-cap"
+    },
+    {
+      "file": "e2e/assertion-soft.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-soft.spec.ts",
+          "line": 4,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        },
+        {
+          "code": "no-mistakes(playwright-assertion-timeout-cap)",
+          "column": 1,
+          "file": "e2e/assertion-soft.spec.ts",
+          "line": 7,
+          "message": "Assertion timeout must not exceed 10000 ms. Increase the test timeout or fix the slow condition instead."
+        }
+      ],
+      "name": "assertion soft chains on CommonJS bindings",
       "options": null,
       "rule": "playwright-assertion-timeout-cap"
     },

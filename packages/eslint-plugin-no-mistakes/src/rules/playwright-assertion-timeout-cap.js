@@ -3,6 +3,7 @@
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression } = require("./async-ast");
+const { isReassigned } = require("./async-target-bindings");
 const { importSpecifierName } = require("./async-target-sources");
 const {
   admitsPlaywrightModule,
@@ -61,10 +62,24 @@ function expectFact(fact) {
     if (fact.status === "namespace") return false;
     return fact.exported === "expect";
   }
-  if (!isUnreadSource(fact.source)) return false;
+  // Another package falls through so a local name of expect still counts.
+  if (!isUnreadSource(fact.source)) return null;
   // Exported name expect falls through to the local-name check below.
   if (fact.status === "export" && fact.exported === "expect") return null;
   return "opaque";
+}
+
+function moduleFact(node, context) {
+  return expectFact(resolveModuleBinding(node, context, new Set()));
+}
+
+function followAlias(node, context, expectNames, seen) {
+  const variable = variableFor(node, context);
+  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  if (!def || def.type !== "Variable" || !def.node?.init || seen.has(variable)) return null;
+  if (isReassigned(node, context)) return null;
+  seen.add(variable);
+  return expectRoot(def.node.init, context, expectNames, seen);
 }
 
 function expectRoot(node, context, expectNames, seen = new Set()) {
@@ -72,15 +87,17 @@ function expectRoot(node, context, expectNames, seen = new Set()) {
   if (!node) return false;
   if (node.type === "CallExpression") return expectRoot(node.callee, context, expectNames, seen);
   if (node.type === "MemberExpression") {
-    const fact = expectFact(resolveModuleBinding(node, context, seen));
+    const fact = moduleFact(node, context);
     if (fact !== null && fact !== false) return fact;
-    if (memberName(node) === "expect") return namespaceExpect(node.object, context, seen);
+    if (memberName(node) === "expect") return namespaceExpect(node.object, context);
     return expectRoot(node.object, context, expectNames, seen);
   }
   if (node.type !== "Identifier") return false;
-  const fact = expectFact(resolveModuleBinding(node, context, seen));
+  const fact = moduleFact(node, context);
   if (fact !== null && fact !== false) return fact;
   if (fact === false) return false;
+  const followed = followAlias(node, context, expectNames, seen);
+  if (followed !== null) return followed;
   const variable = variableFor(node, context);
   const named = expectNames.has(node.name) || node.name === "expect";
   if (!named) return false;
@@ -88,8 +105,8 @@ function expectRoot(node, context, expectNames, seen = new Set()) {
   return variable.defs[0]?.type === "ImportBinding";
 }
 
-function namespaceExpect(node, context, seen) {
-  const fact = resolveModuleBinding(node, context, seen);
+function namespaceExpect(node, context) {
+  const fact = resolveModuleBinding(node, context, new Set());
   if (fact?.status === "opaque" || (fact && isUnreadSource(fact.source))) return "opaque";
   return fact?.status === "namespace" && fact.source === "@playwright/test";
 }

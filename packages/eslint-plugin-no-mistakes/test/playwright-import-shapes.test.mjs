@@ -26,6 +26,31 @@ const cases = [
     ],
   },
   {
+    name: "assertion soft chains on CommonJS bindings",
+    rule: "playwright-assertion-timeout-cap",
+    file: "e2e/assertion-soft.spec.ts",
+    expected: [
+      [4, "timeout"],
+      [7, "timeout"],
+    ],
+  },
+  {
+    name: "assertion configure, soft, and factory aliases",
+    rule: "playwright-assertion-timeout-cap",
+    file: "e2e/assertion-aliases.spec.ts",
+    expected: [
+      [5, "timeout"],
+      [8, "timeout"],
+      [12, "unanalyzable"],
+    ],
+  },
+  {
+    name: "assertion expect imported from another package",
+    rule: "playwright-assertion-timeout-cap",
+    file: "e2e/assertion-other-package.spec.ts",
+    expected: [[4, "timeout"]],
+  },
+  {
     name: "assertion TypeScript wrappers (#4371)",
     rule: "playwright-assertion-timeout-cap",
     file: "e2e/assertion-wrappers.spec.ts",

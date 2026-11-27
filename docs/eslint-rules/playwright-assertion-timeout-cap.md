@@ -63,8 +63,11 @@ await verify(page.getByRole("status")).toHaveText("Done", { timeout: 30_000 });
   keeps the cap check, because the exported name and the local name are both
   `expect`. `import { expect as check } from "./fixtures"` stays quiet.
   `import { test as expect } from "./fixtures"` reports `unanalyzable`. A
-  binding traced to a different package stays quiet. Reassigned `let` bindings
-  stay quiet. A matcher with no `timeout` property stays quiet.
+  renamed import from another package, such as
+  `import { expect as check } from "chai"`, stays quiet. An import whose local
+  name is `expect` keeps the cap check for
+  any package, including `@playwright/experimental-ct-react`. Reassigned `let`
+  bindings stay quiet. A matcher with no `timeout` property stays quiet.
 
 ## Fix
 
@@ -73,9 +76,9 @@ overall budget rather than increasing one assertion beyond the cap.
 
 ## Limits
 
-A string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. `pw.expect` counts only when `pw` is a namespace import from `@playwright/test`, `require("@playwright/test")`, `import pw = require("@playwright/test")`, or a single-write alias of that namespace. `import { "expect" as named }` counts too. A single-write `{ expect }` destructure of that namespace counts too. `const check = customAssertions.expect` is not that namespace. `const verify = check` still counts when `check` is a renamed `expect` import. TypeScript `as`, `satisfies`, `!`, angle-bracket assertions, instantiation expressions, and parentheses are transparent on the callee, the options object, the `timeout` key, and the number. A computed identifier key is not a static name.
+A string or expression-free template key, optional chaining, one single-write `const`, `let`, or `var` alias, and `.call` or a literal-array `.apply` are the same static call when this file can see the binding. `pw.expect` counts only when `pw` is a namespace import from `@playwright/test`, `require("@playwright/test")`, `import pw = require("@playwright/test")`, or a single-write alias of that namespace. `import { "expect" as named }` counts too. A single-write `{ expect }` destructure of that namespace counts too, including `e.soft(loc)` and `pw.expect.soft(loc)`. `const slow = expect.configure(...)` and `const soft = expect.soft` count when that alias is a single write. `const check = makeExpect()` from another file reports `unanalyzable`. `const check = customAssertions.expect` is not that namespace. `const verify = check` still counts when `check` is a renamed `expect` import. TypeScript `as`, `satisfies`, `!`, angle-bracket assertions, instantiation expressions, and parentheses are transparent on the callee, the options object, the `timeout` key, and the number. A computed identifier key is not a static name.
 
-An import from another file is checked against the cap only when the exported name and the local name are both `expect`. Any other exported name reports `unanalyzable` when the matcher passes `timeout`. `import { expect as check } from "./fixtures"` stays quiet.
+An import from another file is checked against the cap only when the exported name and the local name are both `expect`. Any other exported name reports `unanalyzable` when the matcher passes `timeout`. `import { expect as check } from "./fixtures"` stays quiet. An import from another package keeps the cap check when its local name is `expect`, and stays quiet when that local name is different.
 
 ```js
 // assertions.mjs
