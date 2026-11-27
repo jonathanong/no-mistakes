@@ -70,14 +70,16 @@ for exported types, structural index identity, and grammar boundaries.
 Literal PL/pgSQL `EXECUTE` source occurrences in supported `DO` bodies expose
 statement `kind: "literalExecute"` and a `PostgresSqlLiteralExecute` payload
 when no unsupported modifier remains, except inside `FOR`, `WHILE`,
-`FOREACH`, or a bare `LOOP`. There the command stays a visible occurrence,
-produces a diagnostic, and keeps the block incomplete, with no typed
-statement projection. Outside a loop, an unsupported modifier, including
-unquoted `INTO`, is statement kind `other`. A Unicode `U&` body and a national
-`N'` body are also statement kind `other`, with no `bodyEncoding`. Inside
-`FOR`, `WHILE`, `FOREACH`, or a bare `LOOP`, those commands stay occurrences
-and have no typed statement. Occurrence classification still reads the
-decoded command.
+`FOREACH`, a bare `LOOP`, or a `CASE` arm. There the command stays a visible
+occurrence with no typed statement projection. A decoded `controlFlow`
+command, such as `EXECUTE 'DO $body$ BEGIN NULL; END $body$'`, adds no
+diagnostic and can leave the block complete. Any other decoded kind produces
+a diagnostic and keeps the block incomplete. Outside a loop or `CASE` arm,
+an unsupported modifier, including unquoted `INTO`, is statement kind
+`other`. A Unicode `U&` body and a national `N'` body are also statement kind
+`other`, with no `bodyEncoding`. Inside `FOR`, `WHILE`, `FOREACH`, a bare
+`LOOP`, or a `CASE` arm, those commands stay occurrences and have no typed
+statement. Occurrence classification still reads the decoded command.
 Dollar-quoted (`bodyEncoding: "dollarQuoted"`), standard single-quoted
 (`singleQuoted`, doubled quotes), and PostgreSQL `E` escape strings
 (`escapedString`) are the projected literal forms. They are decoded by the
@@ -90,12 +92,13 @@ SQL remains diagnostic. Wholly literal `||` concatenations use the same nested
 pipeline and expose `bodyEncoding: "concatenated"`; `literalSpan` covers the full
 command expression. `using` retains ordered parameter expressions and their
 original source spans, without resolving runtime values; `$1` and other command
-placeholders remain typed parameters. Outside a loop, a non-literal command
+placeholders remain typed parameters. Outside a loop or `CASE` arm, a non-literal command
 (`format` or an identifier) is statement kind `other` and occurrence kind
-`dynamicExecute`. Inside `FOR`, `WHILE`, `FOREACH`, or a bare `LOOP`, it is
-occurrence kind `dynamicExecute` and has no typed statement. Outside a loop,
-an unsupported modifier after a decoded literal is also statement kind
-`other`. Inside those loops it has no typed statement.
+`dynamicExecute`. Inside `FOR`, `WHILE`, `FOREACH`, a bare `LOOP`, or a
+`CASE` arm, it is occurrence kind `dynamicExecute` and has no typed
+statement. Outside a loop or `CASE` arm, an unsupported modifier after a
+decoded literal is also statement kind `other`. Inside those forms it has
+no typed statement.
 An unquoted `INTO` target ends the command expression the same way `USING` does: the occurrence is classified from the literal, and the block stays incomplete. This adds no SQL execution or
 replay policy. `parsePostgresSql` retains its asynchronous single/batch API.
 
