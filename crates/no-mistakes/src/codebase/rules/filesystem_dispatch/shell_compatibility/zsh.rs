@@ -4,7 +4,6 @@ use std::path::Path;
 
 pub const RULE_ID: &str = "zsh-readonly-parameter";
 
-// Skips reading files that cannot plausibly be zsh scripts: no extension, `.sh`, `.zsh`, or executable.
 pub(super) fn likely_shell_file(path: &Path) -> bool {
     path.extension()
         .is_none_or(|ext| matches!(ext.to_str(), Some("sh" | "zsh")))

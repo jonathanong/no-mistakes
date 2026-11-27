@@ -138,12 +138,6 @@ The current validation graph is organized as follows:
   deadlines (`blocked_fifo`), and CLI deadline enforcement against blocked
   configuration loading (`cli_invocation`); the full `no-mistakes` binary test
   harness runs in the native suite on `main`.
-  Before extracting `no-mistakes-invocation`, compiling `macos_invocation`
-  inside `no-mistakes` took 9m54s–13m32s (and 19m34s in run `45364121571`,
-  [macOS smoke job](https://github.com/jonathanong/no-mistakes/actions/runs/45364121571/job/138343765816)),
-  requiring a separate harness cache restore and timestamp replay ahead of the
-  runtime build. After extraction, `Compile macOS-dependent Rust tests` runs
-  in ~8–10 seconds within the unchanged job budget.
   The full macOS jobs (`native-rust-tests-macos` and `native-api-tests-macos`)
   run on `main` and manual dispatch. They build in parallel and each runs its
   tests on its own build runner. They still publish the runtime and Rust test
