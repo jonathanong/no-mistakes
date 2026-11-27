@@ -24,6 +24,8 @@ mod lock_location;
 mod lock_status;
 #[path = "invocation/napi_options.rs"]
 mod napi_options;
+#[path = "invocation/process_lock.rs"]
+mod process_lock;
 
 pub use child::command_output;
 #[doc(hidden)]
@@ -145,6 +147,7 @@ pub struct InvocationGuard {
     _deadline: DeadlineGuard,
     _parent_signals: child::ParentSignalForwardingGuard,
     _lock: Option<File>,
+    _process_lock: Option<process_lock::ProcessLock>,
 }
 
 pub(super) fn nonzero_seconds(seconds: u64) -> Option<Duration> {

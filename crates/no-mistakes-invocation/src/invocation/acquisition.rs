@@ -5,9 +5,9 @@ use anyhow::{Context, Result};
 use std::path::PathBuf;
 #[path = "acquisition/budget.rs"]
 mod budget;
-use budget::acquire_lock_with_budget;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 pub(super) use budget::classify_lock_result;
+use budget::{acquire_lock_with_budget, AcquiredLocks};
 #[path = "acquisition/cli.rs"]
 mod cli;
 
@@ -85,7 +85,12 @@ impl InvocationGuard {
             None
         };
         let target = resolve_lock()?;
-        let lock = acquire_lock_with_budget(target, options, invocation_deadline)?;
+        let AcquiredLocks { file, process } = acquire_lock_with_budget(
+            target,
+            options,
+            invocation_deadline,
+            !forward_parent_signals,
+        )?;
         // Keep the original absolute invocation deadline. Cancel the acquisition
         // watcher before arming the earlier of that deadline and command timeout.
         drop(early_deadline);
@@ -114,7 +119,8 @@ impl InvocationGuard {
         Ok(Self {
             _deadline: deadline,
             _parent_signals: parent_signals,
-            _lock: lock,
+            _lock: file,
+            _process_lock: process,
         })
     }
 }

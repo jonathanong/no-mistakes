@@ -108,3 +108,6 @@ impl Drop for ManagedChild {
         let _ = self.0.wait();
     }
 }
+
+#[path = "process_deadline.rs"]
+mod process_deadline;

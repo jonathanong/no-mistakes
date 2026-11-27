@@ -55,7 +55,7 @@ pub(super) fn acquire_open_lock(
     loop {
         if !first_attempt || acquisition_started.is_some() {
             if let Some(timeout) = timeout.filter(|timeout| started.elapsed() >= *timeout) {
-                return Err(lock_timeout_error(timeout, path));
+                return Err(lock_timeout_error(timeout, LockHolder::read(path)));
             }
         }
         match classify_try_lock(file.try_lock(), path, fail_on_lock) {
@@ -96,7 +96,7 @@ fn classify_try_lock(
         Ok(()) => TryLockOutcome::Acquired,
         Err(TryLockError::Error(error)) => TryLockOutcome::Failed(lock_error(path, error)),
         Err(TryLockError::WouldBlock) if fail_on_lock => {
-            TryLockOutcome::Failed(lock_busy_error(path))
+            TryLockOutcome::Failed(lock_busy_error(LockHolder::read(path)))
         }
         Err(TryLockError::WouldBlock) => TryLockOutcome::Wait,
     }
@@ -124,8 +124,7 @@ fn held_by(holder: &Option<LockHolder>) -> String {
     }
 }
 
-fn lock_busy_error(path: &Path) -> anyhow::Error {
-    let holder = LockHolder::read(path);
+pub(super) fn lock_busy_error(holder: Option<LockHolder>) -> anyhow::Error {
     InvocationError::new(
         InvocationErrorKind::LockBusy,
         format!(
@@ -138,8 +137,7 @@ fn lock_busy_error(path: &Path) -> anyhow::Error {
     .into()
 }
 
-fn lock_timeout_error(timeout: Duration, path: &Path) -> anyhow::Error {
-    let holder = LockHolder::read(path);
+pub(super) fn lock_timeout_error(timeout: Duration, holder: Option<LockHolder>) -> anyhow::Error {
     InvocationError::new(
         InvocationErrorKind::LockTimeout,
         format!(

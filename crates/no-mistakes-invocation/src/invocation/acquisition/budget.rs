@@ -2,17 +2,24 @@ use super::{clock, open_current_lock, LockTarget};
 use crate::invocation::deadline::{self, Deadline};
 use crate::invocation::lock::{acquire_open_lock, open_lock_file};
 use crate::invocation::lock_location::OpenedLock;
+use crate::invocation::process_lock::ProcessLock;
 use crate::invocation::{InvocationError, InvocationErrorKind, InvocationOptions};
 use anyhow::Result;
 use std::fs::File;
+
+pub(super) struct AcquiredLocks {
+    pub(super) file: Option<File>,
+    pub(super) process: Option<ProcessLock>,
+}
 
 pub(super) fn acquire_lock_with_budget(
     target: LockTarget,
     options: InvocationOptions,
     invocation_deadline: Option<Deadline>,
-) -> Result<Option<File>> {
+    needs_process_lock: bool,
+) -> Result<AcquiredLocks> {
     check_acquisition_deadline(invocation_deadline)?;
-    let acquisition_started = clock::now();
+    let before_open = invocation_deadline.map(|_| clock::now());
     let opened = match target {
         LockTarget::Current => open_current_lock(),
         LockTarget::Exact(path) => {
@@ -20,10 +27,10 @@ pub(super) fn acquire_lock_with_budget(
             Some(OpenedLock { path, file })
         }
     };
-    let Some(OpenedLock { path, file }) = opened else {
+    if opened.is_none() {
         check_acquisition_deadline(invocation_deadline)?;
-        return Ok(None);
-    };
+    }
+    let acquisition_started = before_open.unwrap_or_else(clock::now);
     let remaining = invocation_deadline.map(|deadline| {
         deadline
             .expires_at
@@ -38,14 +45,27 @@ pub(super) fn acquire_lock_with_budget(
         (Some(remaining), None) => Some(remaining),
         (None, lock) => lock,
     };
-    let result = acquire_open_lock(
-        &path,
-        file,
-        lock_timeout,
-        options.fail_on_lock,
-        invocation_deadline.map(|_| acquisition_started),
-    );
-    classify_lock_result(result, invocation_deadline, invocation_limited).map(Some)
+    let file = opened
+        .map(|OpenedLock { path, file }| {
+            classify_lock_result(
+                acquire_open_lock(&path, file, lock_timeout, options.fail_on_lock, before_open),
+                invocation_deadline,
+                invocation_limited,
+            )
+        })
+        .transpose()?;
+    // All programmatic requests share process state, even if only some of them
+    // can open a file lock. CLI commands each own their process.
+    let process = needs_process_lock
+        .then(|| {
+            classify_lock_result(
+                ProcessLock::acquire(lock_timeout, acquisition_started, options.fail_on_lock),
+                invocation_deadline,
+                invocation_limited,
+            )
+        })
+        .transpose()?;
+    Ok(AcquiredLocks { file, process })
 }
 
 fn check_acquisition_deadline(invocation_deadline: Option<Deadline>) -> Result<()> {
@@ -60,11 +80,11 @@ fn check_acquisition_deadline(invocation_deadline: Option<Deadline>) -> Result<(
     Ok(())
 }
 
-pub(in crate::invocation) fn classify_lock_result(
-    result: Result<std::fs::File>,
+pub(in crate::invocation) fn classify_lock_result<T>(
+    result: Result<T>,
     invocation_deadline: Option<Deadline>,
     invocation_limited: bool,
-) -> Result<std::fs::File> {
+) -> Result<T> {
     match result {
         Err(error)
             if invocation_deadline.is_some()

@@ -46,7 +46,8 @@ If any candidate fails, the command prints one JSON warning to stderr. Its
 `kind` is `invocation_lock_fallback`, `failed` lists the attempted paths and
 errors, and `lockFile` names the selected path. If every candidate fails,
 `lockFile` is `null` and analysis proceeds without an invocation lock.
-Successful analysis reports remain on stdout.
+Successful analysis reports remain on stdout. The Node API still serializes
+analyses within each Node process to protect its shared deadline state.
 
 ## JSON output
 
