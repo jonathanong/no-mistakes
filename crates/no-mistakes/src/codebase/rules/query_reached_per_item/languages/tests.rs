@@ -1,5 +1,5 @@
 use super::resolve::project;
-use super::{collect, known, root_entries, selected_files, Ctx, Sink};
+use super::{collect, known, root_entries, selected_files, sink_list, Ctx, Sink};
 use crate::codebase::rules::allow_audit::AllowAudit;
 use crate::codebase::rules::path_filter::RulePathFilter;
 use crate::config::v2::schema::{
@@ -223,4 +223,110 @@ fn language_ids_roots_and_session_requirement() {
     };
     let error = collect(&root, &config, &rule, &options, &audit, None).unwrap_err();
     assert!(error.to_string().contains("prepared analysis session"));
+}
+
+#[test]
+fn module_loops_clean_helpers_and_bare_receivers_stay_distinct() {
+    assert!(project_ext("example.store.read_row(item);\n", "txt").is_empty());
+    let module = project_ext(
+        "example.store.read_row(item);\nfor item in items {\n    example.store.read_row(item);\n}\n",
+        "rs",
+    );
+    assert_eq!(module.len(), 1);
+    assert!(module[0].causes.is_empty());
+    assert!(module[0].message.contains("for `example.store.read_row`"));
+    assert!(module[0].message.contains("<module> → read_row"));
+    let while_loop = project_ext(
+        "fn load(items: &[&str]) {\n    while items {\n        example.store.read_row(item);\n    }\n}\n",
+        "rs",
+    );
+    assert!(while_loop.iter().any(|finding| {
+        finding.causes.is_empty() && finding.message.contains("while `example.store.read_row`")
+    }));
+    let spaced = project_ext(
+        "fn load (items: &[&str]) {\n    for item in items {\n        if (ready) {\n            example.store.read_row(item);\n        }\n        (item);\n    }\n}\n",
+        "rs",
+    );
+    assert_eq!(spaced.len(), 1);
+    assert!(spaced[0].message.contains("load → read_row"));
+    let tail = project_ext(
+        "fn load(items: &[&str]) {\n    for item in items {\n        item.();\n    }\n}\n",
+        "rs",
+    );
+    assert!(tail.iter().any(|finding| finding.message.contains("`item.`")));
+    assert!(project_ext(
+        "fn fetch(item: &str) {\n    other.module.lookup(item);\n}\nfn load(items: &[&str]) {\n    for item in items {\n        fetch(item);\n    }\n}\n",
+        "rs",
+    )
+    .is_empty());
+    let doubled = project_ext(
+        "fn fetch(item: &str) {\n    example.store.read_row(item);\n    example.store.read_row(item);\n    other.module.lookup(item);\n}\nfn load(items: &[&str]) {\n    for item in items {\n        fetch(item);\n    }\n}\n",
+        "rs",
+    );
+    assert_eq!(doubled.len(), 1);
+    assert!(doubled[0].message.contains("load → fetch → read_row"));
+    let ruby = project_ext(
+        "def load(items)\n  for item in items do\n    example.store.read_row(item)\n  end\n  def (\n  items.each {\n    item.fetch()\n  }\nend\n",
+        "rb",
+    );
+    assert!(ruby.iter().any(|finding| finding.message.contains("for `example.store.read_row`")));
+    assert!(ruby.iter().any(|finding| finding.message.contains("each `item.fetch`")));
+}
+
+#[test]
+fn unknown_language_missing_effect_and_extensionless_path_are_skipped() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.python.packages = vec!["python".into()];
+    assert!(root_entries(&config, "cobol").is_empty());
+    config.tests.dotnet.projects.insert(
+        "lib".into(),
+        DotnetProjectConfig {
+            project: "csharp".into(),
+            include: Vec::new(),
+            exclude: Vec::new(),
+            test: false,
+        },
+    );
+    config.effects.insert(
+        "store".into(),
+        EffectKindConfig {
+            targets: vec![EffectTargetConfig {
+                module: "example.store".into(),
+                export: "read_row".into(),
+                category: Some("query".into()),
+            }],
+            ..EffectKindConfig::default()
+        },
+    );
+    let options = super::super::config::Options {
+        effects: vec!["missing".into(), "store".into()],
+        ..Default::default()
+    };
+    let listed = sink_list(&config, &options);
+    assert_eq!(listed.len(), 1);
+    assert_eq!(listed[0].export, "read_row");
+    let root = PathBuf::from("/repo");
+    let rule = RuleDef {
+        rule: "query-reached-per-item".into(),
+        scope: Some(RuleScope::Repository),
+        ..RuleDef::default()
+    };
+    let filter = RulePathFilter::new(&root, &config, &rule).unwrap();
+    let files = selected_files(
+        &root,
+        &config,
+        &["cobol".into(), "python".into()],
+        &[root.join("python/README"), root.join("python/worker.py")],
+        &filter,
+    );
+    assert_eq!(files.len(), 1);
+    assert!(files[0].0.ends_with("worker.py"));
+    let dotnet = selected_files(
+        &root,
+        &config,
+        &["dotnet".into()],
+        &[root.join("csharp/Worker.cs")],
+        &filter,
+    );
+    assert_eq!(dotnet.len(), 1);
 }

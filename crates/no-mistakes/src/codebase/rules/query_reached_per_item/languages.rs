@@ -181,15 +181,16 @@ fn scan_roots(root: &Path, entries: &[String], language: &str) -> Vec<PathBuf> {
     entries
         .iter()
         .map(|entry| {
-            let path =
-                crate::codebase::ts_resolver::normalize_path(&root.join(entry.trim_end_matches('/')));
-            match path.extension().and_then(|ext| ext.to_str()) {
-                Some("csproj" | "fsproj" | "vbproj") => path
-                    .parent()
-                    .map(std::path::Path::to_path_buf)
-                    .unwrap_or(path),
-                _ => path,
+            let mut path = crate::codebase::ts_resolver::normalize_path(
+                &root.join(entry.trim_end_matches('/')),
+            );
+            if matches!(
+                path.extension().and_then(|ext| ext.to_str()),
+                Some("csproj" | "fsproj" | "vbproj")
+            ) {
+                path.pop();
             }
+            path
         })
         .collect()
 }

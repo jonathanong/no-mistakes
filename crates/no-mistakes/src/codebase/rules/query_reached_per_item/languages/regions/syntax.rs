@@ -120,8 +120,7 @@ fn construct_label(trimmed: &str) -> &'static str {
 }
 
 fn each_line(trimmed: &str) -> bool {
-    words(trimmed).contains(&"each")
-        && (trimmed.contains(" do") || trimmed.ends_with("do") || trimmed.contains('{'))
+    words(trimmed).contains(&"each") && (trimmed.contains(" do") || trimmed.contains('{'))
 }
 
 fn callee_before(line: &str, paren: usize) -> String {
