@@ -18,17 +18,27 @@ function attributeExpression(attribute) {
 }
 
 function isJsonLdScript(node) {
-  return node.attributes.some((attribute) => {
+  let lastSpread = -1;
+  let typeAt = -1;
+  let jsonLd = false;
+  for (let index = 0; index < node.attributes.length; index += 1) {
+    const attribute = node.attributes[index];
+    if (attribute.type === "JSXSpreadAttribute") {
+      lastSpread = index;
+      continue;
+    }
     if (
       attribute.type !== "JSXAttribute" ||
       attribute.name.type !== "JSXIdentifier" ||
       attribute.name.name !== "type"
     ) {
-      return false;
+      continue;
     }
     const value = unwrapExpression(attributeExpression(attribute));
-    return value?.type === "Literal" && value.value === "application/ld+json";
-  });
+    typeAt = index;
+    jsonLd = value?.type === "Literal" && value.value === "application/ld+json";
+  }
+  return jsonLd && typeAt > lastSpread;
 }
 
 function jsxAttribute(node, name) {

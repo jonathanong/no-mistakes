@@ -117,6 +117,7 @@ function hasGlobalObjectPromiseAccess(context) {
           );
     if (
       references.some((reference) => {
+        if (inTypeQuery(reference.identifier)) return false;
         const member = logicalParent(reference.identifier);
         if (
           member?.type !== "MemberExpression" ||

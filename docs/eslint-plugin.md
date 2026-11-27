@@ -123,7 +123,7 @@ The schema accepts an object: `internalSpecifiers?: string[]`,
 exempt a raw `<script>` only when it also has `dangerouslySetInnerHTML`.
 Both default to no exemptions. Literal `type="application/ld+json"` and
 `type={"application/ld+json"}` tags are allowed by default, including an `as`
-or `satisfies` wrapper around that literal or an allowed `id`.
+or `satisfies` wrapper around that literal or an allowed `id`. A spread after the type is not exempt.
 `unanalyzable?: "finding" | "ignore"` defaults to `"finding"`. Outside `app`
 and `pages`, a non-static `require`, `import()`, or `import = require` reports
 on each raw `<script>`. A static `require("next/…")` or

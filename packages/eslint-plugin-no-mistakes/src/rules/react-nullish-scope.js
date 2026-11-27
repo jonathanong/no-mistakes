@@ -156,7 +156,10 @@ function createNullishState(context) {
           objectAliases.set(binding, alias.props);
           objectBindings.set(binding, alias.props);
         }
-        if (alias?.unresolved) unresolvedAliases.set(binding, alias.unresolved);
+        if (alias?.unresolved) {
+          unresolvedAliases.set(binding, alias.unresolved);
+          unresolvedBindings.set(binding, alias.unresolved);
+        }
       }
       return;
     }

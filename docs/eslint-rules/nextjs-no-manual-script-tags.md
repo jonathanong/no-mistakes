@@ -52,7 +52,7 @@ JSON-LD still reports `unanalyzable` when a structured-data option is set.
 
 A raw `<script>` with `type="application/ld+json"` or
 `type={"application/ld+json"}` is allowed by default, including when that
-literal is wrapped in `as` or `satisfies`. An allowed inline `id` accepts the
+literal is wrapped in `as` or `satisfies`. A spread after that type is not exempt, because JSX applies later attributes last; the same type written after every spread still is. An allowed inline `id` accepts the
 same wrappers. Setting either structured
 data option opts in to reporting those tags. Inline-id exemptions do not
 bypass this opt-in. Dynamic type expressions and template literals retain the

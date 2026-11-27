@@ -301,6 +301,57 @@ describe("typescript import wrappers", () => {
           unanalyzable: "ignore",
         },
       ),
+      eslintCase(
+        "JSON-LD type before a spread still reports",
+        "app/script-spread.tsx",
+        "nextjs-no-manual-script-tags",
+      ),
+      eslintCase(
+        "member alias of a static require getter",
+        "nullable-member-alias.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "forwarded member of an unresolved require",
+        "nullable-forwarded-member.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "destructured name from a dynamic require",
+        "nullable-unresolved-name.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "ignored destructured name from a dynamic require",
+        "nullable-unresolved-name.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+          unanalyzable: "ignore",
+        },
+      ),
+      eslintCase(
+        "const alias chain keeps an unresolved ReactNode",
+        "react-nullish-alias-chain.tsx",
+        "react-no-nullish-react-node",
+      ),
     ];
 
     expect(cases.find((item) => item.name === "ignored unresolved react require").findings).toEqual(
@@ -382,7 +433,7 @@ describe("typescript import wrappers", () => {
     ]);
     expect(
       cases.find((item) => item.name === "promise type query alias").findings.map((f) => f.line),
-    ).toEqual([4]);
+    ).toEqual([4, 9]);
     expect(
       cases
         .find((item) => item.name === "exempt scripts before an unresolved import")
@@ -452,6 +503,47 @@ describe("typescript import wrappers", () => {
     expect(
       cases.find((item) => item.name === "ignored unresolved relay around a getter").findings,
     ).toEqual([]);
+    expect(
+      cases
+        .find((item) => item.name === "JSON-LD type before a spread still reports")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [5, "script"],
+      [7, "script"],
+    ]);
+    expect(
+      cases
+        .find((item) => item.name === "member alias of a static require getter")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [6, "wrapper"],
+      [10, "unanalyzable"],
+    ]);
+    expect(
+      cases
+        .find((item) => item.name === "forwarded member of an unresolved require")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [5, "unanalyzable"],
+      [9, "unanalyzable"],
+    ]);
+    expect(
+      cases
+        .find((item) => item.name === "destructured name from a dynamic require")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([[5, "unanalyzable"]]);
+    expect(
+      cases.find((item) => item.name === "ignored destructured name from a dynamic require")
+        .findings,
+    ).toEqual([]);
+    expect(
+      cases
+        .find((item) => item.name === "const alias chain keeps an unresolved ReactNode")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [17, "nullish"],
+      [23, "unanalyzable"],
+    ]);
 
     const oxlint = {
       "react-use": oxlintOn(".oxlintrc-react-use.json", [
@@ -469,6 +561,7 @@ describe("typescript import wrappers", () => {
         "react-nullish-members.tsx",
         "react-nullish-local-require.tsx",
         "react-nullish-annotated.tsx",
+        "react-nullish-alias-chain.tsx",
       ]),
       "nullish-ignore": oxlintOn(".oxlintrc-nullish-ignore.json", ["react-nullish-unresolved.tsx"]),
       fetch: oxlintOn(".oxlintrc-fetch.json", [
@@ -487,6 +580,7 @@ describe("typescript import wrappers", () => {
         "src/type-specifier-script.tsx",
         "src/mixed-script-import.tsx",
         "src/escaped-script-import.tsx",
+        "app/script-spread.tsx",
       ]),
       "script-structured": oxlintOn(".oxlintrc-script-structured.json", ["src/script-exempt.tsx"]),
       "script-ignore": oxlintOn(".oxlintrc-script-ignore.json", ["src/dynamic-next.tsx"]),
@@ -498,8 +592,14 @@ describe("typescript import wrappers", () => {
         "nullable-dynamic-require.ts",
         "nullable-known-member.ts",
         "nullable-relay-getter.ts",
+        "nullable-member-alias.ts",
+        "nullable-forwarded-member.ts",
+        "nullable-unresolved-name.ts",
       ]),
-      "nullable-ignore": oxlintOn(".oxlintrc-nullable-ignore.json", ["nullable-relay-getter.ts"]),
+      "nullable-ignore": oxlintOn(".oxlintrc-nullable-ignore.json", [
+        "nullable-relay-getter.ts",
+        "nullable-unresolved-name.ts",
+      ]),
       "nullable-user": oxlintOn(".oxlintrc-nullable-user.json", ["nullable-satisfies.ts"]),
       "nullable-overload": oxlintOn(".oxlintrc-nullable-widget.json", ["nullable-overload.ts"]),
       "nullable-outer": oxlintOn(".oxlintrc-nullable-widget.json", ["nullable-outer.ts"]),

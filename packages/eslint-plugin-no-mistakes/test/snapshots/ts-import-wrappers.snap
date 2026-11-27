@@ -90,6 +90,36 @@
       "rule": "nextjs-no-manual-script-tags"
     },
     {
+      "file": "app/script-spread.tsx",
+      "findings": [
+        {
+          "column": 5,
+          "endColumn": 64,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/app/script-spread.tsx",
+          "line": 5,
+          "message": "Use next/script instead of a raw <script> tag.",
+          "messageId": "script",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 53,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/app/script-spread.tsx",
+          "line": 7,
+          "message": "Use next/script instead of a raw <script> tag.",
+          "messageId": "script",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        }
+      ],
+      "name": "JSON-LD type before a spread still reports",
+      "options": null,
+      "rule": "nextjs-no-manual-script-tags"
+    },
+    {
       "file": "src/mixed-script-import.tsx",
       "findings": [
         {
@@ -352,6 +382,36 @@
       "rule": "react-no-nullish-react-node"
     },
     {
+      "file": "react-nullish-alias-chain.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 33,
+          "endLine": 17,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-alias-chain.tsx",
+          "line": 17,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 33,
+          "endLine": 23,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-alias-chain.tsx",
+          "line": 23,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "const alias chain keeps an unresolved ReactNode",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
       "file": "react-nullish-unresolved.tsx",
       "findings": [],
       "name": "ignored unresolved ReactNode import",
@@ -557,6 +617,17 @@
           "endLine": 4,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/promise-type-query.tsx",
           "line": 4,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 33,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/promise-type-query.tsx",
+          "line": 9,
           "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
           "messageId": "resolve",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
@@ -777,6 +848,33 @@
       "rule": "server-require-nullable-fetch-wrapper"
     },
     {
+      "file": "nullable-unresolved-name.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 24,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved-name.ts",
+          "line": 5,
+          "message": "Could not resolve whether 'getWidget' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "destructured name from a dynamic require",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
       "file": "nullable-dynamic-require.ts",
       "findings": [
         {
@@ -811,6 +909,60 @@
           "Widget"
         ],
         "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-forwarded-member.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-forwarded-member.ts",
+          "line": 5,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 39,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-forwarded-member.ts",
+          "line": 9,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "forwarded member of an unresolved require",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-unresolved-name.ts",
+      "findings": [],
+      "name": "ignored destructured name from a dynamic require",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable",
+        "unanalyzable": "ignore"
       },
       "rule": "server-require-nullable-fetch-wrapper"
     },
@@ -861,6 +1013,44 @@
       "file": "nullable-local-require.ts",
       "findings": [],
       "name": "local require is not the getter loader",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-member-alias.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 19,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-member-alias.ts",
+          "line": 6,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-member-alias.ts",
+          "line": 10,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "member alias of a static require getter",
       "options": {
         "getterCalleePatterns": [
           "^getWidget$"
@@ -1150,6 +1340,12 @@
         "findings": [],
         "name": "nullable-relay-getter.ts",
         "options": null
+      },
+      {
+        "file": "nullable-unresolved-name.ts",
+        "findings": [],
+        "name": "nullable-unresolved-name.ts",
+        "options": null
       }
     ],
     "nullable-outer": [
@@ -1249,6 +1445,27 @@
         "options": null
       },
       {
+        "file": "nullable-forwarded-member.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-forwarded-member.ts",
+            "line": 5,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-forwarded-member.ts",
+            "line": 9,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          }
+        ],
+        "name": "nullable-forwarded-member.ts",
+        "options": null
+      },
+      {
         "file": "nullable-known-member.ts",
         "findings": [
           {
@@ -1266,6 +1483,27 @@
         "file": "nullable-local-require.ts",
         "findings": [],
         "name": "nullable-local-require.ts",
+        "options": null
+      },
+      {
+        "file": "nullable-member-alias.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-member-alias.ts",
+            "line": 6,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-member-alias.ts",
+            "line": 10,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          }
+        ],
+        "name": "nullable-member-alias.ts",
         "options": null
       },
       {
@@ -1304,6 +1542,20 @@
         "options": null
       },
       {
+        "file": "nullable-unresolved-name.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-unresolved-name.ts",
+            "line": 5,
+            "message": "Could not resolve whether 'getWidget' is the configured getter or wrapper. Use a static import."
+          }
+        ],
+        "name": "nullable-unresolved-name.ts",
+        "options": null
+      },
+      {
         "file": "nullable-unresolved.ts",
         "findings": [
           {
@@ -1319,6 +1571,27 @@
       }
     ],
     "nullish": [
+      {
+        "file": "react-nullish-alias-chain.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-alias-chain.tsx",
+            "line": 17,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-alias-chain.tsx",
+            "line": 23,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          }
+        ],
+        "name": "react-nullish-alias-chain.tsx",
+        "options": null
+      },
       {
         "file": "react-nullish-annotated.tsx",
         "findings": [],
@@ -1426,6 +1699,13 @@
             "column": 10,
             "file": "promise-type-query.tsx",
             "line": 4,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "promise-type-query.tsx",
+            "line": 9,
             "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
           }
         ],
@@ -1577,6 +1857,27 @@
         "file": "app/page.tsx",
         "findings": [],
         "name": "app/page.tsx",
+        "options": null
+      },
+      {
+        "file": "app/script-spread.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(nextjs-no-manual-script-tags)",
+            "column": 5,
+            "file": "app/script-spread.tsx",
+            "line": 5,
+            "message": "Use next/script instead of a raw <script> tag."
+          },
+          {
+            "code": "no-mistakes(nextjs-no-manual-script-tags)",
+            "column": 5,
+            "file": "app/script-spread.tsx",
+            "line": 7,
+            "message": "Use next/script instead of a raw <script> tag."
+          }
+        ],
+        "name": "app/script-spread.tsx",
         "options": null
       },
       {

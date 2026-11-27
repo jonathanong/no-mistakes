@@ -177,11 +177,11 @@ module.exports = Object.assign(
           const wrapped = wrapperState(node, options.requiredWrapperCallee, context);
           if (wrapped === "inside") return;
           if (suppressed(node)) return;
-          const member = memberPropertyName(node.callee);
+          const member = memberPropertyName(invoked ? invoked.callee : node.callee);
           const knownOtherMember =
             Boolean(member) && !getterPatterns.some((pattern) => pattern.test(member));
           const uncertainGetter =
-            (Boolean(name) && wrapped === "unresolved") ||
+            (Boolean(name) && (wrapped === "unresolved" || unresolved)) ||
             (!name && unresolved && !knownOtherMember);
           if (uncertainGetter) {
             if (reportsUnanalyzable(context)) {

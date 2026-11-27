@@ -28,7 +28,7 @@ function requiredMember(callee, context) {
   if (moduleName === undefined) return null;
   const property = memberPropertyName(current);
   if (moduleName === null || !property) return { unresolved: true };
-  return { name: property };
+  return { name: property, module: moduleName, kind: "named", imported: property, typeOnly: false };
 }
 
 // undefined: not a require. null: require whose module is not a static string.
@@ -145,6 +145,8 @@ function importFact(node, context, seen = new Set()) {
   if (typeof required === "string") {
     return { module: required, kind: "namespace", imported: null, typeOnly: false };
   }
+  const member = requiredMember(current, context);
+  if (member) return member.unresolved ? { unresolved: true } : member;
   if (current.type !== "Identifier") return null;
   const variable = resolveVariable(current, context);
   if (!variable || variable.defs.length === 0) return null;
