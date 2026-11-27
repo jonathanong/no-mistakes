@@ -90,6 +90,55 @@ verdict. `05-where-used` failed `exhaustive-by-construction` 1/3, and
 "planning how to answer" wording seems to push answers further toward a plan
 with no conclusion. That is a reason beyond the tie rule not to ship B.
 
+## 2026-11-26 — `testing-rules` config candidate (T1): kept
+
+**Run:** main `24768fa692` plus the T1 gates commit, `python3 evals/generate.py --rules-variant describe`,
+then `--eval-dir evals-variants/rules-describe --tag rules --ablation none
+--runs 3 -j 4 --no-scaffold`, all 26 rules cases, Claude CLI 2.1.332, agent
+`claude-sonnet-5-5`, judge `claude-opus-5-5`, 78 attempts, zero errored and
+`partial: false`. Cost `$11.20`: `$7.69` agent and `$3.52` judge. Report
+outside git at `~/.cache/no-mistakes/evals/2026-11-26-rules-t1/t1.json`.
+Gates: [pre-registered](#2026-11-26--gates-for-the-testing-rules-config-candidate-t1).
+Control: the with arm of the
+[rules control](#2026-11-26--rules-control-postgresql-queue-testing-re-measured)
+and the [`github-actions` and off-topic run](#2026-11-26--github-actions-and-off-topic-guards-measured).
+
+| gate | needed | control | T1 | |
+| --- | --- | --- | --- | --- |
+| 1. coverage-floor cases load `testing-rules` | ≥ 4/6 | 0/6 | **6/6** | pass |
+| 2. `postgresql` loaded | ≥ 14/24 | 20/24 | 23/24 | pass |
+| 2. `queue` loaded | ≥ 6/15 | 9/15 | 8/15 | pass |
+| 2. `testing` loaded | ≥ 6/18 | 9/18 | 14/18 | pass |
+| 2. `github-actions` loaded | ≥ 6/9 | 9/9 | 9/9 | pass |
+| 2. summed should-fire loaded | ≥ 38/66 | 47/66 | 54/66 | pass |
+| 3. off-topic loaded | 0/12 | 0/12 | 0/12 | pass |
+| 4. passed overall, `testing` (read) | — | 16/18 | 15/18 | within noise |
+| 4. passed overall, all should-fire (read) | — | 60/66 | 60/66 | same |
+
+The rise is on the targeted cases: both coverage-floor cases went from 0/3 to
+3/3 loaded. Of the other `testing` cases, parsed-usage (3/3), error-text (3/3)
+and flaky-wait (0/3) held, and real-email fell from 3/3 to 2/3.
+`postgresql-write-advisory-lock` went from
+0/3 to 3/3 loaded with its description unchanged, the same-day swing the
+control entry already shows on that case.
+
+**Failing attempts read.** `testing-review-lowered-coverage-floor` failed once
+with the skill loaded, on a 2-1 judge vote: the review flagged the lowered
+floor and quoted the rule, then asked to move the unrelated `json-summary`
+reporter into its own commit, which the grader counts against it.
+`testing-review-real-email-fixture` failed once without loading the skill.
+`testing-exception-parsed-usage-text` failed once with it loaded, as in the
+control. `queue-write-bounded-sweep` failed once with `queue-rules` loaded;
+its description is unchanged. None of these comes from the changed sentence.
+
+**Verdict: kept.** The coverage-floor cases are ceiling cases (3/3 without the
+plugin in the control), so this is a loading result only, not evidence that
+the rules improve those reviews. The reason to keep it anyway: a coverage
+threshold edit is a test-config change the `testing-rules` coverage rule
+("MUST NOT lower a coverage threshold … to make a flaky or failing test
+pass") is written for, and the shipped description never let it load there.
+Shipped in `plugins/no-mistakes-rules/skills/testing-rules/SKILL.md`.
+
 ## 2026-11-26 — gates for the `no-mistakes` description candidates A and B
 
 **Pre-registered**, committed before either candidate ran. No run in this entry.

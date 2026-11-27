@@ -1,6 +1,6 @@
 ---
 name: testing-rules
-description: "Load before writing, reviewing, or fixing any automated test or test helper (Vitest, Jest, node:test, backend integration tests, React Testing Library, XCTest, xUnit). Lists the test defects to avoid and the patterns that need a stated reason: assertions, mocks, fixtures, isolation, timers, snapshots, coverage. Browser tests also load playwright-rules."
+description: "Load before writing, reviewing, or fixing any automated test, test helper, or test runner config such as a coverage threshold (Vitest, Jest, node:test, backend integration tests, React Testing Library, XCTest, xUnit). Lists the test defects to avoid and the patterns that need a stated reason: assertions, mocks, fixtures, isolation, timers, snapshots, coverage. Browser tests also load playwright-rules."
 ---
 
 # Testing rules
