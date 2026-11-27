@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 
 function unwrapExpression(node) {
   let current = node;
@@ -25,12 +26,15 @@ module.exports = rule(
         "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.",
     },
   },
-  (context) => ({
-    UnaryExpression(node) {
-      if (node.operator !== "delete") return;
-      const argument = unwrapExpression(node.argument);
-      if (argument?.type !== "MemberExpression") return;
-      context.report({ node, messageId: "delete" });
-    },
-  }),
+  (context) => {
+    const suppressed = ruleSuppression(context, "no-delete-property");
+    return {
+      UnaryExpression(node) {
+        if (node.operator !== "delete") return;
+        const argument = unwrapExpression(node.argument);
+        if (argument?.type !== "MemberExpression" || suppressed(node)) return;
+        context.report({ node, messageId: "delete" });
+      },
+    };
+  },
 );

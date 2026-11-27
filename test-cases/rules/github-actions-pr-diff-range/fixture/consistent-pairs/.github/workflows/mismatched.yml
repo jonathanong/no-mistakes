@@ -1,0 +1,37 @@
+name: mismatched
+on: pull_request
+jobs:
+  base_sha_with_github_sha:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.sha }}
+  baseref_two_arg_head_sha:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git diff --name-only origin/${{ github.base_ref }} ${{ github.event.pull_request.head.sha }}
+  merge_parent_with_head_sha:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: git diff --name-only HEAD^1 ${{ github.event.pull_request.head.sha }}
+  pr_head_checkout_merge_parent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: git diff --name-only HEAD^1 HEAD
+  mismatched_pairs:
+    runs-on: ubuntu-latest
+    env:
+      DIFF_BASE: ${{ github.event.pull_request.base.sha }}
+      DIFF_HEAD: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/analyze
+        with:
+          base-rev: ${{ github.event.pull_request.base.sha }}
+          head-rev: HEAD
+      - run: node scripts/check.mjs --base HEAD^1 --head "${{ github.event.pull_request.head.sha }}"

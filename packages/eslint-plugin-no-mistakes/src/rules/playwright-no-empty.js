@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule, selectorLiteral } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 const { selectorAttributeVisitors } = require("../selector-visitor");
 
 module.exports = rule(
@@ -16,10 +17,12 @@ module.exports = rule(
     ],
     messages: { empty: "Test ID must not be empty." },
   },
-  (context) =>
-    selectorAttributeVisitors(context, (node) => {
-      if (selectorLiteral(node) === "") {
+  (context) => {
+    const suppressed = ruleSuppression(context, "playwright-no-empty");
+    return selectorAttributeVisitors(context, (node) => {
+      if (selectorLiteral(node) === "" && !suppressed(node)) {
         context.report({ node, messageId: "empty" });
       }
-    }),
+    });
+  },
 );

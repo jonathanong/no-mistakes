@@ -62,3 +62,41 @@ No automatic fix is applied.
 
 CLI `check`, async Node `check({ root, config })`, and `analyzeProject()` check
 reports read this same YAML option and return the same findings and suppressions.
+
+## `requireExplicitWorkflowCallBindings`
+
+Set `requireExplicitWorkflowCallBindings: true` to require reusable-workflow
+callers to pass every declared secret explicitly (both required and optional
+secrets under `on.workflow_call.secrets`) and every `required: true` input under
+`on.workflow_call.inputs`:
+
+```yaml
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      requireExplicitWorkflowCallBindings: true
+      unanalyzable: advise # report | advise | ignore
+```
+
+`false` is the default and reports nothing. When `true`:
+
+- `secrets: inherit` is reported at the `secrets` key (deduplicated when
+  `forbidSecretsInherit: true` is also enabled).
+- Every secret declared in a local callee's `on.workflow_call.secrets` (whether
+  `required: true` or optional) must be mapped to a non-null scalar under
+  `secrets:` (matched case-insensitively, following GitHub Actions).
+- Every input declared with `required: true` in a local callee's
+  `on.workflow_call.inputs` must be passed as a non-null scalar under `with:`.
+  Optional inputs may be omitted.
+- Findings point to `secrets:` or `with:` when present (or to the caller job key
+  when the block is omitted), and to the individual entry key when left empty.
+- Unverifiable inputs — remote `uses:` calls, missing or non-callable local
+  callees, malformed workflow YAML, non-mapping `secrets:` / `with:` values
+  (such as `${{ ... }}`), non-scalar entry values, and case-colliding keys — are
+  routed through `options.unanalyzable` (default `advise`, never a silent pass).
+- Non-boolean values for `requireExplicitWorkflowCallBindings` fail at config
+  load with exit code 2.
+- Standard `no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+  `no-mistakes-disable-file` directives for `workflow-topology-policy` suppress
+  both findings and advisories.

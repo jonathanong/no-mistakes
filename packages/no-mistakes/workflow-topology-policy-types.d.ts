@@ -1,3 +1,5 @@
+import type { Unanalyzable } from "./traversal-types";
+
 /** YAML options for workflow-topology-policy, shared by CLI and async check reports. */
 export interface WorkflowTopologyPolicyOptions {
   jobInventory?: Record<string, string[]>;
@@ -7,6 +9,8 @@ export interface WorkflowTopologyPolicyOptions {
   forbiddenActivityTypes?: WorkflowForbiddenActivityTypes[];
   forbiddenEvents?: string[];
   forbidSecretsInherit?: boolean;
+  /** Defaults to false. Require reusable workflow callers to map every declared secret explicitly and pass every required input. */
+  requireExplicitWorkflowCallBindings?: boolean;
   /** Defaults to false. Disallow workflow-level locks on workflow_call workflows. */
   forbidReusableWorkflowConcurrency?: boolean;
   requiredDirectEdges?: [string, string][];
@@ -20,6 +24,8 @@ export interface WorkflowTopologyPolicyOptions {
   concurrencyPolicy?: Record<string, WorkflowConcurrencyIntent>;
   forbidConcurrencyGroupCollisions?: boolean;
   secretInventory?: WorkflowSecretInventory | null;
+  /** Policy for unverified reusable workflow call bindings (default: "advise" when requireExplicitWorkflowCallBindings is true). */
+  unanalyzable?: Unanalyzable;
 }
 
 export interface WorkflowForbiddenActivityTypes {

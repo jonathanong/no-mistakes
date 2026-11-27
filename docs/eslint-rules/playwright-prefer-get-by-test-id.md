@@ -62,6 +62,10 @@ find('[data-pw="save"]');
 page.locator('[data-pw="save-button"]');
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`playwright-selector-priority`](playwright-selector-priority.md) prefers

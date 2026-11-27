@@ -87,6 +87,10 @@ verify(page.getByRole("status")).toBeVisible({ timeout: 30_000 });
 await expect(report).toBeVisible({ timeout: 20_000 });
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 This rule owns assertion-specific timeout caps.

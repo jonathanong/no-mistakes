@@ -34,3 +34,38 @@ fn github_actions_pr_diff_range_json_matches_snapshot() {
     .collect();
     assert_saved_fixture("github_actions_pr_diff_range", &cases);
 }
+
+#[test]
+fn github_actions_pr_diff_range_consistent_pairs_json_matches_snapshot() {
+    let cases: Vec<_> = [
+        ("advise", "consistent-pairs.yml"),
+        ("report", "consistent-pairs-report.yml"),
+        ("ignore", "consistent-pairs-ignore.yml"),
+    ]
+    .into_iter()
+    .map(|(label, config)| {
+        (
+            label,
+            rules_path(RULE, "fixture", "consistent-pairs"),
+            rules_path(RULE, "configs", config),
+        )
+    })
+    .collect();
+    assert_saved_fixture("github_actions_pr_diff_range_consistent_pairs", &cases);
+
+    let root = rules_path(RULE, "fixture", "consistent-pairs");
+    let invalid = rules_path(RULE, "configs", "consistent-pairs-invalid.yml");
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .current_dir(&root)
+        .args(["--lock-timeout", "0", "check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(&invalid)
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    assert!(output.stdout.is_empty());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("revisionPairs[0]"), "{stderr}");
+}
