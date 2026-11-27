@@ -281,41 +281,6 @@ codex plugin add no-mistakes@ratchet-stack
 codex plugin add no-mistakes-rules@ratchet-stack
 ```
 
-If you added the old `no-mistakes` marketplace, migrate. Claude Code uninstalls a
-marketplace's plugins when it is removed, so reinstall both plugins afterward:
-
-```sh
-claude plugin marketplace remove no-mistakes
-claude plugin marketplace add jongleberry/ratchet-stack
-claude plugin install no-mistakes@ratchet-stack
-claude plugin install no-mistakes-rules@ratchet-stack
-
-codex plugin remove no-mistakes@no-mistakes
-codex plugin remove no-mistakes-rules@no-mistakes
-codex plugin marketplace remove no-mistakes
-codex plugin marketplace add jongleberry/ratchet-stack --ref main
-codex plugin add no-mistakes@ratchet-stack
-codex plugin add no-mistakes-rules@ratchet-stack
-```
-
-If you added the former `harness-plugins` marketplace, remove its plugins and
-marketplace after adding `ratchet-stack`, so the old copies of the skills do not
-load alongside the new ones:
-
-```sh
-claude plugin marketplace remove harness-plugins
-codex plugin remove no-mistakes@harness-plugins
-codex plugin remove jong-skills@harness-plugins
-codex plugin remove no-mistakes-rules@harness-plugins
-codex plugin marketplace remove harness-plugins
-```
-
-Claude Code uninstalls a marketplace's plugins when you remove it, and Codex may keep
-them enabled, so remove each plugin before its marketplace. Reinstall any
-other plugin you had from `harness-plugins`; see the
-[`ratchet-stack` README](https://github.com/jongleberry/ratchet-stack#readme) for
-the current plugins.
-
 ### Example recipes
 
 | Goal | Command |
@@ -372,6 +337,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 - Explicit configuration: route roots, queue factories, test projects, and
   global fallback behavior are opt-in configuration, not inferred conventions.
 
-## Harness Ecosystem
+## Related projects
 
 no-mistakes is part of [ratchet-stack](https://github.com/jongleberry/ratchet-stack), a set of plugins and tools for autonomous coding agents.
