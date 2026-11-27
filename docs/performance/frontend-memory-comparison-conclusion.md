@@ -3,7 +3,7 @@
 # Historical frontend memory comparison: inconclusive
 
 The historical frontend memory comparison tracked in
-[issue #2037](https://github.com/jonathanong/no-mistakes/issues/2037) is
+[issue #2037](https://github.com/jongleberry/no-mistakes/issues/2037) is
 **inconclusive for retained objects, repeatability, and causality**. Its adverse
 extract result remains an observed server metric. The improved incremental
 result is a separate observation and does not cancel it. Neither observation
@@ -22,7 +22,7 @@ compares base `6489073eec9d4a9a02fc00e196c8ca0ceaa13513` with head
 `3414f3c47ec55291c6b8c843e43b43ca754b847d`. The check reports 221 untouched
 entries, four skipped entries using baseline values, and 39 syscall-limited
 simulation warnings. Its neutral title is `Performance Regression: -4.53%`.
-The [stored-profile response](https://github.com/jonathanong/no-mistakes/pull/2004#issuecomment-6184403029)
+The [stored-profile response](https://github.com/jongleberry/no-mistakes/pull/2004#issuecomment-6184403029)
 provides these source-tagged numbers:
 
 | Metric                       | Extract base | Extract head | Incremental base | Incremental head |
@@ -104,7 +104,7 @@ dispatched, built, or sampled. It lacked validated format/accounting assumptions
 and consistent resource budgets. No repeatability sample exists from that
 proposal. This evidence therefore supports neither a stable regression nor a
 flat/no-overhead conclusion. The separate original native CPU question remains
-[issue #1972](https://github.com/jonathanong/no-mistakes/issues/1972).
+[issue #1972](https://github.com/jongleberry/no-mistakes/issues/1972).
 
 ## Requirements for a renewed comparison
 

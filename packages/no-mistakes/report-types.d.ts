@@ -1,7 +1,16 @@
+import type {
+  PlaywrightCoverageFetch,
+  PlaywrightCoverageRoute,
+  PlaywrightCoverageSelector,
+  PlaywrightCoverageSummary,
+  PlaywrightDuplicateSelector,
+} from "./playwright-report-types";
+
 export * from "./check-report-types";
 export * from "./fetch-report-types";
 export * from "./queue-report-types";
 export * from "./react-report-types";
+export type * from "./playwright-report-types";
 
 export interface PlaywrightOptions {
   /** Project root. Defaults to the current working directory. */
@@ -31,8 +40,11 @@ export interface PlaywrightRelatedOptions extends PlaywrightOptions {
 export interface PlaywrightCoverageReport {
   /** Config-file and property-line diagnostics, omitted for fully known matchers. */
   warnings?: string[];
-  /** Other coverage fields retain their existing opaque JSON contract. */
-  [field: string]: unknown;
+  summary: PlaywrightCoverageSummary;
+  routes: PlaywrightCoverageRoute[];
+  selectors: PlaywrightCoverageSelector[];
+  duplicateSelectors: PlaywrightDuplicateSelector[];
+  fetchApis: PlaywrightCoverageFetch[];
 }
 
 export interface GraphEdge {
@@ -102,13 +114,34 @@ export interface SwiftTestTargetRow {
   command: string;
 }
 
+export type ServerRouteFramework =
+  | "api-server"
+  | "express"
+  | "fastify"
+  | "hono"
+  | "koa-path-match"
+  | "koa-router"
+  | "nestjs"
+  | "heuristic"
+  | "remix";
+
+export interface ServerRoute {
+  file: string;
+  line: number;
+  method: string;
+  route: string;
+  rawPath: string;
+  queryParams: string[];
+  framework: ServerRouteFramework;
+}
+
 export interface ServerRoutesReport {
   summary: {
     totalRoutes: number;
     totalFiles: number;
     dynamicRoutes: number;
   };
-  routes: unknown[];
+  routes: ServerRoute[];
   edges: unknown[];
   diagnostics: unknown[];
 }

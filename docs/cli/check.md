@@ -383,8 +383,9 @@ Enable [`csp-allowed-origins`](../rules/csp-allowed-origins.md) to report
 third-party browser origins (`<script>`, `<img>`, `<link>`, `<iframe>`, media,
 `fetch`, `WebSocket`, `EventSource`, including protocol-relative `//host` and
 IPv6 literals) not allowed by the intersected CSP directives in
-`options.cspFiles` (with optional `options.selfOrigins` for `'self'` and
-`options.unanalyzable` for dynamic URLs).
+`options.cspFiles` (with optional `options.selfOrigins` for `'self'`,
+`options.unanalyzable` for dynamic URLs, and module-level `const` string
+arrays joined or spread from the same file or one named import).
 
 Enable [`vitest-default-excludes`](../rules/vitest-default-excludes.md) to catch
 literal `test.exclude` arrays that drop Vitest's discovery exclusions in the

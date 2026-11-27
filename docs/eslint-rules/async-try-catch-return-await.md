@@ -69,7 +69,7 @@ aliases one. Review the error-boundary intent before applying it.
 
 ## Limits
 
-Another file's re-export is not visible here. `import { handle } from "./barrel.mjs"` stays unreported when that barrel is `export { report as handle } from "@app/errors"` or `export * from "@app/errors"`. A parameter default such as `function run({ report } = errors)` is not judged, because the caller can pass a different object.
+`new (Promise as typeof Promise)(...)` is a promise constructor. An assertion around `await value` before `return value` handles that binding, so the return is not reported. Another file's re-export is not visible here. `import { handle } from "./barrel.mjs"` stays unreported when that barrel is `export { report as handle } from "@app/errors"` or `export * from "@app/errors"`. A parameter default such as `function run({ report } = errors)` is not judged, because the caller can pass a different object.
 
 ## Suppression
 

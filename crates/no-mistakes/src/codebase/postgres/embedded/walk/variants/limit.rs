@@ -4,20 +4,17 @@ use crate::codebase::postgres::embedded::MAX_EMBEDDED_SQL_VARIANTS;
 pub(super) fn bounded(values: Vec<Recovered>) -> Option<Vec<Recovered>> {
     // Saved fixtures and observer counters check the exploration budget.
     // This boundary executes the same algorithm in ordinary and test builds.
-    let mut unique = Vec::new();
+    let mut unique: Vec<Recovered> = Vec::new();
     for mut value in values {
         normalize(&mut value);
         // Path extension and composition reject incompatible choices before
         // values arrive here; this boundary only normalizes and caps them.
-        let index = unique
-            .iter()
-            .position(|other: &Recovered| other.same_value(&value))
-            .unwrap_or_else(|| {
-                unique.push(value.clone());
-                unique.len() - 1
-            });
-        unique[index].merge_alternative(&value);
-        normalize(&mut unique[index]);
+        if let Some(other) = unique.iter_mut().find(|other| other.same_value(&value)) {
+            other.merge_alternative(&value);
+            normalize(other);
+        } else {
+            unique.push(value);
+        }
     }
     if unique.len() > 1 && unique.iter().any(|value| !value.append_sites.is_empty()) {
         // Prune each join. Conditional cardinality is independent of how many
@@ -79,8 +76,7 @@ fn select_witnesses(values: Vec<Recovered>, cap: usize) -> Vec<Recovered> {
         // Preserve every constraint as its own path, but prefer a distinct SQL
         // outcome over a second all-off path through nested no-op branches.
         if primary.iter().map(|index| &values[*index]).any(|other| {
-            other.append_decisions == value.append_decisions
-                && super::append_decisions::same_sql(other, value)
+            other.append_decisions == value.append_decisions && other.same_physical_value(value)
         }) {
             duplicate_paths.push(index);
         } else {
@@ -112,6 +108,7 @@ pub(super) fn binary_alternatives(
     mut right: Vec<Recovered>,
     id: u64,
 ) -> Option<Vec<Recovered>> {
+    right.iter_mut().for_each(sort_choices);
     let mut values = Vec::new();
     for mut value in left {
         normalize(&mut value);
@@ -136,9 +133,13 @@ pub(super) fn binary_alternatives(
     bounded(values)
 }
 
-fn normalize(value: &mut Recovered) {
+fn sort_choices(value: &mut Recovered) {
     value.choices.sort_unstable();
     value.choices.dedup();
+}
+
+fn normalize(value: &mut Recovered) {
+    sort_choices(value);
     value.decision_offs.sort_unstable();
     value.decision_offs.dedup_by_key(|(id, _, _)| *id);
     value.append_decisions = value
@@ -155,14 +156,14 @@ fn normalize(value: &mut Recovered) {
 }
 
 fn same_without_choice(left: &Recovered, right: &Recovered, id: u64) -> bool {
-    let mut left = left.clone();
-    let mut right = right.clone();
-    left.choices.retain(|(other, _)| *other != id);
-    right.choices.retain(|(other, _)| *other != id);
-    // Whether an alternative was previously enumerated is bookkeeping, not
-    // part of its physical SQL identity. Preserve it when the pair is folded.
-    left.enumerated = false;
-    right.enumerated = false;
-    normalize(&mut right);
-    left.same_value(&right)
+    left.same_physical_value(right)
+        && left
+            .choices
+            .iter()
+            .filter(|(choice, _)| *choice != id)
+            .eq(right.choices.iter().filter(|(choice, _)| *choice != id))
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[path = "limit/tests.rs"]
+mod tests;

@@ -72,7 +72,7 @@ matched files within those workflow and composite-action paths.
 `options.unanalyzable` accepts `advise`, `report`, or `ignore`. It inherits
 the repository-level `unanalyzable` setting when omitted. With neither
 setting, the rule uses `advise`. Definite command-policy violations remain
-findings in all three modes. [Policy selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/filesystem_dispatch/github_actions_run_command_policy/diagnostics.rs#L61-L71).
+findings in all three modes. [Policy selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/filesystem_dispatch/github_actions_run_command_policy/diagnostics.rs#L61-L71).
 
 | Option | Default | Behavior |
 | --- | --- | --- |

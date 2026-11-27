@@ -13,13 +13,7 @@ const results = JSON.parse(
 );
 
 test("CI reports and gates stop on workflow cancellation and still run after failures", () => {
-  for (const name of [
-    "quality",
-    "javascript-coverage",
-    "javascript-tests",
-    "native-tests",
-    "tests-gate",
-  ]) {
+  for (const name of ["quality", "javascript-coverage", "tests-gate"]) {
     assert.match(job(name), /^    if: \$\{\{ !cancelled\(\) \}\}$/m, name);
   }
   assert.match(
@@ -71,21 +65,11 @@ test("Benchmarks enforces change detection and any required benchmark jobs", () 
   }
 });
 
-for (const name of [
-  "quality",
-  "native-tests",
-  "javascript-tests",
-  "tests-standalone-lib",
-  "tests-gate",
-]) {
+for (const name of ["quality", "tests-gate"]) {
   test(`${name} cannot pass when a dependency fails, cancels, or skips`, () => {
     const body = job(name);
     assert.ok(body);
-    const condition =
-      name === "tests-standalone-lib"
-        ? "${{ !cancelled() && needs.changes.outputs.rust == 'true' }}"
-        : "${{ !cancelled() }}";
-    assert.ok(body.includes(`\n    if: ${condition}\n`));
+    assert.ok(body.includes("\n    if: ${{ !cancelled() }}\n"));
     const needs = body
       .match(/needs:\s*\[([^\]]+)\]/)[1]
       .split(",")
@@ -123,10 +107,19 @@ test("required names and every full test family remain in the aggregate", () => 
   for (const name of [
     "quality",
     "packages",
-    "javascript-tests",
-    "native-tests",
+    "javascript-coverage",
+    "linux-api-tests",
+    "native-build",
+    "native-test-build",
+    "native-rust-tests",
+    "native-rust-tests-macos",
+    "native-api-tests",
+    "native-api-tests-macos",
+    "macos-smoke",
+    "windows-smoke",
     "tests",
-    "tests-standalone-lib",
+    "standalone-build",
+    "standalone-shards",
     "timeout-policy-browser-tests",
   ])
     assert.ok(job("tests-gate").includes(name), name);
@@ -136,9 +129,7 @@ test("required names and every full test family remain in the aggregate", () => 
     "standalone-build",
     "standalone-shards",
     "native-build",
-    "native-build-macos",
     "native-test-build",
-    "native-test-build-macos",
     "native-rust-tests",
     "native-rust-tests-macos",
     "native-api-tests",
@@ -174,9 +165,9 @@ test("documentation tests cannot delay coverage archive consumers", () => {
 test("native workspace caches preserve content-verified compiler inputs as one artifact", () => {
   for (const id of [
     "native-build",
-    "native-build-macos",
+    "native-api-tests-macos",
     "native-test-build",
-    "native-test-build-macos",
+    "native-rust-tests-macos",
   ]) {
     const body = job(id);
     assert.match(body, /shared-key: cargo-registry-v1/);
@@ -194,7 +185,7 @@ test("native workspace caches preserve content-verified compiler inputs as one a
     assert.ok(fallback.includes("hashFiles('Cargo.toml'"));
     const restore = body.indexOf("cargo-cache-inputs.cjs restore");
     const compile = body.indexOf(
-      id.startsWith("native-build")
+      id === "native-build" || id === "native-api-tests-macos"
         ? "node .github/scripts/build-native.cjs"
         : "node .github/scripts/native-test-archive.cjs build",
     );

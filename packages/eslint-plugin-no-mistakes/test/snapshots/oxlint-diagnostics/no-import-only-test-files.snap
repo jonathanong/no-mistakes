@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(no-import-only-test-files)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-import-only-test-files/recall.test.js",
+    "line": 1,
+    "message": "Do not create aggregate test files that only import other test files; let the test runner discover those files directly."
+  }
+]

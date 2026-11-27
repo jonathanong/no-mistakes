@@ -1,0 +1,58 @@
+[
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 21,
+    "file": "eslint-snippets/fixture/postgres-pool-requires-error-listener/missing.js",
+    "line": 7,
+    "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 24,
+    "file": "eslint-snippets/fixture/postgres-pool-requires-error-listener/missing.js",
+    "line": 12,
+    "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 28,
+    "file": "eslint-snippets/fixture/postgres-pool-requires-error-listener/missing.js",
+    "line": 13,
+    "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 30,
+    "file": "eslint-snippets/fixture/postgres-pool-requires-error-listener/missing.js",
+    "line": 14,
+    "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 10,
+    "file": "eslint-snippets/fixture/postgres-pool-requires-error-listener/missing.js",
+    "line": 17,
+    "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 10,
+    "file": "eslint-snippets/fixture/postgres-pool-requires-error-listener/missing.js",
+    "line": 21,
+    "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 14,
+    "file": "eslint-snippets/fixture/postgres-pool-requires-error-listener/missing.js",
+    "line": 24,
+    "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process."
+  },
+  {
+    "code": "no-mistakes(postgres-pool-requires-error-listener)",
+    "column": 18,
+    "file": "eslint-snippets/fixture/postgres-pool-requires-error-listener/missing.js",
+    "line": 28,
+    "message": "Attach an \"error\" listener to this PostgreSQL pool in the module that creates it. An idle client error can otherwise crash the process."
+  }
+]

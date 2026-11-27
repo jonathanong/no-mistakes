@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(playwright-prefer-get-by-test-id)",
+    "column": 3,
+    "file": "eslint-snippets/fixture/playwright-prefer-get-by-test-id/suppressed-drag.jsx",
+    "line": 4,
+    "message": "Prefer getByTestId('target') for exact test ID selectors."
+  }
+]

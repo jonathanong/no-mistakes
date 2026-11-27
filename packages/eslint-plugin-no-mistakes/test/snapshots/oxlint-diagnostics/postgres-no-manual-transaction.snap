@@ -1,0 +1,30 @@
+[
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/postgres-2755/query-members.ts",
+    "line": 6,
+    "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/postgres-2755/query-members.ts",
+    "line": 7,
+    "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/postgres-2755/query-members.ts",
+    "line": 9,
+    "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle."
+  },
+  {
+    "code": "no-mistakes(postgres-no-manual-transaction)",
+    "column": 5,
+    "file": "eslint-snippets/fixture/postgres-2755/query-members.ts",
+    "line": 18,
+    "message": "Do not execute BEGIN, START TRANSACTION, COMMIT, or ROLLBACK through a query executor. Use withTransaction / withTransactionOptions so the owner helper owns transaction lifecycle."
+  }
+]

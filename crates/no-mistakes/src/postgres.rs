@@ -1,8 +1,7 @@
 mod lock_inventory;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::{Args, Subcommand};
-use no_mistakes::postgres_catalog::{generate, PostgresCatalogCoverage, PostgresCatalogOptions};
-use std::io::Write;
+use no_mistakes::postgres_catalog::{generate_to, PostgresCatalogCoverage, PostgresCatalogOptions};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -54,32 +53,15 @@ pub fn run(args: PostgresArgs) -> Result<ExitCode> {
                 output,
             ),
         };
-    let catalog = generate(&PostgresCatalogOptions {
-        connection_env,
-        schema,
-        coverage,
-        search_path_schemas,
-        current_database,
-    })?;
-    let json = format!("{catalog:#}\n");
-    publish_catalog(&output, &mut |file| file.write_all(json.as_bytes()))
-        .with_context(|| format!("failed to write catalog {}", output.display()))?;
+    generate_to(
+        &PostgresCatalogOptions {
+            connection_env,
+            schema,
+            coverage,
+            search_path_schemas,
+            current_database,
+        },
+        &output,
+    )?;
     Ok(ExitCode::SUCCESS)
 }
-
-fn publish_catalog(
-    output: &std::path::Path,
-    write: &mut dyn FnMut(&mut std::fs::File) -> std::io::Result<()>,
-) -> Result<()> {
-    let parent = output
-        .parent()
-        .filter(|path| !path.as_os_str().is_empty())
-        .unwrap_or_else(|| std::path::Path::new("."));
-    let mut temporary = tempfile::NamedTempFile::new_in(parent)?;
-    write(temporary.as_file_mut())?;
-    temporary.persist(output)?;
-    Ok(())
-}
-
-#[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
-mod tests;

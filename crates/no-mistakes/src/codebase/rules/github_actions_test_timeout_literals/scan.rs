@@ -102,16 +102,8 @@ fn line_findings(
     }
     let trimmed = line.trim().replace("\r\n", "\n");
     let key = format!("{rel}#{trimmed}");
-    if let Some(reason) = opts.allow.get(&key) {
-        used_allow.insert(key.clone());
-        if reason.trim().is_empty() {
-            return vec![finding(
-                rel,
-                line_no,
-                format!("{rel}: allow entry `{key}` has no reason"),
-                &key,
-            )];
-        }
+    if opts.allow.contains(&key) {
+        used_allow.insert(key);
         return Vec::new();
     }
     vec![finding(
@@ -131,7 +123,7 @@ fn stale_allow_findings(
 ) -> Vec<RuleFinding> {
     let prefix = format!("{rel}#");
     opts.allow
-        .keys()
+        .iter()
         .filter(|allowed| !used_allow.contains(*allowed) && allowed.starts_with(&prefix))
         .map(|allowed| {
             finding(

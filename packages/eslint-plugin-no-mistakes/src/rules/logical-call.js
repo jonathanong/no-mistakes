@@ -2,18 +2,19 @@
 const { unwrapExpression } = require("./async-ast");
 
 function propertyName(node) {
-  if (!node) return null;
-  if (node.type === "Literal") return String(node.value);
-  if (typeof node.name === "string") return node.name;
-  return literalString(node);
+  const current = unwrapExpression(node);
+  if (!current) return null;
+  if (current.type === "Literal") return String(current.value);
+  if (typeof current.name === "string") return current.name;
+  return literalString(current);
 }
 
 function memberPropertyName(node) {
-  let current = node;
-  while (current?.type === "ChainExpression") current = current.expression;
+  const current = unwrapExpression(node);
   if (current?.type !== "MemberExpression") return null;
-  if (current.computed && current.property?.type === "Identifier") return null;
-  return propertyName(current.property);
+  const property = unwrapExpression(current.property);
+  if (current.computed && property?.type === "Identifier") return null;
+  return propertyName(property);
 }
 
 // null means the argument's position is opaque. undefined means it is absent.

@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(playwright-consistent-attribute)",
+    "column": 9,
+    "file": "eslint-plugin/oxlint-snapshots/fixture/consistent-attribute.jsx",
+    "line": 1,
+    "message": "Use 'data-pw' instead of 'data-testid' for test IDs."
+  }
+]

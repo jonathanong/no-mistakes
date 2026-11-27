@@ -7,8 +7,8 @@
     "email": "jonathanrichardong@gmail.com",
     "url": "https://github.com/jonathanong"
   },
-  "homepage": "https://github.com/jonathanong/no-mistakes",
-  "repository": "https://github.com/jonathanong/no-mistakes",
+  "homepage": "https://github.com/jongleberry/no-mistakes",
+  "repository": "https://github.com/jongleberry/no-mistakes",
   "license": "MIT",
   "keywords": [
     "rules",
@@ -29,9 +29,9 @@
     "developerName": "Jonathan Ong",
     "category": "Coding",
     "capabilities": ["Read"],
-    "websiteURL": "https://github.com/jonathanong/no-mistakes",
-    "privacyPolicyURL": "https://github.com/jonathanong/no-mistakes",
-    "termsOfServiceURL": "https://github.com/jonathanong/no-mistakes",
+    "websiteURL": "https://github.com/jongleberry/no-mistakes",
+    "privacyPolicyURL": "https://github.com/jongleberry/no-mistakes",
+    "termsOfServiceURL": "https://github.com/jongleberry/no-mistakes",
     "defaultPrompt": [
       "Check this migration against the PostgreSQL rules",
       "Review these tests against the testing rules",

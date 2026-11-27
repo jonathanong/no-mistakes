@@ -2,57 +2,52 @@
 //!
 //! Check rules consume these facts instead of re-parsing SQL or TypeScript.
 
-mod annotation;
+pub(crate) use no_mistakes_postgres_sql::annotation;
 mod catalog;
 mod collect;
-mod conflict;
+pub(crate) use no_mistakes_postgres_sql::conflict;
 pub(crate) mod executor_detachment;
 pub(crate) use conflict::may_have_insert_conflict;
-pub mod dml;
+pub use no_mistakes_postgres_sql::dml;
 pub(crate) mod embedded;
-mod function_calls;
 pub use function_calls::{SqlFunctionCallFact, SqlFunctionClause};
-pub(crate) mod idents;
-pub(crate) mod lock_inventory;
-mod locking;
-mod migration;
-mod migration_order;
+pub(crate) use no_mistakes_postgres_sql::function_calls;
+pub(crate) use no_mistakes_postgres_sql::idents;
+pub(crate) use no_mistakes_postgres_sql::locking;
+pub(crate) use no_mistakes_postgres_sql::migration;
+pub(crate) use no_mistakes_postgres_sql::migration_order;
 pub(crate) mod query_annotation;
 pub(crate) use migration_order::cmp_sql_rel;
-mod numeric_literal;
-mod offset;
+pub(crate) use no_mistakes_postgres_sql::offset;
 pub(crate) use offset::sql_offset_facts;
 mod on_conflict;
-mod parse;
-pub(crate) mod predicate_normalization;
+pub(crate) use no_mistakes_postgres_sql::parse;
+pub(crate) use no_mistakes_postgres_sql::predicate_normalization;
 pub(crate) mod prepared;
 mod profiles;
 #[doc(hidden)]
 pub use profiles::configure_lock_inventory_helper_call_sites;
 pub(crate) use profiles::helper_call_site_files;
 mod rule_options;
-mod schema;
-mod source;
+pub(crate) use no_mistakes_postgres_sql::schema;
+pub(crate) use no_mistakes_postgres_sql::source;
 pub(crate) mod sql_identifier_syntax;
+pub(crate) use no_mistakes_postgres_sql::sql_include_policy;
+pub(crate) use no_mistakes_postgres_sql::statement_facts;
 pub use sql_identifier_syntax::plan::SqlIdentifierScans;
-mod sql_include_policy;
-mod statement_facts;
 pub use statement_facts::SqlLifecycleFacts;
-pub(crate) use statement_facts::{SqlLifecycleBatch, SqlLifecycleStep, SqlViewReads};
 pub(crate) use statements::project_bounds as project_sql_bounds;
 pub mod statements;
 mod types;
+mod view_bounds;
 #[doc(hidden)]
 pub use types::{SqlPolicyClause, SqlPolicyClauseUse};
 
 pub use annotation::{leading_query_annotation, sql_requires_query_annotation};
 mod executed_source;
-pub(crate) use catalog::canonical_order_keys;
 pub(crate) use catalog::decoded_parts;
 pub(crate) use catalog::normalize_catalog_path as normalize_schema_catalog_path;
 pub(crate) use catalog::normalize_identifier as normalize_catalog_identifier;
-pub(crate) use catalog::order_by_ascending;
-pub(crate) use catalog::SearchPathResolution;
 pub use catalog::{
     catalog_finding, expression_matches, order_prefix_matches, parse_postgres_expression,
     require_catalog_path, AllowEntry, AllowList, CanonicalIndex, CanonicalOrderKey, CatalogCheck,
@@ -178,3 +173,6 @@ pub(crate) use catalog::{canonical_bound_expr, BoundedUniqueIndex};
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod collect_fixture_errors_tests;
+
+#[cfg(test)]
+mod sql_integration_tests;

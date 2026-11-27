@@ -2,11 +2,20 @@
 use super::SchemaCatalog;
 use crate::codebase::postgres::decoded_parts;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum SearchPathResolution {
-    Temporary,
-    Physical(String),
-    Unknown,
+pub(crate) use no_mistakes_postgres_sql::SearchPathResolution;
+
+impl no_mistakes_postgres_sql::CatalogLifecycleLookup for SchemaCatalog {
+    fn current_database(&self) -> Option<&str> {
+        SchemaCatalog::current_database(self)
+    }
+
+    fn resolve_before_temp(&self, earlier: &[String], name: &str) -> SearchPathResolution {
+        SchemaCatalog::resolve_before_temp(self, earlier, name)
+    }
+
+    fn scalar_function_names(&self) -> std::sync::Arc<std::collections::BTreeSet<Vec<String>>> {
+        SchemaCatalog::scalar_function_names(self)
+    }
 }
 
 impl SchemaCatalog {

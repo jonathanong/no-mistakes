@@ -1,5 +1,7 @@
 "use strict";
 
+const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
+
 const { propertyName } = require("./module-mock-helpers");
 
 const LOCAL_BINDING_TYPES = new Set([
@@ -72,12 +74,18 @@ function isStaticFetchProperty(property) {
   return propertyName(property.key) === "fetch";
 }
 
+function isIifeFunction(node) {
+  const parent = unwrapTransparentParent(node)?.parent;
+  return parent?.type === "CallExpression" && unwrapExpression(parent.callee) === node;
+}
+
 module.exports = {
   bindingIdentifier,
   isStaticFetchProperty,
   bindingIdentifiers,
   hasLocalBinding,
   isAmbientDeclaration,
+  isIifeFunction,
   isRuntimeBinding,
   resolveVariable,
   variableFromScope,

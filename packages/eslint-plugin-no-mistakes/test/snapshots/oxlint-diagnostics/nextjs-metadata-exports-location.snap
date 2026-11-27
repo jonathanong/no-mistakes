@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(nextjs-metadata-exports-location)",
+    "column": 1,
+    "file": "eslint-plugin/oxlint-snapshots/fixture/app/components/meta.tsx",
+    "line": 22,
+    "message": "metadata and generateMetadata exports are only allowed in Next.js route segment files."
+  }
+]

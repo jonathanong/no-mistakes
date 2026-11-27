@@ -1,0 +1,10 @@
+version: 2
+rules:
+  - rule: tsconfig-file-coverage
+    scope: repository
+    options:
+      auxiliaryConfigs:
+        - path: control/tsconfig.dependency-cruiser.json
+          reason: array document
+        - path: tsconfig.dependency-cruiser.json
+          reason: array document

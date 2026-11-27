@@ -1,0 +1,51 @@
+[
+  {
+    "code": "no-mistakes(no-argv-main-guard)",
+    "column": 5,
+    "file": "eslint-snippets/fixture/no-argv-main-guard/recall.mjs",
+    "line": 4,
+    "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ."
+  },
+  {
+    "code": "no-mistakes(no-argv-main-guard)",
+    "column": 5,
+    "file": "eslint-snippets/fixture/no-argv-main-guard/recall.mjs",
+    "line": 5,
+    "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ."
+  },
+  {
+    "code": "no-mistakes(no-argv-main-guard)",
+    "column": 5,
+    "file": "eslint-snippets/fixture/no-argv-main-guard/recall.mjs",
+    "line": 6,
+    "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ."
+  },
+  {
+    "code": "no-mistakes(no-argv-main-guard)",
+    "column": 5,
+    "file": "eslint-snippets/fixture/no-argv-main-guard/recall.mjs",
+    "line": 8,
+    "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ."
+  },
+  {
+    "code": "no-mistakes(no-argv-main-guard)",
+    "column": 5,
+    "file": "eslint-snippets/fixture/no-argv-main-guard/recall.mjs",
+    "line": 10,
+    "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ."
+  },
+  {
+    "code": "no-mistakes(no-argv-main-guard)",
+    "column": 5,
+    "file": "eslint-snippets/fixture/no-argv-main-guard/recall.mjs",
+    "line": 13,
+    "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ."
+  },
+  {
+    "code": "no-mistakes(no-argv-main-guard)",
+    "column": 5,
+    "file": "eslint-snippets/fixture/no-argv-main-guard/recall.mjs",
+    "line": 14,
+    "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ."
+  }
+]

@@ -99,14 +99,14 @@ configs participate via their own edge kinds (`md`, `ci`, `workflow`,
 `terraform`, `process`) and are not walked for TS/JS import-style edges.
 
 For GitHub Actions, configure
-[`github-actions-job-timeouts`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-job-timeouts.md)
+[`github-actions-job-timeouts`](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-job-timeouts.md)
 with `rejectJobAtOrAboveStepSum: true` to keep the job deadline below the sum
 of at least two steps' supported literal timeout bounds. Every step needs a
 supported literal bound for that comparison; conditional and matrix steps
 count, while reusable-workflow calls and composite internals are not expanded.
 `allow` entries only adjust caps and cannot bypass the sum check.
 
-Use [`github-actions-job-permissions`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-job-permissions.md)
+Use [`github-actions-job-permissions`](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-job-permissions.md)
 to find jobs that inherit explicit workflow-level token write permissions,
 including `id-token: write` and reusable-workflow callers. The rule does not
 guess repository or organization defaults; unresolved permission declarations
@@ -181,7 +181,7 @@ Use `no-mistakes` instead when the question needs the dependency graph
 "which files contain this syntactic shape?"
 
 For repeated query or cache calls hidden in helpers, enable
-[`query-reached-per-item`](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/query-reached-per-item.md) with
+[`query-reached-per-item`](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/query-reached-per-item.md) with
 explicit effect families. It traces resolved per-item calls; dynamic targets
 cannot prove sink reachability. Use configured batch exemptions and reviewed
 callsite allowlists for rollout. For proven sequential page reads in counted,
@@ -207,11 +207,11 @@ checkout of the current repository before each unprepared local `uses: ./path`.
 Readiness is per action path and per job; an unconditional foreign root checkout
 invalidates every path. Conditional, nonroot, and noncovering self checkouts
 preserve the previous state. Use `check()` or an `analyzeProject()` check report for repeated
-in-process queries. See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-local-action-checkout.md).
+in-process queries. See the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-local-action-checkout.md).
 
 For `github-actions-no-required-pr-path-filters`, declare the workflows that supply
 required PR checks in `options.workflows` and select work inside those workflows.
-See [the rule](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-no-required-pr-path-filters.md).
+See [the rule](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-no-required-pr-path-filters.md).
 
 For `github-actions-run-command-policy`, declare `options.commands` with the
 exact command tokens, `valueFlags`, `whenAnyArgs`, `requireArgs`,
@@ -220,24 +220,24 @@ script parser cannot analyze statically include dynamic commands, unterminated
 shell constructs, and bodies beyond the shell nesting limit. The same
 unanalyzable policy handles unreadable selected workflow files and invalid YAML.
 The default is `advise`. Set `options.unanalyzable: report` for findings or
-`ignore` to omit these diagnostics. See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-run-command-policy.md).
+`ignore` to omit these diagnostics. See the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-run-command-policy.md).
 
 For `dependabot-cooldown-policy`, set `options.minimumDays` and run
 `check --root <root> --format json`. Add `cooldown.default-days` and raise
 any explicit SemVer cooldown below the floor in `.github/dependabot.yml`.
 Repair YAML when the rule appears in `incomplete`, then rerun the check.
-See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/dependabot-cooldown-policy.md).
+See the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/dependabot-cooldown-policy.md).
 
 For `terraform-iam-no-undocumented-wildcards`, scope `check` to the
 Terraform or OpenTofu files that declare AWS IAM policy documents. Replace
 wildcard grants with explicit resource ARNs or explain a required wildcard in
 a suppression beside the `resources` attribute.
-See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/terraform-iam-no-undocumented-wildcards.md).
+See the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/terraform-iam-no-undocumented-wildcards.md).
 
 For `no-cross-package-relative-imports`, scope the rule to the importing files
 that belong to declared workspace packages. Replace cross-package relative
 imports with a declared dependency and a public package specifier.
-See the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/no-cross-package-relative-imports.md).
+See the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/no-cross-package-relative-imports.md).
 
 ## Fact extraction failures
 

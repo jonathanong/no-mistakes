@@ -1,0 +1,37 @@
+[
+  {
+    "code": "no-mistakes(no-locale-less-date-format)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-locale-less-date-format/intl-constructors.mjs",
+    "line": 1,
+    "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale."
+  },
+  {
+    "code": "no-mistakes(no-locale-less-date-format)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-locale-less-date-format/intl-constructors.mjs",
+    "line": 2,
+    "message": "Pass an explicit locale to Intl.NumberFormat so formatting does not depend on the server or browser default locale."
+  },
+  {
+    "code": "no-mistakes(no-locale-less-date-format)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-locale-less-date-format/intl-constructors.mjs",
+    "line": 3,
+    "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale."
+  },
+  {
+    "code": "no-mistakes(no-locale-less-date-format)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-locale-less-date-format/intl-constructors.mjs",
+    "line": 4,
+    "message": "Pass an explicit locale to Intl.NumberFormat so formatting does not depend on the server or browser default locale."
+  },
+  {
+    "code": "no-mistakes(no-locale-less-date-format)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-locale-less-date-format/intl-constructors.mjs",
+    "line": 9,
+    "message": "Cannot statically prove Intl receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope."
+  }
+]

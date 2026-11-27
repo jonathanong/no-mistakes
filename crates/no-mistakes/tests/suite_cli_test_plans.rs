@@ -1,18 +1,3 @@
-//! Cli test plans integration tests, linked in one harness.
-
-// Share stateless fixture helpers across the modules in this harness.
-#[path = "common/mod.rs"]
-mod common;
-// This suite uses materialize_saved; materialize is used by the other suites.
-#[expect(
-    dead_code,
-    reason = "This harness uses materialize_saved; the shared materialize wrapper serves the other CLI suites."
-)]
-#[path = "common/gitignore_fixture.rs"]
-mod gitignore_fixture;
-#[path = "common/saved_fixture.rs"]
-mod saved_fixture;
-
 #[path = "cli_test_plan_changes.rs"]
 mod cli_test_plan_changes;
 #[path = "cli_test_plan_changes_fallbacks.rs"]

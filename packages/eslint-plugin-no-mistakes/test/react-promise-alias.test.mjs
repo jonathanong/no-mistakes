@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import tsParser from "@typescript-eslint/parser";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
-import { __dirname, fixture } from "./helpers.mjs";
+import { __dirname, fixture, runOxlint } from "./helpers.mjs";
 
 const rule = "react-no-use-promise-resolve";
 const languageOptions = {
@@ -76,25 +75,17 @@ describe("React.use global Promise constructor aliases", () => {
 
   it("matches Oxlint for aliases, mutations, scope and suppressions", () => {
     const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture");
-    for (const [name, lines] of cases) {
-      // Oxlint rejects `with` in module syntax before its JS plugin runs.
-      if (name === "with") continue;
-      const result = spawnSync(
-        process.execPath,
-        [
-          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-          "--config",
-          resolve(root, rule, ".oxlintrc-promise-alias.json"),
-          "--format",
-          "json",
-          resolve(root, filename(name)),
-        ],
-        { encoding: "utf8" },
-      );
-      assert.equal(result.status, lines.length ? 1 : 0, `${name}: ${result.stderr}`);
-      const actual = JSON.parse(result.stdout).diagnostics.filter(
-        (diagnostic) => diagnostic.code === `no-mistakes(${rule})`,
-      );
+    // Oxlint rejects `with` in module syntax before its JS plugin runs.
+    const oxlintCases = cases.filter(([name]) => name !== "with");
+    const result = runOxlint({
+      config: resolve(root, rule, ".oxlintrc-promise-alias.json"),
+      files: oxlintCases.map(([name]) => resolve(root, filename(name))),
+    });
+    assert.equal(result.status, 1, result.stderr);
+    for (const [name, lines] of oxlintCases) {
+      const actual = result
+        .forFile(resolve(root, filename(name)))
+        .filter((diagnostic) => diagnostic.code === `no-mistakes(${rule})`);
       assert.deepEqual(
         actual.map((diagnostic) => diagnostic.labels[0].span.line),
         lines,

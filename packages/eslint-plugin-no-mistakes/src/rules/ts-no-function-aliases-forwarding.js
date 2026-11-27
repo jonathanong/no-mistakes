@@ -37,8 +37,9 @@ function forwardedCall(call, sourceCode) {
   if (!target || call.arguments.length < 1) return null;
   if (!receiverMatchesTarget(target, call.arguments[0], sourceCode)) return null;
   if (method === "call") return { target, args: call.arguments.slice(1) };
-  if (call.arguments.length !== 2 || call.arguments[1].type !== "ArrayExpression") return null;
-  const args = call.arguments[1].elements;
+  const list = unwrapExpression(call.arguments[1]);
+  if (call.arguments.length !== 2 || list?.type !== "ArrayExpression") return null;
+  const args = list.elements;
   if (args.some((argument) => argument === null)) return null;
   return { target, args };
 }

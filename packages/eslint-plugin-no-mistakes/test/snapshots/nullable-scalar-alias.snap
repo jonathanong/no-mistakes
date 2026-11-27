@@ -1,12 +1,6 @@
 {
   "ts-preserve-null-option-defaults": [
     {
-      "file": "test-cases/eslint-snippets/fixture/ts-preserve-null-option-defaults/scalar-alias-controls.ts",
-      "findings": [],
-      "kind": "valid",
-      "options": null
-    },
-    {
       "file": "test-cases/eslint-snippets/fixture/ts-preserve-null-option-defaults/scalar-alias-rewrite.ts",
       "findings": [],
       "kind": "valid",
@@ -83,6 +77,24 @@
           "file": "test-cases/eslint-snippets/fixture/ts-preserve-null-option-defaults/scalar-alias-invalid.ts",
           "line": 33,
           "message": "Do not default nullable option 'chained' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/ts-preserve-null-option-defaults/scalar-alias-controls.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 50,
+          "file": "test-cases/eslint-snippets/fixture/ts-preserve-null-option-defaults/scalar-alias-controls.ts",
+          "line": 50,
+          "message": "Do not default nullable option 'alias' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
           "messageId": "default",
           "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
           "severity": 2

@@ -16,9 +16,9 @@ const paths = (step) =>
 const producers = [
   "linux-runtime",
   "native-build",
-  "native-build-macos",
+  "native-api-tests-macos",
   "native-test-build",
-  "native-test-build-macos",
+  "native-rust-tests-macos",
   "standalone-build",
   "rust-coverage-build",
 ];
@@ -72,7 +72,7 @@ test("all large workspace snapshots restore on PRs but save only successful main
 });
 
 test("macOS snapshots prefer CGU64, then fall back across manifest changes", () => {
-  for (const name of ["native-build-macos", "native-test-build-macos"]) {
+  for (const name of ["native-api-tests-macos", "native-rust-tests-macos"]) {
     const restore = steps(job(name)).find((step) => /uses: actions\/cache\/restore@/.test(step));
     assert.match(restore, /key: [^\n]+-cgu64-\$\{\{ hashFiles\('crates\/\*\*\/\*\.rs'\) \}\}/);
     const fallback = restore
@@ -108,14 +108,14 @@ test("dependency caches are main-only, dependency-only and shared across compati
     job("quality-rust"),
     /shared-key: \$\{\{ matrix.name == 'release warnings' && 'rust-quality-release-check-v1' \|\| 'linux-runtime-v1' \}\}/,
   );
-  assert.match(job("quality-rust"), /matrix.name != 'formatting'/);
+  assert.match(job("quality-rust"), /Check Rust formatting/);
   assert.match(job("quality-rust"), /flags: -D warnings --cfg coverage/);
   assert.match(job("docs-tests"), /shared-key: rust-doctests-v1/);
   for (const name of [
     "native-build",
-    "native-build-macos",
+    "native-api-tests-macos",
     "native-test-build",
-    "native-test-build-macos",
+    "native-rust-tests-macos",
     "rust-coverage-build",
     "standalone-build",
   ]) {
@@ -144,7 +144,7 @@ test("pnpm stores restore on PRs but save only on main", () => {
     /if: .*steps\.pnpm-setup\.outcome == 'failure'/.test(step),
   );
   const firsts = setups.filter((step) => !retries.includes(step));
-  assert.equal(setups.length, 34);
+  assert.equal(setups.length, 30);
   assert.equal(firsts.length, retries.length);
   for (const step of firsts) {
     assert.match(step, /cache: true/);
@@ -176,44 +176,27 @@ test("Windows smoke restores the workspace snapshot that main's Windows producer
   assert.equal(paths(restore), paths(producer));
 });
 
-test("macOS smoke restores main test-harness snapshot before the Rust tests and never saves", () => {
+test("macOS smoke builds the runtime CLI first, then compiles and runs no-mistakes-invocation without saving caches", () => {
   const smoke = job("macos-smoke");
   const all = steps(smoke);
   const index = (name) => all.findIndex((step) => step.startsWith(name));
-  const restore = all.find((step) => step.startsWith("Restore native test harness artifacts"));
-  assert.ok(restore);
   assert.doesNotMatch(smoke, /actions\/cache\/save@/);
-  const producer = steps(job("native-test-build-macos")).find((step) =>
-    /uses: actions\/cache\/restore@/.test(step),
-  );
-  const target = (text) => text.replaceAll("${{ matrix.target }}", "aarch64-apple-darwin");
-  const key = (step) => target(step.match(/key: (native-test-harness-workspace-v2-.*)\n/)[1]);
-  const fallbacks = (step) =>
-    target(step.split("restore-keys: |\n")[1].split("          path:")[0])
-      .trim()
-      .split("\n")
-      .map((prefix) => prefix.trim());
-  const runtime = all.find((step) => step.startsWith("Restore native workspace artifacts"));
-  assert.equal(key(restore), key(producer));
-  assert.deepEqual(fallbacks(restore), [...fallbacks(producer), fallbacks(runtime)[0]]);
-  assert.equal(paths(restore), paths(producer));
-  assert.equal(paths(restore), paths(runtime));
-  const inputsIndex = index("Restore macOS test input timestamps");
-  const compileIndex = index("Compile macOS-dependent Rust tests");
-  const testsIndex = index("Run macOS-dependent Rust tests");
   const runtimeRestoreIndex = index("Restore native workspace artifacts built on main");
   const buildIndex = index("Build native CLI and N-API addon");
-  assert.ok(testsIndex >= 0, "Missing Run macOS-dependent Rust tests step");
+  const compileIndex = index("Compile macOS-dependent Rust tests");
+  const testsIndex = index("Run macOS-dependent Rust tests");
+  assert.ok(runtimeRestoreIndex >= 0, "Missing Restore native workspace artifacts step");
   assert.ok(buildIndex >= 0, "Missing Build native CLI and N-API addon step");
-  // The crate-type rewrite invalidates restored test units, so tests run first.
-  assert.ok(index("Restore native test harness") < inputsIndex);
-  assert.ok(inputsIndex < compileIndex);
+  assert.ok(compileIndex >= 0, "Missing Compile macOS-dependent Rust tests step");
+  assert.ok(testsIndex >= 0, "Missing Run macOS-dependent Rust tests step");
+  assert.ok(runtimeRestoreIndex < buildIndex);
+  assert.ok(buildIndex < compileIndex);
   assert.ok(compileIndex < testsIndex);
-  assert.ok(testsIndex < runtimeRestoreIndex, "Restore native runtime artifacts after Rust tests");
-  assert.ok(testsIndex < buildIndex);
-  assert.match(all[inputsIndex], /cargo-cache-inputs\.cjs restore/);
+  assert.match(
+    all[testsIndex],
+    /NO_MISTAKES_CLI_BIN: \$\{\{ github\.workspace \}\}\/target\/debug\/no-mistakes/,
+  );
   assert.doesNotMatch(all[compileIndex], /cargo-cache-inputs/);
-  // A second restore would stamp files changed since the capture as fresh again.
   assert.doesNotMatch(all[testsIndex], /cargo-cache-inputs/);
 });
 
@@ -223,8 +206,6 @@ test("macOS smoke compiles its Rust tests in a bounded step of their own", () =>
     Number(all.find((step) => step.startsWith(name)).match(/timeout-minutes: (\d+)/)[1]);
   const compile = all.find((step) => step.startsWith("Compile macOS-dependent Rust tests"));
   assert.match(compile, /smoke\.cjs macos rust-build/);
-  // The compile may not exceed the budget the build step had before it moved.
-  assert.ok(timeout("Restore macOS test input timestamps") <= 3);
   assert.ok(timeout("Compile macOS-dependent Rust tests") <= timeout("Build native CLI"));
   assert.ok(timeout("Compile macOS-dependent Rust tests") <= 30, "step cap needs no suppression");
   assert.equal(timeout("Run macOS-dependent Rust tests"), 15);

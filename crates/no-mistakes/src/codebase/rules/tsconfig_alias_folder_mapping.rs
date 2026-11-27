@@ -2,7 +2,6 @@ use super::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use rayon::prelude::*;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -32,31 +31,24 @@ use mapping::check_alias;
 use targets::{build_path, target_exists, target_matches};
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            if opts.tsconfig.as_os_str().is_empty() || opts.mappings.is_empty() {
-                return Ok(vec![]);
+    super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: Options = rule.try_rule_options()?;
+        if opts.tsconfig.as_os_str().is_empty() || opts.mappings.is_empty() {
+            return Ok(vec![]);
+        }
+        let findings = check_tsconfig(root, &opts)?;
+        if findings.is_empty() {
+            return Ok(vec![]);
+        }
+        let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
+        let mut filtered = Vec::new();
+        for finding in findings {
+            if filter.is_match(&root.join(&opts.tsconfig)) {
+                filtered.push(finding);
             }
-            let findings = check_tsconfig(root, &opts)?;
-            if findings.is_empty() {
-                return Ok(vec![]);
-            }
-            let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
-            let mut filtered = Vec::new();
-            for finding in findings {
-                if filter.is_match(&root.join(&opts.tsconfig)) {
-                    filtered.push(finding);
-                }
-            }
-            Ok(filtered)
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+        }
+        Ok(filtered)
+    })
 }
 
 /// Check using a pre-discovered file list — tsconfig is read directly regardless.

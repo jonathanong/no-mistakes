@@ -1,6 +1,5 @@
 "use strict";
 
-const { literalString } = require("./module-mock-helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression } = require("./async-ast");
 const { resultDiscarded } = require("./restricted-api-usage-discard");
@@ -12,6 +11,11 @@ const {
   strictVisitors,
 } = require("./restricted-api-usage-strict");
 const { isLocalRequire, memberPropertyName, resolveVariable } = require("./async-target-bindings");
+const {
+  matches,
+  namespaceBinding: resolveNamespace,
+  namespaceVisitors,
+} = require("./restricted-api-usage-namespace");
 
 module.exports = {
   meta: {
@@ -24,7 +28,11 @@ module.exports = {
         additionalProperties: false,
       },
     ],
-    messages: { restrictedApi: "{{message}}" },
+    messages: {
+      restrictedApi: "{{message}}",
+      unanalyzable:
+        "Cannot tell whether this member of {{name}} is restricted. Write a static member so the restricted API can be checked.",
+    },
   },
   create(context) {
     const targets = (context.options[0]?.targets || []).map((target) => ({
@@ -71,77 +79,9 @@ module.exports = {
         }
       }
     }
+    const resolved = namespaceVisitors({ context, targets, report, bindings, suppressed });
     function namespaceBinding(expression) {
-      const object = unwrapExpression(expression);
-      if (!bindings.size || object.type !== "Identifier") return null;
-      const binding = bindings.get(resolveVariable(object, context));
-      return binding?.name === null ? binding : null;
-    }
-    function matches(target, binding, name) {
-      return (
-        binding && name !== null && target.source === binding.source && target.imported?.test(name)
-      );
-    }
-    function member(node) {
-      const binding = namespaceBinding(node.object);
-      const name = memberPropertyName(node);
-      for (const target of targets) if (matches(target, binding, name)) report(node, target, name);
-    }
-    function destructure(node) {
-      const parent = node.parent;
-      const value =
-        parent.type === "VariableDeclarator"
-          ? parent.init
-          : parent.type === "AssignmentExpression"
-            ? parent.right
-            : null;
-      if (!value) return;
-      const binding = namespaceBinding(value);
-      for (const property of node.properties) {
-        if (property.type === "RestElement" && binding) sourceLoad(property, binding.source);
-        if (property.type !== "Property") continue;
-        const name = memberPropertyName({ property: property.key, computed: property.computed });
-        for (const target of targets)
-          if (matches(target, binding, name)) report(property, target, name);
-      }
-    }
-    function reexport(node) {
-      if (!node.source || node.exportKind === "type") return;
-      const binding = { source: node.source.value };
-      for (const target of targets) {
-        if (node.type === "ExportAllDeclaration") {
-          if (target.source === binding.source) report(node, target, binding.source);
-          continue;
-        }
-        for (const specifier of node.specifiers) {
-          if (specifier.exportKind === "type") continue;
-          const name = specifier.local.name ?? specifier.local.value;
-          if (matches(target, binding, name)) report(specifier, target, name);
-        }
-      }
-    }
-    function sourceLoad(node, source) {
-      for (const target of targets) {
-        if (target.source === source) {
-          report(
-            node,
-            target,
-            source,
-            " Use a static named import so the imported API can be checked.",
-          );
-        }
-      }
-    }
-    function dynamicSource(node, source) {
-      const value = literalString(unwrapExpression(source));
-      if (value !== null) sourceLoad(node, value);
-    }
-    function namespaceAlias(node) {
-      const value = node.type === "VariableDeclarator" ? node.init : node.right;
-      const destination = node.type === "VariableDeclarator" ? node.id : node.left;
-      if (!value || destination.type !== "Identifier") return;
-      const binding = namespaceBinding(value);
-      if (binding) sourceLoad(value, binding.source);
+      return resolveNamespace(expression, context, bindings);
     }
     function invocation(node) {
       const callee = unwrapExpression(node.callee);
@@ -150,7 +90,7 @@ module.exports = {
         callee.name === "require" &&
         !isLocalRequire(callee, context)
       ) {
-        dynamicSource(node, node.arguments[0]);
+        resolved.dynamicSource(node, node.arguments[0]);
       }
       if (!bindings.size && !hasCallTargets) return;
       const isMember = callee.type === "MemberExpression";
@@ -181,14 +121,9 @@ module.exports = {
     const base = {
       Program: recordImports,
       CallExpression: invocation,
-      MemberExpression: member,
-      ObjectPattern: destructure,
-      VariableDeclarator: namespaceAlias,
-      AssignmentExpression: namespaceAlias,
-      ExportNamedDeclaration: reexport,
-      ExportAllDeclaration: reexport,
+      ...resolved.visitors,
       ImportExpression(node) {
-        dynamicSource(node, node.source);
+        resolved.dynamicSource(node, node.source);
       },
     };
     return strict ? mergeVisitors(base, strictVisitors(targets, report)) : base;

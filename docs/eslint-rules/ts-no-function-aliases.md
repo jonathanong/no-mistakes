@@ -12,7 +12,7 @@ expressions cannot be replaced by calling a public original.
 
 ```ts
 import { createUser } from "./users";
-export const makeUser = input => createUser(input);
+export const makeUser = (input) => createUser(input);
 ```
 
 Both paths require unchanged arguments in parameter order. A bare-identifier
@@ -28,9 +28,9 @@ Static strings, expression-free template keys, optional calls, and proven
 
 ```ts
 import * as users from "./users";
-const makeUser = input => users["createUser"](input);
-const forwarded = input => users.createUser.call(users, input);
-const applied = input => users.createUser.apply(users, [input]);
+const makeUser = (input) => users["createUser"](input);
+const forwarded = (input) => users.createUser.call(users, input);
+const applied = (input) => users.createUser.apply(users, [input]);
 ```
 
 ### Released identifier compatibility
@@ -46,12 +46,18 @@ suppress those findings:
 
 ```ts
 import { original } from "./api";
-export function typed(value: string): string { return original(value); }
+export function typed(value: string): string {
+  return original(value);
+}
 export const typedArrow = (value: Foo) => original(value);
-export async function asynchronous(value) { return original(value); }
-export function discarded(value) { original(value); }
-export const contextual: F = value => original(value);
-const specialized = value => original<string>(value);
+export async function asynchronous(value) {
+  return original(value);
+}
+export function discarded(value) {
+  original(value);
+}
+export const contextual: F = (value) => original(value);
+const specialized = (value) => original<string>(value);
 ```
 
 This compatibility path retains historical diagnostics without claiming that
@@ -74,8 +80,8 @@ export function isCode(value) {
   return catalog.isCode(value);
 }
 const pattern = /\bVALIDATE\b/i;
-export const isValidation = value => pattern.test(value);
-export const retrieve = id => getClient().refunds.retrieve(id);
+export const isValidation = (value) => pattern.test(value);
+export const retrieve = (id) => getClient().refunds.retrieve(id);
 ```
 
 Literal, call-result, `this`, local and asserted receivers are also excluded.
@@ -88,8 +94,8 @@ import { createUser, LIST } from "./users";
 export function narrowed(value: unknown): value is Code {
   return users.isCode(value);
 }
-export const includes = value => (LIST as readonly string[]).includes(value);
-export const normalized = value => createUser(normalize(value));
+export const includes = (value) => (LIST as readonly string[]).includes(value);
+export const normalized = (value) => createUser(normalize(value));
 export const reordered = (first, second) => createUser(second, first);
 ```
 
@@ -122,6 +128,9 @@ on an identifier (`original<string>(value)`) retain released behavior; an
 instantiated callee expression (`(original<string>)(value)`) does not. Explicit
 generic arguments on expanded calls remain unproved.
 
+A static computed member such as `users["createUser" as const]` is that member.
+`require()` and `import name = require("pkg")` module objects are not
+`Function.prototype`, so `module.call(value)` calls the export named `call`.
 Computed identifier members and cross-file re-exports do not establish a
 reachable static member path. For example, `users[name](value)` does not prove
 which member is called. A bare `remote(value)` follows released behavior even
@@ -145,12 +154,14 @@ without discarding a distinct asserted type:
 ```ts
 import { db } from "./db";
 type Handler = typeof db.createUser;
-const create = input => (db.createUser as Handler)(input);
+const create = (input) => (db.createUser as Handler)(input);
 // Fix: use db.createUser directly instead of create.
 
-export function original(input: string): string { return input; }
+export function original(input: string): string {
+  return input;
+}
 type Output = string;
-const forwarded = input => (original(input) as Output);
+const forwarded = (input) => original(input) as Output;
 // Fix: use original directly instead of forwarded.
 ```
 
@@ -160,12 +171,14 @@ proof, so the wrapper can be replaced by a direct call:
 
 ```ts
 import { g } from "./api";
-const importedAlias = i => (g as typeof g)(i);
+const importedAlias = (i) => (g as typeof g)(i);
 // Fix: call g(i) directly.
 
-export function lf(i: string): string { return i; }
-const localAlias = i => (lf as typeof lf)(i);
-const resultAlias = i => lf(i) as string;
+export function lf(i: string): string {
+  return i;
+}
+const localAlias = (i) => (lf as typeof lf)(i);
+const resultAlias = (i) => lf(i) as string;
 // Fix: call lf(i) directly in place of either wrapper.
 ```
 
@@ -198,7 +211,7 @@ facade that the released rule reports.
 ```ts
 import { createUser } from "./users";
 // no-mistakes-disable-next-line ts-no-function-aliases -- stable deprecation facade
-export const makeUser = input => createUser(input);
+export const makeUser = (input) => createUser(input);
 ```
 
 `no-mistakes-disable-line` and `no-mistakes-disable-file` work the same way.

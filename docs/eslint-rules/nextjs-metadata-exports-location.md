@@ -38,6 +38,10 @@ are still reported.
 export const metadata = legacyMetadata;
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`nextjs-static-fetch-url`](nextjs-static-fetch-url.md) keeps route analysis

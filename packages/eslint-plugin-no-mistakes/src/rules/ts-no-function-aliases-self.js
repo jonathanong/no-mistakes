@@ -4,6 +4,7 @@ const {
   unwrapExpression,
   identifierName,
   staticMemberName,
+  bindingSite,
 } = require("./ts-no-function-aliases-ast");
 
 function resolveVariable(sourceCode, identifier) {
@@ -74,8 +75,10 @@ function patternHasName(pattern, name) {
 }
 
 function assignmentTarget(node) {
-  if (node.parent?.type !== "AssignmentExpression" || node.parent.right !== node) return null;
-  return node.parent.left;
+  const found = bindingSite(node);
+  if (found.parent?.type !== "AssignmentExpression" || found.parent.right !== found.node)
+    return null;
+  return found.parent.left;
 }
 
 function assignmentWrapperName(node) {
@@ -86,8 +89,11 @@ function assignmentWrapperName(node) {
 }
 
 function variableWrapperName(node) {
-  return node.parent?.type === "VariableDeclarator" && node.parent.id.type === "Identifier"
-    ? node.parent.id.name
+  const found = bindingSite(node);
+  return found.parent?.type === "VariableDeclarator" &&
+    found.parent.init === found.node &&
+    found.parent.id.type === "Identifier"
+    ? found.parent.id.name
     : null;
 }
 

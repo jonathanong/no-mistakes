@@ -1,4 +1,11 @@
-const { assert, test, readFileSync, join, packageRoot } = require("./context");
+const {
+  assert,
+  test,
+  readFileSync,
+  join,
+  packageRoot,
+  assertFixturesCompile,
+} = require("./context");
 
 test("JSON relation ID rule configuration is exported with named option types", () => {
   const declaration = readFileSync(
@@ -29,17 +36,17 @@ test("JSON relation ID rule configuration is exported with named option types", 
 });
 
 test("Public option configuration and async checks compile from the package root", () => {
-  const { createRequire } = require("node:module");
-  const dependencyRequire = createRequire(require.resolve("@storybook/react"));
-  const ts = dependencyRequire("typescript");
   const repositoryRoot = join(packageRoot, "..", "..");
-  const program = ts.createProgram(
+  assertFixturesCompile(
     [
       join(repositoryRoot, "fixtures/node-api/postgres-json-relation-ids/public.mts"),
       join(repositoryRoot, "fixtures/node-api/postgres-grouping-not-aggregation/public.mts"),
       join(repositoryRoot, "fixtures/node-api/queue-factory-config/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/g12-domain-parity/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/g12-domain-parity/legacy-policy.mts"),
+      join(repositoryRoot, "fixtures/node-api/g12-domain-parity/statement-kind.mts"),
     ],
-    {
+    (ts) => ({
       noEmit: true,
       strict: true,
       skipLibCheck: true,
@@ -50,13 +57,7 @@ test("Public option configuration and async checks compile from the package root
       baseUrl: repositoryRoot,
       paths: { "no-mistakes": ["packages/no-mistakes/index.d.ts"] },
       ignoreDeprecations: "6.0",
-    },
-  );
-  assert.deepEqual(
-    ts
-      .getPreEmitDiagnostics(program)
-      .map((row) => ts.flattenDiagnosticMessageText(row.messageText, "\n")),
-    [],
+    }),
   );
 });
 

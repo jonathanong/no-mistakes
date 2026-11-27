@@ -50,8 +50,11 @@ avoid re-exporting the banned binding.
 ## Limits
 
 Same-file imported capability calls also include comma callees, optional calls,
-and static `.call` / literal-array `.apply` forwarding, including string and
-expression-free template member keys. An explicitly banned export named `call`
+and static `.call` / literal-array `.apply` forwarding, including string,
+expression-free template, and other static computed member keys. `import name = require("pkg")`,
+`(require as NodeRequire)("pkg")`, and `require("pkg" as const)` are the same module.
+A cast around an immediately invoked function does not hide an assignment of a banned export.
+An explicitly banned export named `call`
 or `apply` takes precedence at every forwarding step, including
 `namespace.call.call(null)`. Unmatched nested intrinsic forwarding follows its
 explicit receiver: `clear.call.call(other, null)` invokes `other()` and is not

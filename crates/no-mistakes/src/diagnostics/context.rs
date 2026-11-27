@@ -31,6 +31,7 @@ pub struct InvocationGuard;
 
 impl InvocationGuard {
     pub fn install(observer: Arc<InvocationObserver>) -> Self {
+        super::hooks::ensure_invocation_hooks_registered();
         ACTIVE.with(|active| active.borrow_mut().push(Some(observer)));
         Self
     }

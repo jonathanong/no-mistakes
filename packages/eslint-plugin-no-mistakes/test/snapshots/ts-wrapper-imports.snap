@@ -1,0 +1,1879 @@
+{
+  "eslint": [
+    {
+      "file": "disposition-expect.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 10,
+          "endLine": 7,
+          "file": "disposition-expect.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "name": "disposition-expect (#4407)",
+      "options": {
+        "targets": [
+          {
+            "calleeNamePatterns": [
+              "default"
+            ],
+            "sourceSpecifierPatterns": [
+              "@example/jobs"
+            ]
+          }
+        ]
+      },
+      "rule": "async-call-disposition"
+    },
+    {
+      "file": "disposition-handled.ts",
+      "findings": [],
+      "name": "disposition-handled (#4360)",
+      "options": {
+        "targets": [
+          {
+            "calleeNamePatterns": [
+              "run"
+            ],
+            "sourceSpecifierPatterns": [
+              "@example/jobs"
+            ]
+          }
+        ]
+      },
+      "rule": "async-call-disposition"
+    },
+    {
+      "file": "disposition-iife.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 14,
+          "endLine": 5,
+          "file": "disposition-iife.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void.",
+          "messageId": "disposition",
+          "ruleId": "no-mistakes/async-call-disposition",
+          "severity": 2
+        }
+      ],
+      "name": "disposition-iife (#4360)",
+      "options": {
+        "targets": [
+          {
+            "calleeNamePatterns": [
+              "run"
+            ],
+            "sourceSpecifierPatterns": [
+              "@example/jobs"
+            ]
+          }
+        ]
+      },
+      "rule": "async-call-disposition"
+    },
+    {
+      "file": "try-catch.ts",
+      "findings": [
+        {
+          "column": 5,
+          "endColumn": 69,
+          "endLine": 7,
+          "file": "try-catch.ts",
+          "line": 7,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler.",
+          "messageId": "awaitReturn",
+          "ruleId": "no-mistakes/async-try-catch-return-await",
+          "severity": 2
+        }
+      ],
+      "name": "try-catch (#4450)",
+      "options": {
+        "handlers": [
+          {
+            "calleeNamePatterns": [
+              "handleRateLimit"
+            ],
+            "sourceSpecifierPatterns": [
+              "@example/rate"
+            ]
+          }
+        ]
+      },
+      "rule": "async-try-catch-return-await"
+    },
+    {
+      "file": "array-methods.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 32,
+          "endLine": 3,
+          "file": "array-methods.ts",
+          "line": 3,
+          "message": "Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.",
+          "messageId": "awaited",
+          "ruleId": "no-mistakes/await-array-methods",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 30,
+          "endLine": 4,
+          "file": "array-methods.ts",
+          "line": 4,
+          "message": "Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.",
+          "messageId": "awaited",
+          "ruleId": "no-mistakes/await-array-methods",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 18,
+          "endLine": 6,
+          "file": "array-methods.ts",
+          "line": 6,
+          "message": "Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly.",
+          "messageId": "awaited",
+          "ruleId": "no-mistakes/await-array-methods",
+          "severity": 2
+        }
+      ],
+      "name": "array-methods (#4361)",
+      "options": null,
+      "rule": "await-array-methods"
+    },
+    {
+      "file": "gh-api.ts",
+      "findings": [
+        {
+          "column": 51,
+          "endColumn": 66,
+          "endLine": 3,
+          "file": "gh-api.ts",
+          "line": 3,
+          "message": "Use structured -f/-F fields instead of an endpoint query string.",
+          "messageId": "endpointQuery",
+          "ruleId": "no-mistakes/gh-api-argument-safety",
+          "severity": 2
+        },
+        {
+          "column": 75,
+          "endColumn": 90,
+          "endLine": 4,
+          "file": "gh-api.ts",
+          "line": 4,
+          "message": "Use structured -f/-F fields instead of an endpoint query string.",
+          "messageId": "endpointQuery",
+          "ruleId": "no-mistakes/gh-api-argument-safety",
+          "severity": 2
+        }
+      ],
+      "name": "gh-api (#4441)",
+      "options": null,
+      "rule": "gh-api-argument-safety"
+    },
+    {
+      "file": "argv-main.ts",
+      "findings": [
+        {
+          "column": 5,
+          "endColumn": 37,
+          "endLine": 6,
+          "file": "argv-main.ts",
+          "line": 6,
+          "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.",
+          "messageId": "argvMain",
+          "ruleId": "no-mistakes/no-argv-main-guard",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 42,
+          "endLine": 7,
+          "file": "argv-main.ts",
+          "line": 7,
+          "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.",
+          "messageId": "argvMain",
+          "ruleId": "no-mistakes/no-argv-main-guard",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 67,
+          "endLine": 8,
+          "file": "argv-main.ts",
+          "line": 8,
+          "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.",
+          "messageId": "argvMain",
+          "ruleId": "no-mistakes/no-argv-main-guard",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 54,
+          "endLine": 9,
+          "file": "argv-main.ts",
+          "line": 9,
+          "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.",
+          "messageId": "argvMain",
+          "ruleId": "no-mistakes/no-argv-main-guard",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 81,
+          "endLine": 10,
+          "file": "argv-main.ts",
+          "line": 10,
+          "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ.",
+          "messageId": "argvMain",
+          "ruleId": "no-mistakes/no-argv-main-guard",
+          "severity": 2
+        }
+      ],
+      "name": "argv-main (#4342 #4445)",
+      "options": null,
+      "rule": "no-argv-main-guard"
+    },
+    {
+      "file": "banned-import.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 7,
+          "file": "banned-import.ts",
+          "line": 7,
+          "message": "Reachable use of banned import \"bad\" from \"@example/evil\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 4,
+          "endLine": 9,
+          "file": "banned-import.ts",
+          "line": 9,
+          "message": "Reachable use of banned import \"bad\" from \"@example/evil\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 34,
+          "endLine": 10,
+          "file": "banned-import.ts",
+          "line": 10,
+          "message": "Do not re-export banned import \"secret\" from \"@example/evil\"; it stays reachable outside allowed paths.",
+          "messageId": "bannedReExport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 35,
+          "endLine": 11,
+          "file": "banned-import.ts",
+          "line": 11,
+          "message": "Do not re-export banned import \"secret\" from \"@example/evil\"; it stays reachable outside allowed paths.",
+          "messageId": "bannedReExport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 2,
+          "endLine": 15,
+          "file": "banned-import.ts",
+          "line": 15,
+          "message": "Reachable use of banned import \"bad\" from \"@example/evil\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 46,
+          "endLine": 16,
+          "file": "banned-import.ts",
+          "line": 16,
+          "message": "Reachable use of banned import \"bad\" from \"@example/evil\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 38,
+          "endLine": 17,
+          "file": "banned-import.ts",
+          "line": 17,
+          "message": "Reachable use of banned import \"bad\" from \"@example/evil\" outside allowed paths. Move it into an allowed helper path.",
+          "messageId": "bannedImport",
+          "ruleId": "no-mistakes/no-banned-import-outside-allowed-paths",
+          "severity": 2
+        }
+      ],
+      "name": "banned-import (#4343 #4460)",
+      "options": {
+        "bannedImports": [
+          {
+            "module": "@example/evil",
+            "names": [
+              "bad",
+              "secret"
+            ]
+          }
+        ],
+        "checkedPathPatterns": [
+          "**"
+        ]
+      },
+      "rule": "no-banned-import-outside-allowed-paths"
+    },
+    {
+      "file": "unbatched-reads.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 34,
+          "endLine": 10,
+          "file": "unbatched-reads.ts",
+          "line": 10,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 38,
+          "endLine": 12,
+          "file": "unbatched-reads.ts",
+          "line": 12,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 34,
+          "endLine": 14,
+          "file": "unbatched-reads.ts",
+          "line": 14,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 34,
+          "endLine": 16,
+          "file": "unbatched-reads.ts",
+          "line": 16,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 31,
+          "endLine": 18,
+          "file": "unbatched-reads.ts",
+          "line": 18,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API.",
+          "messageId": "unbatchedReads",
+          "ruleId": "no-mistakes/no-consecutive-unbatched-reads",
+          "severity": 2
+        }
+      ],
+      "name": "unbatched-reads (#4340)",
+      "options": {
+        "imports": [
+          {
+            "imported": "db",
+            "source": "@example/cache"
+          },
+          {
+            "imported": "default",
+            "source": "@example/cache"
+          }
+        ],
+        "readMethods": [
+          "get"
+        ]
+      },
+      "rule": "no-consecutive-unbatched-reads"
+    },
+    {
+      "file": "delete-property.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 34,
+          "endLine": 6,
+          "file": "delete-property.ts",
+          "line": 6,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.",
+          "messageId": "delete",
+          "ruleId": "no-mistakes/no-delete-property",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 7,
+          "file": "delete-property.ts",
+          "line": 7,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable.",
+          "messageId": "delete",
+          "ruleId": "no-mistakes/no-delete-property",
+          "severity": 2
+        }
+      ],
+      "name": "delete-property (#4468)",
+      "options": null,
+      "rule": "no-delete-property"
+    },
+    {
+      "file": "global-fetch.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 4,
+          "file": "global-fetch.ts",
+          "line": 4,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 6,
+          "endLine": 5,
+          "file": "global-fetch.ts",
+          "line": 5,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 11,
+          "endLine": 6,
+          "file": "global-fetch.ts",
+          "line": 6,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 10,
+          "file": "global-fetch.ts",
+          "line": 10,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized.",
+          "messageId": "globalFetch",
+          "ruleId": "no-mistakes/no-global-fetch-outside-helper",
+          "severity": 2
+        }
+      ],
+      "name": "global-fetch (#4464)",
+      "options": {
+        "checkedPathPatterns": [
+          "**"
+        ]
+      },
+      "rule": "no-global-fetch-outside-helper"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 7,
+          "file": "suite.test.ts",
+          "line": 1,
+          "message": "Do not create aggregate test files that only import other test files; let the test runner discover those files directly.",
+          "messageId": "aggregate",
+          "ruleId": "no-mistakes/no-import-only-test-files",
+          "severity": 2
+        }
+      ],
+      "name": "import-only-test (#4375 #4472)",
+      "options": null,
+      "rule": "no-import-only-test-files"
+    },
+    {
+      "file": "noop-catch.ts",
+      "findings": [
+        {
+          "column": 26,
+          "endColumn": 34,
+          "endLine": 9,
+          "file": "noop-catch.ts",
+          "line": 9,
+          "message": "Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable.",
+          "messageId": "noopCatch",
+          "ruleId": "no-mistakes/no-inline-noop-promise-catch",
+          "severity": 2
+        }
+      ],
+      "name": "noop-catch (#4476)",
+      "options": {
+        "allowedCalleeNamePatterns": [
+          "cleanup"
+        ],
+        "checkedPathPatterns": [
+          "**"
+        ]
+      },
+      "rule": "no-inline-noop-promise-catch"
+    },
+    {
+      "file": "object-mutation.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 4,
+          "file": "object-mutation.ts",
+          "line": 4,
+          "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+          "messageId": "mutation",
+          "ruleId": "no-mistakes/no-object-mutation",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 13,
+          "endLine": 5,
+          "file": "object-mutation.ts",
+          "line": 5,
+          "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+          "messageId": "mutation",
+          "ruleId": "no-mistakes/no-object-mutation",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 18,
+          "endLine": 9,
+          "file": "object-mutation.ts",
+          "line": 9,
+          "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one.",
+          "messageId": "mutation",
+          "ruleId": "no-mistakes/no-object-mutation",
+          "severity": 2
+        }
+      ],
+      "name": "object-mutation (#4344)",
+      "options": {
+        "imported": true,
+        "module": false
+      },
+      "rule": "no-object-mutation"
+    },
+    {
+      "file": "top-level-await.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 25,
+          "endLine": 5,
+          "file": "top-level-await.ts",
+          "line": 5,
+          "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint.",
+          "messageId": "topLevelAwait",
+          "ruleId": "no-mistakes/no-top-level-await",
+          "severity": 2
+        }
+      ],
+      "name": "top-level-await (#4359)",
+      "options": null,
+      "rule": "no-top-level-await"
+    },
+    {
+      "file": "imported-call.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 12,
+          "endLine": 10,
+          "file": "imported-call.ts",
+          "line": 10,
+          "message": "Call 'default' from '@example/http' must pass a statically visible options object at argument 1 containing any of: timeout.",
+          "messageId": "missingOptions",
+          "ruleId": "no-mistakes/require-options-on-imported-call",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 15,
+          "endLine": 11,
+          "file": "imported-call.ts",
+          "line": 11,
+          "message": "Call 'default' from '@example/http' must pass a statically visible options object at argument 1 containing any of: timeout.",
+          "messageId": "missingOptions",
+          "ruleId": "no-mistakes/require-options-on-imported-call",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 12,
+          "file": "imported-call.ts",
+          "line": 12,
+          "message": "Call 'send' passes option(s) agent with a value that is not an allowed factory call.",
+          "messageId": "invalidOptionValue",
+          "ruleId": "no-mistakes/require-options-on-imported-call",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 39,
+          "endLine": 13,
+          "file": "imported-call.ts",
+          "line": 13,
+          "message": "Call 'send' passes option(s) agent with a value that is not an allowed factory call.",
+          "messageId": "invalidOptionValue",
+          "ruleId": "no-mistakes/require-options-on-imported-call",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 69,
+          "endLine": 14,
+          "file": "imported-call.ts",
+          "line": 14,
+          "message": "Call 'createUnsafeAgent' passes option(s) agent with a value that is not an allowed factory call.",
+          "messageId": "invalidOptionValue",
+          "ruleId": "no-mistakes/require-options-on-imported-call",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 31,
+          "endLine": 15,
+          "file": "imported-call.ts",
+          "line": 15,
+          "message": "Call 'request' from '@example/transport' must pass a statically visible options object at argument 1 containing any of: agent.",
+          "messageId": "missingOptions",
+          "ruleId": "no-mistakes/require-options-on-imported-call",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 6,
+          "endLine": 17,
+          "file": "imported-call.ts",
+          "line": 17,
+          "message": "Call 'request' from '@example/transport' must pass a statically visible options object at argument 1 containing any of: agent.",
+          "messageId": "missingOptions",
+          "ruleId": "no-mistakes/require-options-on-imported-call",
+          "severity": 2
+        }
+      ],
+      "name": "imported-call (#4382 #4514)",
+      "options": {
+        "targets": [
+          {
+            "calleeNamePatterns": [
+              "default"
+            ],
+            "optionsPosition": 1,
+            "requiredProperties": [
+              "timeout"
+            ],
+            "sourceSpecifierPatterns": [
+              "@example/http"
+            ]
+          },
+          {
+            "allowedValueCallees": {
+              "agent": [
+                "approvedAgent"
+              ]
+            },
+            "calleeNamePatterns": [
+              "send",
+              "request"
+            ],
+            "optionsPosition": 1,
+            "requiredProperties": [
+              "agent"
+            ],
+            "sourceSpecifierPatterns": [
+              "@example/transport"
+            ]
+          },
+          {
+            "allowedValueCallees": {
+              "agent": [
+                "approvedAgent"
+              ]
+            },
+            "calleeNamePatterns": [
+              "createUnsafeAgent"
+            ],
+            "optionsPosition": 1,
+            "requiredProperties": [
+              "agent"
+            ],
+            "sourceSpecifierPatterns": [
+              "@example/agents"
+            ]
+          }
+        ]
+      },
+      "rule": "require-options-on-imported-call"
+    },
+    {
+      "file": "registration-cast.ts",
+      "findings": [],
+      "name": "registration-cast (#4436)",
+      "options": {
+        "callback": "handler",
+        "registrar": {
+          "imported": "register",
+          "source": "@example/app"
+        }
+      },
+      "rule": "require-top-level-registration"
+    },
+    {
+      "file": "registration-cjs.ts",
+      "findings": [],
+      "name": "registration-cjs (#4341)",
+      "options": {
+        "callback": "handler",
+        "registrar": {
+          "imported": "register",
+          "source": "@example/app"
+        }
+      },
+      "rule": "require-top-level-registration"
+    },
+    {
+      "file": "registration-cjs-default.ts",
+      "findings": [],
+      "name": "registration-cjs-default (#4341)",
+      "options": {
+        "callback": "handler",
+        "registrar": {
+          "imported": "default",
+          "source": "@example/app"
+        }
+      },
+      "rule": "require-top-level-registration"
+    },
+    {
+      "file": "registration-default.ts",
+      "findings": [],
+      "name": "registration-default (#4341)",
+      "options": {
+        "callback": "handler",
+        "registrar": {
+          "imported": "default",
+          "source": "@example/app"
+        }
+      },
+      "rule": "require-top-level-registration"
+    },
+    {
+      "file": "registration-equals.ts",
+      "findings": [],
+      "name": "registration-equals (#4341)",
+      "options": {
+        "callback": "handler",
+        "registrar": {
+          "imported": "register",
+          "source": "@example/app"
+        }
+      },
+      "rule": "require-top-level-registration"
+    },
+    {
+      "file": "registration-missing.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 27,
+          "endLine": 1,
+          "file": "registration-missing.ts",
+          "line": 1,
+          "message": "Import the configured runtime registrar and call it with the configured callback unconditionally at module top level.",
+          "messageId": "registration",
+          "ruleId": "no-mistakes/require-top-level-registration",
+          "severity": 2
+        }
+      ],
+      "name": "registration-missing (#4341)",
+      "options": {
+        "callback": "handler",
+        "registrar": {
+          "imported": "register",
+          "source": "@example/app"
+        }
+      },
+      "rule": "require-top-level-registration"
+    },
+    {
+      "file": "registration-namespace.ts",
+      "findings": [],
+      "name": "registration-namespace (#4341)",
+      "options": {
+        "callback": "handler",
+        "registrar": {
+          "imported": "register",
+          "source": "@example/app"
+        }
+      },
+      "rule": "require-top-level-registration"
+    },
+    {
+      "file": "restricted-api.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 16,
+          "endLine": 3,
+          "file": "restricted-api.ts",
+          "line": 3,
+          "message": "Restricted API 'banned'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 15,
+          "endLine": 5,
+          "file": "restricted-api.ts",
+          "line": 5,
+          "message": "Restricted API 'danger'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 43,
+          "endLine": 5,
+          "file": "restricted-api.ts",
+          "line": 5,
+          "message": "Restricted API '@example/api'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 13,
+          "endColumn": 36,
+          "endLine": 6,
+          "file": "restricted-api.ts",
+          "line": 6,
+          "message": "Restricted API '@example/api'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 9,
+          "endLine": 9,
+          "file": "restricted-api.ts",
+          "line": 9,
+          "message": "Restricted API 'banned'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 10,
+          "endLine": 10,
+          "file": "restricted-api.ts",
+          "line": 10,
+          "message": "Restricted API 'danger'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 10,
+          "endLine": 11,
+          "file": "restricted-api.ts",
+          "line": 11,
+          "message": "Restricted API 'danger'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 9,
+          "endLine": 12,
+          "file": "restricted-api.ts",
+          "line": 12,
+          "message": "Restricted API 'danger'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 11,
+          "endLine": 13,
+          "file": "restricted-api.ts",
+          "line": 13,
+          "message": "Restricted API 'danger'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 9,
+          "endLine": 14,
+          "file": "restricted-api.ts",
+          "line": 14,
+          "message": "Cannot tell whether this member of @example/api is restricted. Write a static member so the restricted API can be checked.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 32,
+          "endLine": 15,
+          "file": "restricted-api.ts",
+          "line": 15,
+          "message": "Restricted API 'danger'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 37,
+          "endColumn": 60,
+          "endLine": 15,
+          "file": "restricted-api.ts",
+          "line": 15,
+          "message": "Restricted API '@example/api'. Use an allowed API instead. Use a static named import so the imported API can be checked.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 30,
+          "endLine": 16,
+          "file": "restricted-api.ts",
+          "line": 16,
+          "message": "Restricted API 'danger'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 20,
+          "file": "restricted-api.ts",
+          "line": 20,
+          "message": "Restricted API 'Foo'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        },
+        {
+          "column": 14,
+          "endColumn": 18,
+          "endLine": 21,
+          "file": "restricted-api.ts",
+          "line": 21,
+          "message": "Restricted API 'safe'. Use an allowed API instead.",
+          "messageId": "restrictedApi",
+          "ruleId": "no-mistakes/restricted-api-usage",
+          "severity": 2
+        }
+      ],
+      "name": "restricted-api (#4339 #4433)",
+      "options": {
+        "targets": [
+          {
+            "importedNamePattern": "^danger$",
+            "source": "@example/api"
+          },
+          {
+            "importedNamePattern": "^banned$"
+          },
+          {
+            "constructNamePattern": "^Foo$"
+          },
+          {
+            "referenceNamePattern": "^safe$"
+          }
+        ]
+      },
+      "rule": "restricted-api-usage"
+    },
+    {
+      "file": "function-aliases.ts",
+      "findings": [
+        {
+          "column": 8,
+          "endColumn": 2,
+          "endLine": 14,
+          "file": "function-aliases.ts",
+          "line": 12,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 2,
+          "endLine": 18,
+          "file": "function-aliases.ts",
+          "line": 16,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 2,
+          "endLine": 22,
+          "file": "function-aliases.ts",
+          "line": 20,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 2,
+          "endLine": 26,
+          "file": "function-aliases.ts",
+          "line": 24,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 2,
+          "endLine": 30,
+          "file": "function-aliases.ts",
+          "line": 28,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 2,
+          "endLine": 34,
+          "file": "function-aliases.ts",
+          "line": 32,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        },
+        {
+          "column": 25,
+          "endColumn": 45,
+          "endLine": 36,
+          "file": "function-aliases.ts",
+          "line": 36,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+          "messageId": "alias",
+          "ruleId": "no-mistakes/ts-no-function-aliases",
+          "severity": 2
+        }
+      ],
+      "name": "function-aliases (#4412 #4528)",
+      "options": null,
+      "rule": "ts-no-function-aliases"
+    },
+    {
+      "file": "null-defaults.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 60,
+          "endLine": 2,
+          "file": "null-defaults.ts",
+          "line": 2,
+          "message": "Do not default nullable option 'limit' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 68,
+          "endLine": 6,
+          "file": "null-defaults.ts",
+          "line": 6,
+          "message": "Do not default nullable option 'limit' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 52,
+          "endLine": 11,
+          "file": "null-defaults.ts",
+          "line": 11,
+          "message": "Do not default nullable option 'limit' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 30,
+          "endLine": 15,
+          "file": "null-defaults.ts",
+          "line": 15,
+          "message": "Do not default nullable option 'limit' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly.",
+          "messageId": "default",
+          "ruleId": "no-mistakes/ts-preserve-null-option-defaults",
+          "severity": 2
+        }
+      ],
+      "name": "null-defaults (#4420)",
+      "options": null,
+      "rule": "ts-preserve-null-option-defaults"
+    }
+  ],
+  "oxlint": [
+    {
+      "file": "disposition-expect.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 1,
+          "file": "disposition-expect.ts",
+          "line": 7,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        }
+      ],
+      "name": "disposition-expect (#4407)",
+      "options": null,
+      "rule": "async-call-disposition"
+    },
+    {
+      "file": "disposition-handled.ts",
+      "findings": [],
+      "name": "disposition-handled (#4360)",
+      "options": null,
+      "rule": "async-call-disposition"
+    },
+    {
+      "file": "disposition-iife.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(async-call-disposition)",
+          "column": 9,
+          "file": "disposition-iife.ts",
+          "line": 5,
+          "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+        }
+      ],
+      "name": "disposition-iife (#4360)",
+      "options": null,
+      "rule": "async-call-disposition"
+    },
+    {
+      "file": "try-catch.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(async-try-catch-return-await)",
+          "column": 5,
+          "file": "try-catch.ts",
+          "line": 7,
+          "message": "Use return await inside this try block so rejections are handled by the configured catch handler."
+        }
+      ],
+      "name": "try-catch (#4450)",
+      "options": null,
+      "rule": "async-try-catch-return-await"
+    },
+    {
+      "file": "array-methods.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(await-array-methods)",
+          "column": 3,
+          "file": "array-methods.ts",
+          "line": 3,
+          "message": "Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly."
+        },
+        {
+          "code": "no-mistakes(await-array-methods)",
+          "column": 3,
+          "file": "array-methods.ts",
+          "line": 4,
+          "message": "Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly."
+        },
+        {
+          "code": "no-mistakes(await-array-methods)",
+          "column": 3,
+          "file": "array-methods.ts",
+          "line": 6,
+          "message": "Do not await sort(). This array method returns a synchronous value; remove await or await the async work explicitly."
+        }
+      ],
+      "name": "array-methods (#4361)",
+      "options": null,
+      "rule": "await-array-methods"
+    },
+    {
+      "file": "gh-api.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(gh-api-argument-safety)",
+          "column": 51,
+          "file": "gh-api.ts",
+          "line": 3,
+          "message": "Use structured -f/-F fields instead of an endpoint query string."
+        },
+        {
+          "code": "no-mistakes(gh-api-argument-safety)",
+          "column": 75,
+          "file": "gh-api.ts",
+          "line": 4,
+          "message": "Use structured -f/-F fields instead of an endpoint query string."
+        }
+      ],
+      "name": "gh-api (#4441)",
+      "options": null,
+      "rule": "gh-api-argument-safety"
+    },
+    {
+      "file": "argv-main.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(no-argv-main-guard)",
+          "column": 5,
+          "file": "argv-main.ts",
+          "line": 6,
+          "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ."
+        },
+        {
+          "code": "no-mistakes(no-argv-main-guard)",
+          "column": 5,
+          "file": "argv-main.ts",
+          "line": 7,
+          "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ."
+        },
+        {
+          "code": "no-mistakes(no-argv-main-guard)",
+          "column": 5,
+          "file": "argv-main.ts",
+          "line": 8,
+          "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ."
+        },
+        {
+          "code": "no-mistakes(no-argv-main-guard)",
+          "column": 5,
+          "file": "argv-main.ts",
+          "line": 9,
+          "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ."
+        },
+        {
+          "code": "no-mistakes(no-argv-main-guard)",
+          "column": 5,
+          "file": "argv-main.ts",
+          "line": 10,
+          "message": "Use import.meta.main or inject isMain instead of comparing argv[1] with the module path; symlinked entry paths can differ."
+        }
+      ],
+      "name": "argv-main (#4342 #4445)",
+      "options": null,
+      "rule": "no-argv-main-guard"
+    },
+    {
+      "file": "banned-import.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+          "column": 1,
+          "file": "banned-import.ts",
+          "line": 7,
+          "message": "Reachable use of banned import \"bad\" from \"@example/evil\" outside allowed paths. Move it into an allowed helper path."
+        },
+        {
+          "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+          "column": 1,
+          "file": "banned-import.ts",
+          "line": 9,
+          "message": "Reachable use of banned import \"bad\" from \"@example/evil\" outside allowed paths. Move it into an allowed helper path."
+        },
+        {
+          "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+          "column": 24,
+          "file": "banned-import.ts",
+          "line": 10,
+          "message": "Do not re-export banned import \"secret\" from \"@example/evil\"; it stays reachable outside allowed paths."
+        },
+        {
+          "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+          "column": 24,
+          "file": "banned-import.ts",
+          "line": 11,
+          "message": "Do not re-export banned import \"secret\" from \"@example/evil\"; it stays reachable outside allowed paths."
+        },
+        {
+          "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+          "column": 1,
+          "file": "banned-import.ts",
+          "line": 15,
+          "message": "Reachable use of banned import \"bad\" from \"@example/evil\" outside allowed paths. Move it into an allowed helper path."
+        },
+        {
+          "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+          "column": 1,
+          "file": "banned-import.ts",
+          "line": 16,
+          "message": "Reachable use of banned import \"bad\" from \"@example/evil\" outside allowed paths. Move it into an allowed helper path."
+        },
+        {
+          "code": "no-mistakes(no-banned-import-outside-allowed-paths)",
+          "column": 1,
+          "file": "banned-import.ts",
+          "line": 17,
+          "message": "Reachable use of banned import \"bad\" from \"@example/evil\" outside allowed paths. Move it into an allowed helper path."
+        }
+      ],
+      "name": "banned-import (#4343 #4460)",
+      "options": null,
+      "rule": "no-banned-import-outside-allowed-paths"
+    },
+    {
+      "file": "unbatched-reads.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(no-consecutive-unbatched-reads)",
+          "column": 3,
+          "file": "unbatched-reads.ts",
+          "line": 10,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API."
+        },
+        {
+          "code": "no-mistakes(no-consecutive-unbatched-reads)",
+          "column": 3,
+          "file": "unbatched-reads.ts",
+          "line": 12,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API."
+        },
+        {
+          "code": "no-mistakes(no-consecutive-unbatched-reads)",
+          "column": 3,
+          "file": "unbatched-reads.ts",
+          "line": 14,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API."
+        },
+        {
+          "code": "no-mistakes(no-consecutive-unbatched-reads)",
+          "column": 3,
+          "file": "unbatched-reads.ts",
+          "line": 16,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API."
+        },
+        {
+          "code": "no-mistakes(no-consecutive-unbatched-reads)",
+          "column": 3,
+          "file": "unbatched-reads.ts",
+          "line": 18,
+          "message": "Adjacent independent reads on the same client add round trips. Batch the complete key set with the client's batch API."
+        }
+      ],
+      "name": "unbatched-reads (#4340)",
+      "options": null,
+      "rule": "no-consecutive-unbatched-reads"
+    },
+    {
+      "file": "delete-property.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(no-delete-property)",
+          "column": 1,
+          "file": "delete-property.ts",
+          "line": 6,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable."
+        },
+        {
+          "code": "no-mistakes(no-delete-property)",
+          "column": 1,
+          "file": "delete-property.ts",
+          "line": 7,
+          "message": "Avoid deleting object properties. Use an omitted copy or an explicit nullable value so object shape changes stay traceable."
+        }
+      ],
+      "name": "delete-property (#4468)",
+      "options": null,
+      "rule": "no-delete-property"
+    },
+    {
+      "file": "global-fetch.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(no-global-fetch-outside-helper)",
+          "column": 1,
+          "file": "global-fetch.ts",
+          "line": 4,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+        },
+        {
+          "code": "no-mistakes(no-global-fetch-outside-helper)",
+          "column": 1,
+          "file": "global-fetch.ts",
+          "line": 5,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+        },
+        {
+          "code": "no-mistakes(no-global-fetch-outside-helper)",
+          "column": 1,
+          "file": "global-fetch.ts",
+          "line": 6,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+        },
+        {
+          "code": "no-mistakes(no-global-fetch-outside-helper)",
+          "column": 1,
+          "file": "global-fetch.ts",
+          "line": 10,
+          "message": "Move global fetch calls into a configured API/client helper so request behavior stays centralized."
+        }
+      ],
+      "name": "global-fetch (#4464)",
+      "options": null,
+      "rule": "no-global-fetch-outside-helper"
+    },
+    {
+      "file": "suite.test.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(no-import-only-test-files)",
+          "column": 1,
+          "file": "suite.test.ts",
+          "line": 1,
+          "message": "Do not create aggregate test files that only import other test files; let the test runner discover those files directly."
+        }
+      ],
+      "name": "import-only-test (#4375 #4472)",
+      "options": null,
+      "rule": "no-import-only-test-files"
+    },
+    {
+      "file": "noop-catch.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(no-inline-noop-promise-catch)",
+          "column": 26,
+          "file": "noop-catch.ts",
+          "line": 9,
+          "message": "Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable."
+        }
+      ],
+      "name": "noop-catch (#4476)",
+      "options": null,
+      "rule": "no-inline-noop-promise-catch"
+    },
+    {
+      "file": "object-mutation.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(no-object-mutation)",
+          "column": 1,
+          "file": "object-mutation.ts",
+          "line": 4,
+          "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+        },
+        {
+          "code": "no-mistakes(no-object-mutation)",
+          "column": 1,
+          "file": "object-mutation.ts",
+          "line": 5,
+          "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+        },
+        {
+          "code": "no-mistakes(no-object-mutation)",
+          "column": 3,
+          "file": "object-mutation.ts",
+          "line": 9,
+          "message": "This mutates a shared object, so its contents can't be determined statically. Declare a literal once instead of writing into this one."
+        }
+      ],
+      "name": "object-mutation (#4344)",
+      "options": null,
+      "rule": "no-object-mutation"
+    },
+    {
+      "file": "top-level-await.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(no-top-level-await)",
+          "column": 1,
+          "file": "top-level-await.ts",
+          "line": 5,
+          "message": "Top-level await suspends module evaluation and can expose uninitialized exports through barrels. Move asynchronous initialization into an exported async function and call it explicitly from an entrypoint."
+        }
+      ],
+      "name": "top-level-await (#4359)",
+      "options": null,
+      "rule": "no-top-level-await"
+    },
+    {
+      "file": "imported-call.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(require-options-on-imported-call)",
+          "column": 1,
+          "file": "imported-call.ts",
+          "line": 10,
+          "message": "Call 'default' from '@example/http' must pass a statically visible options object at argument 1 containing any of: timeout."
+        },
+        {
+          "code": "no-mistakes(require-options-on-imported-call)",
+          "column": 1,
+          "file": "imported-call.ts",
+          "line": 11,
+          "message": "Call 'default' from '@example/http' must pass a statically visible options object at argument 1 containing any of: timeout."
+        },
+        {
+          "code": "no-mistakes(require-options-on-imported-call)",
+          "column": 1,
+          "file": "imported-call.ts",
+          "line": 12,
+          "message": "Call 'send' passes option(s) agent with a value that is not an allowed factory call."
+        },
+        {
+          "code": "no-mistakes(require-options-on-imported-call)",
+          "column": 1,
+          "file": "imported-call.ts",
+          "line": 13,
+          "message": "Call 'send' passes option(s) agent with a value that is not an allowed factory call."
+        },
+        {
+          "code": "no-mistakes(require-options-on-imported-call)",
+          "column": 1,
+          "file": "imported-call.ts",
+          "line": 14,
+          "message": "Call 'createUnsafeAgent' passes option(s) agent with a value that is not an allowed factory call."
+        },
+        {
+          "code": "no-mistakes(require-options-on-imported-call)",
+          "column": 1,
+          "file": "imported-call.ts",
+          "line": 15,
+          "message": "Call 'request' from '@example/transport' must pass a statically visible options object at argument 1 containing any of: agent."
+        },
+        {
+          "code": "no-mistakes(require-options-on-imported-call)",
+          "column": 1,
+          "file": "imported-call.ts",
+          "line": 17,
+          "message": "Call 'request' from '@example/transport' must pass a statically visible options object at argument 1 containing any of: agent."
+        }
+      ],
+      "name": "imported-call (#4382 #4514)",
+      "options": null,
+      "rule": "require-options-on-imported-call"
+    },
+    {
+      "file": "registration-cast.ts",
+      "findings": [],
+      "name": "registration-cast (#4436)",
+      "options": null,
+      "rule": "require-top-level-registration"
+    },
+    {
+      "file": "registration-cjs.ts",
+      "findings": [],
+      "name": "registration-cjs (#4341)",
+      "options": null,
+      "rule": "require-top-level-registration"
+    },
+    {
+      "file": "registration-cjs-default.ts",
+      "findings": [],
+      "name": "registration-cjs-default (#4341)",
+      "options": null,
+      "rule": "require-top-level-registration"
+    },
+    {
+      "file": "registration-default.ts",
+      "findings": [],
+      "name": "registration-default (#4341)",
+      "options": null,
+      "rule": "require-top-level-registration"
+    },
+    {
+      "file": "registration-equals.ts",
+      "findings": [],
+      "name": "registration-equals (#4341)",
+      "options": null,
+      "rule": "require-top-level-registration"
+    },
+    {
+      "file": "registration-missing.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(require-top-level-registration)",
+          "column": 1,
+          "file": "registration-missing.ts",
+          "line": 1,
+          "message": "Import the configured runtime registrar and call it with the configured callback unconditionally at module top level."
+        }
+      ],
+      "name": "registration-missing (#4341)",
+      "options": null,
+      "rule": "require-top-level-registration"
+    },
+    {
+      "file": "registration-namespace.ts",
+      "findings": [],
+      "name": "registration-namespace (#4341)",
+      "options": null,
+      "rule": "require-top-level-registration"
+    },
+    {
+      "file": "restricted-api.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 10,
+          "file": "restricted-api.ts",
+          "line": 3,
+          "message": "Restricted API 'banned'. Use an allowed API instead."
+        },
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 9,
+          "file": "restricted-api.ts",
+          "line": 5,
+          "message": "Restricted API 'danger'. Use an allowed API instead."
+        },
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 20,
+          "file": "restricted-api.ts",
+          "line": 5,
+          "message": "Restricted API '@example/api'. Use an allowed API instead. Use a static named import so the imported API can be checked."
+        },
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 13,
+          "file": "restricted-api.ts",
+          "line": 6,
+          "message": "Restricted API '@example/api'. Use an allowed API instead. Use a static named import so the imported API can be checked."
+        },
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 1,
+          "file": "restricted-api.ts",
+          "line": 9,
+          "message": "Restricted API 'banned'. Use an allowed API instead."
+        },
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 1,
+          "file": "restricted-api.ts",
+          "line": 10,
+          "message": "Restricted API 'danger'. Use an allowed API instead."
+        },
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 1,
+          "file": "restricted-api.ts",
+          "line": 11,
+          "message": "Restricted API 'danger'. Use an allowed API instead."
+        },
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 1,
+          "file": "restricted-api.ts",
+          "line": 12,
+          "message": "Restricted API 'danger'. Use an allowed API instead."
+        },
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 1,
+          "file": "restricted-api.ts",
+          "line": 13,
+          "message": "Restricted API 'danger'. Use an allowed API instead."
+        },
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 1,
+          "file": "restricted-api.ts",
+          "line": 14,
+          "message": "Cannot tell whether this member of @example/api is restricted. Write a static member so the restricted API can be checked."
+        },
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 16,
+          "file": "restricted-api.ts",
+          "line": 15,
+          "message": "Restricted API 'danger'. Use an allowed API instead."
+        },
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 37,
+          "file": "restricted-api.ts",
+          "line": 15,
+          "message": "Restricted API '@example/api'. Use an allowed API instead. Use a static named import so the imported API can be checked."
+        },
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 10,
+          "file": "restricted-api.ts",
+          "line": 16,
+          "message": "Restricted API 'danger'. Use an allowed API instead."
+        },
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 1,
+          "file": "restricted-api.ts",
+          "line": 20,
+          "message": "Restricted API 'Foo'. Use an allowed API instead."
+        },
+        {
+          "code": "no-mistakes(restricted-api-usage)",
+          "column": 14,
+          "file": "restricted-api.ts",
+          "line": 21,
+          "message": "Restricted API 'safe'. Use an allowed API instead."
+        }
+      ],
+      "name": "restricted-api (#4339 #4433)",
+      "options": null,
+      "rule": "restricted-api-usage"
+    },
+    {
+      "file": "function-aliases.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(ts-no-function-aliases)",
+          "column": 8,
+          "file": "function-aliases.ts",
+          "line": 12,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+        },
+        {
+          "code": "no-mistakes(ts-no-function-aliases)",
+          "column": 8,
+          "file": "function-aliases.ts",
+          "line": 16,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+        },
+        {
+          "code": "no-mistakes(ts-no-function-aliases)",
+          "column": 8,
+          "file": "function-aliases.ts",
+          "line": 20,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+        },
+        {
+          "code": "no-mistakes(ts-no-function-aliases)",
+          "column": 8,
+          "file": "function-aliases.ts",
+          "line": 24,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+        },
+        {
+          "code": "no-mistakes(ts-no-function-aliases)",
+          "column": 8,
+          "file": "function-aliases.ts",
+          "line": 28,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+        },
+        {
+          "code": "no-mistakes(ts-no-function-aliases)",
+          "column": 8,
+          "file": "function-aliases.ts",
+          "line": 32,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+        },
+        {
+          "code": "no-mistakes(ts-no-function-aliases)",
+          "column": 25,
+          "file": "function-aliases.ts",
+          "line": 36,
+          "message": "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior."
+        }
+      ],
+      "name": "function-aliases (#4412 #4528)",
+      "options": null,
+      "rule": "ts-no-function-aliases"
+    },
+    {
+      "file": "null-defaults.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(ts-preserve-null-option-defaults)",
+          "column": 10,
+          "file": "null-defaults.ts",
+          "line": 2,
+          "message": "Do not default nullable option 'limit' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly."
+        },
+        {
+          "code": "no-mistakes(ts-preserve-null-option-defaults)",
+          "column": 10,
+          "file": "null-defaults.ts",
+          "line": 6,
+          "message": "Do not default nullable option 'limit' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly."
+        },
+        {
+          "code": "no-mistakes(ts-preserve-null-option-defaults)",
+          "column": 10,
+          "file": "null-defaults.ts",
+          "line": 11,
+          "message": "Do not default nullable option 'limit' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly."
+        },
+        {
+          "code": "no-mistakes(ts-preserve-null-option-defaults)",
+          "column": 10,
+          "file": "null-defaults.ts",
+          "line": 15,
+          "message": "Do not default nullable option 'limit' with ??, ||, ??=, or ||=. Preserve explicit null and check undefined explicitly."
+        }
+      ],
+      "name": "null-defaults (#4420)",
+      "options": null,
+      "rule": "ts-preserve-null-option-defaults"
+    }
+  ]
+}

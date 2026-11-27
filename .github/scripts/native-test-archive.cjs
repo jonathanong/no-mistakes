@@ -139,6 +139,7 @@ function run(index, count) {
     const result = spawnSync(path.resolve(entry.executable), entry.args, {
       stdio: "inherit",
       cwd: path.resolve("crates/no-mistakes"),
+      env: { ...process.env, NO_MISTAKES_CLI_BIN: path.resolve(manifest.cli) },
     });
     fs.appendFileSync(
       "target/native-rust-results.jsonl",

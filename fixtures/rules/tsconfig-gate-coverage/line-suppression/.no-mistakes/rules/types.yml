@@ -1,0 +1,8 @@
+- rule: tsconfig-gate-coverage
+  scope: repository
+  options:
+    allowProjects:
+      docs/unsuppressed.json: invalid
+      docs/line.json: invalid # no-mistakes-disable-line tsconfig-gate-coverage
+      # no-mistakes-disable-next-line tsconfig-gate-coverage
+      docs/next-line.json: invalid

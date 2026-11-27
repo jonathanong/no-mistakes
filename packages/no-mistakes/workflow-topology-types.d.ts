@@ -25,6 +25,11 @@ export interface CiTopologyOptions {
   workflows?: string[];
 }
 
+export interface CiTopologyMermaidOptions extends CiTopologyOptions {
+  /** Render the topology as Mermaid text. */
+  format: "mermaid";
+}
+
 export type JsonScalar = boolean | number | string;
 export type JsonValue =
   | null

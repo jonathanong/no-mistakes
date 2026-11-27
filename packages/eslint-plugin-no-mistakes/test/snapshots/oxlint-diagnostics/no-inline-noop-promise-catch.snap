@@ -1,0 +1,30 @@
+[
+  {
+    "code": "no-mistakes(no-inline-noop-promise-catch)",
+    "column": 26,
+    "file": "eslint-snippets/fixture/no-inline-noop-promise-catch/recall.mjs",
+    "line": 1,
+    "message": "Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable."
+  },
+  {
+    "code": "no-mistakes(no-inline-noop-promise-catch)",
+    "column": 26,
+    "file": "eslint-snippets/fixture/no-inline-noop-promise-catch/recall.mjs",
+    "line": 2,
+    "message": "Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable."
+  },
+  {
+    "code": "no-mistakes(no-inline-noop-promise-catch)",
+    "column": 45,
+    "file": "eslint-snippets/fixture/no-inline-noop-promise-catch/recall.mjs",
+    "line": 3,
+    "message": "Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable."
+  },
+  {
+    "code": "no-mistakes(no-inline-noop-promise-catch)",
+    "column": 28,
+    "file": "eslint-snippets/fixture/no-inline-noop-promise-catch/recall.mjs",
+    "line": 4,
+    "message": "Replace this inline no-op Promise catch with a named handler, logging, reporting, transformation, or rethrow so rejection handling stays reviewable."
+  }
+]

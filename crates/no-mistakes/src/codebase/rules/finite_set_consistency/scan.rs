@@ -111,7 +111,7 @@ pub(super) fn scan(
         }
         comparison::compare(left, right, comparison, findings);
     }
-    findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
+    super::super::sort_findings::sort_by_file_and_message(findings);
     Ok(output)
 }
 

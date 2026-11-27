@@ -11,7 +11,7 @@ silently skip the entrypoint. Prefer the runtime's main-module identity.
 ## Disallowed
 
 ```ts
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath } from "node:url";
 if (process.argv[1] === fileURLToPath(import.meta.url)) main();
 const invoked = process.argv.at(1);
 if (invoked !== import.meta.filename) return;
@@ -87,7 +87,7 @@ are recognized only from their corresponding Node `url`, `path`, and `fs`
 imports or CommonJS bindings. Same-spelled local wrappers are not assumed
 transparent. Transparent TypeScript assertions and optional chains are supported.
 
-A named `argv` import, `const { argv }` from `process`, a string or expression-free template index, `.at` with a static `1`, and `fileURLToPath.call` or a literal-array `.apply` are the same access.
+A named `argv` import, `import proc = require("node:process")`, `const { argv }` from `process` or `require("node:process")`, a static computed `argv` key, a string or expression-free template index, `.at` with a static `1`, a cast around `URL` or `import.meta.filename`, and `fileURLToPath.call` or a literal-array `.apply` are the same access.
 
 ## Fix
 

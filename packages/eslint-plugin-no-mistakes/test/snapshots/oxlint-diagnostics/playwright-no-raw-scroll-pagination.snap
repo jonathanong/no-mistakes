@@ -1,0 +1,44 @@
+[
+  {
+    "code": "no-mistakes(playwright-no-raw-scroll-pagination)",
+    "column": 9,
+    "file": "eslint-snippets/fixture/playwright-no-raw-scroll-pagination/e2e/sentinel-receivers.spec.js",
+    "line": 2,
+    "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call."
+  },
+  {
+    "code": "no-mistakes(playwright-no-raw-scroll-pagination)",
+    "column": 9,
+    "file": "eslint-snippets/fixture/playwright-no-raw-scroll-pagination/e2e/sentinel-receivers.spec.js",
+    "line": 3,
+    "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call."
+  },
+  {
+    "code": "no-mistakes(playwright-no-raw-scroll-pagination)",
+    "column": 9,
+    "file": "eslint-snippets/fixture/playwright-no-raw-scroll-pagination/e2e/sentinel-receivers.spec.js",
+    "line": 4,
+    "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call."
+  },
+  {
+    "code": "no-mistakes(playwright-no-raw-scroll-pagination)",
+    "column": 9,
+    "file": "eslint-snippets/fixture/playwright-no-raw-scroll-pagination/e2e/sentinel-receivers.spec.js",
+    "line": 5,
+    "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call."
+  },
+  {
+    "code": "no-mistakes(playwright-no-raw-scroll-pagination)",
+    "column": 9,
+    "file": "eslint-snippets/fixture/playwright-no-raw-scroll-pagination/e2e/sentinel-receivers.spec.js",
+    "line": 7,
+    "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call."
+  },
+  {
+    "code": "no-mistakes(playwright-no-raw-scroll-pagination)",
+    "column": 9,
+    "file": "eslint-snippets/fixture/playwright-no-raw-scroll-pagination/e2e/sentinel-receivers.spec.js",
+    "line": 9,
+    "message": "scrollIntoViewIfNeeded() may leave this pagination sentinel stationary when it is already visible. Use a helper that scrolls repeatedly until the request fires instead of a single raw call."
+  }
+]

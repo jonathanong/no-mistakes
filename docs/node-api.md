@@ -473,7 +473,7 @@ remain failures. See
 | `resolve-check`                            | `resolveCheck(options)`                                                                                                                                                                                                                                                    |
 | `fetches`                                  | `fetches(options)`                                                                                                                                                                                                                                                         |
 | `postgres lock-inventory` | `postgresLockInventory(options)` |
-| `postgres catalog` | `generatePostgresCatalog(options)` |
+| `postgres catalog --output <path>` | `generatePostgresCatalog({ ...options, output: path })` |
 | Source-only library capability | `parsePostgresSql(sourceOrSources)` |
 | Source-only TS/JS executor SQL extraction | `extractExecutedPostgresSql({ sources, importSpecifier, includeDiagnostics: true })` |
 | Selected TS/JS modules | `analyzeTypeScriptModules({ root, files })` |
@@ -501,10 +501,10 @@ remain failures. See
 | `infra resource-refs\|outputs\|test-for`   | `infraResourceRefs`, `infraOutputs`, `infraTestFor`                                                                                                                                                                                                                        |
 | `swift importers\|test-targets`            | `swiftImporters`, `swiftTestTargets`                                                                                                                                                                                                                                       |
 | `changes diff` | `changesDiff({ baseRoot, headRoot, config })` |
-| `lockfile diff`                            | `lockfileDiff(options)`                                                                                                                                                                                                                                                    |
+| `lockfile diff` | `lockfileDiff(options)`. Set `includeWarnings: true` for entries plus structured binary-lockfile warnings. |
 | `ci impact`                                | `ciImpact(options)`                                                                                                                                                                                                                                                        |
 | `ci env`                                   | `ciEnv(options)`                                                                                                                                                                                                                                                           |
-| `ci topology`                              | `ciTopology(options)`                                                                                                                                                                                                                                                      |
+| `ci topology` | `ciTopology(options)`. Set `format: "mermaid"` for the same diagram text as the CLI. |
 | `ci topology-impact`                       | `ciTopologyImpact(options)`                                                                                                                                                                                                                                                |
 | `impacted-checks`                          | `impactedChecks(options)`                                                                                                                                                                                                                                                  |
 | `planning-impact` (npm package only)       | `writePlanningImpactArtifacts(options)`                                                                                                                                                                                                                                   |
@@ -615,10 +615,10 @@ See the [migration guide](migrations/deprecated-surfaces.md).
 | `changesDiff` | `changesDiff(options)` |
 | `lockfileDiff` | `lockfileDiff(options)` |
 | `validateMermaidMarkdown` | `validateMermaidMarkdown(options)` |
-| `playwrightCheck` | `playwrightCheck(options)` |
-| `playwrightEdges` | `playwrightEdges(options)` |
-| `playwrightRelated` | `playwrightRelated(options)` |
-| `playwrightTests` | `playwrightTests(options)` |
+| `playwrightCheck` | `playwrightCheck(options)` returns a `PlaywrightCoverageReport` with typed summary and coverage rows. |
+| `playwrightEdges` | `playwrightEdges(options)` returns a `PlaywrightEdgesReport`; use `kind` to narrow each `PlaywrightEdge`. |
+| `playwrightRelated` | `playwrightRelated(options)` returns a `PlaywrightRelatedReport` with `tests` and `fetch_apis`. |
+| `playwrightTests` | `playwrightTests(options)` returns a `PlaywrightTestsReport` with test, route, selector, and fetch details. |
 | `reactAnalyze` | `reactAnalyze(options)` |
 | `reactCheck` | `reactCheck(options)` |
 | `reactUsages` | `reactUsages(options)` |
@@ -639,7 +639,7 @@ See the [migration guide](migrations/deprecated-surfaces.md).
 | `queues` | `queues(options)` |
 | `serverContracts` | `serverContracts(options)` |
 | `serverRouteEdges` | `serverRouteEdges(options)` |
-| `serverRouteList` | `serverRouteList(options)` |
+| `serverRouteList` | `serverRouteList(options)` returns `ServerRoute[]`, the same row type present in `serverRoutes()`. |
 | `serverRouteRelated` | `serverRouteRelated(options)` |
 | `serverRoutes` | `serverRoutes(options)`; Remix file-based routes appear when a `type: remix` project is configured |
 | `testsAudit` | `testsAudit(options)` |
@@ -1064,8 +1064,11 @@ The opt-in [`github-actions-no-poll-wait-job`](rules/github-actions-no-poll-wait
 runs through async `check()` and `analyzeProject()` check reports with the same
 outcome as CLI `check`. Exported `GithubActionsNoPollWaitJobOptions` describes
 its `pollCommands` and `ignoreForLoops` options. The opt-in
-[`github-actions-pr-diff-range`](rules/github-actions-pr-diff-range.md) has no
-options and uses the same check paths.
+[`github-actions-pr-diff-range`](rules/github-actions-pr-diff-range.md) uses the
+same check paths; exported `GithubActionsPrDiffRangeOptions` and
+`GithubActionsRevisionPair` describe its `requireConsistentRevisionPairs`,
+`revisionPairs`, and `unanalyzable` options (abstained diagnostics appear in
+`CheckReport.advisories` by default).
 
 The opt-in [`github-actions-env-policy`](rules/github-actions-env-policy.md)
 runs through async `check()` and `analyzeProject()` check reports with the same

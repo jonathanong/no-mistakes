@@ -49,7 +49,7 @@ application code.
 
 ## Limits
 
-`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. `.apply` with a non-literal argument list is not rewritten. A computed identifier key is not the `fetch` property:
+`function run({ fetch } = globalThis)` is not judged, because the caller can pass a different function. `.apply` with a non-literal argument list is not rewritten. A static computed key such as `globalThis["fetch" as const]`, `fetch["call" as const]`, or `const { ["fetch" as const]: fetchAlias } = globalThis` is still `fetch`. A cast around an immediately invoked function that assigns `fetch` does not hide the later call. A computed identifier key is not the `fetch` property:
 
 ```js
 const fetch = "setTimeout";
@@ -63,6 +63,10 @@ schedule(handler, 0);
 // eslint-disable-next-line no-mistakes/no-global-fetch-outside-helper -- service worker must call fetch directly
 await fetch(request);
 ```
+
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
 
 ## Related rules
 

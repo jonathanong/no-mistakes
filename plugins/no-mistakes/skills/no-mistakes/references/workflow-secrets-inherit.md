@@ -24,5 +24,5 @@ next-line suppressions there. Standard rule-level `message` and
 configuration and findings. Secret inventory still treats inherit as a passed
 caller secret unless this ban is on.
 
-See the [configuration reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/workflow-topology-policy-secrets-inherit.md)
-and [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/workflow-topology-policy.md).
+See the [configuration reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/configuration/workflow-topology-policy-secrets-inherit.md)
+and [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/workflow-topology-policy.md).

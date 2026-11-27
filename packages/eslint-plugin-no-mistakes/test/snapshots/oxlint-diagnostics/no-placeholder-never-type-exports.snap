@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(no-placeholder-never-type-exports)",
+    "column": 27,
+    "file": "eslint-plugin/oxlint-snapshots/fixture/placeholder.ts",
+    "line": 1,
+    "message": "Do not export placeholder never types. Define the real type or remove the export."
+  }
+]

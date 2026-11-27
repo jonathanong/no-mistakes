@@ -1,10 +1,9 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { expect, it } from "vitest";
 import tsParser from "@typescript-eslint/parser";
 import { eslintFindings, snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
-import { fixture, lint, __dirname } from "./helpers.mjs";
+import { fixture, lint, runOxlintAsync, __dirname } from "./helpers.mjs";
 
 const rule = "vitest-timeout-cap";
 const finding = { unknownValues: "finding" };
@@ -77,29 +76,29 @@ it("rejects non-boolean requireReason options", () => {
   for (const requireReason of [null, 0, 1, "false", {}, []])
     assert.throws(() => findings({ requireReason }), /should be boolean/u);
 });
-it("preserves reason and cap diagnostics through Oxlint for every carrier", () => {
+it("preserves reason and cap diagnostics through Oxlint for every carrier", async () => {
   const root = resolve(__dirname, `../../../test-cases/eslint-snippets/fixture/${rule}`);
-  for (const [options, config] of [
+  const names = ["reasons", "reason-carriers", "reason-adjacency", "reason-placeholders"];
+  const configs = [
     [{}, ".oxlintrc.json"],
     [{ requireReason: false }, ".oxlintrc-cap-only.json"],
-  ]) {
-    for (const name of ["reasons", "reason-carriers", "reason-adjacency", "reason-placeholders"]) {
-      const result = spawnSync(
-        process.execPath,
-        [
-          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-          "--config",
-          resolve(root, config),
-          "--format",
-          "json",
-          resolve(root, `${name}.ts`),
-        ],
-        { encoding: "utf8" },
-      );
-      assert.equal(result.status, findings(options, name).length ? 1 : 0, result.stderr);
+  ];
+  const results = await Promise.all(
+    configs.map(([, config]) =>
+      runOxlintAsync({
+        config: resolve(root, config),
+        files: names.map((name) => resolve(root, `${name}.ts`)),
+      }),
+    ),
+  );
+  for (let index = 0; index < configs.length; index += 1) {
+    const [options] = configs[index];
+    const result = results[index];
+    assert.equal(result.status, 1, result.stderr);
+    for (const name of names) {
       assert.deepEqual(
-        JSON.parse(result.stdout)
-          .diagnostics.filter((item) => item.code?.includes(rule))
+        result
+          .forFile(resolve(root, `${name}.ts`), rule)
           .map((item) => [item.labels[0].span.line, item.message])
           .sort((a, b) => a[0] - b[0]),
         findings(options, name).map(({ line, message }) => [line, message]),

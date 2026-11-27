@@ -47,46 +47,38 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            let files =
-                super::selected_rule_files_with_sources(root, config, rule, all_files, sources)?;
-            let config_file = super::configured_root::config_file_for_rule(root, config, rule);
-            let audit = super::allow_audit::AllowAudit::new_files(
-                root,
-                config,
-                rule,
-                Some(sources),
-                "allowlist",
-                opts.allowlist.len(),
-            );
-            let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
-            let mut findings = scan(root, &opts, &files, &config_file, &audit);
-            findings.extend(audit.finish_files(
-                |index| {
-                    scope.exact(&opts.allowlist[index])
-                        && audited(&opts.allowlist[index], &opts.scopes)
-                },
-                |index| {
-                    let file = &opts.allowlist[index];
-                    let path = crate::codebase::ts_resolver::normalize_path(&root.join(file));
-                    if audited(&relative_slash_path(root, &path), &opts.scopes) {
-                        file.clone()
-                    } else {
-                        String::new()
-                    }
-                },
-                |index| opts.allowlist[index].clone(),
-            ));
-            Ok(findings)
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: Options = rule.try_rule_options()?;
+        let files =
+            super::selected_rule_files_with_sources(root, config, rule, all_files, sources)?;
+        let config_file = super::configured_root::config_file_for_rule(root, config, rule);
+        let audit = super::allow_audit::AllowAudit::new_files(
+            root,
+            config,
+            rule,
+            Some(sources),
+            "allowlist",
+            opts.allowlist.len(),
+        );
+        let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
+        let mut findings = scan(root, &opts, &files, &config_file, &audit);
+        findings.extend(audit.finish_files(
+            |index| {
+                scope.exact(&opts.allowlist[index]) && audited(&opts.allowlist[index], &opts.scopes)
+            },
+            |index| {
+                let file = &opts.allowlist[index];
+                let path = crate::codebase::ts_resolver::normalize_path(&root.join(file));
+                if audited(&relative_slash_path(root, &path), &opts.scopes) {
+                    file.clone()
+                } else {
+                    String::new()
+                }
+            },
+            |index| opts.allowlist[index].clone(),
+        ));
+        Ok(findings)
+    })
 }
 
 fn scan(
@@ -109,7 +101,7 @@ fn scan(
         })
         .collect();
     findings.extend(file_findings);
-    findings.sort_by(|a, b| a.file.cmp(&b.file));
+    super::sort_findings::sort_by_file(&mut findings);
     findings
 }
 

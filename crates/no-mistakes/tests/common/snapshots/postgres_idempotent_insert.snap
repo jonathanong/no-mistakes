@@ -113,6 +113,27 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "dynamic_insert_advised": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/query.ts",
+          "line": 4,
+          "message": "src/query.ts:4: postgres-idempotent-insert application #0 has unresolved SQL for arbiter, convergence, generated-arbiter, replay-guard, trigger-replay, volatility: opaque-sql-tail; known SQL prefix \"INSERT INTO sql_placeholder_1 (id) VALUES (1)\"",
+          "rule": "postgres-idempotent-insert",
+          "sourceLine": "return query(`INSERT INTO ${table} (id) VALUES (1)`);",
+          "target": "arbiter, convergence, generated-arbiter, replay-guard, trigger-replay, volatility"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "dynamic_insert_ignored": {
     "exitCode": 0,
     "report": {

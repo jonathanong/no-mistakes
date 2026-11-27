@@ -496,7 +496,7 @@ CTE join-key evidence.
 `row-lock-outside-transaction` default to `advise`. `share-lock-then-write`
 and `redundant-prelock` default to `ignore`. Set `share-lock-then-write`
 to `advise` or `fail`, or set `redundant-prelock` to `advise`, to enable
-the corresponding check. [Default check levels](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_written_rows_only.rs#L14-L38), [level names](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_written_rows_only/policy.rs#L3-L10), and [pre-lock level validation](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_written_rows_only/policy.rs#L41-L44).
+the corresponding check. [Default check levels](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_written_rows_only.rs#L14-L38), [level names](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_written_rows_only/policy.rs#L3-L10), and [pre-lock level validation](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_written_rows_only/policy.rs#L41-L44).
 
 `allow` defaults to `[]`; selectors are optional `relation`, `key`, `file`,
 and `line`, with a required
@@ -696,4 +696,4 @@ executor SQL. See [suppression hygiene](../configuration/suppressions.md).
 ## Invalid UTF-8
 
 The rule reads SQL from executor calls in application source. Source text
-is decoded lossily, so a stray byte alone does not drop a file. [Source selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_written_rows_only/scan.rs#L35-L50).
+is decoded lossily, so a stray byte alone does not drop a file. [Source selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/postgres_lock_written_rows_only/scan.rs#L35-L50).

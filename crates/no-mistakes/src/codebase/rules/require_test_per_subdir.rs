@@ -3,7 +3,6 @@ use crate::codebase::ts_source::{discover_files, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use globset::Glob;
-use rayon::prelude::*;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -23,31 +22,24 @@ pub(crate) struct Options {
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let skip = &config.filesystem.skip_directories;
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            if opts.roots.is_empty() {
-                return Ok(vec![]);
-            }
-            let target_roots = super::target_roots(root, config, rule);
-            let files: Vec<PathBuf> = target_roots
-                .iter()
-                .flat_map(|r| discover_files(r, skip))
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(
-                root,
-                &opts,
-                &files,
-                &super::configured_root::config_file_for_rule(root, config, rule),
-            )
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: Options = rule.try_rule_options()?;
+        if opts.roots.is_empty() {
+            return Ok(vec![]);
+        }
+        let target_roots = super::target_roots(root, config, rule);
+        let files: Vec<PathBuf> = target_roots
+            .iter()
+            .flat_map(|r| discover_files(r, skip))
+            .collect();
+        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        scan(
+            root,
+            &opts,
+            &files,
+            &super::configured_root::config_file_for_rule(root, config, rule),
+        )
+    })
 }
 
 pub(crate) fn check_with_files(

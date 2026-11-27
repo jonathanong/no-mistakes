@@ -1,0 +1,16 @@
+[
+  {
+    "code": "no-mistakes(playwright-no-swallowed-visibility)",
+    "column": 5,
+    "file": "eslint-snippets/fixture/playwright-no-swallowed-visibility/nested-try.mjs",
+    "line": 22,
+    "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden()."
+  },
+  {
+    "code": "no-mistakes(playwright-no-swallowed-visibility)",
+    "column": 5,
+    "file": "eslint-snippets/fixture/playwright-no-swallowed-visibility/nested-try.mjs",
+    "line": 35,
+    "message": "A failed Playwright state check is turned into a boolean. Seed the state, then assert with expect(locator).toBeVisible() or expect(locator).toBeHidden()."
+  }
+]

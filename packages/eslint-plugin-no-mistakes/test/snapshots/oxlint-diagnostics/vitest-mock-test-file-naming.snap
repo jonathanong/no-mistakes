@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(vitest-mock-test-file-naming)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/vitest-mock-test-file-naming/recall.test.ts",
+    "line": 1,
+    "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count."
+  }
+]

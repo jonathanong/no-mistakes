@@ -1,7 +1,7 @@
 "use strict";
 
 const { resolveVariable } = require("./ts-no-function-aliases-self");
-const { staticMemberName } = require("./ts-no-function-aliases-ast");
+const { staticMemberName, unwrapExpression } = require("./ts-no-function-aliases-ast");
 
 function moduleBinding(variable) {
   return variable?.scope.block.type === "Program";
@@ -44,18 +44,39 @@ function exportedDeclarations(program, sourceCode) {
   return declarations;
 }
 
-function importedPath(target, sourceCode) {
-  let root = target;
-  while (root.type === "MemberExpression" && staticMemberName(root) !== null) {
-    root = root.object;
+function requiredModule(init, sourceCode) {
+  const call = unwrapExpression(init);
+  const callee = unwrapExpression(call?.callee);
+  if (
+    call?.type !== "CallExpression" ||
+    callee?.type !== "Identifier" ||
+    callee.name !== "require"
+  ) {
+    return false;
   }
-  // Do not unwrap assertions or call results on receivers: they can establish
-  // a different type or a private runtime object instead of the imported API.
-  if (root.type !== "Identifier") return false;
+  return !resolveVariable(sourceCode, callee)?.defs.length;
+}
+
+function importedPath(target, sourceCode) {
+  let root = unwrapExpression(target);
+  while (root?.type === "MemberExpression" && staticMemberName(root) !== null) {
+    root = unwrapExpression(root.object);
+  }
+  if (root?.type !== "Identifier") return false;
   const variable = resolveVariable(sourceCode, root);
   const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  if (!def) return false;
+  if (def.node?.type === "TSImportEqualsDeclaration") return def.node.importKind !== "type";
+  if (
+    def.type === "Variable" &&
+    def.parent?.kind === "const" &&
+    def.node.id?.type === "Identifier" &&
+    requiredModule(def.node.init, sourceCode)
+  ) {
+    return true;
+  }
   return (
-    def?.type === "ImportBinding" &&
+    def.type === "ImportBinding" &&
     def.parent.importKind !== "type" &&
     def.node.importKind !== "type"
   );
@@ -69,7 +90,8 @@ function reachableTarget(target, sourceCode, declarations) {
   if (variable.defs.length !== 1) return null;
   const declaration = variable.defs[0].node;
   if (!declarations.has(declaration)) return null;
-  const callable = declaration.type === "FunctionDeclaration" ? declaration : declaration.init;
+  const callable =
+    declaration.type === "FunctionDeclaration" ? declaration : unwrapExpression(declaration.init);
   return { callable, annotation: declaration.id?.typeAnnotation };
 }
 

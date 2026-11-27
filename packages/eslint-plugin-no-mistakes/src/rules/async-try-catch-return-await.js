@@ -26,10 +26,9 @@ function mayReturnPromise(node) {
 }
 
 function isPromiseConstructor(node) {
+  const callee = unwrapExpression(node?.callee);
   return (
-    node?.type === "NewExpression" &&
-    node.callee.type === "Identifier" &&
-    node.callee.name === "Promise"
+    node?.type === "NewExpression" && callee?.type === "Identifier" && callee.name === "Promise"
   );
 }
 

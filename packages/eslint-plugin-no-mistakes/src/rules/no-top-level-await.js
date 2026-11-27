@@ -1,24 +1,30 @@
 "use strict";
 const { ruleSuppression } = require("../rule-suppression");
 
+const GUARD_WRAPPERS = new Set([
+  "TSAsExpression",
+  "TSTypeAssertion",
+  "TSNonNullExpression",
+  "TSSatisfiesExpression",
+  "TSInstantiationExpression",
+  "ParenthesizedExpression",
+]);
+
+function unwrapGuard(node) {
+  while (GUARD_WRAPPERS.has(node?.type)) node = node.expression;
+  return node;
+}
+
 function isMainGuard(node) {
-  while (
-    [
-      "TSAsExpression",
-      "TSTypeAssertion",
-      "TSNonNullExpression",
-      "TSSatisfiesExpression",
-      "ParenthesizedExpression",
-    ].includes(node.type)
-  ) {
-    node = node.expression;
-  }
+  node = unwrapGuard(node);
+  const object = unwrapGuard(node?.object);
   return (
-    node.type === "MemberExpression" &&
+    node?.type === "MemberExpression" &&
     !node.computed &&
     node.property.name === "main" &&
-    node.object.type === "MetaProperty" &&
-    node.object.meta.name === "import"
+    object?.type === "MetaProperty" &&
+    object.meta.name === "import" &&
+    object.property.name === "meta"
   );
 }
 

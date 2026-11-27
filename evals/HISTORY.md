@@ -19,6 +19,174 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-26 — restructure the eval docs
+
+No run. README.md now follows the eval-suite layout (what the suite evaluates,
+current results from named runs, what each case checks, how to read the
+numbers, what it does not measure, how to run it); AGENTS.md is the short rule
+set; the "Conventions" and "Writing new cases" sections moved into AGENTS.md;
+"What the measurements support" moved to METHODOLOGY.md; the 2026-11-17
+trigger-variant tables and the lock-review and PostgreSQL case narratives left
+README.md because this log already holds them. The tool-skill table is the
+2026-11-21 run unchanged. `github-actions` and the off-topic guards have no
+2026-11-26 run and are marked not re-measured. No case, grader, or fixture
+changed.
+
+## 2026-11-26 — queue and testing rules measured (#4187, #4623)
+
+Closes the unmeasured rows left by #3879 and #3963 for the cases they added
+(`rules-queue-review-job-self-overlap`, `rules-postgresql-review-parent-key-update`,
+and the three `rules-testing` cases). Claude CLI 2.1.332, agent
+`claude-sonnet-5-5`, judge `claude-opus-5-5`, commit `7da7f3d663`, `runs: 3`
+per arm, `--ablation with-without -j 4 --keep-temp`, one invocation per topic
+(`--tag rules-queue`, `--tag rules-testing`), 66 attempts, zero errored,
+`partial: false`. Cost: queue `$4.39` (`$2.95` agent, `$1.43` judge), testing
+`$4.52` (`$2.95` agent, `$1.56` judge). Reports at
+`~/.cache/no-mistakes/evals/parked-2026-11-26/`. Not run: a baseline of the
+rule text from before #3879 and #3963, so these rows compare with and without
+the plugin only, not old rules against new.
+
+| Case | Loaded | Passed (with) | Passed (without) |
+| --- | --- | --- | --- |
+| `queue-exception-enqueue-in-tx-receipt` | 0/3 | 0/3 | 0/3 |
+| `queue-review-entity-only-dedup-id` | 1/3 | 3/3 | 1/3 |
+| `queue-review-job-self-overlap` | 2/3 | 3/3 | 3/3 |
+| `queue-write-bounded-sweep` | 3/3 | 3/3 | 0/3 |
+| `queue-write-self-requeue` | 3/3 | 3/3 | 2/3 |
+| `testing-exception-parsed-usage-text` | 3/3 | 2/3 | 0/3 |
+| `testing-exception-raised-coverage-floor` | 0/3 | 2/3 | 3/3 |
+| `testing-review-lowered-coverage-floor` | 1/3 | 3/3 | 2/3 |
+| `testing-review-real-email-fixture` | 3/3 | 3/3 | 0/3 |
+| `testing-write-error-text` | 3/3 | 3/3 | 0/3 |
+| `testing-write-flaky-response-wait` | 0/3 | 3/3 | 3/3 |
+
+**Failing attempts read.** (1) `queue-exception-enqueue-in-tx-receipt`: all six
+answers (both arms) never loaded the skill and called the enqueue inside the
+transaction a defect, as the earlier 2026-11-17 runs also did. Several raise a
+real hazard the case text does not close (a commit failing after `add`
+succeeds, with `jobId` collisions blocking the redelivery), so the case, not
+only the description, needs review before it can judge the rule. (2)
+`testing-exception-raised-coverage-floor`: the with-arm failure never loaded
+the skill and marked the merge-order concern "blocking", as both arms did;
+one attempt of three, noise. (3) `testing-exception-parsed-usage-text`: the
+one with-arm failure loaded the skill and told the author the exact option
+columns were too tight, the over-flag the case exists to catch; the without arm
+did this in 3 of 3. The grader verdicts matched the answers.
+
+**What it showed.** Where the skill loads it helps on `bounded-sweep`,
+`real-email-fixture`, `write-error-text`, and `parsed-usage-text`. Loading
+is the gap: `testing-write-flaky-response-wait` and
+`testing-exception-raised-coverage-floor` loaded 0 of 3, and
+`queue-exception-enqueue-in-tx-receipt` 0 of 3. `review-job-self-overlap`
+and `review-parent-key-update` are ceiling cases (3/3 without the plugin).
+
+## 2026-11-26 — re-measure the SHOULD NOT wording
+
+Re-ran `rules-postgresql` on the PR #4617 head `41621a7c09`, which has the
+SHOULD NOT duplicate-lookup sentence and the narrow-view sentence with its
+per-row reason. Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge
+`claude-opus-5-5`, `runs: 3` per arm, `-j 4`. Zero errored attempts, `partial:
+false` on both invocations. No case, grader, or fixture changed since the
+earlier entry.
+
+- **Updated and without plugin:** `bash scripts/run-evals.sh --tag
+  rules-postgresql --runs 3 --ablation with-without -j 4 --no-publish
+  --no-scaffold --trust-plugin --keep-temp --max-cost-usd 12` (48 attempts;
+  `$4.33` agent + `$1.71` judge = `$6.04`).
+- **Base (`origin/main` rules, `2a69aee871`):** the same command with
+  `--eval-dir evals-variants/rules-control --ablation none --max-cost-usd 8`,
+  control generated from `origin/main`'s `postgresql-rules/SKILL.md` (24
+  attempts; `$2.89` agent + `$1.32` judge = `$4.21`).
+- Total `$10.25`. Reports are archived outside git at
+  `~/.cache/no-mistakes/evals/pr4617-rerun-2026-11-26/`.
+
+| Case | Base fired / content | Updated fired / content | Without plugin |
+| --- | --- | --- | --- |
+| `postgresql-exception-index-timeout` | 3/3, 3/3 | 3/3, 3/3 | 3/3 |
+| `postgresql-exception-view-uses-joined-columns` | 3/3, 3/3 | 3/3, 3/3 | 3/3 |
+| `postgresql-review-duplicate-row-lookup` | 3/3, 3/3 | 3/3, 3/3 | 3/3 |
+| `postgresql-review-long-identifier` | 3/3, 3/3 | 3/3, 3/3 | 3/3 |
+| `postgresql-review-narrow-view-lookup` | 3/3, 1/3 | 3/3, 3/3 | 1/3 |
+| `postgresql-review-parent-key-update` | 2/3, 3/3 | 2/3, 3/3 | 3/3 |
+| `postgresql-write-advisory-lock` | 3/3, 3/3 | 3/3, 3/3 | 0/3 |
+| `postgresql-write-offset-pagination` | 3/3, 3/3 | 3/3, 3/3 | 3/3 |
+| Total | 23/24, 22/24 | 23/24, 24/24 | 19/24 |
+
+**Failing attempts read.** The two base and two without-plugin failures on
+`review-narrow-view-lookup` approved the query and spent the review on
+first-page cursors, indexes, and soft-deleted authors; none mentioned the
+view's extra join, so the grader was right. The three without-plugin failures
+on `write-advisory-lock` used `pg_try_advisory_lock` (session level) with
+cleanup code, which the existing rule bans. The unfired `review-parent-key-update`
+attempts (one per arm) passed on content and need no action.
+
+**What it showed.** The new wording scored 24/24 against 22/24 for base and
+19/24 without the plugin. The only case that separates the new sentences from
+base is `review-narrow-view-lookup` (3/3 vs 1/3 base and 1/3 without); the
+earlier run had base at 2/3, so base is 3 of 6 pooled and the difference is
+suggestive, not resolved at this sample. `review-duplicate-row-lookup` is a
+ceiling case (3/3 without the plugin in both runs), so it supports neither the
+duplicate-lookup sentence nor its removal; that sentence rests on the extra
+probe per output row.
+
+## 2026-11-26 — Duplicate-lookup rule downgraded to SHOULD NOT
+
+No new run. The duplicate-lookup sentence measured below was later changed from MUST NOT to SHOULD NOT. The only harm it names is another probe per output row, which depends on row count, and a second lookup of the same key can be deliberate. The narrow-view sentence gained the reason that the view's joins and subqueries still run for every output row. Those two sentences were not re-measured here; [the re-run](#2026-11-26--re-measure-the-should-not-wording) did. The table in the next section is the earlier wording. Downgrading a MUST NOT needs no new evidence.
+
+## 2026-11-26 — PostgreSQL duplicate row lookup and narrow view rules
+
+Added two rules to `plugins/no-mistakes-rules/skills/postgresql-rules/SKILL.md`
+(`## Queries`) — MUST NOT look up the same row more than once in one statement
+through separate joins or scalar subqueries keyed by the same expression, and
+SHOULD NOT join or subquery a view containing joins or subqueries only to read
+one or two base-table columns — plus three synthetic cases in
+`evals/rules_cases.py`: `rules-postgresql-review-duplicate-row-lookup`,
+`rules-postgresql-review-narrow-view-lookup`, and
+`rules-postgresql-exception-view-uses-joined-columns`.
+
+**What ran.** Base commit `ca2d93697c` (`origin/main`), Claude CLI 2.1.332,
+agent `claude-sonnet-5-5`, judge `claude-opus-5-5`. After 1-attempt pilots on
+the three new cases (`--runs 1 --ablation with-without`, 6 attempts, `$0.54`
+agent cost, `partial: false`), ran two `--runs 3 -j 4` passes across all eight
+`rules-postgresql` cases in the same session, with zero errored runs and
+`partial: false` on both:
+
+- **Base (`origin/main` rules):** `bash scripts/run-evals.sh --eval-dir
+  evals-variants/rules-control --tag rules-postgresql --runs 3 --ablation none
+  -j 4 --no-publish --no-scaffold --trust-plugin` (24 attempts; `$2.81` agent +
+  `$1.24` judge = `$4.06`).
+- **Updated rules (with and without plugin):** `bash scripts/run-evals.sh
+  --tag rules-postgresql --runs 3 --ablation with-without -j 4 --no-publish
+  --no-scaffold --trust-plugin` (48 attempts; `$4.51` agent + `$1.91` judge =
+  `$6.42`).
+
+Raw JSON and HTML reports are archived outside git at
+`~/.cache/no-mistakes/evals/pg-skill-2026-11-26/`.
+
+| Case | Base fired | Base content | Updated fired | Updated content | Without plugin | Δ (updated vs without) |
+| --- | --- | --- | --- | --- | --- | --- |
+| `postgresql-exception-index-timeout` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 |
+| `postgresql-exception-view-uses-joined-columns` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 |
+| `postgresql-review-duplicate-row-lookup` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 |
+| `postgresql-review-long-identifier` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 |
+| `postgresql-review-narrow-view-lookup` | 3/3 | 2/3 (0.67) | 3/3 | 3/3 (1.00) | 1/3 (0.33) | +0.67 |
+| `postgresql-review-parent-key-update` | 3/3 | 3/3 (1.00) | 2/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 |
+| `postgresql-write-advisory-lock` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 1/3 (0.33) | +0.67 |
+| `postgresql-write-offset-pagination` | 3/3 | 3/3 (1.00) | 3/3 | 3/3 (1.00) | 3/3 (1.00) | +0.00 |
+
+**What the run showed.** With the updated rules, every `rules-postgresql` case
+scored `3/3` (`24/24` content pass rate, zero regressions) and triggered
+`23/24` (`96%`; one `review-parent-key-update` run skipped `Skill` and still
+passed). On `review-narrow-view-lookup`, the failing base attempt and both
+failing without-plugin attempts approved the query without flagging the
+composite view join for a single base-table column, while all three updated
+runs flagged it and recommended joining `users` with `deleted_at IS NULL`
+(`3/3` vs `2/3` base and `1/3` without; at `n = 3`, a 1-count difference is
+within small-sample variation). `review-duplicate-row-lookup` and
+`exception-view-uses-joined-columns` are ceiling cases (`3/3` in all arms),
+confirming trigger firing and no over-flagging on legitimate multi-column view
+reads.
+
 ## 2026-11-24 — lock review cases (#3879)
 
 Added synthetic review cases for a child insert followed by a parent key
@@ -335,7 +503,7 @@ does not ship is spent for nothing. The next candidate inherits them.
 "94%"-style claim survives a clean holdout, and none is made here. The holdout
 was not re-run for the current description — the validation clause was screened
 on `after-edit`, which is now tuning-visible, so a fresh holdout needs [fresh
-cases](README.md#writing-new-cases) written first.
+cases](AGENTS.md#writing-new-cases) written first.
 
 **The `after-edit` row is why this table has a column per description.** #981 reported two
 wins and listed `after-edit` as merely unmeasured. It was not neutral: it fell
@@ -1248,4 +1416,4 @@ because [the regression check](#the-after-edit-regression-981-shipped) measured
 all three; the ⚠️ 1-run pilot it used to carry has been superseded and must not
 be quoted. The `heldout` rows are **not run** for the current description on
 purpose — `after-edit` is now tuning-visible, so a clean holdout needs [fresh
-cases](README.md#writing-new-cases) first.
+cases](AGENTS.md#writing-new-cases) first.

@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import tsParser from "@typescript-eslint/parser";
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, it as registerIt } from "vitest";
 import { snapshotDocument, snapshotSuite } from "./diagnostic-snapshot.mjs";
 import { fixture, messages, plugin, require } from "./helpers.mjs";
 
@@ -42,24 +44,45 @@ const executorRules = Object.keys(plugin.rules).filter(
 );
 
 const recorded = [];
+let registration = 0;
+let activeOrder = 0;
+let activeStep = 0;
+
+// Stamp records when the test is registered. Shuffle runs the body later.
+function it(name, fn, timeout) {
+  const order = registration;
+  registration += 1;
+  const run = () => {
+    activeOrder = order;
+    activeStep = 0;
+    return fn();
+  };
+  return timeout === undefined ? registerIt(name, run) : registerIt(name, run, timeout);
+}
+
+function pushRecord(entry) {
+  const order = activeOrder;
+  const step = activeStep;
+  activeStep += 1;
+  recorded.push({ order, step, ...entry, empty: entry.expected.length === 0 });
+}
+
 function recordIds(code, rule, option, filename, expected) {
-  recorded.push({
+  pushRecord({
     rule,
     code,
     option: { importSpecifier: "@example/db", ...option },
     filename,
     expected,
-    empty: expected.length === 0,
   });
 }
 function recordMessages(code, rule, option, filename, expected) {
-  recorded.push({
+  pushRecord({
     rule,
     code,
     option,
     filename,
     expected,
-    empty: expected.length === 0,
   });
 }
 
@@ -1599,7 +1622,9 @@ describe("explicit PostgreSQL executor selection", () => {
   });
 });
 
-it("snapshots postgres runtime rule diagnostics", async () => {
+afterAll(async () => {
+  recorded.sort((left, right) => left.order - right.order || left.step - right.step);
+  // A filtered or failed earlier test must not accept a short snapshot.
   // Registry-derived cases grow automatically; the other 93 scenarios are fixed.
   assert.equal(
     recorded.length,
@@ -1632,5 +1657,11 @@ it("snapshots postgres runtime rule diagnostics", async () => {
     );
     doc[rule] = rows;
   }
-  await expect(snapshotDocument(doc)).toMatchFileSnapshot("snapshots/postgres-runtime-rules.snap");
+  assert.equal(
+    snapshotDocument(doc),
+    readFileSync(
+      fileURLToPath(new URL("snapshots/postgres-runtime-rules.snap", import.meta.url)),
+      "utf8",
+    ),
+  );
 }, 30_000);

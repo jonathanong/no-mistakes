@@ -32,15 +32,6 @@ impl ScopeVisitor<'_> {
     }
 }
 
-pub(super) fn same_sql(left: &Recovered, right: &Recovered) -> bool {
-    left.value == right.value
-        && left.sql == right.sql
-        && left.line == right.line
-        && left.origins == right.origins
-        && left.positions == right.positions
-        && left.fragment == right.fragment
-}
-
 pub(super) fn conditional(visitor: &ScopeVisitor<'_>, value: &mut Recovered, id: u64) {
     if let Some((source, arm)) = visitor.append_decision_offs.borrow().get(&id) {
         value.decision_offs.push((id, *source, *arm));

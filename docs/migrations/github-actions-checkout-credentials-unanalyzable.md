@@ -130,4 +130,4 @@ the leading comment block suppresses a whole file. These directives apply to
 findings and advisories. For invalid YAML, the reported line is the parser-error
 location rather than a checkout `uses` line.
 
-[reviewed-abstain]: https://github.com/jonathanong/no-mistakes/pull/2697#issuecomment-6383196957
+[reviewed-abstain]: https://github.com/jongleberry/no-mistakes/pull/2697#issuecomment-6383196957

@@ -4,7 +4,7 @@ import { fixture } from "../../../fixtures/test-timeout-policy/timeout-policy-ch
 describe.skipIf(process.platform !== "linux")(
   "candidate public TestRunner constructor composition (Node probes)",
   () => {
-    it("preserves cached identity, most-derived prototype and custom context lifecycle", async () => {
+    it.concurrent("preserves cached identity, most-derived prototype and custom context lifecycle", async () => {
       const result = await fixture(
         fixtureTemplate("public-runner.test-template-6.txt"),
         undefined,
@@ -14,7 +14,7 @@ describe.skipIf(process.platform !== "linux")(
       expect(result.marker).toBe("continued");
       expect(result.forcedCleanup).toBe(false);
     });
-    it("guards the final public SDK subclass with an own-field extension and private receiver", async () => {
+    it.concurrent("guards the final public SDK subclass with an own-field extension and private receiver", async () => {
       const result = await fixture(
         fixtureTemplate("public-runner.test-template-4.txt"),
         undefined,
@@ -24,7 +24,7 @@ describe.skipIf(process.platform !== "linux")(
       expect(result.marker).toBe("continued");
       expect(result.forcedCleanup).toBe(false);
     });
-    it.each(["30001", "0", "NaN", "Infinity"])(
+    it.concurrent.each(["30001", "0", "NaN", "Infinity"])(
       "rejects raw configured deadline %s during public construction",
       async (timeout) => {
         const result = await fixture(

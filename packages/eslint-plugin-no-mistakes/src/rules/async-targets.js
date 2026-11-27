@@ -34,7 +34,18 @@ function createTargetMatcher(
       return;
     }
     const variable = resolveVariable(id, context);
-    if (variable) directBindings.set(variable, { source, calleeName });
+    if (!variable) return;
+    const existing = directBindings.get(variable);
+    if (existing?.source === source) {
+      if (!existing.calleeNames.includes(calleeName)) existing.calleeNames.push(calleeName);
+      return;
+    }
+    directBindings.set(variable, { source, calleeName, calleeNames: [calleeName] });
+  }
+
+  function recordDefaultNames(id, source) {
+    recordDirect(id, source, id.name);
+    recordDirect(id, source, "default");
   }
 
   function recordNamespace(id, source) {
@@ -80,7 +91,8 @@ function createTargetMatcher(
     if (node.importKind === "type" || node.id?.type !== "Identifier") return;
     const ref = node.moduleReference;
     if (ref?.type !== "TSExternalModuleReference") return;
-    const source = ref.expression?.type === "Literal" ? String(ref.expression.value) : null;
+    const expression = unwrapExpression(ref.expression);
+    const source = expression?.type === "Literal" ? String(expression.value) : null;
     if (!source) return;
     recordNamespace(node.id, source);
     recordDirect(node.id, source, node.id.name);
@@ -93,14 +105,11 @@ function createTargetMatcher(
         recordNamespace(specifier.local, source);
       } else if (specifier.type === "ImportDefaultSpecifier") {
         recordNamespace(specifier.local, source);
-        recordDirect(specifier.local, source, specifier.local.name);
+        recordDefaultNames(specifier.local, source);
       } else if (specifier.type === "ImportSpecifier") {
-        const imported = importSpecifierName(specifier);
-        recordDirect(
-          specifier.local,
-          source,
-          imported === "default" ? specifier.local.name : imported,
-        );
+        const exported = importSpecifierName(specifier);
+        if (exported === "default") recordDefaultNames(specifier.local, source);
+        else recordDirect(specifier.local, source, exported);
       }
     }
   }

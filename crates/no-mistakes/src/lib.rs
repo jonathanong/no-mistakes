@@ -27,7 +27,7 @@ pub mod impacted_checks;
 pub mod import_shape;
 pub mod imports;
 pub mod integration_tests;
-pub mod invocation;
+pub use no_mistakes_invocation as invocation;
 pub mod mermaid_validation;
 pub mod napi_api;
 pub mod perf_trace;

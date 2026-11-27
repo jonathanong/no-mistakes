@@ -7,7 +7,6 @@ use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::workspaces;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use rayon::prelude::*;
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -43,66 +42,59 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
-        .into_par_iter()
-        .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.try_rule_options()?;
-            let target_roots = super::target_roots(root, config, rule);
-            let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
-                .iter()
-                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
-                .cloned()
-                .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            let workspace = workspaces::load_from_source_store(root, sources)?;
-            let mut findings = scan_workspace(root, &opts, &workspace, sources);
-            if opts.allowlist.is_empty() {
-                return Ok(findings);
-            }
-            let audit = super::allow_audit::AllowAudit::new(
-                root,
-                config,
-                rule,
-                Some(sources),
-                "allowlist",
-                opts.allowlist.len(),
-            );
-            findings.retain(|finding| {
-                !audit.usage.suppress(opts.allowlist.iter().map(|entry| {
-                    finding.target.as_ref().is_some_and(|target| {
-                        scc::canonical_cycle(target) == scc::canonical_cycle(entry)
-                    })
-                }))
+    super::selected_files::run_parallel_rule_applications(config, RULE_ID, &|rule| {
+        let opts: Options = rule.try_rule_options()?;
+        let target_roots = super::target_roots(root, config, rule);
+        let skip = super::skip_dir_set(config);
+        let files: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
+            .cloned()
+            .collect();
+        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+        let workspace = workspaces::load_from_source_store(root, sources)?;
+        let mut findings = scan_workspace(root, &opts, &workspace, sources);
+        if opts.allowlist.is_empty() {
+            return Ok(findings);
+        }
+        let audit = super::allow_audit::AllowAudit::new(
+            root,
+            config,
+            rule,
+            Some(sources),
+            "allowlist",
+            opts.allowlist.len(),
+        );
+        findings.retain(|finding| {
+            !audit.usage.suppress(opts.allowlist.iter().map(|entry| {
+                finding.target.as_ref().is_some_and(|target| {
+                    scc::canonical_cycle(target) == scc::canonical_cycle(entry)
+                })
+            }))
+        });
+        let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
+        let complete = !workspace.packages.is_empty()
+            && workspace.packages.iter().all(|package| {
+                let manifest = package.dir.join("package.json");
+                scope.exact(&relative_slash_path(root, &manifest))
+                    && sources.parse_json_path(&manifest).is_ok()
             });
-            let scope = super::allow_audit::CheckedScope::new(root, Some(sources), &files);
-            let complete = !workspace.packages.is_empty()
-                && workspace.packages.iter().all(|package| {
-                    let manifest = package.dir.join("package.json");
-                    scope.exact(&relative_slash_path(root, &manifest))
-                        && sources.parse_json_path(&manifest).is_ok()
-                });
-            findings.extend(audit.finish(
-                |index| {
-                    complete
-                        && scc::display_cycle(&scc::canonical_cycle(&opts.allowlist[index]))
-                            .iter()
-                            .all(|name| {
-                                workspace
-                                    .packages
-                                    .iter()
-                                    .any(|package| &package.name == name)
-                            })
-                },
-                |index| opts.allowlist[index].clone(),
-            ));
-            Ok(findings)
-        })
-        .collect();
-    let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+        findings.extend(audit.finish(
+            |index| {
+                complete
+                    && scc::display_cycle(&scc::canonical_cycle(&opts.allowlist[index]))
+                        .iter()
+                        .all(|name| {
+                            workspace
+                                .packages
+                                .iter()
+                                .any(|package| &package.name == name)
+                        })
+            },
+            |index| opts.allowlist[index].clone(),
+        ));
+        Ok(findings)
+    })
 }
 
 fn scan_workspace(
@@ -146,7 +138,7 @@ fn scan_workspace(
             target: Some(cycle.join(" -> ")),
         });
     }
-    findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
+    super::sort_findings::sort_by_file_and_message(&mut findings);
     findings
 }
 

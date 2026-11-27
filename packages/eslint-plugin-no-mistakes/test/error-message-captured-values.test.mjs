@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { expect, it } from "vitest";
 import {
@@ -8,7 +7,7 @@ import {
   snapshotCases,
   snapshotDocument,
 } from "./diagnostic-snapshot.mjs";
-import { __dirname, fixture, lint } from "./helpers.mjs";
+import { __dirname, fixture, lint, runOxlint } from "./helpers.mjs";
 
 const id = "test-no-error-message-matching";
 const rule = `no-mistakes/${id}`;
@@ -91,7 +90,7 @@ it("snapshots error-message-captured-values diagnostics", async () => {
   ];
 
   const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", id);
-  for (const file of [
+  const oxlintFiles = [
     "captured-values.ts",
     "captured-satisfies.ts",
     "captured-satisfies-rewrite.ts",
@@ -106,23 +105,16 @@ it("snapshots error-message-captured-values diagnostics", async () => {
     "captured-with.js",
     "captured-suppressed.ts",
     "captured-suppressed-file.ts",
-  ]) {
-    const result = spawnSync(
-      process.execPath,
-      [
-        resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-        "--config",
-        resolve(root, ".oxlintrc-captured.json"),
-        "--format",
-        "json",
-        resolve(root, file),
-      ],
-      { encoding: "utf8" },
-    );
+  ];
+  const result = runOxlint({
+    config: resolve(root, ".oxlintrc-captured.json"),
+    files: oxlintFiles.map((file) => resolve(root, file)),
+  });
+  assert.equal(result.status, 1, result.stderr);
+  for (const file of oxlintFiles) {
     // pluginFindings sorts; this parity check keeps both engines' original order.
     const eslint = check(file);
-    assert.equal(result.status, eslint.length ? 1 : 0, `${file}: ${result.stderr}`);
-    const diagnostics = JSON.parse(result.stdout).diagnostics;
+    const diagnostics = result.forFile(resolve(root, file));
     const relativeFile = `${id}/${file}`;
     cases.push({
       name: `matches real Oxlint for captures, controls and suppressions: ${file}`,

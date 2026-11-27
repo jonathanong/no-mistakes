@@ -15,7 +15,7 @@ immutable aliases, renamed destructuring, namespace imports, bound setters with
 matching receivers and statically known computed names. Partially applied setters
 or slow methods and dynamic members on a proven framework API report as
 unresolved under `unknownValues: "finding"`. Later call arguments do not
-replace pre-bound arguments. [Unknown values](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-test-timeout-cap.js#L28-L34) and [bound setters](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-test-timeout-cap.js#L82-L106).
+replace pre-bound arguments. [Unknown values](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-test-timeout-cap.js#L28-L34) and [bound setters](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-test-timeout-cap.js#L82-L106).
 
 ```ts
 import { test } from '@playwright/test';
@@ -94,7 +94,7 @@ an assertion that the legal slow operations exceed the cap.
   effect and reports `noEffect`, which points at `test.setTimeout` or the
   project configuration timeout. `test.configure({ timeout })` produces no
   override finding. It reports as an unrecognized framework API call under
-  `unknownValues: "finding"`. [Framework API checks](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-test-timeout-cap.js#L126-L137). This ban does not cover
+  `unknownValues: "finding"`. [Framework API checks](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-test-timeout-cap.js#L126-L137). This ban does not cover
   `expect(..., { timeout })` (owned by
   [`playwright-assertion-timeout-cap`](playwright-assertion-timeout-cap.md)),
   `page.waitFor*` timeouts, or `test.step` timeouts. Project configuration
@@ -129,7 +129,7 @@ SDK `import { default as test }` has the same builtin identity as a default
 import; arbitrary helper defaults do not. Callback `.bind(thisArg)` preserves
 parameter positions. Pre-bound arguments or spread binding arguments instead
 leave the callback carrier unresolved at the registration. It reports under
-`unknownValues: "finding"`. [Bound callback handling](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-test-timeout-cap.js#L99-L106). Immutable aliases
+`unknownValues: "finding"`. [Bound callback handling](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/packages/eslint-plugin-no-mistakes/src/rules/playwright-test-timeout-cap.js#L99-L106). Immutable aliases
 of these callbacks preserve that distinction. Receiver-only bound callbacks retain
 locally legal false/short slow behavior, independently of inherited-slot findings.
 

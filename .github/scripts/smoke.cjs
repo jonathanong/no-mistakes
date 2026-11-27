@@ -17,12 +17,12 @@ function escape(name) {
 
 function cargoCommands(os) {
   const { label, rust } = platform(os);
-  return rust.map(({ selector, args }) => [
+  return rust.map(({ package: pkg = "no-mistakes", selector, args }) => [
     "test",
-    ...profileArgs(label),
+    ...profileArgs(label, pkg),
     "--locked",
     "-p",
-    "no-mistakes",
+    pkg,
     ...selector,
     ...args,
   ]);
@@ -32,13 +32,16 @@ function cargoCommands(os) {
 // package selection as cargoCommands, so the test step compiles nothing.
 function buildCommand(os) {
   const { label, rust } = platform(os);
+  const packages = new Set(rust.map(({ package: pkg = "no-mistakes" }) => pkg));
+  if (packages.size !== 1) throw new Error(`smoke ${os} rust entries must share one package`);
+  const [pkg] = packages;
   const selectors = new Map(rust.map(({ selector }) => [selector.join(" "), selector]));
   return [
     "test",
-    ...profileArgs(label),
+    ...profileArgs(label, pkg),
     "--locked",
     "-p",
-    "no-mistakes",
+    pkg,
     "--no-run",
     ...[...selectors.values()].flat(),
   ];

@@ -1,0 +1,216 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "eslint/no-unused-vars": "off"
+  },
+  "overrides": [
+    {
+      "files": ["restricted-api.ts"],
+      "rules": {
+        "no-mistakes/restricted-api-usage": [
+          "error",
+          {
+            "targets": [
+              { "source": "@example/api", "importedNamePattern": "^danger$" },
+              { "importedNamePattern": "^banned$" },
+              { "constructNamePattern": "^Foo$" },
+              { "referenceNamePattern": "^safe$" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["unbatched-reads.ts"],
+      "rules": {
+        "no-mistakes/no-consecutive-unbatched-reads": [
+          "error",
+          {
+            "imports": [
+              { "source": "@example/cache", "imported": "db" },
+              { "source": "@example/cache", "imported": "default" }
+            ],
+            "readMethods": ["get"]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "registration-namespace.ts",
+        "registration-equals.ts",
+        "registration-cjs.ts",
+        "registration-cast.ts",
+        "registration-missing.ts"
+      ],
+      "rules": {
+        "no-mistakes/require-top-level-registration": [
+          "error",
+          {
+            "registrar": { "source": "@example/app", "imported": "register" },
+            "callback": "handler"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["registration-default.ts", "registration-cjs-default.ts"],
+      "rules": {
+        "no-mistakes/require-top-level-registration": [
+          "error",
+          {
+            "registrar": { "source": "@example/app", "imported": "default" },
+            "callback": "handler"
+          }
+        ]
+      }
+    },
+    {
+      "files": ["argv-main.ts"],
+      "rules": { "no-mistakes/no-argv-main-guard": "error" }
+    },
+    {
+      "files": ["banned-import.ts"],
+      "rules": {
+        "no-mistakes/no-banned-import-outside-allowed-paths": [
+          "error",
+          {
+            "checkedPathPatterns": ["**"],
+            "bannedImports": [{ "module": "@example/evil", "names": ["bad", "secret"] }]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["object-mutation.ts"],
+      "rules": {
+        "no-mistakes/no-object-mutation": ["error", { "module": false, "imported": true }]
+      }
+    },
+    {
+      "files": ["top-level-await.ts"],
+      "rules": { "no-mistakes/no-top-level-await": "error" }
+    },
+    {
+      "files": ["disposition-iife.ts", "disposition-handled.ts"],
+      "rules": {
+        "no-mistakes/async-call-disposition": [
+          "error",
+          {
+            "targets": [
+              { "sourceSpecifierPatterns": ["@example/jobs"], "calleeNamePatterns": ["run"] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["disposition-expect.ts"],
+      "rules": {
+        "no-mistakes/async-call-disposition": [
+          "error",
+          {
+            "targets": [
+              { "sourceSpecifierPatterns": ["@example/jobs"], "calleeNamePatterns": ["default"] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["array-methods.ts"],
+      "rules": { "no-mistakes/await-array-methods": "error" }
+    },
+    {
+      "files": ["suite.test.ts"],
+      "rules": { "no-mistakes/no-import-only-test-files": "error" }
+    },
+    {
+      "files": ["imported-call.ts"],
+      "rules": {
+        "no-mistakes/require-options-on-imported-call": [
+          "error",
+          {
+            "targets": [
+              {
+                "sourceSpecifierPatterns": ["@example/http"],
+                "calleeNamePatterns": ["default"],
+                "optionsPosition": 1,
+                "requiredProperties": ["timeout"]
+              },
+              {
+                "sourceSpecifierPatterns": ["@example/transport"],
+                "calleeNamePatterns": ["send", "request"],
+                "optionsPosition": 1,
+                "requiredProperties": ["agent"],
+                "allowedValueCallees": { "agent": ["approvedAgent"] }
+              },
+              {
+                "sourceSpecifierPatterns": ["@example/agents"],
+                "calleeNamePatterns": ["createUnsafeAgent"],
+                "optionsPosition": 1,
+                "requiredProperties": ["agent"],
+                "allowedValueCallees": { "agent": ["approvedAgent"] }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["function-aliases.ts"],
+      "rules": { "no-mistakes/ts-no-function-aliases": "error" }
+    },
+    {
+      "files": ["null-defaults.ts"],
+      "rules": { "no-mistakes/ts-preserve-null-option-defaults": "error" }
+    },
+    {
+      "files": ["try-catch.ts"],
+      "rules": {
+        "no-mistakes/async-try-catch-return-await": [
+          "error",
+          {
+            "handlers": [
+              {
+                "sourceSpecifierPatterns": ["@example/rate"],
+                "calleeNamePatterns": ["handleRateLimit"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["gh-api.ts"],
+      "rules": { "no-mistakes/gh-api-argument-safety": "error" }
+    },
+    {
+      "files": ["global-fetch.ts"],
+      "rules": {
+        "no-mistakes/no-global-fetch-outside-helper": [
+          "error",
+          { "checkedPathPatterns": ["**"] }
+        ]
+      }
+    },
+    {
+      "files": ["delete-property.ts"],
+      "rules": { "no-mistakes/no-delete-property": "error" }
+    },
+    {
+      "files": ["noop-catch.ts"],
+      "rules": {
+        "no-mistakes/no-inline-noop-promise-catch": [
+          "error",
+          { "allowedCalleeNamePatterns": ["cleanup"], "checkedPathPatterns": ["**"] }
+        ]
+      }
+    }
+  ]
+}

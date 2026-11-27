@@ -25,7 +25,8 @@ This rule has no options.
 ## Limits
 
 Every property deletion is checked directly, including aliases, static string
-or expression-free template keys, optional members, and dynamic keys:
+or expression-free template keys, optional members, `satisfies` and instantiation
+wrappers around the operand, and dynamic keys:
 `delete rows[key]` is a property deletion regardless of the key's value.
 The rule does not infer deletion inside called functions: `remove.call(null,
 rows)` and an imported `remove(rows)` do not prove a deletion from this file.
@@ -41,6 +42,10 @@ sentinel when the shape must remain stable.
 // eslint-disable-next-line no-mistakes/no-delete-property -- cleanup is required by this mutable third-party object
 delete externalCache[key];
 ```
+
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
 
 ## Related rules
 

@@ -53,10 +53,11 @@ function matchesAny(value, patterns) {
 }
 
 function matchingTargets(targets, source, calleeName) {
+  const names = Array.isArray(calleeName) ? calleeName : [calleeName];
   return targets.filter(
     (target) =>
       matchesAny(source, target.sourceSpecifierPatterns) &&
-      matchesAny(calleeName, target.calleeNamePatterns),
+      names.some((name) => matchesAny(name, target.calleeNamePatterns)),
   );
 }
 

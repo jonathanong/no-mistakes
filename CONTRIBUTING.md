@@ -10,7 +10,8 @@ This repository is a huge token sink. Thus, contributions are welcomed.
      `check-runner/` cases, so find the suite's loader with `rg` and add to the tree it reads.
    - Crate-local resolver, source-discovery, and workspace cases live in readable,
      named directories under `crates/no-mistakes/fixtures/`. Load them with
-     `crate::test_support::fixture_root`; use `materialize_saved_fixture` for an
+     `crate::test_support::fixture_root` (available in both `no-mistakes` and
+     `no-mistakes-postgres-sql`); use `materialize_saved_fixture` for an
      isolated copy before mutating files or initializing Git.
 
    Catalog rules listed in `SCHEMA_CATALOG_RULE_IDS` also update
@@ -188,16 +189,18 @@ run those tests alongside the focused module tests.
 For shared diagnostics changes, run the full `suite_cli_queries` target to cover
 every command's basic timing catalog alongside verbose instrumentation.
 
-Rust integration tests share six explicitly registered suites: `suite_cli_queries`,
-`suite_cli_rules`, `suite_cli_postgres`, `suite_cli_package_config`,
-`suite_cli_test_plans`, and `suite_contracts`. This links the analyzer once per suite instead of once per
-source file. Keep new root `crates/no-mistakes/tests/*.rs` modules registered in
-one suite; the registration test rejects omitted or duplicate sources. Original
-module and fixture paths stay unchanged. To run one former target, use, for example,
-`cargo test --locked -p no-mistakes --test suite_cli_queries cli_queries::`.
+Rust integration tests share five explicitly registered suites: `suite_cli_queries`,
+`suite_cli_rules`, `suite_cli_postgres`, `suite_cli_package_config`, and
+`suite_contracts`. Cargo links the analyzer once per suite. The query suite also
+registers the test-plan and test-impact modules. Register each new top-level
+`crates/no-mistakes/tests/*.rs` module in exactly one suite. The registration
+test rejects omitted or duplicate sources. For example, run query cases with
+`cargo test --locked -p no-mistakes --test suite_cli_queries cli_queries::` and
+.NET test-plan cases with
+`cargo test --locked -p no-mistakes --test suite_cli_queries cli_test_plan_dotnet::`.
 Use the full module-qualified name with `-- --exact` for a single test.
-`windows_job_object`, `windows_invocation` and `macos_invocation` remain separate platform harnesses
-for their process and crate-root requirements. The native macOS job also runs
+`windows_job_object` and `windows_invocation` remain separate platform harnesses in `crates/no-mistakes`,
+while `macos_invocation` lives in `crates/no-mistakes-invocation` alongside `src/invocation*` (re-exported by `crates/no-mistakes` as `invocation`). The native macOS job also runs
 `cargo test --locked -p no-mistakes --bin no-mistakes invocation::tests::blocked_check::`
 for the blocked-check timeout regression. This binary subprocess test opens the
 configuration FIFO from the writer side to prove the real check reader reached
@@ -261,8 +264,8 @@ the diff can differ on macOS: native bindings, platform packages, Cargo
 manifests, the toolchain file, build scripts, path and filesystem modules, or
 CI workflows. A docs-only or postgres-rule-only pull request skips those jobs.
 The pull request diff starts at the merge base with the base branch, so a
-workflow edit that exists only on the base does not count. `Native tests` and
-`Tests with coverage` treat that skip as success. Pushes to
+workflow edit that exists only on the base does not count. `Tests with coverage`
+treats that skip as success. Pushes to
 `main` and the release workflow always run the macOS jobs. Markdown under
 `crates/`, `packages/`, `plugins/`, `fixtures/`, `test-cases/`, `tests/`,
 `evals/`, `.ast-grep/`, and `docs/eslint-rules/`, plus pages read by unit and

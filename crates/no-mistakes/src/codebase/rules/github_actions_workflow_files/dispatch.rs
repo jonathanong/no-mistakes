@@ -47,7 +47,11 @@ pub(in crate::codebase::rules) fn run(
             root, config, files, sources,
         )),
         pr_diff_range::RULE_ID => Some(pr_diff_range::check_with_files_and_sources(
-            root, config, files, sources,
+            root,
+            config,
+            files,
+            sources,
+            defer_suppression,
         )),
         github_actions_no_required_pr_path_filters::RULE_ID => Some(
             github_actions_no_required_pr_path_filters::check_with_files_sources_and_deferred_suppression(
