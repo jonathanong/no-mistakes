@@ -1,19 +1,33 @@
-# `no-mistakes` skill evals
+# `no-mistakes` evals
 
-Eval suite for the [`plugins/no-mistakes/skills/no-mistakes`](../plugins/no-mistakes/skills/no-mistakes/SKILL.md)
-skill. It measures two things about the skill's `description:` — whether an
-agent **reaches for the skill** on the questions it answers (and stays away
-from the ones it does not), and whether the **plan** it writes is better for
-having loaded it.
+Two suites share this directory. They answer one question each:
+
+- **Tool skill** (`plugins/no-mistakes/skills/no-mistakes`, 62 cases): does an
+  agent reach for the skill on the questions it answers (and stay away from the
+  ones it does not), and is the **plan** it writes better for having loaded it?
+- **Rules plugin** (`plugins/no-mistakes-rules`, 26 cases): does the topic skill
+  load for ordinary work in its area, and does the answer follow the rule
+  (write, review, and exception cases) when it does?
+
+Every case runs the agent in an empty sandbox and grades the final answer.
+Nothing here measures real-session behavior (see
+[what the suite does not measure](#what-this-suite-does-not-measure)).
 
 | doc | read it for |
 | --- | --- |
-| this README | current results, what they mean, how to run the suite, how cases are built |
+| this README | current results, what each case checks, how to read and run them |
+| [HISTORY.md](HISTORY.md) | every measured run and every change to what is measured, newest first |
+| [AGENTS.md](AGENTS.md) | the rules for adding, changing, running, and recording evals |
 | [METHODOLOGY.md](METHODOLOGY.md) | what a gate can resolve, how to gate a description change, how to build a control or variant |
-| [HISTORY.md](HISTORY.md) | how the description and the suite got here — every screen, regression and retraction |
 | [ROADMAP.md](ROADMAP.md) | evals worth adding next, and what was considered and not built |
+| [eval-improvements.md](../docs/development/eval-improvements.md) | gaps against the eval-suite conventions, in priority order |
 
 ## Current results
+
+Two tables from two runs. Each names its run. A row with no run in
+[HISTORY.md](HISTORY.md) is marked "not re-measured".
+
+### Tool skill (`no-mistakes`)
 
 **Description:** the `description:` line in `plugins/no-mistakes/skills/no-mistakes/SKILL.md`
 today. **Measured:** 2026-11-21 on `d44efa910e` (skill body and
@@ -46,50 +60,207 @@ Trigger rates count should-fire cases only (negative cases excluded), so
 non-firing plans invented a `no-mistakes` command (`summarize.py --mentions`:
 7 no mention, 5 named without a command; `power.py --fabrication`: 0/12).
 
-**This is the control arm for future description changes, and it is not
-comparable with the earlier Opus-agent / Sonnet-judge table** (2026-09-21,
-[HISTORY.md](HISTORY.md#the-full-re-baseline)): agent and judge both changed.
-Trigger rates are lower on most flows (`signature` 7/12 to 0/12, `before-edit`
-14/18 to 7/18, `after-edit` 10/12 to 6/12, `lang-graph` 10/12 to 6/12,
-`queues` 3/12 to 0/12, `ci` 2/12 to 0/12, `usage` 5/12 to 4/12; the zero flows
-stayed at zero), but the gaps cannot be attributed to the agent, the judge, or
-the intervening skill-body changes. Gate a candidate against a same-day control
-measured under these models, never against these stored counts
-([why](METHODOLOGY.md#changing-the-agent-or-judge-model)).
+### Rules plugin (`no-mistakes-rules`)
 
-**Per-grader decomposition of Δ.** Across the five flows with a positive
-should-fire Δ (sum +0.61), the `names-graph-command` regex carries +0.35 (57%)
-and content graders +0.26. On `before-edit` and `after-edit` it is nearly all
-of Δ. The regex only passes when the plan names a command from `SKILL.md`, so
-it records that the skill was used, not that the plan was better:
+**Measured:** 2026-11-26, Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge
+`claude-opus-5-5`, `runs: 3` per arm, `--ablation with-without -j 4`, one
+invocation per topic, zero errored attempts and `partial: false` on all three.
+`rules-postgresql` ran on `41621a7c09`; `rules-queue` and `rules-testing` ran on
+`7da7f3d663`, which has the same plugin and eval files. 114 attempts. Cost
+`$14.95`: about `$10.23` agent and `$4.70` judge (postgresql `$6.04`, queue
+`$4.39`, testing `$4.52`). Reports are archived outside git at
+`~/.cache/no-mistakes/evals/pr4617-rerun-2026-11-26/` and
+`~/.cache/no-mistakes/evals/parked-2026-11-26/`. Run entries:
+[queue and testing](HISTORY.md#2026-11-26--queue-and-testing-rules-measured-4187-4623),
+[postgresql](HISTORY.md#2026-11-26--re-measure-the-should-not-wording).
 
-| flow | should-fire Δ | from `names-graph-command` | from content graders |
+| topic | loaded (with) | passed overall (with) | passed when loaded | passed (without plugin) |
+| --- | --- | --- | --- | --- |
+| `postgresql` (8 cases) | 23/24 (80-99%) | 24/24 (86-100%) | 23/23 | 19/24 (60-91%) |
+| `queue` (5 cases) | 9/15 (36-80%) | 12/15 (55-93%) | 9/9 | 6/15 (20-64%) |
+| `testing` (6 cases) | 10/18 (34-75%) | 16/18 (67-97%) | 9/10 | 8/18 (25-66%) |
+| `github-actions` (3 cases) | not re-measured | not re-measured | not re-measured | not re-measured |
+| off-topic guards (4 cases) | not re-measured | not re-measured | n/a | n/a |
+
+Ranges are 95% Wilson intervals. "Passed when loaded" counts attempts that
+called the topic skill and passed the content grader, out of those that did.
+An attempt that never loaded the skill is still graded on content, and counts
+in "passed overall". `github-actions` and the off-topic guards last ran on
+2026-11-17 (single-arm trigger control: `github-actions` 9/9 loaded, 9/9
+passed; off-topic 0/12 loaded, which is the goal; no baseline arm); see
+[HISTORY.md](HISTORY.md#2026-11-17--retain-ceiling-cases-reject-queue-trigger-candidate-3379).
+
+| case | loaded | passed (with) | passed when loaded | passed (without) | reading |
+| --- | --- | --- | --- | --- | --- |
+| `postgresql-exception-index-timeout` | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
+| `postgresql-exception-view-uses-joined-columns` | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
+| `postgresql-review-duplicate-row-lookup` | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
+| `postgresql-review-long-identifier` | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
+| `postgresql-review-narrow-view-lookup` | 3/3 | 3/3 | 3/3 | 1/3 | base rules scored 1/3 the same day; +2/3, not resolved at n = 3 |
+| `postgresql-review-parent-key-update` | 2/3 | 3/3 | 2/2 | 3/3 | ceiling |
+| `postgresql-write-advisory-lock` | 3/3 | 3/3 | 3/3 | 0/3 | skill helps: the without arm used session locks |
+| `postgresql-write-offset-pagination` | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
+| `queue-exception-enqueue-in-tx-receipt` | 0/3 | 0/3 | 0/0 | 0/3 | both arms fail: skill never loads, answer calls the enqueue a defect |
+| `queue-review-entity-only-dedup-id` | 1/3 | 3/3 | 1/1 | 1/3 | low loading; 2 attempts passed without loading it |
+| `queue-review-job-self-overlap` | 2/3 | 3/3 | 2/2 | 3/3 | ceiling |
+| `queue-write-bounded-sweep` | 3/3 | 3/3 | 3/3 | 0/3 | skill helps |
+| `queue-write-self-requeue` | 3/3 | 3/3 | 3/3 | 2/3 | +1/3, not resolved |
+| `testing-exception-parsed-usage-text` | 3/3 | 2/3 | 2/3 | 0/3 | skill helps; one with-arm attempt told the author to loosen the exact text |
+| `testing-exception-raised-coverage-floor` | 0/3 | 2/3 | 0/0 | 3/3 | below baseline with the skill never loaded; noise at n = 3, a loading gap |
+| `testing-review-lowered-coverage-floor` | 1/3 | 3/3 | 1/1 | 2/3 | low loading |
+| `testing-review-real-email-fixture` | 3/3 | 3/3 | 3/3 | 0/3 | skill helps |
+| `testing-write-error-text` | 3/3 | 3/3 | 3/3 | 0/3 | skill helps |
+| `testing-write-flaky-response-wait` | 0/3 | 3/3 | 0/0 | 3/3 | ceiling; skill never loaded |
+
+The same-day base-rules comparison for `rules-postgresql` is in the
+[run entry](HISTORY.md#2026-11-26--re-measure-the-should-not-wording).
+
+## What each case checks
+
+### What the tool-skill cases grade
+
+**The quality of the impact-scoping plan the agent produces**, in plan mode,
+for a question about a codebase it has been told it cannot read.
+
+Each case is a question phrased the way the questions actually get asked —
+sourced from ~9,800 real prompts across Claude Code, Codex, Cursor and Grok
+histories, then re-pointed at public `auto-harness` symbols. None of them use
+the vocabulary `SKILL.md` is written in ("blast radius", "who calls", "which
+tests should I run"); across all four corpora those phrasings appear zero
+times. The cases deliberately use the real register instead: *is this dead*,
+*where is X used*, *are any of these unused*, *make sure all references are
+updated*, *why is the whole suite running*.
+
+Graders are outcome-shaped: they score whether the **plan** would find what
+needs finding. The design bias throughout is **recall over precision** —
+over-inclusive results are explicitly not penalised, a missed category is the
+failure.
+
+The headline number is **Δ** — the with-plugin score minus the without-plugin
+score. A high absolute score with Δ ≈ 0 means the model would have done just as
+well without the skill. The agent wrote a *good* impact-scoping plan either way
+(the without-arm content graders mostly pass), so where the arms
+genuinely differ is whether the plan is exhaustive **by construction** or only
+**if executed carefully**. The `exhaustive-by-construction` grader on the
+recall-critical cases (01, 02, 05) targets that difference; a text-search plan
+written to be genuinely exhaustive can and should pass it.
+
+### Tool-skill flows
+
+Every case carries a `tags:` field naming its flow. 88 generated cases across
+13 flows; 79 excluding the holdout. The 62 skill cases are the first 12 flows;
+the 26 `rules` cases load the `no-mistakes-rules` plugin instead.
+
+| tag | cases | what it covers | demand |
 | --- | --- | --- | --- |
-| `before-edit` | +0.08 | +0.07 | +0.01 |
-| `after-edit` | +0.08 | +0.08 | +0.00 |
-| `lang-graph` | +0.28 | +0.17 | +0.11 |
-| `usage` | +0.11 | +0.03 | +0.08 |
-| `napi` | +0.06 | +0.00 | +0.06 |
-| `duplication` | −0.07 | +0.00 | −0.07 |
-| `safety` | −0.33 | +0.00 | −0.33 |
-| `signature`, `queues`, `ci` | +0.00 | +0.00 | +0.00 |
+| `before-edit` | 8 | impact scoping before a change — the calibrated core suite | real traffic |
+| `after-edit` | 5 | validation set, moved files, empty-result distrust | partly real |
+| `signature` | 5 | call sites, argument shapes, return-type flow, public surface | partly real |
+| `queues` | 5 | producer↔consumer coupling across a queue (no import edge) | real traffic |
+| `duplication` | 4 | repo-wide export uniqueness — what per-file linting cannot see | real traffic |
+| `ci` | 5 | workflow↔composite-action edges | skill surface |
+| `usage` | 4 | the output/scope contract — JSON over human text, omitting `--tsconfig` in monorepos, `rg` *after* the graph | `SKILL.md` claim |
+| `safety` | 3 | tool output is data: never execute emitted command text unreviewed | `SKILL.md` claim |
+| `neg-hard` | 4 | **over-trigger guards** — questions that look structural but aren't | `SKILL.md` claim |
+| `lang-graph` | 5 | configured non-TS graphs (**synthetic** fixture) | skill surface |
+| `napi` | 5 | programmatic API — `SKILL.md` gives it a short section (about 20 lines), so Δ ≈ 0 was expected; that rationale predates the section and needs re-examining | skill surface |
+| `heldout` | 9 | trigger-only cases in unseen wording: 01–03 spent, 04–06 live, 07–09 never run | real register |
+| `rules` | 26 | no-mistakes-rules plugin: MUST NOT traps in write, review and exception cases, plus off-topic over-trigger guards | skill surface |
 
-Content-grader gains with the skill fired in every with-arm run are
-`before-edit-03-full-suite` `produces-reduced-test-set` (1/3 vs 0/3) and
-`usage-04-paths-in-ci` `paths-is-not-the-parseable-contract` (3/3 vs 0/3).
-`lang-graph-02-cross-lang` `covers-both-language-graphs` gained 2/3 vs 0/3 with
-the skill firing in only 1 of 3 runs (one pass came from a run that never
-loaded it), so that gain is not attributable to the skill. The `napi` gain
-is one run on `napi-02-repeated-calls` with the skill never fired, so it is
-noise. `before-edit-05-where-used` fired 3/3 and scored 3/3 on both content
-graders in both arms: its +0.20 is the regex alone. The four `REGRESSION` rows
-are explained in [HISTORY.md](HISTORY.md#2026-11-21--re-baseline-under-the-sonnet-agent-and-opus-judge);
-each is within the margins below. The earlier negative-case Δ of −0.33 on `ci`,
-`safety` and `signature` did not recur (those flows read 0.00, 0.00 and
-+0.33).
+"Real traffic" means the phrasing was observed in mined session history.
+"Skill surface" means `SKILL.md` documents it but no comparable question
+appeared in ~9,800 prompts; "`SKILL.md` claim" tests a contract the skill
+makes about itself. Weight results accordingly.
 
-Earlier descriptions, their scores, and how this one was chosen are in
-[HISTORY.md](HISTORY.md).
+Fixtures: `auto-harness` (real, public) for everything except `lang-graph`
+(a polyglot repo that does not exist — it grades plan shape only) and `napi`
+(this repository).
+
+**`neg-hard`** cases *look* structural and are not — runtime performance,
+concurrency safety, git history, design judgement — where ordinary negatives
+are obviously textual. They exist because widening a description is the
+change most likely to cause over-triggering. Read them as `skill-fired`
+**plus** fabricated command forms in the non-firing runs; `skill-fired` alone
+reports every description so far as identical.
+
+### `before-edit` cases
+
+| case | asks | trap it sets |
+| --- | --- | --- |
+| `01-dead-in-production` | is a `legacy`-named export dead? | 12+ production consumers; test-file hits must not count as alive |
+| `02-unused-exports` | are any exports of a module unused? | liveness is per-export, not per-file |
+| `03-full-suite` | why is the whole Vitest suite running? | test selection must be transitive, not same-package |
+| `04-all-references` | rename a symbol, update all references | a missed category (types, re-exports, aliases, tests) is the failure |
+| `05-where-used` | where is a symbol used? | every consumer imports the package alias, never the file path |
+| `06-route-coverage` | is a route covered by e2e? | specs match by what they navigate to, not by filename |
+| `07-neg-error-wording` | ❌ exact wording of an error string | a text search is correct here |
+| `08-neg-walkthrough` | ❌ what does this function do? | reading the code is correct here |
+
+Should-not-fire cases (`-neg-` slugs and `neg-hard`) pass when both arms score
+well with Δ ≈ 0. They do not assert the skill is never mentioned; a response
+that says "use `rg` here, the graph won't help" is ideal.
+
+### Rules-plugin cases
+
+The `rules` flow covers `plugins/no-mistakes-rules`. Definitions live in
+`rules_cases.py`; `generate.py` emits each as `rules-<topic>-<slug>/`. Four
+topics (`testing`, `postgresql`, `queue`, `github-actions`) with 22 cases
+between them (`postgresql` has eight, `testing` has six, `queue` has five, and
+`github-actions` has three), plus four off-topic guards. Every case exposes all
+installed plugin skills.
+
+- **write** (one or two per topic, slug `write-*`): ordinary work (a function, query,
+  test, worker, workflow). The prompt never names the rule; breaking one
+  specific rule is the path of least resistance. The rubric checks that one
+  thing in the code.
+- **review** (`review-*`) gives an inline code sample or diff with a planted
+  defect. Passing requires identifying the defect at its location and leaving
+  any deliberate decoy alone.
+- **exception** (one or two per topic, `exception-*`): same vocabulary, but the code is
+  correct because of a written exception or a reasoned SHOULD NOT. Pass when
+  the response leaves it alone. Over-flagging is the failure. The topic skill
+  should still fire, so these count as should-fire.
+- **off-topic** (`rules-offtopic-neg-*`, tag `rules-offtopic`): questions no
+  rules skill covers. `skill-fired` matches any `*-rules` skill, so a green row
+  here is over-triggering. The `-neg-` slug makes `summarize.py` count them as
+  negatives.
+
+Case selection does not require the without-plugin arm to fail. Keep ceiling
+cases: they measure triggering and check that the rules do no harm, although
+they cannot establish a content-score gain. Do not replace cases or add scale
+pressure just to make an unprimed model fail. Keep the same task pressure in
+both arms and retain the content graders as regression checks.
+
+`skill-fired` here checks the specific topic skill among the installed skills, not whether the
+plugin fired at all.
+
+One line per rules case:
+
+| case | checks |
+| --- | --- |
+| `testing-write-error-text` | the test asserts an error code, not message text |
+| `testing-write-flaky-response-wait` | registers the response wait before the click instead of adding retries |
+| `testing-review-real-email-fixture` | flags fixtures that use real domains |
+| `testing-review-lowered-coverage-floor` | flags a lower coverage floor that hides an uncovered path |
+| `testing-exception-parsed-usage-text` | leaves exact usage text that a docs generator parses |
+| `testing-exception-raised-coverage-floor` | accepts a higher floor backed by measured coverage |
+| `postgresql-write-offset-pagination` | keyset pagination instead of `OFFSET` |
+| `postgresql-write-advisory-lock` | transaction-level advisory lock, not session level |
+| `postgresql-review-long-identifier` | flags identifiers that truncate at 63 bytes |
+| `postgresql-review-parent-key-update` | traces the implicit parent lock to the child insert and the deadlock, recommends the stronger parent lock first |
+| `postgresql-review-duplicate-row-lookup` | flags two scalar subqueries on the same row by `t.assignee_id`, recommends one join, leaves the distinct `reviewer_id` join alone |
+| `postgresql-review-narrow-view-lookup` | flags joining a composite view only to read `handle`, recommends joining `users` with `deleted_at IS NULL` |
+| `postgresql-exception-index-timeout` | leaves a deliberate statement-timeout raise |
+| `postgresql-exception-view-uses-joined-columns` | does not flag a view read that uses its joined columns |
+| `queue-write-bounded-sweep` | caps work per run |
+| `queue-write-self-requeue` | a no-progress guard on self-requeue |
+| `queue-review-entity-only-dedup-id` | flags a dedup id that is only the entity id |
+| `queue-review-job-self-overlap` | overlap of scheduled and manual runs across replicas |
+| `queue-exception-enqueue-in-tx-receipt` | leaves an enqueue inside the transaction that holds the receipt |
+| `github-actions-write-persist-credentials` | checkout drops persisted credentials |
+| `github-actions-review-path-filter-required` | flags a path filter on a required check |
+| `github-actions-exception-runner-reasons` | leaves runners that have written reasons |
+| `offtopic-neg-*` (4) | big-O, mutex versus semaphore, regex explanation, release note: no rules skill should load |
 
 ## How to read these numbers
 
@@ -123,50 +294,46 @@ Earlier descriptions, their scores, and how this one was chosen are in
 - **Every number is Claude's.** Codex reads the same `description:`, but the
   suite has no Codex arm.
 
-## What the measurements support
+- **Rules rows report loading and passing apart.** Unloaded attempts are
+  graded on content too and often pass on the model's own judgment, so read
+  "passed (without plugin)" as the content baseline and "loaded" as the
+  description's job. Fix low loading (`queue-exception-*`, the `testing`
+  review and exception cases) in the `description:`, not the body.
+- **Ceiling cases show the skill fires and does no harm.** A rules case with
+  3/3 in the without-plugin arm cannot show the skill helps.
+- **Rules rows are 3 attempts per arm.** One attempt is a third of a row, and
+  the 95% interval on 3 of 3 runs from 44% to 100%.
 
-Rules for changing the description. The evidence for each is in
-[HISTORY.md](HISTORY.md).
+**Per-grader decomposition of Δ.** Across the five flows with a positive
+should-fire Δ (sum +0.61), the `names-graph-command` regex carries +0.35 (57%)
+and content graders +0.26. On `before-edit` and `after-edit` it is nearly all
+of Δ. The regex only passes when the plan names a command from `SKILL.md`, so
+it records that the skill was used, not that the plan was better:
 
-- **Name the subjects that matter.** A subject the description names is
-  reached reliably; one it does not name may or may not be, and nothing
-  predicts which.
-- **Treat the description as a budget.** Rewording reallocates coverage, so
-  measure every flow whose subject a change removes, not only the flows it
-  targets.
-- **Prefer concrete question forms over general framing.**
-- **Gate against a same-day control arm, never a stored number**
-  ([procedure](METHODOLOGY.md#gating-a-description-change)).
-- **Read `neg-hard` as two numbers:** `skill-fired`, plus invented commands in
-  the non-firing runs. A non-firing plan has never named a real subcommand.
+| flow | should-fire Δ | from `names-graph-command` | from content graders |
+| --- | --- | --- | --- |
+| `before-edit` | +0.08 | +0.07 | +0.01 |
+| `after-edit` | +0.08 | +0.08 | +0.00 |
+| `lang-graph` | +0.28 | +0.17 | +0.11 |
+| `usage` | +0.11 | +0.03 | +0.08 |
+| `napi` | +0.06 | +0.00 | +0.06 |
+| `duplication` | −0.07 | +0.00 | −0.07 |
+| `safety` | −0.33 | +0.00 | −0.33 |
+| `signature`, `queues`, `ci` | +0.00 | +0.00 | +0.00 |
 
-## What this suite measures
-
-**The quality of the impact-scoping plan the agent produces**, in plan mode,
-for a question about a codebase it has been told it cannot read.
-
-Each case is a question phrased the way the questions actually get asked —
-sourced from ~9,800 real prompts across Claude Code, Codex, Cursor and Grok
-histories, then re-pointed at public `auto-harness` symbols. None of them use
-the vocabulary `SKILL.md` is written in ("blast radius", "who calls", "which
-tests should I run"); across all four corpora those phrasings appear zero
-times. The cases deliberately use the real register instead: *is this dead*,
-*where is X used*, *are any of these unused*, *make sure all references are
-updated*, *why is the whole suite running*.
-
-Graders are outcome-shaped: they score whether the **plan** would find what
-needs finding. The design bias throughout is **recall over precision** —
-over-inclusive results are explicitly not penalised, a missed category is the
-failure.
-
-The headline number is **Δ** — the with-plugin score minus the without-plugin
-score. A high absolute score with Δ ≈ 0 means the model would have done just as
-well without the skill. The agent wrote a *good* impact-scoping plan either way
-(the without-arm content graders mostly pass), so where the arms
-genuinely differ is whether the plan is exhaustive **by construction** or only
-**if executed carefully**. The `exhaustive-by-construction` grader on the
-recall-critical cases (01, 02, 05) targets that difference; a text-search plan
-written to be genuinely exhaustive can and should pass it.
+Content-grader gains with the skill fired in every with-arm run are
+`before-edit-03-full-suite` `produces-reduced-test-set` (1/3 vs 0/3) and
+`usage-04-paths-in-ci` `paths-is-not-the-parseable-contract` (3/3 vs 0/3).
+`lang-graph-02-cross-lang` `covers-both-language-graphs` gained 2/3 vs 0/3 with
+the skill firing in only 1 of 3 runs (one pass came from a run that never
+loaded it), so that gain is not attributable to the skill. The `napi` gain
+is one run on `napi-02-repeated-calls` with the skill never fired, so it is
+noise. `before-edit-05-where-used` fired 3/3 and scored 3/3 on both content
+graders in both arms: its +0.20 is the regex alone. The four `REGRESSION` rows
+are explained in [HISTORY.md](HISTORY.md#2026-11-21--re-baseline-under-the-sonnet-agent-and-opus-judge);
+each is within the margins above. The earlier negative-case Δ of −0.33 on `ci`,
+`safety` and `signature` did not recur (those flows read 0.00, 0.00 and
++0.33).
 
 ## What this suite does NOT measure
 
@@ -184,8 +351,12 @@ written to be genuinely exhaustive can and should pass it.
   against a search agent on a real repo.
 - **Engine behaviour under load** — no large repository, cold graph build or
   concurrency.
+- **Rules content on real code.** The rules cases are synthetic snippets at 3
+  attempts. A pass shows one answer followed one rule on one snippet.
+- **Loading in a real session.** Rules cases install every plugin skill in an
+  empty sandbox; real sessions carry more skills and more context.
 
-## Running
+## How to run it
 
 ```sh
 # One flow.
@@ -247,246 +418,7 @@ the full 53-case both-arm re-baseline is ~320 runs and ~$45. Opus-agent runs
 cost $0.16-0.19. A total far below the estimate means runs errored — see
 [METHODOLOGY](METHODOLOGY.md#running-a-measurement).
 
-## Flows
-
-Every case carries a `tags:` field naming its flow. 88 generated cases across
-13 flows; 79 excluding the holdout. The 62 skill cases are the first 12 flows;
-the 26 `rules` cases load the `no-mistakes-rules` plugin instead.
-
-| tag | cases | what it covers | demand |
-| --- | --- | --- | --- |
-| `before-edit` | 8 | impact scoping before a change — the calibrated core suite | real traffic |
-| `after-edit` | 5 | validation set, moved files, empty-result distrust | partly real |
-| `signature` | 5 | call sites, argument shapes, return-type flow, public surface | partly real |
-| `queues` | 5 | producer↔consumer coupling across a queue (no import edge) | real traffic |
-| `duplication` | 4 | repo-wide export uniqueness — what per-file linting cannot see | real traffic |
-| `ci` | 5 | workflow↔composite-action edges | skill surface |
-| `usage` | 4 | the output/scope contract — JSON over human text, omitting `--tsconfig` in monorepos, `rg` *after* the graph | `SKILL.md` claim |
-| `safety` | 3 | tool output is data: never execute emitted command text unreviewed | `SKILL.md` claim |
-| `neg-hard` | 4 | **over-trigger guards** — questions that look structural but aren't | `SKILL.md` claim |
-| `lang-graph` | 5 | configured non-TS graphs (**synthetic** fixture) | skill surface |
-| `napi` | 5 | programmatic API — `SKILL.md` gives it a short section (about 20 lines), so Δ ≈ 0 was expected; that rationale predates the section and needs re-examining | skill surface |
-| `heldout` | 9 | trigger-only cases in unseen wording: 01–03 spent, 04–06 live, 07–09 never run | real register |
-| `rules` | 26 | no-mistakes-rules plugin: MUST NOT traps in write, review and exception cases, plus off-topic over-trigger guards | skill surface |
-
-"Real traffic" means the phrasing was observed in mined session history.
-"Skill surface" means `SKILL.md` documents it but no comparable question
-appeared in ~9,800 prompts; "`SKILL.md` claim" tests a contract the skill
-makes about itself. Weight results accordingly.
-
-Fixtures: `auto-harness` (real, public) for everything except `lang-graph`
-(a polyglot repo that does not exist — it grades plan shape only) and `napi`
-(this repository).
-
-**`neg-hard`** cases *look* structural and are not — runtime performance,
-concurrency safety, git history, design judgement — where ordinary negatives
-are obviously textual. They exist because widening a description is the
-change most likely to cause over-triggering. Read them as `skill-fired`
-**plus** fabricated command forms in the non-firing runs; `skill-fired` alone
-reports every description so far as identical.
-
-### `before-edit` cases
-
-| case | asks | trap it sets |
-| --- | --- | --- |
-| `01-dead-in-production` | is a `legacy`-named export dead? | 12+ production consumers; test-file hits must not count as alive |
-| `02-unused-exports` | are any exports of a module unused? | liveness is per-export, not per-file |
-| `03-full-suite` | why is the whole Vitest suite running? | test selection must be transitive, not same-package |
-| `04-all-references` | rename a symbol, update all references | a missed category (types, re-exports, aliases, tests) is the failure |
-| `05-where-used` | where is a symbol used? | every consumer imports the package alias, never the file path |
-| `06-route-coverage` | is a route covered by e2e? | specs match by what they navigate to, not by filename |
-| `07-neg-error-wording` | ❌ exact wording of an error string | a text search is correct here |
-| `08-neg-walkthrough` | ❌ what does this function do? | reading the code is correct here |
-
-Should-not-fire cases (`-neg-` slugs and `neg-hard`) pass when both arms score
-well with Δ ≈ 0. They do not assert the skill is never mentioned; a response
-that says "use `rg` here, the graph won't help" is ideal.
-
-## Rules-plugin cases
-
-The `rules` flow covers `plugins/no-mistakes-rules`. Definitions live in
-`rules_cases.py`; `generate.py` emits each as `rules-<topic>-<slug>/`. Four
-topics (`testing`, `postgresql`, `queue`, `github-actions`) with 22 cases
-between them (`postgresql` has eight, `testing` has six, `queue` has five, and
-`github-actions` has three), plus four off-topic guards. Every case exposes all
-installed plugin skills.
-
-- **write** (one or two per topic, slug `write-*`): ordinary work (a function, query,
-  test, worker, workflow). The prompt never names the rule; breaking one
-  specific rule is the path of least resistance. The rubric checks that one
-  thing in the code.
-- **review** (`review-*`) gives an inline code sample or diff with a planted
-  defect. Passing requires identifying the defect at its location and leaving
-  any deliberate decoy alone.
-- **exception** (1 per topic, `exception-*`): same vocabulary, but the code is
-  correct because of a written exception or a reasoned SHOULD NOT. Pass when
-  the response leaves it alone. Over-flagging is the failure. The topic skill
-  should still fire, so these count as should-fire.
-- **off-topic** (`rules-offtopic-neg-*`, tag `rules-offtopic`): questions no
-  rules skill covers. `skill-fired` matches any `*-rules` skill, so a green row
-  here is over-triggering. The `-neg-` slug makes `summarize.py` count them as
-  negatives.
-
-Case selection does not require the without-plugin arm to fail. Keep ceiling
-cases: they measure triggering and check that the rules do no harm, although
-they cannot establish a content-score gain. Do not replace cases or add scale
-pressure just to make an unprimed model fail. Keep the same task pressure in
-both arms and retain the content graders as regression checks.
-
-`skill-fired` here checks the specific topic skill among the installed skills, not whether the
-plugin fired at all.
-
-### Lock review cases
-
-- `rules-postgresql-review-parent-key-update` checks whether the review traces
-  the implicit parent lock to the child insert, identifies the deadlock, and
-  recommends taking the stronger parent lock first. Measured in the 2026-11-26
-  `rules-postgresql` pass below.
-- `rules-queue-review-job-self-overlap` checks whether the review identifies
-  overlap between scheduled and manual runs across replicas and preserves
-  exclusion or makes concurrent writes safe. Remains unmeasured (the 2026-11-24
-  pilot stopped at authentication; see
-  [HISTORY.md](HISTORY.md#2026-11-24--lock-review-cases-3879)).
-
-### PostgreSQL query rules (`rules-postgresql`, 2026-11-26)
-
-Added three synthetic cases for duplicate keyed lookups of the same row and
-narrow base-table reads through composite views:
-
-- `rules-postgresql-review-duplicate-row-lookup` checks whether the review
-  flags two scalar subqueries looking up the same `members` row by
-  `t.assignee_id`, recommends one join projecting both columns, and leaves a
-  separate `t.reviewer_id` join alone.
-- `rules-postgresql-review-narrow-view-lookup` checks whether the review flags
-  joining a composite view (`user_directory`, which joins `organizations` and
-  runs a correlated `team_memberships` subquery) solely to read one base-table
-  column (`handle`), and recommends joining `users` with `deleted_at IS NULL`.
-- `rules-postgresql-exception-view-uses-joined-columns` checks that the review
-  does not over-flag a query that reads the view's joined `org_name` and
-  computed `team_count` columns.
-
-**Measured:** 2026-11-26 (re-run) on `41621a7c09` (PR #4617
-head, the current SHOULD NOT wording), Claude CLI 2.1.332, agent
-`claude-sonnet-5-5`, judge `claude-opus-5-5`, `runs: 3` per arm, `-j 4`, zero
-errored attempts and `partial: false` on both invocations. "Base" is the
-`origin/main` rules (`2a69aee871`) run through `evals-variants/rules-control`
-with `--ablation none`: 24 attempts, `$2.89` agent + `$1.32` judge = `$4.21`.
-"Updated" and "without plugin" come from one `--ablation with-without`
-invocation: 48 attempts, `$4.33` agent + `$1.71` judge = `$6.04`. Raw reports
-are archived at `~/.cache/no-mistakes/evals/pr4617-rerun-2026-11-26/`. The
-earlier 2026-11-26 run measured the previous MUST NOT wording and is in
-[HISTORY.md](HISTORY.md#2026-11-26--postgresql-duplicate-row-lookup-and-narrow-view-rules).
-
-| Case | Base fired | Base content | Updated fired | Updated content | Without plugin content | Notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| `postgresql-exception-index-timeout` | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
-| `postgresql-exception-view-uses-joined-columns` | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | ceiling (no over-flag) |
-| `postgresql-review-duplicate-row-lookup` | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
-| `postgresql-review-long-identifier` | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
-| `postgresql-review-narrow-view-lookup` | 3/3 | 1/3 | 3/3 | 3/3 | 1/3 | +2/3 over both control arms; at `n = 3` suggestive, not resolved |
-| `postgresql-review-parent-key-update` | 2/3 | 3/3 | 2/3 | 3/3 | 3/3 | ceiling; the unfired attempts still passed |
-| `postgresql-write-advisory-lock` | 3/3 | 3/3 | 3/3 | 3/3 | 0/3 | rule text already on `origin/main`; Base equals Updated by design |
-| `postgresql-write-offset-pagination` | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
-| **Total** | **23/24** | **22/24** | **23/24** | **24/24** | **19/24** | |
-
-Only `review-narrow-view-lookup` can show the new narrow-view sentence working.
-Its base and without-plugin attempts (4 of 6 failed) approved the query and
-discussed cursors and indexes instead; all three updated attempts flagged the
-view and kept `deleted_at IS NULL`. The earlier run on the old wording scored
-base 2/3, updated 3/3, without 1/3, so base is 3 of 6 pooled and the gain over
-base is not resolved. `review-duplicate-row-lookup` is a ceiling case (3/3
-without the plugin, in both runs): the duplicate-lookup sentence is kept for
-the extra probe per output row, not for a measured gain. The advisory-lock row
-is the existing session-lock rule, not part of this change.
-
-### Current trigger comparison
-
-The results below measure the earlier 16-skill inventory. The current plugin
-contains 15 skills after #3587. The `rules-queue-review-job-self-overlap` case
-and the three cases below were added subsequently and remain pending
-measurement; the four newer `rules-postgresql` cases are measured in the table
-above. The historical comparison still refers to its original case set. See
-[history](HISTORY.md).
-
-| Unmeasured case | What it checks |
-| --- | --- |
-| `rules-testing-write-flaky-response-wait` | Register the response wait before the click so a fast response cannot be missed and hidden by retries. |
-| `rules-testing-review-lowered-coverage-floor` | Flag a lower coverage floor that lets a newly uncovered path pass. |
-| `rules-testing-exception-raised-coverage-floor` | Accept a higher floor based on measured coverage gains under the same scope. |
-
-Measured 2026-11-17 on `77413ee9411801db8de00cb94d2cb348d1e30283`
-(release 0.109.78), Claude plugin eval 2.1.325, Sonnet 5.5 agent and Opus 5.5
-judge. One `--runs 3` pass per variant: 54 with-plugin attempts each, 108 total,
-$10.0481 ($5.0976 control; $4.9505 candidate). All attempts completed without
-errors or skipped graders. These are control/candidate variants, not a
-with/without-plugin content comparison.
-
-| Measure | Control | Candidate |
-| --- | --- | --- |
-| Expected topic skill fired | 36/42 | 33/42 |
-| Queue skill fired (primary group) | 7/12 | 7/12 |
-| Any rules skill fired off-topic | 0/12 | 0/12 |
-| Content grader passed, excluding `skill-fired` | 51/54 | 48/54 |
-
-| Case | Control fired | Candidate fired | Control content | Candidate content |
-| --- | --- | --- | --- | --- |
-| `github-actions-exception-runner-reasons` | 3/3 | 3/3 | 3/3 | 3/3 |
-| `github-actions-review-path-filter-required` | 3/3 | 3/3 | 3/3 | 3/3 |
-| `github-actions-write-persist-credentials` | 3/3 | 3/3 | 3/3 | 3/3 |
-| `postgresql-exception-index-timeout` | 3/3 | 2/3 | 3/3 | 3/3 |
-| `postgresql-review-long-identifier` | 3/3 | 3/3 | 3/3 | 3/3 |
-| `postgresql-write-advisory-lock` | 3/3 | 2/3 | 3/3 | 3/3 |
-| `postgresql-write-offset-pagination` | 3/3 | 3/3 | 3/3 | 3/3 |
-| `queue-exception-enqueue-in-tx-receipt` | 0/3 | 0/3 | 0/3 | 0/3 |
-| `queue-review-entity-only-dedup-id` | 1/3 | 1/3 | 3/3 | 3/3 |
-| `queue-write-bounded-sweep` | 3/3 | 3/3 | 3/3 | 2/3 |
-| `queue-write-self-requeue` | 3/3 | 3/3 | 3/3 | 3/3 |
-| `testing-exception-parsed-usage-text` | 3/3 | 3/3 | 3/3 | 3/3 |
-| `testing-review-real-email-fixture` | 2/3 | 1/3 | 3/3 | 1/3 |
-| `testing-write-error-text` | 3/3 | 3/3 | 3/3 | 3/3 |
-
-The candidate changes only the queue description in `rules_variants.py`.
-It leads with enqueueing from request/event handlers and database transaction
-handoffs, rather than "background work" and queue library names. This is a
-routing hypothesis: the receipt prompt centers on a webhook transaction, and
-historical replications repeatedly missed it. The fresh control also missed
-two dedup triggers and one testing-fixture trigger. PostgreSQL and GitHub
-Actions were perfect in this control; their older misses are not a current
-reason to broaden those descriptions. The testing prompt already names a test
-file and Vitest, so a single missed trigger does not justify another candidate.
-
-**Decision: reject the candidate; retain the shipped descriptions.** Queue
-triggering did not improve, and the receipt case remained 0/3 in both variants.
-The `describe` variant retains the rejected wording for reproducibility; it is
-not shipped by the plugin. No prompts, graders, or rule bodies changed.
-
-The gate was sized before the candidate: `power.py --runs 3` on the fresh
-control gives a same-description predictive margin of 3 queue triggers and 5
-global triggers. Queue would need at least 11/12 versus 7/12 to exceed that
-simulated variation; the observed gain is zero. The global loss of three is
-also within its margin. These are noise checks, not proof of equivalence or
-content-score significance. For queue drops, the modeled 80%-power depths
-are 15 runs for a nominal 20% drop, 25 for 15%, and 50 for 10%; concentrated
-single-case changes can need more. No additional paid depth was run.
-
-Every failed content verdict was inspected. All six receipt answers skipped
-`Skill` and proposed after-commit enqueueing or an outbox, contrary to the
-exception rubric. They also raised retention and retry concerns whose validity
-depends on assumptions absent from the snippet; this does not establish that
-routing alone caused the content failures. The candidate's bounded-sweep
-answer enforced batch/time caps but aimed to finish the promo backlog in one
-run, which conflicts with the rubric's leave-work-for-later wording. One
-failed testing review loaded the skill and raised the real-domain issue but
-criticized the empty-list decoy; the other missed the domain issue. Retain all
-recorded verdicts: ambiguous content grading is a limitation, not a reason to
-loosen a grader or relabel a failure.
-
-This suite measures synthetic skill-surface requests, not consumer traffic,
-production reliability, or the model's internal reason for skipping a skill.
-The current comparison does not re-measure without-plugin scores or claim
-that every triggered answer follows every rule.
-
-### Trigger variants
+### Rules plugin and trigger variants
 
 `python3 evals/generate.py --rules-variant <name>` builds a copy of the plugin
 under `evals-variants/_plugins/<name>/` (`rules_variants.py`) and emits the
@@ -549,7 +481,7 @@ text, not from mined traffic. `summarize.py --mentions` and
 `power.py --fabrication` do not apply, since there are no graph command forms
 to fabricate.
 
-## Codex rules runner
+### Codex rules runner
 
 Status: not yet run. No Codex score is recorded in this file or in
 [HISTORY.md](HISTORY.md). The Claude results above stay the primary measure.
@@ -618,62 +550,7 @@ arms. `costUsd` is 0 because the runner does not invent a dollar figure.
 Details and the transcript shapes the trigger check accepts are in
 [METHODOLOGY.md](METHODOLOGY.md#codex-rules-runner).
 
-## Conventions
-
-- `plugins: [../../plugins/no-mistakes/skills/no-mistakes]` in each case — the skill is not at the
-  repo root, so auto-detection does not find it.
-- `model: claude-sonnet-5-5` for the agent (`AGENT_MODEL` in `generate.py`),
-  `--judge-model claude-opus-5-5` for LLM graders (set by `run-evals.sh`). The
-  judge must be sonnet-tier or larger and never the agent's model family.
-- `skill-fired` (`tool_used: Skill`) is on every case. Under `with-without` it
-  is a **display-only indicator** excluded from the score, so it can never
-  move Δ; under `none` it is scored, which is why `summarize.py` drops it
-  everywhere. On a should-not-fire case a red indicator is how
-  over-triggering becomes visible.
-- `names-graph-command` regex graders are weight `0.5` secondaries. They match
-  a `SKILL.md` literal, so they never stand alone as a case's only evidence.
-- Results land in `results/` and are gitignored.
-- Description candidates live in [`variants/`](variants/) as a full copy of
-  the skill with only the `description:` line changed; the plugin under
-  `skills/` is never modified to run a comparison. See
-  [METHODOLOGY](METHODOLOGY.md#adding-or-rebuilding-a-variant).
-
-## Writing new cases
-
-Cases are generated by [`generate.py`](generate.py), the single source of
-truth for prompts, the shared preamble, the plan-mode system prompt, and every
-rubric:
-
-```sh
-python3 evals/generate.py                    # rewrites every case in place
-python3 evals/generate.py --variant <name>   # same cases against variants/<name>
-```
-
-Edit the generator, never the generated `prompt.md` / `graders/*.md` — a hand
-edit is lost on the next run.
-
-Two rules learned the hard way, both of which produced silently meaningless
-scores:
-
-1. **Grade the plan, never a repo-derived fact.** A rubric phrased "the
-   response states whether coverage exists" fails in *both* arms, because the
-   agent has been told the checkout is unavailable and correctly refuses to
-   guess. Phrase rubrics as "the plan would …", and say explicitly that
-   declining to invent an answer is correct.
-2. **Make the prompt well-posed.** An early version omitted any instruction
-   about the missing checkout. Every run in both arms spent 6–12 turns proving
-   the directory was empty and then refused to answer. The
-   `append_system_prompt` block that states the repository is unavailable is
-   load-bearing.
-
-Pilot a new flow at `--runs 1` to calibrate its rubrics, then measure it at
-`runs: 3` before quoting a number — single-run pilots have produced at least
-one phantom result
-([history](HISTORY.md#signature-did-not-regress--the-35-vs-215-above-was-a-1-run-artifact)).
-New held-out cases must be committed **before** the description they judge is
-screened. Candidate flows to add are in [ROADMAP.md](ROADMAP.md).
-
-## Known environment issue
+### Known environment issue
 
 Granting `Bash` to a case fails on a machine whose `~/.docker` contains
 symlinks (Docker Desktop puts them in `bin/` and `cli-plugins/`):

@@ -9,7 +9,7 @@ in [METHODOLOGY.md](METHODOLOGY.md).
 Ranked by what they would let the suite decide. Proposals only — none is
 built. Each new flow starts with a `--runs 1` rubric pilot and is not quoted
 until it has a `runs: 3` measurement
-([Writing new cases](README.md#writing-new-cases)).
+([Writing new cases](AGENTS.md#writing-new-cases)).
 
 ### 1. Fresh held-out cases — needed before any description change
 
@@ -47,7 +47,7 @@ backs them, and the corpus is not in this repository to check. Before building
 any of them, search real session history for the phrasing, the way the
 existing flows were sourced. A surface with no traffic belongs in a pilot at
 most, and its results carry less weight ([how demand is
-labelled](README.md#flows)).
+labelled](README.md#tool-skill-flows)).
 
 Every new should-fire flow also needs a **negative twin** — a question in the
 same vocabulary that the graph cannot answer — because widening the

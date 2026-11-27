@@ -19,6 +19,67 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-26 — restructure the eval docs
+
+No run. README.md now follows the eval-suite layout (what the suite evaluates,
+current results from named runs, what each case checks, how to read the
+numbers, what it does not measure, how to run it); AGENTS.md is the short rule
+set; the "Conventions" and "Writing new cases" sections moved into AGENTS.md;
+"What the measurements support" moved to METHODOLOGY.md; the 2026-11-17
+trigger-variant tables and the lock-review and PostgreSQL case narratives left
+README.md because this log already holds them. The tool-skill table is the
+2026-11-21 run unchanged. `github-actions` and the off-topic guards have no
+2026-11-26 run and are marked not re-measured. No case, grader, or fixture
+changed.
+
+## 2026-11-26 — queue and testing rules measured (#4187, #4623)
+
+Closes the unmeasured rows left by #3879 and #3963 for the cases they added
+(`rules-queue-review-job-self-overlap`, `rules-postgresql-review-parent-key-update`,
+and the three `rules-testing` cases). Claude CLI 2.1.332, agent
+`claude-sonnet-5-5`, judge `claude-opus-5-5`, commit `7da7f3d663`, `runs: 3`
+per arm, `--ablation with-without -j 4 --keep-temp`, one invocation per topic
+(`--tag rules-queue`, `--tag rules-testing`), 66 attempts, zero errored,
+`partial: false`. Cost: queue `$4.39` (`$2.95` agent, `$1.43` judge), testing
+`$4.52` (`$2.95` agent, `$1.56` judge). Reports at
+`~/.cache/no-mistakes/evals/parked-2026-11-26/`. Not run: a baseline of the
+rule text from before #3879 and #3963, so these rows compare with and without
+the plugin only, not old rules against new.
+
+| Case | Loaded | Passed (with) | Passed (without) |
+| --- | --- | --- | --- |
+| `queue-exception-enqueue-in-tx-receipt` | 0/3 | 0/3 | 0/3 |
+| `queue-review-entity-only-dedup-id` | 1/3 | 3/3 | 1/3 |
+| `queue-review-job-self-overlap` | 2/3 | 3/3 | 3/3 |
+| `queue-write-bounded-sweep` | 3/3 | 3/3 | 0/3 |
+| `queue-write-self-requeue` | 3/3 | 3/3 | 2/3 |
+| `testing-exception-parsed-usage-text` | 3/3 | 2/3 | 0/3 |
+| `testing-exception-raised-coverage-floor` | 0/3 | 2/3 | 3/3 |
+| `testing-review-lowered-coverage-floor` | 1/3 | 3/3 | 2/3 |
+| `testing-review-real-email-fixture` | 3/3 | 3/3 | 0/3 |
+| `testing-write-error-text` | 3/3 | 3/3 | 0/3 |
+| `testing-write-flaky-response-wait` | 0/3 | 3/3 | 3/3 |
+
+**Failing attempts read.** (1) `queue-exception-enqueue-in-tx-receipt`: all six
+answers (both arms) never loaded the skill and called the enqueue inside the
+transaction a defect, as the earlier 2026-11-17 runs also did. Several raise a
+real hazard the case text does not close (a commit failing after `add`
+succeeds, with `jobId` collisions blocking the redelivery), so the case, not
+only the description, needs review before it can judge the rule. (2)
+`testing-exception-raised-coverage-floor`: the with-arm failure never loaded
+the skill and marked the merge-order concern "blocking", as both arms did;
+one attempt of three, noise. (3) `testing-exception-parsed-usage-text`: the
+one with-arm failure loaded the skill and told the author the exact option
+columns were too tight, the over-flag the case exists to catch; the without arm
+did this in 3 of 3. The grader verdicts matched the answers.
+
+**What it showed.** Where the skill loads it helps on `bounded-sweep`,
+`real-email-fixture`, `write-error-text`, and `parsed-usage-text`. Loading
+is the gap: `testing-write-flaky-response-wait` and
+`testing-exception-raised-coverage-floor` loaded 0 of 3, and
+`queue-exception-enqueue-in-tx-receipt` 0 of 3. `review-job-self-overlap`
+and `review-parent-key-update` are ceiling cases (3/3 without the plugin).
+
 ## 2026-11-26 — re-measure the SHOULD NOT wording
 
 Re-ran `rules-postgresql` on the PR #4617 head `41621a7c09`, which has the
@@ -442,7 +503,7 @@ does not ship is spent for nothing. The next candidate inherits them.
 "94%"-style claim survives a clean holdout, and none is made here. The holdout
 was not re-run for the current description — the validation clause was screened
 on `after-edit`, which is now tuning-visible, so a fresh holdout needs [fresh
-cases](README.md#writing-new-cases) written first.
+cases](AGENTS.md#writing-new-cases) written first.
 
 **The `after-edit` row is why this table has a column per description.** #981 reported two
 wins and listed `after-edit` as merely unmeasured. It was not neutral: it fell
@@ -1355,4 +1416,4 @@ because [the regression check](#the-after-edit-regression-981-shipped) measured
 all three; the ⚠️ 1-run pilot it used to carry has been superseded and must not
 be quoted. The `heldout` rows are **not run** for the current description on
 purpose — `after-edit` is now tuning-visible, so a clean holdout needs [fresh
-cases](README.md#writing-new-cases) first.
+cases](AGENTS.md#writing-new-cases) first.
