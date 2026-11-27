@@ -13,6 +13,7 @@ const PATH_METHODS = new Set([
   "cp",
   "exists",
   "existsSync",
+  "lstat",
   "mkdir",
   "mkdtemp",
   "mkdtempSync",

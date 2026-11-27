@@ -117,6 +117,14 @@ module.exports = rule(
         return isUnresolved(moduleLoad(typeQueryName(typeNode.exprName), lintContext));
       }
       if (typeNode?.type !== "TSTypeReference") return false;
+      const typeName = typeNode.typeName;
+      if (
+        typeName?.type !== "Identifier" ||
+        typeName.name !== "Parameters" ||
+        referenceBinding(typeName, sourceCode)?.defs.length
+      ) {
+        return false;
+      }
       return unresolvedTypedTarget(typeArgParams(typeNode), lintContext);
     }
 

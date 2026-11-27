@@ -11,6 +11,7 @@ const {
   hasSequentialOption,
   isUnshadowedNamespace,
   recordImportEquals,
+  reassignedDestructuredRunner,
   recordRequire,
   recordVitestImport,
   staticName,
@@ -82,6 +83,7 @@ function acceptsRunner(root, context, namespaces) {
   if (def.type === "Variable" && requireResolution(def.node?.init, context)?.source === null) {
     return false;
   }
+  if (reassignedDestructuredRunner(root, context)) return false;
   if (def.parent?.importKind === "type" || def.node?.importKind === "type") return false;
   if (def.type !== "ImportBinding") return true;
   if (def.node?.type === "ImportNamespaceSpecifier") return namespaces.has(root.name);

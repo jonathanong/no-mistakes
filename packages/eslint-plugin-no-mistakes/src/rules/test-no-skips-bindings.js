@@ -96,7 +96,7 @@ function imported(node, context, namespace = false, seen = new Set()) {
       }
       if (!source && init.type === "Identifier" && declaration.id.type === "ObjectPattern") {
         const namespaceSource = imported(init, context, true, seen);
-        if (namespaceSource === CONFIGURED_NAMESPACE && importedName === "test") {
+        if (!namespace && namespaceSource === CONFIGURED_NAMESPACE && importedName === "test") {
           return { framework: "@playwright/test", name: "test" };
         }
         if (

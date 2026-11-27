@@ -87,15 +87,43 @@ function isMockingCall(node, context) {
   return mockMember(node.callee, context);
 }
 
-function opaqueMock(node, context) {
-  let callee = unwrapSequence(node.callee);
-  if (callee?.type !== "MemberExpression") return false;
-  let method = propertyName(callee.property, callee.computed);
-  if (method === "call" || method === "apply") {
-    callee = unwrapSequence(callee.object);
-    if (callee?.type !== "MemberExpression") return false;
-    method = propertyName(callee.property, callee.computed);
+function constAliasTarget(node, context, seen) {
+  const current = unwrapSequence(node);
+  if (current?.type !== "Identifier") return current;
+  const variable = resolveVariable(current, context);
+  if (!variable || seen.has(variable) || variable.defs.length !== 1) return null;
+  const def = variable.defs[0];
+  if (
+    def.type !== "Variable" ||
+    def.node?.parent?.kind !== "const" ||
+    def.node.id?.type !== "Identifier" ||
+    !def.node.init
+  ) {
+    return null;
   }
+  seen.add(variable);
+  return unwrapSequence(def.node.init);
+}
+
+function opaqueCallee(node, context) {
+  let callee = unwrapSequence(node);
+  const seen = new Set();
+  while (callee?.type === "Identifier") callee = constAliasTarget(callee, context, seen);
+  while (
+    callee?.type === "MemberExpression" &&
+    (propertyName(callee.property, callee.computed) === "call" ||
+      propertyName(callee.property, callee.computed) === "apply")
+  ) {
+    callee = constAliasTarget(unwrapSequence(callee.object), context, seen);
+    while (callee?.type === "Identifier") callee = constAliasTarget(callee, context, seen);
+  }
+  return callee;
+}
+
+function opaqueMock(node, context) {
+  const callee = opaqueCallee(node.callee, context);
+  if (callee?.type !== "MemberExpression") return false;
+  const method = propertyName(callee.property, callee.computed);
   if (method === null || !MOCK_METHODS.has(method)) return false;
   if (isFrameworkBinding(callee.object, context)) return false;
   return frameworkBindingOpaque(callee.object, context);

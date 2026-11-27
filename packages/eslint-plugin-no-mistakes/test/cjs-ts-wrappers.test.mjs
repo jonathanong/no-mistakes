@@ -33,6 +33,8 @@ const groups = [
       "late-binding.js",
       "nested-destructure.js",
       "let-dynamic.test.ts",
+      "member-require.test.ts",
+      "reassigned-destructure.test.ts",
     ],
     valid: [
       "not-a-runner.test.ts",
@@ -47,7 +49,7 @@ const groups = [
     rule: "no-vitest-sequential",
     dir: "sequential-ignore",
     options: [{ unanalyzable: "ignore" }],
-    valid: ["dynamic.test.ts", "let-dynamic.test.ts"],
+    valid: ["dynamic.test.ts", "let-dynamic.test.ts", "reassigned-destructure.test.ts"],
   },
   {
     rule: "module-mock-boundary",
@@ -60,6 +62,7 @@ const groups = [
       "identifier-alias.test.ts",
       "call-apply.test.ts",
       "inline-require.test.ts",
+      "inline-static.test.ts",
       "opaque-follow.test.ts",
     ],
     valid: [
@@ -67,6 +70,7 @@ const groups = [
       "suppressed.test.ts",
       "static-member.test.ts",
       "resolved-computed.test.ts",
+      "inline-other.test.ts",
     ],
   },
   {
@@ -100,6 +104,8 @@ const groups = [
       "dynamic-forward.test.ts",
       "shapes.test.ts",
       "member-alias.test.ts",
+      "alias.mock.test.ts",
+      "mutable-alias.mock.test.ts",
     ],
     valid: ["foo.mock.test.ts", "expect-only.test.ts"],
   },
@@ -157,6 +163,7 @@ const groups = [
       "require-expect.test.ts",
       "require-runner.test.ts",
       "default-namespace.test.ts",
+      "spread-apply.test.ts",
     ],
     valid: ["default-direct.test.ts"],
   },
@@ -191,8 +198,14 @@ const groups = [
       "namespace-vi.test.ts",
       "function-type.test.ts",
       "member-vi.test.ts",
+      "member-export.test.ts",
     ],
-    valid: ["tuple.test.ts", "reassign.test.ts", "other-export.test.ts"],
+    valid: [
+      "tuple.test.ts",
+      "reassign.test.ts",
+      "other-export.test.ts",
+      "local-parameters.test.ts",
+    ],
   },
   {
     rule: "test-no-typed-enqueue-fake",

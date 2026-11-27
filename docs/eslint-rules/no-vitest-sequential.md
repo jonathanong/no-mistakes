@@ -46,7 +46,7 @@ of the same name a namespace.
 A static `require("vitest")`, `import vt = require("vitest")`, and a
 destructured `test`, `it`, or `describe` from that module are the same runner
 as a named import. A `var` or `let` binding of that require with no later write
-is the same runner. A later write reports `unanalyzable`. A `let` or `var` whose `require` specifier is not static reports `unanalyzable`, including a comma callee such as `(0, named.test.sequential)(...)`. Vitest's default import is not a runner, and a destructured
+is the same runner. A later write reports `unanalyzable`. A `let` or `var` whose `require` specifier is not static reports `unanalyzable`, including a comma callee such as `(0, named.test.sequential)(...)`. `const run = require("vitest").test` is that runner. `require("vitest").expect` is not. A later write on `let { test: suite } = require("vitest")` reports `unanalyzable`, including when the local name is `test` or the binding is `let run = require("vitest").test`. An unchanged `let` or `var` destructure still reports sequential. Vitest's default import is not a runner, and a destructured
 `expect` is not a runner. Type assertions, `satisfies`, and `as const` keys do
 not hide a sequential call.
 

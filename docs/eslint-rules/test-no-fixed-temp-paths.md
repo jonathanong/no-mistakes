@@ -92,7 +92,7 @@ filesystem call whose `fs` binding comes from a non-static `require` reports
 `fs.writeFileSync`, `const { ["writeFileSync" as const]: write } = fs`, and
 `(require as NodeRequire)("node:fs")` are the same filesystem binding.
 `loaded.promises.writeFile` and `const { promises } = require(spec)` keep an
-unresolved `fs` binding through `promises`. A destructured name that is not a
+unresolved `fs` binding through `promises`. `loaded.lstatSync` from that require reports `unanalyzable`, as `statSync` does. A destructured name that is not a
 filesystem method, such as `const { test } = require(spec)`, stays quiet.
 
 ## Fix

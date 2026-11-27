@@ -166,16 +166,20 @@ function resolveImportTarget(node, sourceCode) {
       return module ? { name: importSpecifierName(target.node) ?? "default", module } : null;
     }
     const variable = binding?.defs.length === 1 ? binding.defs[0] : null;
-    if (variable?.type === "Variable" && variable.node?.id?.type === "ObjectPattern") {
-      if (isReassigned(node, scopeContext(sourceCode))) return null;
+    if (variable?.type !== "Variable" || isReassigned(node, scopeContext(sourceCode))) return null;
+    const init = unwrapExpression(variable.node.init);
+    if (variable.node?.id?.type === "ObjectPattern") {
       const name = patternExportName(variable.node.id, node.name);
-      const init = unwrapExpression(variable.node.init);
       const module =
         requireSource(variable.node.init, scopeContext(sourceCode)) ||
         (init?.type === "Identifier" ? namespaceModule(init, sourceCode) : null);
       return name && module ? { name, module } : null;
     }
-    return null;
+    if (variable.parent?.kind !== "const" || variable.node?.id?.type !== "Identifier") return null;
+    if (init?.type !== "MemberExpression") return null;
+    const name = memberPropertyName(init);
+    const module = requireSource(unwrapExpression(init.object), scopeContext(sourceCode));
+    return name && module ? { name, module } : null;
   }
   if (
     node?.type === "TSQualifiedName" &&

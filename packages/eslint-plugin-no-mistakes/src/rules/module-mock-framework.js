@@ -64,6 +64,10 @@ function frameworkRequireModule(def, name, context) {
 
 function frameworkBindingModule(node, context, seen = new Set()) {
   node = unwrapExpression(node);
+  if (node?.type === "CallExpression") {
+    const source = requireSource(node, context);
+    return FRAMEWORK_MODULES.has(source) ? source : null;
+  }
   if (node?.type === "MemberExpression") {
     const module = frameworkBindingModule(node.object, context, seen);
     const prop = memberPropertyName(node);
@@ -126,7 +130,9 @@ function frameworkBindingModule(node, context, seen = new Set()) {
 }
 
 function isFrameworkBinding(node, context) {
-  return Boolean(frameworkBindingModule(node, context));
+  const current = unwrapExpression(node);
+  if (current?.type === "CallExpression") return false;
+  return Boolean(frameworkBindingModule(current, context));
 }
 
 function frameworkBindingOpaque(node, context, seen = new Set()) {

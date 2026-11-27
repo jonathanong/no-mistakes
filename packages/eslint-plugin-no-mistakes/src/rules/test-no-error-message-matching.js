@@ -63,6 +63,20 @@ function isGeneratedTestPath(filename) {
   return filename.replace(/\\/g, "/").includes(".generated.");
 }
 
+function expandCallArguments(args) {
+  const forwarded = [];
+  for (const argument of args) {
+    if (argument.type !== "SpreadElement") {
+      forwarded.push(argument);
+      continue;
+    }
+    const list = unwrap(argument.argument);
+    if (list?.type !== "ArrayExpression") return null;
+    forwarded.push(...list.elements);
+  }
+  return forwarded.slice(1);
+}
+
 function forwardedArguments(node) {
   const current = unwrap(node);
   if (current?.type !== "CallExpression") return null;
@@ -70,9 +84,10 @@ function forwardedArguments(node) {
   const args = current.arguments;
   if (callee?.type !== "MemberExpression") return args;
   const name = memberName(callee);
-  if (name === "call") return args.slice(1);
-  if (name === "apply" && unwrap(args[1])?.type === "ArrayExpression") {
-    return unwrap(args[1]).elements;
+  if (name === "call") return expandCallArguments(args);
+  if (name === "apply") {
+    const list = unwrap(args[1]);
+    return list?.type === "ArrayExpression" ? list.elements : null;
   }
   return args;
 }

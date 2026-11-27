@@ -4,6 +4,10 @@ const { unwrapExpression, unwrapSequence } = require("./async-ast");
 const { requireResolution, requireSource } = require("./async-target-sources");
 const { literalString, logicalCall } = require("./logical-call");
 const { isUnresolved, moduleLoad } = require("./module-load");
+const {
+  reassignedDestructuredRunner,
+  reassignedVitestRequire,
+} = require("./no-vitest-sequential-require");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 const TEST_NAMES = new Set(["test", "it", "describe"]);
@@ -97,19 +101,43 @@ function moduleScope(identifier, context) {
   );
 }
 
+function writtenLater(identifier, context) {
+  const variable = resolveVariable(identifier, context);
+  return Boolean(variable && hasLaterWrite(variable));
+}
+
 function recordRequire(declaration, state, context) {
-  const resolution = requireResolution(declaration?.init, context);
-  if (!resolution) return;
-  if (resolution.source !== null && resolution.source !== "vitest") return;
+  const init = unwrapExpression(declaration?.init);
+  const member =
+    init?.type === "MemberExpression" ? staticName(init.property, init.computed) : null;
+  const resolution = requireResolution(
+    member ? unwrapExpression(init.object) : declaration?.init,
+    context,
+  );
+  if (!resolution || (resolution.source !== null && resolution.source !== "vitest")) return;
   state.usesVitest = true;
   // A non-static require is judged later as unanalyzable, not as a runner.
   if (resolution.source === null) return;
+  if (member) {
+    if (
+      TEST_NAMES.has(member) &&
+      declaration.id?.type === "Identifier" &&
+      moduleScope(declaration.id, context) &&
+      !writtenLater(declaration.id, context)
+    ) {
+      state.roots.add(declaration.id.name);
+    }
+    return;
+  }
   if (declaration.id?.type === "Identifier") {
     state.namespaces.add(declaration.id.name);
     return;
   }
   for (const entry of patternTests(declaration.id)) {
-    if (!entry.dynamic && moduleScope(entry.local, context)) state.roots.add(entry.local.name);
+    if (entry.dynamic || !moduleScope(entry.local, context) || writtenLater(entry.local, context)) {
+      continue;
+    }
+    state.roots.add(entry.local.name);
   }
 }
 
@@ -123,20 +151,6 @@ function bindingRoot(node) {
     current = unwrapExpression(current.type === "CallExpression" ? current.callee : current.object);
   }
   return current?.type === "Identifier" ? current : null;
-}
-
-function reassignedVitestRequire(callee, context) {
-  const root = bindingRoot(callee);
-  if (!root) return false;
-  const variable = resolveVariable(root, context);
-  if (!variable || variable.defs.length !== 1) return false;
-  const def = variable.defs[0];
-  return (
-    def.type === "Variable" &&
-    def.node?.id?.type === "Identifier" &&
-    requireSource(def.node.init, context) === "vitest" &&
-    hasLaterWrite(variable)
-  );
 }
 
 function dynamicLetRequire(callee, context) {
@@ -158,7 +172,8 @@ function unresolvedSequential(callee, context) {
   return (
     isUnresolved(moduleLoad(target, context)) ||
     reassignedVitestRequire(target, context) ||
-    dynamicLetRequire(target, context)
+    dynamicLetRequire(target, context) ||
+    reassignedDestructuredRunner(bindingRoot(target), context)
   );
 }
 
@@ -189,10 +204,14 @@ function destructuredFromNamespace(init, context, namespaces) {
 }
 
 module.exports = {
+  bindingRoot,
   destructuredFromNamespace,
+  hasLaterWrite,
   hasSequentialOption,
   isUnshadowedNamespace,
+  patternTests,
   recordImportEquals,
+  reassignedDestructuredRunner,
   recordRequire,
   recordVitestImport,
   staticName,
