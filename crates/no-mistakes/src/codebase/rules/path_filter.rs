@@ -73,6 +73,8 @@ impl RulePathFilter {
             id: &rule.rule,
             include: &rule.include,
             exclude: &rule.exclude,
+            // Test targets without project selectors use the configured default target.
+            // With explicit projects, the repository match would bypass their filters.
             repository: rule.applies_to_repository()
                 || (has_test_target(rule) && rule.projects.is_empty()),
             allow_external_projects,

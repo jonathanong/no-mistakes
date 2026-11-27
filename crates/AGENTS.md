@@ -37,7 +37,7 @@ never open an independent source/read/parse/resolution or graph pipeline.
 
 `SourceStore` owns physical I/O for the request. Every source consumer uses
 the supplied store, including supplemental normalized paths, memoizing source
-text and read failures under one identity. Pass the store to helpers for every source read.
+text and read failures under one identity and accounting path. Pass the store to helpers for every source read. Never replace a missing store with `std::fs::read_to_string`.
 
 Keep layer responsibilities declarative:
 
