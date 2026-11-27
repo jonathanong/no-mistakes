@@ -40,13 +40,14 @@ jobs:
       release-sha: ${{ steps.bump.outputs.release-sha }}
       version: ${{ steps.bump.outputs.version }}
     steps:
-      - name: Check RELEASE_TOKEN is set
-        timeout-minutes: 1
-        run: |
-          if [ -z "${{ secrets.RELEASE_TOKEN }}" ]; then
-            echo "::error::RELEASE_TOKEN secret is not set. This workflow requires a PAT that can push release commits and tags to main." >&2
-            exit 1
-          fi
+      - name: Create release app token
+        id: release-app-token
+        timeout-minutes: 2
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
 
       - name: Checkout
         timeout-minutes: 5
@@ -54,7 +55,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: main
-          token: ${{ secrets.RELEASE_TOKEN }}
+          token: ${{ steps.release-app-token.outputs.token }}
 
       - name: Install Rust
         timeout-minutes: 5
@@ -1039,10 +1040,19 @@ jobs:
           path: dist
           merge-multiple: true
 
+      - name: Create release app token
+        id: release-app-token
+        timeout-minutes: 2
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+
       - name: Create GitHub release
         timeout-minutes: 5
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GH_TOKEN: ${{ steps.release-app-token.outputs.token }}
         shell: bash
         run: |
           set -euo pipefail
@@ -1455,7 +1465,6 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
           ref: ${{ needs.prepare.outputs.release-sha }}
-          token: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Checkout publish tooling
         timeout-minutes: 5

@@ -19,7 +19,7 @@ const commands = [
 ].join("\n");
 
 const rerun = /::error::main moved[^\n]*Re-run the release workflow from current main/;
-const token = /::error::[^\n]*RELEASE_TOKEN[^\n]*push[^\n]*main/;
+const token = /::error::The release GitHub App could not push[^\n]*bypass actor on main[^\n]*branch protection/;
 const existingTag = "!\trefs/tags/v1.2.3:refs/tags/v1.2.3\t[rejected] (already exists)";
 const mainRejected = "!\tHEAD:refs/heads/main\t[rejected]";
 
@@ -49,6 +49,12 @@ for (const [name, status, output, diagnosis] of [
     "GitHub branch protection",
     1,
     "remote: error: GH006: Protected branch update failed for refs/heads/main.\nremote: error: Changes must be made through a pull request.",
+    token,
+  ],
+  [
+    "repository ruleset",
+    1,
+    "remote: error: GH013: Repository rule violations found for refs/heads/main.        \nremote: - Changes must be made through a pull request.",
     token,
   ],
   [
