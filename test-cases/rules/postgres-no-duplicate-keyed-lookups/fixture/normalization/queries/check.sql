@@ -19,7 +19,7 @@ SELECT
        AND a.active IS TRUE AND a.locked IS FALSE
        AND a.rank IS DISTINCT FROM o.rank AND a.team_id IS NOT DISTINCT FROM o.team_id
        AND a.tier IN ('gold', 'silver') AND a.created_on > DATE '2020-01-01'
-       AND a.name::text <> 'unknown'
+       AND a.name <> 'unknown'::text
      ORDER BY a.priority DESC NULLS LAST LIMIT 1),
     (SELECT b.tier FROM accounts b
      WHERE pg_catalog.abs(-o.account_id + 1) = b.id
@@ -27,7 +27,7 @@ SELECT
        AND b.active IS TRUE AND b.locked IS FALSE
        AND b.rank IS DISTINCT FROM o.rank AND b.team_id IS NOT DISTINCT FROM o.team_id
        AND b.tier IN ('silver', 'gold') AND b.created_on > DATE '2020-01-01'
-       AND CAST(b.name AS text) <> 'unknown'
+       AND b.name <> CAST('unknown' AS text)
      ORDER BY b.priority DESC NULLS LAST LIMIT 1),
     (SELECT c.tier FROM accounts c
      WHERE pg_catalog.abs(-o.account_id + 1) = c.id
@@ -35,7 +35,7 @@ SELECT
        AND c.active IS TRUE AND c.locked IS FALSE
        AND c.rank IS DISTINCT FROM o.rank AND c.team_id IS NOT DISTINCT FROM o.team_id
        AND c.tier IN ('silver', 'gold') AND c.created_on > DATE '2020-01-01'
-       AND c.name::text <> 'unknown'
+       AND c.name <> 'unknown'::text
      ORDER BY c.priority DESC NULLS FIRST LIMIT 1)
 FROM orders o;
 

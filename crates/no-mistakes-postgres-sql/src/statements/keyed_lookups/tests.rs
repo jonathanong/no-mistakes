@@ -142,7 +142,7 @@ fn distinguishes_evaluated_order_and_limit_lookups_from_unproven_operations() {
         .iter()
         .map(|fact| (fact.first_line, fact.line))
         .collect();
-    assert_eq!(sites, [(3, 4), (10, 11), (29, 30), (33, 34)]);
+    assert_eq!(sites, [(3, 4), (10, 11), (29, 30), (33, 34), (61, 62)]);
 }
 
 #[test]

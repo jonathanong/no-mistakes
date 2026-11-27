@@ -11,8 +11,8 @@ SELECT
   a1.display_name,
   a2.tier
 FROM orders o
-LEFT JOIN accounts a1 ON a1.id = o.raw_id::uuid
-LEFT JOIN accounts a2 ON a2.id = o.raw_id::text;
+LEFT JOIN accounts a1 ON a1.id = pg_catalog.md5(o.raw_id)::text
+LEFT JOIN accounts a2 ON a2.id = pg_catalog.md5(o.raw_id)::varchar;
 
 SELECT
   o.id,

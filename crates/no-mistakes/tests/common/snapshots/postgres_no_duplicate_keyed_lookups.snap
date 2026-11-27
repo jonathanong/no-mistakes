@@ -204,9 +204,9 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 22,
-          "message": "queries/check.sql:22: duplicate keyed lookup of `accounts` on `id = CAST(o.raw_account_id AS UUID)` (already looked up at line 21). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "message": "queries/check.sql:22: duplicate keyed lookup of `accounts` on `id = CAST(pg_catalog.md5(o.raw_account_id) AS UUID)` (already looked up at line 21). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
-          "sourceLine": "LEFT JOIN accounts a2 ON a2.id = CAST(o.raw_account_id AS uuid);",
+          "sourceLine": "LEFT JOIN accounts a2 ON a2.id = CAST(pg_catalog.md5(o.raw_account_id) AS uuid);",
           "target": "accounts"
         },
         {
@@ -600,9 +600,9 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "queries/check.sql",
           "line": 30,
-          "message": "queries/check.sql:30: duplicate keyed lookup of `accounts` on `keys = CAST($1 AS UUID[])` (already looked up at line 29). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "message": "queries/check.sql:30: duplicate keyed lookup of `accounts` on `id = o.account_id, keys = CAST('{}' AS UUID[])` (already looked up at line 29). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
-          "sourceLine": "LEFT JOIN accounts b ON b.keys = CAST($1 AS uuid[]);",
+          "sourceLine": "LEFT JOIN accounts b ON b.id = o.account_id AND b.keys = CAST('{}' AS uuid[]);",
           "target": "accounts"
         },
         {
@@ -619,6 +619,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "queries/check.sql:4: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 3). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "OFFSET (SELECT b.page_start FROM accounts b WHERE b.id = o.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 62,
+          "message": "queries/check.sql:62: duplicate keyed lookup of `accounts` on `id = (pg_catalog.md5(o.raw_id)::TEXT)::UUID` (already looked up at line 61). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "LEFT JOIN accounts b ON b.id = (pg_catalog.md5(o.raw_id)::text)::uuid;",
           "target": "accounts"
         }
       ],

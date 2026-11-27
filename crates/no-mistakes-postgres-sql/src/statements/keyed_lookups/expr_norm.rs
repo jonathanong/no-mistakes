@@ -67,7 +67,7 @@ impl<'a> ExprNormalizer<'a> {
                 data_type,
                 format: None,
                 ..
-            } => {
+            } if types::cast_source_is_proven(expr) => {
                 let inner = self.normalize(expr)?;
                 Some(format!(
                     "cast({},{})",

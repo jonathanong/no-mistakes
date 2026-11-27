@@ -35,13 +35,13 @@ row-limit clauses.
   identical column type, such as two aliases of the same relation.
 - A `JOIN` combined with a correlated scalar subquery against the same relation
   and key.
-- Equivalent PostgreSQL cast spellings (`o.raw_id::uuid` and
-  `CAST(o.raw_id AS uuid)`).
+- Equivalent PostgreSQL cast spellings for proven built-in values
+  (`'active'::text` and `CAST('active' AS text)`).
 
 The rule stays silent when the lookups are not proven to read the same row:
 
 - Different outer key expressions (`o.buyer_id` vs `o.seller_id`) or different
-  casts (`o.raw_id::uuid` vs `o.raw_id::text`).
+  casts (`'active'::text` vs `'active'::varchar`).
 - Different additional filter predicates (such as `addr.kind = 'billing'` vs
   `addr.kind = 'shipping'`).
 - Scalar subqueries ordered by a bare name or ordinal position. Use a
@@ -56,12 +56,14 @@ The rule stays silent when the lookups are not proven to read the same row:
   or unrecognized functions in keys or scalar projections, unresolved table
   column alias lists, distinct `LIMIT` clauses, or ambiguous expressions.
 - Function calls require a vetted built-in qualified with `pg_catalog` or
-  PostgreSQL syntax such as `COALESCE`. Custom cast targets and custom
-  operators are excluded when their behavior is unknown.
+  PostgreSQL syntax such as `COALESCE`. Casts require a known built-in
+  input and target type. The rule skips casts of columns and parameters
+  whose types it cannot establish, and operators with unknown behavior.
 - Sampled table scans, `ONLY` table scans, or scalar subqueries that lock rows.
 
 PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`,
-and `ORDER BY`. The rule counts an identical reused expression once.
+`ORDER BY`, and window partition and ordering clauses. The rule counts
+an identical reused expression once.
 
 Findings point at the duplicate join or scalar subquery and name the line of the
 first lookup.

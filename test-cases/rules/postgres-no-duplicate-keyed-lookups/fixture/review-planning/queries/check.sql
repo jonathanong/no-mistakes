@@ -26,8 +26,8 @@ ORDER BY CAST((SELECT a.name FROM accounts a WHERE a.id = o.account_id) AS text)
 
 SELECT o.id
 FROM orders o
-LEFT JOIN accounts a ON a.keys = $1::uuid[]
-LEFT JOIN accounts b ON b.keys = CAST($1 AS uuid[]);
+LEFT JOIN accounts a ON a.id = o.account_id AND a.keys = '{}'::uuid[]
+LEFT JOIN accounts b ON b.id = o.account_id AND b.keys = CAST('{}' AS uuid[]);
 
 SELECT
     (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
@@ -45,3 +45,18 @@ WINDOW w AS (
         (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
         (SELECT b.tier FROM accounts b WHERE b.id = o.account_id)
 );
+
+SELECT o.id
+FROM orders o
+LEFT JOIN accounts a ON a.id = o.opaque_key::uuid
+LEFT JOIN accounts b ON b.id = CAST(o.opaque_key AS uuid);
+
+SELECT o.id
+FROM orders o
+LEFT JOIN accounts a ON a.id = $1::uuid
+LEFT JOIN accounts b ON b.id = CAST($1 AS uuid);
+
+SELECT o.id
+FROM orders o
+LEFT JOIN accounts a ON a.id = CAST(CAST(pg_catalog.md5(o.raw_id) AS text) AS uuid)
+LEFT JOIN accounts b ON b.id = (pg_catalog.md5(o.raw_id)::text)::uuid;
