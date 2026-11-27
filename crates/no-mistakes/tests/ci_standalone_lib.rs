@@ -79,19 +79,23 @@ fn standalone_lib_job_starts_catalog_postgres_before_uninstrumented_lib_tests() 
     let producer = &workflow["jobs"]["standalone-build"];
     assert_eq!(producer["timeout-minutes"].as_u64(), Some(25));
     let producer_steps = producer["steps"].as_sequence().unwrap();
-    for (name, timeout, shard) in [
-        ("Build standalone library without a CLI", 13, 1),
-        ("Build standalone library shard 2", 10, 2),
-        ("Build standalone library shard 3", 10, 3),
-    ] {
-        let build = step_named(producer_steps, name);
-        assert_eq!(build["timeout-minutes"].as_u64(), Some(timeout));
-        let build_run = build["run"].as_str().unwrap();
-        let command = format!(
-            "bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle {shard}"
-        );
-        assert!(build_run.lines().any(|line| line.trim() == command));
-    }
+    let matrix = producer["strategy"]["matrix"]["shard"]
+        .as_sequence()
+        .unwrap();
+    let shards: Vec<_> = matrix.iter().map(Value::as_u64).collect();
+    assert_eq!(shards, [Some(1), Some(2), Some(3)]);
+    let build = step_named(producer_steps, "Build standalone library without a CLI");
+    assert_eq!(build["timeout-minutes"].as_u64(), Some(13));
+    assert_eq!(
+        build["env"]["STANDALONE_SHARD"].as_str(),
+        Some("${{ matrix.shard }}")
+    );
+    let command = r#"bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle "$STANDALONE_SHARD""#;
+    assert!(build["run"]
+        .as_str()
+        .unwrap()
+        .lines()
+        .any(|line| line.trim() == command));
     let helper = include_str!("../../../.github/scripts/standalone-shards.cjs");
     assert!(helper.contains("delete childEnv[\"CARGO_BIN_EXE_no-mistakes\"]"));
     assert!(helper.contains("standalone library validation must not build the CLI"));
