@@ -801,9 +801,9 @@ working directory.
 In [release run 46054077976](https://github.com/jongleberry/no-mistakes/actions/runs/46054077976/job/140692427880),
 the Windows native job took 46m39s. Defender exclusion succeeded in four
 seconds. Cache setup and a miss took 13 seconds, and Cargo began compiling
-16 seconds after updating the registry index. The
-[Cargo timing report](https://github.com/jongleberry/no-mistakes/actions/runs/46054077976/artifacts/15227762635)
-recorded 14m43s for the library/addon compiler unit and 15m27s for the CLI unit.
+16 seconds after updating the registry index. The run’s
+`release-timings-x86_64-pc-windows-msvc` artifact recorded 14m43s for the
+library/addon compiler unit and 15m27s for the CLI unit.
 Neither unit reports a separate linker duration. The PostgreSQL SQL and
 `sqlparser` dependency units took 7m55s and 5m06s respectively, with some
 overlap across the dependency graph.
