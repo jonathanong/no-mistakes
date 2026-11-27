@@ -99,22 +99,7 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
     };
     let call_sites = domain.call_sites;
     let react_components = if plan.react {
-        match context.visible_files.as_deref() {
-            Some(visible) => crate::react_traits::analyze::file::analyze_program_from_visible(
-                path,
-                &context.root,
-                source,
-                program,
-                visible,
-            ),
-            None => crate::react_traits::analyze::file::analyze_program(
-                path,
-                &context.root,
-                source,
-                program,
-            ),
-        }
-        .components
+        (super::super::react_analysis::hooks().extract_components)(path, source, program, context)
     } else {
         Default::default()
     };

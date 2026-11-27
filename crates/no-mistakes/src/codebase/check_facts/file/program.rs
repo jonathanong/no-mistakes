@@ -3,6 +3,7 @@ use super::super::{CheckFactPlan, CheckFileFacts};
 use super::plan::ts_extract_plan;
 use super::should_store_source;
 use super::CheckFactVariant;
+use crate::codebase::ts_source::facts::react_analysis::{self, component::FileAnalysis};
 use std::path::Path;
 use std::sync::Arc;
 pub(crate) fn collect_file_facts_from_program_with_discovery(
@@ -58,12 +59,12 @@ pub(crate) fn collect_file_facts_from_program_with_discovery(
         && crate::codebase::check_facts::family_scope::applies(&plan.react_paths, path))
         || plan.graph.react)
         .then(|| {
-            Arc::new(crate::react_traits::analyze::file::FileAnalysis {
+            Arc::new(FileAnalysis {
                 components: Arc::clone(&ts.react_components),
             })
         });
     let react_usages = plan.react_usages.then(|| {
-        crate::react_traits::pipeline::usages::collect_usage_file_facts(
+        (react_analysis::hooks().extract_usages)(
             path,
             source,
             program,

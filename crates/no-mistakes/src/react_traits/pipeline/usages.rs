@@ -5,6 +5,7 @@
 mod helpers;
 
 use crate::ast;
+use crate::codebase::ts_source::facts::react_analysis::usages::UsageFileFacts;
 use crate::imports::relative_string;
 use crate::react_traits::analyze::import_table::build_import_table_from_visible;
 use crate::react_traits::analyze::jsx_callsites::collect_jsx_callsites;
@@ -24,12 +25,6 @@ pub use helpers::UsagesInclude;
 struct FileHit {
     callsites: Vec<Callsite>,
     importer: Option<String>,
-}
-
-#[derive(Clone)]
-pub(crate) struct UsageFileFacts {
-    imports: Vec<(PathBuf, String)>,
-    callsites: Vec<crate::react_traits::analyze::jsx_callsites::RawCallsite>,
 }
 
 pub(crate) fn collect_usage_file_facts(

@@ -4,11 +4,21 @@ pub(crate) fn route_defs_from_prepared_facts_with_catalog(
     root: &Path,
     tsconfig: &TsConfig,
     tsconfig_catalog: Option<&TsConfigCatalog>,
-    prepared: impl IntoIterator<Item = (PathBuf, FileFacts)>,
+    route_files: &[PathBuf],
+    prepared: &dyn crate::codebase::dependencies::graph::TsFactLookup,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Vec<(PathBuf, String)> {
     let root = root.canonicalize().unwrap_or(root.to_path_buf());
-    let facts = prepared.into_iter().collect::<HashMap<_, _>>();
+    let facts = route_files
+        .iter()
+        .filter_map(|path| {
+            prepared
+                .get_ts_facts(path)
+                .and_then(|facts| facts.server_routes.as_ref())
+                .cloned()
+                .map(|facts| (path.clone(), facts))
+        })
+        .collect::<HashMap<_, _>>();
     let visible = facts.keys().cloned().collect::<crate::fx::PathSet>();
     if let Some(catalog) = tsconfig_catalog {
         let resolver = ScopedImportResolver::new_in_session(catalog, &visible, session);

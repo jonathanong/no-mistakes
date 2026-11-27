@@ -1,5 +1,15 @@
 extern crate self as no_mistakes;
 
+ctor::declarative::ctor! {
+    // SAFETY: The constructor only installs an immutable table of function pointers.
+    #[ctor(unsafe)]
+    fn register_react_analysis() {
+        codebase::ts_source::facts::react_analysis::register(
+            &react_analysis_registration::REACT_HOOKS,
+        );
+    }
+}
+
 pub mod ast;
 #[cfg(feature = "test-instrumentation")]
 #[doc(hidden)]
@@ -57,3 +67,5 @@ pub use tests::{
 
 pub mod postgres_catalog;
 pub mod postgres_lock_inventory;
+
+mod react_analysis_registration;
