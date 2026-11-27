@@ -36,10 +36,14 @@ fn parse_entry(name: &str, entry: &serde_json::Value) -> Result<ResolvedPackage,
         (ResolutionKind::Git, fingerprint, true)
     } else if let Some(path) = text(obj, "path") {
         (ResolutionKind::Directory, path.to_string(), true)
-    } else if let Some(url) = ["file", "url", "hg", "svn", "bzr"]
+    } else if let Some(url) = ["hg", "svn", "bzr"]
         .into_iter()
         .find_map(|key| text(obj, key))
     {
+        let fingerprint = text(obj, "ref")
+            .map_or_else(|| url.to_string(), |reference| format!("{url}#{reference}"));
+        (ResolutionKind::Other, fingerprint, true)
+    } else if let Some(url) = text(obj, "file").or_else(|| text(obj, "url")) {
         (ResolutionKind::Tarball, url.to_string(), true)
     } else if obj.contains_key("editable") {
         (ResolutionKind::Directory, String::new(), true)

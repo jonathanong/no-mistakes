@@ -34,7 +34,6 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
             continue;
         }
         if indent == 0 && is_header(trimmed) {
-            saw_header = true;
             revision.clear();
             section = match trimmed {
                 "GEM" => Section::Specs(ResolutionKind::Registry),
@@ -43,6 +42,18 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
                 "CHECKSUMS" => Section::Checksums,
                 _ => Section::Other,
             };
+            saw_header |= matches!(
+                trimmed,
+                "GEM"
+                    | "GIT"
+                    | "PATH"
+                    | "PLUGIN SOURCE"
+                    | "PLATFORMS"
+                    | "DEPENDENCIES"
+                    | "BUNDLED WITH"
+                    | "RUBY VERSION"
+                    | "CHECKSUMS"
+            );
             continue;
         }
         if let Section::Specs(ResolutionKind::Git) = section {

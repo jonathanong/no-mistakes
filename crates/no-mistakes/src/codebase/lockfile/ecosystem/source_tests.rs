@@ -57,7 +57,12 @@ fn pipfile_direct_sources_without_versions_keep_registry_packages() {
         ("sample-svn", "https://vcs.example.invalid/svn"),
         ("sample-bzr", "https://vcs.example.invalid/bzr"),
     ] {
-        expect(&packages, name, "", source, ResolutionKind::Tarball);
+        let kind = if ["sample-file", "sample-url"].contains(&name) {
+            ResolutionKind::Tarball
+        } else {
+            ResolutionKind::Other
+        };
+        expect(&packages, name, "", source, kind);
     }
     expect(
         &packages,
@@ -86,14 +91,26 @@ fn poetry_commit_change_uses_resolved_reference() {
 fn uv_fragment_outranks_rev_and_virtual_omits_version() {
     let base = packages_for_diff(PackageManager::Uv, &fixture("uv", "pin-base.lock")).unwrap();
     assert_eq!(base.len(), 5);
-    expect(&base, "sample-app", "", "", ResolutionKind::Directory);
-    expect(&base, "sample-dir", "0.1.0", "", ResolutionKind::Directory);
-    expect(&base, "sample-edit", "", "", ResolutionKind::Directory);
+    expect(&base, "sample-app", "", ".", ResolutionKind::Directory);
+    expect(
+        &base,
+        "sample-dir",
+        "0.1.0",
+        "lib/sample-dir",
+        ResolutionKind::Directory,
+    );
+    expect(
+        &base,
+        "sample-edit",
+        "",
+        "lib/sample-edit",
+        ResolutionKind::Directory,
+    );
     expect(&base, "sample-git", "0.4.0", "aaa111", ResolutionKind::Git);
     expect(&base, "sample-rev", "0.2.0", "ddd444", ResolutionKind::Git);
     let head = packages_for_diff(PackageManager::Uv, &fixture("uv", "pin-head.lock")).unwrap();
     let diff = diff(&base, &head);
-    assert_eq!(diff.changed, vec!["sample-git".to_string()]);
+    assert_eq!(diff.changed, ["sample-dir", "sample-git"]);
 }
 
 #[test]
@@ -209,4 +226,61 @@ fn uv_uses_source_hash_without_wheels_and_classifies_direct_archives() {
     );
     assert_eq!(diff(&base, &head).changed, ["sample-sdist"]);
     assert!(packages_for_diff(PackageManager::Uv, &fixture("uv", "invalid-source.lock")).is_err());
+}
+
+#[test]
+fn composer_diffs_path_and_checksum_without_references() {
+    let base = packages_for_diff(
+        PackageManager::Composer,
+        &fixture("composer", "fingerprints-base.lock"),
+    )
+    .unwrap();
+    let head = packages_for_diff(
+        PackageManager::Composer,
+        &fixture("composer", "fingerprints-head.lock"),
+    )
+    .unwrap();
+    assert_eq!(
+        diff(&base, &head).changed,
+        ["example/checked", "example/path"]
+    );
+}
+
+#[test]
+fn pipfile_non_git_vcs_revision_changes_are_reported() {
+    let base = packages_for_diff(
+        PackageManager::Pipfile,
+        &fixture("pipfile", "revision-base.lock"),
+    )
+    .unwrap();
+    let head = packages_for_diff(
+        PackageManager::Pipfile,
+        &fixture("pipfile", "revision-head.lock"),
+    )
+    .unwrap();
+    assert_eq!(diff(&base, &head).changed, ["sample-checkout"]);
+}
+
+#[test]
+fn checked_text_lockfiles_reject_unrecognized_top_level_structures() {
+    assert!(packages_for_diff(
+        PackageManager::Gemfile,
+        &fixture("gemfile", "unrecognized-header.lock")
+    )
+    .is_err());
+    assert!(packages_for_diff(
+        PackageManager::Go,
+        &fixture("gomod", "unknown-directive.mod")
+    )
+    .is_err());
+    let packages =
+        packages_for_diff(PackageManager::Go, &fixture("gomod", "ignored-blocks.mod")).unwrap();
+    assert_eq!(packages.len(), 1);
+    expect(
+        &packages,
+        "example.invalid/library",
+        "v1.2.3",
+        "",
+        ResolutionKind::Registry,
+    );
 }

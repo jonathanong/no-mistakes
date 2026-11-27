@@ -91,6 +91,35 @@ fn lockfile_diff_json_impl_distinguishes_unreadable_from_missing_worktree_files(
     assert!(!report[0]["removed"].as_array().unwrap().is_empty());
 }
 
+#[test]
+fn lockfile_diff_discovers_revisions_and_rejects_invalid_utf8() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    setup_git_repo(root);
+    let lock = root.join("Cargo.lock");
+    std::fs::copy(ecosystem_lock("cargo/base.lock"), &lock).unwrap();
+    git_commit(root, "valid");
+    std::fs::copy(ecosystem_lock("cargo/unreadable.lock"), &lock).unwrap();
+    git_commit(root, "unreadable");
+    let options = serde_json::json!({"root": root, "base": "HEAD~1", "head": "HEAD"});
+    let error = lockfile_diff_json_impl(options).unwrap_err();
+    assert!(
+        error
+            .reason
+            .contains("`Cargo.lock` at ref `HEAD` is not valid UTF-8"),
+        "{}",
+        error.reason
+    );
+
+    std::fs::remove_file(lock).unwrap();
+    git_commit(root, "deleted");
+    let options = serde_json::json!({"root": root, "base": "HEAD~2", "head": "HEAD"});
+    let output = lockfile_diff_json_impl(options).unwrap();
+    let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(report[0]["manager"], "cargo");
+    assert!(!report[0]["removed"].as_array().unwrap().is_empty());
+}
+
 fn ecosystem_lock(name: &str) -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/lockfile")

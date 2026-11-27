@@ -4,7 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
 mod git;
-use git::{detect_lockfiles_from_head, find_git_root, git_ref_exists, git_show_file};
+use git::{find_git_root, git_ref_exists};
+use lockfile::git_show_file;
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
@@ -59,9 +60,7 @@ pub(crate) fn lockfile_diff_json_impl(options: serde_json::Value) -> napi::Resul
                 head
             )));
         }
-        // Detect from head commit so newly added lockfiles are found even when
-        // the working tree is still at a different commit.
-        detect_lockfiles_from_head(&git_root, head, &root).map_err(git_io_to_napi)?
+        lockfile::detect_lockfiles_at_refs(&git_root, &root, &base, head).map_err(git_io_to_napi)?
     } else {
         let visible_paths = no_mistakes::codebase::ts_source::discover_visible_paths(&root);
         lockfile::LOCKFILE_BASENAMES
@@ -106,8 +105,15 @@ fn git_lockfile_content(
     lockfile: &str,
     kind: &str,
 ) -> napi::Result<String> {
-    if let Some(content) = git_show_file(git_root, reference, lockfile).map_err(git_io_to_napi)? {
-        return Ok(content);
+    match git_show_file(git_root, reference, lockfile) {
+        Ok(Some(content)) => return Ok(content),
+        Ok(None) => {}
+        Err(error) if error.kind() == std::io::ErrorKind::InvalidData => {
+            return Err(napi::Error::from_reason(format!(
+                "`{lockfile}` at ref `{reference}` is not valid UTF-8"
+            )));
+        }
+        Err(error) => return Err(git_io_to_napi(error)),
     }
     if !git_ref_exists(git_root, reference).map_err(git_io_to_napi)? {
         return Err(napi::Error::from_reason(format!(

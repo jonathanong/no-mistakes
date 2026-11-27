@@ -51,21 +51,21 @@ source is the workspace. Poetry git uses `resolved_reference`, then
 `[metadata.files]`. A Poetry directory uses its source path as the fingerprint.
 Poetry `url` and `file` sources are tarballs.
 uv git uses the commit in the URL fragment after `#`, then `rev`. uv
-`editable`, `directory`, and `virtual` sources are directories and may omit
-`version`. uv uses the first wheel hash or falls back to the source-distribution
+`editable`, `directory`, and `virtual` sources use the directory path as
+their fingerprint and may omit `version`. uv uses the first wheel hash or falls back to the source-distribution
 hash. A direct URL source is a tarball. `Pipfile.lock` reads `default`,
 `develop`, and custom package categories. The object key is the name. A leading `==` is
 removed from `version`. A git or path entry may omit `version`; its
 fingerprint is `ref` or `path`. File, URL, and other version-control sources
-may omit `version`. Their source URL forms the fingerprint. A registry entry
+may omit `version`. Their source URL and any non-Git revision form the fingerprint. A registry entry
 requires `version` and uses the first hash. `go.mod` reads `require` lines, including `// indirect`.
 `replace`, `exclude`, `retract`, and `go.sum`
 are not packages. `Gemfile.lock` reads specs indented four spaces; deeper
 lines are dependencies. A `GIT` revision and a `CHECKSUMS` `sha256` are
 fingerprints, and `PATH` is a directory. `composer.lock` reads `packages` and
 `packages-dev`. A null development section contributes no packages.
-`dist.reference` is the fingerprint, `dist.type` `path` is a
-directory, and a git source with no dist is git.
+Distribution references take precedence over checksums. A path source
+uses its directory URL and any reference, and a git source with no dist is git.
 
 A malformed file of one of those managers is not an empty package list.
 `lockfile diff` warns and omits malformed or unreadable working-tree files. The async
@@ -73,6 +73,10 @@ A malformed file of one of those managers is not an empty package list.
 lockfiles, `mix.lock`, and `pubspec.yaml` are not lockfile diffs.
 
 pnpm 12 still writes `lockfileVersion: '9.0'`. When the project pins pnpm 12, or has config dependencies, `pnpm-lock.yaml` is two YAML documents. The env document comes first and records `configDependencies` and `packageManagerDependencies`. The project document is last. Package diffs union `packages` from every document, so a pnpm pin or config dependency change is reported. Importer and snapshot impact use the project document. A document before that project document must be an env lockfile: its `.` importer has only `configDependencies` and `packageManagerDependencies`. Anything else is rejected instead of being read as the workspace. A `resolution.revision` field is accepted metadata; the `integrity` digest remains the package identity. Lockfile majors outside 5 through 9 stay unsupported.
+
+With `--head` and no explicit path, detection checks both Git revisions for
+each supported lockfile. An undecodable file at either revision produces
+a CLI warning and omission or a Node error naming that file and revision.
 
 ## Output (json format)
 
@@ -101,7 +105,8 @@ provided, it automatically
 uses this diff logic to identify impacted packages and traces them to affected tests
 via `EdgeKind::PackageDependency` edges (from `package.json` → module node).
 
-Without `--base`, providing a lockfile as `--changed-file` with `--global-config-fallback=true`
+Without `--base`, providing an npm-family lockfile as `--changed-file`
+with `--global-config-fallback=true`
 triggers a full test suite run with a `lockfile-no-baseline` warning. The plan
 also reports `incomplete: [{ kind: "dependency-baseline-missing", files }]`.
 That marker is present even when global fallback is off, so a scoped

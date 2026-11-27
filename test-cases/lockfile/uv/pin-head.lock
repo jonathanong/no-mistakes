@@ -8,7 +8,7 @@ source = { virtual = "." }
 [[package]]
 name = "sample-dir"
 version = "0.1.0"
-source = { directory = "lib/sample-dir" }
+source = { directory = "lib/other-dir" }
 
 [[package]]
 name = "sample-edit"

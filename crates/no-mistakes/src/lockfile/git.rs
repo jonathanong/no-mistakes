@@ -1,25 +1,5 @@
 const LOCKFILE_NAMES: &[&str] = no_mistakes::codebase::lockfile::LOCKFILE_BASENAMES;
 
-fn detect_lockfiles_from_head(git_root: &Path, head: &str, root: &Path) -> Result<Vec<PathBuf>> {
-    let prefix = root
-        .strip_prefix(git_root)
-        .unwrap_or(std::path::Path::new(""))
-        .to_string_lossy()
-        .replace('\\', "/");
-    let mut lockfiles = Vec::new();
-    for name in LOCKFILE_NAMES {
-        let rel = if prefix.is_empty() {
-            name.to_string()
-        } else {
-            format!("{prefix}/{name}")
-        };
-        if git_show_file(git_root, head, &rel)?.is_some() {
-            lockfiles.push(root.join(name));
-        }
-    }
-    Ok(lockfiles)
-}
-
 fn detect_lockfiles_in_root(root: &Path, visible_paths: &[PathBuf]) -> Vec<PathBuf> {
     LOCKFILE_NAMES
         .iter()
@@ -58,22 +38,17 @@ fn git_ref_exists(root: &Path, git_ref: &str) -> Result<bool> {
 }
 
 fn git_content_or_empty(git_root: &Path, git_ref: &str, rel: &str) -> Result<Option<String>> {
-    match git_show_file(git_root, git_ref, rel)? {
-        Some(content) => Ok(Some(content)),
-        None if git_ref_exists(git_root, git_ref)? => Ok(Some(String::new())),
-        None => Ok(None),
+    match lockfile::git_show_file(git_root, git_ref, rel) {
+        Ok(Some(content)) => Ok(Some(content)),
+        Ok(None) if git_ref_exists(git_root, git_ref)? => Ok(Some(String::new())),
+        Ok(None) => {
+            eprintln!("warning: could not retrieve {rel} at ref {git_ref}");
+            Ok(None)
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::InvalidData => {
+            eprintln!("warning: `{rel}` at ref `{git_ref}` is not valid UTF-8; skipping it");
+            Ok(None)
+        }
+        Err(error) => Err(error.into()),
     }
-}
-
-fn git_show_file(root: &Path, git_ref: &str, rel_path: &str) -> Result<Option<String>> {
-    let mut command = std::process::Command::new("git");
-    command
-        .args(["show", &format!("{git_ref}:{rel_path}")])
-        .current_dir(root);
-    let output = no_mistakes::invocation::command_output(&mut command)?;
-    Ok(output
-        .status
-        .success()
-        .then(|| String::from_utf8(output.stdout).ok())
-        .flatten())
 }

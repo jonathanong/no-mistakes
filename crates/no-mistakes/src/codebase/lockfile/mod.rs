@@ -4,10 +4,12 @@ pub(crate) mod keyed_diff;
 pub mod npm;
 pub mod pnpm;
 pub(crate) mod pnpm_alias;
+mod revisions;
 pub mod validate;
 pub mod yarn;
 
 pub use pnpm::{parse_importers, PnpmImporter, PnpmImporterDependency};
+pub use revisions::{detect_lockfiles_at_refs, git_show_file};
 pub use validate::packages_for_diff;
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]

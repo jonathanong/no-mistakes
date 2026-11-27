@@ -9,31 +9,50 @@ pub(crate) fn parse(content: &str) -> Vec<ResolvedPackage> {
 
 pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, GoModError> {
     let mut out = Vec::new();
-    let mut in_require = false;
+    let mut block = None;
     let mut saw_module = false;
     for raw in content.lines() {
         let line = strip_comment(raw).trim();
-        if in_require {
+        if line.is_empty() {
+            continue;
+        }
+        if let Some(is_require) = block {
             if line == ")" {
-                in_require = false;
-            } else if !line.is_empty() {
+                block = None;
+            } else if is_require {
                 push_require(line, &mut out)?;
             }
             continue;
         }
         let end = line.find(|ch: char| ch.is_whitespace() || ch == '(');
         let (directive, rest) = line.split_at(end.unwrap_or(line.len()));
+        let rest = rest.trim();
         match directive {
-            "module" | "go" if !rest.trim().is_empty() => saw_module = true,
-            "require" if rest.trim() == "(" => in_require = true,
-            "require" => push_require(rest, &mut out)?,
-            _ => {}
+            "module" | "go" if has_one_token(rest) => saw_module = true,
+            "toolchain" if has_one_token(rest) => {}
+            "require" if rest != "(" => push_require(rest, &mut out)?,
+            "replace" | "exclude" | "retract" | "godebug" | "tool" | "ignore" | "require"
+                if rest == "(" =>
+            {
+                block = Some(directive == "require");
+            }
+            "replace" | "exclude" | "retract" | "godebug" | "tool" | "ignore"
+                if !rest.is_empty() => {}
+            _ => return Err(GoModError),
         }
     }
-    if in_require || (out.is_empty() && !saw_module) {
+    if block.is_some() || (out.is_empty() && !saw_module) {
         return Err(GoModError);
     }
     Ok(out)
+}
+
+fn has_one_token(rest: &str) -> bool {
+    let mut tokens = rest.split_whitespace();
+    tokens
+        .next()
+        .is_some_and(|token| !matches!(token, "(" | ")"))
+        && tokens.next().is_none()
 }
 
 fn push_require(rest: &str, out: &mut Vec<ResolvedPackage>) -> Result<(), GoModError> {

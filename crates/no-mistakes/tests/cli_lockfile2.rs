@@ -482,3 +482,6 @@ fn lockfile_diff_warns_and_omits_an_unreadable_worktree_lockfile() {
         serde_json::json!([])
     );
 }
+
+#[path = "cli_lockfile_revisions.rs"]
+mod revisions;

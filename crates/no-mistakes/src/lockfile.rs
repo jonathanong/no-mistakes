@@ -64,8 +64,6 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
     let lockfile_paths = if let Some(lf) = args.lockfile {
         vec![root.join(lf)]
     } else if let Some(head) = args.head.as_deref() {
-        // When --head is supplied, detect from the head commit so we find lockfiles
-        // added or removed between base and head that don't exist on disk.
         if !git_ref_exists(&git_root, head)? {
             eprintln!(
                 "warning: head ref `{}` does not exist; no lockfiles detected",
@@ -73,7 +71,7 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
             );
             return Ok(ExitCode::SUCCESS);
         }
-        detect_lockfiles_from_head(&git_root, head, &root)?
+        lockfile::detect_lockfiles_at_refs(&git_root, &root, &args.base, head)?
     } else {
         let visible_paths = no_mistakes::codebase::ts_source::try_discover_visible_paths(&root)?;
         detect_lockfiles_in_root(&root, &visible_paths)
@@ -98,7 +96,6 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
         let head = args.head.as_deref().unwrap_or("HEAD");
         let new_content = if args.head.is_some() {
             let Some(c) = git_content_or_empty(&git_root, head, &rel)? else {
-                eprintln!("warning: could not retrieve {} at ref {}", rel, head);
                 continue;
             };
             c
@@ -112,7 +109,6 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
             }
         };
         let Some(old_content) = git_content_or_empty(&git_root, &args.base, &rel)? else {
-            eprintln!("warning: could not retrieve {} at ref {}", rel, args.base);
             continue;
         };
 

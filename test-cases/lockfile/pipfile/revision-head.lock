@@ -1,0 +1,5 @@
+{
+  "default": {
+    "sample-checkout": { "hg": "https://vcs.example.invalid/library", "ref": "bb222" }
+  }
+}

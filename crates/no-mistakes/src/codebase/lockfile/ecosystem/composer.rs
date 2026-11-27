@@ -42,26 +42,24 @@ fn parse_entry(entry: &serde_json::Value) -> Result<ResolvedPackage, ComposerErr
     let dist_ref = text(dist, "reference");
     let source_ref = text(source, "reference");
     let (kind, fingerprint) = if dist_type == "path" || source_type == "path" {
-        let fingerprint = if dist_ref.is_empty() {
-            source_ref
-        } else {
-            dist_ref
+        let path = first_text(text(dist, "url"), text(source, "url"));
+        let reference = first_text(dist_ref, source_ref);
+        let fingerprint = match (path, reference) {
+            ("", reference) => reference.to_string(),
+            (path, "") => path.to_string(),
+            (path, reference) => format!("{path}#{reference}"),
         };
         (ResolutionKind::Directory, fingerprint)
     } else if dist.is_none() && source_type == "git" {
-        (ResolutionKind::Git, source_ref)
+        (ResolutionKind::Git, source_ref.to_string())
     } else {
-        let fingerprint = if dist_ref.is_empty() {
-            source_ref
-        } else {
-            dist_ref
-        };
-        (ResolutionKind::Registry, fingerprint)
+        let fingerprint = first_text(dist_ref, first_text(text(dist, "shasum"), source_ref));
+        (ResolutionKind::Registry, fingerprint.to_string())
     };
     Ok(ResolvedPackage {
         name: name.to_string(),
         version: version.to_string(),
-        fingerprint: fingerprint.to_string(),
+        fingerprint,
         kind,
     })
 }
@@ -71,4 +69,12 @@ fn text<'a>(value: Option<&'a serde_json::Value>, key: &str) -> &'a str {
         .and_then(|entry| entry.get(key))
         .and_then(|entry| entry.as_str())
         .unwrap_or("")
+}
+
+fn first_text<'a>(preferred: &'a str, fallback: &'a str) -> &'a str {
+    if preferred.is_empty() {
+        fallback
+    } else {
+        preferred
+    }
 }

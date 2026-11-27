@@ -81,8 +81,13 @@ fn resolution(
     if let Some(git) = source.git.as_deref() {
         return (ResolutionKind::Git, git_pin(git, source.rev.as_deref()));
     }
-    if source.editable.is_some() || source.directory.is_some() || source.r#virtual.is_some() {
-        return (ResolutionKind::Directory, String::new());
+    if let Some(path) = source
+        .editable
+        .as_deref()
+        .or(source.directory.as_deref())
+        .or(source.r#virtual.as_deref())
+    {
+        return (ResolutionKind::Directory, path.to_string());
     }
     if let Some(url) = source.url.as_deref() {
         return (

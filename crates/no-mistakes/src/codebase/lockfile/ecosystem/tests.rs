@@ -184,7 +184,7 @@ fn uv_inline_sources_set_kind_and_revision() {
         &packages,
         "sample-app",
         "0.1.0",
-        "",
+        ".",
         ResolutionKind::Directory,
     );
     expect(
@@ -273,7 +273,7 @@ fn composer_dist_source_and_path() {
         &packages,
         "acme/sample-path",
         "0.1.0",
-        "",
+        "../sample-path",
         ResolutionKind::Directory,
     );
     assert_diff(
