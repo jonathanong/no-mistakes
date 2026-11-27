@@ -132,7 +132,7 @@ fn invalid_declared_option_values_abort_before_analysis() {
 }
 
 #[test]
-fn valid_declared_option_values_still_run() {
+fn valid_declared_option_values_match_snapshot() {
     let root = rules_path("options-audit", "fixture", "issue-4654");
     let cases = [(
         "valid-declared",
