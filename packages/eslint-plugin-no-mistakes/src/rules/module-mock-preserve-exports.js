@@ -85,6 +85,10 @@ module.exports = rule(
           context,
           new Set(["mock", "doMock", "unstable_mockModule"]),
         );
+        if (forwarded?.mock.unanalyzable) {
+          reportUnanalyzable(context, node, "this call");
+          return;
+        }
         if (forwarded) {
           reportMockCall(
             node,

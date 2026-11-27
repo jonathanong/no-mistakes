@@ -108,6 +108,7 @@ function acceptsRunner(root, context, namespaces) {
   if (def.type === "Variable" && requireResolution(def.node?.init, context)?.source === null) {
     return false;
   }
+  if (def.parent?.importKind === "type" || def.node?.importKind === "type") return false;
   if (def.type !== "ImportBinding") return true;
   if (def.node?.type === "ImportNamespaceSpecifier") return namespaces.has(root.name);
   if (def.node?.type === "ImportDefaultSpecifier") return true;
@@ -183,7 +184,9 @@ module.exports = Object.assign(
           if (!isTestFile(context.filename) && !state.usesVitest) return;
           if (!isSequentialCall(node, context, state.roots, state.namespaces)) {
             if (
-              (hasSequentialMember(node.callee) || hasSequentialOption(node)) &&
+              (hasSequentialMember(node.callee) ||
+                chainInfo(node.callee, context).names.includes("sequential") ||
+                hasSequentialOption(node)) &&
               unresolvedSequential(node.callee, context) &&
               !suppressed(node)
             ) {

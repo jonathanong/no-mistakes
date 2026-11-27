@@ -27,7 +27,9 @@ assertion whose `expect` comes from a non-static `require` reports
 that advisory when `check` is that unresolved expect.
 
 `import vt = require("vitest")`, `const { expect } = require("@playwright/test")`,
-and a Vitest namespace are expect bindings. Inside a test,
+`require("vitest").expect`, and a Vitest namespace are expect bindings.
+`require("vitest").test` is a runner, so a message comparison inside that
+callback is the same diagnostic. Inside a test,
 `err.message === ("boom" as string)`, `(v as typeof v).expect(err.message)`,
 `v.expect.apply(null, [err.message] as const)`, and `(v.expect<string>)(err.message)`
 are the same message comparison.

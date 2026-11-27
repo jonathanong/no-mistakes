@@ -129,6 +129,12 @@ module.exports = rule(
           return;
         }
         const directCall = matchDirectMockCallApply(node, context, MODULE_MOCK_METHODS);
+        if (directCall?.mock.unanalyzable) {
+          if (MODULE_MOCK_METHODS.has(directCall.mock.method)) {
+            reportUnanalyzable(context, node, "this call");
+          }
+          return;
+        }
         if (directCall) {
           reportIfDisallowed(node, directCall.mock, directCall.specifierNode, directCall.factory);
           return;

@@ -1,6 +1,7 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
+const { opaqueIdentifierAlias, opaqueImportEquals } = require("./module-mock-framework-opaque");
 
 function staticImportSource(definition) {
   return require("./async-target-bindings").staticImportSource(definition);
@@ -149,17 +150,12 @@ function frameworkBindingOpaque(node, context, seen = new Set()) {
     const def = found.defs[0];
     const required = requireResolution(def.node?.init, context);
     if (required?.source === null && def.type === "Variable") return true;
-    if (
-      def.type === "ImportBinding" &&
-      def.node?.type === "TSImportEqualsDeclaration" &&
-      !staticImportSource(def)
-    ) {
-      return true;
-    }
+    if (opaqueImportEquals(def)) return true;
     if (def.type === "Variable" && def.node?.id?.type === "ObjectPattern") {
       const key = patternKey(def.node.id, node.name);
       if (key === null && required?.source === null) return true;
     }
+    if (opaqueIdentifierAlias(def, context, seen, frameworkBindingOpaque)) return true;
     return false;
   }
   return false;

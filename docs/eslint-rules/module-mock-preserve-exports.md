@@ -45,7 +45,8 @@ The schema accepts an options object.
 applicable mocks; `baseline` provides temporary `[file, specifier]` allowances.
 `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
 mock whose framework binding comes from a non-static `require` reports
-`unanalyzable`. See the exhaustive table in
+`unanalyzable`, including `.call` and a literal-array `.apply` on that mock.
+See the exhaustive table in
 [`eslint-plugin`](../eslint-plugin.md#rule-options).
 
 `const { expect } = require("vitest")` is not a framework mock.

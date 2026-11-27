@@ -25,8 +25,15 @@ const groups = [
       "dynamic.test.ts",
       "shapes.test.ts",
       "shadow.test.ts",
+      "alias-member.test.ts",
     ],
-    valid: ["not-a-runner.test.ts", "redeclare.js", "type-only.test.ts", "computed-member.test.ts"],
+    valid: [
+      "not-a-runner.test.ts",
+      "redeclare.js",
+      "type-only.test.ts",
+      "computed-member.test.ts",
+      "alias-plain.test.ts",
+    ],
   },
   {
     rule: "no-vitest-sequential",
@@ -37,24 +44,32 @@ const groups = [
   {
     rule: "module-mock-boundary",
     dir: "boundary",
-    invalid: ["mocks.test.ts", "dynamic.test.ts", "shapes.test.ts", "opaque-method.test.ts"],
+    invalid: [
+      "mocks.test.ts",
+      "dynamic.test.ts",
+      "shapes.test.ts",
+      "opaque-method.test.ts",
+      "identifier-alias.test.ts",
+      "call-apply.test.ts",
+    ],
+    valid: ["type-only-equals.test.ts"],
   },
   {
     rule: "module-mock-boundary",
     dir: "boundary-ignore",
     options: [{ unanalyzable: "ignore" }],
-    valid: ["dynamic.test.ts"],
+    valid: ["dynamic.test.ts", "call-apply.test.ts"],
   },
   {
     rule: "module-mock-preserve-exports",
     dir: "preserve",
-    invalid: ["mocks.test.ts", "dynamic.test.ts"],
+    invalid: ["mocks.test.ts", "dynamic.test.ts", "call-apply.test.ts"],
   },
   {
     rule: "module-mock-preserve-exports",
     dir: "preserve-ignore",
     options: [{ unanalyzable: "ignore" }],
-    valid: ["dynamic.test.ts"],
+    valid: ["dynamic.test.ts", "call-apply.test.ts"],
   },
   {
     rule: "vitest-mock-test-file-naming",
@@ -116,7 +131,13 @@ const groups = [
   {
     rule: "test-no-error-message-matching",
     dir: "message",
-    invalid: ["cjs.test.ts", "wrappers.test.ts", "dynamic.test.ts"],
+    invalid: [
+      "cjs.test.ts",
+      "wrappers.test.ts",
+      "dynamic.test.ts",
+      "require-expect.test.ts",
+      "require-runner.test.ts",
+    ],
   },
   {
     rule: "test-no-error-message-matching",
@@ -128,7 +149,7 @@ const groups = [
     rule: "test-no-delayed-rejects",
     dir: "delayed",
     invalid: ["cjs.test.ts", "cast.test.ts", "dynamic.test.ts"],
-    valid: ["caught.test.ts"],
+    valid: ["caught.test.ts", "computed-key.test.ts"],
   },
   {
     rule: "test-no-delayed-rejects",

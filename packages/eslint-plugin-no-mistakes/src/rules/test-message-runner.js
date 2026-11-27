@@ -9,6 +9,7 @@ const MODULES = new Set(["vitest", "@jest/globals", "@playwright/test"]);
 
 function namespace(node, context, seen) {
   node = unwrap(node);
+  if (MODULES.has(requireSource(node, context))) return true;
   if (node?.type !== "Identifier") return false;
   const variable = resolveVariable(node, context);
   if (!variable || seen.has(variable)) return false;

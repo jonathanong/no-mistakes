@@ -155,6 +155,7 @@ module.exports = rule(
           const expectation = unwrapExpression(node.object);
           const expectCallee = unwrapExpression(expectation?.callee);
           if (
+            !node.computed &&
             node.property?.name === "rejects" &&
             expectation?.type === "CallExpression" &&
             isUnresolved(moduleLoad(expectCallee, context))

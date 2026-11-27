@@ -1,6 +1,12 @@
 {
   "module-mock-boundary:boundary": [
     {
+      "file": "type-only-equals.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "mocks.test.ts",
       "findings": [
         {
@@ -126,11 +132,68 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "identifier-alias.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 4,
+          "file": "identifier-alias.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "call-apply.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 40,
+          "endLine": 3,
+          "file": "call-apply.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 45,
+          "endLine": 4,
+          "file": "call-apply.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "module-mock-boundary:boundary-ignore": [
     {
       "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "call-apply.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -176,11 +239,50 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "call-apply.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 53,
+          "endLine": 3,
+          "file": "call-apply.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 71,
+          "endLine": 4,
+          "file": "call-apply.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "module-mock-preserve-exports:preserve-ignore": [
     {
       "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "call-apply.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -211,6 +313,12 @@
     },
     {
       "file": "computed-member.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "alias-plain.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -498,6 +606,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "alias-member.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 7,
+          "endLine": 4,
+          "file": "alias-member.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "no-vitest-sequential:sequential-ignore": [
@@ -515,6 +641,12 @@
   "test-no-delayed-rejects:delayed": [
     {
       "file": "caught.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-key.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -744,6 +876,42 @@
           "line": 9,
           "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "require-expect.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 3,
+          "file": "require-expect.test.ts",
+          "line": 3,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "require-runner.test.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 29,
+          "endLine": 4,
+          "file": "require-runner.test.ts",
+          "line": 4,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
           "ruleId": "no-mistakes/test-no-error-message-matching",
           "severity": 2
         }

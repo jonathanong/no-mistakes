@@ -53,6 +53,7 @@ function isNestedBinding(variable) {
 
 function isNamespace(node, context, seen, modules = null) {
   node = unwrap(node);
+  if (allowedModule(requireSource(node, context), modules)) return true;
   if (node?.type !== "Identifier" || seen.has(node.name)) return false;
   const variable = resolveVariable(node, context);
   const def = variable?.defs.length === 1 ? variable.defs[0] : null;
