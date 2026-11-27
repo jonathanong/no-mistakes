@@ -1,0 +1,9 @@
+version: 2
+rules:
+  - rule: csp-allowed-origins
+    scope: repository
+    include: [src/**]
+    options:
+      cspFiles:
+        - src/duplicate.ts
+        - src/./duplicate.ts
