@@ -4,8 +4,6 @@ use crate::codebase::rules::RuleFinding;
 use std::collections::HashMap;
 
 mod emit;
-#[cfg(test)]
-pub(super) use emit::allowance_matches;
 use emit::{proven, suppressed, unproven};
 
 pub(super) fn project(

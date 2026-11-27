@@ -1,4 +1,4 @@
-use super::resolve::{allowance_matches, project};
+use super::resolve::project;
 use super::{collect, known, root_entries, selected_files, Ctx, Sink};
 use crate::codebase::rules::allow_audit::AllowAudit;
 use crate::codebase::rules::path_filter::RulePathFilter;
@@ -119,14 +119,22 @@ fn each_loop_report_and_ignore_policies_and_allowance() {
     assert!(ignored.is_empty());
     let unread = project("worker.py", None, "py", &ctx(&sinks, Unanalyzable::Advise));
     assert_eq!(unread[0].causes[0].kind, "unresolved-dispatch");
-    let allow = super::super::config::Allowance {
+    let allow = [super::super::config::Allowance {
         file: "worker".to_string(),
         function: Some("load".to_string()),
         callee: Some("item.fetch".to_string()),
         line: Some(3),
-    };
-    assert!(allowance_matches(&allow, "worker", "item.fetch", 3, "load"));
-    assert!(!allowance_matches(&allow, "worker", "fetch", 3, "load"));
+    }];
+    let mut allowed = ctx(&sinks, Unanalyzable::Advise);
+    allowed.allow = &allow;
+    let suppressed = project(
+        "worker",
+        Some("fn load(items: &[&str]) {\n    for item in items {\n        item.fetch();\n        item.load();\n    }\n}\n"),
+        "rs",
+        &allowed,
+    );
+    assert!(suppressed.iter().all(|finding| !finding.message.contains("item.fetch")));
+    assert!(suppressed.iter().any(|finding| finding.message.contains("item.load")));
 }
 
 #[test]

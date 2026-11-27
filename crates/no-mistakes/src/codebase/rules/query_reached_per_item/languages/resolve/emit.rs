@@ -72,7 +72,7 @@ pub(super) fn suppressed(ctx: &Ctx<'_>, file: &str, callee: &str, line: u32, fun
     }
 }
 
-pub(crate) fn allowance_matches(
+pub(super) fn allowance_matches(
     entry: &super::super::super::config::Allowance,
     file: &str,
     callee: &str,
