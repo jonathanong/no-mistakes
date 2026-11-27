@@ -95,8 +95,8 @@ testPlan:
 ## Project-keyed triggers (deprecated)
 
 `fullSuiteTriggers.projects` accepts legacy broad triggers and target-scoped
-triggers. A target-scoped trigger selects only tests owned by the named runner
-projects:
+triggers. A negated path must include a pattern after `!`. A target-scoped
+trigger selects only tests owned by the named runner projects:
 
 ```yaml
 testPlan:

@@ -54,6 +54,10 @@ fn invalid_runner_infra_and_changes_configuration_exits_two_at_load() {
             "4440.yml",
             "testPlan.vitest.fullSuiteTriggers.projects.example[0]",
         ),
+        (
+            "blank-project-trigger-negation.yml",
+            "testPlan.vitest.fullSuiteTriggers.projects.example[1] must not be blank",
+        ),
         ("4456.yml", "infra.terrafom"),
         ("4457.yml", "infra.terraform.moduleRoot"),
         ("4458.yml", "infra.terraform.test.testGlob"),

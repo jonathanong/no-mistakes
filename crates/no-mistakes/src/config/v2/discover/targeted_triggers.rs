@@ -47,6 +47,16 @@ pub(super) fn validate(config: &NoMistakesConfig, path: &Path) -> Result<()> {
             let targeted = match dependency {
                 TestPlanProjectDependency::All(_) => continue,
                 TestPlanProjectDependency::Patterns(patterns) => {
+                    if let Some(index) = patterns
+                        .iter()
+                        .position(|pattern| glob_body(pattern).is_empty())
+                    {
+                        let field = field.index(index);
+                        return Err(super::path_globs::field_error(
+                            field.clone(),
+                            format!("{field} must not be blank"),
+                        ));
+                    }
                     super::test_config::validate_paths(patterns, &field)?;
                     continue;
                 }
@@ -87,8 +97,7 @@ fn validate_paths(paths: &[String], base: &str) -> Result<()> {
         anyhow::bail!("{base}.paths must not be empty");
     }
     for (index, pattern) in paths.iter().enumerate() {
-        let normalized = pattern.trim();
-        let normalized = normalized.strip_prefix('!').unwrap_or(normalized).trim();
+        let normalized = glob_body(pattern);
         if normalized.is_empty() {
             anyhow::bail!("{base}.paths[{index}] must not be blank");
         }
@@ -100,6 +109,11 @@ fn validate_paths(paths: &[String], base: &str) -> Result<()> {
             })?;
     }
     Ok(())
+}
+
+fn glob_body(pattern: &str) -> &str {
+    let pattern = pattern.trim();
+    pattern.strip_prefix('!').unwrap_or(pattern).trim()
 }
 
 fn validate_targets(targets: &[String], base: &str) -> Result<()> {
