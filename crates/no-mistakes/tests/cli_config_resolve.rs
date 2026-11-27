@@ -90,5 +90,8 @@ fn config_resolve_rejects_platform_exports_escaping_relative_dot_root() {
 
     assert_eq!(output.status.code(), Some(2));
     let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("file must stay within the root"), "{stderr}");
+    assert!(
+        stderr.contains("file must stay within the root"),
+        "{stderr}"
+    );
 }
