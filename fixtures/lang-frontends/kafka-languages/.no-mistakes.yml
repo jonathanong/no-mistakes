@@ -1,0 +1,42 @@
+projects:
+  languages:
+    type: server
+    root: .
+    queues:
+      cluster: mail
+      enqueues:
+        - go/produce.go
+        - rust/produce.rs
+        - ruby/produce.rb
+        - php/produce.php
+        - java/produce.java
+        - kotlin/produce.kt
+        - elixir/produce.ex
+        - dart/produce.dart
+      workers:
+        - go/consume.go
+        - rust/consume.rs
+        - ruby/consume.rb
+        - php/consume.php
+        - java/consume.java
+        - kotlin/consume.kt
+        - elixir/consume.ex
+        - dart/consume.dart
+  billing:
+    type: server
+    root: clusters/billing
+    queues:
+      cluster: billing
+      enqueues:
+        - produce.go
+      workers:
+        - consume.go
+  notifications:
+    type: server
+    root: clusters/notifications
+    queues:
+      cluster: notifications
+      enqueues:
+        - produce.go
+      workers:
+        - consume.go

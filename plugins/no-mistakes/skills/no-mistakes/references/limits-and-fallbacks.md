@@ -141,12 +141,15 @@ Dynamic values are skipped or reported as unsupported:
 router.push(`/users/${id}`);
 await fetch(`/api/${resource}`);
 await queue.add(jobName, payload);
+consumer.subscribe(Pattern.compile("mail\\..*"));
 spawn(scriptName, []);
 page.locator(`[data-testid="${id}"]`).click();
 ```
 
 Use `rg` for dynamic call-site discovery and prefer static literals when the
-relationship should be visible to agents.
+relationship should be visible to agents. Kafka static topic literals in
+TypeScript, Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir, and Dart are
+`queue` edges. A runtime topic or a regex subscription is not.
 
 Swift, .NET, Java, Kotlin, Elixir, Dart, and Rust frontends record no
 language-specific queue jobs. The shared Kafka scanner checks configured

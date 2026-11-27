@@ -5,8 +5,12 @@ use std::sync::OnceLock;
 
 pub(crate) fn extract_kafka_topics(source: &str) -> (Vec<String>, Vec<String>) {
     let source = super::strip::strip_comments_keep_strings(source);
-    let produces = extract_named(&source, kafka_produce_re());
-    let consumes = extract_kafka_consumes(&source);
+    let mut produces = extract_named(&source, kafka_produce_re());
+    produces.extend(super::kafka_literals::extra_produces(&source));
+    let mut consumes = extract_kafka_consumes(&source);
+    consumes.extend(super::kafka_literals::extra_consumes(&source));
+    dedup(&mut produces);
+    dedup(&mut consumes);
     (produces, consumes)
 }
 
@@ -21,6 +25,11 @@ pub(crate) fn scan_file(path: &Path, sources: &SourceStore) -> Option<(Vec<Strin
     let source = sources.read_path(path).ok()?;
     let text = super::strip::strip_comments_keep_strings(&source);
     Some(extract_kafka_topics(&text))
+}
+
+fn dedup(values: &mut Vec<String>) {
+    values.sort();
+    values.dedup();
 }
 
 fn extract_named(source: &str, re: &Regex) -> Vec<String> {
@@ -69,7 +78,7 @@ fn kafka_consume_re() -> &'static Regex {
 
 fn kafka_consume_array_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r#"subscribe\(\s*\[([^\]]*)\]"#).expect("consume array"))
+    RE.get_or_init(|| Regex::new(r#"subscribe\(\s*&?\s*\[([^\]]*)\]"#).expect("consume array"))
 }
 
 fn kafka_quoted_re() -> &'static Regex {

@@ -126,7 +126,9 @@ instead of guessed.
 `no-mistakes queues` detects static BullMQ and glide-mq producer/worker
 relationships. Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel,
 and Symfony Messenger sites emit the same `queue-enqueue` / `queue-worker`
-edges; query those with `dependents --relationship queue`.
+edges; query those with `dependents --relationship queue`. Kafka static topic
+literals in TypeScript, Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir, and
+Dart share that relationship.
 
 The graph uses virtual queue-job nodes such as `queues.ts#sendWelcome` so a
 producer can connect to the worker that processes the same static job name.

@@ -11,6 +11,7 @@ mod job_id;
 mod job_options;
 mod job_options_flow;
 mod job_options_policy;
+mod kafka_languages;
 mod lang;
 mod prepared;
 mod priority_mix;

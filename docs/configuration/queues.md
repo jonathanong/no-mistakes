@@ -305,5 +305,7 @@ See [Job state as record](../rules/job-state-as-record.md) and
 
 Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel, and Symfony
 Messenger sites emit the canonical `queue-enqueue` and `queue-worker` edges.
+Kafka reads static topic literals from the enqueue and worker globs in
+TypeScript, Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir, and Dart.
 Use [`queues edges`](../cli/queues-edges.md), [`queues related`](../cli/queues-related.md),
 and [`queues check`](../cli/queues-check.md) to inspect or validate them.

@@ -386,15 +386,15 @@ per-language surface when those stacks are configured.
 | Swift                   | `swift-import`, `swift-ref`, `swift-package`   | `tests plan swift`, semantic `Package.swift` / `Package.resolved` impact | no (client `http` edges only)                                                          | declined: no documented language-specific producer or worker         | shipped, narrower                |
 | .NET / C#               | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet`, semantic project / central NuGet / lock impact      | ASP.NET `MapGet` / `[HttpGet]` literals                                                | declined: no documented language-specific producer or worker         | shipped (v1 extractors + plan)   |
 | Python, Django, Celery  | `python-import`, `python-ref`                  | `tests plan python`                                                      | Django `path(`, Flask, FastAPI                                                         | Celery `.delay(` / `@shared_task`                         | shipped (v1 extractors + plan)   |
-| Go, Asynq               | `go-import`, `go-ref`                          | `tests plan go`                                                          | net/http, Chi, Gin, Echo, Fiber literals                                               | Asynq `NewTask` / `HandleFunc`                            | shipped (v1 extractors + plan)   |
+| Go, Asynq               | `go-import`, `go-ref`                          | `tests plan go`                                                          | net/http, Chi, Gin, Echo, Fiber literals                                               | Asynq `NewTask` / `HandleFunc`; Kafka static topics       | shipped (v1 extractors + plan)   |
 | Kafka                   | n/a                                            | n/a                                                                      | n/a                                                                                    | static topic produce/consume                              | shipped (v1 extractors)          |
-| Rust                    | `rust-use`, `rust-mod`                         | `tests plan cargo`                                                       | Axum, Actix, Rocket literals                                                           | declined: no Rust job facts                               | shipped (v1 extractors + plan)   |
-| Ruby on Rails           | `ruby-require`, `ruby-ref`                     | `tests plan rails`                                                       | `routes.rb` `to:` / `resources`                                                        | Active Job `perform_later`, Sidekiq `perform_async`       | shipped (v1 extractors + plan)   |
-| PHP                     | `php-use`, `php-package`                       | `tests plan php`                                                         | Laravel `Route::` / static resource and `apiResources` forms, or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan)   |
-| Java, Spring            | `java-import`, `java-ref`                      | `tests plan java`                                                        | Spring `@RequestMapping` / `@GetMapping` literals                                      | declined: no documented language-specific producer or worker         | shipped (v1 extractors + plan)   |
-| Kotlin, Spring          | `kotlin-import`, `kotlin-ref`                  | `tests plan kotlin`                                                      | Spring `@RequestMapping` / `@GetMapping` literals on `.kt`                             | declined: no documented language-specific producer or worker         | shipped (v1 extractors + plan)   |
-| Elixir, Phoenix         | `elixir-import`, `elixir-ref`                  | `tests plan elixir`                                                      | Phoenix verb literals, literal `scope` prefixes, and static `resources`                | declined: no documented language-specific producer or worker         | shipped (v1 extractors + plan)   |
-| Dart / Flutter          | `dart-import`, `dart-ref`                      | `tests plan dart`                                                        | no Dart server graph; client `http` edges to TS routes                                 | declined: no documented language-specific producer or worker         | shipped (v1 extractors + plan)   |
+| Rust                    | `rust-use`, `rust-mod`                         | `tests plan cargo`                                                       | Axum, Actix, Rocket literals                                                           | declined: no Rust job facts; Kafka static topics          | shipped (v1 extractors + plan)   |
+| Ruby on Rails           | `ruby-require`, `ruby-ref`                     | `tests plan rails`                                                       | `routes.rb` `to:` / `resources`                                                        | Active Job `perform_later`, Sidekiq `perform_async`; Kafka static topics | shipped (v1 extractors + plan)   |
+| PHP                     | `php-use`, `php-package`                       | `tests plan php`                                                         | Laravel `Route::` / static resource and `apiResources` forms, or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger; Kafka static topics | shipped (v1 extractors + plan)   |
+| Java, Spring            | `java-import`, `java-ref`                      | `tests plan java`                                                        | Spring `@RequestMapping` / `@GetMapping` literals                                      | declined: no documented language-specific producer or worker; Kafka static topics | shipped (v1 extractors + plan)   |
+| Kotlin, Spring          | `kotlin-import`, `kotlin-ref`                  | `tests plan kotlin`                                                      | Spring `@RequestMapping` / `@GetMapping` literals on `.kt`                             | declined: no documented language-specific producer or worker; Kafka static topics | shipped (v1 extractors + plan)   |
+| Elixir, Phoenix         | `elixir-import`, `elixir-ref`                  | `tests plan elixir`                                                      | Phoenix verb literals, literal `scope` prefixes, and static `resources`                | declined: no documented language-specific producer or worker; Kafka static topics | shipped (v1 extractors + plan)   |
+| Dart / Flutter          | `dart-import`, `dart-ref`                      | `tests plan dart`                                                        | no Dart server graph; client `http` edges to TS routes                                 | declined: no documented language-specific producer or worker; Kafka static topics | shipped (v1 extractors + plan)   |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.
@@ -699,8 +699,8 @@ Go support is the language frontend. Asynq is the queue extractor. Configured
 | Tests            | `tests plan vitest` | `tests plan go` → `go test` in owning packages                                                                   |
 | HTTP routes      | `server routes`     | configured `net/http`, Chi, Gin, Echo, or Fiber registrations                                                    |
 | HTTP clients     | `fetch` `http` edge | `http.Get` / `http.NewRequest` static literals; computed URLs are non-edges                                      |
-| Queues           | BullMQ job name     | Asynq `NewTask("mail:welcome", …)` / `HandleFunc("mail:welcome", …)`                                             |
-| Lockfile         | npm-family          | `go.mod` require directives (`lockfile diff`; not `go.sum`)                                          |
+| Queues           | BullMQ job name     | Asynq `NewTask("mail:welcome", …)` / `HandleFunc("mail:welcome", …)`; Kafka static topics                        |
+| Lockfile         | npm-family          | `go.mod` require directives (`lockfile diff`; not `go.sum`)                                                      |
 
 Asynq task type strings are the virtual job identity, same as a BullMQ job
 name. A producer file gets `queue-enqueue`; the handler file gets
@@ -729,8 +729,7 @@ cluster or broker namespace is present and non-empty, and the bare topic
 otherwise. The queue name falls back to `default` when no cluster is set; that
 fallback is not part of the job identity. Topic names are cluster-scoped, so
 two clients that reuse `mail.welcome` on different clusters stay distinct. A
-consumer group id is edge metadata (or a downstream node), never part of that
-identity.
+consumer group id is not part of that identity.
 
 ```ts
 producer.send({ topic: "mail.welcome", messages });
@@ -742,9 +741,58 @@ producer.send("mail.welcome", value=payload)
 consumer.subscribe(["mail.welcome"])
 ```
 
+```go
+_ = &Writer{Topic: "mail.welcome"}
+_ = ProducerMessage{Topic: "mail.welcome"}
+consumer.SubscribeTopics([]string{"mail.welcome"}, nil)
+```
+
+```rust
+FutureRecord::to("mail.welcome")
+BaseRecord::to("mail.welcome")
+consumer.subscribe(&["mail.welcome"])
+```
+
+```ruby
+producer.produce(payload, topic: "mail.welcome")
+consumer.subscribe("mail.welcome")
+```
+
+```php
+$producer->newTopic("mail.welcome");
+$consumer->subscribe(["mail.welcome"]);
+```
+
+```java
+producer.send(new ProducerRecord<>("mail.welcome", key, value));
+consumer.subscribe(List.of("mail.welcome"));
+consumer.subscribe(Arrays.asList("mail.welcome"));
+consumer.subscribe(Collections.singletonList("mail.welcome"));
+```
+
+```kotlin
+producer.send(ProducerRecord("mail.welcome", key, value))
+consumer.subscribe(listOf("mail.welcome"))
+```
+
+```elixir
+:brod.produce_sync(client, "mail.welcome", :hash, key, value)
+:brod.subscribe(client, self(), "mail.welcome", [])
+```
+
+```dart
+producer.produce(topic: "mail.welcome", messages: messages);
+consumer.subscribe(["mail.welcome"]);
+```
+
 Topic names built at runtime, regex subscriptions, and broker admin APIs are
-out of scope. Configure producer and consumer file globs through
-`projects.*.queues` the same way BullMQ enqueue/worker globs are configured.
+out of scope. A regex subscription such as `Pattern.compile`, `Regex::new`,
+`regexp.MustCompile`, `RegExp`, `subscribeRegex`, `~r//`, or `/.../` emits no
+edge, and neither does a topic argument that is not a string literal. Configure
+producer and consumer file globs through `projects.*.queues` the same way
+BullMQ enqueue/worker globs are configured. The queue name still falls back to
+`default` when no cluster is set, and that fallback is not part of the job
+identity.
 
 ## Rust
 
@@ -803,8 +851,8 @@ Sidekiq extractors.
 | Tests            | `tests plan vitest` | `tests plan rails` over Minitest / RSpec files                                                          |
 | HTTP routes      | `server routes`     | configured `config/routes.rb` (and engine routes) → controller#action, including bare `resources :name` |
 | HTTP clients     | `fetch` `http` edge | `Faraday` / `HTTParty` / `RestClient` / `Net::HTTP.get` static literals; computed URLs are non-edges  |
-| Queues           | BullMQ              | Active Job `SomeJob.perform_later` or Sidekiq `SomeWorker.perform_async` → job class                    |
-| Lockfile         | npm-family          | `Gemfile.lock` specs (`lockfile diff`)                                                                  |
+| Queues           | BullMQ              | Active Job `SomeJob.perform_later` or Sidekiq `SomeWorker.perform_async` → job class; Kafka static topics |
+| Lockfile         | npm-family          | `Gemfile.lock` specs (`lockfile diff`)                                                                    |
 
 Zeitwerk inference is heuristic and must stay inside configured roots. Do not
 scan the whole repository for `app/models`. Dynamic `constantize`,
@@ -833,8 +881,8 @@ framework from files, and do not enable both extractors from a missing value.
 | Tests            | `tests plan vitest` | `tests plan php` over PHPUnit / Pest files                                                                    |
 | HTTP routes      | `server routes`     | configured Laravel `Route::` / static `Route::resource` / `Route::apiResource` / `Route::apiResources` or Symfony attribute/YAML routes |
 | HTTP clients     | `fetch` `http` edge | Laravel `Http::get` or `->request("GET", ...)` static literals; computed URLs are non-edges                  |
-| Queues           | BullMQ              | Laravel `SomeJob::dispatch()` / `ShouldQueue`, or Symfony Messenger handlers                                  |
-| Lockfile         | npm-family          | `composer.lock` packages (`lockfile diff`)                                                              |
+| Queues           | BullMQ              | Laravel `SomeJob::dispatch()` / `ShouldQueue`, or Symfony Messenger handlers; Kafka static topics             |
+| Lockfile         | npm-family          | `composer.lock` packages (`lockfile diff`)                                                                    |
 
 ```php
 Route::get('/api/users', [UserController::class, 'index']);
@@ -884,7 +932,7 @@ wildcard translation are non-edges. Same-file controller methods do not emit
 | Tests            | `tests plan vitest` | `tests plan java` over `*Test.java` / `*Tests.java` / `*IT.java`; `mvn test [-f <package>/pom.xml] -Dtest=` |
 | HTTP routes      | `server routes`     | Spring `@RequestMapping` + `@GetMapping` literals                                                           |
 | HTTP clients     | `fetch` `http` edge | `getForObject` / `.uri` static literals; computed URLs are non-edges                         |
-| Queues           | BullMQ              | declined: no documented language-specific producer or worker                                                                           |
+| Queues           | BullMQ              | declined: no documented language-specific producer or worker; Kafka static topics            |
 | Lockfile         | npm-family          | later (`pom.xml` native fallback only)                                                                      |
 
 ```java
@@ -925,7 +973,7 @@ Spring HTTP v1 reuses the Java mapping literals on `.kt` files, matching
 | Tests            | `tests plan vitest` | `tests plan kotlin` over `*Test.kt` / `*Tests.kt` / `*IT.kt`; `gradle [-p <package>] test --tests` |
 | HTTP routes      | `server routes`     | Spring `@RequestMapping` + `@GetMapping` literals on `.kt`                                         |
 | HTTP clients     | `fetch` `http` edge | `getForObject` / `.uri` static literals; computed URLs are non-edges                |
-| Queues           | BullMQ              | declined: no documented language-specific producer or worker                                                                  |
+| Queues           | BullMQ              | declined: no documented language-specific producer or worker; Kafka static topics   |
 | Lockfile         | npm-family          | later (`build.gradle.kts` native fallback only)                                                    |
 
 ```kotlin
@@ -974,7 +1022,7 @@ non-edge.
 | Tests            | `tests plan vitest` | `tests plan elixir` over `*_test.exs`; `mix test <path>` from the Mix project root (umbrella child paths stay repo-relative) |
 | HTTP routes      | `server routes`     | Phoenix verb literals, literal `scope` prefixes, and static `resources` macros                                                |
 | HTTP clients     | `fetch` `http` edge | `HTTPoison` / `Req` / `Tesla` static literals; computed URLs are non-edges                                                       |
-| Queues           | BullMQ              | declined: no documented language-specific producer or worker                                                                            |
+| Queues           | BullMQ              | declined: no documented language-specific producer or worker; Kafka static topics                                               |
 | Lockfile         | npm-family          | later (`mix.exs` native fallback only)                                                                                       |
 
 ```elixir
@@ -996,7 +1044,8 @@ Nested brace aliases, wildcard imports, same-package refs without
 `alias`/`import`/`use`, computed `scope path` blocks (including a nested
 `resources` macro), `resources` calls with options, and `mix.lock` /
 `config.exs` native fallback are non-edges. The Elixir queue cell is declined because no
-language-specific producer or worker is documented. Native fallback is
+language-specific producer or worker is documented; Kafka static topics still
+use the shared scanner. Native fallback is
 `mix.exs` plus non-test `.ex` files under configured apps. Any `.ex`/`.exs`
 under `/test/` is non-production. `*_test.exs` is the test suffix.
 
@@ -1023,7 +1072,7 @@ non-edges.
 | Package identity | workspace packages              | configured `tests.dart.packages` + `pubspec.yaml` `name:`                                                        |
 | Tests            | `tests plan vitest`             | `tests plan dart` over `*_test.dart`; `dart test <path>` or `dart pub --directory <package> run test <rel-path>` |
 | HTTP routes      | Next.js / Express client `http` | client `Uri.parse` / `http.*` literals to TS backend routes                                                      |
-| Queues           | BullMQ                          | declined: no documented language-specific producer or worker                                                            |
+| Queues           | BullMQ                          | declined: no documented language-specific producer or worker; Kafka static topics                               |
 | Lockfile         | npm-family                      | later (`pubspec.yaml` native fallback only)                                                                      |
 
 ```dart

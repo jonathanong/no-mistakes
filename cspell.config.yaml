@@ -89,6 +89,7 @@ words:
   - gitignore
   - glibc
   - globset
+  - brod
   - bstr
   - btrim
   - greppable
