@@ -19,6 +19,48 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-26 — candidate B ("or planning how to answer"): passes its gates, not shipped
+
+**Run:** `evals/variants/nm-load-plan/`, set up the same way as candidate A
+(`--eval-dir evals-variants/nm-load-plan --ablation none --runs 3 -j 4`, one
+invocation per flow, all eleven flows), Claude CLI 2.1.332, agent
+`claude-sonnet-5-5`, judge `claude-opus-5-5`, 159 attempts, zero errored and
+`partial: false` on every flow. Cost `$26.08`: `$18.03` agent and `$8.05`
+judge. Reports outside git at
+`~/.cache/no-mistakes/evals/2026-11-26-skill-nm-load-plan/<flow>.json`.
+
+| flow | loaded, control | loaded, A | loaded, B | content-only, control | content-only, B |
+| --- | --- | --- | --- | --- | --- |
+| `before-edit` | 12/18 | 18/18 | 18/18 | 1.00 | 0.89 |
+| `after-edit` | 7/12 | 12/12 | 12/12 | 1.00 | 1.00 |
+| `signature` | 0/12 | 12/12 | 12/12 | 1.00 | 1.00 |
+| `lang-graph` | 7/12 | 11/12 | 10/12 | 0.92 | 1.00 |
+| `usage` | 5/12 | 6/12 | 7/12 | 0.92 | 1.00 |
+| `queues` | 0/12 | 3/12 | 8/12 | 1.00 | 1.00 |
+| `ci` | 1/12 | 6/12 | 7/12 | 1.00 | 1.00 |
+| `duplication` | 0/9 | 0/9 | 3/9 | 0.89 | 0.89 |
+| `safety` | 0/6 | 0/6 | 0/6 | 0.83 | 1.00 |
+| `napi` | 0/12 | 1/12 | 2/12 | 1.00 | 0.92 |
+| **summed should-fire** | 32/117 | 69/117 | **79/117** | | |
+| `neg-hard` loaded | 0/12 | 0/12 | 0/12 | | |
+| `neg-hard` invented commands | 2/12 | 0/12 | 0/12 | | |
+| each flow's negative case | ≤ 0/3 | ≤ 0/3 | ≤ 0/3 | | |
+
+`safety-03-neg-json-flag`, which expects the skill to load, loaded 3/3 in the
+control and A and 2/3 in B. G1, G2 and G3 pass. B leads A by 10 on summed
+loading, which is inside the tie margin of 16, so **A ships** under the
+pre-registered tie rule and B is recorded here only. A's screen and its
+holdout are recorded with the description change that ships it.
+
+**Failing attempts read.** B loses content where A does not. On `before-edit`,
+`06-route-coverage` failed `states-coverage-verdict` 2/3 (control and A 3/3
+passed): both answers lay out the `playwright related` and `tests plan`
+commands "to run against the real checkout" and stop without a coverage
+verdict. `05-where-used` failed `exhaustive-by-construction` 1/3, and
+`03-full-suite` failed `produces-reduced-test-set` 1/3, as A did. The
+"planning how to answer" wording seems to push answers further toward a plan
+with no conclusion. That is a reason beyond the tie rule not to ship B.
+
 ## 2026-11-26 — gates for the `no-mistakes` description candidates A and B
 
 **Pre-registered**, committed before either candidate ran. No run in this entry.

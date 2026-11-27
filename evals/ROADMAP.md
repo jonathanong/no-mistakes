@@ -73,6 +73,34 @@ agent there. The 2026-11-21 re-baseline (Sonnet agent / Opus judge) read 0.00
 on `ci` and `signature` and +0.33 on `safety`, so the −0.33 did not recur at
 `runs: 3`; the models changed, so this is not a like-for-like re-measure.
 
+## Learnings from the 2026-11-26 pass
+
+What the [2026-11-26 runs](HISTORY.md#2026-11-26--tool-skill-control-all-eleven-flows-re-measured)
+showed about where the next work is.
+
+- **The tool skill was named, then deferred.** Most non-firing should-fire
+  attempts in the control named the `no-mistakes` skill in their plan and did
+  not load it, because the case runs in plan mode in an empty sandbox. The
+  imperative "Load before answering" opening took summed loading from 32/117
+  to 69/117 with no negative firing; the remaining misses are concentrated in
+  `duplication`, `safety`, `napi` and `queues`, which need their own wording
+  or cases.
+- **Telling the agent to plan makes answers stop at the plan.** Candidate B's
+  "or planning how to answer" loaded more (79/117), but two of its
+  three `before-edit-06-route-coverage` answers listed commands and gave no
+  coverage verdict, where A and the control gave one 3/3. Wording that names an action
+  can move content as well as loading, so read the content column too.
+- **Read failing attempts before blaming the description.** Both arms of
+  `queue-exception-enqueue-in-tx-receipt` failed for the same, correct reason:
+  the fixture kept failed jobs, so the `jobId` collision it called harmless
+  could drop a redelivery. The case was wrong, not the skill.
+- **A loading grader can be right when another skill held the rule.**
+  `testing-write-flaky-response-wait` loaded `playwright-rules` and passed,
+  but `testing-rules` holds the no-retries rule the case also checks, so the
+  `testing-rules` expectation stays.
+- **The coverage-floor cases are at the ceiling.** They pass 3/3 without the
+  plugin, so a description that makes them load is a loading result only.
+
 ## Gaps against the eval-suite conventions
 
 Process gaps, in priority order. Current scores and the runs behind them are
