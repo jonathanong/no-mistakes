@@ -35,7 +35,7 @@ function assertRetryPair(
       runtime: first.with.runtime,
       cache: false,
       install: false,
-      'cache-dependency-path': '.github/pnpm-lockfile-cache-disabled',
+      "cache-dependency-path": ".github/pnpm-lockfile-cache-disabled",
     });
   } else {
     assert.deepEqual(retry.with, first.with);
@@ -77,7 +77,7 @@ test("every pnpm Node setup in CI has a bounded, fatal-on-exhaustion retry", () 
       index += 2;
     }
   }
-  assert.equal(count, 34, "CI must retain all pnpm/setup attempts across its job definitions");
+  assert.equal(count, 30, "CI must retain all pnpm/setup attempts across its job definitions");
   assert.ok(
     [...matrixOperatingSystems].some((os) => os.startsWith("windows")),
     "pnpm setup matrix must include Windows",

@@ -22,9 +22,22 @@ function workspace(key, version) {
 }
 function family(key, common = new Set()) {
   const pnpm = key.match(
-    /^(pnpm-cache-(?:Linux|macOS|Windows)-(?:x64|arm64)-[a-f0-9]{64}-[a-f0-9]{64}-[a-f0-9]{64})-[1-9]\d*-[1-9]\d*-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
+    /^(pnpm-cache-(?:Linux|macOS|Windows)-(?:x64|arm64)-[a-f0-9]{64})-[a-f0-9]{64}-[a-f0-9]{64}-[1-9]\d*-[1-9]\d*-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,
   );
-  if (pnpm) return { name: pnpm[1], preferred: 1, largest: true };
+  if (pnpm) {
+    const exact = key.slice(0, pnpm[1].length + 1 + 64 + 1 + 64);
+    return { name: exact, pnpmRuntime: pnpm[1], preferred: 1, largest: true };
+  }
+  const pnpmVerified = key.match(
+    /^pnpm-lockfile-verified-(Linux|macOS|Windows)-(x64|arm64)-[a-f0-9]{64}$/,
+  );
+  if (pnpmVerified)
+    return { name: `pnpm-lockfile-verified:${pnpmVerified[1]}:${pnpmVerified[2]}`, preferred: 1 };
+  const release = key.match(
+    /^v\d+-rust-(release-(?:validate|release-[a-z0-9_-]+))-(Linux|Darwin|Windows_NT)-(x64|arm64)-[a-f0-9]{8,64}-[a-f0-9]{8,64}$/,
+  );
+  if (release)
+    return { name: `dependencies:${release[1]}:${release[2]}:${release[3]}`, preferred: 1 };
   const transport = handoff(key);
   if (transport) return { name: `benchmark-handoff:${transport[1]}:${transport[2]}`, preferred: 1 };
   const registry = key.match(
@@ -100,7 +113,7 @@ function plan(caches, states, budget = BUDGET, sourceRunStates = {}) {
     if (!groups.has(identity.name)) groups.set(identity.name, []);
     groups.get(identity.name).push({ ...cache, ...identity, created });
   }
-  const kept = [];
+  const winners = [];
   for (const [name, versions] of groups) {
     versions.sort(
       (a, b) =>
@@ -109,9 +122,26 @@ function plan(caches, states, budget = BUDGET, sourceRunStates = {}) {
         b.created - a.created ||
         b.id - a.id,
     );
-    kept.push({ family: name, id: versions[0].id, key: versions[0].key });
+    winners.push(versions[0]);
     for (const cache of versions.slice(1)) remove.push({ ...cache, reason: `superseded ${name}` });
   }
+  const pnpmRuntimes = new Map();
+  for (const winner of winners) {
+    if (!winner.pnpmRuntime || winner.size_in_bytes <= 0) continue;
+    if (!pnpmRuntimes.has(winner.pnpmRuntime)) pnpmRuntimes.set(winner.pnpmRuntime, []);
+    pnpmRuntimes.get(winner.pnpmRuntime).push(winner);
+  }
+  const supersededPnpm = new Set();
+  for (const [runtime, entries] of pnpmRuntimes) {
+    entries.sort((a, b) => b.created - a.created || b.id - a.id);
+    for (const cache of entries.slice(1)) {
+      supersededPnpm.add(cache.id);
+      remove.push({ ...cache, reason: `superseded ${runtime}` });
+    }
+  }
+  const kept = winners
+    .filter((cache) => !supersededPnpm.has(cache.id))
+    .map((cache) => ({ family: cache.name, id: cache.id, key: cache.key }));
   remove.sort((a, b) => a.id - b.id);
   if (!Number.isSafeInteger(before)) throw new Error("Cache size exceeds safe integer range");
   let after = before - remove.reduce((sum, cache) => sum + cache.size_in_bytes, 0);

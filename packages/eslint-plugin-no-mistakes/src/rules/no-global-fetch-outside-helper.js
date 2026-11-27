@@ -3,6 +3,7 @@
 const { rule } = require("../helpers");
 const { logicalCall } = require("./module-mock-helpers");
 const helpers = require("./no-global-fetch-outside-helper-helpers");
+const { ruleSuppression } = require("../rule-suppression");
 
 const {
   collectFetchAliases,
@@ -38,6 +39,7 @@ module.exports = Object.assign(
     (context) => {
       const options = context.options?.[0] ?? {};
       if (!shouldCheckFile(context.filename, options)) return {};
+      const suppressed = ruleSuppression(context, "no-global-fetch-outside-helper");
       let aliases = new Set();
       const forwardAliases = new Set();
       let clearedForwardAliases = new Set();
@@ -204,7 +206,8 @@ module.exports = Object.assign(
           const invoked = logicalCall(node);
           if (!invoked || !isGlobalFetchExpression(invoked.callee, context, activeAliases()))
             return;
-          context.report({ node: invoked.callee, messageId: "globalFetch" });
+          if (!suppressed(invoked.callee))
+            context.report({ node: invoked.callee, messageId: "globalFetch" });
         },
       };
     },

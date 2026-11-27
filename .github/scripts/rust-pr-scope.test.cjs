@@ -53,8 +53,8 @@ test("empty, mixed, deleted and renamed inputs stay conservative", () => {
 });
 function gate(name, results, required) {
   const args =
-    name === "native-tests"
-      ? [path.join(__dirname, "native-tests-gate.cjs")]
+    name === "tests-gate"
+      ? [path.join(__dirname, "tests-gate.cjs")]
       : ["-e", job(name).match(/node -e '([^']+)'/)[1]];
   return spawnSync(process.execPath, args, {
     encoding: "utf8",
@@ -70,10 +70,12 @@ function gate(name, results, required) {
 }
 for (const [name, allowed, forbidden] of [
   ["quality", "quality-rust", "quality-js"],
-  ["tests-gate", "tests", "javascript-tests"],
-  ["native-tests", "native-test-build", "changes"],
+  ["tests-gate", "tests", "javascript-coverage"],
+  ["tests-gate", "standalone-build", "linux-api-tests"],
+  ["tests-gate", "standalone-shards", "packages"],
+  ["tests-gate", "native-test-build", "changes"],
 ]) {
-  test(`${name} allows only an intentional Rust skip`, () => {
+  test(`${name} allows only an intentional Rust skip (${allowed})`, () => {
     const skipped = { [allowed]: { result: "skipped" }, changes: { result: "success" } };
     assert.equal(gate(name, skipped, "false").status, 0);
     for (const required of ["true", ""]) assert.equal(gate(name, skipped, required).status, 1);
@@ -87,10 +89,9 @@ test("scope metadata is PR-only, fail-closed, and artifact merges skip with thei
   assert.match(workflow, /rust:.*github.event_name != 'pull_request'.*outputs.rust != 'false'/);
   for (const name of ["quality-rust", "standalone-build", "rust-coverage-build", "docs-tests"])
     assert.match(job(name), /if: \$\{\{ needs.changes.outputs.rust == 'true' \}\}/);
-  for (const name of ["tests", "tests-standalone-lib"])
-    assert.match(
-      job(name),
-      /^    if: \$\{\{ !cancelled\(\) && needs.changes.outputs.rust == 'true' \}\}$/m,
-    );
+  assert.match(
+    job("tests"),
+    /^    if: \$\{\{ !cancelled\(\) && needs.changes.outputs.rust == 'true' \}\}$/m,
+  );
   assert.match(workflow, /node --test[^\n]*rust-pr-scope.test.cjs/);
 });

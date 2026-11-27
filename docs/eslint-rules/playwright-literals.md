@@ -75,6 +75,10 @@ find(`save-${user.id}`);
 return <button data-pw={`row-${row.id}`}>Open</button>;
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`playwright-defaults`](playwright-defaults.md) validates the allowed prop
