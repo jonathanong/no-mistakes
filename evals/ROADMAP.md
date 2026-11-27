@@ -55,7 +55,7 @@ description to reach a new subject is the change most likely to over-trigger.
 
 ### 3. Name the zero flows in the description
 
-`duplication`, `safety` and `napi` have now loaded 0 times in three runs: the
+`duplication`, `safety` and `napi` have now loaded at most once in three runs: the
 2026-11-21 re-baseline, the
 [2026-11-26 control](HISTORY.md#2026-11-26--tool-skill-control-all-eleven-flows-re-measured)
 (0/9, 0/6, 0/12), and under the "Load before answering" description (0/9,
