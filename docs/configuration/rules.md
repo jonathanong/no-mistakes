@@ -415,6 +415,17 @@ blocking under every policy. Rust syntax failures are reported only when
 `rust-no-inline-allows` sees the substring `allow`, or `rust-no-inline-tests`
 sees both substrings `cfg` and `test`; otherwise those AST checks skip parsing.
 
+The workflow rules `github-actions-action-timeout-pair`,
+`github-actions-docker-host-ports`, `github-actions-download-integrity`,
+`github-actions-no-poll-wait-job`, `github-actions-pr-diff-range`, and
+`github-actions-vitest-project-selection` now diagnose malformed YAML or read
+failures in selected workflow and action files. These inputs previously passed.
+The default `report` policy makes them fail `check`. The strict revision-pair
+checks in `github-actions-pr-diff-range` default to `advise` for these inputs.
+Fix or exclude the affected files, or set `options.unanalyzable` to `advise` or
+`ignore` to keep uncertainty from changing the exit status. Definite findings
+remain failures under every policy.
+
 [`test-no-live-repository-scan`](../rules/test-no-live-repository-scan.md) reports
 unresolved scan roots as advisories by default; `options.unresolvedRoot: report`
 makes them blocking unless the rule sets `severity: advisory`.

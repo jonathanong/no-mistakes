@@ -68,7 +68,8 @@ fn compile_pair(index: usize, spec: &RevisionPairSpec) -> Result<CompiledRevisio
         );
     }
     if env {
-        let (base, head) = require_both(index, "baseEnv", "headEnv", &spec.base_env, &spec.head_env)?;
+        let (base, head) =
+            require_both(index, "baseEnv", "headEnv", &spec.base_env, &spec.head_env)?;
         if !is_env_name(&base) || !is_env_name(&head) {
             bail!(
                 "{}",
@@ -83,12 +84,22 @@ fn compile_pair(index: usize, spec: &RevisionPairSpec) -> Result<CompiledRevisio
         return Ok(CompiledRevisionPair::Env { base, head });
     }
     if input {
-        let (base, head) =
-            require_both(index, "baseInput", "headInput", &spec.base_input, &spec.head_input)?;
+        let (base, head) = require_both(
+            index,
+            "baseInput",
+            "headInput",
+            &spec.base_input,
+            &spec.head_input,
+        )?;
         return Ok(CompiledRevisionPair::Input { base, head });
     }
-    let (base, head) =
-        require_both(index, "baseFlag", "headFlag", &spec.base_flag, &spec.head_flag)?;
+    let (base, head) = require_both(
+        index,
+        "baseFlag",
+        "headFlag",
+        &spec.base_flag,
+        &spec.head_flag,
+    )?;
     if !is_flag(&base) || !is_flag(&head) {
         bail!(
             "{}",

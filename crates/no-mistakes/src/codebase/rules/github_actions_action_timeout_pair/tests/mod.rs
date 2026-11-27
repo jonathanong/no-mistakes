@@ -66,14 +66,16 @@ fn empty_file_list_is_silent() {
 }
 
 #[test]
-fn invalid_yaml_is_skipped() {
+fn invalid_yaml_is_undecidable() {
     let root = case_root("invalid-yaml");
     let path = root.join("ci.yml");
     let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
-    assert!(scan::check_file(&root, &path, &opts, &sources, false)
-        .findings
-        .is_empty());
+    let Err(finding) = scan::check_file(&root, &path, &opts, &sources, false) else {
+        panic!("invalid YAML must produce an input failure");
+    };
+    assert_eq!(finding.file, "ci.yml");
+    assert_eq!(finding.target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]
@@ -180,20 +182,22 @@ fn disable_file_comment_skips() {
     let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
     assert!(scan::check_file(&root, &path, &opts, &sources, false)
+        .unwrap()
         .findings
         .is_empty());
 }
 
 #[test]
-fn unreadable_and_include_misses_are_silent() {
+fn unreadable_selected_workflow_returns_a_read_failure() {
     let root = fixture("pass");
     let missing = root.join(".github/workflows/missing.yml");
     let sources = super::super::source_store_for_files(&[]);
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
-    assert!(scan::check_file(&root, &missing, &opts, &sources, false)
-        .findings
-        .is_empty());
-    // Output cases moved to cli_gha_snapshot_action_timeout_pair.
+    let Err(finding) = scan::check_file(&root, &missing, &opts, &sources, false) else {
+        panic!("an unreadable workflow must return a finding");
+    };
+    assert_eq!(finding.file, ".github/workflows/missing.yml");
+    assert_eq!(finding.target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]

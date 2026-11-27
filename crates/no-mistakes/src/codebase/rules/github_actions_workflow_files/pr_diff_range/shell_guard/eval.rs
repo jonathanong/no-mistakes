@@ -62,8 +62,7 @@ fn is_plain_event_literal(word: &Word) -> bool {
     word.quoted_expansion.is_none()
         && word.bare_expansion.is_none()
         && !word.text.is_empty()
-        && word
-            .text
-            .bytes()
-            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'_' | b'-'))
+        && word.text.bytes().all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'_' | b'-')
+        })
 }

@@ -24,6 +24,18 @@ const CHECKS: &[(&str, WorkflowCheck)] = &[
         rules::github_actions_action_timeout_pair::diagnostics_with_files_and_sources,
     ),
     (
+        rules::github_actions_docker_host_ports::RULE_ID,
+        rules::github_actions_docker_host_ports::diagnostics_with_files_and_sources,
+    ),
+    (
+        rules::github_actions_no_poll_wait_job::RULE_ID,
+        rules::github_actions_no_poll_wait_job::diagnostics_with_files_and_sources,
+    ),
+    (
+        rules::github_actions_vitest_project_selection::RULE_ID,
+        rules::github_actions_vitest_project_selection::diagnostics_with_files_and_sources,
+    ),
+    (
         rules::github_actions_local_action_checkout::RULE_ID,
         rules::github_actions_local_action_checkout::diagnostics_with_files_and_sources,
     ),
@@ -69,11 +81,30 @@ pub(super) fn run<'a>(
     for &(id, check) in CHECKS {
         if config.rule_configured(id) {
             // Consume findings and advisories together, without a second file scan.
-            output.append(no_mistakes::perf_trace::filesystem_rule(id, || {
+            let result = no_mistakes::perf_trace::filesystem_rule(id, || {
                 check(root, config, files, &prepared.sources, defer_suppression)
-            })?);
+            });
+            let file_rule_session = prepared.session.filter(|_| {
+                matches!(
+                    id,
+                    rules::github_actions_docker_host_ports::RULE_ID
+                        | rules::GITHUB_ACTIONS_NO_POLL_WAIT_JOB
+                        | rules::GITHUB_ACTIONS_PR_DIFF_RANGE
+                        | rules::github_actions_vitest_project_selection::RULE_ID
+                )
+            });
+            let diagnostics = match file_rule_session {
+                Some(session) => session
+                    .capture_check_result(id, result)?
+                    .unwrap_or_default(),
+                None => result?,
+            };
+            output.append(diagnostics);
             super::handled::mark(remaining.to_mut(), |rule| rule == id);
         }
     }
     Ok((remaining, output))
 }
+
+#[cfg(test)]
+mod tests;

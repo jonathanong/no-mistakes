@@ -1,28 +1,25 @@
 use super::loops::poll_loops;
 use super::RULE_ID;
 use crate::codebase::rules::github_actions_script_expressions::step_run_lines;
-use crate::codebase::rules::github_actions_workflow_files::gha_kind;
 use crate::codebase::rules::github_actions_workflow_files::run_scripts::run_scripts;
 use crate::codebase::rules::github_actions_workflow_files::script_line::yaml_line;
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde_yaml::Value;
 
-pub(super) fn check_source(
+pub(super) fn check_parsed(
     rel: &str,
     source: &str,
+    value: &Value,
+    action: bool,
     polls: &[Vec<String>],
     skip_for: bool,
 ) -> Vec<RuleFinding> {
-    let Some(action) = gha_kind(rel) else {
+    if polls.is_empty() {
         return Vec::new();
-    };
-    let source = source.trim_start_matches('\u{feff}');
-    let Ok(value) = serde_yaml::from_str::<Value>(source) else {
-        return Vec::new();
-    };
+    }
     let located = step_run_lines(source, action);
     let mut findings = Vec::new();
-    for body in run_scripts(action, &value) {
+    for body in run_scripts(action, value) {
         let lines = located
             .iter()
             .find(|item| item.job == body.job && item.step == body.step);

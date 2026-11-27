@@ -1,0 +1,64 @@
+version: 2
+unanalyzable: ignore
+rules:
+  - rule: github-actions-action-timeout-pair
+    scope: repository
+    include:
+      - .github/workflows/control.yml
+      - .github/workflows/broken.yml
+      - .github/workflows/other-project.yml
+      - .github/workflows/suppressed.yml
+      - .github/actions/example/action.yml
+    options:
+      uses: [example/setup@]
+      stepTimeoutMinutes: 2
+  - rule: github-actions-docker-host-ports
+    scope: repository
+    include:
+      - .github/workflows/control.yml
+      - .github/workflows/broken.yml
+      - .github/workflows/other-project.yml
+      - .github/workflows/suppressed.yml
+      - .github/actions/example/action.yml
+  - rule: github-actions-download-integrity
+    scope: repository
+    include:
+      - .github/workflows/control.yml
+      - .github/workflows/broken.yml
+      - .github/workflows/other-project.yml
+      - .github/workflows/suppressed.yml
+      - .github/actions/example/action.yml
+  - rule: github-actions-no-poll-wait-job
+    scope: repository
+    include:
+      - .github/workflows/control.yml
+      - .github/workflows/broken.yml
+      - .github/workflows/other-project.yml
+      - .github/workflows/suppressed.yml
+      - .github/actions/example/action.yml
+    options:
+      pollCommands: [gh run view]
+  - rule: github-actions-pr-diff-range
+    scope: repository
+    include:
+      - .github/workflows/control.yml
+      - .github/workflows/broken.yml
+      - .github/workflows/other-project.yml
+      - .github/workflows/suppressed.yml
+      - .github/actions/example/action.yml
+  - rule: github-actions-vitest-project-selection
+    scope: repository
+    include:
+      - .github/workflows/control.yml
+      - .github/workflows/broken.yml
+      - .github/workflows/other-project.yml
+      - .github/workflows/suppressed.yml
+      - .github/actions/example/action.yml
+    options:
+      projects:
+        - project: example
+          workflows:
+            - .github/workflows/control.yml
+            - .github/workflows/broken.yml
+            - .github/workflows/suppressed.yml
+            - .github/actions/example/action.yml

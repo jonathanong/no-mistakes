@@ -1,0 +1,580 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/actions/example/action.yml",
+          "line": 2,
+          "message": "cannot verify github-actions-action-timeout-pair: YAML could not be parsed (did not find expected node content at line 2 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "runs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/actions/example/action.yml",
+          "line": 2,
+          "message": "cannot verify github-actions-docker-host-ports: YAML could not be parsed (did not find expected node content at line 2 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "runs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/actions/example/action.yml",
+          "line": 2,
+          "message": "cannot verify github-actions-download-integrity: YAML could not be parsed (did not find expected node content at line 2 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "runs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/actions/example/action.yml",
+          "line": 2,
+          "message": "cannot verify github-actions-no-poll-wait-job: YAML could not be parsed (did not find expected node content at line 2 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "runs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/actions/example/action.yml",
+          "line": 2,
+          "message": "cannot verify github-actions-vitest-project-selection: YAML could not be parsed (did not find expected node content at line 2 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "runs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-action-timeout-pair: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-docker-host-ports: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-download-integrity: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-no-poll-wait-job: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-pr-diff-range: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-vitest-project-selection: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/other-project.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-action-timeout-pair: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/other-project.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-docker-host-ports: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/other-project.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-download-integrity: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/other-project.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-no-poll-wait-job: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/other-project.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-pr-diff-range: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 10,
+          "message": ".github/workflows/control.yml:10: job `verify` step 2 pins host port `8080` in `8080:80`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run --publish 8080:80 example-image",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 11,
+          "message": ".github/workflows/control.yml:11: job `verify` step 3 downloads `https://example.invalid/tool` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL https://example.invalid/tool -o example.sh",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 13,
+          "message": ".github/workflows/control.yml:13: job `verify` step 4 waits in a `until` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "until gh run view 123; do",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 16,
+          "message": ".github/workflows/control.yml:16: job `verify` step 5 diffs the pull request base SHA against the head SHA with a two-dot or two-argument range, which also lists base-branch changes made after the branch point, so path filters and changed-file checks run on the wrong set. Use a three-dot diff (`git diff <base>...<head>`) after fetching enough history, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only \"${{ github.event.pull_request.base.sha }}\" \"${{ github.event.pull_request.head.sha }}\"",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 17,
+          "message": ".github/workflows/control.yml:17: job `verify` step 6 narrows Vitest project `example` with positional test file `src/item.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "- run: pnpm exec vitest run --project example src/item.test.ts",
+          "target": "src/item.test.ts"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 9,
+          "message": ".github/workflows/control.yml: job \"verify\" step \"example/setup@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\" uses a configured action and must set timeout-minutes: 2; got null",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "- uses: example/setup@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "target": "verify"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "download-low": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/actions/example/action.yml",
+          "line": 2,
+          "message": "cannot verify github-actions-download-integrity: YAML could not be parsed (did not find expected node content at line 2 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "runs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-download-integrity: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/other-project.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-download-integrity: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 1,
+          "message": "directive names disabled or out-of-scope rule `github-actions-action-timeout-pair`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-action-timeout-pair",
+          "target": "github-actions-action-timeout-pair"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 2,
+          "message": "directive names disabled or out-of-scope rule `github-actions-docker-host-ports`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-docker-host-ports",
+          "target": "github-actions-docker-host-ports"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 4,
+          "message": "directive names disabled or out-of-scope rule `github-actions-no-poll-wait-job`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-no-poll-wait-job",
+          "target": "github-actions-no-poll-wait-job"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 5,
+          "message": "directive names disabled or out-of-scope rule `github-actions-pr-diff-range`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-pr-diff-range",
+          "target": "github-actions-pr-diff-range"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 6,
+          "message": "directive names disabled or out-of-scope rule `github-actions-vitest-project-selection`; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "invalid-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-vitest-project-selection",
+          "target": "github-actions-vitest-project-selection"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 11,
+          "message": ".github/workflows/control.yml:11: job `verify` step 3 downloads `https://example.invalid/tool` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL https://example.invalid/tool -o example.sh",
+          "target": "verify"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 1,
+          "message": "directive for `github-actions-action-timeout-pair` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-action-timeout-pair",
+          "target": "github-actions-action-timeout-pair"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 2,
+          "message": "directive for `github-actions-docker-host-ports` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-docker-host-ports",
+          "target": "github-actions-docker-host-ports"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 3,
+          "message": "directive for `github-actions-download-integrity` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-download-integrity",
+          "target": "github-actions-download-integrity"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 4,
+          "message": "directive for `github-actions-no-poll-wait-job` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-no-poll-wait-job",
+          "target": "github-actions-no-poll-wait-job"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 5,
+          "message": "directive for `github-actions-pr-diff-range` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-pr-diff-range",
+          "target": "github-actions-pr-diff-range"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 6,
+          "message": "directive for `github-actions-vitest-project-selection` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-vitest-project-selection",
+          "target": "github-actions-vitest-project-selection"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 10,
+          "message": ".github/workflows/control.yml:10: job `verify` step 2 pins host port `8080` in `8080:80`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run --publish 8080:80 example-image",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 11,
+          "message": ".github/workflows/control.yml:11: job `verify` step 3 downloads `https://example.invalid/tool` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL https://example.invalid/tool -o example.sh",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 13,
+          "message": ".github/workflows/control.yml:13: job `verify` step 4 waits in a `until` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "until gh run view 123; do",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 16,
+          "message": ".github/workflows/control.yml:16: job `verify` step 5 diffs the pull request base SHA against the head SHA with a two-dot or two-argument range, which also lists base-branch changes made after the branch point, so path filters and changed-file checks run on the wrong set. Use a three-dot diff (`git diff <base>...<head>`) after fetching enough history, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only \"${{ github.event.pull_request.base.sha }}\" \"${{ github.event.pull_request.head.sha }}\"",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 17,
+          "message": ".github/workflows/control.yml:17: job `verify` step 6 narrows Vitest project `example` with positional test file `src/item.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "- run: pnpm exec vitest run --project example src/item.test.ts",
+          "target": "src/item.test.ts"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 9,
+          "message": ".github/workflows/control.yml: job \"verify\" step \"example/setup@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\" uses a configured action and must set timeout-minutes: 2; got null",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "- uses: example/setup@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "target": "verify"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/actions/example/action.yml",
+          "line": 2,
+          "message": "cannot verify github-actions-action-timeout-pair: YAML could not be parsed (did not find expected node content at line 2 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "runs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/actions/example/action.yml",
+          "line": 2,
+          "message": "cannot verify github-actions-docker-host-ports: YAML could not be parsed (did not find expected node content at line 2 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "runs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/actions/example/action.yml",
+          "line": 2,
+          "message": "cannot verify github-actions-download-integrity: YAML could not be parsed (did not find expected node content at line 2 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "runs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/actions/example/action.yml",
+          "line": 2,
+          "message": "cannot verify github-actions-no-poll-wait-job: YAML could not be parsed (did not find expected node content at line 2 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "runs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/actions/example/action.yml",
+          "line": 2,
+          "message": "cannot verify github-actions-vitest-project-selection: YAML could not be parsed (did not find expected node content at line 2 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "runs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-action-timeout-pair: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-docker-host-ports: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-download-integrity: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-no-poll-wait-job: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-pr-diff-range: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/broken.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-vitest-project-selection: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 10,
+          "message": ".github/workflows/control.yml:10: job `verify` step 2 pins host port `8080` in `8080:80`. Hosted and shared runners collide when a publish mapping fixes the host port. Publish a Docker-allocated port (`127.0.0.1::5432`, `::5432`, `0:5432`, or the container port only). A variable host port is not judged.",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "- run: docker run --publish 8080:80 example-image",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 11,
+          "message": ".github/workflows/control.yml:11: job `verify` step 3 downloads `https://example.invalid/tool` with `curl` and does not verify the bytes in this step. An http(s) download can change between runs. Verify it here with `sha256sum -c` or `shasum -a 256 -c` against a downloaded checksum file, use a trusted host, or add `# integrity-check: skip reason=<slug>`.",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "- run: curl -fsSL https://example.invalid/tool -o example.sh",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 13,
+          "message": ".github/workflows/control.yml:13: job `verify` step 4 waits in a `until` loop that sleeps and runs `gh run view`. A job that polls another job or workflow burns runner minutes. Depend on the work with `needs`, or react to an event (`workflow_run`, `merge_group`) instead of polling.",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "until gh run view 123; do",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 16,
+          "message": ".github/workflows/control.yml:16: job `verify` step 5 diffs the pull request base SHA against the head SHA with a two-dot or two-argument range, which also lists base-branch changes made after the branch point, so path filters and changed-file checks run on the wrong set. Use a three-dot diff (`git diff <base>...<head>`) after fetching enough history, or `git diff HEAD^1 HEAD` on the merge commit.",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "- run: git diff --name-only \"${{ github.event.pull_request.base.sha }}\" \"${{ github.event.pull_request.head.sha }}\"",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 17,
+          "message": ".github/workflows/control.yml:17: job `verify` step 6 narrows Vitest project `example` with positional test file `src/item.test.ts`. Whole-project selection is required for this project. Run the configured project without a positional file argument.",
+          "rule": "github-actions-vitest-project-selection",
+          "sourceLine": "- run: pnpm exec vitest run --project example src/item.test.ts",
+          "target": "src/item.test.ts"
+        },
+        {
+          "file": ".github/workflows/control.yml",
+          "line": 9,
+          "message": ".github/workflows/control.yml: job \"verify\" step \"example/setup@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\" uses a configured action and must set timeout-minutes: 2; got null",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "- uses: example/setup@aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "target": "verify"
+        },
+        {
+          "file": ".github/workflows/other-project.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-action-timeout-pair: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-action-timeout-pair",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/other-project.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-docker-host-ports: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-docker-host-ports",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/other-project.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-download-integrity: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-download-integrity",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/other-project.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-no-poll-wait-job: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-no-poll-wait-job",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/other-project.yml",
+          "line": 3,
+          "message": "cannot verify github-actions-pr-diff-range: YAML could not be parsed (did not find expected node content at line 3 column 8, while parsing a flow node); repair source syntax so this check can verify the file",
+          "rule": "github-actions-pr-diff-range",
+          "sourceLine": "jobs: [}",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

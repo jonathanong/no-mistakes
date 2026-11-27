@@ -1,8 +1,10 @@
-use no_mistakes_rule_kernel::finding::RuleFinding;
+use super::source_access;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
-use anyhow::Result;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use rayon::prelude::*;
+use serde_yaml::Value;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub(super) mod dispatch;
 pub(in crate::codebase::rules) mod env_policy;
@@ -35,27 +37,68 @@ pub(super) fn gha_kind(rel: &str) -> Option<bool> {
     None
 }
 
-pub(super) fn scan_files(
+pub(super) fn read_workflow_source(
+    root: &Path,
+    path: &Path,
+    sources: &SourceStore,
+    rule_id: &str,
+) -> Result<Arc<str>, Box<RuleFinding>> {
+    sources
+        .read_source_path(path)
+        .map_err(|error| Box::new(source_access::read_failure(root, path, rule_id, &error)))
+}
+
+pub(super) fn parse_yaml(
+    root: &Path,
+    path: &Path,
+    sources: &SourceStore,
+    source: &str,
+    rule_id: &str,
+    trim_bom: bool,
+) -> Result<Arc<Value>, Box<RuleFinding>> {
+    sources
+        .parse_loaded_yaml(path, source, trim_bom)
+        .map_err(|error| {
+            let mut finding = source_access::unanalyzable_source(
+                root,
+                path,
+                rule_id,
+                format_args!("YAML could not be parsed ({error})"),
+            );
+            finding.line = error.line();
+            Box::new(finding)
+        })
+}
+
+pub(super) fn scan_yaml_files(
     root: &Path,
     files: &[PathBuf],
     sources: &SourceStore,
-    judge: &(dyn Fn(&str, &str) -> Vec<RuleFinding> + Sync),
-) -> Result<Vec<RuleFinding>> {
-    let mut findings: Vec<RuleFinding> = files
+    rule_id: &str,
+    select: &(dyn Fn(&str) -> Option<bool> + Sync),
+    judge: &(dyn Fn(&str, &str, &Value, bool) -> Vec<RuleFinding> + Sync),
+) -> (Vec<RuleFinding>, Vec<RuleFinding>) {
+    let chunks: Vec<_> = files
         .par_iter()
-        .flat_map(|path| {
+        .filter_map(|path| {
             let rel = relative_slash_path(root, path);
-            if gha_kind(&rel).is_none() {
-                return Vec::new();
-            }
-            let Some(content) = super::read_language_source(sources, path) else {
-                return Vec::new();
-            };
-            judge(&rel, &content)
+            let action = select(&rel)?;
+            Some(read_workflow_source(root, path, sources, rule_id).and_then(|source| {
+                parse_yaml(root, path, sources, &source, rule_id, true).map(|value| {
+                    judge(&rel, source.trim_start_matches('\u{feff}'), &value, action)
+                })
+            }))
         })
         .collect();
-    super::sort_findings(&mut findings);
-    Ok(findings)
+    let mut findings = Vec::new();
+    let mut input_failures = Vec::new();
+    for chunk in chunks {
+        match chunk {
+            Ok(rows) => findings.extend(rows),
+            Err(finding) => input_failures.push(*finding),
+        }
+    }
+    (findings, input_failures)
 }
 
 /// Recover only directive bytes after a failed read; never analyze lossy workflow YAML.
@@ -104,3 +147,6 @@ pub(in crate::codebase::rules) fn interpolated_expression_end(value: &str) -> Op
     }
     None
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod tests;

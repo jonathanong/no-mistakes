@@ -11,7 +11,9 @@ fn scan_written(name: &str, defer_suppression: bool) -> Vec<RuleFinding> {
     let (root, path) = written_ci(name);
     let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&path));
     let opts = compile_options(serde_yaml::from_str(OPTIONS).unwrap());
-    scan::check_file(&root, &path, &opts, &sources, defer_suppression).findings
+    scan::check_file(&root, &path, &opts, &sources, defer_suppression)
+        .unwrap()
+        .findings
 }
 
 fn check_written(name: &str, defer_suppression: bool) -> Vec<RuleFinding> {

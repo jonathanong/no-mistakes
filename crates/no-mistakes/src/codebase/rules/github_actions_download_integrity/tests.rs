@@ -244,15 +244,6 @@ fn port_and_bracket_hosts_replace_the_defaults() {
 }
 
 #[test]
-fn missing_workflow_source_is_skipped() {
-    let root = fixture_root("pass");
-    let missing = root.join(".github/workflows/missing.yml");
-    assert!(!missing.exists());
-    let findings = super::check_with_files(&root, &enabled_config(), &[missing]).unwrap();
-    assert!(findings.is_empty());
-}
-
-#[test]
 fn step_item_line_is_the_dash_not_the_run_key() {
     let source = "\
 on: push

@@ -170,11 +170,16 @@ the step cap under all three policies, and exact-value checks
 (`stepTimeoutMinutes` and `nestedTimeoutSeconds`) still emit findings
 regardless of `options.unanalyzable`.
 
-Invalid YAML is skipped so [`github-actions-job-timeouts`](github-actions-job-timeouts.md)
-can report it; it is not sent through `options.unanalyzable`. Invalid UTF-8 is
-decoded lossily and scanned, so a violation next to a stray byte is still
-reported. A file that cannot be read for any other reason is skipped and
-produces no finding.
+When a selected file has invalid YAML, the rule reports the parser location.
+A selected file that cannot be read is reported at line 1.
+The effective `unanalyzable` policy controls these diagnostics. Use `report`
+(the default) for a finding, `advise` for an advisory, or `ignore` to omit it.
+Restore read access or fix the YAML syntax so the rule can verify the file. Valid sibling files are
+still checked.
+
+Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray
+byte is still reported. Other read failures in selected files follow the
+[unanalyzable policy](#unanalyzable-inputs).
 
 ## Related rules
 

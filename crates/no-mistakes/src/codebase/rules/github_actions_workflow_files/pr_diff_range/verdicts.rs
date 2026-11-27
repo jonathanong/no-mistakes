@@ -2,9 +2,9 @@ use super::checkout::CheckoutState;
 use super::diff::Form;
 use super::revisions::Revision;
 use super::verdicts_helpers::{
-    base_with_merge_verdict, has_coalesced_mismatch, is_same_side, merge_group_verdict,
-    merge_parent_verdict, uses_unknown_checkout, MISMATCH_BASE_MERGE, MISMATCH_CROSS_EVENT,
-    MISMATCH_SAME_SIDE, TWO_DOT_PR, UNKNOWN_CHECKOUT, UNKNOWN_REVISION,
+    base_with_merge_verdict, has_coalesced_mismatch, merge_group_verdict, merge_parent_verdict,
+    uses_unknown_checkout, MISMATCH_BASE_MERGE, MISMATCH_CROSS_EVENT, MISMATCH_SAME_SIDE,
+    TWO_DOT_PR, UNKNOWN_CHECKOUT, UNKNOWN_REVISION,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -82,4 +82,21 @@ fn judge_pair(
         return Verdict::Mismatch(MISMATCH_SAME_SIDE);
     }
     Verdict::Mismatch(MISMATCH_BASE_MERGE)
+}
+
+fn is_same_side(a: Revision, b: Revision) -> bool {
+    let is_base = |r: Revision| {
+        r.is_pr_base() || matches!(r, Revision::MergeGroupBaseSha | Revision::CheckedOutPrBase)
+    };
+    let is_head = |r: Revision| {
+        r.is_pr_head()
+            || matches!(
+                r,
+                Revision::GithubSha
+                    | Revision::MergeCommitHead
+                    | Revision::MergeGroupHeadSha
+                    | Revision::CheckedOutMergeGroupHead
+            )
+    };
+    (is_base(a) && is_base(b)) || (is_head(a) && is_head(b))
 }

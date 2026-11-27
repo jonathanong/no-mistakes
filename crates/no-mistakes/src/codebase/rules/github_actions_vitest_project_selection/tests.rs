@@ -376,43 +376,40 @@ fn workflow_scan_reports_configured_files_only() {
         }],
     })
     .unwrap();
-    assert!(super::runs::check_source("README.md", "jobs: {}", &compiled).is_empty());
-    assert!(super::runs::check_source(
+    assert!(check_source("README.md", "jobs: {}", &compiled).is_empty());
+    assert!(check_source(
         ".github/workflows/orders.yml",
         "name: Orders\non: push\njobs:\n  unit:\n    runs-on: ubuntu-latest\n    steps:\n      - run: pnpm exec vitest run --project widgets src/orders.test.ts\n",
         &compiled,
     )
     .is_empty());
-    assert!(
-        super::runs::check_source(".github/workflows/broken.yml", "jobs: [", &compiled).is_empty()
-    );
-    assert!(super::runs::check_source(
+    assert!(check_source(".github/workflows/broken.yml", "jobs: [", &compiled).is_empty());
+    assert!(check_source(
         ".github/actions/orders/action.yml",
         "name: Orders\ndescription: orders\nruns:\n  using: node20\n  main: index.js\n",
         &compiled,
     )
     .is_empty());
-    assert!(super::runs::check_source(
+    assert!(check_source(
         ".github/actions/widgets/action.yml",
         "runs:\n  using: composite\n",
         &compiled,
     )
     .is_empty());
     let composite = "name: Widgets\ndescription: widgets\nruns:\n  using: composite\n  steps:\n    - run: pnpm exec vitest run --project widgets src/widgets.test.ts\n";
-    let hits =
-        super::runs::check_source(".github/actions/widgets/action.yml", composite, &compiled);
+    let hits = check_source(".github/actions/widgets/action.yml", composite, &compiled);
     assert_eq!(hits.len(), 1, "{hits:?}");
     assert!(hits[0].message.contains("composite step 1"), "{hits:?}");
     assert_eq!(hits[0].target.as_deref(), Some("src/widgets.test.ts"));
     let workflow = "name: Widgets\non: push\njobs:\n  skipped: 1\n  unit:\n    steps: 1\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 1\n      - run: pnpm exec vitest run --project widgets src/widgets.test.ts\n";
-    let hits = super::runs::check_source(".github/workflows/widgets.yml", workflow, &compiled);
+    let hits = check_source(".github/workflows/widgets.yml", workflow, &compiled);
     assert_eq!(hits.len(), 1, "{hits:?}");
     assert!(hits[0].message.contains("job `build` step 2"), "{hits:?}");
     let quoted = "name: Widgets\non: push\njobs:\n  unit:\n    runs-on: ubuntu-latest\n    steps:\n      - run: \"pnpm exec vitest run --project widgets src/widgets.test.ts\\necho done\"\n";
-    let hits = super::runs::check_source(".github/workflows/widgets.yml", quoted, &compiled);
+    let hits = check_source(".github/workflows/widgets.yml", quoted, &compiled);
     assert_eq!(hits.len(), 1, "{hits:?}");
     let flow = "name: Widgets\non: push\njobs:\n  unit:\n    runs-on: ubuntu-latest\n    steps: [{run: pnpm exec vitest run --project widgets src/widgets.test.ts}]\n";
-    let hits = super::runs::check_source(".github/workflows/widgets.yml", flow, &compiled);
+    let hits = check_source(".github/workflows/widgets.yml", flow, &compiled);
     assert_eq!(hits.len(), 1, "{hits:?}");
     assert_eq!(hits[0].line, 6, "{hits:?}");
 }
@@ -477,4 +474,19 @@ fn yaml_lines_follow_the_located_script() {
     assert_eq!(scalar_name(&serde_yaml::Value::from(1_i64)), "1");
     assert_eq!(scalar_name(&serde_yaml::Value::Bool(true)), "true");
     assert_eq!(scalar_name(&serde_yaml::Value::Null), "job");
+}
+
+fn check_source(
+    rel: &str,
+    source: &str,
+    compiled: &super::options::Compiled,
+) -> Vec<super::RuleFinding> {
+    let Some(action) = super::super::github_actions_workflow_files::gha_kind(rel) else {
+        return Vec::new();
+    };
+    let source = source.trim_start_matches('\u{feff}');
+    let Ok(value) = serde_yaml::from_str(source) else {
+        return Vec::new();
+    };
+    super::runs::check_parsed(rel, source, &value, action, compiled)
 }

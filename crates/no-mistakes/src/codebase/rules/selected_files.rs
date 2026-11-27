@@ -101,26 +101,6 @@ pub(crate) fn run_selected_workflow_rule<O: DeserializeOwned + Default, C>(
     })
 }
 
-pub(crate) fn run_sourced_file_rule<O: DeserializeOwned + Default>(
-    root: &Path,
-    config: &NoMistakesConfig,
-    all_files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-    rule_id: &str,
-    scan: impl Fn(
-        &Path,
-        &O,
-        &[PathBuf],
-        &crate::codebase::ts_source::SourceStore,
-    ) -> Result<Vec<RuleFinding>>,
-) -> Result<Vec<RuleFinding>> {
-    super::run_rule_applications(config, rule_id, |rule| {
-        let options: O = rule.try_rule_options()?;
-        let files = selected_rule_files(root, config, rule, all_files)?;
-        scan(root, &options, &files, sources)
-    })
-}
-
 pub(crate) fn configured_includes(include: Vec<String>, defaults: &[&str]) -> Vec<String> {
     if include.is_empty() {
         defaults

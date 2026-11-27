@@ -112,8 +112,7 @@ would introduce shell syntax remain unresolved.
 A host that is still `$`, `` ` ``, or `${{ }}` after that expansion is not
 judged. A literal untrusted host is judged even when the path still contains
 `$`, because the path is then not a proven checksum file. Flow-style steps the
-line scan cannot place are reported on line 1. Invalid YAML is not a finding,
-which is not a pass. Rewrite anchors, aliases, and flow style into ordinary
+line scan cannot place are reported on line 1. Rewrite anchors, aliases, and flow style into ordinary
 block-style `run` bodies when a finding lands on line 1 and the download is
 not on that line.
 
@@ -315,6 +314,14 @@ rules:
 
 ### Unanalyzable inputs
 
+When a selected workflow or composite action has invalid YAML, the rule
+reports the parser location. A selected workflow or action that cannot be read
+is reported at line 1.
+The effective `unanalyzable` policy controls these diagnostics. Use `report`
+(the default) for a finding, `advise` for an advisory, or `ignore` to omit it.
+Restore read access or fix the YAML syntax so the rule can verify the file. Valid sibling files are
+still checked. This applies at both effort levels.
+
 - At low effort, a downloader URL built from a variable, a dynamic option
   name such as `curl --$FLAG URL`, an unquoted dynamic option value, or an
   indirect command prefix follows `options.unanalyzable`:
@@ -325,8 +332,9 @@ rules:
   Definite violations remain findings under every policy.
 
 At max effort, the rule skips unresolved URLs and continues checking literal
-candidates. At either effort, it skips scripts with an unterminated heredoc
-and workflows that cannot be read or parsed. [Shell judging](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/judge.rs#L58-L104), [URL operands](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/judge.rs#L118-L140), and [workflow selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/effort.rs#L87-L94).
+candidates. At either effort, it skips scripts with an unterminated heredoc.
+Selected workflow read and parse failures follow the
+[unanalyzable policy](#unanalyzable-inputs). [Shell judging](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/judge.rs#L58-L104), [URL operands](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/judge.rs#L118-L140), and [workflow selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/effort.rs#L87-L94).
 
 ### Limits
 
@@ -452,4 +460,6 @@ rejects a persisted write token. This rule judges http(s) downloads in
 
 ## Invalid UTF-8
 
-Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.
+Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray
+byte is still reported. Unreadable selected shell scripts are skipped. Workflow
+read failures follow the [unanalyzable policy](#unanalyzable-inputs).

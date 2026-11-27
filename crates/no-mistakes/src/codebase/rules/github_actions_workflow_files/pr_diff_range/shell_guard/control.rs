@@ -8,8 +8,8 @@ pub(super) fn keyword(source: &str) -> &str {
 }
 
 pub(super) fn unsupported_control(source: &str, in_double_bracket: bool) -> bool {
-    let source = source
-        .trim_start_matches(|ch: char| ch.is_whitespace() || matches!(ch, '|' | '&' | '!'));
+    let source =
+        source.trim_start_matches(|ch: char| ch.is_whitespace() || matches!(ch, '|' | '&' | '!'));
     let word = keyword(source);
     (!in_double_bracket && source.starts_with(['(', '{']))
         || matches!(

@@ -1,8 +1,8 @@
-use super::{analysis_policy::AnalysisDiagnostics};
-use no_mistakes_rule_kernel::finding::RuleFinding;
+use super::analysis_policy::AnalysisDiagnostics;
+use super::file_diagnostics::{self, InputUncertainty};
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
-use rayon::prelude::*;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -119,7 +119,8 @@ pub fn diagnostics_with_files_and_sources(
             continue;
         }
         let files = super::matching_files(root, &opts.include, &files, &opts.target_roots)?;
-        let mut application = scan_files(root, &opts, &files, sources, defer_suppression);
+        let (mut application, input_failures) =
+            scan::scan_files(root, &opts, &files, sources, defer_suppression);
         if let Some(message) = rule
             .message
             .as_ref()
@@ -134,6 +135,15 @@ pub fn diagnostics_with_files_and_sources(
             }
         }
         diagnostics.append(application);
+        diagnostics.append(file_diagnostics::application(
+            root,
+            sources,
+            config,
+            rule,
+            input_failures,
+            defer_suppression,
+            InputUncertainty::ReadOrParse,
+        )?);
     }
     Ok(super::file_diagnostics::sorted(diagnostics))
 }
@@ -171,22 +181,6 @@ fn compile_options(opts: Options) -> CompiledOptions {
         forbid_nested_in_composite: opts.forbid_nested_in_composite,
         target_roots: Vec::new(),
     }
-}
-
-fn scan_files(
-    root: &Path,
-    opts: &CompiledOptions,
-    files: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-    defer_suppression: bool,
-) -> AnalysisDiagnostics {
-    files
-        .par_iter()
-        .map(|path| scan::check_file(root, path, opts, sources, defer_suppression))
-        .reduce(AnalysisDiagnostics::default, |mut combined, per_file| {
-            combined.append(per_file);
-            combined
-        })
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]

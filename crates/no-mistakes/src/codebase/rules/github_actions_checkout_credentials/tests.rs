@@ -3,9 +3,9 @@ use super::{gha_kind, RULE_ID};
 
 #[path = "assume_write_tests.rs"]
 mod assume_write_tests;
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::path::{Path, PathBuf};
 
 const WORKFLOW: &str = ".github/workflows/ci.yml";
@@ -126,7 +126,7 @@ fn yaml_booleans_are_only_true_and_false() {
 }
 
 #[test]
-fn kinds_and_missing_sources_are_skipped() {
+fn kind_selection_reports_missing_workflows() {
     assert_eq!(gha_kind(".github/workflows/ci.yml"), Some(false));
     // GitHub does not run workflow files in subdirectories.
     assert!(gha_kind(".github/workflows/nested/ci.yaml").is_none());
@@ -143,15 +143,20 @@ fn kinds_and_missing_sources_are_skipped() {
     )
     .is_empty());
     let sources = crate::codebase::rules::source_store_for_files(&[]);
-    let root = Path::new("/missing");
-    let findings = super::super::github_actions_workflow_files::scan_files(
-        root,
-        &[PathBuf::from("README.md"), PathBuf::from(WORKFLOW)],
+    let root = tempfile::tempdir().unwrap();
+    let paths = [root.path().join("README.md"), root.path().join(WORKFLOW)];
+    let (findings, failures) = super::super::github_actions_workflow_files::scan_yaml_files(
+        root.path(),
+        &paths,
         &sources,
-        &|_, _| panic!("a missing source is not judged"),
-    )
-    .unwrap();
+        super::RULE_ID,
+        &gha_kind,
+        &|_, _, _, _| panic!("a missing source is not judged"),
+    );
     assert!(findings.is_empty());
+    assert_eq!(failures.len(), 1);
+    assert_eq!(failures[0].file, WORKFLOW);
+    assert_eq!(failures[0].target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]

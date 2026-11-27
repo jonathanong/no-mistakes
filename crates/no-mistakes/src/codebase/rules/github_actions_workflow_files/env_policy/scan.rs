@@ -2,11 +2,11 @@ use super::super::job_lines::document::Document;
 use super::lines::{locate, parse, Seg};
 use super::scopes::{shape_detail, visit_action_scopes, visit_workflow_scopes, ScopeEvent};
 use super::{scalar_text, Policy, RULE_ID};
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::{analysis_policy::AnalysisDiagnostics, source_access};
-use crate::codebase::ts_source::SourceStore;
 use crate::codebase::ts_source::relative_slash_path;
+use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::Unanalyzable;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde_yaml::{Mapping, Value};
 use std::path::Path;
 
@@ -25,16 +25,7 @@ pub(super) fn check_file(
     {
         return Ok(AnalysisDiagnostics::default());
     }
-    let value = sources.parse_loaded_yaml(path, &source, false).map_err(|error| {
-        let mut finding = source_access::unanalyzable_source(
-            root,
-            path,
-            RULE_ID,
-            format_args!("YAML could not be parsed ({error})"),
-        );
-        finding.line = error.line();
-        Box::new(finding)
-    })?;
+    let value = super::super::parse_yaml(root, path, sources, &source, RULE_ID, false)?;
     let rel = relative_slash_path(root, path);
     let (findings, undecidable) = check_parsed(&rel, &source, &value, policy);
     let mut output = AnalysisDiagnostics {

@@ -16,6 +16,9 @@ mod check_workflow_merge;
 #[path = "check_job_permissions.rs"]
 mod check_job_permissions;
 
+#[path = "check_workflow_invalid_yaml.rs"]
+mod check_workflow_invalid_yaml;
+
 #[path = "check_insta_snapshot_updates.rs"]
 mod check_insta_snapshot_updates;
 #[path = "check_test_reliability.rs"]

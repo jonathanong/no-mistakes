@@ -1,26 +1,22 @@
 use super::judge::{narrowings, Narrowing};
 use super::options::{Compiled, NameFilters};
 use super::RULE_ID;
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::github_actions_script_expressions::{step_run_lines, StepRun};
 use crate::codebase::rules::github_actions_workflow_files::run_scripts::{run_scripts, RunScript};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde_yaml::Value;
 use std::collections::BTreeMap;
 
-pub(super) fn check_source(rel: &str, source: &str, compiled: &Compiled) -> Vec<RuleFinding> {
-    let Some(action) = super::super::github_actions_workflow_files::gha_kind(rel) else {
-        return Vec::new();
-    };
+pub(super) fn check_parsed(
+    rel: &str,
+    source: &str,
+    value: &Value,
+    action: bool,
+    compiled: &Compiled,
+) -> Vec<RuleFinding> {
     let policies = policies_for(rel, compiled);
-    if policies.is_empty() {
-        return Vec::new();
-    }
-    let source = source.trim_start_matches('\u{feff}');
-    let Ok(value) = serde_yaml::from_str::<Value>(source) else {
-        return Vec::new();
-    };
     let located = step_run_lines(source, action);
-    run_scripts(action, &value)
+    run_scripts(action, value)
         .into_iter()
         .flat_map(|body| judge(rel, source, &body, &policies, &located))
         .collect()

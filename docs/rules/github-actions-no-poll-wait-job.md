@@ -9,8 +9,8 @@ and `merge_group` for merge-queue checks.
 
 The rule is opt-in. Listing it is what turns it on. It is not part of a
 recommended or strict preset. It has no built-in command names: it reports only
-the poll commands that `options.pollCommands` lists, and an empty or missing
-list reports nothing.
+the poll commands that `options.pollCommands` lists. An empty or missing
+list produces no polling findings. Selected files still receive input diagnostics.
 
 ## What it catches
 
@@ -37,7 +37,7 @@ These forms are silent:
 
 - `sleep` outside a loop.
 - A loop with no configured poll command, or a poll command with no `sleep`.
-- Invalid YAML, a stray `done`, and loops with no matching `done`. An
+- A stray `done` and loops with no matching `done`. An
   unfinished here-document can hide a closing `done`, so the rule only judges
   completed loops in that case.
 - A `for` loop, when `options.ignoreForLoops` is `true`. A `for` loop runs a
@@ -102,8 +102,12 @@ event that signals completion (`workflow_run` for another workflow,
 
 ### Unanalyzable inputs
 
-Invalid YAML and scripts the parser does not read produce no finding. They are
-not sent through `options.unanalyzable`.
+When a selected file has invalid YAML, the rule reports the parser location.
+A selected file that cannot be read is reported at line 1.
+The effective `unanalyzable` policy controls these diagnostics. Use `report`
+(the default) for a finding, `advise` for an advisory, or `ignore` to omit it.
+Restore read access or fix the YAML syntax so the rule can verify the file. Valid sibling files are
+still checked.
 
 ## Suppression
 
@@ -126,4 +130,6 @@ bounds a step. This rule flags the polling loop that makes a job wait.
 
 ## Invalid UTF-8
 
-Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray byte is still reported. A file that cannot be read for any other reason is skipped and produces no finding.
+Invalid UTF-8 is decoded lossily and scanned, so a violation next to a stray
+byte is still reported. Other read failures in selected files follow the
+[unanalyzable policy](#unanalyzable-inputs).

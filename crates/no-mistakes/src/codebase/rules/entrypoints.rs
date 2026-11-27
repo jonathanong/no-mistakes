@@ -73,41 +73,6 @@ macro_rules! prepared_file_rule_facts {
 }
 pub(crate) use prepared_file_rule_facts;
 
-/// Standalone source rules with parsed options and prepared inventory selection.
-macro_rules! sourced_file_rule_entrypoints {
-    () => {
-        pub fn check(
-            root: &std::path::Path,
-            config: &crate::config::v2::NoMistakesConfig,
-        ) -> anyhow::Result<Vec<super::RuleFinding>> {
-            super::check_sourced_standalone(root, config, check_with_files)
-        }
-
-        pub(crate) fn check_with_files(
-            root: &std::path::Path,
-            config: &crate::config::v2::NoMistakesConfig,
-            all_files: &[std::path::PathBuf],
-        ) -> anyhow::Result<Vec<super::RuleFinding>> {
-            super::check_with_borrowed_source_store(
-                root,
-                config,
-                all_files,
-                check_with_files_and_sources,
-            )
-        }
-
-        pub(crate) fn check_with_files_and_sources(
-            root: &std::path::Path,
-            config: &crate::config::v2::NoMistakesConfig,
-            all_files: &[std::path::PathBuf],
-            sources: &crate::codebase::ts_source::SourceStore,
-        ) -> anyhow::Result<Vec<super::RuleFinding>> {
-            super::run_sourced_file_rule(root, config, all_files, sources, RULE_ID, scan)
-        }
-    };
-}
-pub(crate) use sourced_file_rule_entrypoints;
-
 /// Required source rules expose the same two diagnostic channels at every boundary.
 macro_rules! diagnostic_source_rule_entrypoints {
     () => {

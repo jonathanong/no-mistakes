@@ -23,7 +23,8 @@ pub(super) fn excluded_on_merge_group(
         return Vec::new();
     }
     let parsed = parse(script);
-    if parsed.unterminated_quote || parsed.unterminated_heredoc || parsed.unterminated_substitution {
+    if parsed.unterminated_quote || parsed.unterminated_heredoc || parsed.unterminated_substitution
+    {
         return Vec::new();
     }
     let positions: Vec<_> = script.char_indices().map(|(index, _)| index).collect();

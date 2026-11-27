@@ -1,0 +1,13 @@
+version: 2
+unanalyzable: advise
+rules:
+  - rule: github-actions-download-integrity
+    scope: repository
+    include:
+      - .github/workflows/control.yml
+      - .github/workflows/broken.yml
+      - .github/workflows/other-project.yml
+      - .github/workflows/suppressed.yml
+      - .github/actions/example/action.yml
+    options:
+      effort: low

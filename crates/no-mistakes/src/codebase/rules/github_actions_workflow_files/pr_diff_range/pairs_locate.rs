@@ -53,9 +53,7 @@ pub(super) fn extract_flag_pair<'a>(
 fn match_flag<'a>(words: &[&'a str], index: usize, flag: &str) -> Option<(Option<&'a str>, usize)> {
     let word = words[index].trim_end_matches([')', '`']);
     if word == flag {
-        let next = words
-            .get(index + 1)
-            .map(|w| w.trim_end_matches([')', '`']));
+        let next = words.get(index + 1).map(|w| w.trim_end_matches([')', '`']));
         return Some((next, if next.is_some() { 2 } else { 1 }));
     }
     word.strip_prefix(flag)
@@ -130,9 +128,11 @@ pub(super) fn emit(
     let (bucket, target, reason) = match verdict {
         Verdict::Consistent => return,
         Verdict::Mismatch(reason) => (&mut *out.findings, ctx.job.map(str::to_owned), reason),
-        Verdict::Unanalyzable(reason) => {
-            (&mut *out.undecidable, Some("unanalyzable".to_string()), reason)
-        }
+        Verdict::Unanalyzable(reason) => (
+            &mut *out.undecidable,
+            Some("unanalyzable".to_string()),
+            reason,
+        ),
     };
     bucket.push(RuleFinding {
         causes: Vec::new(),
@@ -161,16 +161,14 @@ pub(super) fn shape_unanalyzable(
             let root = doc.roots().first().copied();
             match (job, step_index) {
                 (None, _) => root.and_then(|r| doc.field_line(r, field)),
-                (Some(name), None) => root
-                    .and_then(|r| doc.field(r, "jobs"))
-                    .and_then(|jobs| {
-                        if field == "steps" {
-                            doc.field(jobs, name)
-                                .and_then(|j| doc.field_line(j, "steps"))
-                        } else {
-                            doc.field_line(jobs, name)
-                        }
-                    }),
+                (Some(name), None) => root.and_then(|r| doc.field(r, "jobs")).and_then(|jobs| {
+                    if field == "steps" {
+                        doc.field(jobs, name)
+                            .and_then(|j| doc.field_line(j, "steps"))
+                    } else {
+                        doc.field_line(jobs, name)
+                    }
+                }),
                 (Some(name), Some(index)) => root
                     .and_then(|r| doc.field(r, "jobs"))
                     .and_then(|jobs| doc.field(jobs, name))

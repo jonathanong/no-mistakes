@@ -1,6 +1,6 @@
 use anyhow::Result;
 use no_mistakes::codebase::rules::{self, analysis_policy::AnalysisDiagnostics};
-use no_mistakes::config::v2::{Effort, NoMistakesConfig};
+use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
 
 pub(super) fn run(
@@ -12,8 +12,7 @@ pub(super) fn run(
     facts: Option<&no_mistakes::codebase::check_facts::CheckFactMap>,
     defer_suppression: bool,
 ) -> Result<AnalysisDiagnostics> {
-    // Preserve the existing default-max dispatch without a config clone.
-    if !enabled || !has_low_application(config)? {
+    if !enabled || !config.rule_configured(rules::github_actions_download_integrity::RULE_ID) {
         return super::csp_allowed_origins::run(
             root,
             config,
@@ -24,7 +23,7 @@ pub(super) fn run(
             defer_suppression,
         );
     }
-    let mut output = no_mistakes::perf_trace::rule(
+    let result = no_mistakes::perf_trace::rule(
         "analysis.filesystem_rules.github-actions-download-integrity",
         || {
             rules::github_actions_download_integrity::diagnostics_with_files_and_sources(
@@ -36,7 +35,13 @@ pub(super) fn run(
                 defer_suppression,
             )
         },
-    )?;
+    );
+    let mut output = match prepared.session {
+        Some(session) => session
+            .capture_check_result(rules::github_actions_download_integrity::RULE_ID, result)?
+            .unwrap_or_default(),
+        None => result?,
+    };
     // Consume both channels once at the rule boundary. The remaining dispatch
     // must not scan downloads again or rediscover advisories at finalization.
     let mut remaining = config.clone();
@@ -52,22 +57,10 @@ pub(super) fn run(
         facts,
         defer_suppression,
     )?;
-    output.findings.extend(rest.findings);
-    output.advisories.extend(rest.advisories);
+    output.append(rest);
     output.findings.sort();
     output.findings.dedup();
     output.advisories.sort();
     output.advisories.dedup();
     Ok(output)
-}
-
-fn has_low_application(config: &NoMistakesConfig) -> Result<bool> {
-    for rule in config.rules.iter().filter(|rule| {
-        rule.enabled && rule.rule == rules::github_actions_download_integrity::RULE_ID
-    }) {
-        if config.effective_rule_analysis(rule)?.effort == Effort::Low {
-            return Ok(true);
-        }
-    }
-    Ok(false)
 }

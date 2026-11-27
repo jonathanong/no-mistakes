@@ -1,5 +1,5 @@
 use super::super::options::{compile, CompiledOptions, Options};
-use super::super::runs::check_source_with_options;
+use super::check_source_with_options;
 use super::super::RULE_ID;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -201,14 +201,16 @@ fn invalid_yaml_and_file_suppression_follow_policy() {
     let out =
         super::super::diagnostics_with_files_and_sources(&root, &config, &files, &sources, false)
             .unwrap();
-    assert_eq!(out.findings.len(), 1);
+    assert_eq!(out.findings.len(), 2);
+    assert!(out.findings.iter().any(|row| row.file == ".github/workflows/missing.yml"
+        && row.target.as_deref() == Some("unanalyzable")));
 
     let dispatched = crate::codebase::rules::github_actions_workflow_files::dispatch::run(
         RULE_ID, &root, &config, &files, &sources, false,
     )
     .unwrap()
     .unwrap();
-    assert_eq!(dispatched.len(), 1);
+    assert_eq!(dispatched, out.findings);
 
     let mut repo_policy = config.clone();
     repo_policy.unanalyzable = Some(crate::config::v2::Unanalyzable::Report);
@@ -235,7 +237,8 @@ fn invalid_yaml_and_file_suppression_follow_policy() {
 #[test]
 fn partial_pairs_and_missing_jobs_stay_quiet() {
     let env_only = "revisionPairs:\n  - baseEnv: DIFF_BASE\n    headEnv: DIFF_HEAD\n";
-    let no_jobs = "on: pull_request\nenv:\n  DIFF_BASE: ${{ github.event.pull_request.base.sha }}\n";
+    let no_jobs =
+        "on: pull_request\nenv:\n  DIFF_BASE: ${{ github.event.pull_request.base.sha }}\n";
     let (findings, undecidable) = check(env_only, no_jobs);
     assert!(findings.is_empty());
     assert!(undecidable.is_empty());

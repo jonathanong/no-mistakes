@@ -1,9 +1,9 @@
+use crate::codebase::rules;
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
-use crate::codebase::rules::self;
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
@@ -47,16 +47,32 @@ pub(crate) fn check_with_files_and_sources(
         .map(|output| output.findings)
 }
 
-fn resolve_unanalyzable(
+#[derive(Clone, Copy)]
+struct Policies {
+    shape: Unanalyzable,
+    yaml: Unanalyzable,
+}
+
+fn policies(
     config: &NoMistakesConfig,
     rule: &crate::config::v2::schema::RuleDef,
-) -> Result<Unanalyzable> {
-    let explicit = rule.options.get("unanalyzable").is_some() || config.unanalyzable.is_some();
-    if explicit {
-        Ok(config.effective_rule_analysis(rule)?.unanalyzable)
-    } else {
-        Ok(Unanalyzable::Advise)
+    strict: bool,
+) -> Result<Policies> {
+    if rule.options.get("unanalyzable").is_some() || config.unanalyzable.is_some() {
+        let policy = config.effective_rule_analysis(rule)?.unanalyzable;
+        return Ok(Policies {
+            shape: policy,
+            yaml: policy,
+        });
     }
+    Ok(Policies {
+        shape: Unanalyzable::Advise,
+        yaml: if strict {
+            Unanalyzable::Advise
+        } else {
+            Unanalyzable::Report
+        },
+    })
 }
 
 pub fn diagnostics_with_files_and_sources(
@@ -70,11 +86,11 @@ pub fn diagnostics_with_files_and_sources(
     for rule in config.rule_applications(RULE_ID) {
         let raw_opts: options::Options = rule.strict_rule_options()?;
         let compiled = options::compile(&raw_opts)?;
-        let unanalyzable = resolve_unanalyzable(config, rule)?;
+        let policies = policies(config, rule, compiled.strict_enabled())?;
         let files = rules::selected_rule_files(root, config, rule, all_files)?;
         let chunks: Vec<AnalysisDiagnostics> = files
             .par_iter()
-            .map(|path| scan_file(root, path, &compiled, sources, defer_suppression, unanalyzable))
+            .map(|path| scan_file(root, path, &compiled, sources, defer_suppression, policies))
             .collect();
         for chunk in chunks {
             output.append(chunk);
@@ -91,24 +107,38 @@ fn scan_file(
     compiled: &options::CompiledOptions,
     sources: &SourceStore,
     defer_suppression: bool,
-    unanalyzable: Unanalyzable,
+    policies: Policies,
 ) -> AnalysisDiagnostics {
     let mut output = AnalysisDiagnostics::default();
     let rel = relative_slash_path(root, path);
-    if super::gha_kind(&rel).is_none() {
+    if super::gha_kind(&rel) != Some(false) {
         return output;
     }
-    let Some(content) = rules::read_language_source(sources, path) else {
-        return output;
+    let content = match super::read_workflow_source(root, path, sources, RULE_ID) {
+        Ok(content) => content,
+        Err(finding) => {
+            output.unanalyzable(policies.yaml, *finding);
+            return output;
+        }
     };
     if !defer_suppression && crate::codebase::ts_source::has_disable_file_comment(&content, RULE_ID)
     {
         return output;
     }
-    let (findings, undecidable) = runs::check_source_with_options(&rel, &content, compiled);
-    output.findings = findings;
-    for finding in undecidable {
-        output.unanalyzable(unanalyzable, finding);
+    match super::parse_yaml(root, path, sources, &content, RULE_ID, true) {
+        Ok(value) => {
+            let (findings, undecidable) = runs::check_parsed(
+                &rel,
+                content.trim_start_matches('\u{feff}'),
+                &value,
+                compiled,
+            );
+            output.findings = findings;
+            for finding in undecidable {
+                output.unanalyzable(policies.shape, finding);
+            }
+        }
+        Err(finding) => output.unanalyzable(policies.yaml, *finding),
     }
     if !defer_suppression {
         rules::suppress_rule_findings_with_source(&mut output.findings, &content);

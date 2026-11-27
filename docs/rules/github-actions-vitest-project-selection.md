@@ -19,7 +19,7 @@ The rule reads workflow files directly under `.github/workflows/*.{yml,yaml}`
 and composite `action.yml` / `action.yaml` files under `.github/actions/`. A
 file is judged only when a configured project lists that path or a glob that
 matches it. Other files, including a workflow that selects an unconfigured
-project, are silent. Invalid YAML is not a finding.
+project, are silent.
 
 A `$` or a backtick leaves the command unjudged only when it is a positional,
 the value of `--project`, or the value of a flag this rule does not know.
@@ -154,7 +154,14 @@ filter is intentional.
 
 ### Unanalyzable inputs
 
-Invalid YAML produces no finding. A command is also left unjudged when a positional, a `--project` value, or an unknown flag value contains `$` or a backtick. Those inputs are not sent through `options.unanalyzable`. A literal positional file or name on a recognized Vitest command is judged, including when a known value flag such as `--shard` is dynamic.
+When a file selected by a project has invalid YAML, the rule reports the parser location.
+A selected file that cannot be read is reported at line 1.
+The effective `unanalyzable` policy controls these diagnostics. Use `report`
+(the default) for a finding, `advise` for an advisory, or `ignore` to omit it.
+Restore read access or fix the YAML syntax so the rule can verify the file. Valid sibling files are
+still checked.
+
+A command is left unjudged when a positional, a `--project` value, or an unknown flag value contains `$` or a backtick. Those inputs are not sent through `options.unanalyzable`. A literal positional file or name on a recognized Vitest command is judged, including when a known value flag such as `--shard` is dynamic.
 
 ## Suppression
 

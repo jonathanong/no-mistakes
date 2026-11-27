@@ -1,8 +1,7 @@
-use super::runs::check_source;
 use super::{gha_kind, RULE_ID};
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::NoMistakesConfig;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::path::{Path, PathBuf};
 
 const WORKFLOW: &str = ".github/workflows/ci.yml";
@@ -95,7 +94,7 @@ fn enabled_config() -> NoMistakesConfig {
 }
 
 #[test]
-fn kinds_and_missing_sources_are_skipped() {
+fn kind_selection_reports_missing_workflows() {
     assert_eq!(gha_kind(".github/workflows/ci.yml"), Some(false));
     assert!(gha_kind(".github/workflows/nested/ci.yaml").is_none());
     assert_eq!(gha_kind(ACTION), Some(true));
@@ -106,15 +105,20 @@ fn kinds_and_missing_sources_are_skipped() {
     assert!(check("README.md", "run: docker run -p 5432:5432 postgres\n").is_empty());
     assert!(check(WORKFLOW, "jobs: [\n").is_empty());
     let sources = crate::codebase::rules::source_store_for_files(&[]);
-    let root = Path::new("/missing");
-    let findings = super::super::github_actions_workflow_files::scan_files(
-        root,
-        &[PathBuf::from("README.md"), PathBuf::from(WORKFLOW)],
+    let root = tempfile::tempdir().unwrap();
+    let paths = [root.path().join("README.md"), root.path().join(WORKFLOW)];
+    let (findings, failures) = super::super::github_actions_workflow_files::scan_yaml_files(
+        root.path(),
+        &paths,
         &sources,
-        &|_, _| panic!("a missing source is not judged"),
-    )
-    .unwrap();
+        super::RULE_ID,
+        &gha_kind,
+        &|_, _, _, _| panic!("a missing source is not judged"),
+    );
     assert!(findings.is_empty());
+    assert_eq!(failures.len(), 1);
+    assert_eq!(failures[0].file, WORKFLOW);
+    assert_eq!(failures[0].target.as_deref(), Some("unanalyzable"));
 }
 
 #[test]
@@ -207,7 +211,10 @@ jobs:
 #[test]
 fn suppression_directives_hide_file_line_and_next_line() {
     let (root, config, files) = load_fixture("suppression");
-    let raw = super::check_with_files(&root, &config, &files).unwrap();
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let raw = super::diagnostics_with_files_and_sources(&root, &config, &files, &sources, true)
+        .unwrap()
+        .findings;
     assert_eq!(raw.len(), 10, "{raw:?}");
     let duplicate: Vec<_> = raw
         .iter()
@@ -366,3 +373,14 @@ jobs:
 mod parser_edges_tests;
 #[path = "wrappers_fixture_tests.rs"]
 mod wrappers_fixture_tests;
+
+fn check_source(rel: &str, source: &str) -> Vec<RuleFinding> {
+    let Some(action) = gha_kind(rel) else {
+        return Vec::new();
+    };
+    let source = source.trim_start_matches('\u{feff}');
+    let Ok(value) = serde_yaml::from_str(source) else {
+        return Vec::new();
+    };
+    super::runs::check_parsed(rel, source, &value, action)
+}

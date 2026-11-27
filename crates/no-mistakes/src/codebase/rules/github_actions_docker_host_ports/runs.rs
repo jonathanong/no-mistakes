@@ -1,8 +1,8 @@
 use super::publish::publish_hits;
-use super::{gha_kind, RULE_ID};
-use no_mistakes_rule_kernel::finding::RuleFinding;
+use super::RULE_ID;
 use crate::codebase::rules::github_actions_script_expressions::{step_run_lines, StepRun};
 use crate::codebase::rules::github_actions_workflow_files::run_scripts::run_scripts;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde_yaml::Value;
 
 struct Body {
@@ -13,14 +13,12 @@ struct Body {
     target: String,
 }
 
-pub(super) fn check_source(rel: &str, source: &str) -> Vec<RuleFinding> {
-    let Some(action) = gha_kind(rel) else {
-        return Vec::new();
-    };
-    let source = source.trim_start_matches('\u{feff}');
-    let Ok(value) = serde_yaml::from_str::<Value>(source) else {
-        return Vec::new();
-    };
+pub(super) fn check_parsed(
+    rel: &str,
+    source: &str,
+    value: &Value,
+    action: bool,
+) -> Vec<RuleFinding> {
     let located = step_run_lines(source, action);
     let mut findings = Vec::new();
     if !action {
@@ -28,7 +26,7 @@ pub(super) fn check_source(rel: &str, source: &str) -> Vec<RuleFinding> {
             findings.extend(super::ports::service_findings(rel, source, jobs));
         }
     }
-    for body in bodies(action, &value) {
+    for body in bodies(action, value) {
         let lines = located
             .iter()
             .find(|item| item.job == body.job && item.step == body.step);

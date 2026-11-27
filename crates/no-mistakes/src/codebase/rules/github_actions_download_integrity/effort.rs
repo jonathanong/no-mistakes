@@ -1,5 +1,10 @@
 use super::*;
-use crate::codebase::rules::{analysis_policy::AnalysisDiagnostics, path_filter::GlobMatcher};
+use crate::codebase::rules::{
+    analysis_policy::AnalysisDiagnostics,
+    file_diagnostics::{self, InputUncertainty},
+    github_actions_workflow_files::{parse_yaml, read_workflow_source},
+    path_filter::GlobMatcher,
+};
 use crate::codebase::ts_source::{
     discover_files_from_visible, relative_slash_path, SourceStore, VisiblePathSnapshot,
 };
@@ -84,19 +89,35 @@ pub fn diagnostics_with_files_and_sources(
                 {
                     return None;
                 }
+                if let Some(action) = kind {
+                    return Some(read_workflow_source(root, path, sources, RULE_ID).and_then(
+                        |content| {
+                            parse_yaml(root, path, sources, &content, RULE_ID, true).map(|value| {
+                                runs::check_workflow(&rel, &content, &value, action, &policy)
+                            })
+                        },
+                    ));
+                }
                 let content = super::super::read_language_source(sources, path)?;
-                Some(match kind {
-                    Some(action) => {
-                        let value = sources.parse_loaded_yaml(path, &content, true).ok()?;
-                        runs::check_workflow(&rel, &content, &value, action, &policy)
-                    }
-                    None => runs::check_shell(&rel, &content, &policy),
-                })
+                Some(Ok(runs::check_shell(&rel, &content, &policy)))
             })
             .collect();
+        let mut input_failures = Vec::new();
         for chunk in chunks {
-            diagnostics.append(chunk);
+            match chunk {
+                Ok(output) => diagnostics.append(output),
+                Err(finding) => input_failures.push(*finding),
+            }
         }
+        diagnostics.append(file_diagnostics::application(
+            root,
+            sources,
+            config,
+            rule,
+            input_failures,
+            defer_suppression,
+            InputUncertainty::ReadOrParse,
+        )?);
     }
     if !defer_suppression {
         super::super::suppress_rule_findings_with_sources(root, &mut diagnostics.findings, sources);
