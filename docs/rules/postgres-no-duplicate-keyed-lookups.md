@@ -7,9 +7,9 @@ subqueries, or a mix of both.
 
 ## Why and when
 
-PostgreSQL does not deduplicate repeated joins or correlated scalar subqueries
-against the same table on the same key. Each extra join or scalar subquery adds
-another index probe per outer row and duplicates I/O and CPU work.
+Repeated joins and independently evaluated correlated scalar subqueries can
+probe the same table on the same key. Those probes can duplicate I/O and CPU
+work.
 
 Enable this rule on query-heavy services and reporting SQL where queries evolve
 over time by tacking on extra `LEFT JOIN` clauses or inline scalar subqueries
@@ -21,7 +21,9 @@ Within a single `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `MERGE`, or `WITH` /
 data-modifying CTE query, this rule flags a second or subsequent keyed lookup of
 the same target relation when the normalized lookup key matches an earlier
 lookup in the same scope. It also checks queries in views, `CREATE TABLE AS`,
-`DECLARE CURSOR`, and `COPY (query) TO`.
+`DECLARE CURSOR`, and `COPY (query) TO`. It covers `ON CONFLICT DO UPDATE`
+expressions, referenced window definitions, and subqueries in ordering and
+row-limit clauses.
 
 - Repeated correlated scalar subqueries on the same relation and key, including
   unqualified inner key columns (`WHERE id = o.account_id`) and differing table

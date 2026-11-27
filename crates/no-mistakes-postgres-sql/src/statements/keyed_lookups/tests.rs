@@ -1,12 +1,12 @@
 use crate::statements::{
-    extract_sql_statement_facts_with_policy, SqlLocationDemand, StatementPolicySources,
+    extract_sql_statement_facts_with_policy, SqlLocationDemand, SqlStatementFileFacts,
+    StatementPolicySources,
 };
 
-#[test]
-fn distinguishes_projection_ordering_and_normalizes_qualified_sort_keys() {
+fn fixture_facts(fixture: &str) -> SqlStatementFileFacts {
     let root = crate::test_support::rule_fixture_root("postgres-no-duplicate-keyed-lookups");
-    let sql = std::fs::read_to_string(root.join("normalization/queries/check.sql")).unwrap();
-    let facts = extract_sql_statement_facts_with_policy(
+    let sql = std::fs::read_to_string(root.join(fixture).join("queries/check.sql")).unwrap();
+    extract_sql_statement_facts_with_policy(
         &sql,
         false,
         None,
@@ -16,7 +16,12 @@ fn distinguishes_projection_ordering_and_normalizes_qualified_sort_keys() {
             ..Default::default()
         },
         false,
-    );
+    )
+}
+
+#[test]
+fn distinguishes_projection_ordering_and_normalizes_qualified_sort_keys() {
+    let facts = fixture_facts("normalization");
 
     let sites: Vec<_> = facts
         .duplicate_keyed_lookups
@@ -28,19 +33,7 @@ fn distinguishes_projection_ordering_and_normalizes_qualified_sort_keys() {
 
 #[test]
 fn detects_duplicates_within_query_scopes() {
-    let root = crate::test_support::rule_fixture_root("postgres-no-duplicate-keyed-lookups");
-    let sql = std::fs::read_to_string(root.join("query-scopes/queries/check.sql")).unwrap();
-    let facts = extract_sql_statement_facts_with_policy(
-        &sql,
-        false,
-        None,
-        SqlLocationDemand::None,
-        StatementPolicySources {
-            collect_duplicate_keyed_lookups: true,
-            ..Default::default()
-        },
-        false,
-    );
+    let facts = fixture_facts("query-scopes");
 
     let sites: Vec<_> = facts
         .duplicate_keyed_lookups
@@ -64,19 +57,7 @@ fn detects_duplicates_within_query_scopes() {
 
 #[test]
 fn constrains_duplicates_to_equivalent_lookup_scopes_and_row_sets() {
-    let root = crate::test_support::rule_fixture_root("postgres-no-duplicate-keyed-lookups");
-    let sql = std::fs::read_to_string(root.join("review-soundness/queries/check.sql")).unwrap();
-    let facts = extract_sql_statement_facts_with_policy(
-        &sql,
-        false,
-        None,
-        SqlLocationDemand::None,
-        StatementPolicySources {
-            collect_duplicate_keyed_lookups: true,
-            ..Default::default()
-        },
-        false,
-    );
+    let facts = fixture_facts("review-soundness");
     assert!(!facts.parse_failed);
     let sites: Vec<_> = facts
         .duplicate_keyed_lookups
@@ -91,19 +72,7 @@ fn constrains_duplicates_to_equivalent_lookup_scopes_and_row_sets() {
 
 #[test]
 fn ignores_reused_target_expressions_and_reports_distinct_sort_lookups() {
-    let root = crate::test_support::rule_fixture_root("postgres-no-duplicate-keyed-lookups");
-    let sql = std::fs::read_to_string(root.join("target-list/queries/check.sql")).unwrap();
-    let facts = extract_sql_statement_facts_with_policy(
-        &sql,
-        false,
-        None,
-        SqlLocationDemand::None,
-        StatementPolicySources {
-            collect_duplicate_keyed_lookups: true,
-            ..Default::default()
-        },
-        false,
-    );
+    let facts = fixture_facts("target-list");
     assert!(!facts.parse_failed);
     let sites: Vec<_> = facts
         .duplicate_keyed_lookups
@@ -111,4 +80,29 @@ fn ignores_reused_target_expressions_and_reports_distinct_sort_lookups() {
         .map(|fact| (fact.first_line, fact.line))
         .collect();
     assert_eq!(sites, [(19, 21)]);
+}
+
+#[test]
+fn detects_executed_clause_lookups_without_colliding_quoted_arguments() {
+    let facts = fixture_facts("query-clauses");
+    assert!(!facts.parse_failed);
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+    assert_eq!(
+        sites,
+        [
+            (3, 4),
+            (9, 10),
+            (15, 16),
+            (21, 22),
+            (27, 28),
+            (33, 34),
+            (40, 41),
+            (47, 49),
+            (63, 64)
+        ]
+    );
 }

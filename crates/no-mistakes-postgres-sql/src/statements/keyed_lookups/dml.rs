@@ -4,7 +4,7 @@ use super::{inspect_exprs, returning_exprs};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{
     Delete, Expr, FromTable, Insert, Merge, MergeAction, MergeInsertKind, MergeUpdateKind,
-    OutputClause, TableObject, Update,
+    OnConflict, OnConflictAction, OnInsert, OutputClause, TableObject, Update,
 };
 use std::collections::BTreeMap;
 
@@ -16,15 +16,41 @@ pub(super) fn walk_insert(
     if let Some(source) = insert.source.as_deref() {
         super::walk_query(source, scopes, out);
     }
-    if let Some(returning) = insert.returning.as_deref() {
+    let update = match &insert.on {
+        Some(OnInsert::OnConflict(OnConflict {
+            action: OnConflictAction::DoUpdate(update),
+            ..
+        })) => Some(update),
+        _ => None,
+    };
+    let returning = insert.returning.as_deref();
+    if update.is_none() && returning.is_none() {
+        return;
+    }
+    scopes.push_frame();
+    if let TableObject::TableName(name) = &insert.table {
+        scopes.add_table_alias(name, insert.table_alias.as_ref().map(|a| &a.alias));
+    }
+    if let Some(update) = update {
         scopes.push_frame();
-        if let TableObject::TableName(name) = &insert.table {
-            scopes.add_table_alias(name, insert.table_alias.as_ref().map(|a| &a.alias));
-        }
-        let mut seen = BTreeMap::new();
-        inspect_exprs(returning_exprs(Some(returning)), scopes, &mut seen, out);
+        scopes.add_named_alias("excluded".to_owned());
+        let exprs = update
+            .assignments
+            .iter()
+            .map(|assignment| &assignment.value)
+            .chain(update.selection.iter());
+        inspect_exprs(exprs, scopes, &mut BTreeMap::new(), out);
         scopes.pop_frame();
     }
+    if let Some(returning) = returning {
+        inspect_exprs(
+            returning_exprs(Some(returning)),
+            scopes,
+            &mut BTreeMap::new(),
+            out,
+        );
+    }
+    scopes.pop_frame();
 }
 
 pub(super) fn walk_update(

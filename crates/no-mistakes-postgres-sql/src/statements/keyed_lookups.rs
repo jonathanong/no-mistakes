@@ -7,6 +7,7 @@ mod scope;
 mod select_exprs;
 mod subquery;
 mod table;
+mod windows;
 
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use join::register_table_with_joins;
@@ -68,6 +69,8 @@ fn walk_query(query: &Query, scopes: &mut ScopeStack, out: &mut Vec<SqlDuplicate
         _ => Vec::new(),
     };
     walk_set_expr(&query.body, &order_exprs, scopes, out);
+    walk_nested_queries(&query.limit_clause, scopes, out);
+    walk_nested_queries(&query.fetch, scopes, out);
 }
 
 fn walk_set_expr(
@@ -83,7 +86,11 @@ fn walk_set_expr(
             scopes.push_frame();
             let mut seen = BTreeMap::new();
             inspect_exprs(
-                values.rows.iter().flat_map(|row| row.content.iter()),
+                values
+                    .rows
+                    .iter()
+                    .flat_map(|row| row.content.iter())
+                    .chain(order_exprs.iter().copied()),
                 scopes,
                 &mut seen,
                 out,
@@ -142,12 +149,12 @@ fn inspect_exprs<'a>(
     let outer = scopes.snapshot();
     for expr in exprs {
         subquery::inspect_expr(expr, &outer, seen, out);
-        walk_nested_queries_in_expr(expr, scopes, out);
+        walk_nested_queries(expr, scopes, out);
     }
 }
 
-fn walk_nested_queries_in_expr(
-    expr: &Expr,
+fn walk_nested_queries(
+    node: &impl Visit,
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
@@ -175,7 +182,7 @@ fn walk_nested_queries_in_expr(
         scopes,
         out,
     };
-    let _ = expr.visit(&mut visitor);
+    let _ = node.visit(&mut visitor);
 }
 
 #[cfg(test)]

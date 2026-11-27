@@ -1,4 +1,5 @@
 use super::select_item_expr;
+use super::windows::referenced_expressions;
 use crate::fx::FxHashSet;
 use crate::idents::unwrap_expr;
 use sqlparser::ast::{Distinct, Expr, GroupByExpr, Select};
@@ -18,7 +19,11 @@ pub(super) fn inspectable<'a>(
 
     let projection = select.projection.iter().filter_map(select_item_expr);
     let mut targets = FxHashSet::default();
-    if !(distinct_on.is_empty() && group_by.is_empty() && order_by.is_empty()) {
+    if !(distinct_on.is_empty()
+        && group_by.is_empty()
+        && select.named_window.is_empty()
+        && order_by.is_empty())
+    {
         targets.extend(projection.clone().map(unwrap_expr));
     }
 
@@ -31,6 +36,7 @@ pub(super) fn inspectable<'a>(
         .chain(select.selection.iter().map(independent))
         .chain(group_by.iter().map(clause_target))
         .chain(select.having.iter().map(independent))
+        .chain(referenced_expressions(select, order_by).map(clause_target))
         .chain(order_by.iter().copied().map(clause_target))
         .filter_map(move |(expr, can_reuse)| {
             (!can_reuse || targets.insert(unwrap_expr(expr))).then_some(expr)

@@ -21,7 +21,7 @@ pub(super) fn normalize(
             _ => None,
         })
         .collect::<Option<Vec<_>>>()?;
-    Some(format!("fn({base},{})", args.join(",")))
+    Some(format!("fn({base},{args:?})"))
 }
 
 pub(in crate::statements::keyed_lookups) fn pure_name(function: &Function) -> Option<String> {

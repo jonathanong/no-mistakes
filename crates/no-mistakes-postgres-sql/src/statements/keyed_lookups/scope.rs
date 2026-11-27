@@ -38,8 +38,11 @@ impl ScopeStack {
     }
 
     pub(super) fn add_alias_only(&mut self, alias: Option<&TableAlias>) -> Option<usize> {
-        let qualifier = ident_key(&alias?.name);
-        Some(self.add_binding(qualifier.clone(), qualifier, true))
+        Some(self.add_named_alias(ident_key(&alias?.name)))
+    }
+
+    pub(super) fn add_named_alias(&mut self, qualifier: String) -> usize {
+        self.add_binding(qualifier.clone(), qualifier, true)
     }
 
     fn add_binding(&mut self, relation: String, qualifier: String, has_alias: bool) -> usize {
