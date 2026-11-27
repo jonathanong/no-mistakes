@@ -458,6 +458,40 @@
       "rule": "playwright-defaults"
     },
     {
+      "file": "e2e/hoisted-default-alias.spec.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 12,
+          "endLine": 6,
+          "file": "e2e/hoisted-default-alias.spec.ts",
+          "line": 6,
+          "message": "`token` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 12,
+          "endLine": 10,
+          "file": "e2e/hoisted-default-alias.spec.ts",
+          "line": 10,
+          "message": "`token` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead.",
+          "messageId": "hoisted",
+          "ruleId": "no-mistakes/playwright-no-hoisted-unique-token",
+          "severity": 2
+        }
+      ],
+      "name": "default-import alias beforeAll reads a hoisted token",
+      "options": {
+        "tokenFactories": [
+          "makeToken"
+        ]
+      },
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
       "file": "e2e/hoisted-opaque-suppressed.spec.ts",
       "findings": [],
       "name": "file directive suppresses an opaque beforeAll",
@@ -920,6 +954,29 @@
         }
       ],
       "name": "intrinsic tag is not an opaque component",
+      "options": {
+        "interactiveComponents": [
+          "Button"
+        ]
+      },
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-member-name.tsx",
+      "findings": [
+        {
+          "column": 29,
+          "endColumn": 33,
+          "endLine": 5,
+          "file": "src/interactive-member-name.tsx",
+          "line": 5,
+          "message": "Cannot tell whether this component is a configured interactive component. Import it with a static name.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/playwright-require-interactive-test-id",
+          "severity": 2
+        }
+      ],
+      "name": "member property is not its own binding",
       "options": {
         "interactiveComponents": [
           "Button"
@@ -1700,6 +1757,28 @@
       "rule": "playwright-defaults"
     },
     {
+      "file": "e2e/hoisted-default-alias.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 7,
+          "file": "e2e/hoisted-default-alias.spec.ts",
+          "line": 6,
+          "message": "`token` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead."
+        },
+        {
+          "code": "no-mistakes(playwright-no-hoisted-unique-token)",
+          "column": 7,
+          "file": "e2e/hoisted-default-alias.spec.ts",
+          "line": 10,
+          "message": "`token` is generated once by `makeToken()` at module/describe scope, but `beforeAll` can re-run in the same worker process with module state preserved — the hoisted value is reused unchanged on re-entry and collides with itself. Move the `makeToken()` call to the first statement inside this `beforeAll` instead."
+        }
+      ],
+      "name": "default-import alias beforeAll reads a hoisted token",
+      "options": null,
+      "rule": "playwright-no-hoisted-unique-token"
+    },
+    {
       "file": "e2e/hoisted-opaque-suppressed.spec.ts",
       "findings": [],
       "name": "file directive suppresses an opaque beforeAll",
@@ -2010,6 +2089,21 @@
         }
       ],
       "name": "intrinsic tag is not an opaque component",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
+      "file": "src/interactive-member-name.tsx",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-require-interactive-test-id)",
+          "column": 29,
+          "file": "src/interactive-member-name.tsx",
+          "line": 5,
+          "message": "Cannot tell whether this component is a configured interactive component. Import it with a static name."
+        }
+      ],
+      "name": "member property is not its own binding",
       "options": null,
       "rule": "playwright-require-interactive-test-id"
     },

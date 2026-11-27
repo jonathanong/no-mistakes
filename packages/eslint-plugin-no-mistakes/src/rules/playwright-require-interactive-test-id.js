@@ -61,7 +61,13 @@ module.exports = rule(
       let opaque = false;
       const component = isComponentTag(node.name);
       const names = jsxCandidateNames(node.name).flatMap((name) => {
-        if (component && componentBinding(name, node, context)?.status === "opaque") opaque = true;
+        if (
+          component &&
+          node.name.type === "JSXIdentifier" &&
+          componentBinding(name, node, context)?.status === "opaque"
+        ) {
+          opaque = true;
+        }
         const imported = mappedImport(name, node, context, importedNames);
         return imported && imported !== name ? [name, imported] : [name];
       });

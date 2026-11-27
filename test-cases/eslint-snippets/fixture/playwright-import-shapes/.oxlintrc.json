@@ -10,7 +10,22 @@
   },
   "overrides": [
     {
-      "files": ["e2e/assertion-imports.spec.ts", "e2e/assertion-soft.spec.ts", "e2e/assertion-aliases.spec.ts", "e2e/assertion-other-package.spec.ts", "e2e/assertion-wrappers.spec.ts", "e2e/assertion-opaque.spec.ts", "e2e/assertion-quiet.spec.ts", "e2e/assertion-relative-expect.spec.ts", "e2e/assertion-relative-require.spec.ts", "e2e/assertion-branches.spec.ts", "e2e/assertion-members.spec.ts", "e2e/assertion-relative-alias.spec.ts", "src/member-require.ts", "src/member-require-local.ts"],
+      "files": [
+        "e2e/assertion-imports.spec.ts",
+        "e2e/assertion-soft.spec.ts",
+        "e2e/assertion-aliases.spec.ts",
+        "e2e/assertion-other-package.spec.ts",
+        "e2e/assertion-wrappers.spec.ts",
+        "e2e/assertion-opaque.spec.ts",
+        "e2e/assertion-quiet.spec.ts",
+        "e2e/assertion-relative-expect.spec.ts",
+        "e2e/assertion-relative-require.spec.ts",
+        "e2e/assertion-branches.spec.ts",
+        "e2e/assertion-members.spec.ts",
+        "e2e/assertion-relative-alias.spec.ts",
+        "src/member-require.ts",
+        "src/member-require-local.ts"
+      ],
       "rules": { "no-mistakes/playwright-assertion-timeout-cap": "error" }
     },
     {
@@ -20,7 +35,12 @@
       }
     },
     {
-      "files": ["e2e/test-timeout-require.spec.ts", "e2e/test-timeout-wrappers.spec.ts", "e2e/test-timeout-dynamic-ignore.spec.ts", "e2e/test-timeout-shapes.spec.ts"],
+      "files": [
+        "e2e/test-timeout-require.spec.ts",
+        "e2e/test-timeout-wrappers.spec.ts",
+        "e2e/test-timeout-dynamic-ignore.spec.ts",
+        "e2e/test-timeout-shapes.spec.ts"
+      ],
       "rules": { "no-mistakes/playwright-test-timeout-cap": "error" }
     },
     {
@@ -54,15 +74,30 @@
       }
     },
     {
-      "files": ["e2e/hoisted-imports.spec.ts", "src/hoisted-require.ts", "e2e/hoisted-opaque.spec.ts", "e2e/hoisted-opaque-suppressed.spec.ts", "e2e/hoisted-aliases.spec.ts", "e2e/hoisted-opaque-quiet.spec.ts", "e2e/hoisted-opaque-write.spec.ts"],
+      "files": [
+        "e2e/hoisted-imports.spec.ts",
+        "src/hoisted-require.ts",
+        "e2e/hoisted-opaque.spec.ts",
+        "e2e/hoisted-opaque-suppressed.spec.ts",
+        "e2e/hoisted-aliases.spec.ts",
+        "e2e/hoisted-opaque-quiet.spec.ts",
+        "e2e/hoisted-opaque-write.spec.ts",
+        "e2e/hoisted-default-alias.spec.ts"
+      ],
       "rules": {
-        "no-mistakes/playwright-no-hoisted-unique-token": ["error", { "tokenFactories": ["makeToken"] }]
+        "no-mistakes/playwright-no-hoisted-unique-token": [
+          "error",
+          { "tokenFactories": ["makeToken"] }
+        ]
       }
     },
     {
       "files": ["e2e/hoisted-wrappers.spec.ts"],
       "rules": {
-        "no-mistakes/playwright-no-hoisted-unique-token": ["error", { "tokenFactories": ["randomSuffix"] }]
+        "no-mistakes/playwright-no-hoisted-unique-token": [
+          "error",
+          { "tokenFactories": ["randomSuffix"] }
+        ]
       }
     },
     {
@@ -72,11 +107,21 @@
     {
       "files": ["e2e/scroll-wrappers.spec.ts"],
       "rules": {
-        "no-mistakes/playwright-no-raw-scroll-pagination": ["error", { "sentinelTestIds": ["feed-sentinel"] }]
+        "no-mistakes/playwright-no-raw-scroll-pagination": [
+          "error",
+          { "sentinelTestIds": ["feed-sentinel"] }
+        ]
       }
     },
     {
-      "files": ["src/selector-require.ts", "src/selector-equals.ts", "e2e/selector-calls.spec.ts", "src/selector-plain.ts", "src/selector-statement.ts", "src/selector-before-require.ts"],
+      "files": [
+        "src/selector-require.ts",
+        "src/selector-equals.ts",
+        "e2e/selector-calls.spec.ts",
+        "src/selector-plain.ts",
+        "src/selector-statement.ts",
+        "src/selector-before-require.ts"
+      ],
       "rules": { "no-mistakes/playwright-selector-priority": "error" }
     },
     {
@@ -84,9 +129,20 @@
       "rules": { "no-mistakes/playwright-defaults": "error" }
     },
     {
-      "files": ["src/interactive-imports.tsx", "src/interactive-opaque.tsx", "src/interactive-member.tsx", "src/interactive-dynamic.tsx", "src/interactive-intrinsic.tsx", "src/interactive-redeclare.tsx"],
+      "files": [
+        "src/interactive-imports.tsx",
+        "src/interactive-opaque.tsx",
+        "src/interactive-member.tsx",
+        "src/interactive-dynamic.tsx",
+        "src/interactive-intrinsic.tsx",
+        "src/interactive-member-name.tsx",
+        "src/interactive-redeclare.tsx"
+      ],
       "rules": {
-        "no-mistakes/playwright-require-interactive-test-id": ["error", { "interactiveComponents": ["Button"] }]
+        "no-mistakes/playwright-require-interactive-test-id": [
+          "error",
+          { "interactiveComponents": ["Button"] }
+        ]
       }
     },
     {

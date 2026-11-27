@@ -128,12 +128,15 @@ function isTestBinding(node, context, testNames, seen = new Set()) {
   if (node?.type !== "Identifier") return false;
   const fact = playwrightFact(node, context, seen);
   if (fact?.status === "export") {
-    if (fact.exported === "default") return testNames.has(node.name);
-    return (
-      fact.exported === "test" ||
-      fact.exported === "it" ||
-      (fact.exported === "describe" && testNames.has(node.name))
-    );
+    if (fact.exported === "default") {
+      if (testNames.has(node.name)) return true;
+    } else {
+      return (
+        fact.exported === "test" ||
+        fact.exported === "it" ||
+        (fact.exported === "describe" && testNames.has(node.name))
+      );
+    }
   }
   if (fact?.status === "namespace") return testNames.has(node.name);
   if (fact?.status === "opaque") return false;

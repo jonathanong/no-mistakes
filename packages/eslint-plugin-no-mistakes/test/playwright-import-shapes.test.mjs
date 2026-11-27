@@ -258,6 +258,16 @@ const cases = [
     ],
   },
   {
+    name: "default-import alias beforeAll reads a hoisted token",
+    rule: "playwright-no-hoisted-unique-token",
+    file: "e2e/hoisted-default-alias.spec.ts",
+    options: { tokenFactories: ["makeToken"] },
+    expected: [
+      [6, "hoisted"],
+      [10, "hoisted"],
+    ],
+  },
+  {
     name: "opaque beforeAll that does not read a token stays quiet",
     rule: "playwright-no-hoisted-unique-token",
     file: "e2e/hoisted-opaque-quiet.spec.ts",
@@ -368,6 +378,13 @@ const cases = [
     file: "src/interactive-opaque.tsx",
     options: { interactiveComponents: ["Button"] },
     expected: [[4, "unanalyzable"]],
+  },
+  {
+    name: "member property is not its own binding",
+    rule: "playwright-require-interactive-test-id",
+    file: "src/interactive-member-name.tsx",
+    options: { interactiveComponents: ["Button"] },
+    expected: [[5, "unanalyzable"]],
   },
   {
     name: "opaque JSX member root",
