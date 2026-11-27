@@ -62,7 +62,7 @@ runs:
 
 Invalid YAML produces an ordinary finding. The rule skips non-sequence
 `runs.steps` values, non-mapping step entries, and non-string keys. It
-does not use `options.unanalyzable`. [YAML and step scanning](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_composite_step_schema/scan.rs#L30-L68).
+does not use `options.unanalyzable`. [YAML and step scanning](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_composite_step_schema/scan.rs#L30-L68).
 
 ## Suppression
 

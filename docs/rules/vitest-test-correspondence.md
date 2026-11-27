@@ -42,7 +42,7 @@ In `test-to-source`, `stemSuffixesToStrip` lets a test match a source using
 its original or stripped test stem. In `source-to-test`, a source can match
 a test with the same stem or with a configured suffix appended. Tests under
 `testsDir` do not need a corresponding source. Duplicate stems are checked
-only in `both` mode. [Directional checks](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/vitest_test_correspondence.rs#L141-L196) and [test matching](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/vitest_test_correspondence/helpers.rs#L116-L131).
+only in `both` mode. [Directional checks](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/vitest_test_correspondence.rs#L141-L196) and [test matching](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/vitest_test_correspondence/helpers.rs#L116-L131).
 Rejected test names name the suffixes stripped from that stem, or list the
 configured `stemSuffixesToStrip` values when none applied, so the supported
 naming path stays visible. Source-to-test rejections include the same
