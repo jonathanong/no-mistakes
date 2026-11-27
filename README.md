@@ -305,11 +305,13 @@ load alongside the new ones:
 ```sh
 claude plugin marketplace remove harness-plugins
 codex plugin remove no-mistakes@harness-plugins
+codex plugin remove jong-skills@harness-plugins
 codex plugin remove no-mistakes-rules@harness-plugins
 codex plugin marketplace remove harness-plugins
 ```
 
-Removing a marketplace uninstalls every plugin installed from it. Reinstall any
+Claude Code uninstalls a marketplace's plugins when you remove it, and Codex may keep
+them enabled, so remove each plugin before its marketplace. Reinstall any
 other plugin you had from `harness-plugins`; see the
 [`ratchet-stack` README](https://github.com/jongleberry/ratchet-stack#readme) for
 the current plugins.
