@@ -91,7 +91,7 @@ The current validation graph is organized as follows:
   and addon to exercise the full compiled API inventory, including addon
   loading, cross-process locks, rename behavior, and invocation diagnostics.
   The same jobs run a real CLI fixture and the `cli_smoke` harness with
-  `NO_MISTAKES_CLI_BIN`. macOS retains Git fsmonitor cleanup, Git timeout JSON,
+  `NO_MISTAKES_CLI_BIN`. macOS retains Git filesystem monitor cleanup, Git timeout JSON,
   and blocked configuration tests. Windows retains a drive-qualified check
   with a deadline, and the small Job Object harness exercises CRLF and UTF-16
   console behavior. Linux coverage retains the portable CLI cases. Windows
