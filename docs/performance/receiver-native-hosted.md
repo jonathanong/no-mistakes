@@ -2,9 +2,9 @@
 
 <!-- cspell:ignore ABBA BAAB codegen b940084d7 rlib PMU opt3 opt0 wait4 stationarity -->
 
-[Issue #2012](https://github.com/jonathanong/no-mistakes/issues/2012) follows the
-inconclusive native investigation in [#1972](https://github.com/jonathanong/no-mistakes/issues/1972)
-and the evidence delivered by [#2005](https://github.com/jonathanong/no-mistakes/pull/2005).
+[Issue #2012](https://github.com/jongleberry/no-mistakes/issues/2012) follows the
+inconclusive native investigation in [#1972](https://github.com/jongleberry/no-mistakes/issues/1972)
+and the evidence delivered by [#2005](https://github.com/jongleberry/no-mistakes/pull/2005).
 This adds a separate x86 hosted experiment. It changes neither analyzer behavior
 nor the existing ARM simulation/memory benchmarks or their artifact handoff.
 

@@ -1,7 +1,7 @@
 # `test-email-domain-policy`
 
 Bans configured email domains in selected text files, including test fixtures
-and documentation. [File selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_email_domain_policy.rs#L78-L101).
+and documentation. [File selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_email_domain_policy.rs#L78-L101).
 
 ```yaml
 rules:
@@ -41,7 +41,7 @@ HTML-encoded forms, unless an allowed pattern matches.
 `bannedDomains` is required. `allowedEmailPatterns` and `replacement` are
 optional. Omitting `extensions` or supplying an empty list uses the built-in
 text and test suffixes. Project and common include/exclude filters also
-apply. [Extension selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_email_domain_policy.rs#L114-L122).
+apply. [Extension selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_email_domain_policy.rs#L114-L122).
 
 `bannedDomains` must be supplied even when options are otherwise omitted; an
 explicit empty list disables domain bans. HTML named and decimal/hex numeric

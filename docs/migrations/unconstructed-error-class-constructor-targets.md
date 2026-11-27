@@ -1,6 +1,6 @@
 # Unconstructed Error classes: unresolved targets are advisory
 
-The [#2734 section 2](https://github.com/jonathanong/no-mistakes/issues/2734)
+The [#2734 section 2](https://github.com/jongleberry/no-mistakes/issues/2734)
 release fix corrects false failures introduced by #2699 in
 [`unconstructed-error-class`](../rules/unconstructed-error-class.md). The rule
 remains opt-in and has no new configuration fields.
@@ -11,7 +11,7 @@ credited as constructed even when its own ancestry is unresolved. Known non-Erro
 globals such as `Intl.DateTimeFormat` and `Intl.NumberFormat` no longer produce
 unresolved-target diagnostics. Shadowed global names need independent proof.
 
-The [#2742 follow-up](https://github.com/jonathanong/no-mistakes/issues/2742)
+The [#2742 follow-up](https://github.com/jongleberry/no-mistakes/issues/2742)
 resolves constructor facades and immutable aliases through the same session's
 prepared binding facts, canonical graph, and declaration resolver projection.
 Each importer keeps its own tsconfig scope. Workspace package root and wildcard
@@ -24,7 +24,7 @@ that proves a class is not an Error. A construct signature alone does not prove
 that ancestry. Included ambient module declarations also supply base-class proof
 within the importing project.
 
-The [#2753 follow-up](https://github.com/jonathanong/no-mistakes/issues/2753)
+The [#2753 follow-up](https://github.com/jongleberry/no-mistakes/issues/2753)
 resolves ambient modules that a project's tsconfig `types` list makes visible,
 including relative declaration files and packages, and values inherited from a
 relative extended config. That path resolves like the catalog, including a
