@@ -1,0 +1,16 @@
+#!/bin/bash
+case "$1" in
+  /publish-tools/.github/scripts/publish-npm.cjs)
+    [[ "$*" == "/publish-tools/.github/scripts/publish-npm.cjs no-mistakes 0.109.8" ]] || exit 99
+    echo publish
+    exit "$TEST_PUBLISH_STATUS"
+    ;;
+  /publish-tools/packages/no-mistakes/scripts/wait-npm-tarball.js)
+    [[ "$*" == "/publish-tools/packages/no-mistakes/scripts/wait-npm-tarball.js --package no-mistakes --version 0.109.8 --timeout-ms 2700000" ]] || exit 99
+    echo verify
+    exit "$TEST_VERIFY_STATUS"
+    ;;
+  *)
+    exit 99
+    ;;
+esac

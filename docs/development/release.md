@@ -50,78 +50,55 @@ differ for that version. No recovery dispatch is triggered automatically.
 See [the Rust resource budget](ci-builds.md#release-rust-resource-budget) for the
 compilation and test worker limits and memory-pressure diagnostics.
 
-Every native release build sets ThinLTO and 16 code generation units before
-restoring its cache, and `cargo build --timings` writes `target/cargo-timings/*.html`.
-A missing HTML report fails that job. The upload of `release-timings-<target>`
-sets `continue-on-error`, so an artifact-service failure does not fail a
-finished native build. The manual
-`Native build timings` workflow runs that same compile for darwin and linux-x64
-without preparing a version or publishing, and its timings upload still fails
-the job because the HTML report is the workflow's only output. Local
-`cargo build --release` still uses the Cargo.toml profile.
+Native distributions use the optimized Cargo release profile. Windows uses
+crate-local ThinLTO, while macOS and Linux use cross-crate ThinLTO. The workflow
+sets the profile overrides before restoring the target cache so Cargo and the
+cache action use the same profile. Local `cargo build --release` uses the
+manifest defaults. See [Windows release build timings](ci-builds.md#windows-release-build-timings)
+for the measurement behind the Windows override.
+
+The native jobs require the HTML report written by `cargo build --timings` and
+upload it as `release-timings-<target>` when the artifact service is available.
+The manual `Native build timings` workflow collects reports for macOS arm64 and
+Linux x64 without preparing a version or publishing.
 
 ## npm retry and backfill safety
 
-Every npm channel uses publish tooling from the running workflow commit, even
-when `resume_version` selects an older tag. Before each publish attempt, the
-helper checks `npm view <package>@<version> version --json`; an existing version
-is skipped. Failed publishes are checked again in case the registry accepted the
-write before the response failed. Sigstore `TLOG_CREATE_ENTRY_ERROR`, rate limits,
-server errors, process timeouts, and transient connection errors get at most
-three publish attempts
-with 10 and 20 second delays. Other failures stop the job. Registry lookups before
-publishing or after a failed upload fail closed on errors other than a missing
-version. Each npm command has a two minute
-process deadline and a one minute fetch timeout with npm fetch retries disabled.
-After a successful upload, the helper polls the exact version for up to 15
-minutes, backing off from one second to a ten second maximum between lookups.
-During this poll window, missing versions and transient lookup errors (`E5xx`,
-`ECONNRESET`, `ECONNREFUSED`, and `ETIMEDOUT`, including process timeouts) use
-the same backoff.
-Other lookup errors and unexpected versions still fail immediately.
-Lookup time and sleeps share that deadline. Each lookup keeps its two minute
-process and one minute fetch limits, shrunk to fit the remaining budget. A version that appears during this
-window proceeds normally. If it remains missing or transient lookups keep failing,
-the helper stops with a clear
-error that it may still be propagating or staged but unpromoted, without
-repeating the accepted upload or entering the 30 minute tarball wait.
-A failed upload response gets one bounded lookup in case the write succeeded.
-A registry response saying `previously staged version` with no visible version
-fails distinctly without retrying the upload. Visible versions retain that wait and checksum
-verification because tarball propagation can legitimately take longer.
+Every npm channel uses the running workflow commit's publish and tarball
+verification tooling, including when `resume_version` selects an older tag.
+Platform publishers stage the built CLI and addon directly from their release
+artifacts and run the package dry run without installing workspace dependencies.
+
+Before each upload, the helper checks the exact version with
+`npm view --prefer-online`. It also rechecks after a failed upload because
+npm may have accepted the write before returning an error. A visible version
+skips the upload. Sigstore `TLOG_CREATE_ENTRY_ERROR`, rate limits, server errors,
+process timeouts, and transient connection errors allow bounded retries.
+Other lookup errors fail closed before another upload.
+
+After an accepted or skipped upload, the publisher checks npm's install
+metadata and downloads the tarball to verify its checksum. The same deadline
+covers metadata and blob propagation. A version-specific result from
+`npm view` alone would leave the installer waiting for bytes, and polling it
+first can hold up verification when the install metadata is already current.
+Each platform's separate install-and-load job still has to succeed before
+the root can publish.
 
 ### Staged publication recovery
 
-The 0.109.27 incident returned `Cannot publish over previously staged version`
-for `no-mistakes-darwin-arm64` while the version remained absent from the
-packument. That establishes a staged upload without a publicly visible version;
-it does not establish whether npm processing, provenance, or package settings
-prevented promotion. A missing post-upload version can also reflect propagation,
-so the helper reports it as a possible staging problem and stops conservatively.
-
-Propagation alone has taken longer than the old two minute window. For 0.109.31
-and 0.109.32, each platform package became visible 4.5 to 7.3 minutes after its
-upload exited 0. The 15 minute packument window covers that with margin. The
-platform publish step allows 70 minutes for one package, and the four platform
-packages publish in parallel. The fetchable-tarball probe can use one minute.
-Each failed attempt can spend two minutes on the version lookup, the dist-tag
-lookup, `npm publish`, and the post-failure version lookup. The successful
-attempt spends those first three commands, then polls the packument for up to
-15 minutes. Retry sleeps add 30 seconds. The same step then waits up to 30
-minutes for the tarball. The root and ESLint publish steps are 70 minutes
-each. Each publish job allows 85 minutes, leaving 15 minutes for checkout and
-install before that step, and stays below the sum of its step timeouts,
-matching
-[`github-actions-job-timeouts`](../rules/github-actions-job-timeouts.md).
-`.github/scripts/publish-npm.test.cjs` enforces those budgets.
+An upload can be accepted without npm making the version publicly available.
+The tarball deadline fails the job in that case, with the most recent lookup
+or checksum error and the same-tag recovery instruction. A registry response
+saying `previously staged version` also fails if an exact-version check cannot
+see that version. In either case the job avoids resending the accepted upload.
 
 On either error, inspect npm publication status and package settings, and retain
 the registry response in the release logs. Check the exact version's metadata
 with `npm view <package>@<version> version --json`. Do not repeatedly republish a
 staged version or move dist-tags to hide the failure. Resolve the staging state
 with npm support if necessary. Once `npm view` shows the version, re-run the
-failed Publish job. The job skips packages whose tarball is already fetchable,
-so it resumes the same release tag without uploading again. A re-run uses the
+failed Publish job. The job skips the upload when the exact version is already visible and
+still verifies its tarball. A re-run uses the
 publish tooling from the release's workflow commit, so a tooling fix merged
 later does not apply to it. If npm cannot recover that version, explicitly retire the partial
 release before preparing a new version; already published immutable packages
