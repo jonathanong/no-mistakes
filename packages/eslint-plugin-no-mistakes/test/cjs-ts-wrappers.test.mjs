@@ -24,8 +24,9 @@ const groups = [
       "wrappers.test.ts",
       "dynamic.test.ts",
       "shapes.test.ts",
+      "shadow.test.ts",
     ],
-    valid: ["not-a-runner.test.ts", "redeclare.js", "type-only.test.ts"],
+    valid: ["not-a-runner.test.ts", "redeclare.js", "type-only.test.ts", "computed-member.test.ts"],
   },
   {
     rule: "no-vitest-sequential",
@@ -36,7 +37,7 @@ const groups = [
   {
     rule: "module-mock-boundary",
     dir: "boundary",
-    invalid: ["mocks.test.ts", "dynamic.test.ts", "shapes.test.ts"],
+    invalid: ["mocks.test.ts", "dynamic.test.ts", "shapes.test.ts", "opaque-method.test.ts"],
   },
   {
     rule: "module-mock-boundary",
@@ -175,6 +176,7 @@ const groups = [
     rule: "test-no-fixed-temp-paths",
     dir: "temp",
     invalid: ["paths.test.ts", "dynamic.test.ts"],
+    valid: ["mock-after.test.ts"],
   },
   {
     rule: "test-no-fixed-temp-paths",

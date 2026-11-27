@@ -97,6 +97,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "opaque-method.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 6,
+          "file": "opaque-method.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "module-mock-boundary:boundary-ignore": [
@@ -176,6 +194,12 @@
     },
     {
       "file": "type-only.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-member.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -313,6 +337,28 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/no-vitest-sequential",
           "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 5,
+          "file": "dynamic.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 12,
+          "file": "dynamic.test.ts",
+          "line": 12,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
         }
       ],
       "kind": "invalid",
@@ -415,6 +461,24 @@
           "endLine": 38,
           "file": "shapes.test.ts",
           "line": 38,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "shadow.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 3,
+          "file": "shadow.test.ts",
+          "line": 3,
           "message": "Use parallel tests instead of .sequential.",
           "messageId": "sequential",
           "ruleId": "no-mistakes/no-vitest-sequential",
@@ -642,9 +706,31 @@
         {
           "column": 3,
           "endColumn": 38,
-          "endLine": 6,
+          "endLine": 7,
           "file": "dynamic.test.ts",
-          "line": 6,
+          "line": 7,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 42,
+          "endLine": 8,
+          "file": "dynamic.test.ts",
+          "line": 8,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 45,
+          "endLine": 9,
+          "file": "dynamic.test.ts",
+          "line": 9,
           "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/test-no-error-message-matching",
@@ -668,6 +754,12 @@
     }
   ],
   "test-no-fixed-temp-paths:temp": [
+    {
+      "file": "mock-after.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
     {
       "file": "paths.test.ts",
       "findings": [
@@ -1516,7 +1608,7 @@
         {
           "column": 1,
           "endColumn": 1,
-          "endLine": 3,
+          "endLine": 7,
           "file": "computed-key.test.ts",
           "line": 1,
           "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",

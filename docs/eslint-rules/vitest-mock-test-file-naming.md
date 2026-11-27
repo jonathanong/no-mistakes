@@ -27,7 +27,7 @@ reports `unanalyzable` in a test file instead of deciding the filename.
 
 `import vt = require("vitest"); vt.vi.mock`, a cast `(vi.mock as typeof vi.mock)`,
 `(vi as typeof vi).mock`, and `vi["mock" as const]` are module mocks.
-`const { expect } = require("vitest"); expect.mock` is not. A `*.mock.test.*`
+`const { expect } = require("vitest"); expect.mock` is not, and neither is `(require("vitest")).expect.mock`. `const { [name as string]: api } = vt` is not `vi`. `const { ["vi" as const]: api } = vt` is. A `*.mock.test.*`
 file may contain those mocks. Another file's re-export stays unreported.
 
 ## Fix

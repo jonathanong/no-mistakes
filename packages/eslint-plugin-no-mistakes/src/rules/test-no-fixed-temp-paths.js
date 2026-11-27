@@ -70,6 +70,7 @@ module.exports = rule(
     const suppressed = ruleSuppression(context, RULE_NAME);
     const resolve = bindingResolver(context);
     const findings = new Set();
+    const advisories = new Set();
     let mocksFilesystem = false;
     function origin(input) {
       const seen = new Set();
@@ -89,7 +90,7 @@ module.exports = rule(
         if (mocksFilesystem) return;
         const binding = resolve(node.callee);
         if (binding === UNRESOLVED) {
-          if (!suppressed(node)) reportUnanalyzable(context, node, "this call");
+          if (!suppressed(node)) advisories.add(node);
           return;
         }
         if (isFilesystemMock(node, binding)) {
@@ -100,6 +101,7 @@ module.exports = rule(
       },
       "Program:exit"() {
         if (mocksFilesystem) return;
+        for (const node of advisories) reportUnanalyzable(context, node, "this call");
         for (const node of findings) context.report({ node, messageId: "fixedTempPath" });
       },
     };

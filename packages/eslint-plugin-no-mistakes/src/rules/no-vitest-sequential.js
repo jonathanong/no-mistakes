@@ -3,11 +3,12 @@
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression, unwrapSequence: unwrap } = require("./async-ast");
-const { requireSource } = require("./async-target-sources");
+const { requireResolution, requireSource } = require("./async-target-sources");
 const { literalString, logicalCall } = require("./logical-call");
 const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
 const {
   destructuredFromNamespace,
+  isUnshadowedNamespace,
   recordImportEquals,
   recordRequire,
   recordVitestImport,
@@ -104,6 +105,9 @@ function acceptsRunner(root, context, namespaces) {
     !(scopeType === "function" && scope.block?.type === "Program"),
   );
   if (def.type === "Parameter" || (nested && def.type !== "ImportBinding")) return false;
+  if (def.type === "Variable" && requireResolution(def.node?.init, context)?.source === null) {
+    return false;
+  }
   if (def.type !== "ImportBinding") return true;
   if (def.node?.type === "ImportNamespaceSpecifier") return namespaces.has(root.name);
   if (def.node?.type === "ImportDefaultSpecifier") return true;
@@ -137,8 +141,7 @@ function isSequentialCall(node, context, roots, namespaces) {
     const accepted = acceptsRunner(info.root, context, namespaces);
     const known =
       (accepted && roots.has(info.root.name)) ||
-      (accepted &&
-        namespaces.has(info.root.name) &&
+      (isUnshadowedNamespace(info.root, context, namespaces) &&
         info.names.some((name) => TEST_NAMES.has(name))) ||
       destructuredTest(info.root, context, namespaces);
     return known && (info.names.includes("sequential") || hasSequentialOption(node));

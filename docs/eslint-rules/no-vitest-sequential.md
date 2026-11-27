@@ -28,7 +28,11 @@ describe("users", () => {
 `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
 `require` or `import = require` of `vitest` whose specifier is not a static
 string reports `unanalyzable` when it is used as a sequential registration,
-instead of passing silently.
+instead of passing silently. A destructured `test`, `it`, or `describe` from
+that require follows the same option instead of the built-in runner name. A
+computed member of a resolved Vitest module, such as `vt[name].sequential`,
+stays silent. A nested `require("vitest")` does not make a different binding
+of the same name a namespace.
 
 A static `require("vitest")`, `import vt = require("vitest")`, and a
 destructured `test`, `it`, or `describe` from that module are the same runner

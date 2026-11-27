@@ -116,7 +116,7 @@ the async matcher was not awaited at its creation.
 
 `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
 `.rejects` matcher whose `expect` comes from a non-static `require` reports
-`unanalyzable`.
+`unanalyzable`. A suppression directive on that matcher silences the advisory.
 
 `const { expect } = require("vitest")`, an `expect` alias, `vt.expect` from
 `require("vitest")`, and `import vt = require("vitest")` are the same expect.

@@ -37,14 +37,16 @@ function memberPropertyName(node) {
 
 function frameworkRequireSource(init, context) {
   let call = unwrapExpression(init);
-  if (call?.type === "MemberExpression" && memberPropertyName(call)) {
-    call = unwrapExpression(call.object);
-  }
-  const source = requireSource(call, context);
-  if (source !== null) return source;
+  const member = call?.type === "MemberExpression" ? memberPropertyName(call) : null;
+  if (member) call = unwrapExpression(call.object);
+  let source = requireSource(call, context);
   const argument = call?.type === "CallExpression" ? call.arguments?.[0] : null;
-  if (argument && argument.type == null && typeof argument.value === "string")
-    return argument.value;
+  if (source === null && argument && argument.type == null && typeof argument.value === "string") {
+    source = argument.value;
+  }
+  if (!member) return source;
+  if (source === "vitest" && member === "vi") return source;
+  if (source === "@jest/globals" && member === "jest") return source;
   return null;
 }
 
@@ -179,7 +181,8 @@ function frameworkImportMatches(def, importModule) {
 function patternKey(pattern, name) {
   for (const property of pattern.properties) {
     if (property.type !== "Property") continue;
-    if (property.computed && property.key?.type === "Identifier") continue;
+    const key = unwrapExpression(property.key);
+    if (property.computed && key?.type === "Identifier") continue;
     const value =
       property.value.type === "AssignmentPattern" ? property.value.left : property.value;
     if (value.type === "Identifier" && value.name === name) return propertyName(property.key);

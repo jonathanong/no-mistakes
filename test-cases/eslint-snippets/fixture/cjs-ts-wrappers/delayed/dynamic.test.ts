@@ -4,4 +4,6 @@ async function reads() {
   const pending = Promise.reject(new Error("x"));
   await Promise.resolve();
   await vt.expect(pending).rejects.toThrow();
+  // no-mistakes-disable-next-line test-no-delayed-rejects -- legacy observer
+  await vt.expect(pending).rejects.toThrow();
 }

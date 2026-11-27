@@ -59,13 +59,14 @@ function moduleLoad(node, context, seen = new Set()) {
     if (!object) return null;
     if (object.source === null) return object;
     const exportName = memberPropertyName(node);
-    return exportName ? { source: object.source, exportName } : { source: null };
+    return exportName ? { source: object.source, exportName } : null;
   }
-  if (node.type !== "Identifier" || seen.has(node.name)) return null;
+  if (node.type !== "Identifier") return null;
   const variable = resolveVariable(node, context);
-  const definition = variable?.defs.length === 1 ? variable.defs[0] : null;
+  if (!variable || seen.has(variable)) return null;
+  const definition = variable.defs.length === 1 ? variable.defs[0] : null;
   if (!definition) return null;
-  seen.add(node.name);
+  seen.add(variable);
   const imported = importLoad(definition);
   if (imported) return imported;
   if (

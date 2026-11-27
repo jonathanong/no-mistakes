@@ -63,6 +63,20 @@ function isGeneratedTestPath(filename) {
   return filename.replace(/\\/g, "/").includes(".generated.");
 }
 
+function forwardedArguments(node) {
+  const current = unwrap(node);
+  if (current?.type !== "CallExpression") return null;
+  const callee = unwrap(current.callee);
+  const args = current.arguments;
+  if (callee?.type !== "MemberExpression") return args;
+  const name = memberName(callee);
+  if (name === "call") return args.slice(1);
+  if (name === "apply" && unwrap(args[1])?.type === "ArrayExpression") {
+    return unwrap(args[1]).elements;
+  }
+  return args;
+}
+
 function opaqueExpect(node, context) {
   const current = unwrap(node);
   if (current?.type !== "CallExpression") return false;
@@ -126,7 +140,7 @@ module.exports = rule(
           MATCHERS.has(memberName(callee)) &&
           !isExpectCall(matcherObject, context) &&
           opaqueExpect(matcherObject, context) &&
-          isMessageValue(unwrap(matcherObject)?.arguments?.[0], context) &&
+          isMessageValue(forwardedArguments(matcherObject)?.[0], context) &&
           !suppressed(node)
         ) {
           reportUnanalyzable(context, node, "this assertion");

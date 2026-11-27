@@ -119,7 +119,9 @@ module.exports = rule(
       CallExpression(node) {
         const memberMock = isModuleMockMemberCall(node, context);
         if (memberMock?.unanalyzable) {
-          reportUnanalyzable(context, node, "this call");
+          if (MODULE_MOCK_METHODS.has(memberMock.method)) {
+            reportUnanalyzable(context, node, "this call");
+          }
           return;
         }
         if (memberMock && MODULE_MOCK_METHODS.has(memberMock.method)) {

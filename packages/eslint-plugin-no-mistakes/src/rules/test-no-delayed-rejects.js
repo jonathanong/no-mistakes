@@ -159,7 +159,9 @@ module.exports = rule(
             expectation?.type === "CallExpression" &&
             isUnresolved(moduleLoad(expectCallee, context))
           ) {
-            reportUnanalyzable(context, node, "this rejection matcher");
+            if (!suppressed(node)) {
+              reportUnanalyzable(context, node, "this rejection matcher");
+            }
           }
           return;
         }

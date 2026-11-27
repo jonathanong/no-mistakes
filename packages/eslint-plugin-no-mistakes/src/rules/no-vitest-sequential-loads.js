@@ -107,6 +107,7 @@ function destructuredFromNamespace(init, context, namespaces) {
 
 module.exports = {
   destructuredFromNamespace,
+  isUnshadowedNamespace,
   recordImportEquals,
   recordRequire,
   recordVitestImport,

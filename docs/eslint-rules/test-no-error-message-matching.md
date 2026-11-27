@@ -23,6 +23,8 @@ expect(error.code).toBe("USER_NOT_FOUND");
 `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. An
 assertion whose `expect` comes from a non-static `require` reports
 `unanalyzable` when the compared value is an error message.
+`check.call(null, err.message)` and `check.apply(null, [err.message])` report
+that advisory when `check` is that unresolved expect.
 
 `import vt = require("vitest")`, `const { expect } = require("@playwright/test")`,
 and a Vitest namespace are expect bindings. Inside a test,
