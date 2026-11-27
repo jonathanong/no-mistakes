@@ -7,6 +7,7 @@ const root = path.resolve(__dirname, "../..");
 function cliCargoCommand(os) {
   const cases = cliCases[os];
   if (!Array.isArray(cases)) throw new Error(`unsupported smoke OS: ${os}`);
+  if (cases.length === 0) throw new Error(`no CLI invocation tests configured for ${os}`);
   return [
     "test",
     "--locked",
@@ -20,21 +21,19 @@ function cliCargoCommand(os) {
   ];
 }
 
-// A cargo filter that matches nothing exits 0 with "running 0 tests".
-function assertCargoTestsRan(args, output) {
-  const ranTests = [...output.matchAll(/^running (\d+) tests?\r?$/gm)].some(
-    ([, count]) => Number(count) > 0,
-  );
-  if (!ranTests) throw new Error(`cargo ${args.join(" ")} ran zero tests; update the smoke list`);
+function assertCargoTestsRan(args, output, expected) {
+  const passed = Number(output.match(/^test result: ok\. (\d+) passed;/m)?.[1] ?? 0);
+  if (passed !== expected)
+    throw new Error(`cargo ${args.join(" ")} passed ${passed} tests, expected ${expected}`);
 }
 
-function cargo(args) {
+function cargo(args, expected) {
   const result = spawnSync("cargo", args, { cwd: root, encoding: "utf8", maxBuffer: 1 << 28 });
   if (result.error) throw result.error;
   process.stdout.write(result.stdout);
   process.stderr.write(result.stderr);
   if (result.status !== 0) throw new Error(`cargo ${args[0]} failed: ${result.status}`);
-  assertCargoTestsRan(args, result.stdout);
+  assertCargoTestsRan(args, result.stdout, expected);
 }
 
 function assertCliResult({ status, stdout, stderr }) {
@@ -64,7 +63,7 @@ function cli(binary) {
 
 function main(os, mode, argument) {
   if (mode === "cli") return cli(argument);
-  if (mode === "cli-rust") return cargo(cliCargoCommand(os));
+  if (mode === "cli-rust") return cargo(cliCargoCommand(os), cliCases[os].length);
   throw new Error("usage: smoke.cjs <macos|windows> <cli <binary>|cli-rust>");
 }
 

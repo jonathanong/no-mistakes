@@ -24,15 +24,22 @@ test("each native CLI Cargo target and selected test case exists", () => {
   }
 });
 
-test("a Cargo filter that runs zero tests fails the smoke run", () => {
+test("every configured CLI case must pass even when Cargo exits successfully", () => {
   const invocation = cliCargoCommand("macos");
-  for (const output of ["running 0 tests\n\ntest result: ok. 0 passed\n", ""]) {
-    assert.throws(() => assertCargoTestsRan(invocation, output), /ran zero tests/);
+  for (const output of ["running 0 tests\n\ntest result: ok. 0 passed; 0 failed;\n", ""]) {
+    assert.throws(() => assertCargoTestsRan(invocation, output, 3), /passed 0 tests, expected 3/);
   }
+  for (const output of [
+    "running 2 tests\n\ntest result: ok. 2 passed; 0 failed; 0 ignored;\n",
+    "running 3 tests\r\n\r\ntest result: ok. 2 passed; 0 failed; 1 ignored;\r\n",
+  ])
+    assert.throws(() => assertCargoTestsRan(invocation, output, 3), /passed 2 tests, expected 3/);
   assert.doesNotThrow(() =>
-    assertCargoTestsRan(invocation, "running 0 tests\r\nrunning 3 tests\r\n"),
+    assertCargoTestsRan(invocation, "test result: ok. 3 passed; 0 failed; 0 ignored;\r\n", 3),
   );
-  assert.doesNotThrow(() => assertCargoTestsRan(invocation, "running 1 test\n"));
+  assert.doesNotThrow(() =>
+    assertCargoTestsRan(cliCargoCommand("windows"), "test result: ok. 1 passed; 0 failed;\n", 1),
+  );
 });
 
 test("CLI smoke requires the expected finding and the findings exit status", () => {
@@ -71,17 +78,18 @@ test("native API jobs run the same CLI cases with the platform runtime on every 
     assert.match(step, /if: .* !cancelled\(\) && steps\.native-cli\.outcome == 'success'/);
     assert.doesNotMatch(step, /continue-on-error/);
     assert.match(body, /name: Run native CLI smoke test\n +id: native-cli/);
-    assert.ok(
-      body.indexOf("Upload real N-API test durations") <
-        body.indexOf("Run platform CLI invocation tests"),
-    );
+    const upload = body.indexOf("      - name: Upload real N-API test durations\n");
+    assert.ok(upload >= 0, `${id} requires the API duration upload`);
+    for (const name of [
+      "Run CLI check on a saved fixture",
+      "Install Rust for CLI invocation tests",
+      "Run platform CLI invocation tests",
+    ]) {
+      assert.ok(body.indexOf(`      - name: ${name}\n`) > upload, `${name} follows the upload`);
+    }
     const toolchain = body
       .split("      - name: Install Rust for CLI invocation tests\n")[1]
       .split("\n      - ")[0];
-    assert.ok(
-      body.indexOf("Upload real N-API test durations") <
-        body.indexOf("Install Rust for CLI invocation tests"),
-    );
     assert.match(toolchain, /!cancelled\(\) && steps\.native-cli\.outcome == 'success'/);
     assert.match(step, /steps\.cli-rust-toolchain\.outcome == 'success'/);
     if (os === "macos") {
@@ -93,9 +101,5 @@ test("native API jobs run the same CLI cases with the platform runtime on every 
       assert.match(step, /steps\.build-artifact-source\.outputs\.reuse != 'true' \|\|/);
     }
     assert.ok(body.includes(`smoke.cjs ${os} cli ./target/debug/${binary}`));
-    assert.ok(
-      body.indexOf("Upload real N-API test durations") <
-        body.indexOf("Run CLI check on a saved fixture"),
-    );
   }
 });
