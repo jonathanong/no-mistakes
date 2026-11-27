@@ -162,6 +162,11 @@ await check(update).rejects.toThrow();
 await expect(update).rejects.toThrow();
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names
+`test-no-delayed-rejects` or `no-mistakes/test-no-delayed-rejects`.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - The Jest or Vitest `valid-expect` rule requires async matcher promises to be

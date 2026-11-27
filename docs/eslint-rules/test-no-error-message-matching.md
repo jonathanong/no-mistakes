@@ -150,6 +150,12 @@ without a proven runner initializer stays unknown.
 expect(error.message).toBe("Translated error");
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names
+`test-no-error-message-matching` or
+`no-mistakes/test-no-error-message-matching`. Directive-looking string
+literals do not.
+
 ## Related rules
 
 - [`test-no-shared-state`](test-no-shared-state.md) keeps tests isolated.
