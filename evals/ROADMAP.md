@@ -53,15 +53,20 @@ Every new should-fire flow also needs a **negative twin** — a question in the
 same vocabulary that the graph cannot answer — because widening the
 description to reach a new subject is the change most likely to over-trigger.
 
-### 3. Repeat the zero flows
+### 3. Name the zero flows in the description
 
-`duplication` 0/9, `safety` 0/6 and `napi` 0/12 are first observations with
-95% upper bounds of 22–39%. One more `runs: 3` pass each (~$12 single-arm)
-would show whether they are structurally dead or unlucky, which decides whether
-a clause is worth screening for them. The 2026-11-21 re-baseline re-measured
-them under the Sonnet agent / Opus judge and they stayed at 0/9, 0/6 and 0/12
-([HISTORY](HISTORY.md#2026-11-21--re-baseline-under-the-sonnet-agent-and-opus-judge));
-that is a second observation under a different agent, not a deeper one.
+`duplication`, `safety` and `napi` have now loaded 0 times in three runs: the
+2026-11-21 re-baseline, the
+[2026-11-26 control](HISTORY.md#2026-11-26--tool-skill-control-all-eleven-flows-re-measured)
+(0/9, 0/6, 0/12), and under the "Load before answering" description (0/9,
+0/6, 1/12). They are not unlucky, so no further repeat is needed. In the
+2026-11-26 runs the agent named the skill and deferred it on `napi`,
+`queues` and most `duplication` attempts, and the description names none of
+those questions (does a helper already exist, where a job is enqueued or
+processed, calling the analyses from Node). A clause per flow is the next
+screen. It needs new held-out cases first, because all nine are spent, and
+for queues it needs the file-lookup framing that kept the earlier queue
+clause off `neg-hard-02` ([HISTORY](HISTORY.md#gates-for-the-queue-clause-984-item-6)).
 
 ### 4. Re-measure the negative-case Δ
 
