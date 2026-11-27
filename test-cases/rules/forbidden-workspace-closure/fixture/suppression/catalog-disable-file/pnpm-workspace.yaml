@@ -1,0 +1,8 @@
+# Workspace catalog
+# no-mistakes-disable-file forbidden-workspace-closure
+packages: []
+catalog:
+  "@fixture/unused": 1.0.0
+include:
+  ./catalog.yaml:
+    - catalog

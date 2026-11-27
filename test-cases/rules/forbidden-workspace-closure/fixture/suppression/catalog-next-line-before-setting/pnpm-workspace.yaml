@@ -1,0 +1,7 @@
+# no-mistakes-disable-next-line forbidden-workspace-closure
+packages: []
+catalog:
+  "@fixture/unused": 1.0.0
+include:
+  ./catalog.yaml:
+    - catalog

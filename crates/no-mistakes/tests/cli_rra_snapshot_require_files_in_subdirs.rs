@@ -96,6 +96,26 @@ fn require_files_in_subdirs_json_matches_snapshot() {
             ),
             // Empty packages skip the fail tree instead of reporting its missing files.
             ("empty_packages", fixture("fail"), config("empty.yml")),
+            (
+                "escape",
+                fixture("escape"),
+                fixture("escape/.no-mistakes.yml"),
+            ),
+            (
+                "escape_disable_file",
+                fixture("escape-disable-file"),
+                fixture("escape-disable-file/.no-mistakes.yml"),
+            ),
+            (
+                "escape_disable_line",
+                fixture("escape-disable-line"),
+                fixture("escape-disable-line/.no-mistakes.yml"),
+            ),
+            (
+                "escape_disable_next_line",
+                fixture("escape-disable-next-line"),
+                fixture("escape-disable-next-line/.no-mistakes.yml"),
+            ),
         ],
     );
 }

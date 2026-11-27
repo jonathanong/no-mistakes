@@ -73,8 +73,11 @@ Following recall over precision, nothing is silently treated as clean ([how anal
 
 ## Suppression
 
-Prefer adjusting `roots` or common excludes. Use
-`no-mistakes-disable-file required-local-docs` for a documented generated tree.
+Missing-document findings point to the directory. Adjust `roots` or common
+excludes for a generated directory that should be exempt. The finding for a
+configured root outside the repository points to line 1 of the configuration
+file. A leading `no-mistakes-disable-file required-local-docs` directive in that
+file suppresses the finding.
 
 ## Related rules
 

@@ -2,6 +2,48 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "config_disable_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 9,
+          "message": "required-entrypoint-reachability: entrypoint `entrypoints/control.ts` does not exist",
+          "rule": "required-entrypoint-reachability",
+          "sourceLine": "- entrypoints/control.ts",
+          "target": "entrypoints/control.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "config_disable_next_line": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".no-mistakes.yml",
+          "line": 10,
+          "message": "required-entrypoint-reachability: entrypoint `entrypoints/control.ts` does not exist",
+          "rule": "required-entrypoint-reachability",
+          "sourceLine": "- entrypoints/control.ts",
+          "target": "entrypoints/control.ts"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "filesystem_skip": {
     "exitCode": 1,
     "report": {

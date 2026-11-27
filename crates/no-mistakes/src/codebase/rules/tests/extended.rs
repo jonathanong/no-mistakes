@@ -354,7 +354,7 @@ fn run_filesystem_rules_applies_shared_suppression() {
             .iter()
             .map(|finding| finding.file.as_str())
             .collect::<Vec<_>>(),
-        vec!["web/middleware.ts"]
+        vec!["web/middleware.ts", "web/next-line/middleware.ts"]
     );
 }
 

@@ -23,10 +23,27 @@ fn forbidden_workspace_closure_json_matches_snapshot() {
     let secret = cfg("acme-app-secret.yml");
     let packages = cfg("acme-app-secret-include-packages.yml");
     let acme_root = cfg("acme-root-secret.yml");
+    let suppression = root("fixture/suppression");
+    let catalog_next_line = suppression.join("catalog-next-line-before-setting");
     assert_saved_fixture(
         "forbidden_workspace_closure",
         &[
             ("direct_external", root("direct-external"), secret.clone()),
+            (
+                "suppression_catalog_file",
+                suppression.join("catalog-disable-file"),
+                suppression.join("config.yml"),
+            ),
+            (
+                "suppression_catalog_line",
+                suppression.join("catalog-disable-line"),
+                suppression.join("config.yml"),
+            ),
+            (
+                "suppression_next_line",
+                catalog_next_line.clone(),
+                catalog_next_line.join(".no-mistakes.yml"),
+            ),
             ("transitive", root("transitive-workspace"), secret.clone()),
             ("outside_closure", root("pass"), secret.clone()),
             (

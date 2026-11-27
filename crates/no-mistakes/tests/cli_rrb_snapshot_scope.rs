@@ -266,6 +266,16 @@ fn required_entrypoint_reachability_json_matches_snapshot() {
                 "required-entrypoint-reachability/fixture",
                 "suppression.no-mistakes.yml",
             ),
+            rule(
+                "config_disable_line",
+                "required-entrypoint-reachability/suppression/disable-line",
+                ".no-mistakes.yml",
+            ),
+            rule(
+                "config_disable_next_line",
+                "required-entrypoint-reachability/suppression/disable-next-line",
+                ".no-mistakes.yml",
+            ),
             case(
                 "filesystem_skip",
                 "test-cases/check-runner/required-reachability-ignores-filesystem-skip/fixture",
@@ -284,6 +294,26 @@ fn required_local_docs_json_matches_snapshot() {
             rule("fail", &format!("{dir}/fail"), ".no-mistakes.yml"),
             rule("pass", &format!("{dir}/pass"), ".no-mistakes.yml"),
             rule("escape", &format!("{dir}/escape"), ".no-mistakes.yml"),
+            rule(
+                "escape_disable_file",
+                &format!("{dir}/escape-disable-file"),
+                ".no-mistakes.yml",
+            ),
+            rule(
+                "escape_disable_line",
+                &format!("{dir}/escape-disable-line"),
+                ".no-mistakes.yml",
+            ),
+            rule(
+                "escape_disable_next_line",
+                &format!("{dir}/escape-disable-next-line"),
+                ".no-mistakes.yml",
+            ),
+            rule(
+                "directory_suppression",
+                &format!("{dir}/directory-suppression"),
+                ".no-mistakes.yml",
+            ),
             rule(
                 "parent_segment",
                 &format!("{dir}/parent-segment"),

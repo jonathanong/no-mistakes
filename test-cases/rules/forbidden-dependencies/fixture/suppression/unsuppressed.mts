@@ -1,0 +1,1 @@
+import "./lib/forbidden.mts";
