@@ -44,6 +44,44 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "first_line_next_line_directive": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "sgconfig.yml",
+          "line": 1,
+          "message": "directive for `config-path-references` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line config-path-references",
+          "target": "config-path-references"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sgconfig.yaml",
+          "line": 1,
+          "message": "sgconfig.yaml: config path `./missing/control` from `ruleDirs[0]` does not exist",
+          "rule": "config-path-references",
+          "sourceLine": "ruleDirs: [./missing/control]",
+          "target": "./missing/control"
+        },
+        {
+          "file": "sgconfig.yml",
+          "line": 1,
+          "message": "sgconfig.yml: config path `./missing/with-directive` from `ruleDirs[0]` does not exist",
+          "rule": "config-path-references",
+          "sourceLine": "# no-mistakes-disable-next-line config-path-references",
+          "target": "./missing/with-directive"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "glob_outside_include": {
     "exitCode": 0,
     "report": {
