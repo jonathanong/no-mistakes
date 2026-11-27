@@ -141,7 +141,7 @@ fn poetry_dependencies_table_keeps_the_package() {
         &packages,
         "sample-dir",
         "0.1.0",
-        "",
+        "lib/sample-dir",
         ResolutionKind::Directory,
     );
     expect(
