@@ -1,0 +1,9 @@
+tests:
+  playwright:
+    routeCoverageSources:
+      - framework: vitest
+        project: example
+        include: ["**/*.test.ts"]
+        routes: ["/api/:id"]
+        helpers:
+          - {module: "", export: example, urlArgument: 0}

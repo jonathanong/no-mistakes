@@ -47,7 +47,8 @@ declared route, and a more specific literal page cannot credit a parameter route
 
 Each helper identifies an exact repository-relative module file or resolvable
 module specifier and an exported binding. Import aliases are supported. Set
-`method` for an imported class instance method; omit it for an imported function.
+`method` for an imported class instance method or omit it for an imported
+function. Configuration loading rejects empty helper fields.
 `urlArgument` is the zero-based argument containing the route string. Class
 receivers must have a concrete imported constructor. Shadowed, reassigned, or
 ambiguous bindings receive no credit.

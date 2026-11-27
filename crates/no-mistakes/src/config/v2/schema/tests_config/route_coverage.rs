@@ -56,3 +56,15 @@ pub struct RouteCoverageHelper {
     pub method: Option<String>,
     pub url_argument: usize,
 }
+
+impl RouteCoverageHelper {
+    pub(crate) fn empty_field(&self) -> Option<&'static str> {
+        [
+            ("module", self.module.is_empty()),
+            ("export", self.export.is_empty()),
+            ("method", self.method.as_ref().is_some_and(String::is_empty)),
+        ]
+        .into_iter()
+        .find_map(|(field, empty)| empty.then_some(field))
+    }
+}

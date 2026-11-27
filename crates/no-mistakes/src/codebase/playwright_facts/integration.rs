@@ -41,9 +41,10 @@ pub(crate) fn validate(sources: &[RouteCoverageSource]) -> anyhow::Result<()> {
             );
         }
         for helper in &source.helpers {
-            anyhow::ensure!(!helper.module.is_empty() && !helper.export.is_empty()
-                && helper.method.as_ref().is_none_or(|method| !method.is_empty()),
-                "routeCoverageSources.helpers requires a module, export, and a nonempty optional method");
+            anyhow::ensure!(
+                helper.empty_field().is_none(),
+                "routeCoverageSources.helpers requires a module, export, and a nonempty optional method"
+            );
         }
     }
     Ok(())

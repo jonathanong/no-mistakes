@@ -112,6 +112,18 @@ fn invalid_runner_infra_and_changes_configuration_exits_two_at_load() {
             "route-coverage-noncanonical.yml",
             "tests.playwright.routeCoverageSources[0].routes[1] requires an exact canonical route identifier: /api/*",
         ),
+        (
+            "route-coverage-empty-module.yml",
+            "tests.playwright.routeCoverageSources[0].helpers[0].module must not be empty",
+        ),
+        (
+            "route-coverage-empty-export.yml",
+            "tests.playwright.routeCoverageSources[0].helpers[0].export must not be empty",
+        ),
+        (
+            "route-coverage-empty-method.yml",
+            "tests.playwright.routeCoverageSources[0].helpers[1].method must not be empty",
+        ),
         ("4483.yml", "infra.terraform.test.testGlobs[0]"),
         ("4484.yml", "infra.terraform.test.match"),
         ("4484-shared-module.yml", "infra.terraform.test.testRoot"),

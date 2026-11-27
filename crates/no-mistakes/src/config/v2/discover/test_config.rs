@@ -49,6 +49,16 @@ fn validate_sources(sources: &[RouteCoverageSource], base: &ConfigPath) -> Resul
                 format!("{field} requires an exact canonical route identifier: {route}"),
             ));
         }
+        let helpers = path.key("helpers");
+        for (index, helper) in source.helpers.iter().enumerate() {
+            if let Some(name) = helper.empty_field() {
+                let field = helpers.clone().index(index).key(name);
+                return Err(field_error(
+                    field.clone(),
+                    format!("{field} must not be empty"),
+                ));
+            }
+        }
     }
     Ok(())
 }
