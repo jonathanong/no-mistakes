@@ -57,8 +57,11 @@ The current validation graph is organized as follows:
   a merge job combines the blob reports and coverage before enforcing the
   configured floors. Linux real-addon cases run in isolated matrix jobs, using
   the shared case partitioning script even for tests registered through umbrella imports.
-- Rust coverage builds instrumented test binaries once, then runs 12 test
-  shards on pull requests and six on other events. Documentation tests run independently with their own ordinary Cargo
+- Rust coverage builds the instrumented library and integration targets in two
+  parallel PR jobs. Each archive feeds six execution shards. The report checks
+  each shard against its own archive, combines the two binary inventories, and
+  enforces coverage across both groups. On other events, one archive feeds six
+  execution shards. Documentation tests run independently with their own ordinary Cargo
   cache, so they cannot rebuild an uninstrumented library on the coverage
   producer before shards start. The collector checks complete execution and
   stages the downloaded raw profiles under shard-specific names. It hard-links
@@ -766,9 +769,9 @@ Other events retain one Cargo slot. Workspace cache matches are opportunities
 for reuse. Cargo still rebuilds changed units, and misses take the cold path.
 
 Release validation uses `.github/scripts/rust-validation.sh` for its build,
-test, and documentation-test commands. The current pull-request workflow uses
-that helper for documentation tests; instrumented Rust tests are built once,
-archived, and run in parallel shards. Resumed releases may use historical source
+test, and documentation-test commands. The pull-request workflow uses
+that helper for documentation tests. It builds separate library and integration
+archives for the instrumented shards. Resumed releases may use historical source
 tags without the shared helpers or profile defaults. Release validation checks
 out the running workflow's revision (`github.workflow_sha`) separately into
 `validation-tools`, then moves that checkout to the runner's temporary directory

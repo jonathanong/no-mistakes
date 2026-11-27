@@ -153,11 +153,11 @@ test("coverage compilation and execution shards have separate failure-aware jobs
   assert.match(build, /rust-coverage-shards\.cjs archive/);
   assert.match(shards, /needs: rust-coverage-build/);
   assert.match(shards, /fail-fast: false/);
-  assert.ok(
-    shards.includes(
-      "fromJSON(github.event_name == 'pull_request' && '[1,2,3,4,5,6,7,8,9,10,11,12]' || '[1,2,3,4,5,6]')",
-    ),
-  );
+  const groups = `group: ${"${{"} fromJSON(github.event_name == 'pull_request' && '["lib","integration"]' || '["all"]') }}`;
+  assert.ok(build.includes(groups));
+  assert.ok(shards.includes(groups));
+  assert.match(shards, /shard: \[1, 2, 3, 4, 5, 6\]/);
+  assert.match(workflowJob("tests"), /rust-coverage-shards\.cjs restore-split/);
   assert.match(shards, /rust-coverage-shards\.cjs shard/);
   const step = stepBudgetSeconds(shards, "Run Rust tests for coverage");
   assert.equal(step, 480);
