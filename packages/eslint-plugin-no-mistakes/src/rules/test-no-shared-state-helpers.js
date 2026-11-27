@@ -26,35 +26,37 @@ const FUNCTION_NODES = new Set([
 ]);
 
 function mutationRootName(node) {
-  if (node.type === "Identifier") return node.name;
-  if (node.type === "MemberExpression") return mutationRootName(node.object);
+  const current = unwrapExpression(node);
+  if (current.type === "Identifier") return current.name;
+  if (current.type === "MemberExpression") return mutationRootName(current.object);
   return null;
 }
 
 function mutationPath(node) {
-  if (node.type === "Identifier") return node.name;
-  if (node.type !== "MemberExpression") return null;
-  const objectPath = mutationPath(node.object);
+  const current = unwrapExpression(node);
+  if (current.type === "Identifier") return current.name;
+  if (current.type !== "MemberExpression") return null;
+  const objectPath = mutationPath(current.object);
   const property =
-    node.computed && node.property.type !== "Literal" ? null : propertyName(node.property);
+    current.computed && current.property.type !== "Literal" ? null : propertyName(current.property);
   return objectPath && property ? `${objectPath}.${property}` : null;
 }
 
 function mutatingCallTarget(node) {
-  if (
-    node.callee.type !== "MemberExpression" ||
-    !MUTATING_METHODS.has(propertyName(node.callee.property))
-  ) {
+  const callee = unwrapExpression(node.callee);
+  if (callee.type !== "MemberExpression" || !MUTATING_METHODS.has(propertyName(callee.property))) {
     return { name: null, path: null };
   }
+  const object = unwrapExpression(callee.object);
   return {
-    name: mutationRootName(node.callee.object),
-    path: mutationPath(node.callee.object),
+    name: mutationRootName(object),
+    path: mutationPath(object),
   };
 }
 
 function mutatingCallPropertyName(node) {
-  return node.callee.type === "MemberExpression" ? propertyName(node.callee.property) : null;
+  const callee = unwrapExpression(node.callee);
+  return callee.type === "MemberExpression" ? propertyName(callee.property) : null;
 }
 
 function isFunctionNode(node) {
@@ -85,10 +87,13 @@ function isCalledFunction(node) {
 }
 
 function containsIdentifierCall(node, name) {
-  if (node.type === "CallExpression" && node.callee.type === "Identifier")
-    return node.callee.name === name;
-  if (isFunctionNode(node)) return false;
-  return childNodes(node).some((child) => containsIdentifierCall(child, name));
+  const current = unwrapExpression(node);
+  if (current.type === "CallExpression") {
+    const callee = unwrapExpression(current.callee);
+    if (callee.type === "Identifier") return callee.name === name;
+  }
+  if (isFunctionNode(current)) return false;
+  return childNodes(current).some((child) => containsIdentifierCall(child, name));
 }
 
 function isMutableInitializer(node) {

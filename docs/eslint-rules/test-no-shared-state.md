@@ -35,7 +35,10 @@ test("user", () => {
 `import vt = require("vitest")`, and `const { test } = require("@playwright/test")`
 register tests. Vitest's default import is not a test callee. A type assertion
 on an array, such as `[] as string[]`, is still a mutable initializer, and
-`list = [] as string[]` inside `beforeEach` is still a reset.
+`list = [] as string[]` inside `beforeEach` is still a reset. A push through a
+type assertion, a non-null assertion, or a cast method, such as
+`(bag as any[]).push(1)`, `bag!.push(1)`, and `(bag.push as any)(1)`, is still
+that shared mutation.
 
 ## Fix
 
