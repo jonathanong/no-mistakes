@@ -25,7 +25,11 @@ test("standalone build retains the default-feature library-only scope", () => {
       command[expectedPrefix.length],
       path.resolve(`target/bundle/standalone-${shard}.tar.zst`),
     );
-    assert.deepEqual(command.slice(expectedPrefix.length + 1), ["--zstd-level", "6", "--zstd-long"]);
+    assert.deepEqual(command.slice(expectedPrefix.length + 1), [
+      "--zstd-level",
+      "6",
+      "--zstd-long",
+    ]);
     assert.ok(!command.includes("--all-features"));
     assert.ok(!command.includes("--bins"));
     assert.ok(!command.includes("--partition"));
@@ -194,4 +198,22 @@ test("the final build step rejects missing earlier archives", () =>
     assert.equal(result.status, 1);
     assert.match(result.stderr, /requires all three archives/);
     assert.equal(existsSync(path.join(bundle, "build.json")), false);
+  }));
+
+test("PR jobs build and run exactly one library slice without an archive", () =>
+  scenario(({ bundle, invoke }) => {
+    for (const index of [1, 2, 3]) {
+      const shard = index - 1;
+      const scope = shard === 0 ? "--workspace" : "-p no-mistakes";
+      const wrapper = path.join(__dirname, `standalone-shard-rustc-${shard}.sh`);
+      const result = invoke(["local", String(index)]);
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(
+        result.stdout.trim(),
+        `local shard=${shard} wrapper=${wrapper} args=--locked ${scope} --lib --no-fail-fast --retries 0`,
+      );
+    }
+    assert.equal(existsSync(bundle), false);
+    assert.equal(invoke(["local", "4"]).status, 1);
+    assert.equal(invoke(["local", "1"], { STANDALONE_FIXTURE_STATUS: "23" }).status, 23);
   }));

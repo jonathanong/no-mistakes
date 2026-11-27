@@ -8,11 +8,18 @@ const root = join(__dirname, "../..");
 const workflow = readFileSync(join(root, ".github/workflows/ci.yml"), "utf8");
 const producer = workflowJob(workflow, "rust-coverage-build");
 
-test("instrumented compilation serializes Cargo units on the hosted memory budget", () => {
+test("instrumented compilation bounds PR Cargo jobs and serializes the largest units", () => {
   assert.ok(evidence.cargoBuildJobs < evidence.runnerCpus);
   const settings = producer.split("    steps:\n")[0];
-  assert.match(settings, new RegExp(`CARGO_BUILD_JOBS: "${evidence.cargoBuildJobs}"`));
-  assert.doesNotMatch(producer, /CARGO_BUILD_JOBS: "[2-9]/);
+  assert.ok(
+    settings.includes(
+      `CARGO_BUILD_JOBS: ${"${{"} github.event_name == 'pull_request' && '2' || '${evidence.cargoBuildJobs}' }}`,
+    ),
+  );
+  assert.match(producer, /RUSTC_WRAPPER: .*pull_request.*coverage-rustc\.sh/);
+  const wrapper = readFileSync(join(__dirname, "coverage-rustc.sh"), "utf8");
+  assert.match(wrapper, /--crate-name.*no_mistakes/);
+  assert.match(wrapper, /exec flock /);
   assert.doesNotMatch(producer, /CARGO_PROFILE_|link-arg|--no-default-features/);
   const archive = readFileSync(join(__dirname, "rust-coverage-shards.cjs"), "utf8");
   for (const flag of ["--locked", "--workspace", "--all-features", "--lib", "--bins", "--tests"])

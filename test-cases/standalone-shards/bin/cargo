@@ -6,6 +6,7 @@ if printenv 'CARGO_BIN_EXE_no-mistakes' >/dev/null; then
 fi
 mode="$2"
 shift 2
+args=("$@")
 archive=''
 extract=''
 zstd_level=''
@@ -34,6 +35,10 @@ elif [[ "$mode" == run ]]; then
   if [[ "${CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER:-}" != "$STANDALONE_FIXTURE_RUNNER" ]]; then
     echo 'standalone nextest argv wrapper is missing or incorrect' >&2
     exit 94
+  fi
+  if [[ -z "$archive" ]]; then
+    printf 'local shard=%s wrapper=%s args=%s\n' "$NM_TEST_SHARD" "$RUSTC_WORKSPACE_WRAPPER" "${args[*]}"
+    exit "${STANDALONE_FIXTURE_STATUS:-0}"
   fi
   if [[ ! -d "$extract" ]]; then
     echo 'nextest extraction directory does not exist' >&2

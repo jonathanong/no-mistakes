@@ -1,4 +1,10 @@
-const rustJobs = new Set(["docs-tests", "tests", "standalone-build", "standalone-shards"]);
+const rustJobs = new Set([
+  "docs-tests",
+  "tests",
+  "standalone-build",
+  "standalone-shards",
+  "standalone-pr",
+]);
 const macosJobs = new Set(["native-rust-tests-macos", "native-api-tests-macos"]);
 const windowsJobs = new Set([
   "native-build",
@@ -17,6 +23,12 @@ for (const [name, { result }] of Object.entries(jobs)) {
     if (
       process.env.RUST_REQUIRED === "false" &&
       (rustJobs.has(name) || macos || windows || name === "windows-smoke")
+    )
+      continue;
+    if (name === "standalone-pr" && process.env.MACOS_EVENT !== "pull_request") continue;
+    if (
+      (name === "standalone-build" || name === "standalone-shards") &&
+      process.env.MACOS_EVENT === "pull_request"
     )
       continue;
     if (macos && process.env.MACOS_REQUIRED === "false") continue;

@@ -4,7 +4,8 @@
 
 "Never serialize parallel work."
 
-For job sizing, see the `github-actions-authoring` skill.
+The `github-actions-authoring` skill's `references/job-sizing.md` defines the
+pull-request targets of under 15 minutes wall time and under 30% setup per shard.
 
 Two setup-dominated, sub-2-minute policy checks are explicit exceptions because
 their runner queue wait and setup exceeded their check runtime and neither sits
@@ -51,20 +52,25 @@ The current validation graph is organized as follows:
   and Rust coverage merges when GitHub cancels the workflow. Active runs
   still evaluate dependency results and reject failures.
 - Independent Linux CLI and N-API producers upload their binaries for the AST check and
-  Linux real-addon tests. Ordinary JavaScript tests run in four Vitest shards;
+  Linux real-addon tests. Ordinary JavaScript tests run in two parallel Vitest
+  shards on pull requests and four on other events;
   a merge job combines the blob reports and coverage before enforcing the
   configured floors. Linux real-addon cases run in isolated matrix jobs, using
   the shared case partitioning script even for tests registered through umbrella imports.
-- Rust coverage builds instrumented test binaries once, then runs six test
-  shards. Documentation tests run independently with their own ordinary Cargo
+- Rust coverage builds the instrumented library and integration targets in two
+  parallel PR jobs. Each archive feeds six execution shards. The report checks
+  each shard against its own archive, combines the two binary inventories, and
+  enforces coverage across both groups. On other events, one archive feeds six
+  execution shards. Documentation tests run independently with their own ordinary Cargo
   cache, so they cannot rebuild an uninstrumented library on the coverage
   producer before shards start. The collector checks complete execution and
   stages the downloaded raw profiles under shard-specific names. It hard-links
   the read-only profiles when the download and report directories share a
   filesystem and copies them across filesystems. Reporting uses those profiles
   to produce LCOV and apply the coverage and complexity gates.
-- Standalone library tests build without the CLI, then run as four shards from
-  the archived test binaries. Native platform jobs build runtime and Rust test
+- Standalone library tests build without the CLI. Each of the three PR shards
+  builds and runs its own test slice on one runner. On other events, one
+  producer builds all three archives for three test consumers. Native platform jobs build runtime and Rust test
   artifacts separately. Each platform has its own producer and consumer jobs,
   so its tests start when its artifacts are ready without waiting for the other
   platform. Contract tests keep their build and test commands aligned.
@@ -486,7 +492,7 @@ cache states and include scheduling overhead.
 
 ### Standalone archive transfers
 
-The [standalone archive producer](../../.github/scripts/standalone-shards.cjs)
+On pushes and manual dispatches, the [standalone archive producer](../../.github/scripts/standalone-shards.cjs)
 uses long-distance archive compression to reduce repeated shard downloads while
 preserving symbol names for panic diagnostics. Debug metadata is already disabled;
 stripping symbols would remove those diagnostics. Once the producer compiles the
@@ -715,7 +721,7 @@ which is what local `cargo test` and clippy do. `crates/no-mistakes-invocation/b
 always sets `nm_shard_all`, and `crates/no-mistakes-postgres-sql/build.rs` watches
 `NM_POSTGRES_SQL_TEST_SHARD` (used only by the `postgres-source` slice) rather
 than `NM_TEST_SHARD`, so Cargo keeps both sibling library artifacts fresh when
-`NM_TEST_SHARD` cycles across `0`, `1`, and `2`. The standalone build sets
+`NM_TEST_SHARD` cycles across `0`, `1`, and `2`. The standalone producer for pushes and manual dispatches sets
 `NM_TEST_SHARD` to `0`, `1`, and `2` on three sequential `cargo nextest archive`
 commands (shard 0 archives `--workspace --lib` so the smaller
 `no-mistakes-invocation` and `no-mistakes-postgres-sql` crates run all of their
@@ -736,10 +742,36 @@ values, including `shards=3`, and samples `[resources]` on the same interval
 as release validation. The ceiling for the sampled `rustc` `top_rss` is 10240
 MiB.
 
+Each PR shard uses the same compiler flags, package selection and Cargo workspace
+cache as the archive producer. It restores verified input timestamps when a
+cache matches, starts the isolated PostgreSQL fixture server and runs
+`cargo nextest run --lib` on the build runner. Shard 1 includes the whole
+workspace's library targets. Shards 2 and 3 select only `no-mistakes`.
+
+### PR Rust profiles and caches
+
+| Job | Cargo profile | Reuse |
+| --- | --- | --- |
+| Linux runtime CLI and addon | `dev` | Separate workspace snapshots with verified input timestamps |
+| macOS and Windows smoke | `dev` for the CLI and addon, `test` for the harness | Platform runtime snapshots and a shared target within each smoke job |
+| Standalone library shards | `test`, default features | Standalone workspace snapshot with verified input timestamps |
+| Instrumented Rust tests | `test`, all features | Coverage-specific workspace snapshot with verified input timestamps |
+| Documentation tests | `test` | Dependency artifacts in a separate doc-test cache |
+| Package checks | `dev` with debug info for Cargo publish verification | Dependency-only cache, with separate package-verification outputs |
+| Rust quality | `dev` checks, `test` for source-identity tests, release configuration for warnings | Dependency artifacts and a separate release metadata cache |
+
+The release warnings lane uses `cargo check --release` to check release-only
+configuration. It emits metadata for the target crates. The shipped CLI and
+addon use the optimized release profile in `release.yml`. On a PR, instrumented
+compilation uses two Cargo slots. The compiler wrapper serializes invocations
+for `no_mistakes`, the largest crate, while smaller units can build concurrently.
+Other events retain one Cargo slot. Workspace cache matches are opportunities
+for reuse. Cargo still rebuilds changed units, and misses take the cold path.
+
 Release validation uses `.github/scripts/rust-validation.sh` for its build,
-test, and documentation-test commands. The current pull-request workflow uses
-that helper for documentation tests; instrumented Rust tests are built once,
-archived, and run in parallel shards. Resumed releases may use historical source
+test, and documentation-test commands. The pull-request workflow uses
+that helper for documentation tests. It builds separate library and integration
+archives for the instrumented shards. Resumed releases may use historical source
 tags without the shared helpers or profile defaults. Release validation checks
 out the running workflow's revision (`github.workflow_sha`) separately into
 `validation-tools`, then moves that checkout to the runner's temporary directory

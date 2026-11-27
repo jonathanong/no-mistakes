@@ -56,8 +56,34 @@ function partition(index, total) {
     throw new Error("Expected a shard index and total with 1 <= index <= total");
   return `hash:${index}/${total}`;
 }
+const coverageTargets = new Map([
+  ["all", ["--lib", "--bins", "--tests"]],
+  ["lib", ["--lib"]],
+  ["integration", ["--bins", "--test", "*"]],
+]);
+
+function coverageGroup(env) {
+  const group = env.COVERAGE_GROUP || "all";
+  if (!coverageTargets.has(group)) throw new Error(`Unknown coverage group: ${group}`);
+  return group;
+}
+
+function coverageBundles(directory, env) {
+  const groups = env.COVERAGE_SPLIT === "true" ? ["lib", "integration"] : ["all"];
+  return groups.map((group) => {
+    const directoryForGroup =
+      group === "all" ? directory : join(directory, `rust-coverage-build-${group}`);
+    return {
+      directory: directoryForGroup,
+      group,
+      build: verify(directoryForGroup, { ...env, COVERAGE_GROUP: group }),
+    };
+  });
+}
+
 function archive(directory, env = process.env, run = command) {
   const identity = scope(env);
+  const group = coverageGroup(env);
   if (resolve(env.CARGO_TARGET_DIR || ".") !== identity.target)
     throw new Error("Source cargo llvm-cov show-env --sh before archiving tests");
   mkdirSync(directory, { recursive: true });
@@ -77,9 +103,7 @@ function archive(directory, env = process.env, run = command) {
       "--locked",
       "--workspace",
       "--all-features",
-      "--lib",
-      "--bins",
-      "--tests",
+      ...coverageTargets.get(group),
       "--archive-file",
       join(directory, archiveName),
     ],
@@ -88,6 +112,7 @@ function archive(directory, env = process.env, run = command) {
   );
   writeJson(join(directory, "build.json"), {
     ...identity,
+    ...(group !== "all" && { group }),
     archiveSha256: digest(join(directory, archiveName)),
   });
 }
@@ -97,6 +122,8 @@ function verify(directory, env = process.env) {
   for (const key of ["source", "workspace", "target"])
     if (identity[key] !== build[key])
       throw new Error(`Coverage archive ${key} mismatch: ${build[key]} != ${identity[key]}`);
+  if ((build.group || "all") !== coverageGroup(env))
+    throw new Error("Coverage archive group mismatch");
   if (digest(join(directory, archiveName)) !== build.archiveSha256)
     throw new Error("Coverage archive SHA-256 mismatch");
   return build;
@@ -155,16 +182,59 @@ function shard(directory, output, index, total, env = process.env, run = command
   return status;
 }
 function reportObjects(directory, metadata, env = process.env) {
-  const build = verify(directory, env);
+  return writeReportObjects(verify(directory, env), [metadata], env);
+}
+
+function restoreSplitReport(directory, env = process.env) {
+  const bundles = coverageBundles(directory, env);
+  mkdirSync(dirname(bundles[0].build.target), { recursive: true });
+  const metadata = bundles.map(({ directory: bundle, build }) => {
+    const result = spawnSync(
+      "cargo",
+      [
+        "nextest",
+        "list",
+        "--archive-file",
+        join(bundle, archiveName),
+        "--extract-to",
+        dirname(build.target),
+        "--extract-overwrite",
+        "--workspace-remap",
+        build.workspace,
+        "--list-type",
+        "binaries-only",
+        "--message-format",
+        "json",
+      ],
+      { env, encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] },
+    );
+    if (result.error) throw result.error;
+    if (result.status !== 0) throw new Error(`Could not restore coverage archive ${bundle}`);
+    return JSON.parse(result.stdout);
+  });
+  const testIds = new Set();
+  for (const group of metadata) {
+    for (const id of Object.keys(group["rust-binaries"] || {})) {
+      if (testIds.has(id)) throw new Error(`Coverage archive has duplicate test binary ${id}`);
+      testIds.add(id);
+    }
+  }
+  return writeReportObjects(bundles[0].build, metadata, env);
+}
+
+function writeReportObjects(build, metadata, env) {
   const previous = env.LLVM_COV_FLAGS || "";
   if (/[\r\n\0]/.test(previous) || /(^|\s)(@|--?(object|instr-profile)(=|\s|$))/.test(previous))
     throw new Error(
       "Conflicting LLVM_COV_FLAGS: object/profile overrides and response files are unsupported",
     );
-  if (metadata["rust-build-meta"]?.["target-directory"] !== build.target)
-    throw new Error("Coverage binary metadata target differs from the archive");
-  const binaries = Object.values(metadata["rust-binaries"] || {});
-  if (!binaries.length) throw new Error("Coverage archive has no test binary objects");
+  const binaries = metadata.flatMap((entry) => {
+    if (entry["rust-build-meta"]?.["target-directory"] !== build.target)
+      throw new Error("Coverage binary metadata target differs from the archive");
+    const entries = Object.values(entry["rust-binaries"] || {});
+    if (!entries.length) throw new Error("Coverage archive has no test binary objects");
+    return entries;
+  });
   const canonicalTarget = realpathSync(build.target);
   const objects = [
     ...new Set(
@@ -197,9 +267,10 @@ function reportObjects(directory, metadata, env = process.env) {
 }
 function collect(directory, input, total, env = process.env) {
   partition(1, total);
-  const build = verify(directory, env);
-  mkdirSync(build.target, { recursive: true });
-  if (readdirSync(build.target).some((name) => /\.prof(raw|data)$/.test(name)))
+  const bundles = coverageBundles(directory, env);
+  const { target } = bundles[0].build;
+  mkdirSync(target, { recursive: true });
+  if (readdirSync(target).some((name) => /\.prof(raw|data)$/.test(name)))
     throw new Error(
       "Coverage target already contains profile data; extract a fresh archive before collecting shards",
     );
@@ -207,8 +278,14 @@ function collect(directory, input, total, env = process.env) {
   const references = [];
   const rows = [];
   const profiles = [];
-  for (let index = 1; index <= +total; index++) {
-    const folder = join(input, `rust-coverage-shard-${index}`);
+  const shards = bundles.flatMap(({ group, build }) =>
+    Array.from({ length: +total }, (_, offset) => {
+      const index = offset + 1;
+      return { build, index, id: group === "all" ? index : `${group}-${index}` };
+    }),
+  );
+  for (const { build, index, id } of shards) {
+    const folder = join(input, `rust-coverage-shard-${id}`);
     try {
       const result = readJson(join(folder, "result.json"));
       for (const [key, expected] of Object.entries({ ...build, index, total: +total }))
@@ -219,16 +296,16 @@ function collect(directory, input, total, env = process.env) {
         const stat = lstatSync(file);
         if (!name.endsWith(".profraw") || !stat.isFile() || stat.size === 0)
           throw new Error(`Invalid raw profile: ${name}`);
-        const destination = join(build.target, `shard-${index}-${name}`);
+        const destination = join(target, `shard-${id}-${name}`);
         if (existsSync(destination)) throw new Error(`Profile already exists: ${destination}`);
         profiles.push([file, destination]);
       }
       references.push(readFileSync(join(folder, "references.txt"), "utf8"));
-      rows.push(`| ${index}/${total} | ${result.status} | ${raw.length} | ${result.elapsedMs} |`);
-      if (result.status !== 0) errors.push(`Shard ${index} exited ${result.status}`);
-      if (raw.length === 0) errors.push(`Shard ${index} produced no raw profiles`);
+      rows.push(`| ${id}/${total} | ${result.status} | ${raw.length} | ${result.elapsedMs} |`);
+      if (result.status !== 0) errors.push(`Shard ${id} exited ${result.status}`);
+      if (raw.length === 0) errors.push(`Shard ${id} produced no raw profiles`);
     } catch (error) {
-      errors.push(`Shard ${index}: ${error.message}`);
+      errors.push(`Shard ${id}: ${error.message}`);
     }
   }
   for (const [source, destination] of profiles) {
@@ -248,15 +325,22 @@ function collect(directory, input, total, env = process.env) {
 if (require.main === module) {
   try {
     const [mode, ...args] = process.argv.slice(2);
-    const arity = { archive: 1, verify: 1, shard: 4, collect: 3, "report-objects": 2 };
+    const arity = {
+      archive: 1,
+      verify: 1,
+      "restore-split": 1,
+      shard: 4,
+      collect: 3,
+      "report-objects": 2,
+    };
     if (args.length !== arity[mode])
       throw new Error(
-        "Usage: rust-coverage-shards.cjs archive <bundle> | verify <bundle> | shard <bundle> <output> <index> <total> | collect <bundle> <input> <total> | report-objects <bundle> <binaries-json>",
+        "Usage: rust-coverage-shards.cjs archive <bundle> | verify <bundle> | shard <bundle> <output> <index> <total> | collect <bundle> <input> <total> | report-objects <bundle> <binaries-json> | restore-split <bundles>",
       );
     const result =
       mode === "report-objects"
         ? reportObjects(args[0], readJson(args[1]))
-        : { archive, verify, shard, collect }[mode](...args);
+        : { archive, verify, shard, collect, "restore-split": restoreSplitReport }[mode](...args);
     if (typeof result === "string") console.log(result);
     if (typeof result === "number") process.exitCode = result;
   } catch (error) {

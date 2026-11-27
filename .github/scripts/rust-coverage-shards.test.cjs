@@ -344,3 +344,45 @@ test("report object preparation rejects stale metadata, outside objects and conf
     assert.throws(() => reportObjects(bundle, metadata, env), /outside the target/);
     assert.equal(existsSync(join(root, "target/llvm-cov/nextest-objects.rsp")), false);
   }));
+
+test("split PR archives validate both groups and retain distinct profile identities", () =>
+  scenario(({ bundle, input, env }) => {
+    const splitEnv = { ...env, COVERAGE_SPLIT: "true" };
+    const buildCalls = [];
+    for (const group of ["lib", "integration"]) {
+      const folder = join(bundle, `rust-coverage-build-${group}`);
+      const groupEnv = { ...splitEnv, COVERAGE_GROUP: group };
+      archive(folder, groupEnv, (args) => {
+        buildCalls.push(args.slice(5, args.indexOf("--archive-file")));
+        copyFileSync(join(fixtures, "archive.fixture"), join(folder, "rust-tests.tar.zst"));
+        return 0;
+      });
+      assert.throws(() => verify(folder, env), /group mismatch/);
+      shard(
+        folder,
+        join(input, `rust-coverage-shard-${group}-1`),
+        1,
+        1,
+        groupEnv,
+        (_, runnerEnv) => {
+          copyFileSync(join(fixtures, "profile.fixture"), runnerEnv.LLVM_PROFILE_FILE);
+          copyFileSync(
+            join(fixtures, "references.fixture"),
+            runnerEnv.INSTA_SNAPSHOT_REFERENCES_FILE,
+          );
+          return 0;
+        },
+      );
+    }
+    assert.deepEqual(buildCalls, [["--lib"], ["--bins", "--test", "*"]]);
+    collect(bundle, input, 1, splitEnv);
+    assert.deepEqual(readdirSync(env.CARGO_LLVM_COV_TARGET_DIR).sort(), [
+      "shard-integration-1-no-mistakes-%9m.profraw",
+      "shard-lib-1-no-mistakes-%9m.profraw",
+    ]);
+    const references = readFileSync(join(fixtures, "references.fixture"), "utf8");
+    assert.equal(
+      readFileSync(join(input, "references.txt"), "utf8"),
+      `${references}\n${references}`,
+    );
+  }));

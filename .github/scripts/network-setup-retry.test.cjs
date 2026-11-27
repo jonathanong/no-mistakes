@@ -94,7 +94,7 @@ test("Rust coverage shard artifact download retries within a bounded fatal seque
   const index = job.steps.findIndex(
     (step) =>
       step.uses?.startsWith("actions/download-artifact@") &&
-      step.with?.name === "rust-coverage-build",
+      step.with?.name?.startsWith("rust-coverage-build"),
   );
   assert.notEqual(index, -1, "coverage build artifact download must exist");
   assertRetryPair(job, index, {
