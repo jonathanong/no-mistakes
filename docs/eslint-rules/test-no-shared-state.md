@@ -79,6 +79,11 @@ check("hidden", () => {
 sharedConnection = createConnection();
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names
+`test-no-shared-state` or `no-mistakes/test-no-shared-state`.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`no-vitest-sequential`](no-vitest-sequential.md) prevents serial ordering
