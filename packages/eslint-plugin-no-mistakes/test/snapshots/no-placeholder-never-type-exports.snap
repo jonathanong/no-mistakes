@@ -12,6 +12,28 @@
         "messageId": "placeholder",
         "ruleId": "no-mistakes/no-placeholder-never-type-exports",
         "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 36,
+        "endLine": 13,
+        "file": "ts-object-recall/ambient-placeholder-types.d.ts",
+        "line": 13,
+        "message": "Do not export placeholder never types. Define the real type or remove the export.",
+        "messageId": "placeholder",
+        "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 31,
+        "endLine": 17,
+        "file": "ts-object-recall/ambient-placeholder-types.d.ts",
+        "line": 17,
+        "message": "Cannot tell whether this exported type is a never placeholder. Its definition is in another module this file cannot read.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+        "severity": 2
       }
     ],
     "name": "ambient modules resolve aliases in their own scope",

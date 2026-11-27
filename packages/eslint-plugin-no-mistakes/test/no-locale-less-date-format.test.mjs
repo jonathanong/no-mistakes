@@ -230,6 +230,12 @@ const cases = [
     lines: [7, 11, 15, 17],
   },
   {
+    name: "a same-file constructor alias still requires a locale",
+    file: "constructor-alias.mjs",
+    options: { methods: [], constructors: ["Intl.DateTimeFormat"] },
+    lines: [2],
+  },
+  {
     name: "a locale binding named undefined is an explicit argument",
     file: "bound-undefined-locale.ts",
     options: {

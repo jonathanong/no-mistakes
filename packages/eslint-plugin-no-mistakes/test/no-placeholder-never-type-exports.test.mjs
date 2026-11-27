@@ -21,6 +21,8 @@ it("reports unanalyzable type re-exports and keeps a same-file never export", as
   const ambientFindings = pluginFindings(fixture(ambientFile), rule, undefined, ambientFile);
   expect(ambientFindings.map((finding) => [finding.line, finding.messageId])).toEqual([
     [8, "placeholder"],
+    [13, "placeholder"],
+    [17, "unanalyzable"],
   ]);
   await expect(
     snapshotDocument(
