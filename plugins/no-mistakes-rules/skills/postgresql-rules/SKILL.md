@@ -29,7 +29,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT read `COUNT(expr)` as a count of true rows; it counts non-NULL values. Use `COUNT(*) FILTER (WHERE expr)`.
 - SHOULD NOT use `COUNT(*) > 0` or `GROUP BY` to test existence or dedupe; use `EXISTS`.
 - SHOULD NOT cast or wrap an indexed column in a predicate (UUIDs, timestamps); compare the raw column to a bound.
-- SHOULD NOT keep predicate arms that cannot match (`AND FALSE` legs, `col IS NULL` on a `NOT NULL` column, comparing an id with foreign keys to other tables).
+- SHOULD NOT keep predicate arms that cannot match (`AND FALSE` legs, `col IS NULL` on a `NOT NULL` column).
 - SHOULD NOT add `MATERIALIZED` CTEs, `LATERAL`, `UNION`, `DISTINCT`, or candidate pools unless `EXPLAIN ANALYZE` at realistic size beats the plain query.
 - SHOULD NOT upsert by overwriting every column; it resets an existing row to the inserter's values. Use `DO UPDATE SET` on the columns you own, or `DO NOTHING` then read the row.
 - SHOULD NOT upsert with `DO UPDATE SET k = EXCLUDED.k` on the conflict key only to get `RETURNING`; it writes a row version on every call. Use `DO NOTHING`, then read the row.
@@ -68,7 +68,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - SHOULD NOT add a `NOT NULL`, unique, or check constraint to an existing table without checking whether existing rows satisfy it.
 - MUST NOT rename or renumber a migration after it has run in any shared environment.
 - MUST NOT edit a migration after it has run in any shared environment.
-- SHOULD NOT create the same function or index in more than one migration; only the last definition survives.
+- SHOULD NOT create the same function or index in more than one migration; only the last definition survives. A later migration may `CREATE OR REPLACE` a function to change it.
 - MUST NOT run code that depends on a migration before that migration is applied; order the deploy so the migration runs first, or expand first.
 - SHOULD NOT build an index on a populated table without `CONCURRENTLY`, outside the migration's transaction; a failed build leaves an `INVALID` index to drop before retrying. A partitioned parent cannot build concurrently: build each partition's index concurrently, then create the parent index `ON ONLY` and attach them.
 
