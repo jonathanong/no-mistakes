@@ -54,8 +54,10 @@ inside `IF` or `LOOP`), `dynamicExecute`, and `unknown`. A `dml` entry is
 visible source text, not an executed statement. `dynamicExecute` is `EXECUTE`
 of a non-literal command (`format`, an identifier, or concatenation that is
 not wholly literal) and keeps `complete` false. Wholly literal `EXECUTE` is
-classified from the decoded command as `dml` or `utility` (a parsed `SELECT`
-is `utility`), not `dynamicExecute`. A qualified name such as
+classified from the decoded command. A recognized command, including a parsed
+`SELECT`, is `dml` or `utility`, not `dynamicExecute`. A decoded command that
+does not classify is `unknown`, including an empty command (`EXECUTE ''`) and
+an invalid `U&` literal. A qualified name such as
 `public.execute(...)` stays `dynamicExecute`.
 IF/ELSIF/ELSE branches expose typed conditions and nested statements;
 inspect every branch without assuming its condition is true. PostgreSQL 18 virtual generated columns retain their declared or
