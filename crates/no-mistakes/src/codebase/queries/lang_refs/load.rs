@@ -134,3 +134,6 @@ fn lang_view(corpus: &Corpus, abs_file: &Path, kind: Frontend) -> Result<View> {
 pub(super) fn rel(path: &Path, root: &Path) -> String {
     crate::codebase::queries::shared::rel_str(path, root)
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod native_bail;

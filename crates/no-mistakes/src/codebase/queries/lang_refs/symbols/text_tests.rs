@@ -150,3 +150,65 @@ fn markdown_covers_single_files_lists_and_empty_reports() {
         "# 2 files\n\n_No symbols found._\n"
     );
 }
+
+struct FailAfter {
+    remaining_writes: usize,
+}
+
+impl Write for FailAfter {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        if self.remaining_writes == 0 {
+            return Err(std::io::Error::other("synthetic write failure"));
+        }
+        self.remaining_writes -= 1;
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+fn exhaust(mut write: impl FnMut(&mut FailAfter) -> anyhow::Result<()>) {
+    let mut completed = false;
+    for remaining_writes in 0..4096 {
+        if write(&mut FailAfter { remaining_writes }).is_ok() {
+            assert!(remaining_writes > 0);
+            completed = true;
+            break;
+        }
+    }
+    assert!(completed, "writer should succeed after enough writes");
+}
+
+#[test]
+fn text_writers_surface_io_errors() {
+    let populated = Output {
+        roots: vec!["a.py".to_string()],
+        files: vec![file("a.py", vec![export_row()], vec![import_row()])],
+    };
+    let split = Output {
+        roots: vec!["a.py".to_string(), "b.py".to_string()],
+        files: vec![
+            file("a.py", vec![export_row()], Vec::new()),
+            file("b.py", Vec::new(), vec![import_row()]),
+        ],
+    };
+    let empty = Output {
+        roots: vec!["a.py".to_string()],
+        files: vec![file("a.py", Vec::new(), Vec::new())],
+    };
+    let empty_many = Output {
+        roots: vec!["a.py".to_string(), "b.py".to_string()],
+        files: vec![file("a.py", Vec::new(), Vec::new())],
+    };
+    exhaust(|writer| write_paths(&populated, writer));
+    exhaust(|writer| write_human(&populated, writer));
+    exhaust(|writer| write_human(&split, writer));
+    exhaust(|writer| write_human(&empty, writer));
+    exhaust(|writer| write_human(&empty_many, writer));
+    exhaust(|writer| write_md(&populated, writer));
+    exhaust(|writer| write_md(&split, writer));
+    exhaust(|writer| write_md(&empty, writer));
+    exhaust(|writer| write_md(&empty_many, writer));
+}

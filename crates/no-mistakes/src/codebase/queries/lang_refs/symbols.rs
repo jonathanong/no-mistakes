@@ -10,6 +10,8 @@ use std::io::{self, Write};
 mod text;
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod coverage_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod text_tests;
 
 pub(crate) fn run_symbols(args: SymbolsArgs) -> Result<()> {

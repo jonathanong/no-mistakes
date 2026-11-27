@@ -126,4 +126,10 @@ pub(crate) fn ensure_list_mode(args: &SymbolsArgs) -> Result<()> {
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod branch_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod lines_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod native_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

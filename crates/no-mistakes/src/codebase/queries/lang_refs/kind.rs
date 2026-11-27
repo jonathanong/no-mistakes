@@ -75,4 +75,10 @@ mod tests {
             assert_eq!(frontend.label(), label);
         }
     }
+
+    #[test]
+    fn package_swift_manifest_is_not_a_swift_source() {
+        assert!(super::frontend(std::path::Path::new("Package.swift")).is_none());
+        assert!(super::frontend(std::path::Path::new("Sources/App/Greeter.swift")).is_some());
+    }
 }
