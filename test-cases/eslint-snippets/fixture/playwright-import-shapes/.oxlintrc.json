@@ -40,6 +40,7 @@
       "files": [
         "e2e/test-timeout-require.spec.ts",
         "e2e/test-timeout-rebind.spec.ts",
+        "e2e/test-timeout-named-bind.spec.ts",
         "e2e/test-timeout-wrappers.spec.ts",
         "e2e/test-timeout-dynamic-ignore.spec.ts",
         "e2e/test-timeout-shapes.spec.ts"
@@ -149,6 +150,10 @@
           { "interactiveComponents": ["Button"] }
         ]
       }
+    },
+    {
+      "files": ["src/interactive-unconfigured.tsx"],
+      "rules": { "no-mistakes/playwright-require-interactive-test-id": "error" }
     },
     {
       "files": ["src/interactive-ignore.tsx"],

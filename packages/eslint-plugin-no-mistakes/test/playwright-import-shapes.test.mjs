@@ -161,6 +161,12 @@ const cases = [
     expected: [[1, "timeout"]],
   },
   {
+    name: "named import bind matches a require of the same test",
+    rule: "playwright-test-timeout-cap",
+    file: "e2e/test-timeout-named-bind.spec.ts",
+    expected: [[3, "timeout"]],
+  },
+  {
     name: "test timeout CommonJS and import-equals (#4357)",
     rule: "playwright-test-timeout-cap",
     file: "e2e/test-timeout-require.spec.ts",
@@ -458,6 +464,12 @@ const cases = [
     rule: "playwright-require-interactive-test-id",
     file: "src/interactive-ignore.tsx",
     options: { interactiveComponents: ["Button"], unanalyzable: "ignore" },
+    expected: [],
+  },
+  {
+    name: "opaque component with no interactiveComponents stays quiet",
+    rule: "playwright-require-interactive-test-id",
+    file: "src/interactive-unconfigured.tsx",
     expected: [],
   },
   {

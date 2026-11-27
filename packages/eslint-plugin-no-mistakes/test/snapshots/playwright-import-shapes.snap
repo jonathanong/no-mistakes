@@ -1066,6 +1066,13 @@
       "rule": "playwright-require-interactive-test-id"
     },
     {
+      "file": "src/interactive-unconfigured.tsx",
+      "findings": [],
+      "name": "opaque component with no interactiveComponents stays quiet",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
       "file": "src/interactive-opaque.tsx",
       "findings": [
         {
@@ -1348,6 +1355,25 @@
         }
       ],
       "name": "extend, namespace member, and info pattern",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-named-bind.spec.ts",
+      "findings": [
+        {
+          "column": 56,
+          "endColumn": 61,
+          "endLine": 3,
+          "file": "e2e/test-timeout-named-bind.spec.ts",
+          "line": 3,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/playwright-test-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "name": "named import bind matches a require of the same test",
       "options": null,
       "rule": "playwright-test-timeout-cap"
     },
@@ -2267,6 +2293,13 @@
       "rule": "playwright-require-interactive-test-id"
     },
     {
+      "file": "src/interactive-unconfigured.tsx",
+      "findings": [],
+      "name": "opaque component with no interactiveComponents stays quiet",
+      "options": null,
+      "rule": "playwright-require-interactive-test-id"
+    },
+    {
       "file": "src/interactive-opaque.tsx",
       "findings": [
         {
@@ -2469,6 +2502,21 @@
         }
       ],
       "name": "extend, namespace member, and info pattern",
+      "options": null,
+      "rule": "playwright-test-timeout-cap"
+    },
+    {
+      "file": "e2e/test-timeout-named-bind.spec.ts",
+      "findings": [
+        {
+          "code": "no-mistakes(playwright-test-timeout-cap)",
+          "column": 56,
+          "file": "e2e/test-timeout-named-bind.spec.ts",
+          "line": 3,
+          "message": "Playwright runtime timeout exceeds 30000 ms. Fix the stalled work rather than increasing the deadline."
+        }
+      ],
+      "name": "named import bind matches a require of the same test",
       "options": null,
       "rule": "playwright-test-timeout-cap"
     },

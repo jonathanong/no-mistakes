@@ -127,7 +127,7 @@ module.exports = rule(
         );
         if (hasSelector || coveredByParent(node)) return;
         if (!isInteractiveElement(names, node.attributes, interactiveComponents)) {
-          if (opaque && surfaceOpaque && !suppressed(node)) {
+          if (opaque && surfaceOpaque && interactiveComponents.length > 0 && !suppressed(node)) {
             context.report({ node: node.name, messageId: "unanalyzable" });
           }
           return;

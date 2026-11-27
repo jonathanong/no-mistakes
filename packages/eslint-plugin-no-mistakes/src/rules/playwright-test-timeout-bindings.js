@@ -148,7 +148,7 @@ function createBindings(context, modules, exportRoles = {}, calls = []) {
             : exportRoles[source]?.[key];
         if (role === "assertion" || role === "ordinary") return null;
         if (role === "opaque") return { kind: "opaque", root: variable };
-        if (key === "test") return { kind: "test", root: variable, path: [] };
+        if (key === "test") return { kind: "test", root: variable, path: [], source };
         if (key === "defineConfig" || key === "mergeTests") return { kind: key, root: variable };
         if (source !== "@playwright/test") return { kind: "opaque", root: variable };
       }

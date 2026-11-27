@@ -126,7 +126,7 @@ absence is not itself an invalid or disabled deadline.
 
 ## Scope and unresolved evidence
 
-`require("@playwright/test")` and `import pw = require("@playwright/test")` are namespaces of that module, including `const { test: t } = require("@playwright/test")`. A dynamic `require` is unresolved and follows `unknownValues`, which stays `"ignore"` by default. `test.setTimeout(15000) as void`, a `.bind!` callback, and `export default defineConfig(...) satisfies object` are the inner call. A wrapped `test.slow(false)` stays inert when `banOverrides` is true.
+`require("@playwright/test")` and `import pw = require("@playwright/test")` are namespaces of that module, including `const { test: t } = require("@playwright/test")`. A named `import { test } from "@playwright/test"` carries that same module source, so `test.setTimeout.bind(require("@playwright/test").test)(45000)` is that `setTimeout` call. A dynamic `require` is unresolved and follows `unknownValues`, which stays `"ignore"` by default. `test.setTimeout(15000) as void`, a `.bind!` callback, and `export default defineConfig(...) satisfies object` are the inner call. A wrapped `test.slow(false)` stays inert when `banOverrides` is true.
 
 SDK `import { default as test }` has the same builtin identity as a default
 import; arbitrary helper defaults do not. Callback `.bind(thisArg)` preserves

@@ -49,6 +49,9 @@ selector-presence behavior. Use `playwright-literals` to validate their values.
   `const Action = UI[componentName]` after `import UI from "./ui"` reports
   `unanalyzable` as well. A lowercase or hyphenated tag such as `<main />` is
   intrinsic, so a binding of that name does not make the tag unanalyzable.
+  When `interactiveComponents` is missing or empty, an opaque component stays
+  quiet: no configured name could match, so the missing binding cannot change
+  the result.
   `<UI.Card />` does not look up the property name `Card` as its own binding.
 
 The slot example above uses the default slot prop and selector attributes:
