@@ -48,6 +48,7 @@ module.exports = Object.assign(
             let never = false;
             let unread = false;
             for (const specifier of node.specifiers) {
+              if (node.exportKind !== "type" && specifier.exportKind !== "type") continue;
               const kind = declared.get(specifierName(specifier));
               if (kind === "never") never = true;
               else if (kind !== "other") unread = true;

@@ -15,8 +15,7 @@ function isRequireCall(node) {
   );
 }
 
-// An import, `import = require`, or `require()` names a module this file
-// cannot read. `import =` of a local name, and a local object, stay quiet.
+// See docs/eslint-rules/no-locale-less-date-format.md for the module/local split.
 function isUnreadModuleDef(def) {
   const node = def.node;
   if (node?.type === "TSImportEqualsDeclaration") {

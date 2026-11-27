@@ -14,6 +14,7 @@ it("reports unanalyzable type re-exports and keeps a same-file never export", as
     [7, "unanalyzable"],
     [8, "unanalyzable"],
     [11, "unanalyzable"],
+    [15, "placeholder"],
   ]);
   await expect(
     snapshotDocument(
