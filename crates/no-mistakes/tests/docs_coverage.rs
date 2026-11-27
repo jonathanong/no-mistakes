@@ -89,7 +89,10 @@ fn review_found_doc_regressions_stay_fixed() {
         "PHP",
         "Sidekiq",
         "Counterexample:",
-        "not started",
+        "native fallback only",
+        "`Cargo.lock`",
+        "`Gemfile.lock`",
+        "`composer.lock`",
     ] {
         assert!(
             feature_parity.contains(needle),
