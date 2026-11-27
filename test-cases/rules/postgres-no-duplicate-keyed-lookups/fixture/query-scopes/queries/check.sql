@@ -39,3 +39,18 @@ CROSS JOIN LATERAL (
     LEFT JOIN accounts a ON a.id = t.account_id
     LEFT JOIN accounts b ON b.id = t.account_id
 ) AS info;
+
+DECLARE order_accounts_cursor CURSOR FOR
+SELECT o.id, a.name, b.tier
+FROM orders o
+JOIN accounts a ON a.id = o.account_id
+JOIN accounts b ON b.id = o.account_id;
+
+COPY (
+    SELECT o.id, a.name, b.tier
+    FROM orders o
+    JOIN accounts a ON a.id = o.account_id
+    JOIN accounts b ON b.id = o.account_id
+) TO STDOUT;
+
+COPY orders TO STDOUT;

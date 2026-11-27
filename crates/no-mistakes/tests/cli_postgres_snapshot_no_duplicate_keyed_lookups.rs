@@ -10,6 +10,7 @@ fn postgres_no_duplicate_keyed_lookups_check_json_snapshot() {
         ("joins_and_mixed", "joins", "enabled-sql.yml"),
         ("dml_and_with", "dml-cte", "enabled-sql.yml"),
         ("normalization", "normalization", "enabled-sql.yml"),
+        ("query_scopes", "query-scopes", "enabled-sql.yml"),
         ("distinct_and_clean", "pass", "enabled-sql.yml"),
         ("disabled_by_config", "scalar-subqueries", "disabled.yml"),
         (

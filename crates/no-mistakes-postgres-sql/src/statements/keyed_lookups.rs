@@ -11,7 +11,8 @@ use join::{inspect_join, register_table_factor};
 use normalize::LookupKey;
 use scope::ScopeStack;
 use sqlparser::ast::{
-    Expr, GroupByExpr, OrderByKind, Query, Select, SelectItem, SetExpr, Statement, Visit, Visitor,
+    CopySource, Expr, GroupByExpr, OrderByKind, Query, Select, SelectItem, SetExpr, Statement,
+    Visit, Visitor,
 };
 use std::collections::BTreeMap;
 use std::ops::ControlFlow;
@@ -27,12 +28,25 @@ fn walk_statement(
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
     match statement {
-        Statement::Query(query) => walk_query(query, scopes, out),
+        Statement::Query(query)
+        | Statement::Copy {
+            source: CopySource::Query(query),
+            to: true,
+            ..
+        } => walk_query(query, scopes, out),
         Statement::Insert(insert) => dml::walk_insert(insert, scopes, out),
         Statement::Update(update) => dml::walk_update(update, scopes, out),
         Statement::Delete(delete) => dml::walk_delete(delete, scopes, out),
         Statement::Merge(merge) => dml::walk_merge(merge, scopes, out),
         Statement::CreateView(view) => walk_query(&view.query, scopes, out),
+        Statement::Declare { stmts, .. } => {
+            for query in stmts
+                .iter()
+                .filter_map(|cursor| cursor.for_query.as_deref())
+            {
+                walk_query(query, scopes, out);
+            }
+        }
         Statement::CreateTable(table) => {
             if let Some(query) = table.query.as_deref() {
                 walk_query(query, scopes, out);
