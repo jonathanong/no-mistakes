@@ -1,4 +1,6 @@
-use super::config::{compile_selection_glob, from_path_parts, ChangesConfig, IdRule};
+use super::config::{
+    compile_selection_glob, validate_category_name, ChangesConfig, IdRule, IdSource,
+};
 use crate::codebase::keyed_diff::KeyOptions;
 use anyhow::{bail, Context, Result};
 use globset::{GlobSet, GlobSetBuilder};
@@ -42,14 +44,7 @@ impl<'a> Rules<'a> {
         let mut rules = Vec::new();
         let mut keyed = Vec::new();
         for (name, category) in &config.categories {
-            if name.is_empty()
-                || matches!(
-                    name.as_str(),
-                    "schemaVersion" | "complete" | "unclassified" | "changedFiles" | "reasons"
-                )
-            {
-                bail!("invalid changes category name {name:?}");
-            }
+            validate_category_name(name)?;
             let exclude = if category.exclude.is_empty() {
                 None
             } else {
@@ -107,19 +102,17 @@ fn compile_id<'a>(id: Option<&'a IdRule>, keyed: &mut Vec<KeyOptions>) -> Result
     let Some(id) = id else {
         return Ok(Id::Path);
     };
-    match (id.from_path.as_deref(), id.keys_of.as_ref()) {
-        (Some(template), None) => {
-            let (prefix, suffix) = from_path_parts(template)
-                .context("fromPath requires exactly one {id} placeholder")?;
-            Ok(Id::FromPath {
-                prefix,
-                suffix,
-                separator: id.separator.as_deref(),
-            })
-        }
-        (None, Some(keys)) if id.separator.is_none() => {
-            let options = keys.options();
-            options.validate()?;
+    match id.source().map_err(|invalid| invalid.error)? {
+        IdSource::FromPath {
+            prefix,
+            suffix,
+            separator,
+        } => Ok(Id::FromPath {
+            prefix,
+            suffix,
+            separator,
+        }),
+        IdSource::Keys(options) => {
             let index = keyed
                 .iter()
                 .position(|existing| existing == &options)
@@ -130,6 +123,5 @@ fn compile_id<'a>(id: Option<&'a IdRule>, keyed: &mut Vec<KeyOptions>) -> Result
                 });
             Ok(Id::Keys(index))
         }
-        _ => bail!("declare either fromPath or keysOf, with separator only for fromPath"),
     }
 }

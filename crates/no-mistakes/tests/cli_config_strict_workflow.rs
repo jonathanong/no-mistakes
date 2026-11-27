@@ -29,7 +29,10 @@ fn invalid_runner_infra_and_changes_configuration_exits_two_at_load() {
             "4430.yml",
             "testPlan.vitest.environments.pre-push.limit.percent",
         ),
-        ("4430-range.yml", "101"),
+        (
+            "4430-range.yml",
+            "testPlan.vitest.environments.pre-push.limit.percent: invalid percentage Number(101.0); use a number from 0 to 100",
+        ),
         (
             "4430-group.yml",
             "testPlan.vitest.environments.pre-push.groups[0].limit.percent",
@@ -123,6 +126,30 @@ fn invalid_runner_infra_and_changes_configuration_exits_two_at_load() {
             "changes.categories.example.rules[0].id.fromPath",
         ),
         ("4492.yml", "changes.categories.example.match"),
+        (
+            "changes-reserved-name.yml",
+            "changes.categories.changedFiles: invalid changes category name",
+        ),
+        (
+            "changes-id-no-paths.yml",
+            "changes.categories.example.paths must not be empty",
+        ),
+        (
+            "changes-id-empty.yml",
+            "changes.categories.example.id: declare either fromPath or keysOf",
+        ),
+        (
+            "changes-id-both.yml",
+            "changes.categories.example.rules[0].id: declare either fromPath or keysOf",
+        ),
+        (
+            "changes-id-key-separator.yml",
+            "changes.categories.example.id: declare either fromPath or keysOf, with separator only for fromPath",
+        ),
+        (
+            "changes-id-key-options.yml",
+            "changes.categories.example.rules[0].id.keysOf: array and idField must be supplied together",
+        ),
     ] {
         let out = invoke(&root, config, &["check"]);
         let stderr = String::from_utf8(out.stderr).unwrap();

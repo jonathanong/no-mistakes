@@ -121,7 +121,7 @@ fn changes_diff_rejects_reserved_categories_and_ambiguous_templates() {
     for (name, message) in [
         (
             "reserved.yml",
-            "invalid changes category name \"schemaVersion\"",
+            "changes.categories.schemaVersion: invalid changes category name \"schemaVersion\"",
         ),
         (
             "invalid-id.yml",
@@ -159,12 +159,18 @@ fn changes_diff_rejects_invalid_rules_even_when_the_roots_match() {
             "missing-rule-paths.yml",
             "changes.categories.inputs.rules[0].paths must not be empty",
         ),
-        ("category-id-without-paths.yml", "rule requires paths"),
+        (
+            "category-id-without-paths.yml",
+            "changes.categories.inputs.paths must not be empty",
+        ),
         (
             "incomplete-key-options.yml",
-            "array and idField must be supplied together",
+            "changes.categories.inputs.id.keysOf: array and idField must be supplied together",
         ),
-        ("conflicting-id.yml", "declare either fromPath or keysOf"),
+        (
+            "conflicting-id.yml",
+            "changes.categories.inputs.id: declare either fromPath or keysOf",
+        ),
     ] {
         let error = changes::diff(&ChangesDiffArgs {
             base_root: root.join("base"),

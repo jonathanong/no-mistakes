@@ -1,9 +1,9 @@
 <!-- cspell:ignore resx -->
 # Categorized semantic changes
 
-Category and rule globs are validated when configuration loads. Every nested
-rule needs at least one path. An explicit `match` needs an `{id}` or `<id>`
-placeholder, and `id.fromPath` needs exactly one `{id}`.
+Configuration loading validates category names, globs, and ID rules. Every
+nested rule and every category-level `id` needs at least one path. An explicit
+`match` needs an `{id}` or `<id>` placeholder.
 
 Declare opaque category names under `changes.categories`. The same configuration
 controls [`changes diff`](../cli/changes-diff.md) and
@@ -40,10 +40,12 @@ is shorthand for one rule. Without an ID rule, that rule reports paths. Do not
 add a path-only shorthand for the same localization files when only semantic
 keys should feed the category.
 
-`fromPath` contains one `{id}` capture. `separator` replaces slashes in the
+Each `id` declares either `fromPath` or `keysOf`. `fromPath` contains one `{id}`
+capture and accepts an optional `separator` that replaces slashes in the
 capture, so `a/b/value.json` can become `a.b.value`. Omitting `separator` keeps
 the captured text, including existing dots and slashes. `keysOf` accepts a format
-name or an options object. JSON `array` is a dotted object path or JSON pointer;
+name or an options object. Supply `array` and `idField` together for JSON.
+`array` is a dotted object path or JSON pointer.
 `idField` names a nonempty string ID in each entry. Any field change, including
 metadata, changes that entry. Duplicate IDs or unparseable data are incomplete.
 

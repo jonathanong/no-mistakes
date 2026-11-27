@@ -60,10 +60,65 @@ pub struct IdRule {
     pub keys_of: Option<KeysOf>,
 }
 
-pub(crate) fn from_path_parts(template: &str) -> Option<(&str, &str)> {
-    template
-        .split_once("{id}")
-        .filter(|(_, suffix)| !suffix.contains("{id}"))
+pub(crate) enum IdSource<'a> {
+    FromPath {
+        prefix: &'a str,
+        suffix: &'a str,
+        separator: Option<&'a str>,
+    },
+    Keys(KeyOptions),
+}
+
+pub(crate) struct IdRuleError {
+    pub(crate) field: Option<&'static str>,
+    pub(crate) error: anyhow::Error,
+}
+
+impl IdRule {
+    pub(crate) fn source(&self) -> Result<IdSource<'_>, IdRuleError> {
+        match (self.from_path.as_deref(), self.keys_of.as_ref()) {
+            (Some(template), None) => {
+                let (prefix, suffix) = template
+                    .split_once("{id}")
+                    .filter(|(_, suffix)| !suffix.contains("{id}"))
+                    .ok_or_else(|| IdRuleError {
+                        field: Some("fromPath"),
+                        error: anyhow!("`{template}` requires exactly one {{id}} placeholder"),
+                    })?;
+                Ok(IdSource::FromPath {
+                    prefix,
+                    suffix,
+                    separator: self.separator.as_deref(),
+                })
+            }
+            (None, Some(keys)) if self.separator.is_none() => {
+                let options = keys.options();
+                options.validate().map_err(|error| IdRuleError {
+                    field: Some("keysOf"),
+                    error,
+                })?;
+                Ok(IdSource::Keys(options))
+            }
+            _ => Err(IdRuleError {
+                field: None,
+                error: anyhow!(
+                    "declare either fromPath or keysOf, with separator only for fromPath"
+                ),
+            }),
+        }
+    }
+}
+
+pub(crate) fn validate_category_name(name: &str) -> Result<()> {
+    ensure!(
+        !name.is_empty()
+            && !matches!(
+                name,
+                "schemaVersion" | "complete" | "unclassified" | "changedFiles" | "reasons"
+            ),
+        "invalid changes category name {name:?}"
+    );
+    Ok(())
 }
 
 pub(crate) fn compile_selection_glob(pattern: &str) -> Result<Glob> {
@@ -82,7 +137,7 @@ pub enum KeysOf {
 }
 
 impl KeysOf {
-    pub(super) fn options(&self) -> KeyOptions {
+    fn options(&self) -> KeyOptions {
         match self {
             Self::Format(format) => KeyOptions {
                 format: *format,

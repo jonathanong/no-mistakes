@@ -1,6 +1,6 @@
 use super::path_globs::{field_error, validate_globs};
 use super::NoMistakesConfig;
-use crate::changes::config::{compile_selection_glob, from_path_parts, IdRule};
+use crate::changes::config::{compile_selection_glob, validate_category_name, IdRule};
 use crate::config::source_locations::ConfigPath;
 use anyhow::Result;
 
@@ -42,10 +42,19 @@ fn validate_change_categories(config: &NoMistakesConfig) -> Result<()> {
     let categories = ConfigPath::default().key("changes").key("categories");
     for (name, category) in &config.changes.categories {
         let base = categories.clone().key(name);
+        validate_category_name(name)
+            .map_err(|error| field_error(base.clone(), format!("{base}: {error}")))?;
         for (field, patterns) in [("paths", &category.paths), ("exclude", &category.exclude)] {
             validate_selection_patterns(patterns, &base.clone().key(field))?;
         }
         validate_test_patterns(&category.tests, &base.clone().key("tests"))?;
+        if category.id.is_some() && category.paths.is_empty() {
+            let paths = base.clone().key("paths");
+            return Err(field_error(
+                paths.clone(),
+                format!("{paths} must not be empty"),
+            ));
+        }
         validate_id(category.id.as_ref(), &base)?;
         for (index, rule) in category.rules.iter().enumerate() {
             let rule_path = base.clone().key("rules").index(index);
@@ -93,14 +102,18 @@ fn validate_test_patterns(patterns: &[String], field: &ConfigPath) -> Result<()>
 }
 
 fn validate_id(id: Option<&IdRule>, path: &ConfigPath) -> Result<()> {
-    if let Some(template) = id.and_then(|id| id.from_path.as_deref()) {
-        if from_path_parts(template).is_none() {
-            let field = path.clone().key("id").key("fromPath");
-            return Err(field_error(
-                field.clone(),
-                format!("{field}: `{template}` requires exactly one {{id}} placeholder"),
-            ));
+    let Some(id) = id else {
+        return Ok(());
+    };
+    if let Err(invalid) = id.source() {
+        let mut field = path.clone().key("id");
+        if let Some(name) = invalid.field {
+            field = field.key(name);
         }
+        return Err(field_error(
+            field.clone(),
+            format!("{field}: {}", invalid.error),
+        ));
     }
     Ok(())
 }
