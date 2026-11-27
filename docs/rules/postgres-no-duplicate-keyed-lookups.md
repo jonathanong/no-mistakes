@@ -53,6 +53,8 @@ The rule stays silent when the lookups are not proven to read the same row:
   `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined
   or unrecognized functions in keys or scalar projections, unresolved table
   column alias lists, distinct `LIMIT` clauses, or ambiguous expressions.
+- Function calls require a vetted built-in qualified with `pg_catalog` or
+  PostgreSQL syntax such as `COALESCE`.
 - Sampled table scans, `ONLY` table scans, or scalar subqueries that lock rows.
 
 PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`,
@@ -101,7 +103,7 @@ rules:
 
 A `projects: [<name>]` entry inherits
 [`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when
-that block is configured.
+that block is configured. The rule rejects `reportUnmatchedExecutorNames`.
 
 ## Valid example
 

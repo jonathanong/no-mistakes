@@ -1,14 +1,15 @@
+mod factor;
 mod using_clause;
 
+use super::inspect_exprs;
 use super::normalize::{extract_lookup_key, LookupKey};
 use super::scope::{ScopeSnapshot, ScopeStack};
 use super::table::lookup_table;
-use super::{inspect_exprs, walk_query};
 use crate::idents::{ident_key, object_name_identity, relation_suffix_name};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
+use factor::register_factor;
 use sqlparser::ast::{
-    Join, JoinConstraint, JoinOperator, ObjectName, Spanned, TableAlias, TableFactor,
-    TableWithJoins,
+    Join, JoinConstraint, JoinOperator, ObjectName, Spanned, TableAlias, TableWithJoins,
 };
 use std::collections::BTreeMap;
 use using_clause::{column_name, UsingColumns};
@@ -28,7 +29,7 @@ fn register_join_chain(
     seen: &mut BTreeMap<LookupKey, (usize, usize)>,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) -> UsingColumns {
-    let mut using = register_factor(&table.relation, scopes, out);
+    let mut using = register_factor(&table.relation, scopes, seen, out);
     for join in &table.joins {
         inspect_join(join, scopes, &mut using, seen, out);
     }
@@ -36,51 +37,12 @@ fn register_join_chain(
 }
 
 pub(super) fn register_table_factor(
-    factor: &TableFactor,
+    factor: &sqlparser::ast::TableFactor,
     scopes: &mut ScopeStack,
+    seen: &mut BTreeMap<LookupKey, (usize, usize)>,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
-    register_factor(factor, scopes, out);
-}
-
-fn register_factor(
-    factor: &TableFactor,
-    scopes: &mut ScopeStack,
-    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
-) -> UsingColumns {
-    let binding = match factor {
-        TableFactor::Table {
-            name,
-            alias,
-            args: None,
-            ..
-        } => Some(scopes.add_table(name, alias.as_ref())),
-        TableFactor::Derived {
-            subquery, alias, ..
-        } => {
-            walk_query(subquery, scopes, out);
-            scopes.add_alias_only(alias.as_ref())
-        }
-        TableFactor::NestedJoin {
-            table_with_joins,
-            alias,
-            ..
-        } => {
-            let mut local_seen = BTreeMap::new();
-            if alias.is_none() {
-                return register_join_chain(table_with_joins, scopes, &mut local_seen, out);
-            }
-            scopes.push_frame();
-            register_join_chain(table_with_joins, scopes, &mut local_seen, out);
-            scopes.pop_frame();
-            scopes.add_alias_only(alias.as_ref())
-        }
-        TableFactor::Table { alias, .. } | TableFactor::Function { alias, .. } => {
-            scopes.add_alias_only(alias.as_ref())
-        }
-        _ => None,
-    };
-    UsingColumns::for_binding(binding)
+    register_factor(factor, scopes, seen, out);
 }
 
 fn inspect_join(
@@ -101,7 +63,7 @@ fn inspect_join(
             record_lookup(key, display, line, column, seen, out);
         }
     }
-    register_table_factor(&join.relation, scopes, out);
+    register_factor(&join.relation, scopes, seen, out);
     using.advance(&join.join_operator, constraint);
     if let Some(JoinConstraint::On(expr)) = constraint {
         inspect_exprs(std::iter::once(expr), scopes, seen, out);

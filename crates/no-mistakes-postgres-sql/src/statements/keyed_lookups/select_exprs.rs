@@ -1,8 +1,9 @@
 use super::select_item_expr;
 use super::windows::referenced_expressions;
 use crate::fx::FxHashSet;
-use crate::idents::unwrap_expr;
-use sqlparser::ast::{Distinct, Expr, GroupByExpr, Select};
+use crate::idents::{ident_key, unwrap_expr};
+use sqlparser::ast::{Distinct, Expr, GroupByExpr, Ident, Select, VisitMut, VisitorMut};
+use std::ops::ControlFlow;
 
 pub(super) fn inspectable<'a>(
     select: &'a Select,
@@ -24,7 +25,7 @@ pub(super) fn inspectable<'a>(
         && select.named_window.is_empty()
         && order_by.is_empty())
     {
-        targets.extend(projection.clone().map(unwrap_expr));
+        targets.extend(projection.clone().map(target_identity));
     }
 
     let clause_target = |expr| (expr, true);
@@ -39,6 +40,23 @@ pub(super) fn inspectable<'a>(
         .chain(referenced_expressions(select, order_by).map(clause_target))
         .chain(order_by.iter().copied().map(clause_target))
         .filter_map(move |(expr, can_reuse)| {
-            (!can_reuse || targets.insert(unwrap_expr(expr))).then_some(expr)
+            (!can_reuse || targets.insert(target_identity(expr))).then_some(expr)
         })
+}
+
+fn target_identity(expr: &Expr) -> Expr {
+    struct Identifiers;
+    impl VisitorMut for Identifiers {
+        type Break = ();
+
+        fn pre_visit_ident(&mut self, ident: &mut Ident) -> ControlFlow<()> {
+            ident.value = ident_key(ident);
+            ident.quote_style = None;
+            ControlFlow::Continue(())
+        }
+    }
+
+    let mut key = unwrap_expr(expr).clone();
+    let _ = key.visit(&mut Identifiers);
+    key
 }

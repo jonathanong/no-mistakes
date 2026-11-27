@@ -56,24 +56,28 @@ impl<'a> ExprNormalizer<'a> {
                 self.mark_anchor();
                 Some(format!(
                     "typed({},{})",
-                    canonical_type(&typed.data_type),
-                    typed.value
+                    atom(&canonical_type(&typed.data_type)),
+                    atom(&typed.value.to_string())
                 ))
             }
             Expr::Cast {
                 expr, data_type, ..
             } => {
                 let inner = self.normalize(expr)?;
-                Some(format!("cast({inner},{})", canonical_type(data_type)))
+                Some(format!(
+                    "cast({},{})",
+                    atom(&inner),
+                    atom(&canonical_type(data_type))
+                ))
             }
             Expr::UnaryOp { op, expr } => {
                 let inner = self.normalize(expr)?;
-                Some(format!("unary({op},{inner})"))
+                Some(format!("unary({op},{})", atom(&inner)))
             }
             Expr::BinaryOp { left, op, right } => Some(format!(
                 "bin({op},{},{})",
-                self.normalize(left)?,
-                self.normalize(right)?
+                atom(&self.normalize(left)?),
+                atom(&self.normalize(right)?)
             )),
             Expr::Function(function) => function::normalize(function, |arg| self.normalize(arg)),
             predicate if self.key_anchor.is_none() => self.predicate(predicate),
@@ -112,8 +116,8 @@ impl<'a> ExprNormalizer<'a> {
                 };
                 return Some(format!(
                     "{operator}({},{})",
-                    self.normalize(left)?,
-                    self.normalize(right)?
+                    atom(&self.normalize(left)?),
+                    atom(&self.normalize(right)?)
                 ));
             }
             Expr::In {
@@ -134,7 +138,11 @@ impl<'a> ExprNormalizer<'a> {
             .map(|item| self.normalize(item))
             .collect::<Option<Vec<_>>>()?;
         items.sort();
-        Some(format!("in({negated},{target},[{}])", items.join(",")))
+        Some(format!(
+            "in({negated},{}[{}])",
+            atom(&target),
+            argument_list(&items)
+        ))
     }
 
     pub(super) fn order_by(&mut self, order_by: &[OrderByExpr]) -> Option<Vec<String>> {
@@ -155,6 +163,14 @@ impl<'a> ExprNormalizer<'a> {
             item.options.sort, item.options.nulls_first
         ))
     }
+}
+
+fn atom(value: &str) -> String {
+    format!("{}:{value}", value.len())
+}
+
+fn argument_list(items: &[String]) -> String {
+    items.iter().map(|item| atom(item)).collect()
 }
 
 fn canonical_type(data_type: &DataType) -> String {

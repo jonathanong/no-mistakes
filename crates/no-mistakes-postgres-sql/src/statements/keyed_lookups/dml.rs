@@ -116,8 +116,8 @@ pub(super) fn walk_merge(
 ) {
     scopes.push_frame();
     let mut base_seen = BTreeMap::new();
-    register_table_factor(&merge.table, scopes, out);
-    register_table_factor(&merge.source, scopes, out);
+    register_table_factor(&merge.table, scopes, &mut base_seen, out);
+    register_table_factor(&merge.source, scopes, &mut base_seen, out);
     inspect_exprs(std::iter::once(&*merge.on), scopes, &mut base_seen, out);
     let mut category_seen: BTreeMap<String, _> = BTreeMap::new();
     for clause in &merge.clauses {

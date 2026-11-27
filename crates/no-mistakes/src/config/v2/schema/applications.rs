@@ -56,6 +56,7 @@ impl RuleDef {
                 postgres: self.rule.starts_with("postgres-"),
                 embedded_sql: super::postgres_executors::PREPARED_EMBEDDED_SQL_RULE_IDS
                     .contains(&self.rule.as_str()),
+                allows_unmatched_executors: self.rule != "postgres-no-duplicate-keyed-lookups",
                 unknown: &unknown,
             })
         } else {

@@ -66,6 +66,7 @@ pub(super) struct WithKnownFields<'a> {
     pub(super) options: Value,
     pub(super) postgres: bool,
     pub(super) embedded_sql: bool,
+    pub(super) allows_unmatched_executors: bool,
     pub(super) unknown: &'a RefCell<Option<String>>,
 }
 
@@ -89,8 +90,10 @@ impl<'de> Deserializer<'de> for WithKnownFields<'_> {
                                 | "sqlIdentifierAssertions"
                                 | "executorOptionProperties"
                                 | "executorOptions"
-                                | "reportUnmatchedExecutorNames"
-                        ));
+                        ))
+                    || (self.embedded_sql
+                        && self.allows_unmatched_executors
+                        && key == "reportUnmatchedExecutorNames");
                 if !known {
                     *self.unknown.borrow_mut() = Some(key.to_string());
                     return Err(serde::de::Error::unknown_field(key, fields));

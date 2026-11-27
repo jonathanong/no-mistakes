@@ -106,3 +106,29 @@ fn detects_executed_clause_lookups_without_colliding_quoted_arguments() {
         ]
     );
 }
+
+#[test]
+fn resolves_function_and_join_scopes_without_merging_distinct_predicates() {
+    let facts = fixture_facts("review-edges");
+    assert!(!facts.parse_failed);
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+    assert_eq!(
+        sites,
+        [
+            (8, 9),
+            (17, 18),
+            (23, 24),
+            (29, 30),
+            (34, 35),
+            (43, 44),
+            (49, 50),
+            (55, 57),
+            (61, 63),
+            (67, 68)
+        ]
+    );
+}

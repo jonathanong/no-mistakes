@@ -4,8 +4,9 @@ pub use identity::{
     object_name_identity, parse_relation_identity, relation_part_key, relation_suffix_key,
     relation_suffix_name, resolve_relation_key,
 };
-use sqlparser::ast::Expr;
+use sqlparser::ast::{Expr, Visit, Visitor};
 use std::collections::HashSet;
+use std::ops::ControlFlow;
 
 /// Lowercased identifiers referenced anywhere under `expr`.
 pub fn collect_ident_names(expr: &Expr) -> Vec<String> {
@@ -36,17 +37,24 @@ pub(crate) fn visit_child_exprs(expr: &Expr, visit: &mut impl FnMut(&Expr)) {
         }
         return;
     }
-    use sqlparser::ast::{Visit, Visitor};
-    use std::ops::ControlFlow;
+    visit_direct_exprs(expr, 1, visit);
+}
+
+pub(crate) fn visit_shallow_exprs(node: &impl Visit, visit: &mut impl FnMut(&Expr)) {
+    visit_direct_exprs(node, 0, visit);
+}
+
+fn visit_direct_exprs(node: &impl Visit, direct_depth: usize, visit: &mut impl FnMut(&Expr)) {
     struct Children<'a, F> {
         visit: &'a mut F,
         depth: usize,
+        direct_depth: usize,
         queries: usize,
     }
     impl<F: FnMut(&Expr)> Visitor for Children<'_, F> {
         type Break = ();
         fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
-            if self.depth == 1 && self.queries == 0 {
+            if self.depth == self.direct_depth && self.queries == 0 {
                 (self.visit)(expr);
             }
             self.depth += 1;
@@ -65,9 +73,10 @@ pub(crate) fn visit_child_exprs(expr: &Expr, visit: &mut impl FnMut(&Expr)) {
             ControlFlow::Continue(())
         }
     }
-    let _ = expr.visit(&mut Children {
+    let _ = node.visit(&mut Children {
         visit,
         depth: 0,
+        direct_depth,
         queries: 0,
     });
 }
@@ -131,7 +140,7 @@ pub(crate) fn visit_function_args(
     }
 }
 
-fn function_arg_expr(arg: &sqlparser::ast::FunctionArg) -> Option<&Expr> {
+pub(crate) fn function_arg_expr(arg: &sqlparser::ast::FunctionArg) -> Option<&Expr> {
     match arg {
         sqlparser::ast::FunctionArg::Unnamed(sqlparser::ast::FunctionArgExpr::Expr(expr))
         | sqlparser::ast::FunctionArg::Named {

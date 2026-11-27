@@ -22,7 +22,7 @@ SELECT
        AND a.name::text <> 'unknown'
      ORDER BY a.priority DESC NULLS LAST LIMIT 1),
     (SELECT b.tier FROM accounts b
-     WHERE abs(-o.account_id + 1) = b.id
+     WHERE pg_catalog.abs(-o.account_id + 1) = b.id
        AND b.archived_at IS NULL AND b.email IS NOT NULL
        AND b.active IS TRUE AND b.locked IS FALSE
        AND b.rank IS DISTINCT FROM o.rank AND b.team_id IS NOT DISTINCT FROM o.team_id
@@ -30,7 +30,7 @@ SELECT
        AND CAST(b.name AS text) <> 'unknown'
      ORDER BY b.priority DESC NULLS LAST LIMIT 1),
     (SELECT c.tier FROM accounts c
-     WHERE abs(-o.account_id + 1) = c.id
+     WHERE pg_catalog.abs(-o.account_id + 1) = c.id
        AND c.archived_at IS NULL AND c.email IS NOT NULL
        AND c.active IS TRUE AND c.locked IS FALSE
        AND c.rank IS DISTINCT FROM o.rank AND c.team_id IS NOT DISTINCT FROM o.team_id

@@ -13,6 +13,7 @@ fn postgres_no_duplicate_keyed_lookups_check_json_snapshot() {
         ("query_scopes", "query-scopes", "enabled-sql.yml"),
         ("query_clauses", "query-clauses", "enabled-sql.yml"),
         ("target_list", "target-list", "enabled-sql.yml"),
+        ("review_edges", "review-edges", "enabled-sql.yml"),
         ("review_soundness", "review-soundness", "enabled-sql.yml"),
         ("distinct_and_clean", "pass", "enabled-sql.yml"),
         ("disabled_by_config", "scalar-subqueries", "disabled.yml"),
@@ -46,6 +47,10 @@ fn postgres_no_duplicate_keyed_lookups_rejects_invalid_options_with_exit_2() {
     let root = rules_path(rule, "fixture", "pass");
     for (config, expected) in [
         ("invalid-unknown-option.yml", "unknownFlag"),
+        (
+            "invalid-unmatched-executors.yml",
+            "options.reportUnmatchedExecutorNames",
+        ),
         ("invalid-missing-executor.yml", "importSpecifier"),
         ("invalid-both-executors.yml", "extraExecutorNames"),
         ("invalid-glob.yml", "sqlInclude"),

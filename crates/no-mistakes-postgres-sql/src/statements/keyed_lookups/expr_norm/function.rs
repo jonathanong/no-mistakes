@@ -1,4 +1,5 @@
 use super::super::builtins::SAFE_PURE_FUNCTIONS;
+use super::argument_list;
 use crate::idents::ident_key;
 use sqlparser::ast::{Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments};
 
@@ -21,7 +22,7 @@ pub(super) fn normalize(
             _ => None,
         })
         .collect::<Option<Vec<_>>>()?;
-    Some(format!("fn({base},{args:?})"))
+    Some(format!("fn({base},{})", argument_list(&args)))
 }
 
 pub(in crate::statements::keyed_lookups) fn pure_name(function: &Function) -> Option<String> {
@@ -29,7 +30,13 @@ pub(in crate::statements::keyed_lookups) fn pure_name(function: &Function) -> Op
         return None;
     }
     let name = match function.name.0.as_slice() {
-        [name] => name,
+        [name] => {
+            let ident = name.as_ident()?;
+            let name = ident_key(ident);
+            return (ident.quote_style.is_none()
+                && matches!(name.as_str(), "coalesce" | "nullif" | "greatest" | "least"))
+            .then_some(name);
+        }
         [schema, name] if ident_key(schema.as_ident()?) == "pg_catalog" => name,
         _ => return None,
     };

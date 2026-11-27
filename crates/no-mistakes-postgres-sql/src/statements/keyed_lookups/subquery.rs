@@ -4,10 +4,14 @@ use super::join::record_lookup;
 use super::normalize::{extract_lookup_key, LookupKey};
 use super::scope::ScopeSnapshot;
 use super::table::lookup_table;
-use crate::idents::{ident_key, object_name_identity, relation_suffix_name, unwrap_expr};
+use crate::idents::{
+    ident_key, object_name_identity, relation_suffix_name, unwrap_expr, visit_child_exprs,
+    visit_shallow_exprs,
+};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{
-    Expr, GroupByExpr, LimitClause, OrderByKind, Query, Select, SetExpr, Spanned, Visit, Visitor,
+    Expr, FunctionArguments, GroupByExpr, LimitClause, OrderByKind, Query, Select, SetExpr,
+    Spanned, Visit, Visitor,
 };
 use std::collections::BTreeMap;
 use std::ops::ControlFlow;
@@ -50,9 +54,17 @@ pub(super) fn inspect_expr(
             }
         }
         other => {
-            crate::idents::visit_child_exprs(other, &mut |child| {
-                inspect_expr(child, outer, seen, out);
-            });
+            let mut visit = |child: &Expr| inspect_expr(child, outer, seen, out);
+            visit_child_exprs(other, &mut visit);
+            if let Expr::Function(function) = other {
+                for arguments in [&function.parameters, &function.args] {
+                    if let FunctionArguments::List(list) = arguments {
+                        visit_shallow_exprs(&list.clauses, &mut visit);
+                    }
+                }
+                visit_shallow_exprs(&function.over, &mut visit);
+                visit_shallow_exprs(&function.within_group, &mut visit);
+            }
         }
     }
 }
