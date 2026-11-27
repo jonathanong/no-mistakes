@@ -105,15 +105,32 @@ fn request_paths_use_shared_store_without_standalone_fallbacks() {
             .unwrap_or_default()
             >= 1
     );
+}
 
-    // Empty findings and missing paths are safe no-ops for the path helper.
+#[test]
+fn empty_findings_and_missing_paths_leave_the_batch_unchanged() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture(
+        "test-cases/rules/no-sparse-checkout/fixture/fail",
+    ));
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let files = snapshot.paths_for(&root).as_ref().clone();
+    let sources = Arc::new(SourceStore::new_observed(
+        Arc::new(FileInventory::from_paths(&files)),
+        None,
+    ));
     let mut empty = Vec::new();
     suppress_rule_findings_for_path(&sources, &root.join("missing.yml"), &mut empty);
     let mut missing = vec![finding("no-sparse-checkout", "missing.yml", 1)];
     suppress_rule_findings_for_path(&sources, &root.join("missing.yml"), &mut missing);
+    assert!(empty.is_empty());
     assert_eq!(missing.len(), 1);
+}
 
-    // Direct standalone fallbacks are tracked when invoked under an observer.
+#[test]
+fn direct_standalone_fallbacks_are_tracked_under_an_observer() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture(
+        "test-cases/rules/no-sparse-checkout/fixture/fail",
+    ));
     let standalone_observer = InvocationObserver::new(true);
     crate::diagnostics::with_observer(Some(Arc::clone(&standalone_observer)), || {
         let mut by_source = vec![finding("my-rule", "a.ts", 1)];

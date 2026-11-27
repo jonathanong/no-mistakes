@@ -5,7 +5,6 @@ pub(super) struct Targets {
     pub keep: bool,
 }
 
-// `read -a` and `mapfile`/`readarray` fill an array from input that may be empty.
 pub(super) fn targets(words: &[Word<'_>]) -> Option<Targets> {
     let mut command = command_words(words).skip_while(|word| assignment(word.raw).is_some());
     let mapfile = match command.next()?.raw {
