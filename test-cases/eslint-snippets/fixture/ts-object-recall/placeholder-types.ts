@@ -6,3 +6,33 @@ import type { RemoteMissing } from "./types";
 export type { RemoteMissing };
 export type { MissingElsewhere } from "./types";
 export type * from "./types";
+// no-mistakes-disable-next-line no-placeholder-never-type-exports -- definition is outside this file
+export type { SuppressedRemote } from "@example/types";
+export type { VisibleRemote } from "@example/types";
+const value = 1;
+type LocalValue = string;
+export { type LocalValue, value };
+export { type LocalMissing, value as renamedValue };
+export type Visible = string;
+export type { Visible as PublicVisible };
+export interface Item {}
+export type { Item as PublicItem };
+class Service {}
+export type { Service };
+enum Kind { Example }
+export type { Kind };
+declare namespace Group {}
+export type { Group };
+export type { Missing as PublicMissingAlias };
+type MixedMissing = never;
+export { type LocalValue as MixedValue, MixedMissing };
+import { ImportedValue, OtherValue } from "./placeholder-values";
+type ImportedValue = never;
+type OtherValue = string;
+export type { ImportedValue, OtherValue };
+import { ImportedValue as ValueOnly } from "./placeholder-values";
+export { type LocalValue as MixedType, ValueOnly };
+export * from "./placeholder-values";
+declare namespace Merged {}
+type Merged = never;
+export type { Merged };

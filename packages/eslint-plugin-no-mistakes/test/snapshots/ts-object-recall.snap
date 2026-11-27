@@ -152,6 +152,105 @@
           "messageId": "placeholder",
           "ruleId": "no-mistakes/no-placeholder-never-type-exports",
           "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 31,
+          "endLine": 6,
+          "file": "fixture.ts",
+          "line": 6,
+          "message": "Cannot tell whether this exported type is a never placeholder. Its definition is in another module this file cannot read.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 49,
+          "endLine": 7,
+          "file": "fixture.ts",
+          "line": 7,
+          "message": "Cannot tell whether this exported type is a never placeholder. Its definition is in another module this file cannot read.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 30,
+          "endLine": 8,
+          "file": "fixture.ts",
+          "line": 8,
+          "message": "Cannot tell whether this exported type is a never placeholder. Its definition is in another module this file cannot read.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 53,
+          "endLine": 11,
+          "file": "fixture.ts",
+          "line": 11,
+          "message": "Cannot tell whether this exported type is a never placeholder. Its definition is in another module this file cannot read.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 53,
+          "endLine": 15,
+          "file": "fixture.ts",
+          "line": 15,
+          "message": "Do not export placeholder never types. Define the real type or remove the export.",
+          "messageId": "placeholder",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 47,
+          "endLine": 26,
+          "file": "fixture.ts",
+          "line": 26,
+          "message": "Do not export placeholder never types. Define the real type or remove the export.",
+          "messageId": "placeholder",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 56,
+          "endLine": 28,
+          "file": "fixture.ts",
+          "line": 28,
+          "message": "Do not export placeholder never types. Define the real type or remove the export.",
+          "messageId": "placeholder",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 32,
+          "file": "fixture.ts",
+          "line": 32,
+          "message": "Do not export placeholder never types. Define the real type or remove the export.",
+          "messageId": "placeholder",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 38,
+          "file": "fixture.ts",
+          "line": 38,
+          "message": "Do not export placeholder never types. Define the real type or remove the export.",
+          "messageId": "placeholder",
+          "ruleId": "no-mistakes/no-placeholder-never-type-exports",
+          "severity": 2
         }
       ],
       "kind": "invalid",

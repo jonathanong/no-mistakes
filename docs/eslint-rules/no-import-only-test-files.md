@@ -54,9 +54,21 @@ require("./barrel");
 
 ## Suppression
 
+The rule reports one finding on the first statement. Place a line or next-line
+directive on that statement. Each example below is a separate file.
+
 ```ts
-// eslint-disable-next-line no-mistakes/no-import-only-test-files -- explicit integration test manifest required by this runner
+// no-mistakes-disable-file no-import-only-test-files -- explicit integration test manifest required by this runner
+import "./suite.test";
+```
+
+```ts
+// no-mistakes-disable-next-line no-import-only-test-files -- explicit integration test manifest required by this runner
 import "./users.test";
+```
+
+```ts
+import "./orders.test"; // no-mistakes-disable-line no-import-only-test-files -- explicit integration test manifest required by this runner
 ```
 
 ## Related rules

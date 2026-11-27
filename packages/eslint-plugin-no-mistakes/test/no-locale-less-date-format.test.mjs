@@ -200,6 +200,81 @@ const cases = [
     options: { methods: [], constructors, unknownValues: "finding" },
     lines: [1, 2, 3, 4, 9],
   },
+  {
+    name: "imported constructor namespaces stay quiet until unknownValues is finding",
+    file: "module-namespace.ts",
+    options: {
+      methods: [],
+      constructors: [
+        "Intl.DateTimeFormat",
+        "IntlEquals.DateTimeFormat",
+        "IntlRequired.DateTimeFormat",
+        "IntlMember.DateTimeFormat",
+      ],
+    },
+    lines: [],
+  },
+  {
+    name: "unknownValues finding reports an import, import equals require, and require as unanalyzable",
+    file: "module-namespace.ts",
+    options: {
+      methods: [],
+      constructors: [
+        "Intl.DateTimeFormat",
+        "IntlEquals.DateTimeFormat",
+        "IntlRequired.DateTimeFormat",
+        "IntlMember.DateTimeFormat",
+      ],
+      unknownValues: "finding",
+    },
+    lines: [7, 11, 15, 17, 21, 29, 33, 38],
+    messageIds: [
+      "unanalyzable",
+      "unanalyzable",
+      "unanalyzable",
+      "unanalyzable",
+      "unanalyzable",
+      "unanalyzable",
+      "unknownLocale",
+      "unanalyzable",
+    ],
+  },
+  {
+    name: "a same-file constructor alias still requires a locale",
+    file: "constructor-alias.mjs",
+    options: { methods: [], constructors: ["Intl.DateTimeFormat"] },
+    lines: [2],
+  },
+  {
+    name: "a locale binding named undefined is an explicit argument",
+    file: "bound-undefined-locale.ts",
+    options: {
+      constructors: ["Intl.DateTimeFormat"],
+      unknownValues: "finding",
+    },
+    lines: [6],
+    messageIds: ["unanalyzable"],
+  },
+  {
+    name: "an import equals alias of a local name stays quiet when unknownValues is finding",
+    file: "import-equals-local.ts",
+    options: {
+      methods: [],
+      constructors: ["LocalIntl.DateTimeFormat"],
+      unknownValues: "finding",
+    },
+    lines: [],
+  },
+  {
+    name: "a proven local Intl object stays quiet when unknownValues is finding",
+    file: "local-intl-object.mjs",
+    options: {
+      methods: [],
+      constructors: ["Intl.DateTimeFormat"],
+      unknownValues: "finding",
+    },
+    lines: [],
+  },
 ];
 
 it("snapshots configured locale checks and scope boundaries", async () => {
@@ -214,6 +289,12 @@ it("snapshots configured locale checks and scope boundaries", async () => {
       findings.map((finding) => finding.line),
       item.name,
     ).toEqual(item.lines);
+    if (item.messageIds) {
+      expect(
+        findings.map((finding) => finding.messageId),
+        item.name,
+      ).toEqual(item.messageIds);
+    }
     return { ...item, file, findings, rule };
   });
   await expect(snapshotDocument(snapshotCases(results))).toMatchFileSnapshot(

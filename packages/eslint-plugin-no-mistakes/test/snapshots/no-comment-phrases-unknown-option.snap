@@ -1,0 +1,27 @@
+[
+  {
+    "file": "no-comment-phrases/placeholder-phrase.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 36,
+        "endLine": 1,
+        "file": "no-comment-phrases/placeholder-phrase.mjs",
+        "line": 1,
+        "message": "This comment matches a configured phrase. Remove the preserved path, or suppress a genuine external constraint with a nonempty reason.",
+        "messageId": "phrase",
+        "ruleId": "no-mistakes/no-comment-phrases",
+        "severity": 2
+      }
+    ],
+    "name": "unknown option is rejected before a valid phrase still reports",
+    "options": {
+      "patterns": [
+        {
+          "pattern": "placeholder"
+        }
+      ]
+    },
+    "rule": "no-comment-phrases"
+  }
+]

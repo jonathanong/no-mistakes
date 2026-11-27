@@ -42,7 +42,13 @@ formatDate(date);
   Number and custom-object methods with that name.
 - `constructors` defaults to an empty list. Each entry selects a member of a
   global namespace by its dotted `Namespace.Member` name and checks both calls
-  and `new` expressions. A local binding that shadows the namespace is ignored.
+  and `new` expressions. A shadowing local object stays quiet. When the dotted
+  name is listed and `unknownValues` is `"finding"`, the rule reports
+  `unanalyzable` for a missing locale when the namespace comes from an import,
+  a global `require()` call or member access, or `import = require()`. Local
+  functions named `require` and other local initializers are outside this
+  check. A direct assignment of a local object before the call in the same
+  statement list also stays quiet.
   An `Intl.*Format` constructor or call whose only use is an immediate
   `.resolvedOptions()` call (including any property read on its result, such as
   `Intl.DateTimeFormat().resolvedOptions().timeZone` or
@@ -55,8 +61,11 @@ formatDate(date);
   first arguments (`date.toLocaleString(...args)`,
   `new Intl.DateTimeFormat(...args)`), computed constructor lookups on a
   configured namespace (`new Intl[name]()`, including through a stable
-  constructor alias), and `undefined` or matched alias and constructor
-  references inside dynamic `with` or non-strict direct `eval` scopes.
+  constructor alias), `undefined` or matched alias and constructor
+  references inside dynamic `with` or non-strict direct `eval` scopes, and
+  a configured constructor whose namespace is an import, `require()`, or
+  `import = require()` this file cannot read. That last form reports
+  `unanalyzable`, not a missing-locale finding.
 
 Invalid options—such as blank `methods` entries, non-dotted `constructors`
 entries, or unknown `unknownValues` strings—fail schema validation at config
@@ -74,6 +83,29 @@ Pass the application's locale to fix the findings.
 ```ts
 new Intl.DateTimeFormat("en-GB", { timeZone: "UTC" });
 Intl.NumberFormat("en-GB");
+```
+
+A proven local object stays quiet:
+
+```ts
+const Intl = { DateTimeFormat() { return { format() {} }; } };
+new Intl.DateTimeFormat();
+```
+
+An `import Local = Other` alias of a name in this file stays quiet. An
+unread module reports `unanalyzable` once `unknownValues` is `"finding"`
+and `constructors` lists that dotted name:
+
+```ts
+import * as Intl from "@example/intl";
+import IntlEquals = require("@example/intl");
+const IntlRequired = require("@example/intl");
+const IntlMember = require("@example/intl").Intl;
+
+new Intl.DateTimeFormat();
+new IntlEquals.DateTimeFormat();
+new IntlRequired.DateTimeFormat();
+new IntlMember.DateTimeFormat();
 ```
 
 ## Configuration

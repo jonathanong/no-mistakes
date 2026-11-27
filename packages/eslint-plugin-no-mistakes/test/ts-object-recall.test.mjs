@@ -54,7 +54,7 @@ describe("TypeScript and object recall audit", () => {
           languageOptions,
           {
             invalid: [
-              // 2 placeholder.
+              // Same-file never exports, plus unanalyzable re-exports.
               recallCase("placeholder-types"),
             ],
           },

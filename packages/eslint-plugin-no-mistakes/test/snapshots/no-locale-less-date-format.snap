@@ -1,5 +1,66 @@
 [
   {
+    "file": "no-locale-less-date-format/bound-undefined-locale.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 6,
+        "file": "no-locale-less-date-format/bound-undefined-locale.ts",
+        "line": 6,
+        "message": "Cannot tell whether Intl.DateTimeFormat is the configured constructor. Its namespace is an import or require this file cannot read, so a missing locale is not proved.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "a locale binding named undefined is an explicit argument",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat"
+      ],
+      "unknownValues": "finding"
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/local-intl-object.mjs",
+    "findings": [],
+    "name": "a proven local Intl object stays quiet when unknownValues is finding",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat"
+      ],
+      "methods": [],
+      "unknownValues": "finding"
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/constructor-alias.mjs",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 16,
+        "endLine": 2,
+        "file": "no-locale-less-date-format/constructor-alias.mjs",
+        "line": 2,
+        "message": "Pass an explicit locale to Intl.DateTimeFormat so formatting does not depend on the server or browser default locale.",
+        "messageId": "explicitLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "a same-file constructor alias still requires a locale",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat"
+      ],
+      "methods": []
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
     "file": "no-locale-less-date-format/undefined-locale.mjs",
     "findings": [],
     "name": "allowUndefinedLocale permits global undefined",
@@ -170,6 +231,19 @@
     "name": "allowUndefinedLocale still rejects missing arguments",
     "options": {
       "allowUndefinedLocale": true
+    },
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/import-equals-local.ts",
+    "findings": [],
+    "name": "an import equals alias of a local name stays quiet when unknownValues is finding",
+    "options": {
+      "constructors": [
+        "LocalIntl.DateTimeFormat"
+      ],
+      "methods": [],
+      "unknownValues": "finding"
     },
     "rule": "no-locale-less-date-format"
   },
@@ -505,6 +579,21 @@
     ],
     "name": "global undefined is rejected by default",
     "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/module-namespace.ts",
+    "findings": [],
+    "name": "imported constructor namespaces stay quiet until unknownValues is finding",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat",
+        "IntlEquals.DateTimeFormat",
+        "IntlRequired.DateTimeFormat",
+        "IntlMember.DateTimeFormat"
+      ],
+      "methods": []
+    },
     "rule": "no-locale-less-date-format"
   },
   {
@@ -872,6 +961,111 @@
     ],
     "name": "TypeScript wrappers preserve method and locale classification",
     "options": null,
+    "rule": "no-locale-less-date-format"
+  },
+  {
+    "file": "no-locale-less-date-format/module-namespace.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 7,
+        "file": "no-locale-less-date-format/module-namespace.ts",
+        "line": 7,
+        "message": "Cannot tell whether Intl.DateTimeFormat is the configured constructor. Its namespace is an import or require this file cannot read, so a missing locale is not proved.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 32,
+        "endLine": 11,
+        "file": "no-locale-less-date-format/module-namespace.ts",
+        "line": 11,
+        "message": "Cannot tell whether IntlEquals.DateTimeFormat is the configured constructor. Its namespace is an import or require this file cannot read, so a missing locale is not proved.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 34,
+        "endLine": 15,
+        "file": "no-locale-less-date-format/module-namespace.ts",
+        "line": 15,
+        "message": "Cannot tell whether IntlRequired.DateTimeFormat is the configured constructor. Its namespace is an import or require this file cannot read, so a missing locale is not proved.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 32,
+        "endLine": 17,
+        "file": "no-locale-less-date-format/module-namespace.ts",
+        "line": 17,
+        "message": "Cannot tell whether IntlMember.DateTimeFormat is the configured constructor. Its namespace is an import or require this file cannot read, so a missing locale is not proved.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 24,
+        "endLine": 21,
+        "file": "no-locale-less-date-format/module-namespace.ts",
+        "line": 21,
+        "message": "Cannot tell whether Intl.DateTimeFormat is the configured constructor. Its namespace is an import or require this file cannot read, so a missing locale is not proved.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 24,
+        "endLine": 29,
+        "file": "no-locale-less-date-format/module-namespace.ts",
+        "line": 29,
+        "message": "Cannot tell whether Intl.DateTimeFormat is the configured constructor. Its namespace is an import or require this file cannot read, so a missing locale is not proved.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 23,
+        "endLine": 33,
+        "file": "no-locale-less-date-format/module-namespace.ts",
+        "line": 33,
+        "message": "Cannot statically prove Intl receives an explicit locale. Pass an explicit locale argument instead of relying on dynamic spread, computed constructor lookup, or dynamic scope.",
+        "messageId": "unknownLocale",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 24,
+        "endLine": 38,
+        "file": "no-locale-less-date-format/module-namespace.ts",
+        "line": 38,
+        "message": "Cannot tell whether Intl.DateTimeFormat is the configured constructor. Its namespace is an import or require this file cannot read, so a missing locale is not proved.",
+        "messageId": "unanalyzable",
+        "ruleId": "no-mistakes/no-locale-less-date-format",
+        "severity": 2
+      }
+    ],
+    "name": "unknownValues finding reports an import, import equals require, and require as unanalyzable",
+    "options": {
+      "constructors": [
+        "Intl.DateTimeFormat",
+        "IntlEquals.DateTimeFormat",
+        "IntlRequired.DateTimeFormat",
+        "IntlMember.DateTimeFormat"
+      ],
+      "methods": [],
+      "unknownValues": "finding"
+    },
     "rule": "no-locale-less-date-format"
   },
   {
