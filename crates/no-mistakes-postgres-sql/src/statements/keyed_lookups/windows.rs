@@ -8,6 +8,7 @@ use std::ops::ControlFlow;
 
 pub(super) fn referenced_expressions<'a>(
     select: &'a Select,
+    distinct_on: &'a [Expr],
     order_by: &'a [&'a Expr],
 ) -> impl Iterator<Item = (&'a Expr, bool)> {
     let mut references = WindowReferences::default();
@@ -16,6 +17,7 @@ pub(super) fn referenced_expressions<'a>(
             .projection
             .iter()
             .filter_map(select_item_expr)
+            .chain(distinct_on)
             .chain(order_by.iter().copied())
         {
             let _ = expr.visit(&mut references);

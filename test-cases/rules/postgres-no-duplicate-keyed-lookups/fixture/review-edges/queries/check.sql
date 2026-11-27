@@ -64,5 +64,5 @@ ORDER BY (SELECT a.name FROM accounts a WHERE a.id = o.account_id);
 
 SELECT o.id
 FROM orders o
-JOIN accounts a ON a.id = COALESCE($1, o.account_id)
-JOIN accounts b ON b.id = COALESCE($1, o.account_id);
+JOIN accounts a ON a.enabled = COALESCE(NULL, o.account_id IS NULL)
+JOIN accounts b ON b.enabled = COALESCE(NULL, o.account_id IS NULL);

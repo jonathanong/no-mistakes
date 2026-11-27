@@ -18,5 +18,5 @@ SELECT
   a1.display_name,
   a2.tier
 FROM orders o
-LEFT JOIN accounts a1 ON a1.id = pg_catalog.md5(o.raw_account_id)::uuid
-LEFT JOIN accounts a2 ON a2.id = CAST(pg_catalog.md5(o.raw_account_id) AS uuid);
+LEFT JOIN accounts a1 ON a1.id = pg_catalog.md5(CAST(o.raw_account_id IS NULL AS text))::uuid
+LEFT JOIN accounts a2 ON a2.id = CAST(pg_catalog.md5(CAST(o.raw_account_id IS NULL AS text)) AS uuid);

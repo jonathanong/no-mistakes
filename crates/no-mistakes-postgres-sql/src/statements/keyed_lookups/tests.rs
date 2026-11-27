@@ -211,3 +211,27 @@ fn shares_lookup_history_for_unnest_and_query_limits_and_checks_projection_purit
         ]
     );
 }
+
+#[test]
+fn reuses_resolved_grouping_and_order_targets_and_visits_distinct_window_references() {
+    let facts = fixture_facts("review-target-reuse");
+    assert!(!facts.parse_failed);
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+    assert_eq!(
+        sites,
+        [
+            (16, 17),
+            (24, 26),
+            (32, 33),
+            (43, 44),
+            (47, 48),
+            (59, 60),
+            (65, 66),
+            (73, 74)
+        ]
+    );
+}

@@ -65,7 +65,7 @@ SELECT
 FROM orders o;
 
 SELECT
-    (SELECT pg_catalog.lower(a.name) FROM accounts a WHERE a.id = o.account_id),
+    (SELECT pg_catalog.lower(CAST(a.name IS NULL AS text)) FROM accounts a WHERE a.id = o.account_id),
     (SELECT b.tier FROM accounts b WHERE b.id = o.account_id)
 FROM orders o;
 

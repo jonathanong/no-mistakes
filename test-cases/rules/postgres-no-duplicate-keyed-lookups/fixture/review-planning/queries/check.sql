@@ -58,5 +58,5 @@ LEFT JOIN accounts b ON b.id = CAST($1 AS uuid);
 
 SELECT o.id
 FROM orders o
-LEFT JOIN accounts a ON a.id = CAST(CAST(pg_catalog.md5(o.raw_id) AS text) AS uuid)
-LEFT JOIN accounts b ON b.id = (pg_catalog.md5(o.raw_id)::text)::uuid;
+LEFT JOIN accounts a ON a.id = CAST(CAST(pg_catalog.md5(CAST(o.raw_id IS NULL AS text)) AS text) AS uuid)
+LEFT JOIN accounts b ON b.id = (pg_catalog.md5(CAST(o.raw_id IS NULL AS text))::text)::uuid;

@@ -56,14 +56,15 @@ The rule stays silent when the lookups are not proven to read the same row:
   or unrecognized functions in keys or scalar projections, unresolved table
   column alias lists, distinct `LIMIT` clauses, or ambiguous expressions.
 - Function calls require a vetted built-in qualified with `pg_catalog` or
-  PostgreSQL syntax such as `COALESCE`. Casts require a known built-in
-  input and target type. The rule skips casts of columns and parameters
-  whose types it cannot establish, and operators with unknown behavior.
+  PostgreSQL syntax such as `COALESCE`. Function arguments and cast inputs
+  need known built-in types, and casts also need known built-in target types.
+  The rule skips function arguments and casts of columns or parameters whose
+  types it cannot establish, and operators with unknown behavior.
 - Sampled table scans, `ONLY` table scans, or scalar subqueries that lock rows.
 
-PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`,
-`ORDER BY`, and window partition and ordering clauses. The rule counts
-an identical reused expression once.
+PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
+(including grouping sets), `ORDER BY`, and window partition and ordering
+clauses. The rule counts an identical reused expression once.
 
 Findings point at the duplicate join or scalar subquery and name the line of the
 first lookup.

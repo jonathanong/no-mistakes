@@ -1,5 +1,6 @@
 use super::super::builtins::SAFE_PURE_FUNCTIONS;
 use super::argument_list;
+use super::types::has_builtin_type;
 use crate::idents::ident_key;
 use sqlparser::ast::{Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments};
 
@@ -8,21 +9,33 @@ pub(super) fn normalize(
     mut norm_arg: impl FnMut(&Expr) -> Option<String>,
 ) -> Option<String> {
     let base = pure_name(function)?;
+    let args = bare_arguments(function)?
+        .iter()
+        .map(|arg| norm_arg(proven_argument(arg)?))
+        .collect::<Option<Vec<_>>>()?;
+    Some(format!("fn({base},{})", argument_list(&args)))
+}
+
+fn bare_arguments(function: &Function) -> Option<&[FunctionArg]> {
     let FunctionArguments::List(list) = &function.args else {
         return None;
     };
-    if !list.clauses.is_empty() || list.duplicate_treatment.is_some() {
-        return None;
+    (matches!(function.parameters, FunctionArguments::None)
+        && list.clauses.is_empty()
+        && list.duplicate_treatment.is_none())
+    .then_some(list.args.as_slice())
+}
+
+fn proven_argument(arg: &FunctionArg) -> Option<&Expr> {
+    match arg {
+        FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) if has_builtin_type(expr) => Some(expr),
+        _ => None,
     }
-    let args = list
-        .args
-        .iter()
-        .map(|arg| match arg {
-            FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => norm_arg(expr),
-            _ => None,
-        })
-        .collect::<Option<Vec<_>>>()?;
-    Some(format!("fn({base},{})", argument_list(&args)))
+}
+
+pub(super) fn arguments_are_proven(function: &Function) -> bool {
+    bare_arguments(function)
+        .is_some_and(|args| args.iter().all(|arg| proven_argument(arg).is_some()))
 }
 
 pub(in crate::statements::keyed_lookups) fn pure_name(function: &Function) -> Option<String> {

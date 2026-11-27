@@ -57,9 +57,9 @@ fn detects_join_plus_scalar_subquery_and_equivalent_casts() {
         "SELECT
             o.id,
             p.display_name,
-            (SELECT p2.avatar_url FROM profiles p2 WHERE p2.id = CAST(pg_catalog.md5(o.owner_id) AS uuid))
+            (SELECT p2.avatar_url FROM profiles p2 WHERE p2.id = CAST(pg_catalog.md5(CAST(o.owner_id IS NULL AS text)) AS uuid))
         FROM orders o
-        LEFT JOIN profiles p ON p.id = pg_catalog.md5(o.owner_id)::uuid",
+        LEFT JOIN profiles p ON p.id = pg_catalog.md5(CAST(o.owner_id IS NULL AS text))::uuid",
     );
     assert_eq!(facts.len(), 1);
     assert_eq!(facts[0].relation, "profiles");
@@ -87,8 +87,8 @@ fn ignores_distinct_keys_casts_and_residual_filters() {
 
         SELECT o.id, a1.name, a2.tier
         FROM orders o
-        LEFT JOIN accounts a1 ON a1.id = pg_catalog.md5(o.raw_id)::text
-        LEFT JOIN accounts a2 ON a2.id = pg_catalog.md5(o.raw_id)::varchar;
+        LEFT JOIN accounts a1 ON a1.id = pg_catalog.md5(CAST(o.raw_id IS NULL AS text))::text
+        LEFT JOIN accounts a2 ON a2.id = pg_catalog.md5(CAST(o.raw_id IS NULL AS text))::varchar;
 
         SELECT o.id, b.postal_code, s.postal_code
         FROM orders o

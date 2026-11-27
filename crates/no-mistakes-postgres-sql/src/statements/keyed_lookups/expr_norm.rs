@@ -67,7 +67,7 @@ impl<'a> ExprNormalizer<'a> {
                 data_type,
                 format: None,
                 ..
-            } if types::cast_source_is_proven(expr) => {
+            } if types::has_builtin_type(expr) => {
                 let inner = self.normalize(expr)?;
                 Some(format!(
                     "cast({},{})",
@@ -75,6 +75,8 @@ impl<'a> ExprNormalizer<'a> {
                     atom(&types::cast_type(data_type)?)
                 ))
             }
+            Expr::IsNull(inner) => Some(format!("is_null({})", self.normalize(inner)?)),
+            Expr::IsNotNull(inner) => Some(format!("is_not_null({})", self.normalize(inner)?)),
             Expr::UnaryOp { op, expr } => {
                 let inner = self.normalize(expr)?;
                 Some(format!("unary({op},{})", atom(&inner)))
@@ -109,8 +111,6 @@ impl<'a> ExprNormalizer<'a> {
 
     fn predicate(&mut self, expr: &Expr) -> Option<String> {
         let (operator, inner) = match expr {
-            Expr::IsNull(inner) => ("is_null", inner),
-            Expr::IsNotNull(inner) => ("is_not_null", inner),
             Expr::IsTrue(inner) => ("is_true", inner),
             Expr::IsFalse(inner) => ("is_false", inner),
             Expr::IsDistinctFrom(left, right) | Expr::IsNotDistinctFrom(left, right) => {
