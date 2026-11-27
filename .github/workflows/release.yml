@@ -151,10 +151,7 @@ jobs:
           fi
           release_sha="$(git rev-parse HEAD)"
           git tag -a "v$version" -m "v$version"
-          if ! git push --atomic origin HEAD:main "v$version"; then
-            echo "::error::main moved while the release commit was being prepared. Re-run the release workflow from current main." >&2
-            exit 1
-          fi
+          bash .github/scripts/release-push.sh "$version"
           echo "release-sha=$release_sha" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
