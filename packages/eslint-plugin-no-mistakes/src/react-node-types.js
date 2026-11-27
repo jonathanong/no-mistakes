@@ -11,6 +11,7 @@ function syntacticRequire(init) {
   return { module: moduleName, kind: "namespace", typeOnly: false };
 }
 const {
+  bindPatternNames,
   definePattern,
   keyName,
   reactTypeStatus,
@@ -170,6 +171,7 @@ function createReactNodeFacts(program, context) {
 }
 
 module.exports = {
+  bindPatternNames,
   createReactNodeFacts,
   definePattern,
   keyName,

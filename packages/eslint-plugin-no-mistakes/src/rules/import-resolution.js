@@ -165,12 +165,14 @@ function importFact(node, context, seen = new Set()) {
     (reference) => reference.isWrite() && !reference.init,
   );
   if (direct) return written && !direct.unresolved ? { unresolved: true } : direct;
+  const kind = def.parent?.kind;
   if (
     def.type === "Variable" &&
-    def.parent?.kind === "const" &&
+    (kind === "const" || kind === "let") &&
     def.node?.id?.type === "Identifier" &&
     def.node.init
   ) {
+    if (kind === "let" && written) return { unresolved: true };
     return importFact(def.node.init, context, seen);
   }
   return null;

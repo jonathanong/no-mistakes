@@ -521,6 +521,25 @@
       "rule": "react-no-nullish-react-node"
     },
     {
+      "file": "react-nullish-pattern-shadows.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 23,
+          "endLine": 34,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-pattern-shadows.tsx",
+          "line": 34,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "pattern shadows do not keep an outer ReactNode",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
       "file": "react-nullish-import-type.tsx",
       "findings": [
         {
@@ -693,6 +712,50 @@
           "line": 43,
           "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
           "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 37,
+          "endLine": 48,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 48,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 40,
+          "endLine": 53,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 53,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 42,
+          "endLine": 58,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 58,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 41,
+          "endLine": 64,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 64,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
           "severity": 2
         }
@@ -1330,6 +1393,28 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 23,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved-wrapper.ts",
+          "line": 23,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 34,
+          "endLine": 23,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-unresolved-wrapper.ts",
+          "line": 23,
+          "message": "Could not resolve whether 'getWidget' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
         }
       ],
       "name": "unresolved wrapper is not inside",
@@ -1726,6 +1811,20 @@
             "file": "nullable-unresolved-wrapper.ts",
             "line": 12,
             "message": "Could not resolve whether 'getWidget' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-unresolved-wrapper.ts",
+            "line": 23,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 23,
+            "file": "nullable-unresolved-wrapper.ts",
+            "line": 23,
+            "message": "Could not resolve whether 'getWidget' is the configured getter or wrapper. Use a static import."
           }
         ],
         "name": "nullable-unresolved-wrapper.ts",
@@ -1799,6 +1898,20 @@
           }
         ],
         "name": "react-nullish-members.tsx",
+        "options": null
+      },
+      {
+        "file": "react-nullish-pattern-shadows.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-pattern-shadows.tsx",
+            "line": 34,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          }
+        ],
+        "name": "react-nullish-pattern-shadows.tsx",
         "options": null
       },
       {
@@ -1925,6 +2038,34 @@
             "file": "react-use-bindings.tsx",
             "line": 43,
             "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 48,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 53,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 58,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 64,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
           }
         ],
         "name": "react-use-bindings.tsx",

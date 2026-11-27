@@ -75,13 +75,21 @@ function reactUseStatus(node, context, useNames, seen = new Set()) {
     }
     if (variable.defs.length !== 1) return "no";
     const def = variable.defs[0];
-    if (def?.type === "Variable" && def.node?.parent?.kind === "const" && def.node.init) {
-      seen.add(variable);
-      if (def.node.id.type === "Identifier") {
-        return reactUseStatus(def.node.init, context, useNames, seen);
+    if (def?.type === "Variable" && def.node?.init) {
+      const kind = def.node.parent?.kind;
+      if (kind === "const") {
+        seen.add(variable);
+        if (def.node.id.type === "Identifier") {
+          return reactUseStatus(def.node.init, context, useNames, seen);
+        }
+        if (patternKey(def.node.id, callee.name) !== "use") return "no";
+        return namespaceStatus(def.node.init, context);
       }
-      if (patternKey(def.node.id, callee.name) !== "use") return "no";
-      return namespaceStatus(def.node.init, context);
+      if (def.node.id?.type === "Identifier") {
+        seen.add(variable);
+        const status = reactUseStatus(def.node.init, context, useNames, seen);
+        if (status !== "no") return "unresolved";
+      }
     }
     return "no";
   }

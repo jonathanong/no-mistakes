@@ -353,6 +353,11 @@ describe("typescript import wrappers", () => {
         "react-no-nullish-react-node",
       ),
       eslintCase(
+        "pattern shadows do not keep an outer ReactNode",
+        "react-nullish-pattern-shadows.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
         "computed member of a namespace import",
         "nullable-computed-member.ts",
         "server-require-nullable-fetch-wrapper",
@@ -461,6 +466,10 @@ describe("typescript import wrappers", () => {
       [22, "resolve"],
       [35, "resolve"],
       [43, "resolve"],
+      [48, "unanalyzable"],
+      [53, "unanalyzable"],
+      [58, "resolve"],
+      [64, "unanalyzable"],
     ]);
     expect(
       cases.find((item) => item.name === "promise type query alias").findings.map((f) => f.line),
@@ -577,6 +586,11 @@ describe("typescript import wrappers", () => {
     ]);
     expect(
       cases
+        .find((item) => item.name === "pattern shadows do not keep an outer ReactNode")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([[34, "nullish"]]);
+    expect(
+      cases
         .find((item) => item.name === "computed member of a namespace import")
         .findings.map((finding) => [finding.line, finding.messageId]),
     ).toEqual([
@@ -592,6 +606,8 @@ describe("typescript import wrappers", () => {
       [6, "unanalyzable"],
       [6, "unanalyzable"],
       [12, "unanalyzable"],
+      [23, "unanalyzable"],
+      [23, "unanalyzable"],
     ]);
     expect(cases.find((item) => item.name === "ignored unresolved wrapper").findings).toEqual([]);
 
@@ -612,6 +628,7 @@ describe("typescript import wrappers", () => {
         "react-nullish-local-require.tsx",
         "react-nullish-annotated.tsx",
         "react-nullish-alias-chain.tsx",
+        "react-nullish-pattern-shadows.tsx",
       ]),
       "nullish-ignore": oxlintOn(".oxlintrc-nullish-ignore.json", ["react-nullish-unresolved.tsx"]),
       fetch: oxlintOn(".oxlintrc-fetch.json", [
@@ -677,6 +694,11 @@ describe("typescript import wrappers", () => {
       oxlint["nullable-overload"].status,
       0,
       JSON.stringify(oxlint["nullable-overload"].findings),
+    );
+    assert.equal(
+      oxlint["nullable-outer"].status,
+      0,
+      JSON.stringify(oxlint["nullable-outer"].findings),
     );
     assert.equal(
       oxlint.script.findings.find((item) => item.file === "app/page.tsx").findings.length,

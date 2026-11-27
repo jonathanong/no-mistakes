@@ -42,3 +42,24 @@ export function memberShadow() {
   const memberRun = memberBridge;
   return memberRun(Promise.resolve(1));
 }
+
+let rebound = React.use;
+export function letAlias() {
+  return rebound(Promise.resolve(1));
+}
+
+var varRebound = React.use;
+export function varAlias() {
+  return varRebound(Promise.resolve(1));
+}
+
+let Required = require("react");
+export function letRequire() {
+  return Required.use(Promise.resolve(1));
+}
+
+let Written = require("react");
+Written = null;
+export function writtenLetRequire() {
+  return Written.use(Promise.resolve(1));
+}

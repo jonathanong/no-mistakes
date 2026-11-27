@@ -3,7 +3,13 @@
 const { literalString } = require("./module-mock-helpers");
 const { unwrapSequence } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
-const { definePattern, keyName, reactTypeStatus, typeAnnotation } = require("../react-node-types");
+const {
+  bindPatternNames,
+  definePattern,
+  keyName,
+  reactTypeStatus,
+  typeAnnotation,
+} = require("../react-node-types");
 const { classifiedProps } = require("./react-nullish-props");
 
 const isObjectPattern = (node) => node && node.type === "ObjectPattern";
@@ -126,6 +132,8 @@ function createNullishState(context) {
     if (isIdentifier(target)) {
       noteType(target.name, type);
       defineObjectType(target, type);
+    } else if (target.type === "ArrayPattern") {
+      bindPatternNames(target, defineBinding);
     } else if (isObjectPattern(target)) {
       const classified = classifiedProps(type, facts);
       definePattern(

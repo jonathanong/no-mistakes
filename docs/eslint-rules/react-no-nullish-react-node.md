@@ -33,10 +33,7 @@ export function Panel({ children }: { children: ReactNode }) {
 export function AliasedPanel(props: { children: ReactNode }) {
   const { [`children`]: slot } = props;
   const p = props;
-  return [
-    slot === undefined ? null : slot,
-    p.children === undefined ? null : p.children,
-  ];
+  return [slot === undefined ? null : slot, p.children === undefined ? null : p.children];
 }
 ```
 
@@ -66,9 +63,11 @@ explicit type uses that contract instead. An alias in a parameter initializer is
 also left unknown.
 An alias source and reads of that alias use its lexical binding's prop type; a
 same-named loop or catch local does not inherit the alias's type. Declared-type
-name facts keep their existing conservative reporting. Computed identifier
-destructuring also retains conservative reporting by the identifier's spelling;
-that spelling does not prove the runtime key.
+name facts keep their existing conservative reporting. A computed destructuring
+key counts only when it is a static literal, so an identifier key does not take
+the ReactNode prop spelled like that identifier. A rest element, a name nested
+in an object or array pattern, and an array-pattern parameter stop the lookup
+and do not inherit an outer ReactNode.
 
 ```tsx
 import type { ReactNode } from "react";

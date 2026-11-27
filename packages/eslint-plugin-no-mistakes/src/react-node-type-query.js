@@ -87,6 +87,29 @@ function reactTypeStatus(type, facts) {
   return "no";
 }
 
+function bindPatternNames(pattern, defineBinding) {
+  if (!pattern) return;
+  if (pattern.type === "AssignmentPattern" || pattern.type === "RestElement") {
+    bindPatternNames(pattern.left ?? pattern.argument, defineBinding);
+    return;
+  }
+  if (pattern.type === "Identifier") {
+    defineBinding(pattern.name);
+    return;
+  }
+  if (pattern.type === "ArrayPattern") {
+    for (const element of pattern.elements) bindPatternNames(element, defineBinding);
+    return;
+  }
+  if (pattern.type !== "ObjectPattern") return;
+  for (const property of pattern.properties) {
+    bindPatternNames(
+      property.type === "RestElement" ? property.argument : property.value,
+      defineBinding,
+    );
+  }
+}
+
 function definePattern(
   pattern,
   props,
@@ -96,21 +119,20 @@ function definePattern(
   defineUnresolved,
 ) {
   if (!pattern || pattern.type !== "ObjectPattern") return;
+  bindPatternNames(pattern, defineBinding);
   for (const property of pattern.properties) {
     if (property.type !== "Property") continue;
-    const name = property.computed
-      ? literalString(property.key) || keyName(property.key)
-      : keyName(property.key);
+    const name = property.computed ? literalString(property.key) : keyName(property.key);
     const value =
       property.value?.type === "AssignmentPattern" ? property.value.left : property.value;
     if (value?.type !== "Identifier") continue;
-    defineBinding(value.name);
     if (name && props?.has(name)) defineReactNode(value.name);
     else if (name && unresolved?.has(name)) defineUnresolved?.(value.name);
   }
 }
 
 module.exports = {
+  bindPatternNames,
   definePattern,
   keyName,
   qualifierText,

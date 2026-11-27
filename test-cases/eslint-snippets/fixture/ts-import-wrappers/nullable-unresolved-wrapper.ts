@@ -17,3 +17,8 @@ const resolved = require("./wrap");
 export function kept(): Promise<Widget | null> {
   return resolved.wrapNullable(getWidget());
 }
+
+export function destructured(): Promise<Widget | null> {
+  const { wrapNullable } = require(moduleName);
+  return wrapNullable(getWidget());
+}
