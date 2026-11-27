@@ -51,9 +51,7 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
         graph_plan.imports = true;
     }
     let discovery_files = discovery_files.to_vec();
-    let prepared_dotnet = preparation_plan
-        .runners
-        .contains(&TestRunner::Dotnet)
+    let prepared_dotnet = preparation_plan.contains(TestRunner::Dotnet)
         .then(|| {
             let (projects, facts) = dotnet_projects::dotnet_projects_and_facts_from_visible_with_sources(
                 root,
@@ -63,9 +61,7 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
             );
             (projects.map_err(|error| format!("{error:#}")), facts)
         });
-    let prepared_swift = preparation_plan
-        .runners
-        .contains(&TestRunner::Swift)
+    let prepared_swift = preparation_plan.contains(TestRunner::Swift)
         .then(|| {
             crate::codebase::swift::collect_swift_facts_with_sources(
                 root,
@@ -74,7 +70,7 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
                 Some(&sources),
             )
         });
-    let cargo_targets = preparation_plan.runners.contains(&TestRunner::Cargo)
+    let cargo_targets = preparation_plan.contains(TestRunner::Cargo)
         .then(|| cargo_targets::CargoTargets::prepare(root, config, visible_paths, &sources));
     let runner_configs = crate::integration_tests::runner_config::prepare_with_catalog_and_sources(
         root,

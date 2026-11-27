@@ -9,6 +9,7 @@ mod projects;
 mod reserved;
 mod swift_projects;
 mod targets;
+pub(crate) mod traversal;
 mod types;
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
@@ -18,6 +19,7 @@ use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
+pub use super::testing_analysis::plan::FrameworkPreparationPlan;
 pub(crate) use filters::fallback_runner_match;
 pub use filters::{fallback_test_path, ProjectTestFilter};
 use ownership::owning_projects;
@@ -25,7 +27,6 @@ pub use project_patterns::project_dependency_patterns;
 pub(crate) use project_patterns::{normalize_project_glob_part, project_relative_pattern};
 pub use targets::TestExecutionTarget;
 pub use types::{DiscoveredTests, PreparedRunnerProject, TestRunner};
-include!("test_discovery/preparation_plan.rs");
 include!("test_discovery/prepared.rs");
 include!("test_discovery/prepared_catalog.rs");
 include!("test_discovery/prepared_vitest_resolution.rs");

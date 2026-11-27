@@ -147,7 +147,7 @@ pub(crate) fn collect_and_filter_entries_prepared(
         &shared.config,
         &shared.tsconfig,
         shared.dataset.visible_paths(),
-        shared.prepared_test_projects.as_ref(),
+        shared.prepared_test_projects.as_deref(),
     );
     let entries = entries?;
     shared

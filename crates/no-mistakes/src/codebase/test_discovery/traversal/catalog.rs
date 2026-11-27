@@ -1,28 +1,9 @@
-/// Builds the automatic catalog in the same frozen request universe used to
-/// prepare runner projects. Keeping this shared prevents standalone reports
-/// from missing aliases owned by configured runner or framework project roots.
-pub(crate) struct FrameworkCatalogPreparation<'a> {
-    pub(crate) root: &'a Path,
-    pub(crate) tsconfig_path: Option<&'a Path>,
-    pub(crate) tsconfig: &'a TsConfig,
-    pub(crate) config: &'a crate::config::v2::NoMistakesConfig,
-    pub(crate) codebase_config: &'a crate::codebase::config::Config,
-    pub(crate) workspace: &'a std::sync::Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
-    pub(crate) root_visible_paths: &'a [PathBuf],
-    pub(crate) visible_paths: &'a crate::codebase::ts_source::VisiblePathSnapshot,
-    pub(crate) sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
-    pub(crate) build_plan: graph::GraphBuildPlan,
-    pub(crate) graph_files: &'a graph::GraphFiles,
-    pub(crate) collect_graph_facts: bool,
-    pub(crate) framework_plan: &'a crate::codebase::test_discovery::FrameworkPreparationPlan,
-}
+use super::*;
+use crate::codebase::dependencies::graph;
 
 pub(crate) fn prepare_tsconfig_catalog_with_framework_projects(
     input: FrameworkCatalogPreparation<'_>,
-) -> Result<(
-    std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
-    crate::codebase::test_discovery::PreparedTestProjects,
-)> {
+) -> Result<FrameworkCatalog> {
     crate::ast::with_request_parse_cache(|| {
         prepare_tsconfig_catalog_with_framework_projects_and_cache(input)
     })
@@ -30,10 +11,7 @@ pub(crate) fn prepare_tsconfig_catalog_with_framework_projects(
 
 fn prepare_tsconfig_catalog_with_framework_projects_and_cache(
     input: FrameworkCatalogPreparation<'_>,
-) -> Result<(
-    std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
-    crate::codebase::test_discovery::PreparedTestProjects,
-)> {
+) -> Result<FrameworkCatalog> {
     let FrameworkCatalogPreparation {
         root,
         tsconfig_path,
@@ -52,9 +30,13 @@ fn prepare_tsconfig_catalog_with_framework_projects_and_cache(
     let mut candidate_roots = Vec::with_capacity(workspace.packages.len() + 1);
     candidate_roots.push(root.to_path_buf());
     candidate_roots.extend(workspace.packages.iter().map(|package| package.dir.clone()));
-    candidate_roots.extend(crate::integration_tests::configured_runner_config_dirs_from_visible(
-        root, config, root_visible_paths,
-    ));
+    candidate_roots.extend(
+        crate::integration_tests::configured_runner_config_dirs_from_visible(
+            root,
+            config,
+            root_visible_paths,
+        ),
+    );
     let preliminary_roots = candidate_roots.clone();
     let preliminary_catalog = std::sync::Arc::new(catalog_for_request(
         root,
@@ -70,7 +52,7 @@ fn prepare_tsconfig_catalog_with_framework_projects_and_cache(
         codebase_config,
         config,
         visible_paths,
-        crate::codebase::test_filter::TestFileFilter::fallback_only(),
+        TestFileFilter::fallback_only(),
         std::sync::Arc::clone(workspace),
     );
     let preliminary_graph = preliminary_graph?;
@@ -84,30 +66,31 @@ fn prepare_tsconfig_catalog_with_framework_projects_and_cache(
     } else {
         &[]
     };
-    let discovery_files =
-        crate::codebase::ts_source::filter_discovered_files_by_skip_directories(
-            root,
-            &config.filesystem.skip_directories,
-            graph_files.all(),
-        );
-    let mut projects = crate::codebase::test_discovery::prepare_test_projects_from_visible_with_sources_and_plan(
+    let discovery_files = crate::codebase::ts_source::filter_discovered_files_by_skip_directories(
+        root,
+        &config.filesystem.skip_directories,
+        graph_files.all(),
+    );
+    let mut projects = super::super::prepare_test_projects_from_visible_with_sources_and_plan(
         root,
         config,
         root_visible_paths,
         std::sync::Arc::clone(&preliminary_catalog),
-        crate::codebase::test_discovery::PreparedTestProjectRequest {
+        super::super::PreparedTestProjectRequest {
             discovery_files: &discovery_files,
             graph: (graph_fact_files, fact_plan, fact_context),
             sources: std::sync::Arc::clone(&sources),
             collect_graph_facts,
             playwright: if crate::codebase::playwright_facts::integration::configured(config) {
                 preliminary_graph.playwright_fact_plan(root, tsconfig, visible_paths)?
-            } else { None },
+            } else {
+                None
+            },
             preparation_plan: framework_plan,
         },
     );
     candidate_roots.extend(projects.tsconfig_candidate_roots(root));
-    let catalog = crate::codebase::test_discovery::reuse_or_rebuild_prepared_catalog(
+    let catalog = super::super::reuse_or_rebuild_prepared_catalog(
         preliminary_catalog,
         &preliminary_roots,
         &mut candidate_roots,
@@ -130,7 +113,7 @@ fn prepare_tsconfig_catalog_with_framework_projects_and_cache(
         std::sync::Arc::clone(&sources),
     );
     projects.reresolve_vitest_setups(root, &catalog, root_visible_paths);
-    Ok((catalog, projects))
+    Ok((catalog, Box::new(projects)))
 }
 
 fn catalog_for_request(

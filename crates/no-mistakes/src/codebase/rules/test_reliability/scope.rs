@@ -1,5 +1,5 @@
 use super::options::RetryOptions;
-use super::{configured, PLAYWRIGHT_NO_SERIAL, TEST_NO_RETRIES};
+use super::{configured, SourceDemand, PLAYWRIGHT_NO_SERIAL, TEST_NO_RETRIES};
 use crate::codebase::rules::path_filter::GlobMatcher;
 use crate::codebase::rules::selected_rule_files_with_sources;
 use crate::codebase::ts_resolver::normalize_path;
@@ -9,50 +9,6 @@ use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-
-#[derive(Clone, Copy, Default)]
-pub struct SourceDemand {
-    pub(crate) vitest_config: bool,
-    pub(crate) playwright_config: bool,
-    pub(crate) playwright_factory: bool,
-    pub(crate) standard_tests: bool,
-    pub(crate) playwright_tests: bool,
-    pub(crate) vitest_globals: bool,
-}
-
-impl SourceDemand {
-    #[doc(hidden)]
-    pub fn includes_playwright_tests(self) -> bool {
-        self.playwright_tests
-    }
-
-    pub(crate) fn include(&mut self, other: Self) {
-        self.vitest_config |= other.vitest_config;
-        self.playwright_config |= other.playwright_config;
-        self.playwright_factory |= other.playwright_factory;
-        self.standard_tests |= other.standard_tests;
-        self.playwright_tests |= other.playwright_tests;
-        self.vitest_globals |= other.vitest_globals;
-    }
-    pub(super) fn includes(self, origin: Origin) -> bool {
-        match origin {
-            Origin::Settings => true,
-            Origin::PlaywrightFactory => self.playwright_factory,
-            Origin::Standard => self.standard_tests,
-            Origin::VitestGlobal => self.standard_tests && self.vitest_globals,
-            Origin::Playwright => self.playwright_tests,
-        }
-    }
-}
-
-#[derive(Clone, Copy)]
-pub(super) enum Origin {
-    Settings,
-    PlaywrightFactory,
-    Standard,
-    VitestGlobal,
-    Playwright,
-}
 
 pub(crate) struct ConfigPaths {
     vitest: Option<BTreeSet<PathBuf>>,

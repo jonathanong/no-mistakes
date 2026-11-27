@@ -15,7 +15,7 @@ use options::Options;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
-pub const RULE_ID: &str = "vitest-project-policy";
+pub use crate::codebase::testing_analysis::vitest_policy::RULE_ID;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -25,11 +25,7 @@ pub(crate) struct Parity {
     pub(crate) compare_root: bool,
 }
 
-#[derive(Default)]
-pub struct Diagnostics {
-    pub findings: Vec<RuleFinding>,
-    pub incomplete: Vec<CheckFailure>,
-}
+pub use crate::codebase::testing_analysis::vitest_policy::Diagnostics;
 
 pub fn diagnostics_with_files_and_sources(
     root: &Path,

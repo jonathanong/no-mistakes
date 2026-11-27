@@ -1,13 +1,10 @@
-mod property_strings;
-mod regex_literals;
 mod visible;
 
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use globset::{Glob, GlobSet, GlobSetBuilder};
-pub(crate) use property_strings::extract_property_strings;
+pub(crate) use crate::codebase::testing_analysis::runner_filter::build_globset;
+pub(crate) use crate::codebase::testing_analysis::matcher_properties::{extract_property_strings, extract_test_regexes};
 use regex::Regex;
-use regex_literals::extract_test_regex_literals;
 use std::path::{Path, PathBuf};
 
 pub(super) use visible::{config_files_from_visible, runner_config_files_from_visible};
@@ -54,14 +51,6 @@ pub(super) fn config_files(root: &Path, config: &NoMistakesConfig) -> Vec<Config
     config_files_from_visible(root, config, &visible_files)
 }
 
-pub(super) fn build_globset(patterns: &[String]) -> Result<GlobSet> {
-    let mut builder = GlobSetBuilder::new();
-    for pattern in patterns {
-        builder.add(Glob::new(pattern)?);
-    }
-    Ok(builder.build()?)
-}
-
 pub(super) fn build_regexes(patterns: &[String]) -> Result<Vec<Regex>> {
     let mut regexes = Vec::new();
     for pattern in patterns {
@@ -74,12 +63,6 @@ pub(super) fn extract_test_property_strings(source: &str, property: &str) -> Vec
     find_property_object(source, "test")
         .map(|test| extract_property_strings(test, property))
         .unwrap_or_default()
-}
-
-pub(crate) fn extract_test_regexes(source: &str) -> Vec<String> {
-    let mut regexes = extract_property_strings(source, "testRegex");
-    regexes.extend(extract_test_regex_literals(source));
-    regexes
 }
 
 fn find_property_object<'a>(source: &'a str, property: &str) -> Option<&'a str> {

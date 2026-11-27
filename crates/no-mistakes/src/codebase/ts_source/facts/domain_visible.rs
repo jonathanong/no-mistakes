@@ -1,7 +1,7 @@
 #[derive(Clone)]
 pub(crate) struct ServerRouteFactFilter {
     glob: GlobSet,
-    test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
+    test_filter: Option<crate::codebase::testing_analysis::test_filter::TestFileFilter>,
 }
 
 impl std::fmt::Debug for ServerRouteFactFilter {
@@ -15,7 +15,7 @@ impl std::fmt::Debug for ServerRouteFactFilter {
 impl ServerRouteFactFilter {
     pub(crate) fn new(
         glob: GlobSet,
-        test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
+        test_filter: Option<crate::codebase::testing_analysis::test_filter::TestFileFilter>,
     ) -> Self {
         Self { glob, test_filter }
     }

@@ -33,6 +33,7 @@ pub mod symbols;
 pub mod terraform;
 pub mod test_discovery;
 pub mod test_filter;
+pub(crate) mod testing_analysis;
 pub mod timing;
 pub mod ts_http_calls;
 pub mod ts_process_spawn;

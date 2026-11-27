@@ -1,3 +1,7 @@
+use super::{hooks, runner::TestRunner};
+use crate::config::v2::NoMistakesConfig;
+use std::path::{Path, PathBuf};
+
 /// Selects which framework project configurations are prepared for one request.
 ///
 /// Keeping this separate from the graph fact plan makes it possible for an
@@ -84,7 +88,7 @@ impl FrameworkPreparationPlan {
         }
     }
 
-    fn runners(&self) -> impl Iterator<Item = TestRunner> + '_ {
+    pub(crate) fn runners(&self) -> impl Iterator<Item = TestRunner> + '_ {
         self.runners.iter().copied()
     }
 
@@ -94,25 +98,11 @@ impl FrameworkPreparationPlan {
         config: &NoMistakesConfig,
         visible_paths: &[PathBuf],
     ) -> std::collections::HashSet<PathBuf> {
-        [TestRunner::Playwright, TestRunner::Vitest]
-            .into_iter()
-            .filter(|runner| !self.runners.contains(runner))
-            .flat_map(|runner| {
-                let (configured, _) = projects::runner_config(config, runner);
-                configured.map_or_else(
-                    || {
-                        crate::integration_tests::project_config::discovered_config_paths(
-                            root,
-                            runner.framework(),
-                            visible_paths,
-                        )
-                    },
-                    crate::config::v2::schema::StringOrList::values,
-                )
-            })
-            .map(|path| crate::codebase::ts_resolver::normalize_path(&root.join(path)))
-            .filter(|path| !self.retained_indexable_paths.contains(path))
-            .collect()
+        (hooks().excluded_config_paths)(self, root, config, visible_paths)
+    }
+
+    pub(crate) fn retains_indexable_path(&self, path: &Path) -> bool {
+        self.retained_indexable_paths.contains(path)
     }
 
     #[doc(hidden)]

@@ -5,48 +5,9 @@ use super::discovery::{
 use super::rule_targets::{rule_test_project_globs, PreparedTargets};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use globset::GlobSet;
-use regex::Regex;
 use std::path::{Path, PathBuf};
 
-#[derive(Clone)]
-pub struct TestFilter {
-    pub(super) include: GlobSet,
-    pub(super) include_regex: Vec<Regex>,
-    pub(super) exclude: GlobSet,
-    pub(super) required: Option<GlobSet>,
-    pub(super) alternatives: Vec<TestFilter>,
-}
-
-impl TestFilter {
-    pub fn is_match(&self, rel_path: &str) -> bool {
-        let included = self
-            .alternatives
-            .iter()
-            .any(|filter| filter.is_match(rel_path))
-            || self.include.is_match(rel_path)
-            || self
-                .include_regex
-                .iter()
-                .any(|regex| regex.is_match(rel_path));
-        included
-            && !self.exclude.is_match(rel_path)
-            && self
-                .required
-                .as_ref()
-                .is_none_or(|scope| scope.is_match(rel_path))
-    }
-
-    pub(super) fn union(filters: Vec<Self>, excludes: &[String]) -> Result<Self> {
-        Ok(Self {
-            include: build_globset(&[])?,
-            include_regex: Vec::new(),
-            exclude: build_globset(excludes)?,
-            required: None,
-            alternatives: filters,
-        })
-    }
-}
+pub use crate::codebase::testing_analysis::runner_filter::TestFilter;
 
 pub fn test_filter(root: &Path, config: &NoMistakesConfig) -> Result<TestFilter> {
     test_filter_from_config_files(root, config, &config_files(root, config))

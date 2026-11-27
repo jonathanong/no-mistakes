@@ -2,6 +2,7 @@ use super::classify::Classified;
 use super::{policy, REWRITE};
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::codebase::dependencies::graph::{test_support::from_raw_maps, GraphFiles};
+use crate::codebase::testing_analysis::dynamic_imports::setup::Scan;
 use crate::config::v2::schema::RuleDef;
 use crate::config::v2::{EffectiveRuleAnalysis, Effort, NoMistakesConfig, Unanalyzable};
 use oxc_ast_visit::Visit;
@@ -12,7 +13,7 @@ use std::sync::Arc;
 
 fn classify(path: &Path, source: &str) -> anyhow::Result<Classified> {
     crate::ast::with_program(path, source, |program, source| {
-        let mut scan = super::classify::Scan::new(source, program);
+        let mut scan = Scan::new(source, program);
         scan.visit_program(program);
         Classified::from(scan.into_reachability())
     })

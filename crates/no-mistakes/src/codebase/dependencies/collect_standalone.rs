@@ -10,7 +10,7 @@ pub(crate) fn collect_and_filter_entries(
     let build_plan = graph::GraphBuildPlan::from_allowed(allowed.as_ref())
         .with_symbols(traversal_needs_symbol_facts(args));
     let mut framework_plan =
-        crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(build_plan);
+        crate::codebase::testing_analysis::plan::FrameworkPreparationPlan::for_graph(build_plan);
     framework_plan.include_framework_names(args.tests.iter().map(String::as_str));
     let shared = SharedTraversalContext::prepare_with_framework_plan_for_direction(
         root,

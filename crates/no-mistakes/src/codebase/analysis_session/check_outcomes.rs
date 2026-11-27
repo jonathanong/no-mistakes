@@ -13,7 +13,7 @@ pub(super) struct CheckOutcomes {
     pub(super) integration_discovery:
         std::sync::OnceLock<crate::codebase::check_facts::FamilyPathScope>,
     vitest_project_policy: std::sync::OnceLock<
-        std::sync::Arc<crate::codebase::rules::vitest_project_policy::Diagnostics>,
+        std::sync::Arc<crate::codebase::testing_analysis::vitest_policy::Diagnostics>,
     >,
     demands: DashMap<String, BTreeSet<PathBuf>>,
     failures: DashMap<CheckFailure, ()>,

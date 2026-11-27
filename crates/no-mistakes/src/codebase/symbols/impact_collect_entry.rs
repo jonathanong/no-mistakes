@@ -28,7 +28,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
         crate::codebase::config::config_from_loaded_v2(&root, args.config.as_deref(), &config);
     let dataset = session.dataset(&root);
     let workspace = dataset.workspace();
-    let framework_plan = crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(
+    let framework_plan = crate::codebase::testing_analysis::plan::FrameworkPreparationPlan::for_graph(
         graph_plan,
     );
     let (tsconfig_catalog, prepared_test_projects) =
@@ -49,7 +49,7 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
                 framework_plan: &framework_plan,
             },
         )?;
-    let test_filter = crate::codebase::test_filter::TestFileFilter::from_prepared_projects(
+    let test_filter = crate::codebase::testing_analysis::test_filter::TestFileFilter::from_prepared_projects(
         &root,
         &config,
         &root_visible_paths,

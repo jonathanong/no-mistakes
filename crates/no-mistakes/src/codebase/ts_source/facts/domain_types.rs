@@ -63,7 +63,7 @@ impl TsFactContext {
     pub(crate) fn set_server_route_filter(
         &mut self,
         glob: GlobSet,
-        test_filter: Option<crate::codebase::test_filter::TestFileFilter>,
+        test_filter: Option<crate::codebase::testing_analysis::test_filter::TestFileFilter>,
     ) {
         self.server_route_filter = Some(ServerRouteFactFilter::new(glob, test_filter));
     }

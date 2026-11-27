@@ -1,5 +1,8 @@
 use super::AnalysisSession;
-use crate::codebase::rules::vitest_project_policy::{self, Diagnostics};
+use crate::codebase::testing_analysis::{
+    self,
+    vitest_policy::{self, Diagnostics},
+};
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
@@ -14,17 +17,17 @@ impl AnalysisSession {
         sources: &SourceStore,
     ) -> anyhow::Result<()> {
         if self.check_outcomes.vitest_project_policy.get().is_some()
-            || !config.rule_configured(vitest_project_policy::RULE_ID)
+            || !config.rule_configured(vitest_policy::RULE_ID)
         {
             return Ok(());
         }
         let result = crate::perf_trace::rule("analysis.rules.vitest-project-policy", || {
-            vitest_project_policy::diagnostics_with_files_and_sources(
+            (testing_analysis::hooks().vitest_policy_diagnostics)(
                 root, config, files, sources, true,
             )
         });
         let diagnostics = self
-            .capture_check_result(vitest_project_policy::RULE_ID, result)?
+            .capture_check_result(vitest_policy::RULE_ID, result)?
             .unwrap_or_default();
         self.set_prepared_vitest_project_policy(Arc::new(diagnostics));
         Ok(())

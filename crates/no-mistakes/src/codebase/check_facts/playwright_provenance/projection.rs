@@ -1,6 +1,6 @@
 use super::exports::ExportKey;
 use super::{CheckFileFacts, ExportLookup, FileIdMap, FxHashMap, FxHashSet, ImportRef, PathBuf};
-use crate::codebase::rules::test_reliability::playwright_provenance::WrapperCall;
+use crate::codebase::testing_analysis::reliability::playwright_provenance::WrapperCall;
 use std::sync::Arc;
 
 type ImportUse = (PathBuf, ImportRef, Vec<WrapperCall>);
