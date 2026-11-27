@@ -1,0 +1,50 @@
+version: 2
+effects:
+  store:
+    targets:
+      - module: example.store
+        export: read_row
+        category: query
+tests:
+  python:
+    packages: [python]
+  go:
+    modules: [go]
+  rust:
+    packages: [rust]
+  rails:
+    apps: [ruby]
+  php:
+    apps: [php]
+  java:
+    packages: [java]
+  kotlin:
+    packages: [kotlin]
+  elixir:
+    apps: [elixir]
+  dart:
+    packages: [dart]
+  swift:
+    packages: [swift]
+  dotnet:
+    projects:
+      api:
+        project: csharp/api.csproj
+rules:
+  - rule: query-reached-per-item
+    scope: repository
+    options:
+      effects: [store]
+      unanalyzable: advise
+      languages:
+        - python
+        - go
+        - rust
+        - rails
+        - php
+        - java
+        - kotlin
+        - elixir
+        - dart
+        - swift
+        - dotnet

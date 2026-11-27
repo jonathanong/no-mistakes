@@ -204,7 +204,11 @@ capped cursor loops, opt in to `options.exemptCappedCursorPageReads: true`;
 other calls and unproven dependencies remain reportable. It defaults to false.
 For a reviewed function-specific allowance, combine `file`, `function`, and
 `callee` so other functions in the same file continue reporting.
-CLI and async `check()` share the rule.
+CLI and async `check()` share the rule. Set `options.languages` to project the
+same proven and unproven per-item facts for Python, Go, Rust, Ruby, PHP, Java,
+Kotlin, Elixir, Dart, Swift, and C#. Each name needs its configured `tests`
+root. Omit `languages` to keep the TypeScript-only check. The `call-sites`
+query stays TypeScript-only.
 Receiver targets retained as possible still participate when a newly recovered
 escape adds unknown evidence; a match does not prove one runtime callee.
 Escaped-array history uses source offsets, which can differ from execution order

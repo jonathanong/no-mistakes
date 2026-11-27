@@ -13,4 +13,10 @@ export interface QueryReachedPerItemOptions {
   allow?: QueryReachedPerItemAllowEntry[];
   /** Exempt proven page reads in counted cursor loops. Defaults to false. */
   exemptCappedCursorPageReads?: boolean;
+  /**
+   * Shipped language frontends that also project per-item call-policy facts.
+   * TypeScript stays on when this is omitted. Each name needs its configured
+   * `tests` root.
+   */
+  languages?: string[];
 }

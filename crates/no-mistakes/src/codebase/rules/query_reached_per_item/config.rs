@@ -7,17 +7,18 @@ use serde::Deserialize;
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(in crate::codebase::rules) struct Options {
-    pub(super) effects: Vec<String>,
-    pub(super) allow: Vec<Allowance>,
-    pub(super) exempt_capped_cursor_page_reads: bool,
+    pub(in crate::codebase::rules) effects: Vec<String>,
+    pub(in crate::codebase::rules) allow: Vec<Allowance>,
+    pub(in crate::codebase::rules) exempt_capped_cursor_page_reads: bool,
+    pub(in crate::codebase::rules) languages: Vec<String>,
 }
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct Allowance {
-    pub(super) file: String,
-    pub(super) function: Option<String>,
-    pub(super) callee: Option<String>,
-    pub(super) line: Option<u32>,
+pub(in crate::codebase::rules) struct Allowance {
+    pub(in crate::codebase::rules) file: String,
+    pub(in crate::codebase::rules) function: Option<String>,
+    pub(in crate::codebase::rules) callee: Option<String>,
+    pub(in crate::codebase::rules) line: Option<u32>,
 }
 
 /// Index selectors once per family; every occurrence uses the prepared binding.

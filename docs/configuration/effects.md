@@ -31,7 +31,9 @@ client-member spellings, such as `sessionValkeyClient.scan`, also follow proven
 receiver bindings through aliases, parameters, and defaults.
 
 `targets` adds binding-aware matching for the `effects` query and the per-item
-rule. Each selector
+rule. When that rule sets `options.languages`, the same `targets` identify a
+proven per-item call in the named language. `returnedExecutors`,
+`typedExecutors`, and `returnedMembers` stay on the TypeScript path. Each selector
 requires a nonempty `module` import specifier and an `export` member path
 (`query`, `default`, or `client.query`); `category` is optional. Unknown selector
 fields are rejected. Named/default imports, namespace calls, and static lexical

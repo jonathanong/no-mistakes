@@ -126,6 +126,8 @@ The opt-in [`query-reached-per-item`](../rules/query-reached-per-item.md) rule r
 through asynchronous `check()` and `analyzeProject()` check queries. Configure
 effect families, transaction sinks, batch exemptions, and rollout allowlists in
 the same config used by the CLI; finding and suppression shapes are unchanged.
+`options.languages` adds the same per-item facts for the shipped non-TypeScript
+frontends on that existing check report.
 
 Opt-in [`postgres-no-mutable-sql-registry`](../rules/postgres-no-mutable-sql-registry.md)
 and [`postgres-no-unbounded-sql-identifier`](../rules/postgres-no-unbounded-sql-identifier.md)

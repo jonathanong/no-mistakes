@@ -5,6 +5,9 @@ Flag per-item calls that transitively reach an explicitly configured effect sink
 This identifies repeated database or cache round trips hidden inside helpers,
 including concurrent array callbacks whose bodies contain no literal `await`.
 The rule uses prepared TypeScript/JavaScript facts and the canonical call graph.
+`options.languages` also projects the same per-item facts for the shipped
+language frontends named below. Omitting `languages` leaves the check
+TypeScript-only.
 
 ## Why and when
 
@@ -127,6 +130,7 @@ rules:
 | `effects` | Empty | Required non-empty list of configured effect family names. |
 | `allow` | Empty | Existing callsites to exempt by repository-relative `file`, optional `function`, optional `callee`, and optional one-based `line`. All supplied selectors must match. |
 | `exemptCappedCursorPageReads` | `false` | Exempt only proven sequential page reads in counted cursor loops. |
+| `languages` | Empty | Shipped frontends that also project per-item call-policy facts. TypeScript stays on when this is omitted. Each name needs its configured `tests` root. |
 
 Effect `targets` match resolved module/export bindings, including aliased
 imports, namespace members, static lexical aliases, and named callbacks. The
@@ -397,9 +401,42 @@ For transaction-client sinks, merge the statements or batch them on that client.
 
 Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning (requested effort low; effective effort max because this rule has no low implementation) and runs the rule at `max`.
 
+### Other languages
+
+`options.languages` accepts `python`, `go`, `rust`, `rails`, `php`, `java`,
+`kotlin`, `elixir`, `dart`, `swift`, and `dotnet`. An unknown name fails
+configuration. Each name requires a non-empty tests root:
+`tests.python.packages`, `tests.go.modules`, `tests.rust.packages`,
+`tests.rails.apps`, `tests.php.apps`, `tests.java.packages`,
+`tests.kotlin.packages`, `tests.elixir.apps`, `tests.dart.packages`,
+`tests.swift.packages`, or a non-empty `tests.dotnet.projects.*.project`.
+Selected files are visible sources under that root whose extension is `py`,
+`go`, `rs`, `rb`, `php`, `java`, `kt`, `ex`/`exs`, `dart`, `swift`, or `cs`,
+after the rule's include and exclude filters.
+
+The language projection matches `effects.<family>.targets` only.
+`returnedExecutors`, `typedExecutors`, `returnedMembers`, transaction markers,
+and batch exemptions stay on the TypeScript path. A proven call is an explicit
+qualified call whose head, after normalizing `::`, `\`, and `/` to `.`, equals
+the target `module`, and whose tail after the last `.`, `::`, or `->` equals
+the target `export`. The finding names the callsite callee, the effect family,
+and the path `enclosing → export`. One bare local call is also proven when that
+function reaches a sink and every other call in its body is a qualified call
+that names a module and is not another hop. The path is then
+`enclosing → local → export`.
+The enclosing name is the nearest function, or `<module>` at file scope. The
+`{` of a brace header must be on the header line. Python uses indentation.
+Ruby and Elixir use `def`/`fun`/`end` and `for`/`while`/`do`/`end`; a nested
+`if`/`end` stays inside the loop. `each` is a loop when the line also has
+` do`, ends with `do`, or contains `{`. A member call on a receiver that is
+not a configured module (`item.fetch`, `$item->fetch`), a second hop, a
+duplicate function name, or a file that cannot be read is unproven. A resolved
+call that does not reach a sink is silent. The `call-sites` query stays
+TypeScript-only. No shipped language frontend is declined.
+
 ### Unanalyzable inputs
 
-Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)); this rule has no unanalyzable inputs because it judges call shapes in parsed source against configured declarations, so `options.unanalyzable` has no effect on it.
+Following recall over precision, nothing is silently treated as clean ([how analysis works](../../README.md#how-analysis-works)). TypeScript and JavaScript findings judge parsed call shapes against configured declarations, so `options.unanalyzable` does not change them. Unproven calls in a language named by `options.languages` follow `options.unanalyzable`: `report` (the default) is a finding, `advise` is an advisory with cause kind `unresolved-dispatch`, and `ignore` drops the call. A custom rule `message` prefixes proven findings only.
 
 ## Suppression
 
