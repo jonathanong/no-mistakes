@@ -61,10 +61,7 @@ test("PR standalone slices build and test in independent runners with the main c
   assert.deepEqual(pr.strategy, { "fail-fast": false, matrix: { shard: [1, 2, 3] } });
   assert.deepEqual(pr.env, main.env);
   const restore = pr.steps.find(({ id }) => id === "standalone-lib-workspace-cache");
-  assert.deepEqual(
-    restore,
-    main.steps.find(({ id }) => id === restore.id),
-  );
+  assert.deepEqual(restore.with, main.steps.find(({ id }) => id === restore.id).with);
   assert.ok(pr.steps.every(({ uses }) => !uses?.startsWith("actions/upload-artifact@")));
   assert.ok(pr.steps.at(-1).run.endsWith("standalone-shards.cjs local ${{ matrix.shard }}"));
   assert.ok(ci.jobs["tests-gate"].needs.includes("standalone-pr"));

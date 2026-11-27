@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const path = require("node:path");
 const { test } = require("node:test");
+const YAML = require("yaml");
 const workflow = readFileSync(path.join(__dirname, "../workflows/ci.yml"), "utf8");
 const job = (name) => workflow.split(`\n  ${name}:\n`)[1]?.split(/\n  [a-z][a-z-]*:\n/)[0];
 const benchmarkWorkflow = readFileSync(path.join(__dirname, "../workflows/benchmarks.yml"), "utf8");
@@ -88,19 +89,20 @@ test("macOS snapshots prefer CGU64, then fall back across manifest changes", () 
 });
 
 test("dependency caches are main-only, dependency-only and shared across compatible Linux roles", () => {
-  for (const step of steps(workflow).filter((step) => /uses: Swatinem\/rust-cache@/.test(step))) {
-    const block = step.split(/\n  [a-z][a-z-]*:\n/)[0];
-    assert.match(block, /cache-workspace-crates: false/);
-    if (block.startsWith("Cache Rust quality artifacts\n")) {
-      assert.ok(
-        block.includes(
-          "save-if: ${{ github.ref == 'refs/heads/main' && matrix.name != 'default-feature Clippy' }}",
-        ),
-      );
-    } else {
-      assert.match(block, /save-if: \$\{\{ github.ref == 'refs\/heads\/main' \}\}/);
-    }
-    assert.match(block, /env.COLD_BUILD != 'true'/);
+  const jobs = YAML.parse(workflow).jobs;
+  const dependencyCaches = Object.values(jobs)
+    .flatMap(({ steps = [] }) => steps)
+    .filter(({ uses }) => uses?.startsWith("Swatinem/rust-cache@"));
+  assert.ok(dependencyCaches.length > 0);
+  for (const step of dependencyCaches) {
+    assert.equal(step.with["cache-workspace-crates"], false);
+    assert.equal(
+      step.with["save-if"],
+      step.name === "Cache Rust quality artifacts"
+        ? "${{ github.ref == 'refs/heads/main' && matrix.name != 'default-feature Clippy' }}"
+        : "${{ github.ref == 'refs/heads/main' }}",
+    );
+    assert.match(step.if, /env.COLD_BUILD != 'true'/);
   }
   for (const name of ["packages", "linux-runtime"])
     assert.match(job(name), /shared-key: linux-runtime-v1/);
