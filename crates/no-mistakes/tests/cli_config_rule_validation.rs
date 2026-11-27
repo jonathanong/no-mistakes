@@ -37,6 +37,11 @@ fn invalid_rule_configuration_aborts_before_analysis() {
             root.clone(),
             root.join("semantic-errors.yml"),
         ),
+        (
+            "swift-test-policy-declared",
+            root.clone(),
+            root.join("swift-test-policy-declared.yml"),
+        ),
         ("fragment", root.join("fragment"), PathBuf::new()),
     ];
     let result = assert_saved_fixture_report("invalid_rule_configuration", &cases, &[], &[]);
@@ -44,6 +49,34 @@ fn invalid_rule_configuration_aborts_before_analysis() {
         assert_eq!(result[label]["exitCode"], 2, "{label}: {result}");
         assert!(result[label]["report"].is_null(), "{label}: {result}");
     }
+    let declared = result["swift-test-policy-declared"]["stderr"]
+        .as_str()
+        .expect("invalid declared values");
+    for marker in [
+        "swift-no-raw-print",
+        "swift-viewmodel-main-actor",
+        "test-no-dependency-pins",
+        "test-no-live-repository-scan: fixtureDirs",
+    ] {
+        assert!(declared.contains(marker), "{marker} missing: {declared}");
+    }
+}
+
+#[test]
+fn valid_declared_option_values_still_run() {
+    let root = rules_path("options-audit", "fixture", "valid-declared-values");
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["--lock-timeout", "0", "--jobs", "1", "check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert_eq!(output.status.code(), Some(0), "{stderr}");
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).expect(&stderr);
+    assert!(report.is_object(), "{report}");
 }
 
 #[test]
