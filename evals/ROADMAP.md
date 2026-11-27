@@ -53,15 +53,20 @@ Every new should-fire flow also needs a **negative twin** — a question in the
 same vocabulary that the graph cannot answer — because widening the
 description to reach a new subject is the change most likely to over-trigger.
 
-### 3. Repeat the zero flows
+### 3. Name the zero flows in the description
 
-`duplication` 0/9, `safety` 0/6 and `napi` 0/12 are first observations with
-95% upper bounds of 22–39%. One more `runs: 3` pass each (~$12 single-arm)
-would show whether they are structurally dead or unlucky, which decides whether
-a clause is worth screening for them. The 2026-11-21 re-baseline re-measured
-them under the Sonnet agent / Opus judge and they stayed at 0/9, 0/6 and 0/12
-([HISTORY](HISTORY.md#2026-11-21--re-baseline-under-the-sonnet-agent-and-opus-judge));
-that is a second observation under a different agent, not a deeper one.
+`duplication`, `safety` and `napi` have now loaded at most once in three runs: the
+2026-11-21 re-baseline, the
+[2026-11-26 control](HISTORY.md#2026-11-26--tool-skill-control-all-eleven-flows-re-measured)
+(0/9, 0/6, 0/12), and under the "Load before answering" description (0/9,
+0/6, 1/12). They are not unlucky, so no further repeat is needed. In the
+2026-11-26 runs the agent named the skill and deferred it on `napi`,
+`queues` and most `duplication` attempts, and the description names none of
+those questions (does a helper already exist, where a job is enqueued or
+processed, calling the analyses from Node). A clause per flow is the next
+screen. It needs new held-out cases first, because 01–03 are spent and
+04–09 are reserved for candidate A's holdout, and for queues it needs the file-lookup framing that kept the earlier queue
+clause off `neg-hard-02` ([HISTORY](HISTORY.md#gates-for-the-queue-clause-984-item-6)).
 
 ### 4. Re-measure the negative-case Δ
 
@@ -72,6 +77,35 @@ answer. At n=3 that is one run flipping. A deeper run on just those three cases
 agent there. The 2026-11-21 re-baseline (Sonnet agent / Opus judge) read 0.00
 on `ci` and `signature` and +0.33 on `safety`, so the −0.33 did not recur at
 `runs: 3`; the models changed, so this is not a like-for-like re-measure.
+
+## Learnings from the 2026-11-26 pass
+
+What the [2026-11-26 runs](HISTORY.md#2026-11-26--tool-skill-control-all-eleven-flows-re-measured)
+showed about where the next work is.
+
+- **The tool skill was named, then deferred.** Most non-firing should-fire
+  attempts in the control named the `no-mistakes` skill in their plan and did
+  not load it, because the case runs in plan mode in an empty sandbox. The
+  imperative "Load before answering" opening took summed loading from 32/117
+  to 69/117 with no negative firing; the remaining misses are concentrated in
+  `duplication`, `safety`, `napi` and `queues`, which need their own wording
+  or cases.
+- **Telling the agent to plan makes answers stop at the plan.** Candidate B's
+  "or planning how to answer" loaded more (79/117), but two of its
+  three `before-edit-06-route-coverage` answers listed commands and gave no
+  coverage verdict, where A and the control gave one 3/3. Wording that names an action
+  can move content as well as loading, so read the content column too.
+- **Read failing attempts before blaming the description.** Both arms of
+  `queue-exception-enqueue-in-tx-receipt` failed for the same, correct reason:
+  the snippet never showed the queue's job retention, so the `jobId`
+  collision it called harmless could drop a redelivery. The case was wrong, not the skill, and one fixture
+  fix exposed the next hole, so the case needs a redesign rather than patches.
+- **A loading grader can be right when another skill held the rule.**
+  `testing-write-flaky-response-wait` loaded `playwright-rules` and passed,
+  but `testing-rules` holds the no-retries rule the case also checks, so the
+  `testing-rules` expectation stays.
+- **The coverage-floor cases are at the ceiling.** They pass 3/3 without the
+  plugin, so a description that makes them load is a loading result only.
 
 ## Gaps against the eval-suite conventions
 
@@ -113,9 +147,12 @@ Grader weaknesses seen in failing attempts:
 
 - `rules-queue-exception-enqueue-in-tx-receipt` fails in both arms and the
   skill never loads: answers call the enqueue a defect and raise a hazard the
-  snippet does not close (a commit failing after `add`, then a `jobId`
-  collision on redelivery). Rewrite the snippet so the exception is airtight,
-  then re-pilot. Details: [HISTORY](HISTORY.md#2026-11-26--queue-and-testing-rules-measured-4187-4623).
+  snippet does not close. Making the snippet airtight did not work
+  ([pilot](HISTORY.md#2026-11-26--receipt-case-fixture-fix-piloted-and-abandoned)):
+  the snippet enqueues on every delivery, so enqueue-after-commit is already
+  safe and the exception never applies. Redesign it so the code enqueues only
+  when the insert inserted, and give it a reconciler for exhausted retries, or
+  remove the case.
 - `rules-testing-exception-raised-coverage-floor`: both arms raise a
   merge-order warning. Grade only whether the answer accepts the higher floor.
 - `names-graph-command` records that the skill was used, not that the plan was

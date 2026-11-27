@@ -1,0 +1,166 @@
+# Lightweight single-file queries — full reference
+
+Short-form queries for one file that skip structural-question formulation. Reach
+for these when the question is local ("what imports this file?", "is this export
+used?") and a full `dependents` traversal is more setup than the answer needs.
+`importers`, `exports-of`, `dead-exports`, `call-sites`, `resolve-check`, and
+`import-usages` emit JSON on a non-TTY (or with `--json`) and accept `--root`,
+`--tsconfig`, `--format`, and `--json`. `effects` accepts those flags but stays
+`human` when piped unless you pass `--format json` or `--json`.
+`registry-extension` has no `--tsconfig` and prints human output even when
+piped, so pass `--json` or `--format json`.
+
+## When to use a different tool
+
+- Need **transitive** impact or non-import edges → `no-mistakes dependents`.
+- Need a symbol's **public-API list** without consumers → `no-mistakes symbols`.
+- Need exact call **text** or line context → `rg` on the files these return.
+
+## Resolution scope
+
+Reverse queries resolve **relative**,
+**tsconfig path**, and recognized **workspace package** imports through visible
+package entry points. Configured tsconfig `paths` aliases or `baseUrl` resolution
+takes precedence and can resolve a subpath even when the package's `exports`
+blocks it. Otherwise, missing or blocked workspace subpaths do not create import
+edges. Unmatched third-party packages are outside this project-wide index.
+(Relative, alias, NodeNext `.js`, and declaration-only `.d.ts` imports are also
+resolved.) When a module ships a runtime `.js` and a `.d.ts` side by
+side at the same path, resolution prefers the runtime file, so a type-only
+import may attach to the `.js` rather than the `.d.ts`.
+
+## Collection gaps
+
+Reverse query JSON includes `partial` and `incompleteFiles`; each file has a
+root-relative `file`, `reason`, and `message`. Reasons are `operational-error`,
+`parse-error`, `missing-facts`, and `missing-symbols`. Check these before treating
+an empty caller/importer list as proof that an export is unused. Failed source
+facts can hide imports, so warnings include candidate files with unknown
+relevance. Recovered imports can still be reported. `partial: false` means no
+recorded collection gaps and does not promise exhaustive runtime references.
+`exports-of --no-importers` omits both fields; `--format paths` omits diagnostics.
+Repair incomplete files and rerun before deleting code based on `anyDead`.
+
+## `importers <file>`
+
+Direct importers of one file plus a `dependentsCount`. One reverse import scan,
+no full graph build.
+
+```bash
+no-mistakes importers src/utils.mts --format json
+no-mistakes importers src/utils.mts --tests --format json   # adds testImpact (builds graph)
+```
+
+`--tests` adds the transitive impacted-test set under `testImpact`.
+
+## `exports-of <file>`
+
+Named exports and, for each, who imports it.
+
+```bash
+no-mistakes exports-of src/components/Tabs.tsx --format json
+no-mistakes exports-of src/components/Tabs.tsx --no-importers   # export list only, instant
+```
+
+Re-exports include a root-relative `resolved` path when the target resolves. Namespace imports (`import * as ns`) are
+counted at file granularity, not per-export.
+
+## `dead-exports <file> [NAME...]`
+
+Yes/no on whether anything still imports the given exports (all exports if no
+names). Exits non-zero when any are dead. Works before or after deleting the
+export. Counts import edges only — dynamic/string-keyed access is not detected.
+
+```bash
+no-mistakes dead-exports src/utils.mts --format json
+no-mistakes dead-exports src/utils.mts oldHelper legacyFn --format json
+```
+
+## `call-sites <file> SYMBOL`
+
+Every call site of an exported function with coarse argument shapes (`string`,
+`number`, `object`, `array`, `arrow`, `spread`, `other`, …) — no type inference.
+Matches the canonical exported callable identity through namespace calls,
+static lexical aliases, and re-export barrels. Shadowed bindings are excluded.
+Dynamic selection and aliases invalidated by reassignment can remain unresolved.
+
+```bash
+no-mistakes call-sites src/api.mts handler --format json
+```
+
+## `registry-extension <file>`
+
+Best-effort, heuristic summary of the repeated "register an entry" shape in a
+registry file, for adding a new entry that follows the same pattern. Reports
+`patternKind` (`register-call`, `container-array`, `container-object`, or
+`none`), `confidence` (`high` when every entry resolves to an import, else
+`medium`; `low` when no repeated pattern exists), each entry's import, and an
+approximate `template`. Namespace-imported factories and entries wrapped in a
+local helper can be misattributed; read the file before copying the template.
+See [registry-extension](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/registry-extension.md).
+
+```bash
+no-mistakes registry-extension src/plugins/index.ts --format json
+```
+
+## `resolve-check <file> [file...]`
+
+Whether every import in the file resolves. Fully local, sub-second. Each import
+is `resolved`, `external` (third-party/builtin/unknown package), or `unresolved`
+(a broken relative, aliased, or recognized workspace import). Workspace
+`exports`/`main` targets agree with dependency `workspace` edges; missing or blocked
+subpaths fail closed. Exits non-zero when any are unresolved. Omit `--tsconfig`
+to select the nearest tsconfig above the file; pass it only to force a resolver.
+
+```bash
+no-mistakes resolve-check src/new-feature.test.ts --format json
+no-mistakes resolve-check src/new-feature.test.ts src/changed-module.ts --format json
+```
+
+One input returns the historical per-file result. Multiple inputs return sorted
+`results`, an `allResolve` summary, and sorted `unresolvedFiles`; duplicate
+paths are checked once. The batch uses one visible-file inventory and one
+parallel union import-fact pass.
+
+## `import-usages [FILE]...`
+
+Direct string-literal import specifiers, including static imports, re-exports,
+dynamic `import()`, TypeScript `import("pkg")` type references, `require()`,
+and `require.resolve()`. Expression-free templates count as literals. Computed
+`import()` / `require()` / `require.resolve()` specifiers are omitted; use
+`resolve-check` when those rows must appear as `computed: true` / `unresolved`.
+
+```bash
+no-mistakes import-usages --root . --filter 'src/**' --format json
+no-mistakes import-usages src/index.mts --format json
+```
+
+## `effects KIND --entry FILE`
+
+For opaque transaction factories, configure `effects.<kind>.returnedExecutors`
+with `{module, export}` import selectors; local executor names need no spelling
+configuration. Visible factory returns and agreeing client arguments/defaults
+reuse the prepared call bindings.
+
+Report configured effect occurrences in runtime imports reachable from an entry.
+String `functions`/`categories` match source spellings; use
+`effects.<kind>.targets: [{ module: "@vendor/database", export: "query", category: "storage" }]`
+for binding-aware import aliases and namespace members. Module specifiers match
+exactly for repository callables; a different repository barrel requires its own
+selector. Explicit external re-exports resolve to the external module selector.
+Shadowed bindings are excluded from target matching. See
+[effects configuration](https://github.com/jongleberry/no-mistakes/blob/main/docs/configuration/effects.md).
+
+Static indexed properties and `NonNullable` preserve selected callable types.
+Statically invoked async callbacks preserve returned-executor metadata, and nullish
+choices require every alternative to match the selected effect family/category.
+For explicit imported callable parameter types, configure
+`effects.<kind>.typedExecutors`. For a method on a receiver returned from an
+imported factory, configure `effects.<kind>.returnedMembers` with the exact
+factory export path and member path. Both selectors are opt-in and preserve
+category filtering; no type or method names are inferred. The async Node APIs
+`effects()`, `check()`, and `analyzeProject()` share these selectors.
+
+```bash
+no-mistakes effects storage --entry src/server.ts --root . --format json
+```

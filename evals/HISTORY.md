@@ -19,6 +19,312 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-26 — receipt case: fixture fix piloted and abandoned
+
+**Run:** a local, uncommitted edit to `rules-queue-exception-enqueue-in-tx-receipt`
+in `evals/rules_cases.py`, regenerated, then `--case
+rules-queue-exception-enqueue-in-tx-receipt --runs 1 --ablation with-without
+--no-scaffold -j 2`. Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge
+`claude-opus-5-5`, 2 attempts, zero errored. Cost `$0.26`: `$0.18` agent and
+`$0.07` judge. Report outside git at
+`~/.cache/no-mistakes/evals/2026-11-26-receipt/pilot.json`.
+
+The edit added a `src/queues.ts` with `attempts: 10`, exponential backoff,
+`removeOnComplete` and `removeOnFail`, and rewrote the comment to say a
+redelivery collides only while the first job is queued or retrying. That
+closes the gap the [rules control](#2026-11-26--rules-control-postgresql-queue-testing-re-measured)
+found: the snippet never showed the queue's options, so its "collides
+harmlessly" claim could not be checked.
+
+Both arms failed `leaves-enqueue-inside-tx` again (with 0/1, without 0/1), and
+the with arm did not load `queue-rules`. Both found new, real holes. Once
+retries run out, `removeOnFail` deletes the job while the provider already has
+its 2xx, so with no reconciler the event is lost. And because
+`receiveWebhook` enqueues on every delivery, conflicting insert or not,
+"commit, then enqueue, return 500 on failure" is already safe. The with arm
+said exactly that. The queue-rules exception does not apply to this snippet.
+
+**Abandoned.** Another patch would tune the case until the model agrees, so
+the edit was dropped and the arms were not run at 3. The case stays as it
+was; the ROADMAP says what a redesign needs.
+
+## 2026-11-26 — candidate B ("or planning how to answer"): passes its gates, not shipped
+
+**Run:** `evals/variants/nm-load-plan/`, set up the same way as candidate A
+(`--eval-dir evals-variants/nm-load-plan --ablation none --runs 3 -j 4`, one
+invocation per flow, all eleven flows), Claude CLI 2.1.332, agent
+`claude-sonnet-5-5`, judge `claude-opus-5-5`, 159 attempts, zero errored and
+`partial: false` on every flow. Cost `$26.08`: `$18.03` agent and `$8.05`
+judge. Reports outside git at
+`~/.cache/no-mistakes/evals/2026-11-26-skill-nm-load-plan/<flow>.json`.
+
+| flow | loaded, control | loaded, A | loaded, B | content-only, control | content-only, B |
+| --- | --- | --- | --- | --- | --- |
+| `before-edit` | 12/18 | 18/18 | 18/18 | 1.00 | 0.89 |
+| `after-edit` | 7/12 | 12/12 | 12/12 | 1.00 | 1.00 |
+| `signature` | 0/12 | 12/12 | 12/12 | 1.00 | 1.00 |
+| `lang-graph` | 7/12 | 11/12 | 10/12 | 0.92 | 1.00 |
+| `usage` | 5/12 | 6/12 | 7/12 | 0.92 | 1.00 |
+| `queues` | 0/12 | 3/12 | 8/12 | 1.00 | 1.00 |
+| `ci` | 1/12 | 6/12 | 7/12 | 1.00 | 1.00 |
+| `duplication` | 0/9 | 0/9 | 3/9 | 0.89 | 0.89 |
+| `safety` | 0/6 | 0/6 | 0/6 | 0.83 | 1.00 |
+| `napi` | 0/12 | 1/12 | 2/12 | 1.00 | 0.92 |
+| **summed should-fire** | 32/117 | 69/117 | **79/117** | | |
+| `neg-hard` loaded | 0/12 | 0/12 | 0/12 | | |
+| `neg-hard` invented commands | 2/12 | 0/12 | 0/12 | | |
+| each flow's negative case | ≤ 0/3 | ≤ 0/3 | ≤ 0/3 | | |
+
+`safety-03-neg-json-flag`, which expects the skill to load, loaded 3/3 in the
+control and A and 2/3 in B. G1, G2 and G3 pass. B leads A by 10 on summed
+loading, which is inside the tie margin of 16, so **A ships** under the
+pre-registered tie rule and B is recorded here only. A's screen and its
+holdout are recorded with the description change that ships it.
+
+**Failing attempts read.** B loses content where A does not. On `before-edit`,
+`06-route-coverage` failed `states-coverage-verdict` 2/3 (control and A 3/3
+passed): both answers lay out the `playwright related` and `tests plan`
+commands "to run against the real checkout" and stop without a coverage
+verdict. `05-where-used` failed `exhaustive-by-construction` 1/3, and
+`03-full-suite` failed `produces-reduced-test-set` 1/3, as A did. The
+"planning how to answer" wording seems to push answers further toward a plan
+with no conclusion. That is a reason beyond the tie rule not to ship B.
+
+## 2026-11-26 — gates for the `no-mistakes` description candidates A and B
+
+**Pre-registered**, committed before either candidate ran. No run in this entry.
+
+The [tool-skill control](#2026-11-26--tool-skill-control-all-eleven-flows-re-measured)
+shows the agent naming the skill and deferring it. Two candidates change only
+the `description:` line of `plugins/no-mistakes/skills/no-mistakes/SKILL.md`;
+the body and references are byte-identical to the shipped skill.
+
+- **A**, `evals/variants/nm-load-before/`: "Answers questions about how code
+  connects:" becomes "Load before answering any question about how code
+  connects:". The rules plugin's descriptions use this imperative form.
+- **B**, `evals/variants/nm-load-plan/`: A's opening widened to "Load before
+  answering, or planning how to answer, any question about how code
+  connects:", plus a closing sentence "Lists the exact commands to put in the
+  plan." B makes two changes, so a B win cannot say which part did it.
+
+Each runs `--ablation none --runs 3 -j 4` on all eleven flows, one invocation
+per flow, compared with the control's with arm (trigger counts are comparable
+across ablation modes). Margins are `a|obs` from `power.py`, conditioned on
+the realized control.
+
+1. **G1, the target:** summed should-fire loading over the 39 cases reaches
+   at least 48/117 (control 32/117, rise margin 16).
+2. **G2, no flow drops:** `before-edit` ≥ 8/18, `after-edit` ≥ 4/12,
+   `lang-graph` ≥ 4/12, `usage` ≥ 3/12, `ci` ≥ 0/12. The flows at 0 cannot
+   drop.
+3. **G3, `neg-hard`, both halves:** loading ≤ 4/12 (control 0/12), and
+   invented command forms ≤ 6/12 (control 2/12, `power.py --fabrication`).
+   Each flow's own negative case stays at or below 2/3 loaded (`before-edit`:
+   3/6). `safety-03-neg-json-flag` expects the skill to load and is not a
+   guard.
+4. **G4, content, read and not gated:** the candidate's with-arm content-only
+   score per flow beside the control's with arm. B's gain is judged on this
+   column, because its closing sentence can raise `names-graph-command`
+   without improving the answer.
+5. **Tie rule:** if both pass and B's summed loading is within 16 of A's, A
+   ships as the smaller change.
+6. **Holdout, last and only for a candidate that passes G1–G3:** `--tag
+   heldout`, cases 04–09 (07–09 never run), `--ablation none --runs 3`, shipped
+   description and the winner in the same session. The holdout uses the same
+   plan-mode, empty-sandbox setup, so it cannot catch a win that comes only
+   from that framing.
+
+A candidate that misses G1, G2 or G3 is rejected and recorded here only.
+
+## 2026-11-26 — tool-skill control: all eleven flows re-measured
+
+**Run:** main `24768fa692` plus #4742's reporting scripts; the `no-mistakes`
+skill and its cases are main's. Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge
+`claude-opus-5-5`, `runs: 3` per arm, `--ablation with-without -j 4`, one
+invocation per flow, 318 attempts, zero errored and `partial: false` on all
+eleven. Cost `$49.83`: `$31.36` agent and `$18.46` judge. Reports outside git
+at `~/.cache/no-mistakes/evals/2026-11-26-skill-control/<flow>.json`. An
+unrelated release `rustc` build pushed host load to about 42 during
+`before-edit`; no attempt errored or timed out.
+
+This is the same-session control for the two description candidates above. It
+replaces the 2026-11-21 tool-skill numbers in the README.
+
+| flow | trigger (with-arm) | should-fire Δ | content-only Δ | negatives Δ |
+| --- | --- | --- | --- | --- |
+| `before-edit` | 12/18 (44-84%) | +0.23 | +0.15 | +0.00 |
+| `after-edit` | 7/12 (32-81%) | +0.11 | +0.00 | +0.00 |
+| `signature` | 0/12 (0-24%) | +0.06 | +0.08 | +0.00 |
+| `lang-graph` | 7/12 (32-81%) | +0.25 | +0.08 | +0.00 |
+| `usage` | 5/12 (19-68%) | +0.31 | +0.33 | — |
+| `queues` | 0/12 (0-24%) | +0.11 | +0.17 | +0.00 |
+| `ci` | 1/12 (1-35%) | +0.03 | +0.00 | +0.00 |
+| `duplication` | 0/9 (0-30%) | +0.00 | +0.00 | +0.00 |
+| `safety` | 0/6 (0-39%) | -0.17 | -0.17 | +0.00 |
+| `napi` | 0/12 (0-24%) | +0.11 | +0.17 | +0.00 |
+| `neg-hard` (guard) | 0/12 | n/a | n/a | +0.00 |
+
+Summed over the 39 should-fire cases the skill loaded on 32/117 with-arm
+attempts. `neg-hard` loaded 0/12, and 2/12 of its non-firing answers used an
+invented command form (`power.py --fabrication`).
+
+**What the failing attempts say.** Of the with-arm should-fire attempts that
+did not load the skill, most still named it: 12/12 on `queues`, 9/12 on
+`signature`, 5/5 on `lang-graph`, 4/5 on `after-edit`, 4/7 on `usage`, 3/6 on
+`before-edit`. Typical lines: "I'd use the `no-mistakes` skill, which resolves
+the import graph", "If I need a precise answer, use the `no-mistakes` skill."
+Most open with "I can't see the repo in this environment, so this is the
+search I'd run": the cases run in plan mode in an empty sandbox, and the agent
+puts loading the skill in the plan for later instead of loading it now. The
+description reaches the model and the model defers it. The `safety-01` miss
+(with 2/3, without 3/3) answered "You can, but I wouldn't pipe it straight
+into `bash` unless you add some safeguards" to piping the planner's output
+into a shell; the skill never loaded in that attempt, so it does not reflect
+the skill's text.
+
+`names-graph-command` still carries much of the should-fire Δ: the
+content-only column is lower than the should-fire column on `before-edit`,
+`after-edit` and `lang-graph`.
+
+## 2026-11-26 — gates for the `testing-rules` config candidate (T1)
+
+**Pre-registered**, committed before the candidate ran. No run in this entry.
+
+The two coverage-floor cases (`testing-exception-raised-coverage-floor`,
+`testing-review-lowered-coverage-floor`) are `vitest.config.ts` diffs, and the
+shipped `testing-rules` description names tests and test helpers but not test
+runner config. Neither case loaded `testing-rules` in the control (0/6), and
+both pass 3/3 without the plugin, so a gain here is a loading gain on ceiling
+cases and cannot show the rules help.
+
+Candidate T1, in `DESCRIBE["testing-rules"]` of `evals/rules_variants.py`,
+changes one phrase: "any automated test or test helper" becomes "any automated
+test, test helper, or test runner config such as a coverage threshold". Every
+other `DESCRIBE` entry equals the shipped description; the entry for
+`queue-rules` was reset to the shipped text in this change. The #3379 wording
+it held is in `evals/rules_variants.py` at `af27b588f5`, and the
+[2026-11-17 entry](#2026-11-17--retain-ceiling-cases-reject-queue-trigger-candidate-3379)
+describes it.
+
+Run: `python3 evals/generate.py --rules-variant describe`, then `--eval-dir
+evals-variants/rules-describe --tag rules --ablation none --runs 3 -j 4
+--no-scaffold`, all 26 rules cases. Control: the with arm of the
+[rules control](#2026-11-26--rules-control-postgresql-queue-testing-re-measured)
+and the [`github-actions` and off-topic run](#2026-11-26--github-actions-and-off-topic-guards-measured).
+Margins from `power.py` on those reports (`a|obs`, conditioned on the realized
+control):
+
+1. **Target:** the two coverage-floor cases load `testing-rules` on at least
+   4/6 (control 0/6; the null rise tail first drops under 5% at 4).
+2. **Hold:** each topic's loading stays at or above control minus its `a|obs`:
+   `postgresql` ≥ 14/24, `queue` ≥ 6/15, `testing` ≥ 6/18 (control 9/18;
+   the flaky-wait case still expects `testing-rules` in this comparison),
+   `github-actions` ≥ 6/9. Summed over the 22 should-fire cases, ≥ 38/66
+   (control 47/66, `a|obs` 9).
+3. **Guard:** off-topic stays at 0/12. The modeled margin would allow 4; any
+   rules skill loading on a question no rule covers is over-triggering, and
+   this candidate widens a description.
+4. **Content, read not gated:** passed overall on the with arm is reported
+   beside the control's. A single-arm candidate has no baseline arm of its own.
+
+Miss any of 1–3 and T1 is rejected and recorded here only.
+
+## 2026-11-26 — rules control: `postgresql`, `queue`, `testing` re-measured
+
+The same-session control for the rules description candidate above. Claude CLI
+2.1.332, agent `claude-sonnet-5-5`, judge `claude-opus-5-5`, commit
+`af27b588f5` (rules plugin unchanged since), `runs: 3` per arm, `--ablation
+with-without -j 4 --no-publish --no-scaffold --trust-plugin --keep-temp`, one
+invocation per topic, 114 attempts, zero errored, `partial: false`. Cost:
+`postgresql` `$6.29` (`$4.40` agent, `$1.89` judge), `queue` `$4.46` (`$3.00`
+agent, `$1.47` judge), `testing` `$4.60` (`$2.99` agent, `$1.61` judge),
+`$15.35` in all. Reports at `~/.cache/no-mistakes/evals/2026-11-26-rules-control/`.
+No case, grader, or fixture changed.
+
+| topic | loaded | passed (with) | passed when loaded | passed (without) |
+| --- | --- | --- | --- | --- |
+| `postgresql` | 20/24 | 24/24 | 20/20 | 21/24 |
+| `queue` | 9/15 | 11/15 | 8/9 | 6/15 |
+| `testing` | 9/18 | 16/18 | 7/9 | 9/18 |
+
+Rows that moved against the 2026-11-26 entries below (same day, earlier):
+
+| Case | Loaded | Passed (with) | Passed (without) | Earlier today |
+| --- | --- | --- | --- | --- |
+| `postgresql-write-advisory-lock` | 0/3 | 3/3 | 3/3 | loaded 3/3, without 0/3 |
+| `postgresql-review-parent-key-update` | 2/3 | 3/3 | 3/3 | loaded 3/3 |
+| `postgresql-review-narrow-view-lookup` | 3/3 | 3/3 | 0/3 | without 1/3 |
+| `queue-review-entity-only-dedup-id` | 2/3 | 2/3 | 2/3 | loaded 1/3, with 3/3, without 1/3 |
+| `queue-review-job-self-overlap` | 1/3 | 3/3 | 3/3 | loaded 2/3 |
+| `queue-write-self-requeue` | 3/3 | 3/3 | 1/3 | without 2/3 |
+| `testing-exception-parsed-usage-text` | 3/3 | 1/3 | 0/3 | with 2/3 |
+| `testing-exception-raised-coverage-floor` | 0/3 | 3/3 | 3/3 | with 2/3 |
+| `testing-review-lowered-coverage-floor` | 0/3 | 3/3 | 3/3 | loaded 1/3, without 2/3 |
+
+**Failing attempts read.**
+
+- `queue-exception-enqueue-in-tx-receipt`, 0/6 again. No skill of any kind
+  loaded in the with arm. The case's own comment ("a duplicate delivery
+  collides harmlessly") is true only if finished jobs are retained, and the
+  fixture never shows the queue's options, so the grader asks for a judgment
+  the prompt does not give enough to make. A fixture fix was piloted and
+  abandoned ([receipt pilot](#2026-11-26--receipt-case-fixture-fix-piloted-and-abandoned)).
+- `queue-review-entity-only-dedup-id`: the loaded failure and the unloaded
+  one both found the retained-id drop and proposed removing `jobId` or using
+  BullMQ's `deduplication` option instead of adding the event to the id. The
+  rule says not to key the id by entity alone; the answers did not follow it.
+  The grader is right.
+- `testing-exception-parsed-usage-text`: both loaded failures kept the
+  exact-text assertions but then recommended replacing them with a test
+  through the docs generator's parser. The grader fails a recommendation to
+  replace them; it is right. This is the rule body under Sonnet, not loading.
+- `testing-write-flaky-response-wait` loaded `playwright-rules` on all three
+  with-arm attempts and `testing-rules` on none, and all three passed.
+  `playwright-rules` holds the response-wait rule; `testing-rules` holds it
+  too, plus the no-retries rule the grader also checks, and its description
+  says browser tests load `playwright-rules` as well, not instead. The
+  `skill-fired` grader (`testing-rules`) is right: this is a `testing-rules`
+  loading gap on a browser test, not a grader defect. A first plan to accept
+  either skill was dropped because it would count a load that lacks the
+  retries rule.
+
+**What it showed.** The with arm passed every `postgresql` case and every
+`testing` case but the parsed-usage one. The coverage-floor cases never loaded
+`testing-rules` and passed at the ceiling in both arms. `advisory-lock` moved
+from 3/3-loaded and 0/3-without earlier today to 0/3 and 3/3: the same day's
+draws differ by three on a case, which is the noise a 3-attempt row carries.
+
+## 2026-11-26 — `github-actions` and off-topic guards measured
+
+Closes the two rules rows the docs restructure marked "not re-measured". Claude
+CLI 2.1.332, agent `claude-sonnet-5-5`, judge `claude-opus-5-5`, commit
+`af27b588f5`, `runs: 3` per arm, `--ablation with-without -j 4 --no-publish
+--no-scaffold --trust-plugin --keep-temp`, two invocations (`--case
+'rules-*-actions-*'`, `--tag rules-offtopic`), 42 attempts, zero errored,
+`partial: false`. Cost: `github-actions` `$2.28` (`$1.54` agent, `$0.75`
+judge), off-topic `$1.66` (`$1.17` agent, `$0.49` judge), `$3.94` in all.
+Reports at `~/.cache/no-mistakes/evals/2026-11-26-step1/`. No case, grader, or
+fixture changed.
+
+| Case | Loaded | Passed (with) | Passed (without) |
+| --- | --- | --- | --- |
+| `github-actions-exception-runner-reasons` | 3/3 | 3/3 | 3/3 |
+| `github-actions-review-path-filter-required` | 3/3 | 3/3 | 3/3 |
+| `github-actions-write-persist-credentials` | 3/3 | 3/3 | 1/3 |
+| `offtopic-neg-big-o` | 0/3 | 3/3 | 3/3 |
+| `offtopic-neg-mutex-semaphore` | 0/3 | 3/3 | 3/3 |
+| `offtopic-neg-regex-explain` | 0/3 | 3/3 | 3/3 |
+| `offtopic-neg-release-note` | 0/3 | 3/3 | 3/3 |
+
+**Failing attempts read.** The two without-plugin failures on
+`write-persist-credentials` wrote `actions/checkout@v4` with no
+`persist-credentials: false`; the grader was right. No with-arm attempt failed.
+
+**What it showed.** `github-actions-rules` loads on all three cases (9/9) and
+helps on `write-persist-credentials` (3/3 against 1/3). The other two cases are
+ceiling cases. No rules skill loaded on any off-topic guard (0/12), which is the
+goal, and all twelve answers passed.
+
 ## 2026-11-26 — restructure the eval docs
 
 No run. README.md now follows the eval-suite layout (what the suite evaluates,
