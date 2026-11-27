@@ -12,7 +12,7 @@ Opaque roots retain a failure diagnostic, while aliases without mutation proof
 retain uncertainty. Ordinary findings and errors are unchanged. Node callers
 use `check({ includeRunnerConfigDeadlines: true })` or the same option on an
 `analyzeProject()` check report. See the
-[evidence contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/check.md#declared-runner-config-evidence).
+[evidence contract](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/check.md#declared-runner-config-evidence).
 This does not enforce runtime registrations or a universal timeout cap.
 
 Use `tests plan` for all test selection — it is the preferred replacement for
@@ -155,7 +155,7 @@ normal global-config fallback.
 
 CI path filters for config-dependent validation should include the four root
 config filenames and `.no-mistakes/**`, so edits to fragments run those jobs.
-See the [split-config migration guide](https://github.com/jonathanong/no-mistakes/blob/main/docs/migrations/split-no-mistakes-config.md)
+See the [split-config migration guide](https://github.com/jongleberry/no-mistakes/blob/main/docs/migrations/split-no-mistakes-config.md)
 for a filter example and for replacing direct config readers with the merged
 declared view.
 
@@ -336,7 +336,7 @@ Group types: `direct`, `dependencies`, `sample` — for `vitest`;
 `direct` is changed tests plus tests one reverse import/`TestOf` hop from a
 changed file; it runs before `dependencies` so a tight limit cannot drop a
 direct importer in favor of a longer markdown or resource path.
-Consult https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/test-plan.md
+Consult https://github.com/jongleberry/no-mistakes/blob/main/docs/configuration/test-plan.md
 for the full schema.
 
 
@@ -346,7 +346,7 @@ Use `no-mistakes tests audit --plan audit-plan.json --observations audit-run.jso
 to compare a targeted plan with full-suite per-test-file execution observations.
 The plan needs a versioned envelope with explicit changed files/symbols and
 caller-recorded checkout/source/scope identities matching the observations.
-See [the artifact contract and producer recipe](https://github.com/jonathanong/no-mistakes/blob/main/docs/cli/tests-audit.md)
+See [the artifact contract and producer recipe](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/tests-audit.md)
 before collecting traces. Whole-suite aggregate coverage is unsupported.
 `missed_observed_tests` is positive evidence of missed selection; complete traces
 without changed-code hits are investigation candidates. Missing or incomplete
@@ -407,5 +407,5 @@ returns parsed JSON unchanged) and an explicit loader call such as
 `loadFixture("{id}")`, `attributePaths` narrows selection to reads of changed
 fields and keeps any test with uncertain reads or loader uses. A trusted report
 can supersede a path trigger marked `supersededByChanges`; without the flag that
-trigger is unchanged. See [the shared changes schema](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/changes.md) for the shared schema.
+trigger is unchanged. See [the shared changes schema](https://github.com/jongleberry/no-mistakes/blob/main/docs/configuration/changes.md) for the shared schema.
 The async APIs are `changesDiff(options)` and `testsPlan({ changes, ...options })`.

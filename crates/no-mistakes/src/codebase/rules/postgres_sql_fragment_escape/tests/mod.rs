@@ -7,5 +7,6 @@ mod incomplete;
 mod load_lex_tests;
 mod namespace_uses;
 mod readers;
+mod resolver_coverage;
 mod support;
 mod writes;

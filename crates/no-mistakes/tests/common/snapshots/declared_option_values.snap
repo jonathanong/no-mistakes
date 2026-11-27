@@ -1,0 +1,21 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "invalid": {
+    "exitCode": 2,
+    "stderr": "error: invalid-declared-options.yml:103: postgres-materialized-view-shape option windowFunctions: names must not be empty\ninvalid-declared-options.yml:106: postgres-no-transformed-uuid-predicates sqlInclude contains invalid glob `[`: error parsing glob '[': unclosed character class; missing ']'\ninvalid-declared-options.yml:10: invalid options for rule `rust-max-lines-per-file` at options.srcMax: invalid type: string \"many\", expected usize\ninvalid-declared-options.yml:113: invalid options for rule `postgres-redundant-index` at options.allowedIndexes: invalid type: string \"orders_pkey\", expected a sequence\ninvalid-declared-options.yml:117: invalid options for rule `postgres-require-fk-on-delete` at options.sqlInclude: invalid type: string \"migrations\", expected a sequence\ninvalid-declared-options.yml:121: invalid options for rule `postgres-require-named-constraints` at options.sqlInclude: invalid type: string \"migrations\", expected a sequence\ninvalid-declared-options.yml:124: postgres-require-query-annotation: sqlLiteralHelpers entries must be nonempty module#export identities\ninvalid-declared-options.yml:131: postgres-required-comments option objects: unknown value index\ninvalid-declared-options.yml:134: postgres-sql-statement-policy: unknown bannedStatements kind or group `NOT_A_KIND`\ninvalid-declared-options.yml:140: postgres-status-with-lifecycle-timestamps option statusColumns: must not be empty\ninvalid-declared-options.yml:14: invalid options for rule `rust-no-inline-allows` at options.testMax: invalid type: string \"many\", expected usize\ninvalid-declared-options.yml:18: invalid options for rule `rust-no-inline-tests` at options.excludes: invalid type: string \"src\", expected a sequence\ninvalid-declared-options.yml:24: postgres-array-columns option allowElementTypes: overlaps neverAllowElementTypes: uuid\ninvalid-declared-options.yml:30: postgres-bounded-statements option statements: unknown statement merge; use select, update or delete\ninvalid-declared-options.yml:33: postgres-conflict-ordering include contains invalid glob `[`: error parsing glob '[': unclosed character class; missing ']'\ninvalid-declared-options.yml:40: invalid options for rule `postgres-constraint-validate` at options.sqlInclude: invalid type: string \"migrations\", expected a sequence\ninvalid-declared-options.yml:45: postgres-duplicate-function-body option minClusterSize: must be at least 2\ninvalid-declared-options.yml:48: postgres-explain-write-rollback sqlInclude contains invalid glob `[`: error parsing glob '[': unclosed character class; missing ']'\ninvalid-declared-options.yml:55: postgres-explicit-columns option maxColumns: must be zero or greater\ninvalid-declared-options.yml:60: postgres-finite-text-columns option columnTypes: empty\ninvalid-declared-options.yml:64: invalid options for rule `postgres-fk-index` at options.allowedColumns: invalid type: string \"id\", expected a sequence\ninvalid-declared-options.yml:69: postgres-generated-column-predicates option functions: must not be empty\ninvalid-declared-options.yml:6: invalid options for rule `nextjs-redirect-destinations` at options.includeRewrites: invalid type: string \"yes\", expected a boolean\ninvalid-declared-options.yml:72: postgres-idempotent-insert include contains invalid glob `[`: error parsing glob '[': unclosed character class; missing ']'\ninvalid-declared-options.yml:78: postgres-identifier-length option maxBytes: must be from 1 through 63\ninvalid-declared-options.yml:82: postgres-json-relation-ids option idKeyPattern: regex parse error:\n    (\n    ^\nerror: unclosed group\ninvalid-declared-options.yml:87: postgres-key-column-types option allowedTypes: required and nonempty\ninvalid-declared-options.yml:90: postgres-lock-ordering include contains invalid glob `[`: error parsing glob '[': unclosed character class; missing ']'\ninvalid-declared-options.yml:95: postgres-lock-written-rows-only: unknown check not-a-check\n"
+  },
+  "valid": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

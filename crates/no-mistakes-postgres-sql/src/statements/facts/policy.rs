@@ -1,0 +1,71 @@
+use super::{PreparedSql, StatementPolicySources};
+use crate::{SqlFunctionCallFact, SqlPolicyClauseUse, SqlSettingUse, SqlStatementKind};
+use sqlparser::ast::Statement;
+
+pub(super) fn collect(
+    sql: &str,
+    prepared_sql: &PreparedSql<'_>,
+    statements: &[Statement],
+    policy: StatementPolicySources<'_>,
+) -> (
+    Vec<SqlStatementKind>,
+    Vec<SqlSettingUse>,
+    Vec<SqlPolicyClauseUse>,
+    Vec<SqlFunctionCallFact>,
+) {
+    let (statement_kinds, setting_uses, clause_uses, mut function_calls) =
+        policy.schema.map_or_else(
+            || {
+                let tokens: Vec<_> = statements
+                    .iter()
+                    .enumerate()
+                    .map(|(index, _)| {
+                        policy
+                            .tokens
+                            .and_then(|sources| sources.get(index))
+                            .and_then(Option::as_deref)
+                            .unwrap_or_else(|| prepared_sql.tokens())
+                    })
+                    .collect();
+                let facts = crate::migration::policy_facts(sql, statements, &tokens);
+                (
+                    facts.statement_kinds,
+                    facts.setting_uses,
+                    facts.clause_uses,
+                    facts.function_calls,
+                )
+            },
+            |facts| {
+                (
+                    facts.statement_kinds.clone(),
+                    facts.setting_uses.clone(),
+                    facts.clause_uses.clone(),
+                    facts.function_calls.clone(),
+                )
+            },
+        );
+    if policy.schema.is_none() {
+        function_calls.extend_from_slice(policy.functions);
+        function_calls.extend_from_slice(&prepared_sql.functions());
+    }
+    (statement_kinds, setting_uses, clause_uses, function_calls)
+}
+
+pub(super) fn table_keyword(token: &sqlparser::tokenizer::TokenWithSpan) -> bool {
+    matches!(&token.token, sqlparser::tokenizer::Token::Word(word) if word.keyword == sqlparser::keywords::Keyword::TABLE)
+}
+
+pub(super) fn arbiters(
+    prepared: &PreparedSql<'_>,
+) -> crate::fx::FxHashMap<sqlparser::tokenizer::Location, crate::SqlConflictArbiter> {
+    prepared
+        .policy_arbiters()
+        .iter()
+        .map(|arbiter| {
+            (
+                arbiter.insert_start,
+                super::super::conflict::expression_arbiter(arbiter),
+            )
+        })
+        .collect()
+}

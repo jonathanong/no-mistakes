@@ -13,7 +13,17 @@ const profile = require("../../test-cases/native-build-diagnostics/reports/macos
 
 for (const platform of ["Windows", "macOS"]) {
   const overrides = platform === "macOS" ? profile : [];
-  const base = ["test", ...overrides, "--locked", "-p", "no-mistakes"];
+  const baseFor = (pkg = "no-mistakes") => [
+    "test",
+    ...overrides.map((arg) => arg.replaceAll("no-mistakes", pkg)),
+    "--locked",
+    "-p",
+    pkg,
+  ];
+  const pkgForSelector = (selector) =>
+    platform === "macOS" && selector[1] === "macos_invocation"
+      ? "no-mistakes-invocation"
+      : "no-mistakes";
   test(`native ${platform} runtime and every test command retain consistent package profiles`, () => {
     const env = { RUNNER_OS: platform, NO_MISTAKES_BUILD_NAPI: "1" };
     assert.deepEqual(buildInvocation(["node", "wrapper"], env).args, [
@@ -28,7 +38,9 @@ for (const platform of ["Windows", "macOS"]) {
     ]);
     for (const mode of ["build", "archive-build", "run"]) {
       for (const args of commands(mode, platform)) {
-        assert.deepEqual(args.slice(0, base.length), base);
+        const pkg = args[args.indexOf("-p") + 1];
+        const expectedBase = baseFor(pkg);
+        assert.deepEqual(args.slice(0, expectedBase.length), expectedBase);
         assert.equal(args.filter((arg) => arg === "--config").length, overrides.length / 2);
         assert.ok(!args.some((arg) => /opt-level|debug|assertions|features/.test(arg)));
       }
@@ -78,7 +90,7 @@ for (const platform of ["Windows", "macOS"]) {
           .map(JSON.parse);
         assert.deepEqual(
           captured.slice(compiledCount).map(({ args }) => args),
-          expected[platform].map((args) => [...base, ...args]),
+          expected[platform].map((args) => [...baseFor(pkgForSelector(args)), ...args]),
         );
         const selectors = [
           ...new Map(
@@ -87,13 +99,10 @@ for (const platform of ["Windows", "macOS"]) {
         ].flat();
         assert.deepEqual(
           captured.slice(0, compiledCount).map(({ args }) => args),
-          Array.from({ length: selectors.length / 2 }, (_, index) => [
-            ...base,
-            "--no-run",
-            "--timings",
-            "--verbose",
-            ...selectors.slice(index * 2, index * 2 + 2),
-          ]),
+          Array.from({ length: selectors.length / 2 }, (_, index) => {
+            const sel = selectors.slice(index * 2, index * 2 + 2);
+            return [...baseFor(pkgForSelector(sel)), "--no-run", "--timings", "--verbose", ...sel];
+          }),
         );
         assert.ok(
           captured.every(
@@ -135,7 +144,7 @@ for (const platform of ["Windows", "macOS"]) {
   );
 }
 
-test("native workflow compiles independent archives and consumers never build Rust", () => {
+test("native workflow keeps independent runtime and Rust archive builds", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
   const job = (name) => workflowJob(workflow, name);
   const runtime = job("native-build");

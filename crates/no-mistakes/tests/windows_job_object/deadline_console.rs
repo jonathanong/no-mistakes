@@ -12,9 +12,9 @@ use windows_sys::Win32::System::Console::{
 };
 
 // Compile the exact production adapters in the small native Windows harness.
-#[path = "../../src/invocation/deadline/output/stdio/windows.rs"]
+#[path = "../../../no-mistakes-invocation/src/invocation/deadline/output/stdio/windows.rs"]
 mod console;
-#[path = "../../src/invocation/deadline/output/stdio/wide.rs"]
+#[path = "../../../no-mistakes-invocation/src/invocation/deadline/output/stdio/wide.rs"]
 mod wide;
 
 fn fixture() -> serde_json::Value {

@@ -1,11 +1,9 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { Linter } from "eslint";
 import tsParser from "@typescript-eslint/parser";
 import { it } from "vitest";
-import { __dirname, plugin } from "./helpers.mjs";
+import { __dirname, getLinter, plugin, runOxlint } from "./helpers.mjs";
 
 const root = resolve(
   __dirname,
@@ -33,6 +31,21 @@ const fixtures = [
     "computed-holder",
   ].map((name) => `local-cached-map-${name}.ts`),
 ];
+
+let cachedOxlint;
+function oxlintBatch() {
+  if (!cachedOxlint) {
+    cachedOxlint = runOxlint({
+      config: resolve(root, ".oxlintrc-proven.json"),
+      files: fixtures.map((fixture) => resolve(root, fixture)),
+      typeAware: true,
+      denyWarnings: true,
+    });
+    assert.equal(cachedOxlint.status, 1, cachedOxlint.stderr);
+  }
+  return cachedOxlint;
+}
+
 for (const fixture of fixtures) {
   const expected = readFileSync(resolve(root, fixture), "utf8")
     .split("\n")
@@ -41,7 +54,7 @@ for (const fixture of fixtures) {
     `${fixture}: accepts only locally awaited cache consumers (typed=%s)`,
     (typed) => {
       const filename = resolve(root, fixture);
-      const messages = new Linter({ cwd: dirname(filename) }).verify(
+      const messages = getLinter(dirname(filename)).verify(
         readFileSync(filename, "utf8"),
         {
           files: ["**/*.ts"],
@@ -75,23 +88,9 @@ for (const fixture of fixtures) {
     },
   );
   it(`${fixture}: checks cached consumer disposition under real type-aware Oxlint`, () => {
-    const result = spawnSync(
-      process.execPath,
-      [
-        resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-        "--type-aware",
-        "--deny-warnings",
-        "--config",
-        resolve(root, ".oxlintrc-proven.json"),
-        "--format",
-        "json",
-        resolve(root, fixture),
-      ],
-      { encoding: "utf8" },
-    );
-    assert.equal(result.status, 1, result.stderr);
+    const diagnostics = oxlintBatch().forFile(resolve(root, fixture));
     assert.deepEqual(
-      JSON.parse(result.stdout).diagnostics.map((item) => [item.labels[0].span.line, item.code]),
+      diagnostics.map((item) => [item.labels[0].span.line, item.code]),
       expected.map((line) => [line, "no-mistakes(async-call-disposition)"]),
     );
   });

@@ -48,7 +48,8 @@ if (import.meta.main) {
 
 `allowInImportMetaMain` defaults to `true`: awaits within the consequent of a
 direct `if (import.meta.main)` are allowed, including nested blocks. Parentheses
-and TypeScript assertion wrappers around the condition are accepted. The test,
+and TypeScript assertion, non-null, `satisfies`, and instantiation wrappers
+around the condition are accepted. The test,
 `else` branch, negated tests, computed properties and compound tests do not earn
 an exemption. Set this option to `false` to report guarded awaits too.
 

@@ -1,5 +1,4 @@
-import { Linter } from "eslint";
-import { lint, linterCwd, plugin } from "./helpers.mjs";
+import { getLinter, lint, linterCwd, plugin } from "./helpers.mjs";
 import {
   eslintFindings,
   relativeDiagnosticFile,
@@ -52,10 +51,7 @@ export function configuredFindings(
 // RuleTester cases carry their own languageOptions. helpers.lint would switch
 // TypeScript files onto the TS parser and change which branches run.
 export function languageOptionsFindings({ code, rule, options, filename, languageOptions }) {
-  const linter = new Linter({
-    configType: "flat",
-    cwd: filename ? linterCwd(filename) : process.cwd(),
-  });
+  const linter = getLinter(filename ? linterCwd(filename) : process.cwd());
   return eslintFindings(
     linter.verify(
       code,

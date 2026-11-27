@@ -1,0 +1,9 @@
+[
+  {
+    "code": "no-mistakes(no-comment-phrases)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/no-comment-phrases/comments.mjs",
+    "line": 1,
+    "message": "Invalid comment phrase pattern [: Invalid regular expression: /[/i: Unterminated character class"
+  }
+]

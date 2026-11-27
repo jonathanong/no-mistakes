@@ -362,11 +362,15 @@ unproven. Recovered modifying SQL still requires statement-level classification.
 v1 is the Swift/.NET bar plus the named key feature for each stack: a module
 graph, `tests plan`, and either HTTP routes or queues. SwiftPM and NuGet
 dependency artifacts participate in semantic native test planning. Playwright, React,
-Next.js fetches, call-sites, dead-exports, other ecosystem lockfile diffs, and
-dedicated `no-mistakes python|go|rust|rails|php|java|kotlin|elixir|dart` CLIs are later work. Agents
-use `dependents --relationship <lang>` now and `tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart`
-when those stacks are configured. Other ecosystem lockfiles and dedicated
-language CLIs are not started.
+Next.js fetches, call-sites, dead-exports, other ecosystem lockfile diffs, and applying every rule family to every language it
+can (for example the PostgreSQL rules over SQL in Rust code, tracked in
+[#4740](https://github.com/jongleberry/no-mistakes/issues/4740)) are later work. There are no
+per-language CLIs and none are planned: one `no-mistakes` invocation analyzes every
+configured language in one session with one graph, so a Next.js app that calls a Rust
+endpoint is a single analysis. `dependents --relationship <lang>` and
+`tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart` are the stable
+per-language surface when those stacks are configured. Other ecosystem lockfiles are
+not started.
 
 ## Current Status
 
@@ -469,7 +473,8 @@ crate/super/self` and `pub` declarations emit `rust-use` / `rust-mod` edges.
 integration files emit `rust-package` from the crate root (not an n² clique).
 The existing `rust-*` filesystem rules, `--test cargo` globs, and `ci` Cargo
 binary edges remain. `tests plan cargo` now emits `cargo test -p` targets.
-There is still no `no-mistakes rust` CLI.
+There is no `no-mistakes rust` CLI by design. Use `dependents --relationship rust`
+and `tests plan cargo`.
 
 ## Canonical Feature Set
 
@@ -569,7 +574,7 @@ Follow the Swift and .NET adapter shape, not a second analysis session.
 6. Ship CLI, N-API, `docs/cli/*`, `docs/graph-edges.md`,
    `docs/configuration/tests.md`, and fixtures in the same change.
 
-Counterexample: a `no-mistakes python` command that walks the tree, parses
+Counterexample: a separate per-language command (for example `no-mistakes python`) that walks the tree, parses
 files again, and builds a standalone import graph. That violates prepared
 analysis ownership.
 
@@ -711,8 +716,9 @@ out of scope. Configure producer and consumer file globs through
 Rust v1 is a language frontend at the Swift/.NET bar: configured
 `tests.rust.packages` emit `rust-use` / `rust-mod` / `rust-package` edges,
 `tests plan cargo` selects crate tests, and static Axum / Actix / Rocket
-registrations emit `route` edges. Dedicated `no-mistakes rust` CLI, language
-`symbols` / `call-sites`, and `Cargo.lock` diffs are later work.
+registrations emit `route` edges. Language `symbols` / `call-sites`,
+`Cargo.lock` diffs, and PostgreSQL rules over SQL in Rust code
+([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)) are later work.
 
 | Feature          | TS/JS reference     | Rust equivalent                                                                                                                              |
 | ---------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -924,8 +930,8 @@ end
 
 Nested brace aliases, wildcard imports, same-package refs without
 `alias`/`import`/`use`, Phoenix `resources` macros, computed `scope path`
-blocks, `mix.lock` / `config.exs` native fallback, queues, and a dedicated
-`no-mistakes elixir` CLI are non-edges / later work. Native fallback is
+blocks, `mix.lock` / `config.exs` native fallback, and queues
+are non-edges / later work. Native fallback is
 `mix.exs` plus non-test `.ex` files under configured apps. Any `.ex`/`.exs`
 under `/test/` is non-production. `*_test.exs` is the test suffix.
 
@@ -1060,7 +1066,7 @@ opt-in.
 ## Agent Fallback
 
 v1 module graphs, `tests plan <lang>`, and named route/queue extractors are
-shipped for configured Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and Dart packages. Use
+shipped for configured Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and Dart packages. One invocation covers every configured language; there are no per-language CLIs. Use
 `dependents --relationship <lang|route|queue|http>` and
 `tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart` for those questions instead of `rg`.
 
@@ -1070,8 +1076,8 @@ ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
 Dart/Flutter `Uri.parse` / `http.*` literals, Laravel `Route::resource` /
 `Route::apiResource` `only`/`except`, nested dotted names, named arguments, and
 `Route::apiResources`, Kafka outside TS/Python literal shapes, language
-`symbols`/`call-sites`, and dedicated
-`no-mistakes python|go|rust|rails|php|java|kotlin|elixir|dart` CLIs.
+`symbols`/`call-sites`, and rule families that apply only to TS/JS or `.sql`
+([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)).
 
 See [Architecture](architecture.md) for the one-pass session rules,
 [Graph edges](graph-edges.md) for the current edge kinds, and
@@ -1256,9 +1262,11 @@ TS/JS [`csp-allowed-origins`](rules/csp-allowed-origins.md) checks third-party
 browser origins (including protocol-relative `//host` and IPv6 literals) in JSX
 elements and `fetch`/`WebSocket`/`EventSource` calls against static CSP
 directives declared in `options.cspFiles` (first duplicate directive wins per
-policy, multiple policies intersect, optional `options.selfOrigins`, and shared
-`options.unanalyzable` for dynamic/unparsed URLs) through Rust, CLI `check`,
-async Node `check()`, and batched `analyzeProject()` checks.
+policy, multiple policies intersect, optional `options.selfOrigins`, shared
+`options.unanalyzable` for dynamic/unparsed URLs, and module-level `const`
+string arrays joined or spread in the same file or through one named import)
+through Rust, CLI `check`, async Node `check()`, and batched `analyzeProject()`
+checks.
 
 TS/JS [`vitest-default-excludes`](rules/vitest-default-excludes.md) checks
 literal discovery exclusions on a selected config (and its inline projects) and

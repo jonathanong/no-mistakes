@@ -49,18 +49,23 @@ module.exports = {
       if (call?.type !== "CallExpression") return null;
       const member = unwrapExpression(call.callee);
       if (
-        member.type !== "MemberExpression" ||
-        unwrapExpression(member.object).type !== "Identifier" ||
+        member?.type !== "MemberExpression" ||
         !options.readMethods?.includes(memberPropertyName(member))
       )
         return null;
       const client = unwrapExpression(member.object);
-      if (
-        !options.clients?.includes(client.name) &&
-        !options.imports?.some((selector) => matchesRuntimeImport(client, selector, context))
-      )
-        return null;
-      return { call, client, variable: resolveVariable(client, context) };
+      const named = client.type === "Identifier" && options.clients?.includes(client.name);
+      const imported = options.imports?.some((selector) =>
+        matchesRuntimeImport(client, selector, context),
+      );
+      if (!named && !imported) return null;
+      let root = client;
+      while (root?.type === "MemberExpression") root = unwrapExpression(root.object);
+      return {
+        call,
+        label: client.type === "Identifier" ? client.name : memberPropertyName(client),
+        variable: root?.type === "Identifier" ? resolveVariable(root, context) : null,
+      };
     }
     function assignedVariables(pattern) {
       if (!pattern) return [];
@@ -97,7 +102,7 @@ module.exports = {
           !first ||
           !second ||
           first.variable !== second.variable ||
-          first.client.name !== second.client.name ||
+          first.label !== second.label ||
           suppressed(reportNode) ||
           (current.type === "VariableDeclarator" &&
             (suppressed(current.parent) ||

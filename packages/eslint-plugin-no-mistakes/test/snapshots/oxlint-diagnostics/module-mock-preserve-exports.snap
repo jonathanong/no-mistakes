@@ -1,0 +1,23 @@
+[
+  {
+    "code": "no-mistakes(module-mock-preserve-exports)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/module-mock-preserve-exports/recall.mjs",
+    "line": 3,
+    "message": "Module mock factory must spread the real module to preserve exports."
+  },
+  {
+    "code": "no-mistakes(module-mock-preserve-exports)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/module-mock-preserve-exports/recall.mjs",
+    "line": 4,
+    "message": "Module mock factory must spread the real module to preserve exports."
+  },
+  {
+    "code": "no-mistakes(module-mock-preserve-exports)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/module-mock-preserve-exports/recall.mjs",
+    "line": 5,
+    "message": "Module mock factory must spread the real module to preserve exports."
+  }
+]

@@ -1,5 +1,6 @@
 "use strict";
 
+const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { createInvocationChecker } = require("./no-banned-import-outside-allowed-paths-calls");
 const { rule } = require("../helpers");
 const {
@@ -65,8 +66,8 @@ module.exports = rule(
     let functionDepth = 0;
 
     function isIifeFunction(node) {
-      const parent = node?.parent;
-      return parent?.type === "CallExpression" && parent.callee === node;
+      const parent = unwrapTransparentParent(node)?.parent;
+      return parent?.type === "CallExpression" && unwrapExpression(parent.callee) === node;
     }
 
     function pushFunctionScope(node) {

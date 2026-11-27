@@ -1,0 +1,16 @@
+name: caller-unanalyzable
+on: push
+jobs:
+  remote_call:
+    uses: example/platform/.github/workflows/release.yml@v1
+    secrets:
+      DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+  missing_callee:
+    uses: ./.github/workflows/does-not-exist.yml
+  non_callable:
+    uses: ./.github/workflows/not-callable.yml
+  dynamic_secrets:
+    uses: ./.github/workflows/callee.yml
+    with:
+      target_env: production
+    secrets: ${{ inputs.secrets_map }}

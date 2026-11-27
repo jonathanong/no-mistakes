@@ -25,6 +25,12 @@ fn csharp_max_lines_per_file_json_matches_snapshot() {
                 "csharp-max-lines-per-file/fixture/suppression",
                 "../fail/.no-mistakes.yml",
             ),
+            // The file-length finding is anchored at line 1.
+            c(
+                "first_line_next_line_directive",
+                "csharp-max-lines-per-file/fixture/suppression-next-line",
+                "../fail/.no-mistakes.yml",
+            ),
             c("input_report", input, "csharp-max-lines-per-file.yml"),
             c(
                 "input_advise",
@@ -136,6 +142,11 @@ fn swift_no_raw_print_json_matches_snapshot() {
                 "swift-no-raw-print/fixture/disable-lines",
                 "../../config/swift_no_raw_print_cli_fails.yml",
             ),
+            c(
+                "disable_file",
+                "swift-no-raw-print/fixture/disable-file",
+                "../../config/swift_no_raw_print_cli_fails.yml",
+            ),
         ],
     );
 }
@@ -184,6 +195,11 @@ fn swift_viewmodel_main_actor_json_matches_snapshot() {
             c(
                 "disable_lines",
                 "swift-viewmodel-main-actor/fixture/disable-lines",
+                "../../config/swift_viewmodel_main_actor_cli_fails.yml",
+            ),
+            c(
+                "disable_file",
+                "swift-viewmodel-main-actor/fixture/disable-file",
                 "../../config/swift_viewmodel_main_actor_cli_fails.yml",
             ),
         ],

@@ -167,6 +167,11 @@ fn test_no_unmocked_dynamic_imports_json_matches_snapshot() {
                 "test-no-unmocked-dynamic-imports/fixture/disable-line",
                 ".no-mistakes.yml",
             ),
+            c(
+                "disable_file",
+                "test-no-unmocked-dynamic-imports/fixture/disable-file",
+                ".no-mistakes.yml",
+            ),
         ],
     );
 }

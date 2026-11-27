@@ -24,7 +24,14 @@ require("./api-tests/declarations-sql");
 require("./api-tests/declarations-audit");
 require("./api-tests/declarations-runtime");
 
-const { assert, test, readFileSync, join, packageRoot } = require("./api-tests/context");
+const {
+  assert,
+  test,
+  readFileSync,
+  join,
+  packageRoot,
+  assertFixturesCompile,
+} = require("./api-tests/context");
 
 test("cache setup policy exports both workflow selectors", () => {
   const options = readFileSync(
@@ -215,11 +222,8 @@ test("shell compatibility rules expose optional path globs", () => {
 });
 
 test("check rule options compile from the package root", () => {
-  const { createRequire } = require("node:module");
-  const dependencyRequire = createRequire(require.resolve("@storybook/react"));
-  const ts = dependencyRequire("typescript");
   const repositoryRoot = join(packageRoot, "..", "..");
-  const program = ts.createProgram(
+  assertFixturesCompile(
     [
       join(repositoryRoot, "fixtures/node-api/dependabot-cooldown-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/forbidden-lint-suppressions/public.mts"),
@@ -234,7 +238,7 @@ test("check rule options compile from the package root", () => {
       join(repositoryRoot, "fixtures/node-api/vitest-default-excludes/public.mts"),
       join(repositoryRoot, "fixtures/node-api/vitest-project-policy/public.mts"),
     ],
-    {
+    (ts) => ({
       noEmit: true,
       strict: true,
       skipLibCheck: true,
@@ -245,13 +249,7 @@ test("check rule options compile from the package root", () => {
       baseUrl: repositoryRoot,
       paths: { "no-mistakes": ["packages/no-mistakes/index.d.ts"] },
       ignoreDeprecations: "6.0",
-    },
-  );
-  assert.deepEqual(
-    ts
-      .getPreEmitDiagnostics(program)
-      .map((row) => ts.flattenDiagnosticMessageText(row.messageText, "\n")),
-    [],
+    }),
   );
 });
 
@@ -674,6 +672,33 @@ test("changes diff and planner changes have exported public contracts", () => {
     readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
     /export \{ changesDiff \} from "\.\/changes-types"/,
   );
+});
+
+test("GitHub Actions pr-diff-range and workflow call bindings export named option types", () => {
+  const prDiff = readFileSync(join(packageRoot, "github-actions-pr-diff-range-types.d.ts"), "utf8");
+  assert.match(prDiff, /export type GithubActionsRevisionPair\b/);
+  assert.match(prDiff, /export interface GithubActionsPrDiffRangeOptions \{/);
+  for (const field of [
+    "requireConsistentRevisionPairs?: boolean;",
+    "revisionPairs?: GithubActionsRevisionPair[];",
+    "unanalyzable?: Unanalyzable;",
+    "baseEnv: string; headEnv: string",
+    "baseInput: string; headInput: string",
+    "baseFlag: string; headFlag: string",
+  ]) {
+    assert.ok(prDiff.includes(field), `missing ${field}`);
+  }
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/github-actions-pr-diff-range-types";/,
+  );
+
+  const topology = readFileSync(join(packageRoot, "workflow-topology-policy-types.d.ts"), "utf8");
+  assert.ok(
+    topology.includes("requireExplicitWorkflowCallBindings?: boolean;"),
+    "missing requireExplicitWorkflowCallBindings",
+  );
+  assert.ok(topology.includes("unanalyzable?: Unanalyzable;"), "missing unanalyzable");
 });
 
 test("required PR path filters export the workflow scope type", () => {

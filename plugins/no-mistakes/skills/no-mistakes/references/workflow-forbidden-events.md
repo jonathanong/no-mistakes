@@ -24,5 +24,5 @@ Standard rule-level `message` and `no-mistakes-disable-file
 workflow-topology-policy` also apply. Async `check({ root, config })` and
 `analyzeProject()` check reports use the same configuration and findings.
 
-See the [configuration reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/workflow-topology-policy-forbidden-events.md)
-and [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/workflow-topology-policy.md).
+See the [configuration reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/configuration/workflow-topology-policy-forbidden-events.md)
+and [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/workflow-topology-policy.md).

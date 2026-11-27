@@ -563,8 +563,18 @@ the commands that poll another run. `options.ignoreForLoops` (default `false`)
 skips `for` loops as bounded retries. The rule stays off until a configuration
 lists it.
 
-[`github-actions-pr-diff-range`](../rules/github-actions-pr-diff-range.md) has no
-options. It stays off until a configuration lists it.
+For [`github-actions-pr-diff-range`](../rules/github-actions-pr-diff-range.md),
+listing the rule turns on the default pull-request diff-range and `merge_group`
+checks. Set `options.requireConsistentRevisionPairs: true` to enforce
+consistent base/merge and base/head revision pairs across `git diff` ranges
+(tracking `actions/checkout` `with.ref`, including `HEAD^1 HEAD` on
+`merge_group` checkouts), and configure `options.revisionPairs` with
+`{ baseEnv, headEnv }`, `{ baseInput, headInput }`, or `{ baseFlag, headFlag }`
+entries to check env vars, `with:` inputs, or CLI flags.
+`options.unanalyzable: report | advise | ignore` defaults to `advise` when
+either option is enabled, covering unresolved checkout refs, dynamic revisions,
+non-mapping or YAML-merged `env:` / `with:` blocks for configured pairs, and
+invalid workflow YAML. The rule stays off until a configuration lists it.
 
 Set `options.workflows` to a required non-empty list of exact repository-relative
 paths directly under `.github/workflows` for workflows that supply required PR
@@ -774,7 +784,9 @@ rules:
 third-party browser origins (including protocol-relative `//host` and IPv6
 literals) in JS/TS/JSX/TSX files against static CSP directives declared in the
 root-relative files listed in required `options.cspFiles` (first duplicate
-directive wins per policy; multiple policies intersect). Optional
+directive wins per policy; multiple policies intersect; a module-level `const`
+string array may supply those origins through `.join` or a spread, including
+one named import). Optional
 `options.selfOrigins` lists first-party origins treated as `'self'` (default
 `[]`). Dynamic URLs, malformed network URLs, and dynamic `<link>` `rel`/`as`
 attributes use the shared `options.unanalyzable` policy (`report` by default,

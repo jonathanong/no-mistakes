@@ -16,7 +16,7 @@ const languageOptions = {
 };
 const cases = [
   ["invalid", [7, 7, 13, 20, 27, 33]],
-  ["controls", []],
+  ["controls", [50]],
   ["rewrite", []],
   ["suppressed", [8, 20]],
   ["file-suppressed", []],

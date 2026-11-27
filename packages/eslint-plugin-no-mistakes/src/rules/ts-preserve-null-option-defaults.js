@@ -11,6 +11,7 @@ const {
   memberRootAndProperty,
   objectPropertyName,
   propsFromType,
+  unwrapValue,
 } = require("./nullable-option-defaults-helpers");
 const {
   bindingScope,
@@ -82,29 +83,30 @@ module.exports = Object.assign(
     function defineVariable(node) {
       const scope = variableScope(scopes, currentScope, node);
       let props = propsForAnnotation(node.id);
+      const init = unwrapValue(node.init);
       const asserted = assertionType(node.init);
       if (isIdentifier(node.id)) {
         if (!props && asserted) {
           props = propsFromType(asserted, facts);
         }
-        if (!props && node.init) {
-          const member = memberRootAndProperty(node.init);
+        if (!props && init) {
+          const member = memberRootAndProperty(init);
           const objProps = member ? objectProps(scopes, member.object) : null;
           if (objProps?.has(member.property)) {
             defineNullableBinding(node.id.name, scope);
             return;
           }
-          if (scalarConstAlias(node, context) && isNullableBinding(scopes, node.init.name)) {
+          if (scalarConstAlias(node, context) && isNullableBinding(scopes, init.name)) {
             defineNullableBinding(node.id.name, scope);
             return;
           }
-          props = isIdentifier(node.init) ? objectProps(scopes, node.init.name) : null;
+          props = isIdentifier(init) ? objectProps(scopes, init.name) : null;
         }
         defineObject(node.id.name, props, scope);
         return;
       }
       if (node.id?.type === "ObjectPattern") {
-        let initProps = isIdentifier(node.init) ? objectProps(scopes, node.init.name) : null;
+        let initProps = isIdentifier(init) ? objectProps(scopes, init.name) : null;
         if (!initProps && asserted) {
           initProps = propsFromType(asserted, facts);
         }
@@ -114,13 +116,14 @@ module.exports = Object.assign(
     }
     function reportDefault(node, target) {
       if (suppressed(node)) return;
-      if (isIdentifier(target)) {
-        if (isNullableBinding(scopes, target.name)) {
-          context.report({ node, messageId: "default", data: { name: target.name } });
+      const value = unwrapValue(target);
+      if (isIdentifier(value)) {
+        if (isNullableBinding(scopes, value.name)) {
+          context.report({ node, messageId: "default", data: { name: value.name } });
         }
         return;
       }
-      const member = memberRootAndProperty(target);
+      const member = memberRootAndProperty(value);
       if (!member) return;
       const props = objectProps(scopes, member.object);
       if (!props?.has(member.property)) return;
@@ -146,11 +149,12 @@ module.exports = Object.assign(
       },
       AssignmentExpression(node) {
         if (node.operator === "=" && node.left.type === "ObjectPattern") {
+          const right = unwrapValue(node.right);
           const asserted = assertionType(node.right);
           const props = asserted
             ? propsFromType(asserted, facts)
-            : isIdentifier(node.right)
-              ? objectProps(scopes, node.right.name)
+            : isIdentifier(right)
+              ? objectProps(scopes, right.name)
               : null;
           definePatternBindings(node.left, props, currentScope(), true);
           return;

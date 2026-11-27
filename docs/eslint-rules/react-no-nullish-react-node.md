@@ -90,6 +90,11 @@ export const Panel = (props: PanelProps) => props.footer ?? <Empty />;
 return <section>{children ?? <EmptyState />}</section>;
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names
+`react-no-nullish-react-node` or `no-mistakes/react-no-nullish-react-node`.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`ts-preserve-null-option-defaults`](ts-preserve-null-option-defaults.md)

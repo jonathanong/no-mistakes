@@ -1,6 +1,4 @@
-mod common;
-
-use common::{fixture, run, stdout};
+use crate::common::{fixture, run, stdout};
 
 #[test]
 fn flow_json_reports_symbol_neighborhood() {

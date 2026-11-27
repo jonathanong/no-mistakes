@@ -1,5 +1,6 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
 const { importSpecifierName } = require("./module-mock-helpers");
 const { resolveVariable } = require("./no-global-fetch-outside-helper-bindings");
 const {
@@ -55,8 +56,25 @@ function seedImportSpecifier(specifier, node, moduleSpecifier, context, config, 
 // Seeds import-derived tags. Import bindings are always top-level and
 // unconditional (re-assigning them is a syntax error), so this is a single
 // non-fixed-point pass, unlike the require()/createRequire() forward pass.
+function seedImportEquals(node, context, config, aliasMap) {
+  if (node.importKind === "type" || node.id?.type !== "Identifier") return;
+  const ref = node.moduleReference;
+  if (ref?.type !== "TSExternalModuleReference") return;
+  // The external-module grammar only accepts a string literal.
+  const moduleSpecifier = String(unwrapExpression(ref.expression).value);
+  if (!moduleSpecifier) return;
+  const variable = resolveVariable(node.id, context);
+  if (hasAnyBannedName(config, moduleSpecifier) || CREATE_REQUIRE_MODULES.has(moduleSpecifier)) {
+    aliasMap.set(variable, { kind: "object", modules: new Set([moduleSpecifier]) });
+  }
+}
+
 function seedImportTags(program, context, config, aliasMap) {
   for (const node of program.body) {
+    if (node.type === "TSImportEqualsDeclaration") {
+      seedImportEquals(node, context, config, aliasMap);
+      continue;
+    }
     if (node.type !== "ImportDeclaration") continue;
     const moduleSpecifier = node.source.value;
     for (const specifier of node.specifiers) {
@@ -129,10 +147,22 @@ function checkExportedDeclaration(
 ) {
   if (declaration?.type !== "VariableDeclaration") return;
   for (const declarator of declaration.declarations) {
-    if (declarator.id.type !== "Identifier") continue;
-    const variable = resolveVariable(declarator.id, context);
-    const tag = resolveExportedTag(variable, aliasMap, clearedAliases, forwardAliasMap);
-    reportTagLeak(declarator, tag, config, context);
+    const ids =
+      declarator.id.type === "Identifier"
+        ? [declarator.id]
+        : declarator.id.type === "ObjectPattern"
+          ? declarator.id.properties.flatMap((property) => {
+              if (property.type !== "Property") return [];
+              const value =
+                property.value?.type === "AssignmentPattern" ? property.value.left : property.value;
+              return value?.type === "Identifier" ? [value] : [];
+            })
+          : [];
+    for (const id of ids) {
+      const variable = resolveVariable(id, context);
+      const tag = resolveExportedTag(variable, aliasMap, clearedAliases, forwardAliasMap);
+      reportTagLeak(id === declarator.id ? declarator : id, tag, config, context);
+    }
   }
 }
 

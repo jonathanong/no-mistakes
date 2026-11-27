@@ -1,0 +1,91 @@
+use super::SqlSelectFact;
+use sqlparser::ast::{Expr, TableFactor};
+
+pub(super) fn walk_factor(
+    sql: &str,
+    factor: &TableFactor,
+    ctes: &[String],
+    selects: &mut Vec<SqlSelectFact>,
+    positions: super::super::value::PlaceholderPositions<'_>,
+) {
+    match factor {
+        TableFactor::Derived { subquery, .. } => {
+            super::super::select::collect_query_at(
+                sql, subquery, ctes, false, false, positions, selects,
+            );
+        }
+        TableFactor::NestedJoin {
+            table_with_joins, ..
+        } => super::walk_side_queries(
+            sql,
+            std::slice::from_ref(table_with_joins),
+            None,
+            ctes,
+            selects,
+            positions,
+        ),
+        TableFactor::UNNEST { array_exprs, .. } => {
+            walk_table_exprs(sql, array_exprs, ctes, positions, selects);
+        }
+        TableFactor::Table {
+            args: Some(args), ..
+        } => {
+            crate::idents::visit_function_args(&args.args, &mut |expr| {
+                record_table_expr(sql, expr, ctes, positions, selects);
+            });
+        }
+        _ => {}
+    }
+}
+
+fn walk_table_exprs(
+    sql: &str,
+    exprs: &[Expr],
+    ctes: &[String],
+    positions: super::super::value::PlaceholderPositions<'_>,
+    selects: &mut Vec<SqlSelectFact>,
+) {
+    for expr in exprs {
+        record_table_expr(sql, expr, ctes, positions, selects);
+    }
+}
+
+fn record_table_expr(
+    sql: &str,
+    expr: &Expr,
+    ctes: &[String],
+    positions: super::super::value::PlaceholderPositions<'_>,
+    selects: &mut Vec<SqlSelectFact>,
+) {
+    super::super::select::collect_predicate_shapes(expr, selects);
+    collect_exists_facts(sql, expr, positions, selects);
+    super::super::select::walk_expr_at(sql, expr, ctes, false, positions, selects);
+}
+
+/// Record `EXISTS (... UNION ...)` wrappers that sit outside a SELECT.
+pub(super) fn collect_exists_facts(
+    sql: &str,
+    expr: &Expr,
+    positions: super::super::value::PlaceholderPositions<'_>,
+    selects: &mut Vec<SqlSelectFact>,
+) {
+    let mut exists_set_operations = Vec::new();
+    super::super::exists::collect_exists_at(sql, Some(expr), positions, &mut exists_set_operations);
+    if exists_set_operations.is_empty() {
+        return;
+    }
+    selects.push(SqlSelectFact {
+        sql_position: (0, 0),
+        line: 1,
+        tables: Vec::new(),
+        predicate_sql: String::new(),
+        exists_set_operations,
+        relations: Vec::new(),
+        in_insert_select: false,
+        not_in_subqueries: Vec::new(),
+        not_in_columns: Vec::new(),
+        count_existence_checks: Vec::new(),
+        star_projections: Vec::new(),
+        column_uses: Vec::new(),
+    });
+}

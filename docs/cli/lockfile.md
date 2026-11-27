@@ -28,7 +28,11 @@ no-mistakes lockfile diff --base <ref> [--head <ref>] [--lockfile <path>] [--roo
 | `bun.lock` | bun |
 
 Auto-detection ignores `bun.lockb`. `--lockfile bun.lockb` warns that the
-binary lockfile cannot be parsed, omits it, and still exits 0.
+binary lockfile cannot be parsed, omits it, and still exits 0. In Node,
+`lockfileDiff({ base, lockfile: "bun.lockb", includeWarnings: true })` returns
+an empty `entries` array and a warning with `code: "binary-lockfile"`,
+`lockfile`, and `message`. Without `includeWarnings`, the Node promise rejects
+for explicit binary lockfiles and returns an array for supported lockfiles.
 
 pnpm 12 still writes `lockfileVersion: '9.0'`. When the project pins pnpm 12, or has config dependencies, `pnpm-lock.yaml` is two YAML documents. The env document comes first and records `configDependencies` and `packageManagerDependencies`. The project document is last. Package diffs union `packages` from every document, so a pnpm pin or config dependency change is reported. Importer and snapshot impact use the project document. A document before that project document must be an env lockfile: its `.` importer has only `configDependencies` and `packageManagerDependencies`. Anything else is rejected instead of being read as the workspace. A `resolution.revision` field is accepted metadata; the `integrity` digest remains the package identity. Lockfile majors outside 5 through 9 stay unsupported.
 

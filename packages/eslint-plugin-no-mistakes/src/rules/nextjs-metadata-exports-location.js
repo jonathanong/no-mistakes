@@ -1,6 +1,7 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 
 const ALLOWED_SUFFIXES = [
   "/page.tsx",
@@ -62,38 +63,44 @@ module.exports = Object.assign(
           "metadata and generateMetadata exports are only allowed in Next.js route segment files.",
       },
     },
-    (context) => ({
-      ExportNamedDeclaration(node) {
-        if (!isNextFile(context.filename)) return;
-        if (isAllowedFile(context.filename)) return;
-        if (node.declaration?.type === "VariableDeclaration") {
+    (context) => {
+      const suppressed = ruleSuppression(context, "nextjs-metadata-exports-location");
+      function report(node) {
+        if (!suppressed(node)) context.report({ node, messageId: "location" });
+      }
+      return {
+        ExportNamedDeclaration(node) {
+          if (!isNextFile(context.filename)) return;
+          if (isAllowedFile(context.filename)) return;
+          if (node.declaration?.type === "VariableDeclaration") {
+            if (
+              node.declaration.declarations.some((declaration) =>
+                [...collectPatternNames(declaration.id), declarationName(declaration)].some(
+                  (name) => METADATA_EXPORTS.has(name),
+                ),
+              )
+            ) {
+              report(node);
+            }
+          }
           if (
-            node.declaration.declarations.some((declaration) =>
-              [...collectPatternNames(declaration.id), declarationName(declaration)].some((name) =>
-                METADATA_EXPORTS.has(name),
-              ),
+            node.declaration?.type === "FunctionDeclaration" &&
+            METADATA_EXPORTS.has(declarationName(node.declaration))
+          ) {
+            report(node);
+          }
+          if (
+            node.exportKind !== "type" &&
+            node.specifiers?.some(
+              (specifier) =>
+                specifier.exportKind !== "type" && METADATA_EXPORTS.has(specifierName(specifier)),
             )
           ) {
-            context.report({ node, messageId: "location" });
+            report(node);
           }
-        }
-        if (
-          node.declaration?.type === "FunctionDeclaration" &&
-          METADATA_EXPORTS.has(declarationName(node.declaration))
-        ) {
-          context.report({ node, messageId: "location" });
-        }
-        if (
-          node.exportKind !== "type" &&
-          node.specifiers?.some(
-            (specifier) =>
-              specifier.exportKind !== "type" && METADATA_EXPORTS.has(specifierName(specifier)),
-          )
-        ) {
-          context.report({ node, messageId: "location" });
-        }
-      },
-    }),
+        },
+      };
+    },
   ),
   { __test: { specifierName, collectPatternNames } },
 );

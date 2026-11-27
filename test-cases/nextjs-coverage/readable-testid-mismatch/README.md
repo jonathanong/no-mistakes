@@ -1,6 +1,6 @@
 # readable-testid-mismatch
 
-Companion to `helper-config-testid` for [#343](https://github.com/jonathanong/no-mistakes/issues/343).
+Companion to `helper-config-testid` for [#343](https://github.com/jongleberry/no-mistakes/issues/343).
 
 Here the Playwright config sets `use.testIdAttribute = 'data-qa'` directly in the
 exported object, so it **is** statically readable. The app marks elements with

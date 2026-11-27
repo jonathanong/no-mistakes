@@ -150,8 +150,8 @@ Oxlint 5:1 no-mistakes(module-mock-preserve-exports) Module mock factory must sp
 
 ## nextjs-metadata-exports-location
 eslint-plugin/oxlint-snapshots/fixture/app/components/meta.tsx
-ESLint 2:1 no-mistakes/nextjs-metadata-exports-location (location) metadata and generateMetadata exports are only allowed in Next.js route segment files.
-Oxlint 2:1 no-mistakes(nextjs-metadata-exports-location) metadata and generateMetadata exports are only allowed in Next.js route segment files.
+ESLint 22:1 no-mistakes/nextjs-metadata-exports-location (location) metadata and generateMetadata exports are only allowed in Next.js route segment files.
+Oxlint 22:1 no-mistakes(nextjs-metadata-exports-location) metadata and generateMetadata exports are only allowed in Next.js route segment files.
 
 ## nextjs-no-manual-script-tags
 eslint-plugin/nextjs-structured-data/fixture/app/page.tsx
@@ -232,6 +232,7 @@ ESLint 181:7 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) R
 ESLint 188:1 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
 ESLint 193:14 no-mistakes/no-banned-import-outside-allowed-paths (bannedReExport) Do not re-export banned import "createProgram" from "typescript"; it stays reachable outside allowed paths.
 ESLint 198:5 no-mistakes/no-banned-import-outside-allowed-paths (bannedImport) Reachable use of banned import "default" from "@acme/rate-limit" outside allowed paths. Move it into an allowed helper path.
+ESLint 203:31 no-mistakes/no-banned-import-outside-allowed-paths (bannedReExport) Do not re-export banned import "createProgram" from "typescript"; it stays reachable outside allowed paths.
 Oxlint 2:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
 Oxlint 6:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createWatchProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
 Oxlint 9:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
@@ -265,6 +266,7 @@ Oxlint 181:7 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use o
 Oxlint 188:1 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "createProgram" from "typescript" outside allowed paths. Move it into an allowed helper path.
 Oxlint 193:14 no-mistakes(no-banned-import-outside-allowed-paths) Do not re-export banned import "createProgram" from "typescript"; it stays reachable outside allowed paths.
 Oxlint 198:5 no-mistakes(no-banned-import-outside-allowed-paths) Reachable use of banned import "default" from "@acme/rate-limit" outside allowed paths. Move it into an allowed helper path.
+Oxlint 203:31 no-mistakes(no-banned-import-outside-allowed-paths) Do not re-export banned import "createProgram" from "typescript"; it stays reachable outside allowed paths.
 
 ## no-comment-phrases
 eslint-snippets/fixture/no-comment-phrases/comments.mjs

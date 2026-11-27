@@ -1,3 +1,4 @@
+use super::super::registries::{ConstArrays, RegistryJoin};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
     ArrayExpression, ArrayExpressionElement, BinaryExpression, BinaryOperator, Expression,
@@ -31,18 +32,28 @@ pub(in super::super) fn eval_static_string<'a>(
     }
 }
 
-pub(super) fn eval_csp_text<'a>(expression: &'a Expression<'a>) -> Option<Cow<'a, str>> {
+pub(in super::super) fn eval_csp_text<'a>(
+    expression: &'a Expression<'a>,
+    arrays: &ConstArrays,
+) -> Option<Cow<'a, str>> {
     match unwrap_ts_wrappers(expression) {
         Expression::StringLiteral(value) => Some(crate::ast::js_literal(value)),
-        Expression::TemplateLiteral(template) => eval_csp_template(template),
+        Expression::TemplateLiteral(template) => eval_csp_template(template, arrays),
         Expression::BinaryExpression(bin) if bin.operator == BinaryOperator::Addition => {
-            eval_csp_binary(bin).map(Cow::Owned)
+            eval_csp_binary(bin, arrays).map(Cow::Owned)
         }
+        Expression::CallExpression(call) => match arrays.eval_join(call) {
+            Some(RegistryJoin::Resolved(text)) => Some(Cow::Owned(text)),
+            _ => None,
+        },
         _ => None,
     }
 }
 
-pub(super) fn eval_csp_template<'a>(template: &'a TemplateLiteral<'a>) -> Option<Cow<'a, str>> {
+pub(super) fn eval_csp_template<'a>(
+    template: &'a TemplateLiteral<'a>,
+    arrays: &ConstArrays,
+) -> Option<Cow<'a, str>> {
     if template.expressions.is_empty() {
         return static_template_text(template);
     }
@@ -53,7 +64,7 @@ pub(super) fn eval_csp_template<'a>(template: &'a TemplateLiteral<'a>) -> Option
         let Some(expr) = template.expressions.get(idx) else {
             break;
         };
-        if let Some(static_part) = eval_csp_text(expr) {
+        if let Some(static_part) = eval_csp_text(expr, arrays) {
             out.push_str(&static_part);
             continue;
         }
@@ -69,10 +80,10 @@ pub(super) fn eval_csp_template<'a>(template: &'a TemplateLiteral<'a>) -> Option
     Some(Cow::Owned(out))
 }
 
-pub(super) fn eval_csp_binary(expr: &BinaryExpression<'_>) -> Option<String> {
+pub(super) fn eval_csp_binary(expr: &BinaryExpression<'_>, arrays: &ConstArrays) -> Option<String> {
     let mut pieces = Vec::new();
-    collect_add_pieces(&expr.left, &mut pieces);
-    collect_add_pieces(&expr.right, &mut pieces);
+    collect_add_pieces(&expr.left, &mut pieces, arrays);
+    collect_add_pieces(&expr.right, &mut pieces, arrays);
     let mut out = String::new();
     for (idx, piece) in pieces.iter().enumerate() {
         match piece {
@@ -92,13 +103,17 @@ pub(super) fn eval_csp_binary(expr: &BinaryExpression<'_>) -> Option<String> {
     Some(out)
 }
 
-fn collect_add_pieces(expr: &Expression<'_>, pieces: &mut Vec<Option<String>>) {
+fn collect_add_pieces(
+    expr: &Expression<'_>,
+    pieces: &mut Vec<Option<String>>,
+    arrays: &ConstArrays,
+) {
     match unwrap_ts_wrappers(expr) {
         Expression::BinaryExpression(bin) if bin.operator == BinaryOperator::Addition => {
-            collect_add_pieces(&bin.left, pieces);
-            collect_add_pieces(&bin.right, pieces);
+            collect_add_pieces(&bin.left, pieces, arrays);
+            collect_add_pieces(&bin.right, pieces, arrays);
         }
-        other => match eval_csp_text(other) {
+        other => match eval_csp_text(other, arrays) {
             Some(text) => {
                 if let Some(Some(prev)) = pieces.last_mut() {
                     prev.push_str(&text);
@@ -131,12 +146,15 @@ fn is_csp_nonce_or_hash_slot(before: &str, after: &str) -> bool {
         })
 }
 
-pub(super) fn csp_array_strings(array: &ArrayExpression<'_>) -> Option<Vec<String>> {
+pub(super) fn csp_array_strings(
+    array: &ArrayExpression<'_>,
+    arrays: &ConstArrays,
+) -> Option<Vec<String>> {
     let mut items = Vec::with_capacity(array.elements.len());
     for element in &array.elements {
         let ArrayExpressionElement::SpreadElement(_) = element else {
             let expr = element.as_expression()?;
-            items.push(eval_csp_text(expr)?.into_owned());
+            items.push(eval_csp_text(expr, arrays)?.into_owned());
             continue;
         };
         return None;

@@ -7,6 +7,7 @@ const WRAPPERS = new Set([
   "TSAsExpression",
   "TSSatisfiesExpression",
   "TSTypeAssertion",
+  "TSInstantiationExpression",
   "ChainExpression",
 ]);
 const NAME_SLOTS = {
@@ -33,7 +34,7 @@ const NAME_SLOTS = {
   TSNamedTupleMember: "label",
 };
 const BINDING_PARENTS =
-  /^(ArrayPattern|RestElement|Import.*Specifier|ExportSpecifier|CatchClause)$/;
+  /^(ArrayPattern|RestElement|Import.*Specifier|ExportSpecifier|CatchClause|TSDeclareFunction)$/;
 const KEYS = ["reference", "declaration", "property", "destructure", "construct"];
 
 function compile(target) {

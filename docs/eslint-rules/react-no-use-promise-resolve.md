@@ -82,6 +82,11 @@ use(Promise.resolve(value));
 const value = React.use(Promise.resolve(initialValue));
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names
+`react-no-use-promise-resolve` or `no-mistakes/react-no-use-promise-resolve`.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`react-no-iife-in-jsx`](react-no-iife-in-jsx.md) keeps render expressions

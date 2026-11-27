@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { describe, it } from "vitest";
-import { fixture, lint, plugin, __dirname } from "./helpers.mjs";
+import { fixture, lint, plugin, runOxlint, __dirname } from "./helpers.mjs";
 import { headingSection, rulePages, sourceFences } from "./docs-snippets.mjs";
 const id = "no-argv-main-guard";
 const fixtureRoot = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", id);
@@ -70,7 +69,7 @@ describe(id, () => {
     assert.ok(findings.every((message) => message.ruleId === `no-mistakes/${id}`));
     assert.deepEqual(lint(allowed.code, rules, "documented.ts"), []);
   });
-  for (const [name, count] of [
+  const oxlintCases = [
     ["file-url-recall.mjs", 20],
     ["file-url-controls.mjs", 0],
     ["unsafe.mjs", 10],
@@ -83,22 +82,21 @@ describe(id, () => {
     ["template-controls.mjs", 0],
     ["template-suppressions.mjs", 1],
     ["template-suppression-file.mjs", 0],
-  ]) {
+  ];
+  let cachedOxlint;
+  function oxlintBatch() {
+    if (!cachedOxlint) {
+      cachedOxlint = runOxlint({
+        config: resolve(fixtureRoot, ".oxlintrc.json"),
+        files: oxlintCases.map(([name]) => resolve(fixtureRoot, name)),
+      });
+      assert.equal(cachedOxlint.status, 1, cachedOxlint.stderr);
+    }
+    return cachedOxlint;
+  }
+  for (const [name, count] of oxlintCases) {
     it(`has genuine oxlint parity for ${name}`, () => {
-      const result = spawnSync(
-        process.execPath,
-        [
-          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
-          "--config",
-          resolve(fixtureRoot, ".oxlintrc.json"),
-          "--format",
-          "json",
-          resolve(fixtureRoot, name),
-        ],
-        { encoding: "utf8" },
-      );
-      assert.equal(result.status, count ? 1 : 0, result.stderr);
-      const diagnostics = JSON.parse(result.stdout).diagnostics.filter((d) => d.code.includes(id));
+      const diagnostics = oxlintBatch().forFile(resolve(fixtureRoot, name), id);
       assert.equal(diagnostics.length, count, name);
     });
   }

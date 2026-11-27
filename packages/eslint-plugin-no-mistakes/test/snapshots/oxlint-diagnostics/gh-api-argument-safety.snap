@@ -1,0 +1,51 @@
+[
+  {
+    "code": "no-mistakes(gh-api-argument-safety)",
+    "column": 27,
+    "file": "eslint-snippets/fixture/gh-api-argument-safety/recall.mjs",
+    "line": 4,
+    "message": "Use structured -f/-F fields instead of an endpoint query string."
+  },
+  {
+    "code": "no-mistakes(gh-api-argument-safety)",
+    "column": 19,
+    "file": "eslint-snippets/fixture/gh-api-argument-safety/recall.mjs",
+    "line": 6,
+    "message": "Use structured -f/-F fields instead of an endpoint query string."
+  },
+  {
+    "code": "no-mistakes(gh-api-argument-safety)",
+    "column": 35,
+    "file": "eslint-snippets/fixture/gh-api-argument-safety/recall.mjs",
+    "line": 7,
+    "message": "Use structured -f/-F fields instead of an endpoint query string."
+  },
+  {
+    "code": "no-mistakes(gh-api-argument-safety)",
+    "column": 29,
+    "file": "eslint-snippets/fixture/gh-api-argument-safety/recall.mjs",
+    "line": 8,
+    "message": "Use structured -f/-F fields instead of an endpoint query string."
+  },
+  {
+    "code": "no-mistakes(gh-api-argument-safety)",
+    "column": 30,
+    "file": "eslint-snippets/fixture/gh-api-argument-safety/recall.mjs",
+    "line": 9,
+    "message": "Use structured -f/-F fields instead of an endpoint query string."
+  },
+  {
+    "code": "no-mistakes(gh-api-argument-safety)",
+    "column": 28,
+    "file": "eslint-snippets/fixture/gh-api-argument-safety/recall.mjs",
+    "line": 10,
+    "message": "Use structured -f/-F fields instead of an endpoint query string."
+  },
+  {
+    "code": "no-mistakes(gh-api-argument-safety)",
+    "column": 37,
+    "file": "eslint-snippets/fixture/gh-api-argument-safety/recall.mjs",
+    "line": 13,
+    "message": "Use structured -f/-F fields instead of an endpoint query string."
+  }
+]
