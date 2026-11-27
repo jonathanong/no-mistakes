@@ -55,9 +55,19 @@ fn tsconfig_alias_folder_mapping_json_matches_snapshot() {
                 config("check-exists.yml"),
             ),
             (
+                "disable_file_with_control",
+                fixture("disable-file-with-control"),
+                config("disable-file-with-control.yml"),
+            ),
+            (
                 "disable_line",
                 fixture("disable-line"),
                 config("check-exists.yml"),
+            ),
+            (
+                "disable_next_line",
+                fixture("entry-suppression"),
+                fixture("entry-suppression").join(".no-mistakes.yml"),
             ),
             (
                 "exists_shape_without_check",

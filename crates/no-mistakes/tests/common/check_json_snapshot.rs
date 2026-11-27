@@ -388,6 +388,15 @@ fn normalization_collapses_machine_specific_json() {
     let quoted = normalize_report(r#"{"message":"[tools\r\n"}"#, &[]);
     assert!(quoted.contains("[tools\\n"), "{quoted}");
     assert!(!quoted.contains("\\r"), "{quoted}");
+    let rust_parse = normalize_report(
+        r#"{"message":"cannot verify rust-no-inline-allows: cannot parse Rust: cannot parse string into token stream; repair source syntax so this check can verify the file"}"#,
+        &[],
+    );
+    assert!(
+        rust_parse.contains("cannot parse Rust: <rust-parse-error>; repair source syntax"),
+        "{rust_parse}"
+    );
+    assert!(!rust_parse.contains("token stream"), "{rust_parse}");
 }
 
 #[test]

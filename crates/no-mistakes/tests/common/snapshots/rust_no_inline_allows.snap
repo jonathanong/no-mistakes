@@ -26,7 +26,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/invalid.rs",
           "line": 1,
-          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: cannot parse string into token stream; repair source syntax so this check can verify the file",
+          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: <rust-parse-error>; repair source syntax so this check can verify the file",
           "rule": "rust-no-inline-allows",
           "sourceLine": "#[cfg(test)]",
           "target": "unanalyzable"
@@ -44,6 +44,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
+      "warnings": []
+    }
+  },
+  "disable_file_with_control": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "control.rs",
+          "line": 1,
+          "message": "inline #[allow(dead_code)] attribute - fix the warning or move test-only code to a sibling test module",
+          "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow(dead_code)]"
+        }
+      ],
       "warnings": []
     }
   },
@@ -123,7 +143,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "invalid.rs",
           "line": 1,
-          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: cannot parse string into token stream; repair source syntax so this check can verify the file",
+          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: <rust-parse-error>; repair source syntax so this check can verify the file",
           "rule": "rust-no-inline-allows",
           "sourceLine": "#[allow(dead_code)]",
           "target": "unanalyzable"
@@ -234,6 +254,83 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "inline #[allow(unused_imports)] attribute - fix the warning or move test-only code to a sibling test module",
           "rule": "rust-no-inline-allows",
           "sourceLine": "#[allow(unused_imports)]"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "invalid.rs",
+          "line": 1,
+          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: <rust-parse-error>; repair source syntax so this check can verify the file",
+          "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow(dead_code)]",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "control.rs",
+          "line": 1,
+          "message": "inline #[allow(dead_code)] attribute - fix the warning or move test-only code to a sibling test module",
+          "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow(dead_code)]"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable_ignore": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "control.rs",
+          "line": 1,
+          "message": "inline #[allow(dead_code)] attribute - fix the warning or move test-only code to a sibling test module",
+          "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow(dead_code)]"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "control.rs",
+          "line": 1,
+          "message": "inline #[allow(dead_code)] attribute - fix the warning or move test-only code to a sibling test module",
+          "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow(dead_code)]"
+        },
+        {
+          "file": "invalid.rs",
+          "line": 1,
+          "message": "cannot verify rust-no-inline-allows: cannot parse Rust: <rust-parse-error>; repair source syntax so this check can verify the file",
+          "rule": "rust-no-inline-allows",
+          "sourceLine": "#[allow(dead_code)]",
+          "target": "unanalyzable"
         }
       ],
       "warnings": []

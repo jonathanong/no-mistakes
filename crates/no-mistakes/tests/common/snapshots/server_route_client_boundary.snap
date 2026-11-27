@@ -22,6 +22,26 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "disable_file": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "backend/api/control.ts",
+          "line": 8,
+          "message": "client HTTP call is in a server route folder; move request clients out of route definition folders or narrow server route globs so AST route extraction stays unambiguous",
+          "rule": "server-route-client-boundary",
+          "sourceLine": "axios.get(route);"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "fail": {
     "exitCode": 1,
     "report": {
