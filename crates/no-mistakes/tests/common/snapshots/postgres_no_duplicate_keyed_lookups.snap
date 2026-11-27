@@ -726,6 +726,75 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "review_join_window": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries/check.sql",
+          "line": 13,
+          "message": "queries/check.sql:13: duplicate keyed lookup of `flags` on `flag = o.id IS NULL` (already looked up at line 12). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "LEFT JOIN flags c ON c.flag = (o.id IS NULL);",
+          "target": "flags"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 22,
+          "message": "queries/check.sql:22: duplicate keyed lookup of `flags` on `flag = o.id IS NULL` (already looked up at line 20). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "LEFT JOIN flags b ON b.flag = (o.id IS NULL)",
+          "target": "flags"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 28,
+          "message": "queries/check.sql:28: duplicate keyed lookup of `accounts` on `USING (id)` (already looked up at line 27). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "JOIN accounts b USING (id) AS second_key;",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 42,
+          "message": "queries/check.sql:42: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 41). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT a.name FROM accounts a WHERE a.id = o.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 53,
+          "message": "queries/check.sql:53: duplicate keyed lookup of `accounts` on `id = $1` (already looked up at line 51). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT a.n FROM accounts a WHERE a.id = $1) FOLLOWING)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 58,
+          "message": "queries/check.sql:58: duplicate keyed lookup of `flags` on `flag = x.id IS NULL` (already looked up at line 57). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT c.name FROM flags c WHERE c.flag = (x.id IS NULL))",
+          "target": "flags"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 6,
+          "message": "queries/check.sql:6: duplicate keyed lookup of `flags` on `flag = o.id IS NULL` (already looked up at line 5). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "LEFT JOIN flags c ON c.flag = (o.id IS NULL);",
+          "target": "flags"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "review_planning": {
     "exitCode": 1,
     "report": {

@@ -278,3 +278,26 @@ fn separates_grouped_reuse_from_independent_expressions_and_case_arms() {
         ]
     );
 }
+
+#[test]
+fn respects_null_extended_bindings_and_reuses_aliased_targets_and_window_specs() {
+    let facts = fixture_facts("review-join-window");
+    assert!(!facts.parse_failed);
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+    assert_eq!(
+        sites,
+        [
+            (5, 6),
+            (12, 13),
+            (20, 22),
+            (27, 28),
+            (41, 42),
+            (51, 53),
+            (57, 58)
+        ]
+    );
+}

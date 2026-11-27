@@ -29,9 +29,10 @@ fn register_join_chain(
     seen: &mut BTreeMap<LookupKey, (usize, usize)>,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) -> UsingColumns {
+    let left_start = scopes.binding_count();
     let mut using = register_factor(&table.relation, scopes, seen, out);
     for join in &table.joins {
-        inspect_join(join, scopes, &mut using, seen, out);
+        inspect_join(join, left_start, scopes, &mut using, seen, out);
     }
     using
 }
@@ -47,6 +48,7 @@ pub(super) fn register_table_factor(
 
 fn inspect_join(
     join: &Join,
+    left_start: usize,
     scopes: &mut ScopeStack,
     using: &mut UsingColumns,
     seen: &mut BTreeMap<LookupKey, (usize, usize)>,
@@ -65,6 +67,7 @@ fn inspect_join(
             record_lookup(key, display, line, column, seen, out);
         }
     }
+    let right_start = scopes.binding_count();
     register_factor(&join.relation, scopes, seen, out);
     using.advance(
         &join.join_operator,
@@ -73,6 +76,21 @@ fn inspect_join(
     );
     if let Some(JoinConstraint::On(expr)) = constraint {
         inspect_exprs(std::iter::once(expr), scopes, seen, out);
+    }
+    let end = scopes.binding_count();
+    match &join.join_operator {
+        JoinOperator::Left(_) | JoinOperator::LeftOuter(_) => {
+            scopes.refresh_bindings(right_start..end);
+        }
+        JoinOperator::Right(_) | JoinOperator::RightOuter(_) => {
+            scopes.refresh_bindings(left_start..right_start);
+            using.invalidate_left();
+        }
+        JoinOperator::FullOuter(_) => {
+            scopes.refresh_bindings(left_start..end);
+            using.invalidate_left();
+        }
+        _ => {}
     }
 }
 
@@ -104,7 +122,9 @@ fn join_lookup(
             };
             extract_lookup_key(relation, &self_qualifier, false, expr, outer, &[], None)
         }
-        JoinConstraint::Using(columns) => using_lookup(relation.to_owned(), columns, using),
+        JoinConstraint::Using(columns) | JoinConstraint::UsingAlias(columns, _) => {
+            using_lookup(relation.to_owned(), columns, using)
+        }
         _ => None,
     }
 }

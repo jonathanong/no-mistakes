@@ -1,26 +1,35 @@
+mod identity;
+
 use super::select_item_expr;
-use super::table::lookup_table;
 use super::windows::referenced_expressions;
 use crate::fx::FxHashSet;
-use crate::idents::{ident_key, object_name_identity, relation_suffix_name, unwrap_expr};
-use sqlparser::ast::{
-    CastKind, Distinct, Expr, Ident, Query, Select, SelectItem, SetExpr, VisitMut, VisitorMut,
-};
+use identity::normalize_target;
+pub(super) use identity::target_identity;
+use sqlparser::ast::{Distinct, Expr, Select, SelectItem, WindowSpec};
 use std::cell::{OnceCell, RefCell};
-use std::ops::ControlFlow;
 
 #[derive(Default)]
 pub(super) struct SelectTargets<'a> {
     projection: &'a [SelectItem],
     keys: OnceCell<RefCell<FxHashSet<Expr>>>,
+    windows: RefCell<FxHashSet<WindowSpec>>,
 }
 
 impl<'a> SelectTargets<'a> {
     pub(super) fn new(projection: &'a [SelectItem]) -> Self {
         Self {
             projection,
-            keys: OnceCell::new(),
+            ..Self::default()
         }
+    }
+
+    pub(super) fn reuses_window(&self, spec: &WindowSpec) -> bool {
+        if spec.window_frame.is_none() {
+            return false;
+        }
+        let mut key = spec.clone();
+        normalize_target(&mut key);
+        !self.windows.borrow_mut().insert(key)
     }
 
     pub(super) fn reuses(&self, expr: &Expr) -> bool {
@@ -67,106 +76,4 @@ pub(super) fn inspectable<'a>(
         .filter_map(move |(expr, can_reuse)| {
             (!can_reuse || !select_targets.reuses(expr)).then_some(expr)
         })
-}
-
-pub(super) fn target_identity(expr: &Expr) -> Expr {
-    struct Identifiers;
-    impl VisitorMut for Identifiers {
-        type Break = ();
-
-        fn pre_visit_query(&mut self, query: &mut Query) -> ControlFlow<()> {
-            if let SetExpr::Select(select) = query.body.as_mut() {
-                normalize_local_columns(select);
-            }
-            ControlFlow::Continue(())
-        }
-
-        fn pre_visit_expr(&mut self, expr: &mut Expr) -> ControlFlow<()> {
-            if matches!(expr, Expr::Nested(_)) {
-                *expr = unwrap_expr(expr).clone();
-            }
-            if let Expr::Cast {
-                kind: kind @ CastKind::DoubleColon,
-                ..
-            } = expr
-            {
-                *kind = CastKind::Cast;
-            }
-            ControlFlow::Continue(())
-        }
-
-        fn pre_visit_ident(&mut self, ident: &mut Ident) -> ControlFlow<()> {
-            ident.value = ident_key(ident);
-            ident.quote_style = None;
-            ControlFlow::Continue(())
-        }
-    }
-
-    let mut key = expr.clone();
-    let _ = key.visit(&mut Identifiers);
-    key
-}
-
-fn normalize_local_columns(select: &mut Select) {
-    let [table] = select.from.as_slice() else {
-        return;
-    };
-    if !table.joins.is_empty() {
-        return;
-    }
-    let Some((name, alias)) = lookup_table(&table.relation) else {
-        return;
-    };
-    let qualifier = alias.map_or_else(
-        || relation_suffix_name(&object_name_identity(name)),
-        |alias| ident_key(&alias.name),
-    );
-
-    struct LocalColumns<'a> {
-        qualifier: &'a str,
-        depth: usize,
-    }
-
-    impl VisitorMut for LocalColumns<'_> {
-        type Break = ();
-
-        fn pre_visit_query(&mut self, _: &mut Query) -> ControlFlow<()> {
-            self.depth += 1;
-            ControlFlow::Continue(())
-        }
-
-        fn post_visit_query(&mut self, _: &mut Query) -> ControlFlow<()> {
-            self.depth -= 1;
-            ControlFlow::Continue(())
-        }
-
-        fn pre_visit_expr(&mut self, expr: &mut Expr) -> ControlFlow<()> {
-            if self.depth == 0 {
-                if let Expr::CompoundIdentifier(parts) = expr {
-                    if let [qualifier, column] = parts.as_slice() {
-                        if ident_key(qualifier) == self.qualifier {
-                            *expr = Expr::Identifier(column.clone());
-                        }
-                    }
-                }
-            }
-            ControlFlow::Continue(())
-        }
-    }
-
-    let mut visitor = LocalColumns {
-        qualifier: &qualifier,
-        depth: 0,
-    };
-    for expr in select
-        .projection
-        .iter_mut()
-        .filter_map(|item| match item {
-            SelectItem::UnnamedExpr(expr) | SelectItem::ExprWithAlias { expr, .. } => Some(expr),
-            _ => None,
-        })
-        .chain(select.selection.iter_mut())
-    {
-        let _ = expr.visit(&mut visitor);
-    }
 }

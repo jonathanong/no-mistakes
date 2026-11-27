@@ -32,7 +32,9 @@ row-limit clauses.
   the same relation on the same key, regardless of equality operand order
   (`a.id = o.account_id` vs `o.account_id = a.id`). For a chained
   `USING` join, both inputs of the preceding merge must have a provably
-  identical column type, such as two aliases of the same relation.
+  identical column type, such as two aliases of the same relation. A join
+  that can extend a binding with NULL starts a new lookup history for that
+  binding.
 - A `JOIN` combined with a correlated scalar subquery against the same relation
   and key.
 - Equivalent PostgreSQL cast spellings for proven built-in values
@@ -67,7 +69,8 @@ The rule stays silent when the lookups are not proven to read the same row:
 
 PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
 (including grouping sets), `ORDER BY`, and window partition and ordering
-clauses. An aggregate can also reuse an argument in its ordering clause. The
+clauses. Identical inline window specifications share their frame bounds. An
+aggregate can also reuse an argument in its ordering clause. The
 rule counts an identical reused expression once. A matching grouping
 expression is also reused inside `HAVING` outside function arguments.
 

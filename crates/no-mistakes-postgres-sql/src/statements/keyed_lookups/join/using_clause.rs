@@ -22,6 +22,11 @@ impl UsingColumns {
         self.merged.get(column).copied().or(self.single_binding)
     }
 
+    pub(super) fn invalidate_left(&mut self) {
+        self.single_binding = None;
+        self.merged.clear();
+    }
+
     pub(super) fn advance(
         &mut self,
         op: &JoinOperator,
@@ -29,7 +34,7 @@ impl UsingColumns {
         right_relation: Option<&str>,
     ) {
         match constraint {
-            Some(JoinConstraint::Using(columns)) => {
+            Some(JoinConstraint::Using(columns) | JoinConstraint::UsingAlias(columns, _)) => {
                 if right_relation.is_some()
                     && self.base_relation.as_deref() == right_relation
                     && preserves_left(op)

@@ -1,0 +1,61 @@
+SELECT a.name, b.name, c.name
+FROM orders o
+LEFT JOIN flags a ON a.flag = (o.id IS NULL)
+FULL JOIN extras x ON false
+LEFT JOIN flags b ON b.flag = (o.id IS NULL)
+LEFT JOIN flags c ON c.flag = (o.id IS NULL);
+
+SELECT a.name, b.name, c.name
+FROM orders o
+LEFT JOIN flags a ON a.flag = (o.id IS NULL)
+RIGHT JOIN extras x ON false
+LEFT JOIN flags b ON b.flag = (o.id IS NULL)
+LEFT JOIN flags c ON c.flag = (o.id IS NULL);
+
+SELECT q.*
+FROM orders o
+CROSS JOIN LATERAL (
+    SELECT a.name AS first_flag, b.name AS second_flag
+    FROM teams t
+    LEFT JOIN flags a ON a.flag = (o.id IS NULL)
+    FULL JOIN extras x ON x.id = t.id
+    LEFT JOIN flags b ON b.flag = (o.id IS NULL)
+) q;
+
+SELECT a.name, b.name
+FROM accounts o
+JOIN accounts a USING (id) AS first_key
+JOIN accounts b USING (id) AS second_key;
+
+SELECT a.name, b.name
+FROM accounts o
+LEFT JOIN accounts a USING (id) AS first_key
+FULL JOIN extras x ON false
+LEFT JOIN accounts b USING (id) AS second_key;
+
+SELECT (SELECT a.name FROM accounts AS a WHERE a.id = o.account_id)
+FROM orders o
+ORDER BY (SELECT a.name FROM accounts a WHERE a.id = o.account_id);
+
+SELECT
+    (SELECT a.name FROM accounts AS a WHERE a.id = o.account_id),
+    (SELECT a.name FROM accounts a WHERE a.id = o.account_id)
+FROM orders o;
+
+SELECT
+    sum(o.amount) OVER (ROWS (SELECT a.n FROM accounts AS a WHERE a.id = $1) PRECEDING),
+    avg(o.amount) OVER (ROWS (SELECT a.n FROM accounts a WHERE a.id = $1) PRECEDING)
+FROM orders o;
+
+SELECT
+    sum(o.amount) OVER (ROWS (SELECT a.n FROM accounts a WHERE a.id = $1) PRECEDING),
+    avg(o.amount) OVER (ROWS BETWEEN CURRENT ROW AND
+        (SELECT a.n FROM accounts a WHERE a.id = $1) FOLLOWING)
+FROM orders o;
+
+SELECT
+    (SELECT b.name FROM flags b WHERE b.flag = (x.id IS NULL)),
+    (SELECT c.name FROM flags c WHERE c.flag = (x.id IS NULL))
+FROM orders o
+LEFT JOIN extras x ON
+    (SELECT a.enabled FROM flags a WHERE a.flag = (x.id IS NULL));

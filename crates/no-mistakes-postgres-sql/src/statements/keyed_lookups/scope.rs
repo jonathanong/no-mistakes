@@ -48,6 +48,24 @@ impl ScopeStack {
         id
     }
 
+    pub(super) fn binding_count(&self) -> usize {
+        self.frames
+            .last()
+            .expect("bindings require a query scope")
+            .len()
+    }
+
+    pub(super) fn refresh_bindings(&mut self, bindings: std::ops::Range<usize>) {
+        let frame = self
+            .frames
+            .last_mut()
+            .expect("bindings require a query scope");
+        for binding in &mut frame[bindings] {
+            binding.id = self.next_id;
+            self.next_id += 1;
+        }
+    }
+
     pub(super) fn snapshot(&self) -> ScopeSnapshot {
         ScopeSnapshot {
             frames: self.frames.clone(),

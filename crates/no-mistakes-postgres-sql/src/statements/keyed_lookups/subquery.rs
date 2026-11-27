@@ -60,12 +60,15 @@ pub(super) fn inspect_expr(
                 for arguments in [&function.parameters, &function.args] {
                     visit_argument_clauses(arguments, &mut visit);
                 }
-                if let Some(WindowType::WindowSpec(spec)) = &function.over {
-                    for (expr, can_reuse) in window_expressions(spec) {
-                        if !can_reuse || !targets.reuses(expr) {
-                            visit(expr);
+                match &function.over {
+                    Some(WindowType::WindowSpec(spec)) if !targets.reuses_window(spec) => {
+                        for (expr, can_reuse) in window_expressions(spec) {
+                            if !can_reuse || !targets.reuses(expr) {
+                                visit(expr);
+                            }
                         }
                     }
+                    _ => {}
                 }
                 visit_shallow_exprs(&function.within_group, &mut visit);
             }
