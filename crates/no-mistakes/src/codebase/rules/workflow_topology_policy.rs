@@ -6,27 +6,31 @@ use anyhow::Result;
 use serde::Deserialize;
 use std::path::Path;
 
+mod call_bindings_map;
+mod call_bindings_yaml;
 mod concurrency_compile;
 mod concurrency_scope;
 mod evaluate;
 mod evaluate_activity_types;
+mod evaluate_call_bindings;
 mod evaluate_collisions;
 mod evaluate_concurrency;
 mod evaluate_forbidden_events;
 mod evaluate_graph;
 mod evaluate_secrets_inherit;
 mod evaluate_steps;
+mod execution;
 mod locations;
 mod malformed;
-mod execution;
 mod merge_availability;
 mod options;
-pub use execution::diagnostics_prepared;
-pub(crate) use options::Options;
 #[cfg(test)]
 mod prepare;
 mod secret_inventory;
 mod validate;
+
+pub use execution::diagnostics_prepared;
+pub(crate) use options::Options;
 
 pub const RULE_ID: &str = "workflow-topology-policy";
 
@@ -83,6 +87,7 @@ pub(super) enum FindingOwner<'a> {
 pub(super) struct LocatedFinding {
     finding: RuleFinding,
     path: crate::config::source_locations::ConfigPath,
+    fallback_path: Option<crate::config::source_locations::ConfigPath>,
 }
 
 pub(super) fn finding(owner: FindingOwner<'_>, message: String) -> LocatedFinding {
@@ -110,6 +115,7 @@ pub(super) fn finding(owner: FindingOwner<'_>, message: String) -> LocatedFindin
                     .key(job)
             },
         ),
+        fallback_path: None,
     }
 }
 
