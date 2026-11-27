@@ -183,12 +183,14 @@ module.exports = Object.assign(
           const uncertainGetter =
             (Boolean(name) && wrapped === "unresolved") ||
             (!name && unresolved && !knownOtherMember);
-          if (uncertainGetter && reportsUnanalyzable(context)) {
-            context.report({
-              node,
-              messageId: "unanalyzable",
-              data: { callee: name || "this call" },
-            });
+          if (uncertainGetter) {
+            if (reportsUnanalyzable(context)) {
+              context.report({
+                node,
+                messageId: "unanalyzable",
+                data: { callee: name || "this call" },
+              });
+            }
             return;
           }
           if (name) {

@@ -159,7 +159,9 @@ function importFact(node, context, seen = new Set()) {
   if (variable.defs.length !== 1) return { unresolved: true };
   const def = variable.defs[0];
   const direct = factFromDef(def, current.name, context, seen);
-  const written = variable.references.some((reference) => reference.isWrite() && !reference.init);
+  const written = (variable.references ?? []).some(
+    (reference) => reference.isWrite() && !reference.init,
+  );
   if (direct) return written && !direct.unresolved ? { unresolved: true } : direct;
   if (
     def.type === "Variable" &&

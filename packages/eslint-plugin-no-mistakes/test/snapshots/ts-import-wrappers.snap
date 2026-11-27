@@ -20,6 +20,25 @@
       "rule": "nextjs-no-manual-script-tags"
     },
     {
+      "file": "src/escaped-script-import.tsx",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 49,
+          "endLine": 2,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/src/escaped-script-import.tsx",
+          "line": 2,
+          "message": "Use next/script instead of a raw <script> tag.",
+          "messageId": "script",
+          "ruleId": "no-mistakes/nextjs-no-manual-script-tags",
+          "severity": 2
+        }
+      ],
+      "name": "escaped next template import",
+      "options": null,
+      "rule": "nextjs-no-manual-script-tags"
+    },
+    {
       "file": "src/script-exempt.tsx",
       "findings": [
         {
@@ -594,6 +613,17 @@
           "messageId": "resolve",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 39,
+          "endLine": 43,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 43,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
         }
       ],
       "name": "react use binding shapes",
@@ -785,6 +815,22 @@
       "rule": "server-require-nullable-fetch-wrapper"
     },
     {
+      "file": "nullable-relay-getter.ts",
+      "findings": [],
+      "name": "ignored unresolved relay around a getter",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable",
+        "unanalyzable": "ignore"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
       "file": "nullable-known-member.ts",
       "findings": [
         {
@@ -955,6 +1001,44 @@
         "requiredWrapperCallee": "wrapNullable"
       },
       "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-relay-getter.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-relay-getter.ts",
+          "line": 4,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 27,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-relay-getter.ts",
+          "line": 4,
+          "message": "Could not resolve whether 'getWidget' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "unresolved relay around a getter",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
     }
   ],
   "oxlint": {
@@ -1057,6 +1141,14 @@
           }
         ],
         "name": "iife.tsx",
+        "options": null
+      }
+    ],
+    "nullable-ignore": [
+      {
+        "file": "nullable-relay-getter.ts",
+        "findings": [],
+        "name": "nullable-relay-getter.ts",
         "options": null
       }
     ],
@@ -1188,6 +1280,27 @@
           }
         ],
         "name": "nullable-member-require.ts",
+        "options": null
+      },
+      {
+        "file": "nullable-relay-getter.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-relay-getter.ts",
+            "line": 4,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 16,
+            "file": "nullable-relay-getter.ts",
+            "line": 4,
+            "message": "Could not resolve whether 'getWidget' is the configured getter or wrapper. Use a static import."
+          }
+        ],
+        "name": "nullable-relay-getter.ts",
         "options": null
       },
       {
@@ -1349,6 +1462,13 @@
             "file": "react-use-bindings.tsx",
             "line": 35,
             "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 43,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
           }
         ],
         "name": "react-use-bindings.tsx",
@@ -1471,6 +1591,20 @@
           }
         ],
         "name": "src/dynamic-next.tsx",
+        "options": null
+      },
+      {
+        "file": "src/escaped-script-import.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(nextjs-no-manual-script-tags)",
+            "column": 27,
+            "file": "src/escaped-script-import.tsx",
+            "line": 2,
+            "message": "Use next/script instead of a raw <script> tag."
+          }
+        ],
+        "name": "src/escaped-script-import.tsx",
         "options": null
       },
       {

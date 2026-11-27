@@ -64,19 +64,19 @@ function reactUseStatus(node, context, useNames, seen = new Set()) {
     if (name === "call" || name === "apply") callee = unwrapSequence(callee.object);
   }
   if (callee?.type === "Identifier") {
-    if (seen.has(callee.name)) return "no";
     const fact = importFact(callee, context);
     if (namedUse(fact)) return "yes";
     if (fact?.unresolved) return "unresolved";
     if (fact) return "no";
     const variable = resolveVariable(callee, context);
+    if (variable && seen.has(variable)) return "no";
     if (!variable || variable.defs.length === 0) {
       return useNames.has(callee.name) ? "yes" : "no";
     }
     if (variable.defs.length !== 1) return "no";
     const def = variable.defs[0];
     if (def?.type === "Variable" && def.node?.parent?.kind === "const" && def.node.init) {
-      seen.add(callee.name);
+      seen.add(variable);
       if (def.node.id.type === "Identifier") {
         return reactUseStatus(def.node.init, context, useNames, seen);
       }

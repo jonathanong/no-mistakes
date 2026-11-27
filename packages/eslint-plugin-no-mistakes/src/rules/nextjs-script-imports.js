@@ -1,7 +1,7 @@
 "use strict";
 
-const { literalString } = require("../helpers");
 const { importFact } = require("./import-resolution");
+const { literalString } = require("./logical-call");
 
 const SKIP_KEYS = new Set(["comments", "loc", "parent", "range", "tokens"]);
 

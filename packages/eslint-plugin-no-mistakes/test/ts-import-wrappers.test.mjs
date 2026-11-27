@@ -275,6 +275,32 @@ describe("typescript import wrappers", () => {
         "src/mixed-script-import.tsx",
         "nextjs-no-manual-script-tags",
       ),
+      eslintCase(
+        "escaped next template import",
+        "src/escaped-script-import.tsx",
+        "nextjs-no-manual-script-tags",
+      ),
+      eslintCase(
+        "unresolved relay around a getter",
+        "nullable-relay-getter.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "ignored unresolved relay around a getter",
+        "nullable-relay-getter.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+          unanalyzable: "ignore",
+        },
+      ),
     ];
 
     expect(cases.find((item) => item.name === "ignored unresolved react require").findings).toEqual(
@@ -352,6 +378,7 @@ describe("typescript import wrappers", () => {
       [15, "unanalyzable"],
       [22, "resolve"],
       [35, "resolve"],
+      [43, "resolve"],
     ]);
     expect(
       cases.find((item) => item.name === "promise type query alias").findings.map((f) => f.line),
@@ -409,6 +436,22 @@ describe("typescript import wrappers", () => {
         .find((item) => item.name === "mixed type and value next import")
         .findings.map((finding) => [finding.line, finding.messageId]),
     ).toEqual([[2, "script"]]);
+    expect(
+      cases
+        .find((item) => item.name === "escaped next template import")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([[2, "script"]]);
+    expect(
+      cases
+        .find((item) => item.name === "unresolved relay around a getter")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [4, "unanalyzable"],
+      [4, "unanalyzable"],
+    ]);
+    expect(
+      cases.find((item) => item.name === "ignored unresolved relay around a getter").findings,
+    ).toEqual([]);
 
     const oxlint = {
       "react-use": oxlintOn(".oxlintrc-react-use.json", [
@@ -443,6 +486,7 @@ describe("typescript import wrappers", () => {
         "src/type-import-head.tsx",
         "src/type-specifier-script.tsx",
         "src/mixed-script-import.tsx",
+        "src/escaped-script-import.tsx",
       ]),
       "script-structured": oxlintOn(".oxlintrc-script-structured.json", ["src/script-exempt.tsx"]),
       "script-ignore": oxlintOn(".oxlintrc-script-ignore.json", ["src/dynamic-next.tsx"]),
@@ -453,7 +497,9 @@ describe("typescript import wrappers", () => {
         "nullable-local-require.ts",
         "nullable-dynamic-require.ts",
         "nullable-known-member.ts",
+        "nullable-relay-getter.ts",
       ]),
+      "nullable-ignore": oxlintOn(".oxlintrc-nullable-ignore.json", ["nullable-relay-getter.ts"]),
       "nullable-user": oxlintOn(".oxlintrc-nullable-user.json", ["nullable-satisfies.ts"]),
       "nullable-overload": oxlintOn(".oxlintrc-nullable-widget.json", ["nullable-overload.ts"]),
       "nullable-outer": oxlintOn(".oxlintrc-nullable-widget.json", ["nullable-outer.ts"]),
@@ -463,6 +509,11 @@ describe("typescript import wrappers", () => {
       oxlint["nullish-ignore"].status,
       0,
       JSON.stringify(oxlint["nullish-ignore"].findings),
+    );
+    assert.equal(
+      oxlint["nullable-ignore"].status,
+      0,
+      JSON.stringify(oxlint["nullable-ignore"].findings),
     );
     assert.equal(
       oxlint["script-ignore"].status,

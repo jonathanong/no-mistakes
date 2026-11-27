@@ -34,3 +34,11 @@ export function overload() {
 export function outerUse() {
   return use(Promise.resolve(1));
 }
+
+import * as React from "react";
+const memberRun = React.use;
+const memberBridge = memberRun;
+export function memberShadow() {
+  const memberRun = memberBridge;
+  return memberRun(Promise.resolve(1));
+}
