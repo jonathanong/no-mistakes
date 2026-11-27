@@ -1,4 +1,5 @@
-use super::{sql_rel, AllowedMigration, CompiledOptions, RuleFinding, RULE_ID};
+use super::{sql_rel, AllowedMigration, CompiledOptions, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::postgres::collect_prepared_schema_facts;
 use crate::codebase::ts_source::SourceStore;
 use anyhow::Context;

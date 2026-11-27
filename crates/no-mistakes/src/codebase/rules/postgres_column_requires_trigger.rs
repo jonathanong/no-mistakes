@@ -1,4 +1,4 @@
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::postgres::{
     require_catalog_path, AllowEntry, AllowList, TriggerEvent, TriggerTiming,
 };

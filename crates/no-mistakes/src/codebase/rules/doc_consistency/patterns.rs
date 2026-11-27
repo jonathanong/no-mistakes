@@ -1,4 +1,4 @@
-use super::super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::options::BannedPattern;
 use super::RULE_ID;
 use crate::codebase::ts_source::byte_offset_to_line;

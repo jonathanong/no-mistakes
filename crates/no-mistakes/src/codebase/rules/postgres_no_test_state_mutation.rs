@@ -1,7 +1,8 @@
 //! Prevent persistent database mutations in explicitly selected test code.
 mod scan;
 
-use super::{path_filter::GlobMatcher, RuleFinding};
+use super::{path_filter::GlobMatcher};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::postgres::EmbeddedSqlOptions;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;

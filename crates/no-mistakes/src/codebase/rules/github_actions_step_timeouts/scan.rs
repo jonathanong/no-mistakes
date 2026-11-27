@@ -1,6 +1,7 @@
 use super::steps::scan_steps;
 use super::yaml::{finding, StepLocations};
-use super::{CompiledOptions, RuleFinding, RULE_ID};
+use super::{CompiledOptions, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
 use std::path::Path;

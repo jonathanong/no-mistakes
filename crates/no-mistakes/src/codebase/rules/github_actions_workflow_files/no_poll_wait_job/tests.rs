@@ -1,5 +1,5 @@
 use super::loops::poll_loops;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 fn polls() -> Vec<Vec<String>> {
     vec![vec!["gh".into(), "run".into(), "view".into()]]

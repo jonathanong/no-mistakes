@@ -1,6 +1,7 @@
 use super::values::{filter_predicates, parse_filters_value_with_sources};
 use super::workflow_paths::WorkflowPathFilters;
-use super::{workflow_finding, CiFilter, RuleFinding};
+use super::{workflow_finding, CiFilter};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::vitest_ci_path_coverage::globs::{
     compile_pattern_predicates, PredicateQuantifier,
 };

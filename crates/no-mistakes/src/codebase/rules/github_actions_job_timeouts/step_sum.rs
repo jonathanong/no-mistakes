@@ -1,4 +1,5 @@
-use super::{yaml::timeout_minutes, RuleFinding};
+use super::{yaml::timeout_minutes};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn finding(
     rel: &str,

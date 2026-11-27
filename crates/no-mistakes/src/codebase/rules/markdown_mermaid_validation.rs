@@ -5,7 +5,7 @@ use merman_analysis::Analyzer;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 #[cfg(feature = "mermaid-validation")]
 use crate::mermaid_validation::{

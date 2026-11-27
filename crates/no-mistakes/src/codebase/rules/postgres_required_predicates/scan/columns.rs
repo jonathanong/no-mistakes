@@ -1,6 +1,6 @@
 use super::super::{CompiledOptions, PartitionExemption, RULE_ID};
 use crate::codebase::postgres::{SchemaCatalog, SqlRelationPredicateFact, SqlSelectFact};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::collections::BTreeSet;
 
 pub(super) fn effective_columns(

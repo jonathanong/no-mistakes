@@ -1,6 +1,6 @@
 use super::analysis;
 use crate::codebase::postgres::{SchemaCatalog, SqlStatementFileFacts};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use anyhow::{Context, Result};
 
 /// Preserve the exact-call finding shape while reusing the request's one SQL

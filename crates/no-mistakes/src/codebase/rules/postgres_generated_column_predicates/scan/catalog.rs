@@ -1,4 +1,5 @@
-use super::super::{CompiledOptions, ExtraGeneratedColumn, RuleFinding, RULE_ID};
+use super::super::{CompiledOptions, ExtraGeneratedColumn, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::postgres::{SqlColumnMetadata, SqlSchemaFileFacts, SqlTableSchemaEvent};
 use crate::codebase::rules::config_diagnostic::ConfigAnchor;
 use std::collections::{BTreeMap, BTreeSet};

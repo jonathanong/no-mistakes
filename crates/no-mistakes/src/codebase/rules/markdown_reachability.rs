@@ -1,6 +1,6 @@
 //! Enforces the deliberately small documentation discovery graph used by agents.
 use super::path_filter::GlobMatcher;
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::schema::StringOrList;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

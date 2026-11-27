@@ -1,4 +1,4 @@
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use anyhow::Result;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};

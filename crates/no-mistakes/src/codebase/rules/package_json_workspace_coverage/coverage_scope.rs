@@ -3,7 +3,8 @@ use super::patterns::{
     config_finding, covered_workspace_dirs, package_directories, path_under_package_roots,
     unmatched_patterns, workspace_config_file,
 };
-use super::{Options, RuleFinding, RULE_ID};
+use super::{Options, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::workspaces;
 use anyhow::Result;

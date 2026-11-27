@@ -175,7 +175,7 @@ fn run_prepared_filesystem_rules(
         suppress_rule_findings_with_sources_except(
             root,
             &mut findings,
-            &sources,
+            sources.as_ref(),
             &[
                 RUST_MAX_LINES_PER_FILE,
                 RUST_NO_INLINE_TESTS,

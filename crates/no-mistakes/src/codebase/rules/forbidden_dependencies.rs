@@ -1,4 +1,5 @@
-use super::{allow_audit::MissingFiles, RuleFinding};
+use super::{allow_audit::MissingFiles};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, NodeId};
 use crate::codebase::dependencies::{relationship_filter, EdgeKind};
 use crate::codebase::rules::config_diagnostic::ConfigAnchor;

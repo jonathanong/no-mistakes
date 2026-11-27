@@ -65,7 +65,7 @@ pub(super) fn scan(
             end += 1;
         }
         let rel = relative_slash_path(root, &statements[start].path);
-        let source = crate::codebase::rules::read_language_source(sources, &statements[start].path);
+        let source = no_mistakes_rule_kernel::source_access::read_language_source(sources, &statements[start].path);
         for (offset, file) in statements[start..end].iter().copied().enumerate() {
             let file_index = start + offset;
             if opts.advise_unanalyzable && file_index < native_statement_count {

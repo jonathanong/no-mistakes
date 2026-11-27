@@ -37,7 +37,7 @@ fn dollar_sign_identifiers_do_not_absorb_later_writes_or_suppressions() {
         [2, 4, 6, 7, 8]
     );
     let sources = crate::codebase::rules::source_store_for_files(&paths);
-    crate::codebase::rules::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
+    no_mistakes_rule_kernel::suppression::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
     assert_eq!(
         findings
             .iter()
@@ -58,7 +58,7 @@ fn raw_sql_occurrences_keep_locations_and_suppress_independently() {
         [3, 6, 7, 8]
     );
     let sources = crate::codebase::rules::source_store_for_files(&paths);
-    crate::codebase::rules::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
+    no_mistakes_rule_kernel::suppression::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
     assert_eq!(
         findings
             .iter()

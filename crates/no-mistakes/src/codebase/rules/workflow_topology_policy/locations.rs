@@ -1,4 +1,4 @@
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use crate::config::source_locations::ConfigLocations;
 use std::collections::BTreeMap;

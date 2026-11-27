@@ -12,7 +12,7 @@ fn check(
     config: &crate::config::v2::NoMistakesConfig,
     graph: Option<&crate::codebase::dependencies::graph::DepGraph>,
     facts: &crate::codebase::check_facts::CheckFactMap,
-) -> anyhow::Result<Vec<crate::codebase::rules::RuleFinding>> {
+) -> anyhow::Result<Vec<no_mistakes_rule_kernel::finding::RuleFinding>> {
     super::check_with_catalog(root, config, graph, facts, None)
 }
 

@@ -1,5 +1,5 @@
 use super::super::analysis_tests::analyze;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 #[path = "assume_write_fixture_tests.rs"]
 mod assume_write_fixture_tests;

@@ -1,5 +1,6 @@
 use super::scan::finding;
-use super::{BannedShapes, RuleFinding};
+use super::BannedShapes;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::postgres::statements::SqlFactSite;
 pub(super) fn located_findings(
     file: &str,

@@ -1,7 +1,7 @@
 use super::{CompiledOptions, Options};
 use crate::codebase::postgres::{EmbeddedSqlFileFacts, SqlStatementFileFacts};
 use crate::codebase::rules::allow_audit::AllowAudit;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig};
 use std::path::{Path, PathBuf};

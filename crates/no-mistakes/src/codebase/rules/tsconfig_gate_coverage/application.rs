@@ -1,6 +1,7 @@
 use super::{
-    command_scan, is_tsconfig_path, relative_slash_path, Path, PathBuf, RuleFinding, RULE_ID,
+    command_scan, is_tsconfig_path, relative_slash_path, Path, PathBuf, RULE_ID,
 };
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(serde::Deserialize, Default)]

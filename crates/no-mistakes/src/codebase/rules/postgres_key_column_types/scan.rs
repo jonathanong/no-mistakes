@@ -1,7 +1,7 @@
 use super::compile::Compiled;
 use super::RULE_ID;
 use crate::codebase::postgres::{catalog_finding, CatalogObjectRef, CatalogTable, SchemaCatalog};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use anyhow::{bail, Result};
 
 pub(super) fn scan(

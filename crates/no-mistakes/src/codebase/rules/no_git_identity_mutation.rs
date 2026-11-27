@@ -1,4 +1,4 @@
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
 use globset::{Glob, GlobSet, GlobSetBuilder};

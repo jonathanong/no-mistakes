@@ -1,6 +1,7 @@
 use super::judge::{narrowings, Narrowing};
 use super::options::{Compiled, NameFilters};
-use super::{RuleFinding, RULE_ID};
+use super::RULE_ID;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::github_actions_script_expressions::{step_run_lines, StepRun};
 use crate::codebase::rules::github_actions_workflow_files::run_scripts::{run_scripts, RunScript};
 use serde_yaml::Value;

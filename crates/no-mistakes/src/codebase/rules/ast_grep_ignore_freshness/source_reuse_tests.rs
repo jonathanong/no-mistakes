@@ -1,4 +1,5 @@
-use super::{check_with_files, finding, RuleFinding, RULE_ID};
+use super::{check_with_files, finding, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::filesystem_dispatch::{
     run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts,
     PreparedFilesystemRuleInputs,

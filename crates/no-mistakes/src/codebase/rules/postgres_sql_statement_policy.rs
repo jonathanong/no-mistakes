@@ -1,4 +1,4 @@
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions, SqlPolicyClause};
 use crate::codebase::ts_source::relative_slash_path;

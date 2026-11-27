@@ -10,7 +10,7 @@ use super::enumerators::{
 use super::findings;
 use crate::codebase::dependencies::extract::ImportKind;
 use crate::codebase::dependencies::graph::{KnownCallTargetRef, ResolvedCallSite, TsFactLookup};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::module_facts::RequireBinding;
 use crate::config::v2::schema::RuleDef;
 use crate::fx::{FxHashMap, FxHashSet};

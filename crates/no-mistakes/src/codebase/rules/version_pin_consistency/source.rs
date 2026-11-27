@@ -1,4 +1,5 @@
-use super::{parse::parse_source, path::read_text, scan::finding, Anchor, RuleFinding};
+use super::{parse::parse_source, path::read_text, scan::finding, Anchor};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use serde_yaml::Value;
 use std::{path::Path, sync::Arc};

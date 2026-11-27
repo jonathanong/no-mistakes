@@ -2,7 +2,7 @@ use super::super::compile::compile;
 use super::super::scan::scan;
 use super::super::Options;
 use crate::codebase::postgres::SchemaCatalog;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) const INDEX: &str = "\
 schemaCatalogPath: schema.json\n\

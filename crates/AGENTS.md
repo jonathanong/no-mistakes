@@ -3,6 +3,7 @@
 - `crates/no-mistakes` — CLI, N-API library, graph, and rules (`pub use no_mistakes_invocation as invocation;`; `codebase::postgres` re-exports the postgres-sql crate).
 - `crates/no-mistakes-invocation` — invocation locking, deadlines, watchdogs, process trees, and `macos_invocation` (inverted diagnostics hooks in `hooks.rs`).
 - `crates/no-mistakes-postgres-sql` — pure PostgreSQL SQL parsing, statement/DML/lock/bound facts, identifiers (no `no-mistakes` dep; `CatalogLifecycleLookup` + `source::record_global_rayon_threads`).
+- `crates/no-mistakes-rule-kernel` — shared rule findings, contexts, suppression, source access, diagnostics, path matching, and validator types. The facade owns family registration and prepared inputs.
 - `crates/no-mistakes-ts-facts` — pure OXC TS parsing, module facts, and value-flow extraction (must not depend on `no-mistakes`; diagnostics via `hooks`).
 ## Performance Guidelines
 Core check/evaluator optimizations must also follow [the crate rules](no-mistakes/AGENTS.md).
@@ -36,8 +37,7 @@ never open an independent source/read/parse/resolution or graph pipeline.
 
 `SourceStore` owns physical I/O for the request. Every source consumer uses
 the supplied store, including supplemental normalized paths, memoizing source
-text and read failures under one identity and accounting path. Thread prepared
-sources to helpers; never replace a missing store with `std::fs::read_to_string`.
+text and read failures under one identity. Pass the store to helpers for every source read.
 
 Keep layer responsibilities declarative:
 

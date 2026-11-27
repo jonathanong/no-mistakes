@@ -1,4 +1,4 @@
-use super::super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::config::{display_app_root, resolve_config_path, resolved_app_root};
 use super::options::Options;
 pub(super) use super::words::{contains_word, word_line};

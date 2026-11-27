@@ -7,7 +7,7 @@ pub(crate) use plan_merge::merge_plans;
 #[doc(hidden)]
 pub use prepared::{configure_fact_plan, PreparedCompanionImportPlan};
 
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

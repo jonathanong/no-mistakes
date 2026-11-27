@@ -1,5 +1,6 @@
 //! Configured coverage producers require an assertion reachable in the canonical graph.
-use super::{analysis_policy::AnalysisDiagnostics, RuleFinding};
+use super::{analysis_policy::AnalysisDiagnostics};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::dependencies::graph::{
     CallRoot, DepGraph, EdgeKind, KnownCallTargetRef, NodeId, ResolvedCallSite, TsFactLookup,
 };

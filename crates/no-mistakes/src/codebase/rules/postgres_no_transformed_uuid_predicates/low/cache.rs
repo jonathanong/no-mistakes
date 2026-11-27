@@ -35,7 +35,7 @@ pub(super) fn recovered_finding(
     sql: &crate::codebase::postgres::RecoveredSql,
     use_: &crate::codebase::postgres::statements::SqlTransformedColumnUseFact,
     table: &str,
-) -> crate::codebase::rules::RuleFinding {
+) -> no_mistakes_rule_kernel::finding::RuleFinding {
     let (origin, line) =
         crate::codebase::postgres::sql_identifier_syntax::helper_recovery::Recovered::position(
             sql,

@@ -1,5 +1,4 @@
 use super::masked_source::FileAllow;
-use super::RuleFinding;
 use anyhow::Result;
 use serde::Deserialize;
 use std::path::Path;

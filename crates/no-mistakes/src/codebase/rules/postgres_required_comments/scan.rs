@@ -1,6 +1,6 @@
 use super::{Compiled, ObjectKind, RULE_ID};
 use crate::codebase::postgres::{catalog_finding, CatalogObjectRef, SchemaCatalog};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn scan(
     compiled: Compiled,

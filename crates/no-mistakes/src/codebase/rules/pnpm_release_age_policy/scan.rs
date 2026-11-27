@@ -1,6 +1,7 @@
 use super::inputs::{active_names, cooldown, lockfile_keys};
 use super::policy::{check_with_complete_names, ExcludeEntry, FileKind, Issue, Snapshot};
-use super::{rel, ClassifiedFinding, Options, RuleFinding, RULE_ID};
+use super::{rel, ClassifiedFinding, Options, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use serde_yaml::Value as Yaml;
 use std::collections::HashMap;

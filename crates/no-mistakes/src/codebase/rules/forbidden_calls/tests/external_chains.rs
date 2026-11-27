@@ -1,6 +1,6 @@
 use super::*;
 
-fn run_external_chains(config: &str) -> Vec<crate::codebase::rules::RuleFinding> {
+fn run_external_chains(config: &str) -> Vec<no_mistakes_rule_kernel::finding::RuleFinding> {
     let fixture = crate::test_support::rule_fixture_root("forbidden-calls");
     let base = fixture.parent().unwrap();
     run_check(

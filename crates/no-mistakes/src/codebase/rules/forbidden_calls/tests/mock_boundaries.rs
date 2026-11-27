@@ -1,6 +1,6 @@
 use super::*;
 
-fn run_mock_case(name: &str) -> Vec<crate::codebase::rules::RuleFinding> {
+fn run_mock_case(name: &str) -> Vec<no_mistakes_rule_kernel::finding::RuleFinding> {
     let base = crate::test_support::rule_fixture_root("forbidden-calls");
     let base = base.parent().unwrap();
     run_check(

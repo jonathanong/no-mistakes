@@ -1,4 +1,5 @@
-use super::{BaselineEntry, RuleFinding, RULE_ID};
+use super::{BaselineEntry, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn finding(
     file: &str,

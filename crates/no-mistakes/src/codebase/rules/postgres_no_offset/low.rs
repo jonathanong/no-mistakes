@@ -3,7 +3,8 @@ use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::{
     sql_identifier_syntax::SqlCall, SqlObligationVerdict, SqlVerdictStatus,
 };
-use crate::codebase::rules::{PostgresFindings, RuleFinding};
+use crate::codebase::rules::PostgresFindings;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::schema::RuleDef;
 use anyhow::Result;

@@ -9,7 +9,7 @@ fn suppression_fixture(name: &str) -> std::path::PathBuf {
 }
 
 fn suppress_rule_findings(root: &std::path::Path, findings: &mut Vec<RuleFinding>) {
-    super::suppression::suppress_rule_findings_inner(root, findings, None, &[]);
+    super::suppression::standalone::suppress_rule_findings_inner(root, findings, &[]);
 }
 
 #[test]

@@ -51,7 +51,7 @@ fn suppression_directives_hide_trigger_writes() {
     let mut findings = check_with_files(&root(), &config_with_options(COLUMNS), &paths).unwrap();
     assert_eq!(findings.len(), 3, "{findings:?}");
     let sources = crate::codebase::rules::source_store_for_files(&paths);
-    crate::codebase::rules::suppress_rule_findings_with_sources(&root(), &mut findings, &sources);
+    no_mistakes_rule_kernel::suppression::suppress_rule_findings_with_sources(&root(), &mut findings, &sources);
     assert!(findings.is_empty(), "{findings:?}");
 }
 

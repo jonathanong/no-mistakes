@@ -1,4 +1,5 @@
-use super::{CompiledOptions, RuleFinding, SchemaCatalog};
+use super::{CompiledOptions, SchemaCatalog};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::postgres::EmbeddedSqlCall;
 
 pub(super) fn findings(

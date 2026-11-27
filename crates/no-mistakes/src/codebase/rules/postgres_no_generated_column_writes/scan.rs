@@ -86,7 +86,7 @@ pub(super) fn scan(
                     opts.advise_unanalyzable,
                 );
             }
-            let source = crate::codebase::rules::read_language_source(sources, path);
+            let source = no_mistakes_rule_kernel::source_access::read_language_source(sources, path);
             let uncertainty = positional_uncertainty(opts, facts);
             let anchors = match &uncertainty {
                 positional::PositionalUncertainty::Advise(_, _) => profile

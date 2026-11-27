@@ -7,7 +7,8 @@ use crate::codebase::rules::github_actions_workflow_files::{
     gha_kind,
     job_lines::document::Document,
 };
-use crate::codebase::rules::{source_access, RuleFinding};
+use crate::codebase::rules::source_access;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_yaml::Mapping;
 use std::path::Path;

@@ -1,6 +1,7 @@
 use super::flow_scope::inside_flow;
 use super::synthetic::is_synthetic;
-use super::{finding, CompiledPattern, RuleFinding};
+use super::{finding, CompiledPattern};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use regex::{Match, Regex};
 use std::sync::LazyLock;
 

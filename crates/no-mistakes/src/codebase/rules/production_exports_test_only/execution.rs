@@ -151,7 +151,7 @@ pub(crate) fn check_with_graph_and_session(
         baseline_selectors,
         compressed_selectors,
     ));
-    crate::codebase::rules::sort_findings(&mut diagnostics.findings);
-    crate::codebase::rules::sort_findings(&mut diagnostics.advisories);
+    no_mistakes_rule_kernel::finding::sort_findings(&mut diagnostics.findings);
+    no_mistakes_rule_kernel::finding::sort_findings(&mut diagnostics.advisories);
     Ok(diagnostics)
 }

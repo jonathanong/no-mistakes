@@ -3,8 +3,10 @@ use super::{NoMistakesConfig, Options, RULE_ID};
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::codebase::rules::{
     analysis_policy::AnalysisDiagnostics, file_allowed_by_roots_and_skip, path_filter,
-    skip_dir_set, sort_findings, suppress_rule_findings_with_sources, target_roots,
+    skip_dir_set, target_roots,
 };
+use no_mistakes_rule_kernel::finding::sort_findings;
+use no_mistakes_rule_kernel::suppression::suppress_rule_findings_with_sources;
 use anyhow::Result;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};

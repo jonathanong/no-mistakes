@@ -1,4 +1,4 @@
-use super::{iteration, CompiledOptions, RuleFinding, RULE_ID};
+use super::{iteration, CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::postgres_sql_paths;
 use crate::codebase::ts_source::relative_slash_path;
@@ -55,7 +55,7 @@ pub(super) fn scan(
                 ));
             }
         }
-        let source = crate::codebase::rules::read_language_source(sources, path);
+        let source = no_mistakes_rule_kernel::source_access::read_language_source(sources, path);
         super::audit::observe_source(opts, source.as_deref());
         for fragment in prepared.postgres_fragments(path, &opts.embedded)? {
             let statements = &fragment.statements;
@@ -123,7 +123,7 @@ pub(super) fn scan(
         for file in prepared.postgres_statements(path, profile)? {
             super::audit::observe_statements(opts, file);
             let rel = relative_slash_path(root, &file.path);
-            let source = crate::codebase::rules::read_language_source(sources, path);
+            let source = no_mistakes_rule_kernel::source_access::read_language_source(sources, path);
             super::audit::observe_source(opts, source.as_deref());
             for (index, finding) in super::functions::located_findings(
                 &rel,

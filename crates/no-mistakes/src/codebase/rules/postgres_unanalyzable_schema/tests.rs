@@ -1,6 +1,7 @@
 use super::*;
 use crate::codebase::postgres::extract_migration_facts;
-use crate::codebase::rules::{source_store_for_files, suppress_rule_findings_with_sources};
+use crate::codebase::rules::source_store_for_files;
+use no_mistakes_rule_kernel::suppression::suppress_rule_findings_with_sources;
 use crate::config::v2::load_v2_config;
 
 mod body_policy;

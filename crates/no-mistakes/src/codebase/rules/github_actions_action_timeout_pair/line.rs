@@ -1,5 +1,6 @@
 use super::yaml::{finding, literal_u64, mapping_get, nested_message, yaml_got};
-use super::{CompiledOptions, RuleFinding};
+use super::CompiledOptions;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde_yaml::{Mapping, Value};
 
 pub(super) fn nested_input_finding(

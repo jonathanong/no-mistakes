@@ -1,6 +1,6 @@
 //! Directional compatibility of explicitly selected JSON Schema declarations.
 //! This checks declarations, not whether runtime endpoints adopt those schemas.
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

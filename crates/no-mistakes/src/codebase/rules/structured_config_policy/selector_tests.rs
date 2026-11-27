@@ -119,7 +119,7 @@ items:
     assert!(not_seq_index.is_empty(), "{not_seq_index:?}");
 }
 
-fn any_equals(key: &str, root: &serde_yaml::Value) -> Vec<crate::codebase::rules::RuleFinding> {
+fn any_equals(key: &str, root: &serde_yaml::Value) -> Vec<no_mistakes_rule_kernel::finding::RuleFinding> {
     assert_value(
         "app.yml",
         root,

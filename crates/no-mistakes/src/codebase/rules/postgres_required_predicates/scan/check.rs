@@ -2,7 +2,7 @@ use super::super::{CompiledOptions, RelationOption};
 use super::catalog;
 use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::{SchemaCatalog, SqlRelationPredicateFact, SqlStatementFileFacts};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::collections::BTreeSet;
 
 pub(super) use super::columns::{

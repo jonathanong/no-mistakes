@@ -1,4 +1,5 @@
-use super::{finding_for_file, is_nextjs_api_route, RuleFinding, RULE_ID};
+use super::{finding_for_file, is_nextjs_api_route, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::{bail, Context, Result};
 use rayon::prelude::*;
@@ -141,7 +142,7 @@ where
                 .collect::<Vec<_>>(),
         );
     }
-    crate::codebase::rules::sort_findings(&mut findings);
+    no_mistakes_rule_kernel::finding::sort_findings(&mut findings);
     Ok(findings)
 }
 

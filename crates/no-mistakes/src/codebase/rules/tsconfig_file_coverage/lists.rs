@@ -1,4 +1,5 @@
-use super::{finding, CompiledAuxiliary, CompiledOptions, RuleFinding};
+use super::{finding, CompiledAuxiliary, CompiledOptions};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -112,7 +113,7 @@ fn program_key_findings(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
     let path = root.join(&entry.path);
-    let Some(source) = crate::codebase::rules::read_language_source(sources, &path) else {
+    let Some(source) = no_mistakes_rule_kernel::source_access::read_language_source(sources, &path) else {
         return vec![finding(
             &entry.path,
             format!("{}: auxiliary tsconfig is not a JSON object", entry.path),

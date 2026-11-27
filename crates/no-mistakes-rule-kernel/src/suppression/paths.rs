@@ -6,7 +6,7 @@ pub(super) fn finding_source_candidate(
     allow_absolute: bool,
 ) -> Option<(PathBuf, bool)> {
     let path = Path::new(file);
-    if crate::codebase::ts_source::is_portably_absolute_path(path) {
+    if crate::paths::is_portably_absolute_path(path) {
         return allow_absolute.then(|| (path.to_path_buf(), true));
     }
     if path.components().any(|component| {
@@ -22,15 +22,6 @@ pub(super) fn finding_source_candidate(
         return None;
     }
     Some((root.join(path), false))
-}
-
-pub(super) fn source_path_for_candidate(
-    canonical_root: &Path,
-    candidate: PathBuf,
-) -> Option<PathBuf> {
-    let canonical_candidate = std::fs::canonicalize(&candidate).ok()?;
-    let metadata = std::fs::metadata(&canonical_candidate).ok()?;
-    (canonical_candidate.starts_with(canonical_root) && metadata.is_file()).then_some(candidate)
 }
 
 pub(super) fn markdown_prose(file: &str) -> bool {

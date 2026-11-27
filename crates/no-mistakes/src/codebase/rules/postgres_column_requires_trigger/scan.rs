@@ -3,7 +3,7 @@ use crate::codebase::postgres::{
     catalog_finding, CatalogObjectRef, CatalogTable, CatalogTrigger, SchemaCatalog, TriggerEvent,
     TriggerTiming,
 };
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFinding> {
     let mut findings = Vec::new();

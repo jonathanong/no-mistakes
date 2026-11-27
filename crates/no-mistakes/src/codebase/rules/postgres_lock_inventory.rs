@@ -1,4 +1,5 @@
-use super::{PreparedRuleContext, RuleFinding};
+use super::PreparedRuleContext;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig};

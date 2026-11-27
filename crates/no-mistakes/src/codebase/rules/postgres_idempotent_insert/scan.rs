@@ -1,4 +1,5 @@
-use super::{CompiledOptions, RuleFinding, RULE_ID};
+use super::{CompiledOptions, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::CheckFactPlan;
 use crate::codebase::postgres::{
     collect_postgres_facts, judge_file_with_prepared_triggers, EmbeddedSqlFileFacts,
@@ -97,7 +98,7 @@ fn collect_findings<'a>(
         } else {
             judge_file_with_prepared_triggers(file, catalog, installed)
         };
-        let source = crate::codebase::rules::read_language_source(sources, &file.path);
+        let source = no_mistakes_rule_kernel::source_access::read_language_source(sources, &file.path);
         for (site, line, message) in judged {
             dedup.push(
                 &mut findings,

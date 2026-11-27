@@ -60,7 +60,7 @@ fn configured_rule(
 
 fn stale_findings(
     rule: &crate::config::v2::schema::RuleDef,
-) -> Vec<crate::codebase::rules::RuleFinding> {
+) -> Vec<no_mistakes_rule_kernel::finding::RuleFinding> {
     let options = rule.try_rule_options().unwrap();
     let empty = std::collections::BTreeSet::new();
     super::super::scan_application(

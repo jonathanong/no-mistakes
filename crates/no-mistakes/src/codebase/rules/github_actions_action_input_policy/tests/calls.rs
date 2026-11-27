@@ -1,5 +1,6 @@
 use super::super::policy;
-use super::super::{check_with_files, RuleFinding};
+use super::super::check_with_files;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::{load_config, parsed, rule_root, POLICY};
 use serde_yaml::Value;
 

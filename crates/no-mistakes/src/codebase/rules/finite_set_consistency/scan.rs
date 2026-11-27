@@ -1,6 +1,7 @@
 use super::extract::{self, extract_set_with_sources, ExtractedSet, ExtractionIssue};
 use super::extraction_completeness;
-use super::{comparison, Options, RuleFinding, RULE_ID};
+use super::{comparison, Options, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::config::v2::schema::RuleDef;
 use crate::config::v2::NoMistakesConfig;

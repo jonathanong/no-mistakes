@@ -1,4 +1,4 @@
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::{CheckFactMap, CheckFactPlan};
 use crate::codebase::check_outcome::CheckInputFailure;
@@ -84,7 +84,7 @@ pub fn check_with_files(
             Arc::clone(&sources),
         );
     let mut findings = check_prepared(root, config, files, Some(&facts), &sources, None)?;
-    super::suppress_rule_findings_with_sources(root, &mut findings, &sources);
+    super::suppress_rule_findings_with_sources(root, &mut findings, sources.as_ref());
     Ok(findings)
 }
 

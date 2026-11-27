@@ -4,9 +4,10 @@ pub(super) use messages::unreadable;
 use messages::unresolved_binding_message;
 
 use super::{
-    Allowlist, Inputs, Location, RuleFinding, Shape, SourceDemand, PLAYWRIGHT_NO_SERIAL,
+    Allowlist, Inputs, Location, Shape, SourceDemand, PLAYWRIGHT_NO_SERIAL,
     TEST_NO_RETRIES,
 };
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_outcome::{CheckFailure, CheckInputFailure};
 use crate::fx::FxHashSet;
 use anyhow::Result;

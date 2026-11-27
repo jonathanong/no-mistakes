@@ -1,5 +1,5 @@
 use super::yaml::{finding, key_line, step_label, timeout_minutes};
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde_yaml::Value;
 
 pub(super) fn findings(

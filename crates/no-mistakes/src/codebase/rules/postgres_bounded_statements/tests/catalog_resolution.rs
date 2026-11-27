@@ -14,7 +14,7 @@ fn config(name: &str) -> NoMistakesConfig {
 fn check(
     config_name: &str,
     sql_name: &str,
-) -> anyhow::Result<Vec<crate::codebase::rules::RuleFinding>> {
+) -> anyhow::Result<Vec<no_mistakes_rule_kernel::finding::RuleFinding>> {
     let root = root();
     let config = crate::config::v2::load_v2_config(&root, Some(&root.join(config_name)))?;
     let files = vec![root.join("catalog.json"), root.join("sql").join(sql_name)];

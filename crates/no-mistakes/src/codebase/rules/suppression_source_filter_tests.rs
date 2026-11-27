@@ -30,7 +30,7 @@ fn already_suppressed_rules_stay_visible() {
     let temp = tempfile::tempdir().unwrap();
     let mut findings = vec![sample_finding("missing.ts", 1)];
 
-    suppression::suppress_rule_findings_inner(temp.path(), &mut findings, None, &["my-rule"]);
+    suppression::standalone::suppress_rule_findings_inner(temp.path(), &mut findings, &["my-rule"]);
 
     assert_eq!(findings.len(), 1);
 }
@@ -40,7 +40,7 @@ fn missing_source_file_keeps_the_finding() {
     let temp = tempfile::tempdir().unwrap();
     let mut findings = vec![sample_finding("missing.ts", 1)];
 
-    suppression::suppress_rule_findings_inner(temp.path(), &mut findings, None, &[]);
+    suppression::standalone::suppress_rule_findings_inner(temp.path(), &mut findings, &[]);
 
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "missing.ts");

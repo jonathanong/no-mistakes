@@ -9,7 +9,7 @@ fn fixture_root() -> PathBuf {
     )
 }
 
-fn fixture_findings(case: &str) -> anyhow::Result<Vec<crate::codebase::rules::RuleFinding>> {
+fn fixture_findings(case: &str) -> anyhow::Result<Vec<no_mistakes_rule_kernel::finding::RuleFinding>> {
     run_check(
         &fixture_root(),
         Some(&super::forbidden_calls_case(case)),

@@ -1,4 +1,4 @@
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 fn findings(options: &str) -> Vec<RuleFinding> {
     let root = super::fixture("forbidden-events");

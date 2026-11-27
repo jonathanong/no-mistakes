@@ -91,7 +91,7 @@ pub(super) fn finish(
             }
             let finding = &located.finding;
             let source =
-                crate::codebase::rules::read_language_source(sources, &root.join(&finding.file));
+                no_mistakes_rule_kernel::source_access::read_language_source(sources, &root.join(&finding.file));
             let prefix = format!("{}:{}: ", finding.file, finding.line);
             advise(
                 facts,

@@ -1,5 +1,6 @@
 use super::publish::publish_hits;
-use super::{gha_kind, RuleFinding, RULE_ID};
+use super::{gha_kind, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::github_actions_script_expressions::{step_run_lines, StepRun};
 use crate::codebase::rules::github_actions_workflow_files::run_scripts::run_scripts;
 use serde_yaml::Value;

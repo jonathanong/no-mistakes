@@ -1,4 +1,5 @@
-use super::{RuleFinding, RULE_ID};
+use super::RULE_ID;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_outcome::{CheckFailure, CheckInputFailure};
 use crate::codebase::workflow_topology::model::{DiagnosticCode, WorkflowTopology, WorkflowTopologyDiagnostic};

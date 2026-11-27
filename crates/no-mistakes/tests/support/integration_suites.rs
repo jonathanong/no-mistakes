@@ -61,6 +61,7 @@ fn changed_suite_modules_select_the_configured_workspace_test_command() {
     let output = std::process::Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
         .args([
             "impacted-checks",
+            "crates/no-mistakes-rule-kernel/src/lib.rs",
             "crates/no-mistakes/tests/cli_test_plan_dotnet.rs",
             "crates/no-mistakes/tests/postgres_catalog_real/bounded.rs",
             // This production directory is named tests but holds planner implementation.
@@ -103,6 +104,7 @@ fn changed_suite_modules_select_the_configured_workspace_test_command() {
             ".no-mistakes.yml",
             "Cargo.lock",
             "Cargo.toml",
+            "crates/no-mistakes-rule-kernel/src/lib.rs",
             "crates/no-mistakes/Cargo.toml",
             "crates/no-mistakes/tests/cli_test_plan_dotnet.rs",
             "crates/no-mistakes/tests/postgres_catalog_real/bounded.rs"

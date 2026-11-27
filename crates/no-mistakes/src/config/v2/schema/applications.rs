@@ -1,4 +1,4 @@
-use super::strict_rule_options::{OptionLocation, WithKnownFields};
+use super::strict_rule_options::{option_location_from_error, WithKnownFields};
 use super::{rule_targets, NoMistakesConfig, RuleDef, RuleScope};
 use anyhow::Result;
 use serde::de::IntoDeserializer;
@@ -61,7 +61,7 @@ impl RuleDef {
         } else {
             serde_path_to_error::deserialize(options.into_deserializer())
         };
-        result.map_err(|error| OptionLocation::from_error(self, error, unknown.into_inner()))
+        result.map_err(|error| option_location_from_error(self, error, unknown.into_inner()))
     }
 
     fn validate_common_options(&self) -> Result<()> {

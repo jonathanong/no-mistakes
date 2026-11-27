@@ -3,7 +3,7 @@ use crate::codebase::rules::github_actions_workflow_files::{
     env_policy::lines::{locate, Seg},
     job_lines::document::Document,
 };
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde_yaml::{Mapping, Value};
 
 mod commands;

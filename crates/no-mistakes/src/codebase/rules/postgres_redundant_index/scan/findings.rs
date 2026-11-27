@@ -1,4 +1,5 @@
-use super::{CompiledOptions, RuleFinding, RULE_ID};
+use super::{CompiledOptions, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::collections::BTreeSet;
 
 pub(super) fn stale_allowlist(opts: &CompiledOptions, used: &BTreeSet<String>) -> Vec<RuleFinding> {

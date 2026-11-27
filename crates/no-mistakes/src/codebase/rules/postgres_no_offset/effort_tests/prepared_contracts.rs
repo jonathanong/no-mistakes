@@ -66,7 +66,7 @@ fn mixed_invalid_sql_abstains_and_unavailable_max_statements_fall_back_to_litera
     facts.postgres.embedded.clear();
     let mut findings =
         check_with_files_sources_and_facts(&root(), &cfg, &files, &sources, &facts).unwrap();
-    crate::codebase::rules::suppress_rule_findings_with_sources(&root(), &mut findings, &sources);
+    no_mistakes_rule_kernel::suppression::suppress_rule_findings_with_sources(&root(), &mut findings, &sources);
     assert_eq!(findings, run(".no-mistakes.low-ignore.yml"));
 }
 

@@ -1,4 +1,5 @@
-use super::{RuleFinding, RULE_ID};
+use super::RULE_ID;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn sql_finding(file: &str, line: usize, message: &str, target: &str) -> RuleFinding {
     RuleFinding {

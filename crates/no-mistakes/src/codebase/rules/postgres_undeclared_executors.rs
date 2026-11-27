@@ -1,5 +1,6 @@
 //! Missing executor configuration is an abstention, never proof of execution.
-use super::{RuleFinding, RuleGlobFilter};
+use super::RuleGlobFilter;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::{CheckFactMap, SqlFactContext};
 use crate::codebase::postgres::{EmbeddedSqlOptions, SqlObligationVerdict, SqlVerdictStatus};
 use crate::codebase::ts_source::relative_slash_path;

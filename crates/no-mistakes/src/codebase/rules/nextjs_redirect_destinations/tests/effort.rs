@@ -1,7 +1,7 @@
 use super::super::{
     advisories_with_files, advisories_with_files_and_sources, check_with_files_and_sources, scan,
-    RuleFinding,
 };
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::named_section as extract;
 use super::{config, fixture, fixture_files, run};
 use crate::codebase::rules::analysis_policy::prepare_rule_analysis;

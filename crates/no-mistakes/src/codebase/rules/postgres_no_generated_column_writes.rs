@@ -1,5 +1,5 @@
 use super::path_filter::GlobMatcher;
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{fail_unanalyzable_sql, EmbeddedSqlOptions, PostgresSchemaOptions};
 use crate::codebase::ts_source::{discover_files, relative_slash_path};

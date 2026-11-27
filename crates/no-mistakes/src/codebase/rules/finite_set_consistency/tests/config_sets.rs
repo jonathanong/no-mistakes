@@ -4,7 +4,7 @@ use super::extract::{
 };
 use super::test_support::extract_yaml_sequence;
 use super::*;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::{
     schema::{Project, RuleDef, RuleScope},
     NoMistakesConfig,

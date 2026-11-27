@@ -11,7 +11,7 @@ mod used_in_file;
 
 use super::analysis_policy::AnalysisDiagnostics;
 use super::path_filter::RulePathFilter;
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, TsFactLookup};
 use crate::codebase::ts_source::relative_slash_path;

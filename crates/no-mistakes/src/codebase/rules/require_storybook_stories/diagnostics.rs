@@ -1,4 +1,5 @@
-use super::{GlobMatcher, NoMistakesConfig, RuleFinding};
+use super::{GlobMatcher, NoMistakesConfig};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::rules::{analysis_policy::AnalysisDiagnostics, path_filter::RulePathFilter};
 use crate::codebase::ts_resolver::ImportResolution;

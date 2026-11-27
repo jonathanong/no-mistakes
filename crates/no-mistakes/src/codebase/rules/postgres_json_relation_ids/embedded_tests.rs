@@ -1,11 +1,11 @@
 use super::tests::{fixture, run, IDS};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 fn suppress(files: &[&str], mut findings: Vec<RuleFinding>) -> Vec<RuleFinding> {
     let root = fixture();
     let files = files.iter().map(|file| root.join(file)).collect::<Vec<_>>();
     let sources = crate::codebase::rules::source_store_for_files(&files);
-    crate::codebase::rules::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
+    no_mistakes_rule_kernel::suppression::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
     findings
 }
 

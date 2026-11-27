@@ -1,7 +1,7 @@
 use super::super::compile::{RequiredColumn, Shape};
 use super::super::scan::{report, shape_text};
 use crate::codebase::postgres::{CatalogForeignKey, CatalogObjectRef, CatalogTable};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn push_foreign_key(
     findings: &mut Vec<RuleFinding>,

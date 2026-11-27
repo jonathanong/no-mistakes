@@ -1,6 +1,6 @@
 use super::RULE_ID;
 use crate::codebase::postgres::SqlBoundKind;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn append_domain_over(text: &mut String, domain_over: Option<u64>, cap: Option<u64>) {
     if let (Some(product), Some(cap)) = (domain_over, cap) {

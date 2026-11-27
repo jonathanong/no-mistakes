@@ -1,7 +1,7 @@
 use super::findings::{finding, incomplete};
 use super::CompiledInventory;
 use crate::codebase::ci_workflows::secret_facts::{Environment, Reference};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::collections::BTreeSet;
 
 pub(super) struct Resolver<'a> {

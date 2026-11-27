@@ -4,7 +4,7 @@ use crate::codebase::postgres::{
     sql_identifier_syntax::{helper_recovery::Recovered, literal_projection::ProjectedLiteral},
     RecoveredSql, SqlVerdictStatus,
 };
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn recovered(
     context: &EvaluationContext<'_>,

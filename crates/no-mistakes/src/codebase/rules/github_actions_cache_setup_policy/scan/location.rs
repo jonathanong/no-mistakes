@@ -1,4 +1,5 @@
-use super::{Document, RuleFinding, RULE_ID};
+use super::{Document, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn field(doc: Option<&Document>, node: Option<usize>, key: &str) -> Option<usize> {
     doc?.field(node?, key)

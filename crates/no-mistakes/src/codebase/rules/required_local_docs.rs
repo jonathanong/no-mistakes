@@ -6,7 +6,7 @@ pub(crate) use doc_section::check_required_doc_section_with_files;
 #[doc(hidden)]
 pub use doc_section::diagnostics_with_files_and_sources;
 
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{discover_files, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

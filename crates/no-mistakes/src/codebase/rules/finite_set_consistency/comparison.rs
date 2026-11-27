@@ -1,5 +1,5 @@
 use super::{extract::ExtractedSet, finding, Comparison};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use globset::{Glob, GlobSetBuilder};
 
 pub(super) fn compare(

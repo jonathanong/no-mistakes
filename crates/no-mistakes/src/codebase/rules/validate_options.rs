@@ -6,22 +6,8 @@ use locations::display_config_path;
 use std::collections::BTreeSet;
 use std::path::Path;
 
-pub(crate) fn format_invalid_option(
-    rule: &str,
-    option: &str,
-    value: impl std::fmt::Debug,
-    allowed: impl std::fmt::Display,
-) -> String {
-    format!("Rule `{rule}` has invalid value {value:?} for `options.{option}`. Expected {allowed}.")
-}
-
-pub(crate) fn finish(mut errors: Vec<String>) -> Result<()> {
-    if errors.is_empty() {
-        return Ok(());
-    }
-    errors.sort();
-    Err(anyhow::anyhow!(errors.join("\n")))
-}
+pub(crate) use no_mistakes_rule_kernel::validate_options::{finish, format_invalid_option};
+use no_mistakes_rule_kernel::validate_options::{semantic_option_path, NoOptions};
 
 mod applications;
 pub(super) use applications::{
@@ -41,17 +27,10 @@ mod workflow;
 
 mod postgres_sql;
 
-#[derive(Default, serde::Deserialize)]
-#[serde(deny_unknown_fields)]
-struct NoOptions {}
-
-pub(super) struct ValidationContext<'a> {
-    root: &'a Path,
-    config: &'a NoMistakesConfig,
-}
-
-type Validate = fn(&RuleDef, &ValidationContext<'_>) -> Result<()>;
-type RuleValidator = (&'static str, Validate);
+pub(super) type ValidationContext<'a> =
+    no_mistakes_rule_kernel::validate_options::ValidationContext<'a, NoMistakesConfig>;
+type RuleValidator =
+    no_mistakes_rule_kernel::validate_options::RuleValidator<RuleDef, NoMistakesConfig>;
 
 fn decode<T: for<'de> serde::Deserialize<'de> + Default>(
     rule: &RuleDef,
@@ -171,23 +150,6 @@ fn application_errors(
             Ok(BTreeSet::new())
         }
     }
-}
-
-fn semantic_option_path(message: &str) -> ConfigPath {
-    let path = ConfigPath::default().key("options");
-    let Some(option) = message
-        .split_once("options.")
-        .or_else(|| message.split_once(" option "))
-        .map(|(_, option)| option)
-    else {
-        return path;
-    };
-    option
-        .split(|c: char| !(c.is_alphanumeric() || matches!(c, '_' | '.' | '-')))
-        .take(1)
-        .filter(|key| !key.is_empty())
-        .flat_map(|key| key.split('.'))
-        .fold(path, ConfigPath::key)
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]

@@ -1,4 +1,5 @@
-use super::{finding, step_script_lines, RuleFinding, ScriptScan, StepScript};
+use super::{finding, step_script_lines, ScriptScan, StepScript};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::fx::FxHashMap;
 use serde_yaml::Value;
 

@@ -1,5 +1,5 @@
 use super::path_filter::GlobMatcher;
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

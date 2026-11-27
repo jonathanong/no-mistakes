@@ -15,12 +15,7 @@ use std::path::Path;
 mod prepared;
 mod standalone;
 
-#[doc(hidden)]
-pub struct PreparedRuleFindings {
-    pub findings: Vec<RuleFinding>,
-    pub suppression_sources: Vec<Option<String>>,
-    pub advisories: Vec<RuleFinding>,
-}
+pub use no_mistakes_rule_kernel::run::PreparedRuleFindings;
 
 #[doc(hidden)]
 pub use prepared::run_check_with_config_facts_playwright_and_graph;

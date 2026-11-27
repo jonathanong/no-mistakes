@@ -7,7 +7,7 @@ mod targets;
 pub(crate) use modules::module_catalog;
 
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{bail, Result};
 use std::path::Path;

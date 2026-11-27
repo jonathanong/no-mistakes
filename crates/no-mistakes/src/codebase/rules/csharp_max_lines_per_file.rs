@@ -9,7 +9,7 @@ mod scan;
 use prepared::{is_csharp_file, PreparedRule};
 use scan::scan;
 
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub const RULE_ID: &str = "csharp-max-lines-per-file";
 

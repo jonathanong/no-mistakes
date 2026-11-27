@@ -2,7 +2,7 @@ use super::findings::{finding, incomplete, unused};
 use super::resolve::Resolver;
 use super::CompiledInventory;
 use crate::codebase::ci_workflows::{secret_facts::Environment, PreparedWorkflowTopologyInputs};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use crate::codebase::workflow_topology::model::{WorkflowCallSecretsBinding, WorkflowTopologyEdge};
 use std::collections::{BTreeMap, BTreeSet};

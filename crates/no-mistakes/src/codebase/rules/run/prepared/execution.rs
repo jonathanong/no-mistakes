@@ -8,7 +8,8 @@ mod independent;
 mod independent_collect;
 mod outcomes;
 mod source_store;
-use helpers::{finalize_findings, required_graph_facts, suppress_findings};
+use helpers::{required_graph_facts, suppress_findings};
+use no_mistakes_rule_kernel::run::finalize_findings;
 
 pub(super) fn run(
     inputs: PreparedRulesCheck<'_>,

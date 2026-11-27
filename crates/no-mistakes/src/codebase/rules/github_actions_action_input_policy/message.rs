@@ -1,5 +1,6 @@
 use super::policy::InputFault;
-use super::{RuleFinding, RULE_ID};
+use super::RULE_ID;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 #[derive(Clone, Copy)]
 pub(super) enum Site<'a> {

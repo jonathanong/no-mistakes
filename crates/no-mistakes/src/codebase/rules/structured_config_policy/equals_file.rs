@@ -1,7 +1,7 @@
 use super::paths::contained_in_root;
 use super::value_assertions::selector::{any_groups, values_at_selector};
 use super::{MatchMode, RULE_ID, ValueAssertion};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::structured_value::parse_structured_value_located;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{SourceStore, relative_slash_path};

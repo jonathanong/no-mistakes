@@ -1,6 +1,6 @@
 use super::compile::{lists_type, Compiled};
 use crate::codebase::postgres::{CatalogColumn, CatalogTable, SchemaCatalog};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn require_text(
     column: &CatalogColumn,

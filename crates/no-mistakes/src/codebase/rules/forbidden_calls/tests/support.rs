@@ -27,7 +27,7 @@ pub(in super::super) fn finding_for_site(
     label: &str,
     options: &Options,
     site: &crate::codebase::dependencies::graph::ResolvedCallSite,
-) -> Option<crate::codebase::rules::RuleFinding> {
+) -> Option<no_mistakes_rule_kernel::finding::RuleFinding> {
     super::super::findings::finding_for_site_with_arguments(
         root,
         application,

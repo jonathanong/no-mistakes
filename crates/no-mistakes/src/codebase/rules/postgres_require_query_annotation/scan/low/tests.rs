@@ -4,7 +4,7 @@ use crate::codebase::rules::postgres_require_query_annotation::{compile_options,
 fn low_fixture(
     mode: crate::codebase::rules::postgres_require_query_annotation::UnanalyzableSql,
 ) -> (
-    Vec<crate::codebase::rules::RuleFinding>,
+    Vec<no_mistakes_rule_kernel::finding::RuleFinding>,
     Vec<(usize, crate::codebase::postgres::SqlObligationVerdict)>,
 ) {
     use crate::codebase::postgres::SqlVerdictStatus;

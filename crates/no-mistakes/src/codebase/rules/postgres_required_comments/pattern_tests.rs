@@ -1,4 +1,5 @@
-use crate::codebase::rules::{postgres_column_naming, postgres_finite_text_columns, RuleFinding};
+use crate::codebase::rules::{postgres_column_naming, postgres_finite_text_columns};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::load_v2_config;
 use std::path::PathBuf;
 

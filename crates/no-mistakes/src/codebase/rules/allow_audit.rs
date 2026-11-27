@@ -15,7 +15,7 @@ pub(crate) use missing::{
 };
 pub(crate) use scope::CheckedScope;
 
-pub(crate) const RULE_ID: &str = "unused-allow-entry";
+pub(crate) use no_mistakes_rule_kernel::rule_ids::UNUSED_ALLOW_ENTRY as RULE_ID;
 
 pub(crate) struct AllowUsage(Vec<AtomicBool>);
 

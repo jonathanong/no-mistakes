@@ -1,4 +1,3 @@
-use super::RuleFinding;
 use crate::codebase::postgres::PostgresSchemaOptions;
 use crate::codebase::ts_source::relative_slash_path;
 use serde::Deserialize;

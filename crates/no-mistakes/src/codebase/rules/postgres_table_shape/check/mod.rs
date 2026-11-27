@@ -6,7 +6,7 @@ use super::scan::{report, shape_text};
 use crate::codebase::postgres::{
     CatalogColumn, CatalogObjectRef, CatalogTable, CatalogTrigger, SchemaCatalog, TriggerEvent,
 };
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 
 pub(super) fn check_shape(
     findings: &mut Vec<RuleFinding>,

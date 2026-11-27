@@ -9,7 +9,7 @@ mod command_scan;
 mod no_check;
 mod workflow;
 
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ci_workflows::ParsedWorkflowSet;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::NoMistakesConfig;

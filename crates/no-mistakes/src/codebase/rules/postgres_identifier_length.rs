@@ -1,4 +1,4 @@
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::postgres::PostgresSchemaOptions;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{bail, Result};

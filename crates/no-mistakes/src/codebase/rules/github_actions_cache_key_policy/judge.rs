@@ -2,7 +2,8 @@ use super::options::{CacheSpec, Options};
 use super::output::proven_output_names;
 use super::scan::{Field, Job, Step};
 use super::text::{has_fragment, hash_args, norm_path, path_entries};
-use super::{hit, RuleFinding};
+use super::hit;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::config::v2::Unanalyzable;
 

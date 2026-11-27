@@ -1,4 +1,5 @@
-use super::{workflow_finding, RuleFinding};
+use super::workflow_finding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use serde_yaml::Value;
 use std::path::Path;
 

@@ -4,7 +4,7 @@ use super::keys::Keys;
 use super::matching::{compile_value_globs, mapping_value, optional_value_globs, relative_path};
 use crate::codebase::rules::structured_config_policy::value_at_key;
 use crate::codebase::rules::structured_config_policy::ValueAssertion;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use globset::GlobSet;
 use serde_yaml::{Mapping, Value};
 use std::path::Path;

@@ -42,11 +42,6 @@ pub use super::vitest_project_catalog::{
 
 pub(crate) use super::file_matching::matching_files;
 pub(crate) use super::selected_files::selected_rule_files;
-#[cfg_attr(
-    not(test),
-    expect(unused_imports, reason = "tests call the strict read helper")
-)]
-pub(crate) use super::source_access::read_source;
 pub(crate) use super::source_access::{read_language_source, source_store_for_files};
 #[doc(hidden)]
 pub use super::suppression::{
@@ -59,7 +54,7 @@ pub(crate) use super::suppression::{
 };
 
 pub(crate) use super::finding::rule_enabled;
-pub use super::finding::{FindingCause, RuleFinding};
+pub use no_mistakes_rule_kernel::finding::{FindingCause, RuleFinding};
 
 pub(crate) use super::entrypoints::{
     borrowed_source_rule_entrypoints, diagnostic_source_rule_entrypoints,

@@ -1,5 +1,5 @@
 use super::*;
-use crate::codebase::rules::FindingCause;
+use no_mistakes_rule_kernel::finding::FindingCause;
 use std::path::PathBuf;
 
 /// Causes named in the message; `causes` carries up to `STRUCTURED_CAUSES`.

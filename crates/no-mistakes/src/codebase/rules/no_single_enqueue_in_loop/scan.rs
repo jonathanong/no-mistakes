@@ -3,7 +3,7 @@ use super::options::Targets;
 use super::targets::matching_target;
 use crate::codebase::dependencies::extract::{CallableId, InvocationKind};
 use crate::codebase::dependencies::graph::{DepGraph, ResolvedCallSite, TsFactLookup};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::{NoMistakesConfig, RuleDef};
 use anyhow::Result;

@@ -1,4 +1,5 @@
-use super::{extract, RuleFinding, RULE_ID};
+use super::{extract, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::path::Path;
 
 pub(super) fn has_unsuppressed_issues(

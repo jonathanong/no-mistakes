@@ -7,7 +7,7 @@ use super::analysis_policy::AnalysisDiagnostics;
 use super::file_diagnostics::{classified_applications, ClassifiedInputFindings, FileRuleInputs};
 use super::path_filter::GlobMatcher;
 use super::source_access::read_failure;
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{discover_files, relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

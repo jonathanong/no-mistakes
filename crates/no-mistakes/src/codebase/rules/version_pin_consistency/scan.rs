@@ -1,7 +1,8 @@
 use super::key::key_line;
 use super::parse::{configured_rel, pin_kind, tracked_rels};
 use super::path::read_text;
-use super::{Anchor, Options, RuleFinding, RULE_ID};
+use super::{Anchor, Options, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::line_number;
 use regex::Regex;
 use serde_yaml::Value;

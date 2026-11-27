@@ -1,4 +1,5 @@
-use super::{clauses::clause_finding, sql_rel, CompiledOptions, RuleFinding, RULE_ID};
+use super::{clauses::clause_finding, sql_rel, CompiledOptions, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::{collect_prepared_schema_facts, statements::SqlFactSite};
 use crate::codebase::ts_source::SourceStore;
@@ -81,7 +82,7 @@ pub(super) fn scan(
                 }
             }
         }
-        let source = crate::codebase::rules::read_language_source(sources, path);
+        let source = no_mistakes_rule_kernel::source_access::read_language_source(sources, path);
         for file in statements {
             if file.parse_failed && opts.fail_unanalyzable {
                 for (site, line) in file.parse_failure_sites() {

@@ -1,4 +1,4 @@
-use super::super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::{CompiledOptions, RULE_ID};
 use crate::codebase::ts_source::relative_slash_path;
 use serde_yaml::Value;

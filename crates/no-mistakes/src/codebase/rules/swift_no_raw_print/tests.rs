@@ -1,4 +1,5 @@
 use super::*;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
     NoMistakesConfig,

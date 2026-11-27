@@ -1,5 +1,5 @@
 use super::{Options, DEFAULT_MAX_CHARS, DEFAULT_MAX_LINES, RULE_ID};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path, SourceStore};
 use anyhow::Result;
 use rayon::prelude::*;
@@ -22,7 +22,7 @@ pub(super) fn scan_with_sources(
     let mut findings: Vec<RuleFinding> = files
         .par_iter()
         .flat_map(|path| {
-            let Some(content) = crate::codebase::rules::read_language_source(sources, path) else {
+            let Some(content) = no_mistakes_rule_kernel::source_access::read_language_source(sources, path) else {
                 return Vec::new();
             };
             check_content_with_deferred_suppression(
@@ -60,7 +60,7 @@ pub(super) fn scan_advisories_with_sources_deferred(
     let mut advisories: Vec<RuleFinding> = files
         .par_iter()
         .filter_map(|path| {
-            let content = crate::codebase::rules::read_language_source(sources, path)?;
+            let content = no_mistakes_rule_kernel::source_access::read_language_source(sources, path)?;
             check_advisory_content(
                 path,
                 root,

@@ -31,14 +31,7 @@ pub enum Effort {
     Max,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Unanalyzable {
-    #[default]
-    Report,
-    Advise,
-    Ignore,
-}
+pub use no_mistakes_rule_kernel::file_diagnostics::Unanalyzable;
 
 /// Resolved before fact demand. Non-adopters retain maximum analysis.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

@@ -1,6 +1,6 @@
 use super::github_actions_script_expressions::{step_script_lines, ScriptScan, StepScript};
 use super::github_actions_workflow_files::gha_kind;
-use super::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

@@ -187,7 +187,7 @@ fn non_ascii_source_disables_the_domain_prefilter() {
     let path = root.join("src/send.test.mts");
     let filtered = check_file(&root, &path, &opts);
     let sources = super::super::source_store_for_files(std::slice::from_ref(&path));
-    let content = super::super::read_source(&sources, &path).expect("unicode fixture");
+    let content = no_mistakes_rule_kernel::source_access::read_source(&sources, &path).expect("unicode fixture");
     let unfiltered = scan_email_lines("src/send.test.mts", &content, &opts);
     assert_eq!(filtered, unfiltered);
     assert_eq!(filtered.len(), 1, "{filtered:?}");

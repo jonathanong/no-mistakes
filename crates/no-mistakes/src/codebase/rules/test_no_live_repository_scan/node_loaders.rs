@@ -1,7 +1,7 @@
 //! Conservative fallback for potential Node-origin loaders in prepared facts.
 use super::{config::Enumerator, requires::is_enumerator_module, RuleDef};
 use crate::codebase::dependencies::graph::{ResolvedCallSite, TsFactLookup};
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use std::path::Path;
 

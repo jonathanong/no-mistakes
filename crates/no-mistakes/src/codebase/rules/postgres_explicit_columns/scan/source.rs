@@ -23,6 +23,6 @@ pub(super) fn physical_source(
     };
     (
         relative_slash_path(root, path),
-        crate::codebase::rules::read_language_source(sources, path),
+        no_mistakes_rule_kernel::source_access::read_language_source(sources, path),
     )
 }

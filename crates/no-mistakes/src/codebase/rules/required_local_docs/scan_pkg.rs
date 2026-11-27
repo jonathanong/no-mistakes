@@ -1,4 +1,5 @@
-use super::{is_code_file, RuleFinding, RULE_ID};
+use super::{is_code_file, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use globset::GlobSet;
 use std::collections::{BTreeSet, HashSet};

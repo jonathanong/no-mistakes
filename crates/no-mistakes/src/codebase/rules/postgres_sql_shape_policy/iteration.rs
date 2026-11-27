@@ -1,6 +1,7 @@
 //! The bounded-iteration shapes: `literal-limit` and `keyset-only-sweep`.
 use super::scan::finding;
-use super::{BannedShapes, RuleFinding, RULE_ID};
+use super::{BannedShapes, RULE_ID};
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::{

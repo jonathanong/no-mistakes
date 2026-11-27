@@ -1,6 +1,6 @@
 use super::CompiledInventory;
 use crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs;
-use crate::codebase::rules::RuleFinding;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use std::collections::BTreeSet;
 use std::path::Path;
