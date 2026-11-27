@@ -61,58 +61,73 @@ non-firing plans invented a `no-mistakes` command (`summarize.py --mentions`:
 
 ### Rules plugin (`no-mistakes-rules`)
 
-**Measured:** 2026-11-26, Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge
-`claude-opus-5-5`, `runs: 3` per arm, `--ablation with-without -j 4`, one
-invocation per topic, zero errored attempts and `partial: false` on all three.
-`rules-postgresql` ran on `41621a7c09`; `rules-queue` and `rules-testing` ran on
-`7da7f3d663`, which has the same plugin and eval files. 114 attempts. Cost
-`$14.95`: about `$10.23` agent and `$4.70` judge (postgresql `$6.04`, queue
-`$4.39`, testing `$4.52`). Reports are archived outside git at
-`~/.cache/no-mistakes/evals/pr4617-rerun-2026-11-26/` and
-`~/.cache/no-mistakes/evals/parked-2026-11-26/`. Run entries:
-[queue and testing](HISTORY.md#2026-11-26--queue-and-testing-rules-measured-4187-4623),
-[postgresql](HISTORY.md#2026-11-26--re-measure-the-should-not-wording).
+**Measured:** 2026-11-26 on `af27b588f5` (rules plugin and rules cases
+unchanged since), Claude CLI 2.1.332, agent `claude-sonnet-5-5`, judge
+`claude-opus-5-5`, `runs: 3` per arm, `--ablation with-without -j 4
+--no-scaffold`, one invocation per topic (`github-actions` by `--case
+'rules-*-actions-*'`), 156 attempts, zero errored and `partial: false` on
+all five. Cost `$19.31`: `$13.10` agent and `$6.21` judge. Reports are
+outside git at `~/.cache/no-mistakes/evals/2026-11-26-rules-control/` and
+`~/.cache/no-mistakes/evals/2026-11-26-step1/`. Run entries:
+[rules control](HISTORY.md#2026-11-26--rules-control-postgresql-queue-testing-re-measured),
+[`github-actions` and off-topic](HISTORY.md#2026-11-26--github-actions-and-off-topic-guards-measured).
+Built with `python3 evals/readme_table.py rules <reports>`.
 
 | topic | loaded (with) | passed overall (with) | passed when loaded | passed (without plugin) |
 | --- | --- | --- | --- | --- |
-| `postgresql` (8 cases) | 23/24 (80-99%) | 24/24 (86-100%) | 23/23 | 19/24 (60-91%) |
-| `queue` (5 cases) | 9/15 (36-80%) | 12/15 (55-93%) | 9/9 | 6/15 (20-64%) |
-| `testing` (6 cases) | 10/18 (34-75%) | 16/18 (67-97%) | 9/10 | 8/18 (25-66%) |
-| `github-actions` (3 cases) | not re-measured | not re-measured | not re-measured | not re-measured |
-| off-topic guards (4 cases) | not re-measured | not re-measured | n/a | n/a |
+| `github-actions` | 9/9 (70-100%) | 9/9 (70-100%) | 9/9 | 7/9 (45-94%) |
+| `off-topic` | 0/12 (0-24%) | 12/12 (76-100%) | 0/0 | 12/12 (76-100%) |
+| `postgresql` | 20/24 (64-93%) | 24/24 (86-100%) | 20/20 | 21/24 (69-96%) |
+| `queue` | 9/15 (36-80%) | 11/15 (48-89%) | 8/9 | 6/15 (20-64%) |
+| `testing` | 9/18 (29-71%) | 16/18 (67-97%) | 7/9 | 9/18 (29-71%) |
+
+| case | loaded | passed (with) | passed when loaded | passed (without) |
+| --- | --- | --- | --- | --- |
+| `github-actions-exception-runner-reasons` | 3/3 | 3/3 | 3/3 | 3/3 |
+| `github-actions-review-path-filter-required` | 3/3 | 3/3 | 3/3 | 3/3 |
+| `github-actions-write-persist-credentials` | 3/3 | 3/3 | 3/3 | 1/3 |
+| `offtopic-neg-big-o` | 0/3 | 3/3 | 0/0 | 3/3 |
+| `offtopic-neg-mutex-semaphore` | 0/3 | 3/3 | 0/0 | 3/3 |
+| `offtopic-neg-regex-explain` | 0/3 | 3/3 | 0/0 | 3/3 |
+| `offtopic-neg-release-note` | 0/3 | 3/3 | 0/0 | 3/3 |
+| `postgresql-exception-index-timeout` | 3/3 | 3/3 | 3/3 | 3/3 |
+| `postgresql-exception-view-uses-joined-columns` | 3/3 | 3/3 | 3/3 | 3/3 |
+| `postgresql-review-duplicate-row-lookup` | 3/3 | 3/3 | 3/3 | 3/3 |
+| `postgresql-review-long-identifier` | 3/3 | 3/3 | 3/3 | 3/3 |
+| `postgresql-review-narrow-view-lookup` | 3/3 | 3/3 | 3/3 | 0/3 |
+| `postgresql-review-parent-key-update` | 2/3 | 3/3 | 2/2 | 3/3 |
+| `postgresql-write-advisory-lock` | 0/3 | 3/3 | 0/0 | 3/3 |
+| `postgresql-write-offset-pagination` | 3/3 | 3/3 | 3/3 | 3/3 |
+| `queue-exception-enqueue-in-tx-receipt` | 0/3 | 0/3 | 0/0 | 0/3 |
+| `queue-review-entity-only-dedup-id` | 2/3 | 2/3 | 1/2 | 2/3 |
+| `queue-review-job-self-overlap` | 1/3 | 3/3 | 1/1 | 3/3 |
+| `queue-write-bounded-sweep` | 3/3 | 3/3 | 3/3 | 0/3 |
+| `queue-write-self-requeue` | 3/3 | 3/3 | 3/3 | 1/3 |
+| `testing-exception-parsed-usage-text` | 3/3 | 1/3 | 1/3 | 0/3 |
+| `testing-exception-raised-coverage-floor` | 0/3 | 3/3 | 0/0 | 3/3 |
+| `testing-review-lowered-coverage-floor` | 0/3 | 3/3 | 0/0 | 3/3 |
+| `testing-review-real-email-fixture` | 3/3 | 3/3 | 3/3 | 0/3 |
+| `testing-write-error-text` | 3/3 | 3/3 | 3/3 | 0/3 |
+| `testing-write-flaky-response-wait` | 0/3 | 3/3 | 0/0 | 3/3 |
 
 Ranges are 95% Wilson intervals. "Passed when loaded" counts attempts that
 called the topic skill and passed the content grader, out of those that did.
 An attempt that never loaded the skill is still graded on content, and counts
-in "passed overall". `github-actions` and the off-topic guards last ran on
-2026-11-17 (single-arm trigger control: `github-actions` 9/9 loaded, 9/9
-passed; off-topic 0/12 loaded, which is the goal; no baseline arm); see
-[HISTORY.md](HISTORY.md#2026-11-17--retain-ceiling-cases-reject-queue-trigger-candidate-3379).
+in "passed overall". A case whose without-plugin arm passed 3/3 is a ceiling
+case: it shows the skill fires and does no harm, not that it helps.
 
-| case | loaded | passed (with) | passed when loaded | passed (without) | reading |
-| --- | --- | --- | --- | --- | --- |
-| `postgresql-exception-index-timeout` | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
-| `postgresql-exception-view-uses-joined-columns` | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
-| `postgresql-review-duplicate-row-lookup` | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
-| `postgresql-review-long-identifier` | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
-| `postgresql-review-narrow-view-lookup` | 3/3 | 3/3 | 3/3 | 1/3 | base rules scored 1/3 the same day; +2/3, not resolved at n = 3 |
-| `postgresql-review-parent-key-update` | 2/3 | 3/3 | 2/2 | 3/3 | ceiling |
-| `postgresql-write-advisory-lock` | 3/3 | 3/3 | 3/3 | 0/3 | skill helps: the without arm used session locks |
-| `postgresql-write-offset-pagination` | 3/3 | 3/3 | 3/3 | 3/3 | ceiling |
-| `queue-exception-enqueue-in-tx-receipt` | 0/3 | 0/3 | 0/0 | 0/3 | both arms fail: skill never loads, answer calls the enqueue a defect |
-| `queue-review-entity-only-dedup-id` | 1/3 | 3/3 | 1/1 | 1/3 | low loading; 2 attempts passed without loading it |
-| `queue-review-job-self-overlap` | 2/3 | 3/3 | 2/2 | 3/3 | ceiling |
-| `queue-write-bounded-sweep` | 3/3 | 3/3 | 3/3 | 0/3 | skill helps |
-| `queue-write-self-requeue` | 3/3 | 3/3 | 3/3 | 2/3 | +1/3, not resolved |
-| `testing-exception-parsed-usage-text` | 3/3 | 2/3 | 2/3 | 0/3 | skill helps; one with-arm attempt told the author to loosen the exact text |
-| `testing-exception-raised-coverage-floor` | 0/3 | 2/3 | 0/0 | 3/3 | below baseline with the skill never loaded; noise at n = 3, a loading gap |
-| `testing-review-lowered-coverage-floor` | 1/3 | 3/3 | 1/1 | 2/3 | low loading |
-| `testing-review-real-email-fixture` | 3/3 | 3/3 | 3/3 | 0/3 | skill helps |
-| `testing-write-error-text` | 3/3 | 3/3 | 3/3 | 0/3 | skill helps |
-| `testing-write-flaky-response-wait` | 0/3 | 3/3 | 0/0 | 3/3 | ceiling; skill never loaded |
-
-The same-day base-rules comparison for `rules-postgresql` is in the
-[run entry](HISTORY.md#2026-11-26--re-measure-the-should-not-wording).
+Readings: the skill helps on `github-actions-write-persist-credentials`,
+`postgresql-review-narrow-view-lookup`, `queue-write-bounded-sweep`,
+`queue-write-self-requeue`, `testing-review-real-email-fixture` and
+`testing-write-error-text` (with arm 3/3 against 0/3 or 1/3 without). Every
+other case is at the ceiling except three. `queue-exception-enqueue-in-tx-receipt`
+fails in both arms and no skill loads. `queue-review-entity-only-dedup-id`
+passes 2/3 in both. `testing-exception-parsed-usage-text` passes 1/3 with and
+0/3 without: the loaded failures kept the exact-text assertions and then
+advised replacing them. `testing-write-flaky-response-wait` loaded
+`playwright-rules`, not `testing-rules`, on all three attempts and passed;
+`testing-rules` also holds the no-retries rule the case checks, so its 0/3 is
+a real loading gap on browser tests.
 
 ## What each case checks
 

@@ -19,6 +19,143 @@ person to rediscover it.
 | #1024 | all eleven flows re-baselined; #986's price claim retracted | [The full re-baseline](#the-full-re-baseline), [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
 | #1033 | gate resolution measured; `power.py` added | [METHODOLOGY.md](METHODOLOGY.md#how-large-an-effect-can-a-gate-here-actually-resolve-1025) |
 
+## 2026-11-26 — gates for the `testing-rules` config candidate (T1)
+
+**Pre-registered**, committed before the candidate ran. No run in this entry.
+
+The two coverage-floor cases (`testing-exception-raised-coverage-floor`,
+`testing-review-lowered-coverage-floor`) are `vitest.config.ts` diffs, and the
+shipped `testing-rules` description names tests and test helpers but not test
+runner config. Neither case loaded `testing-rules` in the control (0/6), and
+both pass 3/3 without the plugin, so a gain here is a loading gain on ceiling
+cases and cannot show the rules help.
+
+Candidate T1, in `DESCRIBE["testing-rules"]` of `evals/rules_variants.py`,
+changes one phrase: "any automated test or test helper" becomes "any automated
+test, test helper, or test runner config such as a coverage threshold". Every
+other `DESCRIBE` entry equals the shipped description; the entry for
+`queue-rules` was reset to the shipped text in this change. The #3379 wording
+it held is in `evals/rules_variants.py` at `af27b588f5`, and the
+[2026-11-17 entry](#2026-11-17--retain-ceiling-cases-reject-queue-trigger-candidate-3379)
+describes it.
+
+Run: `python3 evals/generate.py --rules-variant describe`, then `--eval-dir
+evals-variants/rules-describe --tag rules --ablation none --runs 3 -j 4
+--no-scaffold`, all 26 rules cases. Control: the with arm of the
+[rules control](#2026-11-26--rules-control-postgresql-queue-testing-re-measured)
+and the [`github-actions` and off-topic run](#2026-11-26--github-actions-and-off-topic-guards-measured).
+Margins from `power.py` on those reports (`a|obs`, conditioned on the realized
+control):
+
+1. **Target:** the two coverage-floor cases load `testing-rules` on at least
+   4/6 (control 0/6; the null rise tail first drops under 5% at 4).
+2. **Hold:** each topic's loading stays at or above control minus its `a|obs`:
+   `postgresql` ≥ 14/24, `queue` ≥ 6/15, `testing` ≥ 6/18 (control 9/18;
+   the flaky-wait case still expects `testing-rules` in this comparison),
+   `github-actions` ≥ 6/9. Summed over the 22 should-fire cases, ≥ 38/66
+   (control 47/66, `a|obs` 9).
+3. **Guard:** off-topic stays at 0/12. The modeled margin would allow 4; any
+   rules skill loading on a question no rule covers is over-triggering, and
+   this candidate widens a description.
+4. **Content, read not gated:** passed overall on the with arm is reported
+   beside the control's. A single-arm candidate has no baseline arm of its own.
+
+Miss any of 1–3 and T1 is rejected and recorded here only.
+
+## 2026-11-26 — rules control: `postgresql`, `queue`, `testing` re-measured
+
+The same-session control for the rules description candidates below. Claude CLI
+2.1.332, agent `claude-sonnet-5-5`, judge `claude-opus-5-5`, commit
+`af27b588f5` (rules plugin unchanged since), `runs: 3` per arm, `--ablation
+with-without -j 4 --no-publish --no-scaffold --trust-plugin --keep-temp`, one
+invocation per topic, 114 attempts, zero errored, `partial: false`. Cost:
+`postgresql` `$6.29` (`$4.40` agent, `$1.89` judge), `queue` `$4.46` (`$3.00`
+agent, `$1.47` judge), `testing` `$4.60` (`$2.99` agent, `$1.61` judge),
+`$15.35` in all. Reports at `~/.cache/no-mistakes/evals/2026-11-26-rules-control/`.
+No case, grader, or fixture changed.
+
+| topic | loaded | passed (with) | passed when loaded | passed (without) |
+| --- | --- | --- | --- | --- |
+| `postgresql` | 20/24 | 24/24 | 20/20 | 21/24 |
+| `queue` | 9/15 | 11/15 | 8/9 | 6/15 |
+| `testing` | 9/18 | 16/18 | 7/9 | 9/18 |
+
+Rows that moved against the 2026-11-26 entries below (same day, earlier):
+
+| Case | Loaded | Passed (with) | Passed (without) | Earlier today |
+| --- | --- | --- | --- | --- |
+| `postgresql-write-advisory-lock` | 0/3 | 3/3 | 3/3 | loaded 3/3, without 0/3 |
+| `postgresql-review-parent-key-update` | 2/3 | 3/3 | 3/3 | loaded 3/3 |
+| `queue-review-entity-only-dedup-id` | 2/3 | 2/3 | 2/3 | loaded 1/3, with 3/3, without 1/3 |
+| `queue-review-job-self-overlap` | 1/3 | 3/3 | 3/3 | loaded 2/3 |
+| `testing-exception-parsed-usage-text` | 3/3 | 1/3 | 0/3 | with 2/3 |
+| `testing-exception-raised-coverage-floor` | 0/3 | 3/3 | 3/3 | with 2/3 |
+| `testing-review-lowered-coverage-floor` | 0/3 | 3/3 | 3/3 | loaded 1/3, without 2/3 |
+
+**Failing attempts read.**
+
+- `queue-exception-enqueue-in-tx-receipt`, 0/6 again. No skill of any kind
+  loaded in the with arm. The case's own comment ("a duplicate delivery
+  collides harmlessly") is true only if finished jobs are retained, and the
+  fixture never shows the queue's options, so the grader asks for a judgment
+  the prompt does not give enough to make. The case is rewritten in its own
+  PR.
+- `queue-review-entity-only-dedup-id`: the loaded failure and the unloaded
+  one both found the retained-id drop and proposed removing `jobId` or using
+  BullMQ's `deduplication` option instead of adding the event to the id. The
+  rule says not to key the id by entity alone; the answers did not follow it.
+  The grader is right.
+- `testing-exception-parsed-usage-text`: both loaded failures kept the
+  exact-text assertions but then recommended replacing them with a test
+  through the docs generator's parser. The grader fails a recommendation to
+  replace them; it is right. This is the rule body under Sonnet, not loading.
+- `testing-write-flaky-response-wait` loaded `playwright-rules` on all three
+  with-arm attempts and `testing-rules` on none, and all three passed.
+  `playwright-rules` holds the response-wait rule; `testing-rules` holds it
+  too, plus the no-retries rule the grader also checks, and its description
+  says browser tests load `playwright-rules` as well, not instead. The
+  `skill-fired` grader (`testing-rules`) is right: this is a `testing-rules`
+  loading gap on a browser test, not a grader defect. A first plan to accept
+  either skill was dropped because it would count a load that lacks the
+  retries rule.
+
+**What it showed.** The with arm passed every `postgresql` case and every
+`testing` case but the parsed-usage one. The coverage-floor cases never loaded
+`testing-rules` and passed at the ceiling in both arms. `advisory-lock` moved
+from 3/3-loaded and 0/3-without earlier today to 0/3 and 3/3: the same day's
+draws differ by three on a case, which is the noise a 3-attempt row carries.
+
+## 2026-11-26 — `github-actions` and off-topic guards measured
+
+Closes the two rules rows the docs restructure marked "not re-measured". Claude
+CLI 2.1.332, agent `claude-sonnet-5-5`, judge `claude-opus-5-5`, commit
+`af27b588f5`, `runs: 3` per arm, `--ablation with-without -j 4 --no-publish
+--no-scaffold --trust-plugin --keep-temp`, two invocations (`--case
+'rules-*-actions-*'`, `--tag rules-offtopic`), 42 attempts, zero errored,
+`partial: false`. Cost: `github-actions` `$2.28` (`$1.54` agent, `$0.75`
+judge), off-topic `$1.66` (`$1.17` agent, `$0.49` judge), `$3.94` in all.
+Reports at `~/.cache/no-mistakes/evals/2026-11-26-step1/`. No case, grader, or
+fixture changed.
+
+| Case | Loaded | Passed (with) | Passed (without) |
+| --- | --- | --- | --- |
+| `github-actions-exception-runner-reasons` | 3/3 | 3/3 | 3/3 |
+| `github-actions-review-path-filter-required` | 3/3 | 3/3 | 3/3 |
+| `github-actions-write-persist-credentials` | 3/3 | 3/3 | 1/3 |
+| `offtopic-neg-big-o` | 0/3 | 3/3 | 3/3 |
+| `offtopic-neg-mutex-semaphore` | 0/3 | 3/3 | 3/3 |
+| `offtopic-neg-regex-explain` | 0/3 | 3/3 | 3/3 |
+| `offtopic-neg-release-note` | 0/3 | 3/3 | 3/3 |
+
+**Failing attempts read.** The two without-plugin failures on
+`write-persist-credentials` wrote `actions/checkout@v4` with no
+`persist-credentials: false`; the grader was right. No with-arm attempt failed.
+
+**What it showed.** `github-actions-rules` loads on all three cases (9/9) and
+helps on `write-persist-credentials` (3/3 against 1/3). The other two cases are
+ceiling cases. No rules skill loaded on any off-topic guard (0/12), which is the
+goal, and all twelve answers passed.
+
 ## 2026-11-26 — restructure the eval docs
 
 No run. README.md now follows the eval-suite layout (what the suite evaluates,
