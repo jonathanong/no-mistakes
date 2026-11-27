@@ -1651,6 +1651,7 @@ jobs:
         timeout-minutes: 3
         uses: Swatinem/rust-cache@eedcf2fb1c22f010a0eb66b92f378c110977f266 # v2
         with:
+          shared-key: native-rust-tests-v1-aarch64-apple-darwin
           cache-targets: true
           cache-bin: false
           cache-workspace-crates: false
@@ -2449,10 +2450,10 @@ jobs:
         timeout-minutes: 3
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with: &standalone-cache
-          key: standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('.github/scripts/standalone-shard-rustc*.sh') }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
+          key: standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-shard-${{ matrix.shard }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('.github/scripts/standalone-shard-rustc*.sh') }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-${{ hashFiles('crates/**/*.rs') }}
           restore-keys: |
-            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('.github/scripts/standalone-shard-rustc*.sh') }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
-            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('.github/scripts/standalone-shard-rustc*.sh') }}-
+            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-shard-${{ matrix.shard }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('.github/scripts/standalone-shard-rustc*.sh') }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml', '.cargo/config.toml', 'crates/**/Cargo.toml') }}-
+            standalone-lib-workspace-v2-${{ runner.os }}-${{ runner.arch }}-shard-${{ matrix.shard }}-${{ steps.standalone-rust-toolchain.outputs.cachekey }}-${{ env.RUSTFLAGS }}-cgu${{ env.CARGO_PROFILE_TEST_CODEGEN_UNITS }}-debug${{ env.CARGO_PROFILE_TEST_DEBUG }}-${{ hashFiles('.github/scripts/standalone-shard-rustc*.sh') }}-
           path: |
             target/standalone-lib/target/debug
             target/standalone-lib/target/.rustc_info.json
@@ -2481,11 +2482,11 @@ jobs:
           bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs build target/standalone-bundle "$STANDALONE_SHARD"
 
       - name: Record standalone compiler inputs for cache publication
-        if: ${{ matrix.shard == 1 && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
+        if: ${{ env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
         run: node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-standalone-lib-cargo-inputs"
       - name: Save verified workspace artifacts
-        if: ${{ (success() && matrix.shard == 1 && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
+        if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.standalone-lib-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 3
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:

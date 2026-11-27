@@ -16,8 +16,13 @@ function handoff(key) {
 function workspace(key, version) {
   return key.match(
     new RegExp(
-      `^(linux-runtime-workspace-v${version}-(?:cli|addon)|native-(?:runtime|test-harness)-workspace-v${version}-(?:x86_64-pc-windows-msvc|aarch64-apple-darwin)|(?:standalone-lib|coverage)-workspace-v${version}-Linux-X64)-`,
+      `^(linux-runtime-workspace-v${version}-(?:cli|addon)|native-(?:runtime|test-harness)-workspace-v${version}-(?:x86_64-pc-windows-msvc|aarch64-apple-darwin)|standalone-lib-workspace-v${version}-Linux-X64(?:-shard-[123])?|coverage-workspace-v${version}-Linux-X64)-`,
     ),
+  );
+}
+function macosRustDependencies(key) {
+  return /^v\d+-rust-native-rust-tests-v1-aarch64-apple-darwin-Darwin-arm64-[a-f0-9]{8,64}-[a-f0-9]{8,64}$/.test(
+    key,
   );
 }
 function family(key, common = new Set()) {
@@ -49,6 +54,8 @@ function family(key, common = new Set()) {
   );
   if (benchmark)
     return { name: `dependencies:${benchmark[1]}:${benchmark[2]}:${benchmark[3]}`, preferred: 1 };
+  if (macosRustDependencies(key))
+    return { name: "dependencies:native-rust-tests-macos", preferred: 1 };
   let match = workspace(key, 2);
   if (match) return { name: match[1], preferred: 1 };
   match = sharedIdentity(key);
@@ -149,7 +156,7 @@ function plan(caches, states, budget = BUDGET, sourceRunStates = {}) {
   const expendable = caches.filter(
     (cache) =>
       cache.ref === "refs/heads/main" &&
-      workspace(cache.key, 2) &&
+      (workspace(cache.key, 2) || macosRustDependencies(cache.key)) &&
       !removed.has(cache.id) &&
       Number.isFinite(Date.parse(cache.last_accessed_at)),
   );

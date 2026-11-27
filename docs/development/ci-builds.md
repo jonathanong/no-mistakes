@@ -7,7 +7,7 @@
 The `github-actions-authoring` skill's `references/job-sizing.md` defines the
 pull-request targets of under 15 minutes wall time and under 30% setup per shard.
 
-Two setup-dominated, sub-2-minute policy checks are explicit exceptions because
+Two setup-dominated, sub-2-minute policy checks are exceptions because
 their runner queue wait and setup exceeded their check runtime and neither sits
 on any PR critical path (baseline 30-run non-cancelled PR medians: 15m04s
 non-Rust, 49m44s Rust):
@@ -23,6 +23,10 @@ non-Rust, 49m44s Rust):
   a post-Clippy `if: ${{ !cancelled() }}` step in `all-feature Clippy` (2m26s
   + 13s = ~2m39s, well below the 5m57s sibling `PostgreSQL source identities`
   matrix entry).
+- `retain-caches` performs a single repository-wide sweep after the main-push
+  producers finish. The seven equivalent calls in run `46045845814` each
+  took 17–25 seconds, with 82–88% spent before the retention script started.
+  The sweep stays off the required checks' critical path.
 
 Parallel test shards (`javascript-shards`, `linux-api-tests`,
 `rust-coverage-shards`, `standalone-shards`) remain parallel.
@@ -312,8 +316,8 @@ main-push run of Test CI or Benchmarks finishes. A run can save caches before a
 later job fails, so cleanup also runs after unsuccessful completions.
 
 After deduplication it evicts least-recently-accessed main workspace snapshots
-until the inventory fits an 8 GiB budget. The former macOS Rust test harness
-snapshot can be evicted along with other workspace snapshots. Open PRs, unknown
+until the inventory fits an 8 GiB budget. The macOS Rust dependency cache is
+also eligible for budget eviction. Open PRs, unknown
 families, release dependencies, and active benchmark handoffs also remain
 protected. If protected entries alone exceed the budget, cleanup reports the
 remaining excess. Individual uploads can briefly precede their cleanup jobs,
@@ -519,7 +523,7 @@ Windows Rust (70 / 281 seconds) and 23% for Linux N-API (28 / 120 seconds) at
 the maximum observed setup times. The Windows API estimate is 29% with median
 setup (68.5 / 236.5 seconds) and just under 30% with maximum setup and five
 seconds of reporting and cleanup (73 / 246 seconds). JavaScript projects
-25% (18 / 72 seconds). Use observed per-shard timings to check the balance.
+27% (24 / 89 seconds, using 130 seconds of combined test execution). Use observed per-shard timings to check the balance.
 
 The full macOS Rust job caches Cargo dependencies and rebuilds its workspace
 harnesses. Main runs `46020851639` and `46038889294` both downloaded a 4.62 GiB
@@ -766,11 +770,10 @@ unit tests once, while shards 1 and 2 archive `-p no-mistakes --lib`) and writes
 `standalone-0.tar.zst`, `standalone-1.tar.zst`, and `standalone-2.tar.zst`.
 Each consumer runs one of those archives and does not hash-partition it. Cargo
 uses a distinct workspace compiler wrapper path for each shard. Each runner
-restores the shared workspace snapshot and its input timestamps when available.
-Only the first shard, which builds the full workspace library suite, publishes
-a new snapshot on main. The three jobs use independent target directories.
-Each archive command has its own deadline within the 25-minute producer job.
-The first command also builds registry dependencies. The job sets `CARGO_BUILD_JOBS=1`, `CARGO_INCREMENTAL=0`,
+restores its own workspace snapshot and input timestamps when available, builds
+any missing dependencies, and publishes its own snapshot on main. Each runner
+executes one archive command with a separate step deadline inside its 25-minute
+job. The job sets `CARGO_BUILD_JOBS=1`, `CARGO_INCREMENTAL=0`,
 `CARGO_PROFILE_DEV_DEBUG=0`, `CARGO_PROFILE_TEST_DEBUG=0`,
 `CARGO_PROFILE_DEV_CODEGEN_UNITS=4096`, and
 `CARGO_PROFILE_TEST_CODEGEN_UNITS=4096`. The cache key includes the test

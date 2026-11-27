@@ -94,6 +94,7 @@ test("macOS Rust tests use a best-effort dependency cache and retain inventory a
   assert.match(cache.uses, /^Swatinem\/rust-cache@/);
   assert.equal(cache["continue-on-error"], true);
   assert.equal(cache["timeout-minutes"], 3);
+  assert.equal(cache.with["shared-key"], "native-rust-tests-v1-aarch64-apple-darwin");
   assert.equal(cache.with["cache-targets"], true);
   assert.equal(cache.with["cache-workspace-crates"], false);
   const run = steps.find(({ id }) => id === "native-rust-tests");

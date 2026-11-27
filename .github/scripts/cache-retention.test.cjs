@@ -500,6 +500,25 @@ test("budget eviction includes the retired macOS harness in workspace access ord
   assert.ok(!active.remove.some((cache) => [21, 22, 23].includes(cache.id)));
 });
 
+test("parallel standalone caches are distinct and macOS dependency generations are bounded", () => {
+  const caches = require("../../test-cases/cache-retention/parallel-standalone-macos-dependencies.json");
+  const result = plan(caches, {});
+  assert.deepEqual(
+    result.kept.map(({ id }) => id),
+    [91, 92, 93, 95],
+  );
+  assert.deepEqual(
+    result.remove.map(({ id, reason }) => [id, reason]),
+    [
+      [90, "superseded standalone-lib-workspace-v2-Linux-X64-shard-1"],
+      [94, "superseded dependencies:native-rust-tests-macos"],
+    ],
+  );
+  assert.ok(
+    plan(caches, {}, 0).remove.some(({ id, reason }) => id === 95 && reason === "budget-workspace"),
+  );
+});
+
 test("release caches and superseded populated pnpm lockfiles are pruned per target and runtime", () => {
   const entries = JSON.parse(
     readFileSync(

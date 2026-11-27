@@ -47,6 +47,10 @@ test("each standalone producer publishes its own archive under the consumer's sh
   assert.equal(uploads[0].with.name, "standalone-library-${{ matrix.shard }}");
   assert.equal(uploads[0].with.path, "target/standalone-bundle/");
   assert.equal(uploads[0].with["if-no-files-found"], "error");
+  const cache = producer.steps.find(({ id }) => id === "standalone-lib-workspace-cache");
   const save = producer.steps.find(({ name }) => name === "Save verified workspace artifacts");
-  assert.match(save.if, /matrix\.shard == 1/);
+  assert.match(save.if, /github\.ref == 'refs\/heads\/main'/);
+  assert.doesNotMatch(save.if, /matrix\.shard/);
+  for (const key of [cache.with.key, ...cache.with["restore-keys"].trim().split("\n")])
+    assert.ok(key.includes("-shard-${{ matrix.shard }}-"));
 });
