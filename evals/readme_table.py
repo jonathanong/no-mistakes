@@ -8,7 +8,9 @@
 plugin, passed when loaded, and passed without it, each with its count.
 `skill` prints one row per flow: should-fire trigger, should-fire Δ, the part
 of it that content graders carry (`names-graph-command` left out), and the
-negatives' Δ. Paste the output into README.md; do not edit the numbers by hand.
+negatives' Δ. The output replaces the README's results tables whole; do not
+edit its numbers by hand. Notes on single cases go in prose under the table,
+not in an extra column.
 """
 import json
 import math

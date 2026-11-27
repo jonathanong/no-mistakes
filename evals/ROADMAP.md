@@ -99,7 +99,8 @@ counts.
    verdict against the target, and record the attempts that ran ("2 of 2").
 7. **A tracking CSV** (`evals/results.csv`: date, commit, models, case, arm,
    attempts, loaded, passed, cost) that `summarize.py` appends to. Until it
-   exists, update the README table by hand from the run.
+   exists, build the README tables with `python3 evals/readme_table.py` from
+   one run's reports.
 8. **Rules-plugin loading gaps.** Several cases load the skill in at most one of
    three attempts. Try `describe` variants for those topics at six attempts or
    more per case.
