@@ -12,6 +12,7 @@ pub(super) fn acquire_lock_with_budget(
     invocation_deadline: Option<Deadline>,
 ) -> Result<Option<File>> {
     check_acquisition_deadline(invocation_deadline)?;
+    let acquisition_started = clock::now();
     let opened = match target {
         LockTarget::Current => open_current_lock(),
         LockTarget::Exact(path) => {
@@ -19,11 +20,10 @@ pub(super) fn acquire_lock_with_budget(
             Some(OpenedLock { path, file })
         }
     };
-    check_acquisition_deadline(invocation_deadline)?;
     let Some(OpenedLock { path, file }) = opened else {
+        check_acquisition_deadline(invocation_deadline)?;
         return Ok(None);
     };
-    let acquisition_started = clock::now();
     let remaining = invocation_deadline.map(|deadline| {
         deadline
             .expires_at

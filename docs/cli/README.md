@@ -17,8 +17,9 @@ analysis. It defaults to `0`, which uses `RAYON_NUM_THREADS` when that variable
 is a positive integer and otherwise the CPU count. Each process creates the
 pool once and does not resize it.
 
-Every analysis invocation takes a per-user, machine-wide lock so CPU-intensive
-CLI and Node/N-API work cannot overlap, even across repositories. While waiting,
+Analysis uses a per-user lock when a [lock location](lock-status.md#lock-locations)
+is usable. CPU-intensive CLI and Node/N-API invocations that select the same
+lock file run in sequence across repositories. While waiting,
 stderr reports `waiting for lock held by <holder> for <n>s`. `<holder>` is the
 holder description: `pid <pid>` alone, or that pid plus the cwd, command
 basename, and age present on the record. When no holder record can be read,
@@ -38,7 +39,7 @@ or after the command name:
   independently configured command or lock timeout.
   It is opt-in: ordinary command and lock deadlines retain their existing meaning
   when omitted. With this budget enabled, the independent lock timeout starts
-  before opening the lock file. Its deadline is compared with the original
+  before selecting and opening the lock file. Its deadline is compared with the original
   invocation deadline, which already includes lock-path resolution; the earlier
   deadline determines the reported timeout. Without this option,
   the existing lock-wait timing is unchanged.
@@ -48,7 +49,7 @@ or after the command name:
 - `--fail-on-lock` fails immediately when another invocation holds the lock,
   overriding `--lock-timeout`.
 - `--profile ci` sets `--timeout 0 --lock-timeout 0` for CI jobs that should
-  wait for the machine-wide lock and run without a command deadline. Node
+  wait for the selected lock and run without a command deadline. Node
   `profile: "ci"` clears any supplied `timeout` / `lockTimeout` the same way.
   Each `ciTopology()` call reads the current workflow and configuration files.
 
@@ -59,16 +60,16 @@ or after the command name:
 | `0` | Success. | none |
 | `75` | Lock contention (`EX_TEMPFAIL`): `--fail-on-lock` found the lock busy, or `--lock-timeout` elapsed while waiting. Retrying later may succeed. | `lock_busy`, `lock_timeout` |
 | `124` | The analysis deadline elapsed (`--timeout`, `--invocation-timeout-ms`), matching `timeout(1)`. | `deadline` |
-| `2` | Any other error, including lock setup failures and invalid arguments. | none |
+| `2` | Any other error, such as invalid arguments or a lock operation error. | none |
 
 Command-specific codes (for example `dead-exports` or `check` findings) keep
 the meanings documented on their pages. A shared `--invocation-timeout-ms`
 budget that expires while waiting for the lock is a deadline (`124`, phase
 `invocation.lock`), not lock contention.
 
-The lock is machine-wide by design: each analysis uses every core, so
-invocations run one at a time instead of oversubscribing the CPU. Scoping the
-lock per repository is intentionally not offered.
+The lock limits CPU oversubscription across repositories. Use the same
+`NO_MISTAKES_LOCK_DIR` for invocations that need to share a lock across
+environments with different writable directories.
 
 Errors are written to stderr. Lock messages name the holder:
 

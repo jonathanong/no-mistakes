@@ -26,7 +26,7 @@ positive safe integer in milliseconds when present; unlike the older options, nu
 measured once when native invocation coordination starts, before
 lock-path resolution. The lock and execution phases share this absolute budget;
 it never extends either ordinary phase deadline. With this budget enabled,
-`lockTimeout` starts before opening the lock file. Its deadline is compared
+`lockTimeout` starts before selecting and opening the lock file. Its deadline is compared
 with the original invocation deadline, which already includes lock-path
 resolution; the earlier deadline determines the timeout classification. Ordinary
 lock-wait timing is unchanged when the invocation budget is omitted.
