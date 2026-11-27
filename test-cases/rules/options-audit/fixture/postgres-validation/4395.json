@@ -1,0 +1,23 @@
+{
+  "rules": [
+    {
+      "rule": "postgres-table-shape",
+      "scope": "repository",
+      "options": {
+        "schemaCatalogPath": "schema.json",
+        "shapes": [
+          {
+            "name": "orders",
+            "tablePattern": "^orders$",
+            "requiredColumns": [
+              {
+                "name": "account_id",
+                "foreginKey": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

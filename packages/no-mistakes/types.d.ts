@@ -61,6 +61,7 @@ export type * from "./github-actions-download-integrity-types";
 export type * from "./github-actions-env-policy-types";
 export type * from "./github-actions-no-poll-wait-job-types";
 export type * from "./github-actions-no-required-pr-path-filters-types";
+export type * from "./github-actions-pr-diff-range-types";
 export type * from "./github-actions-run-command-policy-types";
 export type * from "./workflow-topology-policy-types";
 

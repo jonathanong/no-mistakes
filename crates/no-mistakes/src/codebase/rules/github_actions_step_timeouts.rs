@@ -19,7 +19,7 @@ pub(in crate::codebase::rules) struct Options {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct AllowEntry {
     step: String,
     reason: String,
@@ -187,3 +187,5 @@ mod steps;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 mod yaml;
+
+mod validation;

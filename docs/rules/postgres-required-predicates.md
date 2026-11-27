@@ -130,6 +130,10 @@ scope.
 
 ## Options and defaults
 
+The loader validates `sqlInclude` globs even when no relation filters are
+configured. Each `relations` entry accepts only `table`, `require`, and
+`requireColumns`.
+
 `unanalyzableSql: advise` reports residual uncertainty in non-failing advisories.
 `--include-sql-verdicts` adds [per-subcheck SQL verdicts](../postgres-sql-verdicts.md).
 

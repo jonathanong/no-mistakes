@@ -293,6 +293,8 @@ mod cli_config_fragments;
 
 #[path = "cli_rule_options_audit.rs"]
 mod cli_rule_options_audit;
+#[path = "cli_workflow_option_validation.rs"]
+mod cli_workflow_option_validation;
 
 #[path = "cli_gha_snapshot_activity_types.rs"]
 mod cli_gha_snapshot_activity_types;
@@ -325,6 +327,8 @@ mod cli_postgres_snapshot_literal_comment_names;
 #[path = "cli_postgres_snapshot_declared_bounds.rs"]
 mod cli_postgres_snapshot_declared_bounds;
 
+#[path = "cli_postgres_option_validation.rs"]
+mod cli_postgres_option_validation;
 #[path = "cli_postgres_snapshot_materialized_view_shape.rs"]
 mod cli_postgres_snapshot_materialized_view_shape;
 #[path = "cli_postgres_unused_disables.rs"]

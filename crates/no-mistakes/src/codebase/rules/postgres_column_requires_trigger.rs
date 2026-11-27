@@ -23,7 +23,7 @@ pub(in crate::codebase::rules) struct Options {
 }
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 struct RequirementOptions {
     column: String,
     function: String,

@@ -1,0 +1,397 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "both": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/caller-unanalyzable.yml",
+          "line": 11,
+          "message": "reusable workflow call `.github/workflows/caller-unanalyzable.yml#non_callable` targets `.github/workflows/not-callable.yml`, which does not declare `on.workflow_call`; declared secrets and required inputs cannot be verified",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "uses: ./.github/workflows/not-callable.yml",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/caller-unanalyzable.yml",
+          "line": 16,
+          "message": "reusable workflow call `.github/workflows/caller-unanalyzable.yml#dynamic_secrets` sets `secrets` to `${{ inputs.secrets_map }}`, which cannot be verified statically; use a literal mapping",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "secrets: ${{ inputs.secrets_map }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/caller-unanalyzable.yml",
+          "line": 5,
+          "message": "reusable workflow call `.github/workflows/caller-unanalyzable.yml#remote_call` targets remote workflow `example/platform/.github/workflows/release.yml@v1`; declared secrets and required inputs cannot be verified locally",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "uses: example/platform/.github/workflows/release.yml@v1",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/caller-unanalyzable.yml",
+          "line": 9,
+          "message": "reusable workflow call `.github/workflows/caller-unanalyzable.yml#missing_callee` targets `.github/workflows/does-not-exist.yml`, which is missing or could not be parsed; declared secrets and required inputs cannot be verified",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "uses: ./.github/workflows/does-not-exist.yml",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 11,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_optional_secret` does not pass declared secret `AUDIT_TOKEN` to `.github/workflows/callee.yml`; map `AUDIT_TOKEN` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "secrets:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 13,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_all` does not pass declared secret `AUDIT_TOKEN` to `.github/workflows/callee.yml`; map `AUDIT_TOKEN` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing_all:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 13,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_all` does not pass declared secret `DEPLOY_KEY` to `.github/workflows/callee.yml`; map `DEPLOY_KEY` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing_all:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 13,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_all` does not pass required input `target_env` to `.github/workflows/callee.yml`; pass `target_env` explicitly under `with:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing_all:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 20,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#empty_secret` leaves declared secret `DEPLOY_KEY` empty for `.github/workflows/callee.yml`; map `DEPLOY_KEY` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "DEPLOY_KEY:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 4,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#inherit_only` does not pass required input `target_env` to `.github/workflows/callee.yml`; pass `target_env` explicitly under `with:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "inherit_only:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 6,
+          "message": "forbidden secrets: inherit; map each secret explicitly on the reusable workflow call",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "secrets: inherit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "disabled-false": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/suppressed-file.yml",
+          "line": 1,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 12,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "uses: example/platform/.github/workflows/release.yml@v1 # no-mistakes-disable-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        },
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 8,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "enabled": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/caller-unanalyzable.yml",
+          "line": 11,
+          "message": "reusable workflow call `.github/workflows/caller-unanalyzable.yml#non_callable` targets `.github/workflows/not-callable.yml`, which does not declare `on.workflow_call`; declared secrets and required inputs cannot be verified",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "uses: ./.github/workflows/not-callable.yml",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/caller-unanalyzable.yml",
+          "line": 16,
+          "message": "reusable workflow call `.github/workflows/caller-unanalyzable.yml#dynamic_secrets` sets `secrets` to `${{ inputs.secrets_map }}`, which cannot be verified statically; use a literal mapping",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "secrets: ${{ inputs.secrets_map }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/caller-unanalyzable.yml",
+          "line": 5,
+          "message": "reusable workflow call `.github/workflows/caller-unanalyzable.yml#remote_call` targets remote workflow `example/platform/.github/workflows/release.yml@v1`; declared secrets and required inputs cannot be verified locally",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "uses: example/platform/.github/workflows/release.yml@v1",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/caller-unanalyzable.yml",
+          "line": 9,
+          "message": "reusable workflow call `.github/workflows/caller-unanalyzable.yml#missing_callee` targets `.github/workflows/does-not-exist.yml`, which is missing or could not be parsed; declared secrets and required inputs cannot be verified",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "uses: ./.github/workflows/does-not-exist.yml",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 11,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_optional_secret` does not pass declared secret `AUDIT_TOKEN` to `.github/workflows/callee.yml`; map `AUDIT_TOKEN` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "secrets:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 13,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_all` does not pass declared secret `AUDIT_TOKEN` to `.github/workflows/callee.yml`; map `AUDIT_TOKEN` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing_all:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 13,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_all` does not pass declared secret `DEPLOY_KEY` to `.github/workflows/callee.yml`; map `DEPLOY_KEY` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing_all:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 13,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_all` does not pass required input `target_env` to `.github/workflows/callee.yml`; pass `target_env` explicitly under `with:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing_all:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 20,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#empty_secret` leaves declared secret `DEPLOY_KEY` empty for `.github/workflows/callee.yml`; map `DEPLOY_KEY` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "DEPLOY_KEY:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 4,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#inherit_only` does not pass required input `target_env` to `.github/workflows/callee.yml`; pass `target_env` explicitly under `with:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "inherit_only:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 6,
+          "message": "forbidden secrets: inherit; map each secret explicitly on the reusable workflow call",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "secrets: inherit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "ignore-unanalyzable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/suppressed.yml",
+          "line": 12,
+          "message": "directive for `workflow-topology-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "uses: example/platform/.github/workflows/release.yml@v1 # no-mistakes-disable-line workflow-topology-policy",
+          "target": "workflow-topology-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 11,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_optional_secret` does not pass declared secret `AUDIT_TOKEN` to `.github/workflows/callee.yml`; map `AUDIT_TOKEN` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "secrets:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 13,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_all` does not pass declared secret `AUDIT_TOKEN` to `.github/workflows/callee.yml`; map `AUDIT_TOKEN` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing_all:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 13,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_all` does not pass declared secret `DEPLOY_KEY` to `.github/workflows/callee.yml`; map `DEPLOY_KEY` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing_all:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 13,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_all` does not pass required input `target_env` to `.github/workflows/callee.yml`; pass `target_env` explicitly under `with:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing_all:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 20,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#empty_secret` leaves declared secret `DEPLOY_KEY` empty for `.github/workflows/callee.yml`; map `DEPLOY_KEY` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "DEPLOY_KEY:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 4,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#inherit_only` does not pass required input `target_env` to `.github/workflows/callee.yml`; pass `target_env` explicitly under `with:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "inherit_only:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 6,
+          "message": "forbidden secrets: inherit; map each secret explicitly on the reusable workflow call",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "secrets: inherit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report-unanalyzable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/caller-unanalyzable.yml",
+          "line": 11,
+          "message": "reusable workflow call `.github/workflows/caller-unanalyzable.yml#non_callable` targets `.github/workflows/not-callable.yml`, which does not declare `on.workflow_call`; declared secrets and required inputs cannot be verified",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "uses: ./.github/workflows/not-callable.yml",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/caller-unanalyzable.yml",
+          "line": 16,
+          "message": "reusable workflow call `.github/workflows/caller-unanalyzable.yml#dynamic_secrets` sets `secrets` to `${{ inputs.secrets_map }}`, which cannot be verified statically; use a literal mapping",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "secrets: ${{ inputs.secrets_map }}",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/caller-unanalyzable.yml",
+          "line": 5,
+          "message": "reusable workflow call `.github/workflows/caller-unanalyzable.yml#remote_call` targets remote workflow `example/platform/.github/workflows/release.yml@v1`; declared secrets and required inputs cannot be verified locally",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "uses: example/platform/.github/workflows/release.yml@v1",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/caller-unanalyzable.yml",
+          "line": 9,
+          "message": "reusable workflow call `.github/workflows/caller-unanalyzable.yml#missing_callee` targets `.github/workflows/does-not-exist.yml`, which is missing or could not be parsed; declared secrets and required inputs cannot be verified",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "uses: ./.github/workflows/does-not-exist.yml",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 11,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_optional_secret` does not pass declared secret `AUDIT_TOKEN` to `.github/workflows/callee.yml`; map `AUDIT_TOKEN` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "secrets:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 13,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_all` does not pass declared secret `AUDIT_TOKEN` to `.github/workflows/callee.yml`; map `AUDIT_TOKEN` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing_all:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 13,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_all` does not pass declared secret `DEPLOY_KEY` to `.github/workflows/callee.yml`; map `DEPLOY_KEY` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing_all:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 13,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#missing_all` does not pass required input `target_env` to `.github/workflows/callee.yml`; pass `target_env` explicitly under `with:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "missing_all:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 20,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#empty_secret` leaves declared secret `DEPLOY_KEY` empty for `.github/workflows/callee.yml`; map `DEPLOY_KEY` explicitly under `secrets:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "DEPLOY_KEY:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 4,
+          "message": "reusable workflow call `.github/workflows/caller-violations.yml#inherit_only` does not pass required input `target_env` to `.github/workflows/callee.yml`; pass `target_env` explicitly under `with:`",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "inherit_only:"
+        },
+        {
+          "file": ".github/workflows/caller-violations.yml",
+          "line": 6,
+          "message": "forbidden secrets: inherit; map each secret explicitly on the reusable workflow call",
+          "rule": "workflow-topology-policy",
+          "sourceLine": "secrets: inherit"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

@@ -1,8 +1,16 @@
+use super::hit;
 use super::options::Options;
 use super::scan::Step;
-use super::{hit, RuleFinding};
+use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use crate::config::v2::Unanalyzable;
 
-pub(super) fn check(rel: &str, step: &Step, options: &Options, findings: &mut Vec<RuleFinding>) {
+pub(super) fn check(
+    rel: &str,
+    step: &Step,
+    options: &Options,
+    policy: Unanalyzable,
+    output: &mut AnalysisDiagnostics,
+) {
     for (name, field) in [("key", &step.key), ("restore-keys", &step.restore_keys)] {
         let Some(field) = field else { continue };
         let decoded = field
@@ -11,11 +19,12 @@ pub(super) fn check(rel: &str, step: &Step, options: &Options, findings: &mut Ve
             .then(|| serde_yaml::from_str::<String>(&field.value).ok())
             .flatten();
         let value = decoded.as_deref().unwrap_or(&field.value);
-        for pattern in literal_hash_patterns(value) {
+        let patterns = hash_patterns(value);
+        for pattern in patterns.literals {
             if is_broad(&pattern, options)
                 && !options.allowed_hash_files_patterns.contains(&pattern)
             {
-                findings.push(hit(
+                output.findings.push(hit(
                     rel,
                     field.line,
                     format!(
@@ -23,6 +32,17 @@ pub(super) fn check(rel: &str, step: &Step, options: &Options, findings: &mut Ve
                     ),
                 ));
             }
+        }
+        if patterns.unresolved {
+            let mut finding = hit(
+                rel,
+                field.line,
+                format!(
+                    "Cache `{name}` calls hashFiles with a pattern that cannot be checked against forbidBroadHashFiles. Replace the dynamic argument with a literal dependency path so broad patterns can be ruled out."
+                ),
+            );
+            finding.target = Some("unanalyzable".into());
+            output.unanalyzable(policy, finding);
         }
     }
 }
@@ -45,12 +65,20 @@ fn is_recursive_lockfile(pattern: &str, options: &Options) -> bool {
         })
 }
 
-fn literal_hash_patterns(mut value: &str) -> Vec<String> {
-    let mut patterns = Vec::new();
+#[derive(Default)]
+struct HashPatterns {
+    literals: Vec<String>,
+    unresolved: bool,
+}
+
+fn hash_patterns(mut value: &str) -> HashPatterns {
+    let mut patterns = HashPatterns::default();
     while let Some((_, body)) = value.split_once("${{") {
-        let start = patterns.len();
+        let start = patterns.literals.len();
+        let unresolved = patterns.unresolved;
         let Some(rest) = scan_expression(body, &mut patterns) else {
-            patterns.truncate(start);
+            patterns.literals.truncate(start);
+            patterns.unresolved = unresolved;
             break;
         };
         value = rest;
@@ -64,19 +92,23 @@ struct Group<'a> {
 }
 
 impl<'a> Group<'a> {
-    fn finish_argument(&mut self, rest: &'a str, patterns: &mut Vec<String>) {
+    fn finish_argument(&mut self, rest: &'a str, patterns: &mut HashPatterns) {
         let Some(start) = self.hash_arg.as_mut() else {
             return;
         };
         let argument = start[..start.len() - rest.len()].trim();
-        if let Some((literal, "")) = string_literal(argument) {
-            patterns.push(literal.replace("''", "'"));
+        if !argument.is_empty() {
+            if let Some((literal, "")) = string_literal(argument) {
+                patterns.literals.push(literal.replace("''", "'"));
+            } else {
+                patterns.unresolved = true;
+            }
         }
         *start = &rest[1..];
     }
 }
 
-fn scan_expression<'a>(mut body: &'a str, patterns: &mut Vec<String>) -> Option<&'a str> {
+fn scan_expression<'a>(mut body: &'a str, patterns: &mut HashPatterns) -> Option<&'a str> {
     let mut groups: Vec<Group<'_>> = Vec::new();
     let mut hash_function = false;
     let mut member = false;

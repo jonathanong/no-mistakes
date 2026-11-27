@@ -1,10 +1,22 @@
 use super::*;
+use std::path::PathBuf;
 
 mod coverage;
 mod edges;
 mod followups;
 mod forbidden_paths;
 mod policy;
+
+fn judge_findings(
+    file: &str,
+    jobs: &[scan::Job],
+    options: &options::Options,
+    message: Option<&str>,
+    actions: &dyn Fn(&str) -> Option<String>,
+) -> Vec<RuleFinding> {
+    judge::judge(file, jobs, options, message, actions, crate::config::v2::Unanalyzable::Report)
+        .findings
+}
 
 fn fixture(name: &str) -> PathBuf {
     crate::test_support::rule_fixture_root(RULE_ID).join(name)

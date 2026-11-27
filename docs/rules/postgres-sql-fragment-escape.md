@@ -22,7 +22,8 @@ rules:
 ```
 
 `trustedSqlTags` is the only rule option. The default is an empty list, and an
-empty list reports nothing. Each entry needs a non-empty `module` and `name`.
+empty list reports nothing. The loader rejects entries with a blank `module`
+or `name` before analysis.
 `name: default` matches a default import of that module, including
 `import sql from "@example/sql"`. A bare name matches a named import. `module`
 matches that specifier or a subpath under it. `include` and `exclude` are the

@@ -45,6 +45,10 @@ small static wrapper when the relationship should be analyzable.
 await fetch(resourceUrl);
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`nextjs-static-fetch-method`](nextjs-static-fetch-method.md) requires a

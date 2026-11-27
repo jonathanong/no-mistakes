@@ -3,7 +3,7 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
 use serde::Deserialize;
-use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 mod scan;
@@ -23,7 +23,7 @@ pub(crate) struct Options {
 }
 
 #[derive(Deserialize, Default, Clone)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct AllowEntry {
     pub(crate) file: String,
     pub(crate) text: String,
@@ -31,7 +31,7 @@ pub(crate) struct AllowEntry {
 }
 
 struct CompiledOptions {
-    allow: BTreeMap<String, String>,
+    allow: BTreeSet<String>,
 }
 
 pub(crate) fn check_with_files(
@@ -110,11 +110,13 @@ pub(crate) fn check_with_files_and_sources(
 }
 
 pub(in crate::codebase::rules) fn validate_options(opts: &Options) -> Result<()> {
+    use super::validate_options::checks::{includes, nonblank, option};
+    includes(RULE_ID, &opts.include)?;
     for (index, entry) in opts.allow.iter().enumerate() {
-        anyhow::ensure!(
-            !entry.file.trim().is_empty(),
-            "{RULE_ID}: allow[{index}].file is required and must not be empty"
-        );
+        let path = option("allow").index(index);
+        nonblank(RULE_ID, path.clone().key("file"), &entry.file)?;
+        nonblank(RULE_ID, path.clone().key("text"), &entry.text)?;
+        nonblank(RULE_ID, path.key("reason"), &entry.reason)?;
     }
     Ok(())
 }
@@ -125,12 +127,7 @@ fn compile_options(opts: Options) -> Result<CompiledOptions> {
         allow: opts
             .allow
             .into_iter()
-            .map(|entry| {
-                (
-                    format!("{}#{}", entry.file.trim(), entry.text.trim()),
-                    entry.reason,
-                )
-            })
+            .map(|entry| format!("{}#{}", entry.file.trim(), entry.text.trim()))
             .collect(),
     })
 }

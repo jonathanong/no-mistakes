@@ -81,6 +81,10 @@ find("#save");
 page.locator(".generated-widget");
 ```
 
+`no-mistakes-disable-line`, `no-mistakes-disable-next-line`, and
+`no-mistakes-disable-file` also suppress this rule when the comment names it.
+Directive-looking string literals do not.
+
 ## Related rules
 
 - [`playwright-prefer-get-by-test-id`](playwright-prefer-get-by-test-id.md)

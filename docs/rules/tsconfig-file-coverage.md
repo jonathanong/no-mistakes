@@ -139,7 +139,7 @@ Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an anal
 
 An unreadable auxiliary config, a parse failure, or a top-level value other
 than a JSON object produces an ordinary finding. The rule does not use
-`options.unanalyzable`. [Auxiliary config validation](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/tsconfig_file_coverage/lists.rs#L109-L129).
+`options.unanalyzable`. [Auxiliary config validation](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/tsconfig_file_coverage/lists.rs#L109-L129).
 
 ## Suppression
 

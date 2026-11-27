@@ -123,6 +123,9 @@ with the same step scanner as `github-actions-script-expressions`, so
 
 ## Options
 
+A `trustedHosts` entry can include a decimal port in the range 0–65535. Write
+IPv6 addresses in brackets, for example `[::1]:443`.
+
 `trustedHosts` is a list of host names. Ports are stripped before comparison,
 and comparison is case-insensitive. Subdomains are different hosts. When the
 rule is enabled and `trustedHosts` is omitted, the default is:
@@ -323,7 +326,7 @@ rules:
 
 At max effort, the rule skips unresolved URLs and continues checking literal
 candidates. At either effort, it skips scripts with an unterminated heredoc
-and workflows that cannot be read or parsed. [Shell judging](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/judge.rs#L58-L104), [URL operands](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/judge.rs#L118-L140), and [workflow selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/effort.rs#L87-L94).
+and workflows that cannot be read or parsed. [Shell judging](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/judge.rs#L58-L104), [URL operands](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/judge.rs#L118-L140), and [workflow selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_download_integrity/effort.rs#L87-L94).
 
 ### Limits
 

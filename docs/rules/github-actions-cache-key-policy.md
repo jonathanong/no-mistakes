@@ -109,7 +109,7 @@ The key must also prove a digest of the configured lockfile, in either of these 
   read `steps.<step id>.outputs.<name>` for the workflow step's `id` and that declared output.
   A missing file, a non-composite action, an output with no `value`, a constant, or a nested
   `uses` inside the action is not proof. A local action reference with an
-  empty, `.`, or `..` path segment cannot supply the digest. [Local action path validation](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_cache_key_policy/local_action.rs#L70-L80).
+  empty, `.`, or `..` path segment cannot supply the digest. [Local action path validation](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_cache_key_policy/local_action.rs#L70-L80).
 
 `rejectRestoreKeys` defaults to true. Any non-empty `restore-keys` value, including a YAML
 sequence, is a finding. An empty or missing value is allowed. Set `rejectRestoreKeys` to false to
@@ -119,17 +119,18 @@ With `forbidBroadHashFiles: true`, the rule also checks each single-quoted strin
 passed directly to `hashFiles` in a configured `actions/cache`, `actions/cache/restore`, or
 `actions/cache/save` step's `key` or `restore-keys` when its path matches
 a `caches` entry. Paths listed only in `forbiddenPaths` and `setup-*`
-`cache-dependency-path` inputs are outside this check. [Cache step selection](https://github.com/jonathanong/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_cache_key_policy/judge.rs#L17-L51). It reports a
+`cache-dependency-path` inputs are outside this check. [Cache step selection](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/github_actions_cache_key_policy/judge.rs#L17-L51). It reports a
 pattern containing `**` or ending in a standalone `*` path component, with or without a
 trailing slash. Examples include `**`, `src/**`, and `output/*`. Exact paths and suffix-specific
 patterns such as `src/*.json` pass. A single `**/` before the exact basename of any configured
 cache's lockfile (not only the matched cache's) also passes, including `**/widgets.lock` and
 `packages/**/widgets.lock`. Every other
 component in that exception must be literal. A basename glob still does not prove the
-required digest. Dynamic arguments such as `env.cachePattern` and `format(...)` are ignored.
-If the scan detects malformed quoting or delimiters, it discards partial findings from that
-interpolation and keeps findings from earlier complete interpolations. The check applies
-independently of `allowHashFiles` and `rejectRestoreKeys`.
+required digest. Dynamic arguments such as `env.cachePattern` and `format(...)` produce an
+unanalyzable diagnostic on the `key` or `restore-keys` field. Broad literal arguments in the
+same call remain definite findings. If the scan detects malformed quoting or delimiters, it
+discards partial findings from that interpolation and keeps findings from earlier complete
+interpolations. The check applies independently of `allowHashFiles` and `rejectRestoreKeys`.
 
 A missing `key` is reported on the step. Platform and digest gaps are reported on the `key` line.
 `restore-keys` is reported on its own line. Broad patterns are reported on the associated
@@ -278,6 +279,14 @@ automatic fix: the platform list, lockfile path, and forbidden store policy come
 Runs at `max` only. Configuring `effort: low` is accepted: `check` emits an analysis warning
 (requested effort low; effective effort max because this rule has no low implementation) and runs
 the rule at `max`.
+
+### Unanalyzable inputs
+
+With `forbidBroadHashFiles: true`, the rule cannot verify the pattern represented by
+`${{ hashFiles('widgets.lock', env.cachePattern) }}`. Replace the dynamic argument with a
+literal dependency path. The effective `unanalyzable` policy puts the diagnostic in failing
+findings with `report` (the default), in advisories with `advise`, or omits it with `ignore`.
+A broad literal such as `src/**` still produces a definite finding.
 
 ## Suppression
 

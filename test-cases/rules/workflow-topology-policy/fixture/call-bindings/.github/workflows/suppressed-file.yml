@@ -1,0 +1,7 @@
+# no-mistakes-disable-file workflow-topology-policy
+name: suppressed-file
+on: push
+jobs:
+  skipped:
+    uses: ./.github/workflows/callee.yml
+    secrets: inherit

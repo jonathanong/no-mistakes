@@ -1,6 +1,7 @@
 "use strict";
 
 const { fetchInvocation, isStaticString, literalString, rule } = require("../helpers");
+const { ruleSuppression } = require("../rule-suppression");
 
 const { unwrapExpression } = require("./async-ast");
 const { argumentAt } = require("./logical-call");
@@ -35,16 +36,20 @@ module.exports = rule(
         "fetch() method option must be a string literal or an expression-free template literal so it can be statically analyzed.",
     },
   },
-  (context) => ({
-    CallExpression(node) {
-      const invocation = fetchInvocation(node, context);
-      if (!invocation) return;
-      const optionsArg = argumentAt(invocation.arguments, 1);
-      const opts = unwrapExpression(optionsArg);
-      const method = opts?.type === "ObjectExpression" ? effectiveMethod(opts) : null;
-      if (optionsArg === null || (method && !isStaticString(method))) {
-        context.report({ node: method ?? node, messageId: "dynamic" });
-      }
-    },
-  }),
+  (context) => {
+    const suppressed = ruleSuppression(context, "nextjs-static-fetch-method");
+    return {
+      CallExpression(node) {
+        const invocation = fetchInvocation(node, context);
+        if (!invocation) return;
+        const optionsArg = argumentAt(invocation.arguments, 1);
+        const opts = unwrapExpression(optionsArg);
+        const method = opts?.type === "ObjectExpression" ? effectiveMethod(opts) : null;
+        const target = method ?? node;
+        if ((optionsArg === null || (method && !isStaticString(method))) && !suppressed(target)) {
+          context.report({ node: target, messageId: "dynamic" });
+        }
+      },
+    };
+  },
 );
