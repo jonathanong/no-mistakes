@@ -13,7 +13,7 @@ function namedFact(moduleName, names) {
   };
 }
 
-function memberFact(node, context, importFact, requireModule, namespaceMember) {
+function memberFact(node, context, importFact, requireModule, namespaceMember, seen) {
   const names = [];
   let dynamic = false;
   let current = unwrapExpression(node);
@@ -30,7 +30,7 @@ function memberFact(node, context, importFact, requireModule, namespaceMember) {
     return dynamic ? { unresolved: true } : namedFact(moduleName, names);
   }
   if (moduleName === null) return { unresolved: true };
-  const base = importFact(current, context);
+  const base = importFact(current, context, seen);
   if (!base) return null;
   if (dynamic || base.unresolved) return { unresolved: true };
   let fact = base;

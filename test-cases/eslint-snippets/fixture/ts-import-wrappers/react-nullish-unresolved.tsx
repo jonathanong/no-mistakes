@@ -22,3 +22,13 @@ function shadowed() {
 function outerSlot(value: Slot) {
   return value ?? "";
 }
+type Plain = string;
+type Repeated = Plain | Plain;
+function repeatedAlias(value: Repeated) {
+  return value ?? "";
+}
+type Left = Right;
+type Right = Left;
+function aliasCycle(value: Left) {
+  return value ?? "";
+}

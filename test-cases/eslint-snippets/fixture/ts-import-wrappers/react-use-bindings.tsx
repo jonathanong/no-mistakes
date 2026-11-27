@@ -109,3 +109,8 @@ export function constOtherKey() {
 export function constUseKey() {
   return React[useKey](Promise.resolve(1));
 }
+var left = right?.x;
+var right = left?.y;
+export function memberCycle() {
+  return left(Promise.resolve(1));
+}

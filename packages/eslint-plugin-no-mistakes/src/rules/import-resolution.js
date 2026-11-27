@@ -20,8 +20,8 @@ function isFreeRequire(node, context) {
   );
 }
 
-function requiredMember(callee, context) {
-  return memberFact(callee, context, importFact, requireModule, namespaceMember);
+function requiredMember(callee, context, seen = new Set()) {
+  return memberFact(callee, context, importFact, requireModule, namespaceMember, seen);
 }
 
 // undefined: not a require. null: require whose module is not a static string.
@@ -152,7 +152,7 @@ function importFact(node, context, seen = new Set()) {
   if (typeof required === "string") {
     return { module: required, kind: "namespace", imported: null, typeOnly: false };
   }
-  const member = requiredMember(current, context);
+  const member = requiredMember(current, context, seen);
   if (member) return member.unresolved ? { unresolved: true } : member;
   if (current.type !== "Identifier") return null;
   const variable = resolveVariable(current, context);

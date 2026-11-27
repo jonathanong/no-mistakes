@@ -801,6 +801,17 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/react-no-nullish-react-node",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 21,
+          "endLine": 33,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-unresolved.tsx",
+          "line": 33,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
         }
       ],
       "name": "unresolved ReactNode import",
@@ -1030,6 +1041,17 @@
           "line": 110,
           "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
           "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 34,
+          "endLine": 115,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 115,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
           "severity": 2
         }
@@ -2543,6 +2565,13 @@
             "file": "react-nullish-unresolved.tsx",
             "line": 23,
             "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-unresolved.tsx",
+            "line": 33,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
           }
         ],
         "name": "react-nullish-unresolved.tsx",
@@ -2714,6 +2743,13 @@
             "file": "react-use-bindings.tsx",
             "line": 110,
             "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 115,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
           }
         ],
         "name": "react-use-bindings.tsx",

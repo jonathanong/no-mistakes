@@ -114,8 +114,9 @@ function localTypeStatus(node, name, facts, seen) {
       if (!containsNode(declaration.parent, node)) continue;
       if (declaration.type === "TSInterfaceDeclaration") return "no";
       if (seen.has(declaration)) return "unresolved";
-      seen.add(declaration);
-      return reactTypeStatus(declaration.typeAnnotation, facts, seen);
+      const next = new Set(seen);
+      next.add(declaration);
+      return reactTypeStatus(declaration.typeAnnotation, facts, next);
     }
     current = current.parent;
   }
