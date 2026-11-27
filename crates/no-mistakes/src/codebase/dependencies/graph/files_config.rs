@@ -142,7 +142,7 @@ fn graph_config_options_from_loaded_with_test_filter(
         trpc_routers: flatten_trpc_routers(v2_config),
         terraform: v2_config.infra.terraform.clone(),
         ci: v2_config.ci.clone(),
-        assertion_owners: v2_config.rule_applications(crate::codebase::testing_analysis::rule_ids::ASSERTION_OWNER_RULE_ID).into_iter().cloned().collect(),
+        assertion_owners: v2_config.rule_applications(crate::codebase::testing_analysis::hooks().assertion_owner_rule_id).into_iter().cloned().collect(),
     }
 }
 

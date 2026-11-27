@@ -19,7 +19,7 @@ mod traversal;
 mod uncertainty;
 use config::Options;
 pub(crate) use ownership::ownership_edges;
-pub use crate::codebase::testing_analysis::rule_ids::ASSERTION_OWNER_RULE_ID as RULE_ID;
+pub const RULE_ID: &str = "coverage-producer-assertion-owner";
 
 pub(crate) fn check(
     root: &Path,

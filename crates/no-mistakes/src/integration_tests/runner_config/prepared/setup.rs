@@ -1,5 +1,5 @@
 use super::*;
-use crate::codebase::testing_analysis::{self, rule_ids::DYNAMIC_IMPORTS_RULE_ID};
+use crate::codebase::testing_analysis;
 
 #[derive(Default)]
 struct RunnerDemand {
@@ -81,7 +81,8 @@ fn prepare_inner(
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
         .collect::<crate::fx::PathSet>();
-    let dynamic = force_dynamic || config.rule_configured(DYNAMIC_IMPORTS_RULE_ID);
+    let hooks = testing_analysis::hooks();
+    let dynamic = force_dynamic || config.rule_configured(hooks.dynamic_imports_rule_id);
     add_framework_specs(
         &mut specs,
         root,
@@ -89,7 +90,7 @@ fn prepare_inner(
         config.tests.playwright.configs.as_ref(),
         &config.tests.playwright.projects,
         &visible_files,
-        (dynamic && (testing_analysis::hooks().needs_playwright_configs)(config))
+        (dynamic && (hooks.needs_playwright_configs)(config))
             || (deadlines && config.tests.playwright.configs.is_some()),
     );
     add_framework_specs(
@@ -99,7 +100,7 @@ fn prepare_inner(
         config.tests.vitest.configs.as_ref(),
         &config.tests.vitest.projects,
         &visible_files,
-        (dynamic && (testing_analysis::hooks().needs_vitest_configs)(config))
+        (dynamic && (hooks.needs_vitest_configs)(config))
             || (deadlines && config.tests.vitest.configs.is_some())
             || !config.tests.playwright.route_coverage_sources.is_empty()
             || config

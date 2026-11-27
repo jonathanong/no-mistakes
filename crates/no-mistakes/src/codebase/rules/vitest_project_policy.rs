@@ -15,7 +15,7 @@ use options::Options;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
-pub use crate::codebase::testing_analysis::vitest_policy::RULE_ID;
+pub const RULE_ID: &str = "vitest-project-policy";
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

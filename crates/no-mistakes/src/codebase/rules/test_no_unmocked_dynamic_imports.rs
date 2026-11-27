@@ -21,7 +21,7 @@ pub(crate) use with_facts::{
     check_with_prepared_facts_graph_and_session_with_suppression, supplement_runner_facts,
     PreparedFactsGraphRequest,
 };
-pub use crate::codebase::testing_analysis::rule_ids::DYNAMIC_IMPORTS_RULE_ID as RULE_ID;
+pub const RULE_ID: &str = "test-no-unmocked-dynamic-imports";
 
 pub fn check(
     root: &Path,

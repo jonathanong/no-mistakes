@@ -17,7 +17,6 @@ pub(crate) mod plan;
 mod prepared_projects;
 pub(crate) mod project_filter;
 pub(crate) mod reliability;
-pub(crate) mod rule_ids;
 pub(crate) mod runner;
 pub(crate) mod runner_filter;
 pub(crate) mod test_filter;
@@ -76,6 +75,7 @@ pub(crate) struct Hooks {
     pub(crate) new_test_filter: fn(&Path, &NoMistakesConfig) -> test_filter::TestFileFilter,
     pub(crate) test_filter_from_visible: FilterFromVisible,
     pub(crate) legacy_filter_from_visible: LegacyFilterFromVisible,
+    pub(crate) dynamic_imports_rule_id: &'static str,
     pub(crate) needs_playwright_configs: fn(&NoMistakesConfig) -> bool,
     pub(crate) needs_vitest_configs: fn(&NoMistakesConfig) -> bool,
     pub(crate) vitest_roots_configured: fn(&NoMistakesConfig) -> bool,
@@ -83,7 +83,9 @@ pub(crate) struct Hooks {
     pub(crate) collect_fixture_initializers: CollectFixtureInitializers,
     pub(crate) has_vitest_candidate_exports: fn(&Program<'_>) -> bool,
     pub(crate) collect_vitest_excludes: CollectVitestExcludes,
+    pub(crate) vitest_policy_rule_id: &'static str,
     pub(crate) vitest_policy_diagnostics: VitestPolicyDiagnostics,
+    pub(crate) assertion_owner_rule_id: &'static str,
     pub(crate) assertion_ownership_edges: AssertionOwnershipEdges,
 }
 
