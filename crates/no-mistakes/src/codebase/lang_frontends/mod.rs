@@ -40,7 +40,7 @@ pub(crate) use dart::{collect_dart_facts, extract_http_paths};
 pub(crate) use elixir::collect_elixir_facts;
 pub(crate) use facts::{configured_roots, LangFactMap, LangFileFacts};
 pub(crate) use go::collect_go_facts;
-pub(crate) use http_clients::{client_matches_route, extract_dotnet};
+pub(crate) use http_clients::{extract_dotnet, normalize_route_pattern};
 pub(crate) use java::collect_java_facts;
 pub(crate) use kafka::{scan_file as scan_kafka_file, topic_identity};
 pub(crate) use kotlin::collect_kotlin_facts;

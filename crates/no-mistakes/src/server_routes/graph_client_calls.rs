@@ -48,21 +48,30 @@ fn stored_client_call_relationships(
     facts: &HashMap<PathBuf, FileFacts>,
     routes: &[ServerRoute],
 ) -> Vec<RelationshipEdge> {
+    use crate::codebase::lang_frontends::normalize_route_pattern;
+    use crate::codebase::ts_routes::matcher;
+
+    let mut callers = facts
+        .iter()
+        .filter(|(_, file)| !file.client_calls.is_empty())
+        .peekable();
+    if callers.peek().is_none() {
+        return Vec::new();
+    }
+    let patterns: Vec<_> = routes
+        .iter()
+        .map(|route| (&route.route, normalize_route_pattern(&route.route)))
+        .collect();
     let mut relationships = Vec::new();
-    for (path, file_facts) in facts {
+    for (path, file_facts) in callers {
         for reference in &file_facts.client_calls {
             relationships.extend(
-                routes
+                patterns
                     .iter()
-                    .filter(|route| {
-                        crate::codebase::lang_frontends::client_matches_route(
-                            reference,
-                            &route.route,
-                        )
-                    })
-                    .map(|route| RelationshipEdge {
+                    .filter(|(_, pattern)| matcher::matches(reference, pattern))
+                    .map(|(route, _)| RelationshipEdge {
                         from: RelationshipNode::File(path.clone()),
-                        to: RelationshipNode::Route(route.route.clone()),
+                        to: RelationshipNode::Route((*route).clone()),
                         kind: EdgeKind::ClientCall,
                     }),
             );

@@ -51,20 +51,29 @@ struct HttpClientFile<'a> {
 }
 
 fn http_edges_for_client_files(files: &[HttpClientFile<'_>], interner: &PathInterner) -> Vec<Edge> {
+    use crate::codebase::lang_frontends::normalize_route_pattern;
+    use crate::codebase::ts_routes::matcher;
+
+    let mut callers = files.iter().filter(|file| !file.calls.is_empty()).peekable();
+    if callers.peek().is_none() {
+        return Vec::new();
+    }
+    let routes: Vec<_> = files
+        .iter()
+        .flat_map(|file| {
+            file.routes
+                .iter()
+                .map(|(route, _)| (file.path, normalize_route_pattern(route)))
+        })
+        .collect();
     let mut edges = Vec::new();
-    for caller in files {
+    for caller in callers {
         for call in caller.calls {
-            for route_file in files {
-                if route_file.path == caller.path {
-                    continue;
-                }
-                let matched = route_file.routes.iter().any(|(route, _)| {
-                    crate::codebase::lang_frontends::client_matches_route(call, route)
-                });
-                if matched {
+            for (route_file, pattern) in &routes {
+                if *route_file != caller.path && matcher::matches(call, pattern) {
                     edges.push((
                         NodeId::file_in(interner, caller.path),
-                        NodeId::file_in(interner, route_file.path),
+                        NodeId::file_in(interner, route_file),
                         EdgeKind::HttpCall,
                     ));
                 }

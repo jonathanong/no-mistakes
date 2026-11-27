@@ -17,7 +17,8 @@ Filters select client-call source files, not helper modules: an included client
 can still resolve a static local or imported helper omitted by the filter.
 Configured route roots and mounts continue to define server-route definitions.
 Configured Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and .NET client
-literals appear as `client-call` edges to the matching route pattern. Computed
-URLs are non-edges. Test files are excluded the same way as other client sources.
+root-relative literals appear as `client-call` edges to the matching route
+pattern. Host-qualified and computed URLs produce no edge. Test files are
+excluded the same way as other client sources.
 
 Node API: `serverRouteEdges(options)`.

@@ -38,7 +38,9 @@ Use `--relationship http` for static HTTP client literals. That includes
 TypeScript `fetch`, Swift `Endpoint` literals, Dart `Uri.parse` / `http.*`
 literals, and configured Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir,
 and .NET client literals. The edge targets the file that already stores the
-matching route. Computed, concatenated, and interpolated URLs are non-edges.
+matching route. The configured language clients match root-relative paths.
+URLs with a host and computed, concatenated, or interpolated URLs produce no
+edge.
 
 Use `--relationship trpc` for reverse impact through static tRPC procedure
 calls and the router files that declared them. Virtual IDs are

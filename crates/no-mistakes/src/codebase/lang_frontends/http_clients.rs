@@ -42,10 +42,6 @@ pub(crate) fn extract_dotnet(source: &str) -> Vec<String> {
     paths_from(source, &[regexes::dotnet(), regexes::dotnet_message()])
 }
 
-pub(crate) fn client_matches_route(client: &str, route: &str) -> bool {
-    crate::codebase::ts_routes::matcher::matches(client, &normalize_route_pattern(route))
-}
-
 fn paths_from(source: &str, patterns: &[&Regex]) -> Vec<String> {
     let mut paths = Vec::new();
     for pattern in patterns {
@@ -70,26 +66,19 @@ fn first_group<'a>(cap: &'a regex::Captures<'a>) -> Option<&'a str> {
 
 fn static_path(raw: Option<&str>) -> Option<String> {
     let raw = raw?;
-    if raw.contains(['$', '{', '%']) {
+    if !raw.starts_with('/') || raw.starts_with("//") || raw.contains(['$', '{', '%']) {
         return None;
     }
-    let path = hosted_path(raw).unwrap_or(raw);
-    let path = path.split(['?', '#']).next().unwrap_or(path);
+    let path = raw.split(['?', '#']).next().unwrap_or(raw);
     let path = if path.len() > 1 {
         path.trim_end_matches('/')
     } else {
         path
     };
-    path.starts_with('/').then(|| path.to_string())
+    Some(path.to_string())
 }
 
-fn hosted_path(raw: &str) -> Option<&str> {
-    let rest = raw.split_once("://")?.1;
-    let end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
-    rest[end..].starts_with('/').then_some(&rest[end..])
-}
-
-fn normalize_route_pattern(raw: &str) -> String {
+pub(crate) fn normalize_route_pattern(raw: &str) -> String {
     let path = raw.split(['?', '#']).next().unwrap_or(raw);
     let path = if path.len() > 1 {
         path.trim_end_matches('/')

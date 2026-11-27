@@ -1,13 +1,15 @@
 use super::{
-    client_matches_route, extract_dotnet, extract_elixir, extract_go, extract_jvm, extract_php,
-    extract_python, extract_ruby, extract_rust,
+    extract_dotnet, extract_elixir, extract_go, extract_jvm, extract_php, extract_python,
+    extract_ruby, extract_rust, normalize_route_pattern,
 };
 
 #[test]
 fn static_literals_keep_a_path_and_computed_urls_do_not() {
     assert_eq!(extract_python(r#"requests.get("/users")"#), vec!["/users"]);
+    assert!(extract_python(r#"requests.get("https://api.example.invalid/users?x=1")"#).is_empty());
+    assert!(extract_python(r#"requests.get("//api.example.invalid/users")"#).is_empty());
     assert_eq!(
-        extract_python(r#"requests.get("https://example.test/users?x=1")"#),
+        extract_python(r#"requests.get("/users?next=https://api.example.invalid")"#),
         vec!["/users"]
     );
     assert!(extract_python(r#"requests.get(f"/users/{user_id}")"#).is_empty());
@@ -38,8 +40,7 @@ fn static_literals_keep_a_path_and_computed_urls_do_not() {
 
 #[test]
 fn client_paths_match_normalized_route_patterns() {
-    assert!(client_matches_route("/users", "/users"));
-    assert!(client_matches_route("/users", "users/"));
-    assert!(client_matches_route("/api/users", "/api/users"));
-    assert!(!client_matches_route("/users", "/accounts"));
+    assert_eq!(normalize_route_pattern("users/"), "/users");
+    assert_eq!(normalize_route_pattern("/api/users?query=1"), "/api/users");
+    assert_eq!(normalize_route_pattern(""), "/");
 }

@@ -74,7 +74,7 @@ fn configured_language_http_clients_match_route_files() {
         );
         assert!(
             files.iter().all(|path| path != computed),
-            "{route} dependents include computed {computed}: {files:?}"
+            "{route} dependents include unsupported URL source {computed}: {files:?}"
         );
         let _ = pattern;
     }
@@ -97,7 +97,7 @@ fn configured_language_http_clients_match_route_files() {
             edges
                 .iter()
                 .all(|edge| { edge["from"].as_str().unwrap_or("").replace('\\', "/") != computed }),
-            "computed file {computed} emitted an edge: {edges:?}"
+            "unsupported URL source {computed} emitted an edge: {edges:?}"
         );
     }
 }
