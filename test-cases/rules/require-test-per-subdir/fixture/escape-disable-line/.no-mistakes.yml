@@ -1,0 +1,6 @@
+rules: # no-mistakes-disable-line require-test-per-subdir
+  - rule: require-test-per-subdir
+    scope: repository
+    options:
+      roots: [".."]
+      testGlob: "*.test.mts"

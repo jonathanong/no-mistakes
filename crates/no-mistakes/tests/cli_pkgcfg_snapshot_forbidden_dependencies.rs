@@ -18,10 +18,16 @@ fn analysis_root(name: &str) -> PathBuf {
 fn forbidden_dependencies_json_matches_snapshot() {
     let basic = analysis_root("forbidden-dependencies-basic");
     let globs = analysis_root("forbidden-dependencies-globs");
+    let suppression = rules_path("forbidden-dependencies", "fixture", "suppression");
     assert_saved_fixture(
         "forbidden_dependencies",
         &[
             ("basic", basic.clone(), cfg("basic.yml")),
+            (
+                "suppression",
+                suppression.clone(),
+                suppression.join(".no-mistakes.yml"),
+            ),
             (
                 "directory_root",
                 basic.clone(),

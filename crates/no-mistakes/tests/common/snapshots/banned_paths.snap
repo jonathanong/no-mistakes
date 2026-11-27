@@ -74,12 +74,29 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "include_and_suppression": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "web/pages/disable-next-line.tsx",
+          "line": 1,
+          "message": "directive for `banned-paths` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "// no-mistakes-disable-next-line banned-paths: fixture targets line 2 while the rule reports line 1",
+          "target": "banned-paths"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
       "rules": [
+        {
+          "file": "web/pages/disable-next-line.tsx",
+          "line": 1,
+          "message": "Next.js pages router files are not allowed",
+          "rule": "banned-paths",
+          "sourceLine": "// no-mistakes-disable-next-line banned-paths: fixture targets line 2 while the rule reports line 1",
+          "target": "web/pages/**"
+        },
         {
           "file": "web/pages/index.tsx",
           "line": 1,

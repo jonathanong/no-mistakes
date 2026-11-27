@@ -1,0 +1,10 @@
+rules:
+  - rule: required-entrypoint-reachability
+    scope: repository
+    options:
+      sourceGlobs: [main.ts]
+      entrypoints:
+        - main.ts
+        # no-mistakes-disable-next-line required-entrypoint-reachability
+        - entrypoints/unavailable.ts
+        - entrypoints/control.ts
