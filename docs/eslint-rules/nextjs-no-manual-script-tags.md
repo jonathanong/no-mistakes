@@ -42,7 +42,7 @@ Outside `app` and `pages`, a non-static `require`, `import()`, or
 module might be `next/`. JSON-LD and an allowed inline id are checked first.
 JSON-LD still reports `unanalyzable` when a structured-data option is set.
 `"ignore"` drops only that uncertain report. A static
-`require("next/…")` or `import Name = require("next/…")` is a Next.js file. An expression-free template counts by its cooked text, so a template whose source text is `next\u002fscript` is the module `next/script`. A type-only import, including `import type Head = require("next/head")` and `import { type Script } from "next/script"`, does not.
+`require("next/…")` or `import Name = require("next/…")` is a Next.js file. An expression-free template counts by its cooked text, so an escaped slash in a `next/script` template is still that module. A type-only import, including `import type Head = require("next/head")` and `import { type Script } from "next/script"`, does not.
 
 - `structuredDataComponent` is a nonempty component name to recommend instead
   of raw JSON-LD scripts, for example `"StructuredData"`. The name is used in
