@@ -39,6 +39,50 @@ fn missing_authored_allowlist_key_uses_fragment_with_first_line_fallback() {
     assert_eq!(sources.physical_read_count(), 1);
 }
 
+#[test]
+fn empty_provenance_leaves_findings_unlocated() {
+    let (root, mut config) = fixture_config();
+    let rule = configured_rule(&config).clone();
+    config.config_provenance = Default::default();
+    let mut findings = stale_findings(&rule);
+    let original = findings.clone();
+    let sources = crate::codebase::rules::source_store_for_files(&[]);
+    super::annotate(&root, &config, &rule, &sources, &mut findings);
+    assert_eq!(findings, original);
+}
+
+#[test]
+fn missing_config_source_uses_the_first_line() {
+    let (root, mut config) = fixture_config();
+    let index = config
+        .rules
+        .iter()
+        .position(|rule| rule.rule == super::super::RULE_ID)
+        .unwrap();
+    let mut findings = stale_findings(&config.rules[index]);
+    let target = findings[0].target.clone().unwrap();
+    config.config_provenance.insert(
+        crate::config::source_locations::ConfigPath::default()
+            .key("rules")
+            .index(index)
+            .key("options")
+            .key("allowProjects")
+            .key(&target),
+        std::path::PathBuf::from("missing-location"),
+        crate::config::source_locations::ConfigPath::default(),
+    );
+    let sources = crate::codebase::rules::source_store_for_files(&[]);
+    super::annotate(
+        &root,
+        &config,
+        &config.rules[index],
+        &sources,
+        &mut findings,
+    );
+    assert_eq!(findings[0].line, 1);
+    assert!(findings[0].file.ends_with("missing-location"));
+}
+
 fn fixture_config() -> (std::path::PathBuf, crate::config::v2::NoMistakesConfig) {
     let root = crate::codebase::ts_resolver::normalize_path(
         &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))

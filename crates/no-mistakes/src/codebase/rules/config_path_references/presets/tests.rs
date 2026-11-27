@@ -170,3 +170,31 @@ tests:
     )
     .is_empty());
 }
+
+#[test]
+fn recorded_field_origin_reports_only_the_file_that_declared_it() {
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    let origin = crate::config::source_locations::ConfigPath::default().key("projects");
+    let source = std::path::Path::new(".no-mistakes.yml");
+    config.config_provenance.insert(
+        origin.clone(),
+        source.to_path_buf(),
+        crate::config::source_locations::ConfigPath::default(),
+    );
+    assert!(super::no_mistakes::reports_reference(
+        Some(&origin),
+        &config,
+        source
+    ));
+    assert!(!super::no_mistakes::reports_reference(
+        Some(&origin),
+        &config,
+        std::path::Path::new("other.yml")
+    ));
+    let unrecorded = crate::config::source_locations::ConfigPath::default().key("tests");
+    assert!(!super::no_mistakes::reports_reference(
+        Some(&unrecorded),
+        &config,
+        source
+    ));
+}
