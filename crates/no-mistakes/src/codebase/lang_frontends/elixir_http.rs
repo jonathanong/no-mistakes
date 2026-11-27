@@ -1,6 +1,9 @@
 use regex::Regex;
 use std::sync::OnceLock;
 
+#[path = "elixir_http_resources.rs"]
+mod resources;
+
 pub(super) fn extract_http_routes(source: &str) -> Vec<(String, String)> {
     let source = super::super::strip::mask_triple_quoted_strings(source);
     let mut prefixes: Vec<(usize, Option<String>)> = Vec::new();
@@ -20,7 +23,10 @@ pub(super) fn extract_http_routes(source: &str) -> Vec<(String, String)> {
         }
         let scope = parse_scope(trimmed);
         let verb = scope.is_none().then(|| parse_verb(trimmed)).flatten();
-        if (scope.is_some() || verb.is_some())
+        let resource_actions = (scope.is_none() && verb.is_none())
+            .then(|| resources::parse_resources(trimmed))
+            .flatten();
+        if (scope.is_some() || verb.is_some() || resource_actions.is_some())
             && prefixes.last().is_some_and(|(open, _)| indent <= *open)
         {
             opaque_rest = true;
@@ -42,6 +48,12 @@ pub(super) fn extract_http_routes(source: &str) -> Vec<(String, String)> {
             continue;
         }
         if prefixes.iter().any(|(_, prefix)| prefix.is_none()) {
+            continue;
+        }
+        if let Some(actions) = resource_actions {
+            for (path, handler) in actions {
+                routes.push((join_all(&prefixes, None, &path), handler));
+            }
             continue;
         }
         if let Some((path, handler)) = verb {

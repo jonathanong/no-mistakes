@@ -31,15 +31,61 @@ fn moduledoc_heredoc_examples_are_not_routes() {
 }
 
 #[test]
-fn resources_and_computed_paths_are_skipped() {
+fn bare_resources_expand_default_actions() {
+    assert_eq!(
+        extract_http_routes(r#"    resources "/users", UserController"#),
+        resource_actions("/users", "UserController")
+    );
+}
+
+#[test]
+fn literal_scope_prefixes_resources() {
     let routes = extract_http_routes(
         r#"
-    resources "/users", UserController
+    scope "/api" do
+      resources "/users", UserController
+    end
+    get "/after", UserController, :index
+"#,
+    );
+    let mut expected = resource_actions("/api/users", "UserController");
+    expected.push(("/after".into(), "UserController.index".into()));
+    expected.sort();
+    assert_eq!(routes, expected);
+}
+
+#[test]
+fn resources_options_and_computed_paths_stay_empty() {
+    let routes = extract_http_routes(
+        r#"
+    resources "/users", UserController, only: [:index]
+    resources "/#{id}", UserController
+    resources path, UserController
     get path, UserController, :index
     get "/users", UserController
+    scope path do
+      resources "/hidden", UserController
+    end
+    scope "/x#{v}" do
+      resources "/accounts", UserController
+    end
 "#,
     );
     assert!(routes.is_empty());
+}
+
+fn resource_actions(base: &str, controller: &str) -> Vec<(String, String)> {
+    let mut routes = vec![
+        (base.to_string(), format!("{controller}.index")),
+        (base.to_string(), format!("{controller}.create")),
+        (format!("{base}/new"), format!("{controller}.new")),
+        (format!("{base}/:id"), format!("{controller}.show")),
+        (format!("{base}/:id/edit"), format!("{controller}.edit")),
+        (format!("{base}/:id"), format!("{controller}.update")),
+        (format!("{base}/:id"), format!("{controller}.delete")),
+    ];
+    routes.sort();
+    routes
 }
 
 #[test]

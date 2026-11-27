@@ -384,10 +384,10 @@ not started.
 | Kafka                   | n/a                                            | n/a                                                                      | n/a                                                                                    | static topic produce/consume                              | shipped (v1 extractors)          |
 | Rust                    | `rust-use`, `rust-mod`                         | `tests plan cargo`                                                       | Axum, Actix, Rocket literals                                                           | no                                                        | shipped (v1 extractors + plan)   |
 | Ruby on Rails           | `ruby-require`, `ruby-ref`                     | `tests plan rails`                                                       | `routes.rb` `to:` / `resources`                                                        | Active Job `perform_later`, Sidekiq `perform_async`       | shipped (v1 extractors + plan)   |
-| PHP                     | `php-use`, `php-package`                       | `tests plan php`                                                         | Laravel `Route::` / `Route::resource` / `Route::apiResource` or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan)   |
+| PHP                     | `php-use`, `php-package`                       | `tests plan php`                                                         | Laravel `Route::` / static resource and `apiResources` forms, or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan)   |
 | Java, Spring            | `java-import`, `java-ref`                      | `tests plan java`                                                        | Spring `@RequestMapping` / `@GetMapping` literals                                      | no                                                        | shipped (v1 extractors + plan)   |
 | Kotlin, Spring          | `kotlin-import`, `kotlin-ref`                  | `tests plan kotlin`                                                      | Spring `@RequestMapping` / `@GetMapping` literals on `.kt`                             | no                                                        | shipped (v1 extractors + plan)   |
-| Elixir, Phoenix         | `elixir-import`, `elixir-ref`                  | `tests plan elixir`                                                      | Phoenix `get`/`post`/`put`/`patch`/`delete` literals with literal `scope` prefixes     | no                                                        | shipped (v1 extractors + plan)   |
+| Elixir, Phoenix         | `elixir-import`, `elixir-ref`                  | `tests plan elixir`                                                      | Phoenix verb literals, literal `scope` prefixes, and static `resources`                | no                                                        | shipped (v1 extractors + plan)   |
 | Dart / Flutter          | `dart-import`, `dart-ref`                      | `tests plan dart`                                                        | no Dart server graph; client `http` edges to TS routes                                 | no                                                        | shipped (v1 extractors + plan)   |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
@@ -789,7 +789,7 @@ framework from files, and do not enable both extractors from a missing value.
 | Module graph     | `import`            | `use`, `require`/`include` of local files, PSR-4 from configured `composer.json`                              |
 | Package identity | workspace packages  | configured Composer packages / path repositories                                                              |
 | Tests            | `tests plan vitest` | `tests plan php` over PHPUnit / Pest files                                                                    |
-| HTTP routes      | `server routes`     | configured Laravel `Route::` / bare `Route::resource` / `Route::apiResource` or Symfony attribute/YAML routes |
+| HTTP routes      | `server routes`     | configured Laravel `Route::` / static `Route::resource` / `Route::apiResource` / `Route::apiResources` or Symfony attribute/YAML routes |
 | Queues           | BullMQ              | Laravel `SomeJob::dispatch()` / `ShouldQueue`, or Symfony Messenger handlers                                  |
 | Lockfile         | npm-family          | later (`lockfile diff` is npm-family; `composer.lock` diffs are not started)                                  |
 
@@ -797,6 +797,8 @@ framework from files, and do not enable both extractors from a missing value.
 Route::get('/api/users', [UserController::class, 'index']);
 Route::resource('users', UserController::class);
 Route::apiResource('accounts', UserController::class);
+Route::resource('articles', UserController::class)->only(['show']);
+Route::apiResources(['bulk' => UserController::class]);
 SomeJob::dispatch($user);
 #[Route('/health', methods: ['GET'])]
 class HealthController {}
@@ -804,11 +806,18 @@ $bus->dispatch(new WelcomeMessage());
 ```
 
 `__DIR__ . '/' . $name`, `app($abstract)`, `#[Route($prefix . '/users')]`,
-`$bus->dispatch($message)` lookups, `Route::resource(..., ['only' => ...])`,
-`Route::resource(...)->only([...])`, nested dotted `Route::resource` names,
-named-argument `Route::resource` / `Route::apiResource` calls, and
-`Route::apiResources` maps are non-edges. Missing `tests.php.framework`
-still enables neither Laravel nor Symfony extractors.
+and `$bus->dispatch($message)` lookups are non-edges. Static
+`Route::resource` / `Route::apiResource` forms with an `only` or `except`
+list (an options array or `->only([...])` / `->except([...])`, including
+after `->names([...])`), nested dotted names such as `photos.comments`,
+named `name:` / `controller:` arguments, and `Route::apiResources` maps
+emit one route fact per remaining standard action and omit excluded actions.
+`Route::apiResource` omits `create` and `edit`. Computed prefixes, computed
+names, nested routes using `->shallow()`, and `__DIR__` concatenation stay
+non-edges. A call that sets both
+`only` and `except`, or names an action outside that call's set, stays a
+non-edge. Missing `tests.php.framework` still enables neither Laravel nor
+Symfony extractors.
 
 ## Java, Spring
 
@@ -901,16 +910,20 @@ Module names plus capitalized identifiers emit `elixir-ref`. Same-package
 refs without an `alias`/`import`/`use` are non-edges.
 
 Phoenix HTTP v1 matches literal `get "/users", Controller, :index` (and
-`post`/`put`/`patch`/`delete`) registrations and joins literal
-`scope "/api"` prefixes onto nested verb paths. `resources` macros and
-computed `scope path` blocks are non-edges.
+`post`/`put`/`patch`/`delete`) registrations, joins literal `scope "/api"`
+prefixes onto nested verb and `resources` paths, and expands a static
+`resources "/users", UserController` macro into one route fact per default
+action (`index`, `create`, `new`, `show`, `edit`, `update`, `delete`).
+Computed `scope path` blocks stay non-edges, including a `resources` macro
+nested inside one. A `resources` call with options such as `only:` stays a
+non-edge.
 
 | Feature          | TS/JS reference     | Elixir equivalent                                                                                                            |
 | ---------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Module graph     | `import`            | exact `alias`/`import`/`use MyApp.User` and brace aliases `alias MyApp.{User, Role}`                                         |
 | Package identity | workspace packages  | configured `tests.elixir.apps`                                                                                               |
 | Tests            | `tests plan vitest` | `tests plan elixir` over `*_test.exs`; `mix test <path>` from the Mix project root (umbrella child paths stay repo-relative) |
-| HTTP routes      | `server routes`     | Phoenix `get`/`post`/`put`/`patch`/`delete` literals, including literal `scope "/api"` prefixes                              |
+| HTTP routes      | `server routes`     | Phoenix verb literals, literal `scope` prefixes, and static `resources` macros                                                |
 | Queues           | BullMQ              | no                                                                                                                           |
 | Lockfile         | npm-family          | later (`mix.exs` native fallback only)                                                                                       |
 
@@ -925,13 +938,14 @@ defmodule MyAppWeb.Router do
   scope "/api" do
     get "/items", MyAppWeb.UserController, :index
   end
+  resources "/accounts", MyAppWeb.UserController
 end
 ```
 
 Nested brace aliases, wildcard imports, same-package refs without
-`alias`/`import`/`use`, Phoenix `resources` macros, computed `scope path`
-blocks, `mix.lock` / `config.exs` native fallback, and queues
-are non-edges / later work. Native fallback is
+`alias`/`import`/`use`, computed `scope path` blocks (including a nested
+`resources` macro), `resources` calls with options, `mix.lock` /
+`config.exs` native fallback, and queues are non-edges / later work. Native fallback is
 `mix.exs` plus non-test `.ex` files under configured apps. Any `.ex`/`.exs`
 under `/test/` is non-production. `*_test.exs` is the test suffix.
 
@@ -1073,9 +1087,8 @@ shipped for configured Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and D
 Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
 `Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients besides
-Dart/Flutter `Uri.parse` / `http.*` literals, Laravel `Route::resource` /
-`Route::apiResource` `only`/`except`, nested dotted names, named arguments, and
-`Route::apiResources`, Kafka outside TS/Python literal shapes, language
+Dart/Flutter `Uri.parse` / `http.*` literals, Laravel resource routes with
+computed options or arguments, Phoenix resource routes with options, Kafka outside TS/Python literal shapes, language
 `symbols`/`call-sites`, and rule families that apply only to TS/JS or `.sql`
 ([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)).
 

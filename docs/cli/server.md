@@ -8,7 +8,9 @@ Laravel, Symfony attribute/YAML, Rust Axum / Actix / Rocket, ASP.NET
 configured Java and Kotlin packages, and Phoenix `get`/`post`/`put`/`patch`/
 `delete` literals in configured Elixir apps, are
 projected into the same `server routes|edges|related` report from the language
-`RouteRef` facts.
+`RouteRef` facts. Static Laravel `Route::resource`, `Route::apiResource`, and
+`Route::apiResources` forms, and Phoenix `resources` macros, are included.
+Computed route paths stay out.
 
 | Leaf command | Purpose |
 | --- | --- |
