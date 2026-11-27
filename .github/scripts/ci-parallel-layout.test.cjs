@@ -86,7 +86,7 @@ for (const name of ["quality", "tests-gate"]) {
             ...process.env,
             MACOS_REQUIRED: "",
             MACOS_SMOKE_REQUIRED: "",
-            MACOS_EVENT: "",
+            MACOS_EVENT: dependency === "standalone-pr" ? "pull_request" : "push",
             MACOS_REF: "",
             RESULTS: JSON.stringify(input),
           },
@@ -120,6 +120,7 @@ test("required names and every full test family remain in the aggregate", () => 
     "tests",
     "standalone-build",
     "standalone-shards",
+    "standalone-pr",
     "timeout-policy-browser-tests",
   ])
     assert.ok(job("tests-gate").includes(name), name);
@@ -144,7 +145,12 @@ test("JavaScript shards merge coverage under the normal unchanged threshold conf
     job("javascript-shards"),
     /--config \.github\/scripts\/vitest-shard.config.cjs --shard=/,
   );
-  assert.match(job("javascript-shards"), /reporter=blob/);
+  const shards = job("javascript-shards");
+  assert.ok(
+    shards.includes("fromJSON(github.event_name == 'pull_request' && '[1,2]' || '[1,2,3,4]')"),
+  );
+  assert.match(shards, /reporter=blob/);
+  assert.match(job("quality-links"), /name: Documentation links/);
   assert.match(job("javascript-shards"), /runs-on: ubuntu-latest/);
   assert.match(job("javascript-shards"), /include-hidden-files: true/);
   assert.match(job("javascript-shards"), /path: \.vitest\/blob/);

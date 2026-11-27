@@ -36,13 +36,15 @@ function commands(mode, bundle, index, total, workspace = process.cwd()) {
   ];
 }
 
+function testTargets(shard) {
+  return ["--locked", ...(shard === 0 ? ["--workspace"] : ["-p", "no-mistakes"]), "--lib"];
+}
+
 function buildCommand(bundle, shard) {
   return [
     "nextest",
     "archive",
-    "--locked",
-    ...(shard === 0 ? ["--workspace"] : ["-p", "no-mistakes"]),
-    "--lib",
+    ...testTargets(shard),
     "--archive-file",
     path.resolve(bundle, archiveName(shard)),
     "--zstd-level",
@@ -69,29 +71,14 @@ function run(mode, bundle, index, total, env = process.env) {
   }
   for (const [offset, args] of commands(mode, directory, index, total).entries()) {
     const shardEnv = { ...childEnv };
-    if (mode === "build") {
-      if (shardEnv.NM_TEST_SHARD) throw new Error("standalone compile shard is already selected");
-      const shard = index === undefined ? offset : index - 1;
-      shardEnv.NM_TEST_SHARD = String(shard);
-      const wrapper = path.join(__dirname, "standalone-shard-rustc.sh");
-      // Cargo fingerprints workspace artifacts by the wrapper path.
-      shardEnv.RUSTC_WORKSPACE_WRAPPER = path.join(__dirname, `standalone-shard-rustc-${shard}.sh`);
-      if (shardEnv.RUSTC_WRAPPER && shardEnv.RUSTC_WRAPPER !== wrapper) {
-        shardEnv.NM_INNER_RUSTC_WRAPPER = shardEnv.RUSTC_WRAPPER;
-      }
-      shardEnv.RUSTC_WRAPPER = "";
-    }
+    if (mode === "build") selectCompileShard(shardEnv, index === undefined ? offset : index - 1);
     const child = spawnSync("cargo", args, { env: shardEnv, stdio: "inherit" });
     if (child.error) throw child.error;
     if (child.status !== 0) return child.status ?? 1;
   }
   const target =
     mode === "build" ? env.CARGO_TARGET_DIR : path.resolve("target/standalone-lib/target");
-  if (!target) throw new Error("standalone archive requires its isolated Cargo target");
-  if (
-    ["no-mistakes", "no-mistakes.exe"].some((name) => existsSync(path.join(target, "debug", name)))
-  )
-    throw new Error("standalone library validation must not build the CLI");
+  requireNoCli(target);
   if (mode === "build" && (index === undefined || index === SHARDS)) {
     for (let shard = 0; shard < SHARDS; shard += 1) {
       if (!existsSync(path.join(directory, archiveName(shard))))
@@ -105,20 +92,63 @@ function run(mode, bundle, index, total, env = process.env) {
   return 0;
 }
 
+function requireNoCli(target) {
+  if (!target) throw new Error("standalone archive requires its isolated Cargo target");
+  if (
+    ["no-mistakes", "no-mistakes.exe"].some((name) => existsSync(path.join(target, "debug", name)))
+  )
+    throw new Error("standalone library validation must not build the CLI");
+}
+
+function selectCompileShard(env, shard) {
+  if (env.NM_TEST_SHARD) throw new Error("standalone compile shard is already selected");
+  env.NM_TEST_SHARD = String(shard);
+  // Cargo fingerprints workspace artifacts by the wrapper path.
+  env.RUSTC_WORKSPACE_WRAPPER = path.join(__dirname, `standalone-shard-rustc-${shard}.sh`);
+  if (
+    env.RUSTC_WRAPPER &&
+    env.RUSTC_WRAPPER !== path.join(__dirname, "standalone-shard-rustc.sh")
+  ) {
+    env.NM_INNER_RUSTC_WRAPPER = env.RUSTC_WRAPPER;
+  }
+  env.RUSTC_WRAPPER = "";
+}
+
+function runLocal(index, env = process.env) {
+  if (!Number.isInteger(index) || index < 1 || index > SHARDS)
+    throw new Error("expected a one-based standalone build shard");
+  requireNoCli(env.CARGO_TARGET_DIR);
+  const childEnv = { ...env };
+  delete childEnv["CARGO_BIN_EXE_no-mistakes"];
+  selectCompileShard(childEnv, index - 1);
+  childEnv.CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER = `bash ${path.join(__dirname, "libtest-argv-runner.sh")}`;
+  const child = spawnSync(
+    "cargo",
+    ["nextest", "run", ...testTargets(index - 1), "--no-fail-fast", "--retries", "0"],
+    { env: childEnv, stdio: "inherit" },
+  );
+  if (child.error) throw child.error;
+  requireNoCli(env.CARGO_TARGET_DIR);
+  return child.status ?? 1;
+}
+
 if (require.main === module) {
   try {
     const [mode, bundle, index, total] = process.argv.slice(2);
     const arity = process.argv.length - 2;
-    if (!bundle || (mode === "build" ? ![2, 3].includes(arity) : arity !== 4))
+    if (mode === "local" && arity === 2) {
+      process.exitCode = runLocal(Number(bundle));
+    } else if (!bundle || (mode === "build" ? ![2, 3].includes(arity) : arity !== 4))
       throw new Error(
-        "usage: standalone-shards.cjs build <bundle> [index] | run <bundle> <index> <total>",
+        "usage: standalone-shards.cjs build <bundle> [index] | run <bundle> <index> <total> | local <index>",
       );
-    process.exitCode = run(
-      mode,
-      bundle,
-      index === undefined ? undefined : Number(index),
-      Number(total),
-    );
+    else
+      process.exitCode = run(
+        mode,
+        bundle,
+        index === undefined ? undefined : Number(index),
+        Number(total),
+      );
   } catch (error) {
     console.error(error.message);
     process.exitCode = 1;

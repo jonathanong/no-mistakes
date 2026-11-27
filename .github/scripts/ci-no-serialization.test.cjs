@@ -45,3 +45,27 @@ test("the source policy job scans committed binaries before installing tooling",
   const steps = ci.jobs["quality-source"].steps.map(({ name }) => name);
   assert.deepEqual(steps.slice(0, 2), ["Checkout", "Check committed binary files"]);
 });
+
+test("PR standalone slices build and test in independent runners with the main cache", () => {
+  const pr = ci.jobs["standalone-pr"];
+  const main = ci.jobs["standalone-build"];
+  assert.equal(
+    pr.if,
+    "${{ github.event_name == 'pull_request' && needs.changes.outputs.rust == 'true' }}",
+  );
+  assert.equal(
+    main.if,
+    "${{ github.event_name != 'pull_request' && needs.changes.outputs.rust == 'true' }}",
+  );
+  assert.equal(pr.needs, "changes");
+  assert.deepEqual(pr.strategy, { "fail-fast": false, matrix: { shard: [1, 2, 3] } });
+  assert.deepEqual(pr.env, main.env);
+  const restore = pr.steps.find(({ id }) => id === "standalone-lib-workspace-cache");
+  assert.deepEqual(
+    restore,
+    main.steps.find(({ id }) => id === restore.id),
+  );
+  assert.ok(pr.steps.every(({ uses }) => !uses?.startsWith("actions/upload-artifact@")));
+  assert.ok(pr.steps.at(-1).run.endsWith("standalone-shards.cjs local ${{ matrix.shard }}"));
+  assert.ok(ci.jobs["tests-gate"].needs.includes("standalone-pr"));
+});

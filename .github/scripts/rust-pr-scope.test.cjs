@@ -51,7 +51,7 @@ test("empty, mixed, deleted and renamed inputs stay conservative", () => {
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout, "rust=true\n");
 });
-function gate(name, results, required) {
+function gate(name, results, required, event = "pull_request") {
   const args =
     name === "tests-gate"
       ? [path.join(__dirname, "tests-gate.cjs")]
@@ -63,7 +63,7 @@ function gate(name, results, required) {
       RESULTS: JSON.stringify(results),
       RUST_REQUIRED: required,
       MACOS_REQUIRED: "false",
-      MACOS_EVENT: "pull_request",
+      MACOS_EVENT: event,
       MACOS_REF: "refs/pull/1/merge",
     },
   });
@@ -71,8 +71,7 @@ function gate(name, results, required) {
 for (const [name, allowed, forbidden] of [
   ["quality", "quality-rust", "quality-js"],
   ["tests-gate", "tests", "javascript-coverage"],
-  ["tests-gate", "standalone-build", "linux-api-tests"],
-  ["tests-gate", "standalone-shards", "packages"],
+  ["tests-gate", "standalone-pr", "linux-api-tests"],
   ["tests-gate", "native-test-build", "changes"],
 ]) {
   test(`${name} allows only an intentional Rust skip (${allowed})`, () => {
@@ -87,11 +86,33 @@ for (const [name, allowed, forbidden] of [
 }
 test("scope metadata is PR-only, fail-closed, and artifact merges skip with their producers", () => {
   assert.match(workflow, /rust:.*github.event_name != 'pull_request'.*outputs.rust != 'false'/);
-  for (const name of ["quality-rust", "standalone-build", "rust-coverage-build", "docs-tests"])
+  for (const name of ["quality-rust", "rust-coverage-build", "docs-tests"])
     assert.match(job(name), /if: \$\{\{ needs.changes.outputs.rust == 'true' \}\}/);
   assert.match(
     job("tests"),
     /^    if: \$\{\{ !cancelled\(\) && needs.changes.outputs.rust == 'true' \}\}$/m,
   );
   assert.match(workflow, /node --test[^\n]*rust-pr-scope.test.cjs/);
+});
+
+test("the coverage gate requires the standalone job for the current event", () => {
+  const results = Object.fromEntries(
+    ["standalone-build", "standalone-shards", "standalone-pr"].map((id) => [
+      id,
+      { result: "success" },
+    ]),
+  );
+  for (const [event, inactive] of [
+    ["pull_request", ["standalone-build", "standalone-shards"]],
+    ["push", ["standalone-pr"]],
+    ["workflow_dispatch", ["standalone-pr"]],
+  ]) {
+    for (const name of Object.keys(results)) {
+      const changed = { ...results, [name]: { result: "skipped" } };
+      assert.equal(
+        gate("tests-gate", changed, "true", event).status,
+        inactive.includes(name) ? 0 : 1,
+      );
+    }
+  }
 });

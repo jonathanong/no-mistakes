@@ -137,7 +137,7 @@ test("coverage report fan-in preserves every floor after sharded test execution"
     assert.match(workflow, new RegExp(`RUST_COVERAGE_FAIL_UNDER_${dimension}: "98"`));
 });
 
-test("coverage compilation and six execution shards have separate failure-aware jobs", () => {
+test("coverage compilation and execution shards have separate failure-aware jobs", () => {
   const observed = JSON.parse(
     readFileSync(
       path.join(root, "test-cases/rust-validation/fixture/rust-coverage-step-timing.json"),
@@ -153,7 +153,11 @@ test("coverage compilation and six execution shards have separate failure-aware 
   assert.match(build, /rust-coverage-shards\.cjs archive/);
   assert.match(shards, /needs: rust-coverage-build/);
   assert.match(shards, /fail-fast: false/);
-  assert.match(shards, /shard: \[1, 2, 3, 4, 5, 6\]/);
+  assert.ok(
+    shards.includes(
+      "fromJSON(github.event_name == 'pull_request' && '[1,2,3,4,5,6,7,8,9,10,11,12]' || '[1,2,3,4,5,6]')",
+    ),
+  );
   assert.match(shards, /rust-coverage-shards\.cjs shard/);
   const step = stepBudgetSeconds(shards, "Run Rust tests for coverage");
   assert.equal(step, 480);
@@ -330,14 +334,14 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
       .filter(Boolean);
     const successful = Object.fromEntries(needs.map((name) => [name, { result: "success" }]));
     const [command, args] = workflowGateCommand(body);
-    const runGate = (results) =>
+    const runGate = (results, event = "push") =>
       spawnSync(command, args, {
         encoding: "utf8",
         env: {
           ...process.env,
           MACOS_REQUIRED: "",
           MACOS_SMOKE_REQUIRED: "",
-          MACOS_EVENT: "",
+          MACOS_EVENT: event,
           MACOS_REF: "",
           RESULTS: JSON.stringify(results),
         },
@@ -345,7 +349,10 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
     assert.equal(runGate(successful).status, 0);
     for (const dependency of needs)
       for (const result of ["failure", "cancelled", "skipped"]) {
-        const output = runGate({ ...successful, [dependency]: { result } });
+        const output = runGate(
+          { ...successful, [dependency]: { result } },
+          dependency === "standalone-pr" ? "pull_request" : "push",
+        );
         assert.equal(output.status, 1, `${name} must reject ${dependency}: ${result}`);
         assert.ok(output.stderr.includes(`${dependency}: ${result}`));
       }
@@ -370,6 +377,7 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
     "tests",
     "standalone-build",
     "standalone-shards",
+    "standalone-pr",
   ])
     assert.ok(gate.includes(job));
   const workflow = readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
@@ -398,8 +406,8 @@ test("coverage and standalone producers retain content-verified workspace caches
     assert.match(body, /cache-targets: false/);
     assert.ok(body.includes(`id: ${toolchain}`));
     const overlay = body
-      .split(`      - name: Cache ${profile} workspace artifacts by source\n`)[1]
-      .split("\n      - name:")[0];
+      .split(`name: Cache ${profile} workspace artifacts by source\n`)[1]
+      .split(/\n      - /)[0];
     assert.match(overlay, /uses: actions\/cache\/restore@[a-f0-9]{40}/);
     const key = overlay.match(/^          key: ([^\n]+)/m)[1];
     const fallback = overlay.match(/restore-keys: \|\n            ([^\n]+)/)[1];
@@ -451,7 +459,7 @@ test("v2 workspace producers prefer matching manifests before compatible compile
     const body = workflowJob(name);
     const cache = body
       .split(/uses: actions\/cache\/restore@[a-f0-9]{40}[^\n]*\n/)[1]
-      .split("\n      - name:")[0];
+      .split(/\n      - /)[0];
     const primary = cache.match(/^          key: ([^\n]+)/m)[1];
     const fallbacks = cache
       .match(/restore-keys: \|\n([\s\S]*?)\n          path: \|/)[1]
@@ -491,7 +499,7 @@ test("v2 workspace producers prefer matching manifests before compatible compile
     assert.match(body, /cache-targets: false/);
     const workspace = body
       .split(/uses: actions\/cache\/restore@[a-f0-9]{40}[^\n]*\n/)[1]
-      .split("\n      - name:")[0];
+      .split(/\n      - /)[0];
     assert.doesNotMatch(workspace, /save-if:|\n        if:/);
   }
 });

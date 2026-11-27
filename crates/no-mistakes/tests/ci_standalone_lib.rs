@@ -108,7 +108,7 @@ fn tests_gate_requires_standalone_lib_and_coverage_keeps_catalog_postgres() {
     let gate = &workflow["jobs"]["tests-gate"];
     assert_eq!(gate["runs-on"].as_str(), Some("ubuntu-slim"));
     let needs = gate["needs"].as_sequence().unwrap();
-    for required in ["standalone-build", "standalone-shards"] {
+    for required in ["standalone-build", "standalone-shards", "standalone-pr"] {
         assert!(
             needs.iter().any(|name| name.as_str() == Some(required)),
             "Tests with coverage must still require {required}"
