@@ -151,7 +151,7 @@ fn fold_spread(
 
 fn eval_mode(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> ModeState {
     let inner = expr.get_inner_expression();
-    if is_undefined_expr(inner) || matches!(inner, Expression::NullLiteral(_)) {
+    if unbound_undefined(visitor, inner) || matches!(inner, Expression::NullLiteral(_)) {
         return ModeState::Absent;
     }
     match literal_expr(inner, &visitor.const_strings).as_deref() {
@@ -161,9 +161,11 @@ fn eval_mode(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> ModeState {
     }
 }
 
-fn is_undefined_expr(expr: &Expression<'_>) -> bool {
+pub(super) fn unbound_undefined(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> bool {
     match expr.get_inner_expression() {
-        Expression::Identifier(id) => id.name == "undefined",
+        Expression::Identifier(id) if id.name == "undefined" => {
+            crate::queue::extract_job_id::referenced_symbol(visitor, id).is_none()
+        }
         Expression::UnaryExpression(unary) => unary.operator == UnaryOperator::Void,
         _ => false,
     }
@@ -171,7 +173,7 @@ fn is_undefined_expr(expr: &Expression<'_>) -> bool {
 
 fn is_non_object_literal_or_token(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> bool {
     visitor.tracks_job_token(expr)
-        || is_undefined_expr(expr)
+        || unbound_undefined(visitor, expr)
         || matches!(
             expr,
             Expression::StringLiteral(_)

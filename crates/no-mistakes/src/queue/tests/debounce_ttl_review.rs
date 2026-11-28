@@ -32,20 +32,36 @@ fn review_cases_find_known_ttl_and_abstain_when_unknown() {
         "spread-then-key",
         "bulk-const",
         "visible-child",
+        "shadow-ttl",
+        "satisfies-opts",
+        "assert-opts",
+        "computed-then-explicit",
+        "bulk-as",
+        "bulk-rest",
+        "flow-as",
     ] {
         assert!(
             findings.iter().any(|line| line.contains(marker)),
             "{marker} should be a finding, findings={findings:?} abstained={abstained:?}"
         );
     }
-    for marker in ["alias-absent", "bulk-clean", "\"plain\""] {
+    for marker in ["alias-absent", "bulk-clean", "\"plain\"", "void-ttl"] {
         assert!(
             findings.iter().all(|line| !line.contains(marker))
                 && abstained.iter().all(|line| !line.contains(marker)),
             "{marker} should stay clean, findings={findings:?} abstained={abstained:?}"
         );
     }
-    for marker in ["later-spread", "dynamicJobs", "getQueueOptions"] {
+    for marker in [
+        "later-spread",
+        "dynamicJobs",
+        "getQueueOptions",
+        "cond-ttl",
+        "member-ttl",
+        "call-ttl",
+        "computed-key",
+        "bulk-spread-rest",
+    ] {
         assert!(
             abstained.iter().any(|line| line.contains(marker)),
             "{marker} should abstain, findings={findings:?} abstained={abstained:?}"

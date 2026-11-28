@@ -41,7 +41,7 @@ impl<'a> ObjectBinding<'a> {
     pub fn value(&self) -> Option<&'a Expression<'a>> {
         self.init.filter(|expr| {
             matches!(
-                expr,
+                expr.get_inner_expression(),
                 Expression::ObjectExpression(_) | Expression::Identifier(_)
             )
         })

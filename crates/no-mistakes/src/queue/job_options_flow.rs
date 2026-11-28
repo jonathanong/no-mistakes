@@ -3,10 +3,7 @@ use super::super::extract_visitor::QueueVisitor;
 use super::site::{member_string, push_site};
 use super::walk::{read, read_member};
 use crate::fx::FxHashSet;
-use oxc_ast::ast::{
-    Argument, ArrayExpressionElement, CallExpression, Expression, ObjectExpression,
-    ObjectPropertyKind,
-};
+use oxc_ast::ast::{Argument, CallExpression, Expression, ObjectExpression, ObjectPropertyKind};
 use oxc_span::GetSpan;
 
 #[path = "job_options_flow_members.rs"]
@@ -170,18 +167,20 @@ fn note_children<'a>(
         return;
     };
     for element in &array.elements {
-        match element {
-            ArrayExpressionElement::ObjectExpression(object) => {
-                note_flow_node(visitor, object, active)
-            }
-            _ => push_site(
+        if let Some(Expression::ObjectExpression(object)) = element
+            .as_expression()
+            .map(Expression::get_inner_expression)
+        {
+            note_flow_node(visitor, object, active);
+        } else {
+            push_site(
                 visitor,
                 element.span().start,
                 None,
                 queue_name.clone(),
                 None,
                 JobOptionEvidence::open(),
-            ),
+            );
         }
     }
 }

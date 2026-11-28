@@ -32,18 +32,22 @@ fn walk_jobs<'a>(visitor: &mut QueueVisitor<'a>, expr: &Expression<'a>, depth: u
     }
     match expr.get_inner_expression() {
         Expression::ArrayExpression(array) => {
+            let mut resolved = true;
             for element in &array.elements {
-                let ArrayExpressionElement::ObjectExpression(object) = element else {
-                    continue;
-                };
-                let job = job_name(visitor, object);
-                check_opts_member(
-                    visitor,
-                    object,
-                    line_number(visitor.source, object.span.start),
-                    job,
-                );
+                if !walk_element(visitor, element, depth + 1) {
+                    resolved = false;
+                }
             }
+            resolved
+        }
+        Expression::ObjectExpression(object) => {
+            let job = job_name(visitor, object);
+            check_opts_member(
+                visitor,
+                object,
+                line_number(visitor.source, object.span.start),
+                job,
+            );
             true
         }
         Expression::Identifier(id) => match const_init(visitor, id) {
@@ -52,6 +56,22 @@ fn walk_jobs<'a>(visitor: &mut QueueVisitor<'a>, expr: &Expression<'a>, depth: u
         },
         _ => false,
     }
+}
+
+fn walk_element<'a>(
+    visitor: &mut QueueVisitor<'a>,
+    element: &ArrayExpressionElement<'a>,
+    depth: u8,
+) -> bool {
+    if let ArrayExpressionElement::SpreadElement(spread) = element {
+        return walk_jobs(visitor, &spread.argument, depth);
+    }
+    if matches!(element, ArrayExpressionElement::Elision(_)) {
+        return true;
+    }
+    element
+        .as_expression()
+        .is_some_and(|expr| walk_jobs(visitor, expr.get_inner_expression(), depth))
 }
 
 fn job_name<'a>(visitor: &QueueVisitor<'a>, object: &ObjectExpression<'a>) -> Option<String> {

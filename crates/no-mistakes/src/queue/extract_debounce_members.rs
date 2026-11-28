@@ -54,7 +54,10 @@ where
     for property in &object.properties {
         match property {
             ObjectPropertyKind::ObjectProperty(property) => {
-                if crate::ast::property_key_name(&property.key).as_deref() == Some(key) {
+                let name = crate::ast::property_key_name(&property.key);
+                if property.computed && name.is_none() {
+                    unknown = true;
+                } else if name.as_deref() == Some(key) {
                     found = Some(&property.value);
                     unknown = false;
                 }

@@ -1,6 +1,6 @@
 use super::format::{missing_finding, unanalyzable_finding};
 use super::judge::{call_arguments, judge_arguments, DelayVerdict};
-use super::matching::{candidate_targets, has_local_value_export_target, target_matches};
+use super::matching::{candidate_targets, has_local_value_export_target, target_fit, TargetFit};
 use super::options::Target;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::extract::InvocationKind;
@@ -62,35 +62,49 @@ pub(super) fn scan(input: &ScanInput<'_>) -> Result<AnalysisDiagnostics> {
         let call_args = call_arguments(ts_facts, site.offset);
         if !site.has_unknown_target() {
             let mut matched_any = false;
-            for target in targets
-                .iter()
-                .filter(|target| target_matches(graph, target, site, resolved))
-            {
-                matched_any = true;
-                match judge_arguments(&call_args, target) {
-                    DelayVerdict::Valid => {}
-                    DelayVerdict::Missing(detail) => {
-                        diagnostics.findings.push(missing_finding(
-                            root,
-                            application,
-                            &file,
-                            site,
-                            target,
-                            &detail,
-                        ));
-                    }
-                    DelayVerdict::Unanalyzable(detail) => {
-                        let finding = unanalyzable_finding(
-                            root,
-                            application,
-                            &file,
-                            site.line,
-                            Some(site),
-                            &detail,
-                        );
-                        diagnostics.unanalyzable(policy, finding);
+            let mut mixed = false;
+            for target in targets {
+                match target_fit(graph, target, site, resolved) {
+                    TargetFit::None => {}
+                    TargetFit::Mixed => mixed = true,
+                    TargetFit::All => {
+                        matched_any = true;
+                        match judge_arguments(&call_args, target) {
+                            DelayVerdict::Valid => {}
+                            DelayVerdict::Missing(detail) => {
+                                diagnostics.findings.push(missing_finding(
+                                    root,
+                                    application,
+                                    &file,
+                                    site,
+                                    target,
+                                    &detail,
+                                ));
+                            }
+                            DelayVerdict::Unanalyzable(detail) => {
+                                let finding = unanalyzable_finding(
+                                    root,
+                                    application,
+                                    &file,
+                                    site.line,
+                                    Some(site),
+                                    &detail,
+                                );
+                                diagnostics.unanalyzable(policy, finding);
+                            }
+                        }
                     }
                 }
+            }
+            if mixed && !matched_any {
+                let detail = format!(
+                    "callee `{}` resolves to both configured and unconfigured rate-limit targets",
+                    site.source_callee
+                );
+                let finding =
+                    unanalyzable_finding(root, application, &file, site.line, Some(site), &detail);
+                diagnostics.unanalyzable(policy, finding);
+                continue;
             }
             if matched_any || !has_local_value_export_target(site) {
                 continue;

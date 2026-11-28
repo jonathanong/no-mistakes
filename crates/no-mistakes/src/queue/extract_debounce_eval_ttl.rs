@@ -13,8 +13,19 @@ fn classify_inner(visitor: &QueueVisitor<'_>, expr: &Expression<'_>, depth: u8) 
         return TtlState::Dynamic;
     }
     let inner = expr.get_inner_expression();
-    if super::is_undefined_expr(inner) {
+    if super::unbound_undefined(visitor, inner) {
         return TtlState::Absent;
+    }
+    if matches!(
+        inner,
+        Expression::ConditionalExpression(_)
+            | Expression::CallExpression(_)
+            | Expression::StaticMemberExpression(_)
+            | Expression::ComputedMemberExpression(_)
+            | Expression::PrivateFieldExpression(_)
+            | Expression::ChainExpression(_)
+    ) {
+        return TtlState::Dynamic;
     }
     let Expression::Identifier(id) = inner else {
         return TtlState::Present;

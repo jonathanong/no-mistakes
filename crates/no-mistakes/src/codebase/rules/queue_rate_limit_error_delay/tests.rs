@@ -17,6 +17,7 @@ use serde_json::json;
 use std::path::{Path, PathBuf};
 
 mod candidate_targets;
+mod mixed_resolution;
 
 fn arg_target(delay_argument: usize, delay_property: Option<&str>) -> Target {
     Target {
