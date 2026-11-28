@@ -105,7 +105,7 @@ fn push_quoted_block(
 fn rust_record_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"(?:FutureRecord|BaseRecord)::to\(\s*["']([^"'\r\n]+)["']"#)
+        Regex::new(r#"\b(?:FutureRecord|BaseRecord)::to\(\s*["']([^"'\r\n]+)["']"#)
             .expect("rust record")
     })
 }
@@ -120,7 +120,7 @@ fn named_produce_re() -> &'static Regex {
 
 fn php_topic_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r#"newTopic\(\s*["']([^"'\r\n]+)["']"#).expect("php topic"))
+    RE.get_or_init(|| Regex::new(r#"\bnewTopic\(\s*["']([^"'\r\n]+)["']"#).expect("php topic"))
 }
 
 fn java_record_re() -> &'static Regex {
@@ -148,7 +148,9 @@ fn go_subscribe_re() -> &'static Regex {
 
 fn ruby_subscribe_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r#"subscribe\(\s*["']([^"'\r\n]+)["']"#).expect("ruby subscribe"))
+    RE.get_or_init(|| {
+        Regex::new(r#"\bsubscribe\(\s*["']([^"'\r\n]+)["']"#).expect("ruby subscribe")
+    })
 }
 
 fn java_subscribe_re() -> &'static Regex {

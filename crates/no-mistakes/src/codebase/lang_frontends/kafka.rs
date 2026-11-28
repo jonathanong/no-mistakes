@@ -85,13 +85,18 @@ impl KafkaFile {
     }
 }
 
+fn ruby_marker(text: &str, marker: &str) -> bool {
+    text.strip_prefix(marker)
+        .is_some_and(|rest| rest.chars().next().is_none_or(char::is_whitespace))
+}
+
 fn blank_ruby_block_comments(source: &str) -> String {
     let mut open = false;
     let mut out = String::with_capacity(source.len());
     for line in source.split_inclusive('\n') {
         let text = line.trim_end_matches(['\r', '\n']);
-        let starts = !open && text.starts_with("=begin");
-        let ends = open && text.starts_with("=end");
+        let starts = !open && ruby_marker(text, "=begin");
+        let ends = open && ruby_marker(text, "=end");
         if starts || open {
             out.push_str(&line[text.len()..]);
         } else {
