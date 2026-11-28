@@ -97,18 +97,23 @@ pub(super) fn forget_unset<'w, 'a: 'w>(
         match parsed {
             Some(operand) => {
                 if let Some(name) = indexed_name(&operand) {
-                    unset_name(state, name, case_ctx);
+                    unset_element(state, name, case_ctx);
                 } else if identifier(&operand) {
                     unset_name(state, &operand, case_ctx);
                 } else if word.dynamic || has_expansion(word.raw) {
                     if let Some(resolved) =
                         extract_single_var(word.raw).and_then(|var| case_ctx.resolve(var))
                     {
+                        let single = resolved.names.len() == 1;
                         for name in resolved.names {
                             if resolved.case_insensitive {
                                 state.touch_ci_empty(&name);
                             }
-                            unset_name(state, &name, case_ctx);
+                            if single {
+                                unset_name(state, &name, case_ctx);
+                            } else {
+                                unset_element(state, &name, case_ctx);
+                            }
                         }
                     } else {
                         dynamic = true;
@@ -126,6 +131,14 @@ pub(super) fn forget_unset<'w, 'a: 'w>(
 pub(super) fn single_word(raw: &str) -> Option<String> {
     let mut parts = split_quoted_words(raw, Whitespace::Ascii)?;
     (parts.len() == 1).then(|| parts.swap_remove(0))
+}
+
+fn unset_element(state: &mut State, name: &str, case_ctx: &mut dyn CaseUnsetCtx) {
+    state.touch(name);
+    if state.arrays.contains_key(name) {
+        state.set_known(name, ArrayState::MaybeEmpty);
+    }
+    case_ctx.invalidate(name);
 }
 
 fn unset_name(state: &mut State, name: &str, case_ctx: &mut dyn CaseUnsetCtx) {

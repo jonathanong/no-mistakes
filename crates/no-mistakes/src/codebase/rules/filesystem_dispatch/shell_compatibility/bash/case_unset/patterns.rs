@@ -94,7 +94,7 @@ fn push_literal_pattern(
     let unquoted = single_word(word.raw)?;
     if let Some(base) = indexed_name(&unquoted) {
         names.insert(base.to_owned());
-    } else if unquoted.contains('[') {
+    } else if unquoted.contains('[') || (unquoted != "*" && unquoted.contains(['*', '?'])) {
         return None;
     } else if identifier(&unquoted) {
         names.insert(unquoted);

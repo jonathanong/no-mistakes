@@ -130,6 +130,9 @@ fn remember_command<'a>(
         }
         for scalar in read.scalars {
             state.touch(&scalar);
+            if state.arrays.get(&scalar) == Some(&ArrayState::Empty) {
+                state.set_known(&scalar, ArrayState::MaybeEmpty);
+            }
             case_ctx.invalidate(&scalar);
         }
         return;
@@ -155,6 +158,7 @@ fn remember_command<'a>(
         "declare" | "local" => {
             let mut array = false;
             let mut global = false;
+            let mut display = false;
             let local_kw = first.raw == "local";
             command.next();
             while let Some((enable, flags)) = command.peek().and_then(|word| flag(word.raw)) {
@@ -164,7 +168,11 @@ fn remember_command<'a>(
                 if flags.contains('g') {
                     global = enable;
                 }
+                display |= enable && flags.contains(['p', 'f', 'F']);
                 command.next();
+            }
+            if display {
+                return;
             }
             let is_local = local_kw || (in_function && !global);
             command.next_if(|word| word.raw == "--");
