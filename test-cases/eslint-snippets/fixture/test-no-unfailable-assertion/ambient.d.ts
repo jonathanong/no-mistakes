@@ -13,6 +13,8 @@ interface FixtureMatchers<T = unknown> {
   toContain(expected: unknown): void;
   toHaveTextContent(expected: string): void;
   toBeVisible(): Promise<void>;
+  toMatchFileSnapshot(path: string): Promise<void>;
+  toBeTypeOf(expected: string): void;
 }
 
 interface FixtureExpect {

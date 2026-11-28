@@ -155,7 +155,7 @@ module.exports = rule(
         if ((!definedCheck && !truthyCheck) || !typeCtx || !typeCtx.strictNullChecks) return;
         if (
           assertion.asyncModifier !== "resolves" &&
-          isUncheckedIndexedAccess(assertion.actual, typeCtx)
+          isUncheckedIndexedAccess(assertion.actual, context, typeCtx)
         ) {
           return;
         }

@@ -45,6 +45,10 @@ export async function definedThenDeref() {
   expect(asyncUser).toBeDefined();
   expect(await asyncUser?.load()).toBe("A");
 
+  const containUser = loadUser();
+  expect(containUser).toBeDefined();
+  expect(containUser?.name).toContain("A");
+
   // Counterexamples (allowed)
   const withOther = loadUser();
   expect(withOther).toBeDefined();
@@ -103,4 +107,8 @@ export async function definedThenDeref() {
   expect(early).toBeDefined();
   if (!early) return;
   expect(early!.name).toBe("Alice");
+
+  const typeCheck = loadUser();
+  expect(typeCheck).toBeDefined();
+  expect(typeCheck?.nickname).toBeTypeOf("undefined");
 }

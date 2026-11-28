@@ -9,7 +9,21 @@ const {
   samePath,
 } = require("./test-no-unfailable-assertion-assertions");
 
-const OPTIONAL_ALLOWS_UNDEFINED = new Set(["toBeUndefined", "toBeFalsy", "toBeNull"]);
+const OPTIONAL_REJECTS_UNDEFINED = new Set([
+  "toBeDefined",
+  "toBeTruthy",
+  "toBeGreaterThan",
+  "toBeGreaterThanOrEqual",
+  "toBeLessThan",
+  "toBeLessThanOrEqual",
+  "toBeCloseTo",
+  "toContain",
+  "toContainEqual",
+  "toMatch",
+  "toHaveLength",
+  "toHaveProperty",
+  "toBeInstanceOf",
+]);
 const EQUALITY_MATCHERS = new Set(["toBe", "toEqual", "toStrictEqual"]);
 const CONTROL_FLOW_STATEMENTS = new Set([
   "BreakStatement",
@@ -52,15 +66,11 @@ function isUndefinedLiteral(node, context) {
 
 function optionalAssertionFailsOnUndefined(assertion, context) {
   if (assertion.negated) return assertion.matcher === "toBeUndefined";
-  if (OPTIONAL_ALLOWS_UNDEFINED.has(assertion.matcher)) return false;
-  if (
-    EQUALITY_MATCHERS.has(assertion.matcher) &&
-    assertion.matcherArgs.length === 1 &&
-    isUndefinedLiteral(assertion.matcherArgs[0], context)
-  ) {
-    return false;
+  if (OPTIONAL_REJECTS_UNDEFINED.has(assertion.matcher)) return true;
+  if (EQUALITY_MATCHERS.has(assertion.matcher) && assertion.matcherArgs.length === 1) {
+    return !isUndefinedLiteral(assertion.matcherArgs[0], context);
   }
-  return true;
+  return false;
 }
 
 function derefKind(node, target, context, afterPos) {

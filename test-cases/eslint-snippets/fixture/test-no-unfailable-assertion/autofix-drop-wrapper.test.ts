@@ -5,6 +5,7 @@ export async function asyncQueries() {
   expect(screen.getByText("Save")).toBeDefined();
   expect(screen.getByText("Save")).not.toBeNull();
   expect(screen.getByText("Save")).not.toBeUndefined();
+  expect(({}, screen.getByText("Save"))).toBeTruthy();
   expect(screen.getAllByRole("button")).toBeDefined();
   expect(screen.getAllByRole("button")).not.toBeNull();
 

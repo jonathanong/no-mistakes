@@ -108,7 +108,7 @@ describe(rule, () => {
 
     const byName = Object.fromEntries(cases.map((item) => [item.name, item.findings]));
     expect(byName["defined-by-type (typed)"].map((f) => f.messageId)).toEqual(
-      Array(7).fill("defined-by-type"),
+      Array(8).fill("defined-by-type"),
     );
     expect(byName["defined-by-type (untyped)"]).toEqual([]);
     expect(byName["same-value (typed)"]).toEqual(byName["same-value (untyped)"]);
@@ -133,7 +133,7 @@ describe(rule, () => {
     expect(byName["discarded-locator (untyped)"]).toEqual([]);
     expect(byName["defined-then-deref (typed)"]).toEqual(byName["defined-then-deref (untyped)"]);
     expect(byName["defined-then-deref (typed)"].map((f) => f.messageId)).toEqual(
-      Array(8).fill("defined-then-deref"),
+      Array(9).fill("defined-then-deref"),
     );
     expect(byName["suppressions (typed)"].map((f) => f.line)).toEqual([12, 15]);
     expect(byName["suppressed-file (typed)"]).toEqual([]);
@@ -171,13 +171,13 @@ describe(rule, () => {
 
     expect(drop.fixed).toBe(true);
     expect(drop.messages.map((m) => [m.line, m.messageId])).toEqual([
-      [22, "throwing-query"],
-      [26, "throwing-query"],
+      [23, "throwing-query"],
       [27, "throwing-query"],
       [28, "throwing-query"],
-      [31, "throwing-query"],
-      [35, "throwing-query"],
-      [40, "throwing-query"],
+      [29, "throwing-query"],
+      [32, "throwing-query"],
+      [36, "throwing-query"],
+      [41, "throwing-query"],
     ]);
 
     expect(directImport.fixed).toBe(true);
@@ -294,7 +294,7 @@ describe(rule, () => {
     const countFor = (name) => diagnostics.filter((item) => item.file.endsWith(name)).length;
     expect(countFor("same-value.test.ts")).toBe(13);
     expect(countFor("throwing-query.test.ts")).toBe(27);
-    expect(countFor("defined-then-deref.test.ts")).toBe(8);
+    expect(countFor("defined-then-deref.test.ts")).toBe(9);
     expect(countFor("suppressed-file.test.ts")).toBe(0);
   });
 

@@ -58,6 +58,7 @@ expect(items[idx]).toBe(items[idx]);
 
 const pattern = /foo/g;
 expect(pattern).toBe(other);
+expect("hello").toMatchFileSnapshot("./expected.txt");
 
 function shadowedExpect() {
   const expect = (v: unknown) => ({ toBe: (_: unknown) => v });

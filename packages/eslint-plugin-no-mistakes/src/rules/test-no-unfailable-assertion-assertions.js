@@ -6,6 +6,28 @@ const { moduleMember } = require("./test-no-wall-time-assertions-bindings");
 
 const ASSERTION_MODULES = new Set([...EXPECT_MODULES, "@playwright/test"]);
 const SAME_VALUE_MATCHERS = new Set(["toBe", "toEqual", "toStrictEqual"]);
+const CONSTANT_VALUE_MATCHERS = new Set([
+  "toBe",
+  "toEqual",
+  "toStrictEqual",
+  "toBeDefined",
+  "toBeUndefined",
+  "toBeTruthy",
+  "toBeFalsy",
+  "toBeNull",
+  "toBeNaN",
+  "toBeGreaterThan",
+  "toBeGreaterThanOrEqual",
+  "toBeLessThan",
+  "toBeLessThanOrEqual",
+  "toBeCloseTo",
+  "toContain",
+  "toContainEqual",
+  "toMatch",
+  "toHaveLength",
+  "toBeTypeOf",
+  "toBeInstanceOf",
+]);
 
 function isFrameworkExpect(node, context) {
   if (
@@ -115,7 +137,10 @@ function samePath(left, right) {
 
 function isSameValueAssertion(assertion, context) {
   if (assertion.asyncModifier) return false;
-  if (isConstPrimitiveLiteral(assertion.actual, context)) {
+  if (
+    CONSTANT_VALUE_MATCHERS.has(assertion.matcher) &&
+    isConstPrimitiveLiteral(assertion.actual, context)
+  ) {
     return assertion.matcherArgs.every(
       (arg) => arg.type !== "SpreadElement" && isConstPrimitiveLiteral(arg, context),
     );

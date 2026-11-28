@@ -1,6 +1,7 @@
 "use strict";
 
-const { unwrap } = require("./test-message-expect");
+const { memberName, unwrap } = require("./test-message-expect");
+const { immutableConstDef } = require("./test-no-unfailable-assertion-assertions");
 
 const PLAYWRIGHT_PATH = /(?:^|[\\/])(?:@playwright|playwright(?:-core)?)(?:[\\/]|$)/;
 const PLAYWRIGHT_MODULES = new Set(["@playwright/test", "playwright", "playwright-core"]);
@@ -30,6 +31,11 @@ function getExpressionType(node, typeCtx, awaited) {
   return awaited ? typeCtx.checker.getAwaitedType(type) : type;
 }
 
+function hasIndexSignature(type, checker) {
+  if (type.isUnion()) return type.types.some((part) => hasIndexSignature(part, checker));
+  return checker.getIndexInfosOfType(type).length > 0;
+}
+
 function hasIndexableType(type, checker) {
   if (type.isUnion()) return type.types.some((part) => hasIndexableType(part, checker));
   return (
@@ -39,12 +45,22 @@ function hasIndexableType(type, checker) {
   );
 }
 
-function isUncheckedIndexedAccess(node, typeCtx) {
+function isUncheckedIndexedAccess(node, context, typeCtx) {
   if (typeCtx.noUncheckedIndexedAccess) return false;
-  const current = unwrap(node);
-  if (current.type !== "MemberExpression" || !current.computed) return false;
+  let current = unwrap(node);
+  while (current.type === "Identifier") {
+    const decl = immutableConstDef(current, context);
+    if (decl?.id.type !== "Identifier") return false;
+    current = unwrap(decl.init);
+  }
+  if (current.type !== "MemberExpression") return false;
   const objectType = getExpressionType(current.object, typeCtx, false);
-  return Boolean(objectType && hasIndexableType(objectType, typeCtx.checker));
+  if (!objectType) return false;
+  if (current.computed) return hasIndexableType(objectType, typeCtx.checker);
+  const name = memberName(current);
+  return Boolean(
+    name && hasIndexSignature(objectType, typeCtx.checker) && !objectType.getProperty(name),
+  );
 }
 
 function resolveConstrainedType(type, checker, ts) {

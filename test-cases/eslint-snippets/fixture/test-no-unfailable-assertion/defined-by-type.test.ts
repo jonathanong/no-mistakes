@@ -16,6 +16,8 @@ declare const record: Record<string, string>;
 declare const items: string[];
 declare const pair: [string, number];
 declare const unionItems: string[] | Record<string, string>;
+declare const unionRecords: Record<string, string> | Record<string, number>;
+declare const declaredObj: { name: string };
 declare const key: string;
 declare const idx: number;
 
@@ -26,6 +28,7 @@ expect(screen.queryByText("Save")).toBeDefined();
 expect(rootEl.querySelector(".item")).not.toBeUndefined();
 expect(getIntersection()).toBeDefined();
 expect(getAsyncName()).resolves.toBeDefined();
+expect(declaredObj.name).toBeDefined();
 
 export function constrained<T extends string>(value: T) {
   expect(value).toBeDefined();
@@ -47,6 +50,10 @@ expect(items[0]).toBeDefined();
 expect(items[idx]).not.toBeUndefined();
 expect(pair[0]).toBeDefined();
 expect(unionItems[0]).toBeDefined();
+expect(record.missing).toBeDefined();
+expect(unionRecords.missing).toBeDefined();
+const firstItem = items[0];
+expect(firstItem).toBeDefined();
 
 export function unconstrained<T>(value: T) {
   expect(value).toBeDefined();

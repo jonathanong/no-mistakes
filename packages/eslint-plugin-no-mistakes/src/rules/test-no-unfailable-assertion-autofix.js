@@ -196,11 +196,11 @@ function createThrowingQueryFix(node, assertion, query, context, typeCtx, cache)
 
   if (!inStatement || !directCall || hasAssertionCountCheck(ownerFn)) return null;
   if (isFind) {
-    if (directAwait) return (fixer) => fixer.replaceText(outerExpr, actualText);
+    if (directAwait) return (fixer) => fixer.replaceText(outerExpr, awaitedActual);
     if (!outerAwait && !inAsync) return null;
     return (fixer) => fixer.replaceText(outerExpr, `await ${awaitedActual}`);
   }
-  return (fixer) => fixer.replaceText(outerExpr, actualText);
+  return (fixer) => fixer.replaceText(outerExpr, awaitedActual);
 }
 
 module.exports = { createThrowingQueryFix };
