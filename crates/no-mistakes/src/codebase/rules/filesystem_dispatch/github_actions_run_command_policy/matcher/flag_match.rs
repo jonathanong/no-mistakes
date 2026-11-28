@@ -5,6 +5,21 @@ use super::dynamic_match::{
 };
 use crate::codebase::rules::github_actions_download_integrity::words::Word;
 
+pub(super) fn dynamic_inline_pair(
+    word: &Word,
+    command_dynamic: bool,
+    flag: &str,
+    value: &str,
+    value_flags: &[String],
+) -> bool {
+    if dynamic_word_could_match_literal(word, command_dynamic, &format!("{flag}={value}")) {
+        return true;
+    }
+    is_short_flag(flag)
+        && takes_value(flag, value_flags)
+        && dynamic_word_could_match_literal(word, command_dynamic, &format!("{flag}{value}"))
+}
+
 pub(super) fn match_single_flag(
     word: &Word,
     next: Option<&Word>,

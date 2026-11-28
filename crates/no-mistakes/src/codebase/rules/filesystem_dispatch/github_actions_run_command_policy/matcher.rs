@@ -1,4 +1,4 @@
-use super::options::CompiledPolicy;
+use super::options::{ArgMatcher, CompiledPolicy};
 use crate::codebase::rules::github_actions_download_integrity::words::{self, Word};
 
 mod args;
@@ -25,6 +25,7 @@ pub(super) struct ParsedInvocation<'a> {
     pub(super) subcommand_args: Vec<&'a Word>,
     pub(super) positionals: Vec<&'a Word>,
     pub(super) splitting_word: Option<(String, usize)>,
+    pub(super) flag_splitting_word: Option<(String, usize)>,
 }
 
 pub(super) fn match_command<'a>(
@@ -74,12 +75,14 @@ pub(super) fn match_command<'a>(
     }
     let subcommand_args: Vec<&Word> = words[idx..].iter().collect();
     let positionals = extract_positionals(&subcommand_args, &policy.value_flags);
-    let splitting_word = global_args
-        .iter()
-        .chain(subcommand_args.iter())
-        .copied()
-        .find(|word| is_word_splitting_expansion(word))
-        .map(|word| (word.text.clone(), word.line));
+    let splitting_word = splitting_at(global_args.iter().chain(subcommand_args.iter()).copied());
+    let flag_stop = option_end(&subcommand_args, &policy.value_flags);
+    let flag_splitting_word = splitting_at(
+        global_args
+            .iter()
+            .copied()
+            .chain(subcommand_args[..flag_stop].iter().copied()),
+    );
     MatchOutcome::Matched(ParsedInvocation {
         cmd_line: words[cmd_at].line,
         command_dynamic,
@@ -87,7 +90,29 @@ pub(super) fn match_command<'a>(
         subcommand_args,
         positionals,
         splitting_word,
+        flag_splitting_word,
     })
+}
+
+fn splitting_at<'a>(mut words: impl Iterator<Item = &'a Word>) -> Option<(String, usize)> {
+    words
+        .find(|word| is_word_splitting_expansion(word))
+        .map(|word| (word.text.clone(), word.line))
+}
+
+fn option_end(args: &[&Word], value_flags: &[String]) -> usize {
+    let mut index = 0;
+    while index < args.len() {
+        let word = args[index];
+        if word.text == "--" {
+            return index;
+        }
+        let takes = is_option_token(&word.text)
+            && !word.text.contains('=')
+            && takes_value(&word.text, value_flags);
+        index += 1 + usize::from(takes);
+    }
+    args.len()
 }
 
 pub(super) fn is_dynamic_word(word: &Word, command_dynamic: bool) -> bool {
@@ -96,6 +121,24 @@ pub(super) fn is_dynamic_word(word: &Word, command_dynamic: bool) -> bool {
         || word.expansion_may_split
         || word.text.contains("${{")
         || (command_dynamic && (word.text.contains('$') || word.text.contains('`')))
+}
+
+pub(super) fn flags_only(matchers: &[ArgMatcher]) -> bool {
+    !matchers.is_empty()
+        && matchers.iter().all(|matcher| {
+            matcher
+                .tokens
+                .first()
+                .is_some_and(|token| is_option_token(token))
+        })
+}
+
+pub(super) fn split_hit(inv: &ParsedInvocation<'_>, flags: bool) -> Option<(String, usize)> {
+    if flags {
+        inv.flag_splitting_word.clone()
+    } else {
+        inv.splitting_word.clone()
+    }
 }
 
 fn is_word_splitting_expansion(word: &Word) -> bool {

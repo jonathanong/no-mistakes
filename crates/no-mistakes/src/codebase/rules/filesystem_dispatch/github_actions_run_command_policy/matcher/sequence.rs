@@ -1,5 +1,7 @@
 use super::args::ArgMatch;
-use super::dynamic_match::{dynamic_word_could_match_literal, possible_terminator};
+use super::dynamic_match::{
+    dynamic_word_could_match_literal, is_expanded_word, possible_terminator,
+};
 use crate::codebase::rules::github_actions_download_integrity::words::Word;
 
 pub(super) fn match_token_sequence_skipping(
@@ -75,7 +77,7 @@ fn window_indefinite(indefinite: &[bool], start: usize, len: usize) -> bool {
 fn match_token_window(window: &[&Word], tokens: &[String], command_dynamic: bool) -> ArgMatch {
     let mut dynamic_hit = None;
     for (word, expected) in window.iter().zip(tokens) {
-        if word.text == *expected {
+        if word.text == *expected && !is_expanded_word(word) {
             continue;
         }
         if dynamic_word_could_match_literal(word, command_dynamic, expected) {

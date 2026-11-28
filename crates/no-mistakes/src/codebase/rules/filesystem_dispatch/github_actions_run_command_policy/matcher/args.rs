@@ -1,5 +1,7 @@
-use super::dynamic_match::{dynamic_word_could_match_literal, possible_terminator};
-use super::flag_match::{match_flag_pair, match_single_flag};
+use super::dynamic_match::{
+    could_be_value_flag, dynamic_word_could_match_literal, possible_terminator,
+};
+use super::flag_match::{dynamic_inline_pair, match_flag_pair, match_single_flag};
 use super::ParsedInvocation;
 use crate::codebase::rules::github_actions_download_integrity::words::Word;
 use crate::codebase::rules::github_actions_run_command_policy::options::ArgMatcher;
@@ -73,6 +75,7 @@ fn match_flag_slice(
     let mut index = 0;
     let mut dynamic_hit = None;
     let mut opaque_terminator = None;
+    let mut consumed_by = None;
     while index < region.len() {
         let word = region[index];
         if is_option_token(&word.text) {
@@ -99,16 +102,25 @@ fn match_flag_slice(
                     command_dynamic,
                 )
             };
+            let pending_consumption = consumed_by.take();
             match outcome {
                 ArgMatch::Matched => {
-                    return opaque_terminator.map_or(ArgMatch::Matched, |(token, line)| {
-                        ArgMatch::DynamicValue { token, line }
-                    });
+                    if let Some((token, line)) = pending_consumption.or(opaque_terminator) {
+                        return ArgMatch::DynamicValue { token, line };
+                    }
+                    return ArgMatch::Matched;
                 }
                 ArgMatch::DynamicValue { token, line } => {
                     dynamic_hit.get_or_insert((token, line));
                 }
                 ArgMatch::NotMatched => {}
+            }
+            if !consumes_next {
+                if opaque_terminator.is_none() {
+                    opaque_terminator = possible_terminator(word, command_dynamic);
+                }
+                consumed_by = could_be_value_flag(word, command_dynamic, value_flags)
+                    .then(|| (word.text.clone(), word.line));
             }
             index += 1 + usize::from(consumes_next);
         } else {
@@ -122,12 +134,19 @@ fn match_flag_slice(
                             || dynamic_word_could_match_literal(next, command_dynamic, expected)
                     })
                 });
-            if could_be_flag && pair_value_ok {
+            let inline_ok = matcher.tokens.get(1).is_some_and(|value| {
+                matcher.tokens.first().is_some_and(|flag| {
+                    dynamic_inline_pair(word, command_dynamic, flag, value, value_flags)
+                })
+            });
+            if (could_be_flag && pair_value_ok) || (!require_value && inline_ok) {
                 dynamic_hit.get_or_insert_with(|| (word.text.clone(), word.line));
             }
             if opaque_terminator.is_none() {
                 opaque_terminator = possible_terminator(word, command_dynamic);
             }
+            consumed_by = could_be_value_flag(word, command_dynamic, value_flags)
+                .then(|| (word.text.clone(), word.line));
             index += 1;
         }
     }

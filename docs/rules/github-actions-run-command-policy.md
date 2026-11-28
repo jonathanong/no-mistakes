@@ -60,7 +60,10 @@ For each configured entry in `options.commands`:
   `-c=core.hooksPath=/dev/null`), and attached short value flag (`-XGET`,
   `-ccore.hooksPath=/dev/null`) forms, and stop at `--`. Required flags listed
   in `valueFlags` must also have a non-empty value (`--method=`, `-X ""`, and a
-  dangling `-X` do not satisfy the requirement).
+  dangling `-X` do not satisfy the requirement). A splitting expansion after
+  that `--` cannot supply a flag: `gh api -f x=1 -- $ENDPOINT` still misses
+  `--method` or `-X`. A `--` consumed as a `valueFlags` value does not end
+  option parsing, so a splitting word after it can still hide a missing flag.
 - Every entry in `forbidArgPatterns` tests either all arguments (`scope: any`,
   the default) or positional arguments after the subcommand (`scope:
   positional`, skipping options and values consumed by `valueFlags`).
@@ -69,15 +72,20 @@ For each configured entry in `options.commands`:
 When the parser encounters a command it cannot statically analyze—such as a
 dynamic command name (`$CMD ...` or `$DIR/$TOOL ...`), `eval`, a dynamic
 `bash -c "$SCRIPT"`, a dynamic subcommand on a configured base command, an
-unquoted word-splitting expansion that could supply a required argument, a
-dynamic value for a required flag (`--method "$METHOD"`), a dynamic positional
+unquoted word-splitting expansion before `--` that could supply a required
+argument, a dynamic value for a required flag (`--method "$METHOD"`), a dynamic positional
 that could match an `unlessAnyArgs` exemption when a requirement would
 otherwise fail (`gh api -f x=1 "$ENDPOINT"` with `unlessAnyArgs: [graphql]`),
 a dynamic word that could expand to a configured flag (`tool run "$MODE"`
-with `whenAnyArgs: [--write]`) or to a `valueFlags` entry that would consume
-a later exemption (`tool emit "$OPT" exempt` with `valueFlags: [--label]`),
+with `whenAnyArgs: [--write]`), to an inline `flag=value` or attached short
+form on a `whenAnyArgs` or `unlessAnyArgs` gate (`tool run "$ARG"` with
+`whenAnyArgs: [[--mode, write]]`), or to a `valueFlags` entry that would
+consume the next word (`tool emit "$OPT" exempt` with `valueFlags: [--label]`,
+or `tool run "--label${TAIL}" --skip` with `unlessAnyArgs: [--skip]`),
 a dynamic word that could expand to `--` before a later required flag
-(`tool run "$STOP" --strict`), a command substitution whose `)` sits inside
+(`tool run "$STOP" --strict`, including when another flag sits between them),
+a configured token whose text equals an expansion's source (`tool run "$REMOTE"`
+with `unlessAnyArgs: ["$REMOTE"]`), a command substitution whose `)` sits inside
 quotes (`--method="$( : ')' )"`), or an unterminated quote, expansion, or
 here-document—it abstains from
 reporting a policy violation and records a diagnostic under the configured
@@ -246,14 +254,16 @@ steps:
   `zsh`/`dash`/`ksh`/`fish`/`pwsh`, or a wrapper command such as `env`/`sudo`/
   `xargs`/`nohup`/`time`/`exec`/`command`),
   `eval`, dynamic `bash -c` / `sh -c` scripts, dynamic subcommands on a
-  configured base command, unquoted word-splitting expansions on a matching
+  configured base command, unquoted word-splitting expansions before `--` on a matching
   command whose required arguments are absent, dynamic values on required flags
   (such as `--method "$METHOD"`), dynamic arguments that could match an
   `unlessAnyArgs` exemption when a policy would otherwise fail (such as
   `gh api -f x=1 "$ENDPOINT"` with `unlessAnyArgs: [graphql]`), a dynamic
-  word that could expand to a configured flag or to a `valueFlags` entry
-  that would consume a later exemption, a dynamic word that could expand to
-  `--` before a later required flag, a command substitution whose `)` sits
+  word that could expand to a configured flag, to an inline `flag=value` or
+  attached short form on a when or unless gate, or to a `valueFlags` entry
+  that would consume the next exemption or flag, a dynamic word that could expand to
+  `--` before a later required flag, a configured token whose text equals an
+  expansion's source, a command substitution whose `)` sits
   inside quotes, and
   unterminated quotes, expansions, or here-documents abstain from policy failure
   and emit a diagnostic governed by the effective unanalyzable policy.

@@ -11,6 +11,10 @@ pub(super) fn could_be_value_flag(
         .any(|flag| dynamic_word_could_match_literal(word, command_dynamic, flag))
 }
 
+pub(super) fn is_expanded_word(word: &Word) -> bool {
+    word.bare_expansion.is_some() || word.quoted_expansion.is_some() || word.expansion_may_split
+}
+
 pub(super) fn possible_terminator(word: &Word, command_dynamic: bool) -> Option<(String, usize)> {
     dynamic_word_could_match_literal(word, command_dynamic, "--")
         .then(|| (word.text.clone(), word.line))

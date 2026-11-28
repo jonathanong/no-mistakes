@@ -1,4 +1,4 @@
-use super::args::{match_invocation, ArgMatch};
+use super::args::{is_option_token, match_invocation, ArgMatch};
 use super::ParsedInvocation;
 use crate::codebase::rules::filesystem_dispatch::github_actions_run_command_policy::judge::{
     Hit, HitKind,
@@ -47,7 +47,8 @@ fn check_when_gate(inv: &ParsedInvocation<'_>, policy: &CompiledPolicy) -> Optio
             ArgMatch::NotMatched => {}
         }
     }
-    if let Some((token, line)) = inv.splitting_word.as_ref().or(dynamic_trigger.as_ref()) {
+    let split = super::split_hit(inv, super::flags_only(&policy.when_any_args));
+    if let Some((token, line)) = split.as_ref().or(dynamic_trigger.as_ref()) {
         return Some(vec![dynamic_abstention(*line, token, &policy.label)]);
     }
     Some(Vec::new())
@@ -72,7 +73,9 @@ fn check_unless_gate(inv: &ParsedInvocation<'_>, policy: &CompiledPolicy) -> Unl
             ArgMatch::NotMatched => {}
         }
     }
-    UnlessGate::Apply(uncertain.or_else(|| inv.splitting_word.clone()))
+    UnlessGate::Apply(
+        uncertain.or_else(|| super::split_hit(inv, super::flags_only(&policy.unless_any_args))),
+    )
 }
 
 fn check_requirements(
@@ -88,8 +91,12 @@ fn check_requirements(
                 uncertain.get_or_insert((token, line));
             }
             ArgMatch::NotMatched => {
-                if let Some((token, line)) = &inv.splitting_word {
-                    uncertain.get_or_insert((token.clone(), *line));
+                let flag = required
+                    .tokens
+                    .first()
+                    .is_some_and(|token| is_option_token(token));
+                if let Some((token, line)) = super::split_hit(inv, flag) {
+                    uncertain.get_or_insert((token, line));
                 } else {
                     hits.push(Hit {
                         line: inv.cmd_line,
@@ -119,7 +126,8 @@ fn check_requirements(
             }
         }
         if !any_matched {
-            if let Some((token, line)) = any_dynamic.or_else(|| inv.splitting_word.clone()) {
+            let split = super::split_hit(inv, super::flags_only(&policy.require_any_args));
+            if let Some((token, line)) = any_dynamic.or(split) {
                 uncertain.get_or_insert((token, line));
             } else {
                 hits.push(Hit {

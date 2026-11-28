@@ -6,6 +6,7 @@ use crate::config::v2::{load_v2_config, NoMistakesConfig};
 use std::path::PathBuf;
 
 mod extended;
+mod flag_edges;
 
 fn compile_yaml(yaml: &str) -> options::CompiledOptions {
     let opts: Options = serde_yaml::from_str(yaml).expect("valid options yaml");

@@ -1,5 +1,7 @@
 use super::args::{is_option_token, takes_value, ArgMatch};
-use super::dynamic_match::{could_be_value_flag, dynamic_word_could_match_literal};
+use super::dynamic_match::{
+    could_be_value_flag, dynamic_word_could_match_literal, is_expanded_word,
+};
 use super::sequence::match_token_sequence_masked;
 use crate::codebase::rules::github_actions_download_integrity::words::Word;
 
@@ -52,7 +54,7 @@ fn match_one(
     let mut dynamic_hit = None;
     for (index, word) in words.iter().enumerate() {
         let uncertain = indefinite.get(index).copied().unwrap_or(false);
-        if word.text == target {
+        if word.text == target && !is_expanded_word(word) {
             if !uncertain {
                 return ArgMatch::Matched;
             }
