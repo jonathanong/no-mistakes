@@ -186,8 +186,8 @@ locator instead of discarding it.
 
 - When `@testing-library/jest-dom` matchers are available — imported in the
   file, imported in a configured Vitest/Jest `setupFiles` /
-  `setupFilesAfterEnv` file (or listed directly in those config fields), or
-  present in the project's TypeScript `expect(...)` types — single-element
+  `setupFilesAfterEnv` file (or listed directly in those config fields) —
+  single-element
   `getBy*` and `findBy*` assertions rewrite their matcher to
   `.toBeInTheDocument()`.
 - Otherwise, the autofix drops the `expect(...)` wrapper and keeps only the
