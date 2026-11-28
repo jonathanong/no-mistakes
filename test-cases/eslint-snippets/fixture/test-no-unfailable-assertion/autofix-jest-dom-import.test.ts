@@ -30,3 +30,7 @@ export function syncWithJestDom() {
   expect(screen.findByText("Loaded")).toBeDefined();
   expect(screen.findByText("Loaded")).resolves.toBeDefined();
 }
+
+export function groupedWithJestDom() {
+  (expect(screen.getByText("Save"))).toBeDefined();
+}

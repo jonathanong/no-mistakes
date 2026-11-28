@@ -46,12 +46,13 @@ function isFrameworkExpect(node, context) {
 function parseAssertion(node, context) {
   const callee = unwrap(node.callee);
   const matcher = memberName(callee);
-  if (!matcher) return null;
+  if (!matcher || callee.property.type === "SequenceExpression") return null;
   let current = unwrap(callee.object);
   let negated = false;
   let asyncModifier = null;
   while (current?.type === "MemberExpression") {
     const modifier = memberName(current);
+    if (current.property.type === "SequenceExpression") return null;
     if (modifier === "not") {
       negated = !negated;
     } else if (modifier === "resolves" || modifier === "rejects") {

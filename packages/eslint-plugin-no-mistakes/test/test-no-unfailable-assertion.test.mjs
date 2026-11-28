@@ -185,6 +185,7 @@ describe(rule, () => {
     expect(directImport.messages.map((m) => [m.line, m.messageId])).toEqual([
       [30, "throwing-query"],
       [31, "throwing-query"],
+      [35, "throwing-query"],
     ]);
 
     expect(matchersOnly.fixed).toBe(true);

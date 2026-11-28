@@ -73,3 +73,6 @@ void shadowedExpect;
 let messageDelta = 1;
 let messageCount = 0;
 expect(messageCount, (messageCount += messageDelta, "message")).toBe(messageCount);
+
+let matcherSeq = 0;
+expect(matcherSeq)[(matcherSeq += 1, "toBe")](matcherSeq);

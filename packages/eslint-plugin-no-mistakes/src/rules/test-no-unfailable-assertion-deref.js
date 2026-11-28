@@ -128,6 +128,16 @@ function writesTarget(statement, target, context) {
   return Boolean(mutated && pathPrefixMatches(canonicalPath(mutated, context), target));
 }
 
+function hasCall(node) {
+  if (!node || typeof node.type !== "string") return false;
+  if (node.type === "CallExpression" || node.type === "NewExpression") return true;
+  return Object.entries(node).some(
+    ([key, value]) =>
+      key !== "parent" &&
+      (Array.isArray(value) ? value.some((child) => hasCall(child)) : hasCall(value)),
+  );
+}
+
 function isSuspension(statement) {
   return (
     statement.type === "ExpressionStatement" && statement.expression.type === "AwaitExpression"
@@ -161,6 +171,7 @@ function findDefinedThenDeref(statements, context, reportedAssertions) {
         results.push(call);
         break;
       }
+      if (hasCall(nextAssertion.actual)) break;
     }
   }
   return results;

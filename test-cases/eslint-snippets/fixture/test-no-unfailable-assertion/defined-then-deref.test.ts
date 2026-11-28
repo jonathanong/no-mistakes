@@ -145,3 +145,9 @@ export async function definedThenAwaitIdentifier(state: { user?: { name: string 
   await ready;
   expect(state.user!.name).toBe("Ada");
 }
+
+export function definedThenEffectfulAssertion(state: { user?: { name: string } }) {
+  expect(state.user).toBeDefined();
+  expect(loadUser()).toBe(true);
+  expect(state.user!.name).toBe("Ada");
+}

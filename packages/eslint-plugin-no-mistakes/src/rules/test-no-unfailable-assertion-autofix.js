@@ -170,6 +170,7 @@ function createThrowingQueryFix(node, assertion, query, context, cache) {
     assertion.actual.type === "SequenceExpression" ? `(${actualText})` : actualText;
 
   if (hasJestDom) {
+    if (sourceCode.getTokenAfter(assertion.expectCall)?.value === ")") return null;
     if (assertion.asyncModifier === "resolves") {
       if (!outerAwait && !inAsync) return null;
       const prefix = outerAwait ? "" : "await ";
