@@ -77,9 +77,29 @@ impl KafkaFile {
         match self {
             Self::Historical | Self::Rust => super::strip::strip_comments_keep_strings_rust(source),
             Self::Go => super::strip::strip_comments_keep_strings_go(source),
+            Self::Ruby => {
+                super::strip::strip_comments_keep_strings(&blank_ruby_block_comments(source))
+            }
             _ => super::strip::strip_comments_keep_strings(source),
         }
     }
+}
+
+fn blank_ruby_block_comments(source: &str) -> String {
+    let mut open = false;
+    let mut out = String::with_capacity(source.len());
+    for line in source.split_inclusive('\n') {
+        let text = line.trim_end_matches(['\r', '\n']);
+        let starts = !open && text.starts_with("=begin");
+        let ends = open && text.starts_with("=end");
+        if starts || open {
+            out.push_str(&line[text.len()..]);
+        } else {
+            out.push_str(line);
+        }
+        open = starts || (open && !ends);
+    }
+    out
 }
 
 pub(crate) fn extract_kafka_topics_for(

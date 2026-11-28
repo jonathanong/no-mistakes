@@ -184,3 +184,12 @@ fn elixir_and_php_concatenated_topics_produce_no_edge() {
         assert!(produces.is_empty() && consumes.is_empty(), "{source}");
     }
 }
+
+#[test]
+fn ruby_block_comments_do_not_yield_topics() {
+    let source = "=begin\nproducer.produce(payload, topic: \"ghost\")\nconsumer.subscribe(\"ghost.in\")\n=end\nproducer.produce(payload, topic: \"mail.welcome\")\n";
+    let (produces, consumes) =
+        extract_kafka_topics_for(source, KafkaFile::from_path(Path::new("send.rb")));
+    assert_eq!(produces, welcome());
+    assert!(consumes.is_empty(), "{consumes:?}");
+}
