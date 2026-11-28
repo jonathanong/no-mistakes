@@ -74,7 +74,7 @@ impl LookupHistory {
     }
 
     pub(super) fn restrict(&mut self, condition: &Expr, outer: &ScopeSnapshot, taken: bool) {
-        let (operand, test) = boolean_test(condition);
+        let (operand, test, _) = boolean_test(condition);
         let allowed = if taken { test } else { ANY ^ test };
         self.restrict_operand(operand, outer, allowed);
     }
@@ -94,6 +94,13 @@ impl LookupHistory {
             || Filter::Opaque(Rc::new(())),
             |key| Filter::Known(Rc::new(key)),
         );
+    }
+
+    pub(super) fn guard_only(&self) -> Self {
+        Self {
+            active: self.active.clone(),
+            sites: BTreeMap::new(),
+        }
     }
 
     pub(super) fn is_reachable(&self) -> bool {
@@ -131,20 +138,24 @@ fn site_is_new(sites: &[(Guards, Site)], guards: &Guards) -> bool {
     sites.iter().all(|(existing, _)| existing != guards)
 }
 
-fn boolean_test(expr: &Expr) -> (&Expr, u8) {
-    match unwrap_expr(expr) {
+fn boolean_test(expr: &Expr) -> (&Expr, u8, u8) {
+    let (operand, when_true) = match unwrap_expr(expr) {
         Expr::UnaryOp {
             op: UnaryOperator::Not,
             expr,
+        } => {
+            let (operand, when_true, when_false) = boolean_test(expr);
+            return (operand, when_false, when_true);
         }
-        | Expr::IsFalse(expr) => (expr, FALSE),
         Expr::IsTrue(expr) => (expr, TRUE),
+        Expr::IsFalse(expr) => (expr, FALSE),
         Expr::IsUnknown(expr) | Expr::IsNull(expr) => (expr, NULL),
         Expr::IsNotFalse(expr) => (expr, TRUE | NULL),
         Expr::IsNotTrue(expr) => (expr, FALSE | NULL),
         Expr::IsNotUnknown(expr) | Expr::IsNotNull(expr) => (expr, TRUE | FALSE),
-        operand => (operand, TRUE),
-    }
+        operand => return (operand, TRUE, FALSE),
+    };
+    (operand, when_true, ANY ^ when_true)
 }
 
 fn guard_column(operand: &Expr, outer: &ScopeSnapshot) -> Option<Column> {

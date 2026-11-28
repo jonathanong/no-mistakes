@@ -2,7 +2,7 @@ use super::{walk_query, ScopeStack};
 use crate::fx::FxHashSet;
 use crate::idents::ident_key;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
-use sqlparser::ast::{Ident, ObjectName, Query, SetExpr, TableFactor, Visit, Visitor};
+use sqlparser::ast::{Cte, Ident, ObjectName, Query, SetExpr, TableFactor, Visit, Visitor};
 use std::ops::ControlFlow;
 
 pub(super) fn walk_reachable(
@@ -14,23 +14,78 @@ pub(super) fn walk_reachable(
         return;
     };
     let mut uses = RelationUses::default();
-    uses.inspect_table_commands(&query.body);
-    let _ = query.body.visit(&mut uses);
-    let _ = query.order_by.visit(&mut uses);
-    let _ = query.limit_clause.visit(&mut uses);
-    let _ = query.fetch.visit(&mut uses);
-    let mut reachable = Vec::new();
-    for cte in with.cte_tables.iter().rev() {
-        if with.recursive
-            || modifies_data(&cte.query)
-            || uses.names.contains(&ident_key(&cte.alias.name))
-        {
-            let _ = cte.query.visit(&mut uses);
-            reachable.push(&cte.query);
+    let _ = query.visit(&mut uses);
+    for index in uses.root_reachable.into_iter().rev() {
+        walk_query(&with.cte_tables[index].query, scopes, out);
+    }
+}
+
+#[derive(Default)]
+struct RelationUses {
+    frames: Vec<QueryUses>,
+    root_reachable: Vec<usize>,
+}
+
+struct QueryUses {
+    names: FxHashSet<String>,
+    definitions: Vec<Definition>,
+    parent_definition: Option<usize>,
+    recursive: bool,
+}
+
+struct Definition {
+    query: *const Query,
+    name: String,
+    forced: bool,
+    names: FxHashSet<String>,
+}
+
+impl QueryUses {
+    fn new(query: &Query, parent_definition: Option<usize>) -> Self {
+        let definitions = query
+            .with
+            .iter()
+            .flat_map(|with| &with.cte_tables)
+            .map(Definition::new)
+            .collect();
+        Self {
+            names: FxHashSet::default(),
+            definitions,
+            parent_definition,
+            recursive: query.with.as_ref().is_some_and(|with| with.recursive),
         }
     }
-    for cte in reachable.into_iter().rev() {
-        walk_query(cte, scopes, out);
+
+    fn resolve(&mut self) -> Vec<usize> {
+        let mut reachable = Vec::new();
+        for (index, cte) in self.definitions.iter_mut().enumerate().rev() {
+            if self.recursive || self.names.remove(&cte.name) || cte.forced {
+                self.names.extend(std::mem::take(&mut cte.names));
+                reachable.push(index);
+            }
+        }
+        if self.recursive {
+            for cte in &self.definitions {
+                self.names.remove(&cte.name);
+            }
+        }
+        reachable
+    }
+
+    fn named_definition(&self, query: &Query) -> Option<usize> {
+        let query = std::ptr::from_ref(query);
+        self.definitions.iter().position(|cte| cte.query == query)
+    }
+}
+
+impl Definition {
+    fn new(cte: &Cte) -> Self {
+        Self {
+            query: std::ptr::from_ref(cte.query.as_ref()),
+            name: ident_key(&cte.alias.name),
+            forced: modifies_data(&cte.query),
+            names: FxHashSet::default(),
+        }
     }
 }
 
@@ -48,80 +103,22 @@ fn modifies_data(query: &Query) -> bool {
         }
 }
 
-#[derive(Default)]
-struct RelationUses {
-    names: FxHashSet<String>,
-    scopes: Vec<WithScope>,
-}
-
-#[derive(Default)]
-struct WithScope {
-    declarations: Vec<(String, *const Query)>,
-    visible: usize,
-    recursive: bool,
-}
-
-impl WithScope {
-    fn new(query: &Query) -> Self {
-        let Some(with) = &query.with else {
-            return Self::default();
-        };
-        let declarations: Vec<_> = with
-            .cte_tables
-            .iter()
-            .map(|cte| {
-                (
-                    ident_key(&cte.alias.name),
-                    std::ptr::from_ref(cte.query.as_ref()),
-                )
-            })
-            .collect();
-        Self {
-            visible: declarations.len(),
-            declarations,
-            recursive: with.recursive,
-        }
-    }
-
-    fn descend(&mut self, query: &Query) {
-        if !self.recursive {
-            let query = std::ptr::from_ref(query);
-            self.visible = self
-                .declarations
-                .iter()
-                .position(|(_, definition)| *definition == query)
-                .unwrap_or(self.declarations.len());
-        }
-    }
-
-    fn shadows(&self, name: &str) -> bool {
-        self.declarations[..self.visible]
-            .iter()
-            .any(|(cte, _)| cte == name)
+fn insert_name(names: &mut FxHashSet<String>, name: Option<&Ident>) {
+    if let Some(name) = name {
+        names.insert(ident_key(name));
     }
 }
 
-impl RelationUses {
-    fn insert(&mut self, name: Option<&Ident>) {
-        if let Some(name) = name {
-            let name = ident_key(name);
-            if !self.scopes.iter().any(|scope| scope.shadows(&name)) {
-                self.names.insert(name);
-            }
+fn inspect_table_commands(body: &SetExpr, names: &mut FxHashSet<String>) {
+    match body {
+        SetExpr::Table(table) if table.schema_name.is_none() => {
+            insert_name(names, table.table_name.as_ref());
         }
-    }
-
-    fn inspect_table_commands(&mut self, body: &SetExpr) {
-        match body {
-            SetExpr::Table(table) if table.schema_name.is_none() => {
-                self.insert(table.table_name.as_ref())
-            }
-            SetExpr::SetOperation { left, right, .. } => {
-                self.inspect_table_commands(left);
-                self.inspect_table_commands(right);
-            }
-            _ => {}
+        SetExpr::SetOperation { left, right, .. } => {
+            inspect_table_commands(left, names);
+            inspect_table_commands(right, names);
         }
+        _ => {}
     }
 }
 
@@ -129,18 +126,26 @@ impl Visitor for RelationUses {
     type Break = ();
 
     fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
-        if let Some(parent) = self.scopes.last_mut() {
-            parent.descend(query);
-        }
-        self.scopes.push(WithScope::new(query));
-        self.inspect_table_commands(&query.body);
+        let parent_definition = self
+            .frames
+            .last()
+            .and_then(|parent| parent.named_definition(query));
+        let mut current = QueryUses::new(query, parent_definition);
+        inspect_table_commands(&query.body, &mut current.names);
+        self.frames.push(current);
         ControlFlow::Continue(())
     }
 
     fn post_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
-        self.scopes.pop();
-        if let Some(parent) = self.scopes.last_mut() {
-            parent.visible = parent.declarations.len();
+        let mut current = self.frames.pop().expect("query visit stack");
+        let reachable = current.resolve();
+        if let Some(parent) = self.frames.last_mut() {
+            match current.parent_definition {
+                Some(index) => parent.definitions[index].names = current.names,
+                None => parent.names.extend(current.names),
+            }
+        } else {
+            self.root_reachable = reachable;
         }
         ControlFlow::Continue(())
     }
@@ -153,7 +158,8 @@ impl Visitor for RelationUses {
         } = factor
         {
             if let [name] = parts.as_slice() {
-                self.insert(name.as_ident());
+                let current = self.frames.last_mut().expect("relation in query visit");
+                insert_name(&mut current.names, name.as_ident());
             }
         }
         ControlFlow::Continue(())

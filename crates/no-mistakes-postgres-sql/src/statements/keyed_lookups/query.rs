@@ -1,13 +1,14 @@
 mod ctes;
 
-use super::conditions::{decimal_integer, literal};
+use super::conditions::{cannot_match, decimal_integer, literal};
 use super::select_exprs::walk_select;
 use super::select_item_expr;
 use super::{scope::ScopeStack, subquery, walk_nested_queries, walk_set_expr, LookupHistory};
 use crate::idents::{unwrap_expr, visit_shallow_exprs};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{
-    CastKind, DataType, Distinct, Expr, GroupByExpr, LimitClause, OrderByKind, Query, Select, Value,
+    CastKind, DataType, Distinct, Expr, GroupByExpr, LimitClause, OrderByKind, Query, Select,
+    SetExpr, Value,
 };
 
 pub(super) fn walk_query(
@@ -64,14 +65,35 @@ pub(super) fn walk_exists(
 
 fn discard_exists_projection(query: &Query, select: &Select) -> bool {
     query.with.is_none()
-        && query.order_by.is_none()
+        && has_plain_order(query)
         && discard_exists_limit(query.limit_clause.as_ref())
         && query.fetch.is_none()
         && query.locks.is_empty()
         && select_has_plain_outputs(select)
 }
 
-pub(super) fn select_has_plain_outputs(select: &Select) -> bool {
+fn has_plain_order(query: &Query) -> bool {
+    query.order_by.as_ref().is_none_or(|order| {
+        matches!(&order.kind, OrderByKind::Expressions(items)
+            if items.iter().all(|item| plain_output(&item.expr)))
+    })
+}
+
+pub(super) fn query_produces_no_rows(query: &Query) -> bool {
+    has_zero_limit(query.limit_clause.as_ref())
+        || has_plain_order(query)
+            && match query.body.as_ref() {
+                SetExpr::Select(select) => select_produces_no_rows(select),
+                SetExpr::Query(inner) => query_produces_no_rows(inner),
+                _ => false,
+            }
+}
+
+pub(super) fn select_produces_no_rows(select: &Select) -> bool {
+    select.selection.as_ref().is_some_and(cannot_match) && select_has_plain_outputs(select)
+}
+
+fn select_has_plain_outputs(select: &Select) -> bool {
     select.having.is_none()
         && matches!(
             select.distinct,
@@ -100,9 +122,10 @@ fn discard_exists_limit(limit: Option<&LimitClause>) -> bool {
             limit,
             offset: None,
             ..
-        }) => limit
-            .as_ref()
-            .is_none_or(|count| literal_limit_value(count).is_some_and(|value| value > 0)),
+        }) => limit.as_ref().is_none_or(|count| {
+            matches!(limit_literal(count), Some(Value::Null))
+                || literal_limit_value(count).is_some_and(|value| value > 0)
+        }),
         _ => false,
     }
 }
@@ -118,6 +141,18 @@ pub(super) fn has_zero_limit(limit: Option<&LimitClause>) -> bool {
 }
 
 fn literal_limit_value(count: &Expr) -> Option<i64> {
+    match limit_literal(count)? {
+        Value::Number(number, _) => {
+            decimal_integer(number).or_else(|| decimal_zero(number).then_some(0))
+        }
+        Value::SingleQuotedString(number) | Value::EscapedStringLiteral(number) => {
+            number.trim_ascii().parse().ok()
+        }
+        _ => None,
+    }
+}
+
+fn limit_literal(count: &Expr) -> Option<&Value> {
     let count = match unwrap_expr(count) {
         Expr::Cast {
             kind: CastKind::Cast | CastKind::DoubleColon,
@@ -128,13 +163,16 @@ fn literal_limit_value(count: &Expr) -> Option<i64> {
         } => expr.as_ref(),
         count => count,
     };
-    match literal(count)? {
-        Value::Number(number, _) => decimal_integer(number),
-        Value::SingleQuotedString(number) | Value::EscapedStringLiteral(number) => {
-            number.trim_ascii().parse().ok()
-        }
-        _ => None,
-    }
+    literal(count)
+}
+
+fn decimal_zero(number: &str) -> bool {
+    let mantissa = number.split(['e', 'E']).next().unwrap_or_default();
+    let mantissa = mantissa.trim_start_matches(['+', '-']);
+    mantissa.contains('0')
+        && mantissa
+            .bytes()
+            .all(|digit| matches!(digit, b'0' | b'.' | b'_'))
 }
 
 fn inspect_limits(

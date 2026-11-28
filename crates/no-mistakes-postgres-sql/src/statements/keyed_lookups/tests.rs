@@ -343,7 +343,8 @@ fn respects_null_extended_bindings_and_reuses_aliased_targets_and_window_specs()
             (107, 108),
             (123, 124),
             (133, 134),
-            (147, 148)
+            (147, 148),
+            (169, 170)
         ]
     );
 }
@@ -483,7 +484,12 @@ fn checks_operator_signatures_and_shares_only_compatible_lookup_history() {
             (876, 878),
             (888, 889),
             (907, 908),
-            (915, 916)
+            (915, 916),
+            (926, 927),
+            (930, 931),
+            (942, 943),
+            (953, 954),
+            (981, 982)
         ]
     );
 }

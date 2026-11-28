@@ -22,8 +22,8 @@ data-modifying CTE query, this rule flags a second or subsequent keyed lookup of
 the same target relation when the normalized lookup key matches an earlier
 lookup in the same scope. It also checks queries in views, `CREATE TABLE AS`,
 `DECLARE CURSOR`, and `COPY (query) TO`. It covers `ON CONFLICT DO UPDATE`
-expressions, referenced window definitions, XML table column paths, and subqueries
-in ordering and row-limit clauses.
+expressions, referenced window definitions, XML table column paths and defaults,
+and subqueries in ordering and row-limit clauses.
 
 - Repeated correlated scalar subqueries on the same relation and key, including
   unqualified inner key columns (`WHERE id = o.account_id`) and differing table
@@ -65,13 +65,13 @@ The rule stays silent when the lookups are not proven to read the same row:
   repeat a filtered input in either order. Transition inputs are skipped
   when the filter is a literal false or null. A window filter does not
   suppress earlier ordinary aggregates.
-- Optional default expressions in `lag` and `lead` window calls. PostgreSQL
+- Optional default expressions in `pg_catalog.lag` and `pg_catalog.lead` window calls. PostgreSQL
   evaluates them only when the requested row falls outside the partition.
   The rule also skips value arguments of `pg_catalog.lag`, `pg_catalog.lead`,
   and `pg_catalog.nth_value` when their offset or position is a literal
   null. Earlier aggregate inputs remain eligible.
-  Value inputs of row-selecting windows such as `first_value` and
-  `last_value` can run on different rows. The rule checks each for
+  Value inputs of row-selecting windows such as `pg_catalog.first_value` and
+  `pg_catalog.last_value` can run on different rows. The rule checks each for
   repeated work within that input.
 - `COALESCE` arguments after a known non-null literal. Aggregate and window
   inputs still follow their separate evaluation rules. For resolved columns,
@@ -82,10 +82,12 @@ The rule stays silent when the lookups are not proven to read the same row:
 - Window calls eliminated by literal `CASE`, `COALESCE`, or Boolean
   expressions, unreachable DML actions, and query bodies with a literal
   `LIMIT 0`. Simple per-row outputs are also skipped under literal
-  `WHERE FALSE` or `WHERE NULL`. CTEs and limit expressions are still inspected.
+  `WHERE FALSE` or `WHERE NULL`. Aggregate transition inputs require source
+  rows, and aggregate outputs can still run on empty input. CTEs and limit
+  expressions are still inspected.
 - Unreferenced read-only CTEs when their lack of references can be proven,
   and discarded projections in simple `EXISTS` queries, including those
-  with a positive literal limit. Data-modifying
+  with plain ordering or a positive or null literal limit. Data-modifying
   CTEs and `EXISTS` conditions still receive analysis.
 - Volatile key expressions (UUID generators such as `gen_random_uuid()`,
   `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined

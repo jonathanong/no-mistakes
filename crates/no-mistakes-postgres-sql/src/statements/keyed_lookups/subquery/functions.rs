@@ -31,6 +31,9 @@ pub(super) fn inspect_function(
     visit_ordered_set_arguments(function, &mut |expr| {
         inspect(expr, outer, targets, seen, out, skip_eager);
     });
+    if targets.skips_transition_inputs(function) {
+        return;
+    }
     let input_scope = targets.function_input_scope(function, outer);
     if let Some(filter) = &function.filter {
         inspect(filter, input_scope, targets, seen, out, skip_eager);

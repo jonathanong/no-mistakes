@@ -5,7 +5,6 @@ use sqlparser::ast::{CastKind, DataType, Expr, Function, FunctionArg, FunctionAr
 fn window_name(function: &Function) -> Option<String> {
     function.over.as_ref()?;
     let ident = match function.name.0.as_slice() {
-        [name] => name.as_ident(),
         [schema, name] if ident_key(schema.as_ident()?) == "pg_catalog" => name.as_ident(),
         _ => None,
     }?;
@@ -35,7 +34,7 @@ pub(in crate::statements::keyed_lookups) fn row_window_value(function: &Function
     }
     let args = arguments(function)?;
     if matches!(name.as_str(), "lag" | "lead")
-        && matches!(args.get(1).and_then(function_arg_expr).and_then(literal),
+        && matches!(args.get(1).and_then(function_arg_expr).and_then(|expr| integer_input(expr, false)),
             Some(Value::Number(offset, _)) if decimal_integer(offset) == Some(0))
     {
         return None;
@@ -46,28 +45,39 @@ pub(in crate::statements::keyed_lookups) fn row_window_value(function: &Function
 pub(in crate::statements::keyed_lookups) fn null_position_inputs(
     function: &Function,
 ) -> Option<&[FunctionArg]> {
-    if function.name.0.len() != 2
-        || !matches!(
-            window_name(function).as_deref(),
-            Some("nth_value" | "lag" | "lead")
-        )
-    {
+    if !matches!(
+        window_name(function).as_deref(),
+        Some("nth_value" | "lag" | "lead")
+    ) {
         return None;
     }
     let args = arguments(function)?;
     let [_, position, ..] = args else {
         return None;
     };
-    let mut position = unwrap_expr(function_arg_expr(position)?);
+    matches!(
+        integer_input(function_arg_expr(position)?, true),
+        Some(Value::Null)
+    )
+    .then_some(args)
+}
+
+fn integer_input(expr: &Expr, allows_int4: bool) -> Option<&Value> {
+    let mut position = unwrap_expr(expr);
     while let Expr::Cast {
         kind: CastKind::Cast | CastKind::DoubleColon,
         expr,
-        data_type: DataType::Int(None) | DataType::Int4(None) | DataType::Integer(None),
+        data_type,
         format: None,
         ..
     } = position
     {
+        if !(matches!(data_type, DataType::Int(None) | DataType::Integer(None))
+            || allows_int4 && matches!(data_type, DataType::Int4(None)))
+        {
+            return None;
+        }
         position = unwrap_expr(expr);
     }
-    matches!(literal(position), Some(Value::Null)).then_some(args)
+    literal(position)
 }

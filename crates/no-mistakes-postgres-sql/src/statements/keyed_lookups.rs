@@ -17,7 +17,7 @@ mod windows;
 
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use history::LookupHistory;
-use nested::walk_nested_queries;
+use nested::{walk_nested_queries, walk_nested_with_context};
 use query::walk_query;
 use scope::ScopeStack;
 use select_exprs::walk_select;
@@ -124,7 +124,7 @@ fn inspect_exprs<'a>(
     let targets = select_exprs::SelectTargets::default();
     for expr in exprs {
         subquery::inspect_expr(expr, &outer, &targets, seen, out);
-        walk_nested_queries(expr, scopes, out);
+        walk_nested_with_context(expr, scopes, out, seen.guard_only(), false);
     }
 }
 

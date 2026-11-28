@@ -40,8 +40,8 @@ ORDER BY (
 );
 
 SELECT CASE WHEN o.active
-    THEN first_value((SELECT a.name FROM accounts a WHERE a.id = o.account_id)) OVER ()
-    ELSE last_value(
+    THEN pg_catalog.first_value((SELECT a.name FROM accounts a WHERE a.id = o.account_id)) OVER ()
+    ELSE pg_catalog.last_value(
         (SELECT a.name FROM accounts a WHERE a.id = o.account_id)
         || (SELECT b.name FROM accounts b WHERE b.id = o.account_id)
     ) OVER ()

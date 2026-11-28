@@ -160,3 +160,21 @@ LEFT JOIN (
     accounts a JOIN accounts b ON b.id = a.id
     JOIN accounts c ON c.id = a.id
 ) AS nested ON FALSE;
+
+SELECT x.n
+FROM orders o
+CROSS JOIN XMLTABLE(
+    '/r' PASSING '<r/>'::xml
+    COLUMNS n integer PATH 'missing' DEFAULT (
+        (SELECT a.n FROM accounts a WHERE a.id = o.id)
+        + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    )
+) AS x;
+
+SELECT x.n, x.m
+FROM orders o
+CROSS JOIN XMLTABLE(
+    '/r' PASSING '<r/>'::xml
+    COLUMNS n integer PATH 'missing' DEFAULT (SELECT a.n FROM accounts a WHERE a.id = o.id),
+            m integer PATH 'other' DEFAULT (SELECT b.n FROM accounts b WHERE b.id = o.id)
+) AS x;

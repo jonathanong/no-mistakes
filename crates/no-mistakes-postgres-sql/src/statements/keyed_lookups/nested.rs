@@ -1,13 +1,13 @@
-use super::conditions::{boolean_result_is_fixed, case_condition, visit_case_children};
+use super::conditions::{boolean_result_is_fixed, case_condition};
 use super::function_clauses::{
-    coalesce_arguments, filter_skips_inputs, has_optional_window_default, null_position_inputs,
-    split_coalesce_arguments, visit_eager_functions, visit_function_inputs,
+    coalesce_arguments, filter_skips_inputs, has_optional_window_default, is_eager,
+    null_position_inputs, split_coalesce_arguments, visit_eager_functions, visit_function_inputs,
     visit_ordered_set_arguments,
 };
-use super::{query::walk_exists, walk_query, ScopeStack};
+use super::{query::walk_exists, walk_query, LookupHistory, ScopeStack};
 use crate::idents::function_arg_expr;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
-use sqlparser::ast::{Expr, Query, Visit, Visitor};
+use sqlparser::ast::{CaseWhen, Expr, Query, Visit, Visitor};
 use std::ops::ControlFlow;
 
 pub(super) fn walk_nested_queries(
@@ -15,12 +15,26 @@ pub(super) fn walk_nested_queries(
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
-    let _ = node.visit(&mut Nested {
-        query_depth: 0,
-        blocked_expression_depth: 0,
-        scopes,
-        out,
-    });
+    walk_nested_with_context(node, scopes, out, LookupHistory::new(), false);
+}
+
+pub(super) fn walk_nested_with_context(
+    node: &impl Visit,
+    scopes: &mut ScopeStack,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
+    guards: LookupHistory,
+    empty_input: bool,
+) {
+    if guards.is_reachable() {
+        let _ = node.visit(&mut Nested {
+            query_depth: 0,
+            blocked_expression_depth: 0,
+            scopes,
+            out,
+            guards,
+            empty_input,
+        });
+    }
 }
 
 struct Nested<'a> {
@@ -28,6 +42,8 @@ struct Nested<'a> {
     blocked_expression_depth: usize,
     scopes: &'a mut ScopeStack,
     out: &'a mut Vec<SqlDuplicateKeyedLookupFact>,
+    guards: LookupHistory,
+    empty_input: bool,
 }
 
 impl Nested<'_> {
@@ -41,19 +57,21 @@ impl Nested<'_> {
                 walk_exists(subquery, self.scopes, self.out);
             }
             Expr::Function(function)
+                if self.empty_input && function.over.is_none() && is_eager(function) =>
+            {
+                self.blocked_expression_depth = 1;
+                visit_ordered_set_arguments(function, &mut |arg| self.walk_child(arg));
+            }
+            Expr::Function(function)
                 if filter_skips_inputs(function)
                     || has_optional_window_default(function)
                     || null_position_inputs(function).is_some() =>
             {
                 self.blocked_expression_depth = 1;
-                walk_nested_queries(&function.filter, self.scopes, self.out);
-                visit_ordered_set_arguments(function, &mut |arg| {
-                    walk_nested_queries(arg, self.scopes, self.out)
-                });
-                visit_function_inputs(function, &mut |arg| {
-                    walk_nested_queries(arg, self.scopes, self.out)
-                });
-                walk_nested_queries(&function.over, self.scopes, self.out);
+                self.walk_child(&function.filter);
+                visit_ordered_set_arguments(function, &mut |arg| self.walk_child(arg));
+                visit_function_inputs(function, &mut |arg| self.walk_child(arg));
+                self.walk_child(&function.over);
             }
             Expr::Function(function) => {
                 if let Some(arguments) = coalesce_arguments(function) {
@@ -61,7 +79,7 @@ impl Nested<'_> {
                     if !skipped.is_empty() {
                         self.blocked_expression_depth = 1;
                         for argument in evaluated.iter().filter_map(function_arg_expr) {
-                            walk_nested_queries(argument, self.scopes, self.out);
+                            self.walk_child(argument);
                         }
                         for argument in skipped.iter().filter_map(function_arg_expr) {
                             self.walk_eager_children(argument);
@@ -74,33 +92,74 @@ impl Nested<'_> {
                 conditions,
                 else_result,
                 ..
-            } if conditions
-                .iter()
-                .any(|branch| case_condition(operand.as_deref(), &branch.condition).is_some()) =>
-            {
+            } => {
                 self.blocked_expression_depth = 1;
-                if let Some(operand) = operand {
-                    walk_nested_queries(operand, self.scopes, self.out);
-                }
-                visit_case_children(
-                    operand.as_deref(),
-                    conditions,
-                    else_result.as_deref(),
-                    |expr, reachable| {
-                        if reachable {
-                            walk_nested_queries(expr, self.scopes, self.out);
-                        }
-                    },
-                );
+                self.walk_case(operand.as_deref(), conditions, else_result.as_deref());
             }
             _ => {}
+        }
+    }
+
+    fn walk_child(&mut self, node: &impl Visit) {
+        walk_nested_with_context(
+            node,
+            self.scopes,
+            self.out,
+            self.guards.guard_only(),
+            self.empty_input,
+        );
+    }
+
+    fn walk_case(
+        &mut self,
+        operand: Option<&Expr>,
+        conditions: &[CaseWhen],
+        fallback: Option<&Expr>,
+    ) {
+        if let Some(operand) = operand {
+            self.walk_child(operand);
+        }
+        let outer = self.scopes.snapshot();
+        let mut remaining = self.guards.guard_only();
+        for branch in conditions {
+            let test = case_condition(operand, &branch.condition);
+            if test == Some(false) {
+                continue;
+            }
+            walk_nested_with_context(
+                &branch.condition,
+                self.scopes,
+                self.out,
+                remaining.guard_only(),
+                self.empty_input,
+            );
+            let mut chosen = remaining.guard_only();
+            if operand.is_none() && test.is_none() {
+                chosen.restrict(&branch.condition, &outer, true);
+                remaining.restrict(&branch.condition, &outer, false);
+            }
+            self.walk_case_arm(&branch.result, chosen);
+            if test == Some(true) {
+                return;
+            }
+        }
+        if let Some(fallback) = fallback {
+            self.walk_case_arm(fallback, remaining);
+        }
+    }
+
+    fn walk_case_arm(&mut self, expr: &Expr, guards: LookupHistory) {
+        if guards.is_reachable() {
+            walk_nested_with_context(expr, self.scopes, self.out, guards, self.empty_input);
+        } else {
+            self.walk_eager_children(expr);
         }
     }
 
     fn walk_eager_children(&mut self, skipped: &Expr) {
         visit_eager_functions(skipped, &mut |eager| {
             if !matches!(eager, Expr::Function(function) if function.over.is_some()) {
-                walk_nested_queries(eager, self.scopes, self.out);
+                self.walk_child(eager);
             }
         });
     }

@@ -922,3 +922,66 @@ SELECT CASE WHEN o.enabled IS NOT NULL THEN COALESCE(
     (SELECT b.enabled FROM accounts b WHERE b.id = o.id)
 ) ELSE FALSE END
 FROM orders o;
+
+SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id),
+       lag(0, 0, (SELECT b.n FROM accounts b WHERE b.id = o.id)) FILTER (WHERE o.enabled) OVER ()
+FROM orders o;
+
+SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id),
+       pg_catalog.lag((SELECT b.n FROM accounts b WHERE b.id = o.id), CAST(0 AS integer)) OVER ()
+FROM orders o;
+
+SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id),
+       pg_catalog.lead((SELECT b.n FROM accounts b WHERE b.id = o.id), 1::integer) OVER ()
+FROM orders o;
+
+SELECT CASE WHEN NOT (o.enabled IS TRUE) THEN (SELECT a.n FROM accounts a WHERE a.id = o.id) END,
+       CASE WHEN o.enabled IS TRUE THEN (SELECT b.n FROM accounts b WHERE b.id = o.id) END
+FROM orders o;
+
+SELECT CASE WHEN NOT (o.enabled IS TRUE) THEN (SELECT a.n FROM accounts a WHERE a.id = o.id) END,
+       CASE WHEN o.enabled IS UNKNOWN THEN (SELECT b.n FROM accounts b WHERE b.id = o.id) END
+FROM orders o;
+
+SELECT CASE WHEN o.enabled THEN CASE WHEN NOT o.enabled THEN (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+) END END
+FROM orders o;
+
+SELECT CASE WHEN o.enabled THEN CASE WHEN o.enabled THEN (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+) END END
+FROM orders o;
+
+SELECT EXISTS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id),
+           (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    FROM orders o ORDER BY o.id
+);
+
+SELECT EXISTS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id),
+           (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    FROM orders o LIMIT NULL
+);
+
+SELECT pg_catalog.sum(
+    (SELECT a.n FROM accounts a WHERE a.id = o.id)
+    + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+) FROM orders o WHERE FALSE;
+
+SELECT pg_catalog.sum((
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+)) FROM orders o WHERE FALSE;
+
+SELECT pg_catalog.sum(
+    (SELECT a.n FROM accounts a WHERE a.id = o.id)
+    + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+) FROM orders o WHERE TRUE;
+
+SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id LIMIT 0.0),
+       (SELECT b.n FROM accounts b WHERE b.id = o.id LIMIT 0.0)
+FROM orders o;

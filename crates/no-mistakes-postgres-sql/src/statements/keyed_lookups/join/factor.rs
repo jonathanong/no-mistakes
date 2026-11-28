@@ -107,6 +107,17 @@ fn inspect_factor_inputs(
                 .chain(passing.arguments.iter().map(|argument| &argument.expr))
                 .chain(paths);
             inspect_exprs(inputs, scopes, seen, out);
+            for default in columns.iter().filter_map(|column| match &column.option {
+                XmlTableColumnOption::NamedInfo { default, .. } => default.as_ref(),
+                XmlTableColumnOption::ForOrdinality => None,
+            }) {
+                inspect_exprs(
+                    std::iter::once(default),
+                    scopes,
+                    &mut LookupHistory::new(),
+                    out,
+                );
+            }
         }
         TableFactor::Derived {
             lateral, subquery, ..

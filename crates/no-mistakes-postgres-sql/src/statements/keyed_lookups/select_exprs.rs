@@ -4,11 +4,12 @@ use super::conditions::cannot_match;
 use super::function_clauses::is_eager;
 use super::grouping;
 use super::join::register_table_with_joins;
-use super::query::{plain_output, select_has_plain_outputs};
+use super::nested::walk_nested_with_context;
+use super::query::{plain_output, select_produces_no_rows};
 use super::scope::{ScopeSnapshot, ScopeStack};
 use super::subquery::inspect_expr;
 use super::windows::WindowPlan;
-use super::{inspect_exprs, select_item_expr, walk_nested_queries, LookupHistory};
+use super::{inspect_exprs, select_item_expr, LookupHistory};
 use crate::fx::FxHashSet;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 pub(super) use identity::target_identity;
@@ -23,9 +24,14 @@ pub(super) struct SelectTargets<'a> {
     before_grouping: Option<&'a ScopeSnapshot>,
     keys: OnceCell<RefCell<FxHashSet<Expr>>>,
     windows: Option<&'a WindowPlan>,
+    empty_input: bool,
 }
 
 impl SelectTargets<'_> {
+    pub(super) fn skips_transition_inputs(&self, function: &Function) -> bool {
+        self.empty_input && function.over.is_none() && is_eager(function)
+    }
+
     pub(super) fn function_input_scope<'scope>(
         &'scope self,
         function: &Function,
@@ -74,10 +80,7 @@ pub(super) fn walk_select(
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) -> LookupHistory {
-    if select.selection.as_ref().is_some_and(cannot_match)
-        && select_has_plain_outputs(select)
-        && order_by.iter().all(|expr| plain_output(expr))
-    {
+    if select_produces_no_rows(select) && order_by.iter().all(|expr| plain_output(expr)) {
         return LookupHistory::new();
     }
     scopes.push_frame();
@@ -90,6 +93,7 @@ pub(super) fn walk_select(
         scopes.pop_frame();
         return seen;
     }
+    let empty_input = select.selection.as_ref().is_some_and(cannot_match);
     let before_grouping = scopes.snapshot();
     let after_grouping = grouping::can_omit_keys(&select.group_by).then(|| {
         scopes.refresh_bindings(0..scopes.binding_count());
@@ -103,17 +107,21 @@ pub(super) fn walk_select(
         grouping: Some(&reuse),
         before_grouping: after_grouping.as_ref().map(|_| &before_grouping),
         windows: Some(&windows),
+        empty_input,
         ..SelectTargets::default()
     };
     for (expr, runs_before_grouping) in
         expressions(select, order_by, &targets, &group_by.all, &windows)
     {
+        if empty_input && runs_before_grouping {
+            continue;
+        }
         let outer = after_grouping
             .as_ref()
             .filter(|_| !runs_before_grouping)
             .unwrap_or(&before_grouping);
         inspect_expr(&expr, outer, &targets, &mut seen, out);
-        walk_nested_queries(expr.as_ref(), scopes, out);
+        walk_nested_with_context(expr.as_ref(), scopes, out, seen.guard_only(), empty_input);
     }
     scopes.pop_frame();
     seen

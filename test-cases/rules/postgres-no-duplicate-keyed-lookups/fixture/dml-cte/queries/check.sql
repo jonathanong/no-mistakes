@@ -298,3 +298,31 @@ WHEN NOT MATCHED BY SOURCE THEN UPDATE SET account_name = CASE WHEN NOT o.enable
     (SELECT a.name FROM accounts a WHERE a.id = o.account_id)
     || (SELECT b.name FROM accounts b WHERE b.id = o.account_id)
 END;
+
+INSERT INTO orders AS o (id) SELECT 1 WHERE FALSE
+RETURNING (SELECT a.name FROM accounts a WHERE a.id = o.id),
+          (SELECT b.tier FROM accounts b WHERE b.id = o.id);
+
+INSERT INTO orders AS o (id) SELECT count(*) WHERE FALSE
+RETURNING (SELECT a.name FROM accounts a WHERE a.id = o.id),
+          (SELECT b.tier FROM accounts b WHERE b.id = o.id);
+
+WITH candidate AS MATERIALIZED (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id) AS x,
+           (SELECT b.n FROM accounts b WHERE b.id = o.id) AS y
+    FROM orders o
+)
+SELECT 1 FROM (
+    WITH unused AS (SELECT * FROM candidate)
+    SELECT 1
+) q;
+
+WITH candidate AS MATERIALIZED (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id) AS x,
+           (SELECT b.n FROM accounts b WHERE b.id = o.id) AS y
+    FROM orders o
+)
+SELECT 1 FROM (
+    WITH used AS (SELECT * FROM candidate)
+    SELECT 1 FROM used
+) q;
