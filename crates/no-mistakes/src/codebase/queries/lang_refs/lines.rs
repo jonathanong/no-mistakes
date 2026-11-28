@@ -4,7 +4,12 @@ use std::path::Path;
 
 pub(super) fn first_name_line(sources: &SourceStore, path: &Path, name: &str) -> Option<u32> {
     let source = sources.read_path(path).ok()?;
-    let masked = mask_strings(&strip_comments_keep_strings(&source));
+    let normalized = if path.extension().and_then(|ext| ext.to_str()) == Some("rs") {
+        std::borrow::Cow::Owned(strip_rust_lifetimes(&source))
+    } else {
+        std::borrow::Cow::Borrowed(source.as_ref())
+    };
+    let masked = mask_strings(&strip_comments_keep_strings(&normalized));
     let needles = needles(name);
     for (index, line) in masked.lines().enumerate() {
         if needles.iter().any(|needle| contains_word(line, needle)) {
@@ -12,6 +17,36 @@ pub(super) fn first_name_line(sources: &SourceStore, path: &Path, name: &str) ->
         }
     }
     None
+}
+
+fn strip_rust_lifetimes(source: &str) -> String {
+    let chars: Vec<char> = source.chars().collect();
+    let mut out = String::with_capacity(source.len());
+    for (index, &ch) in chars.iter().enumerate() {
+        if ch == '\'' && is_rust_lifetime(&chars, index) {
+            out.push(' ');
+        } else {
+            out.push(ch);
+        }
+    }
+    out
+}
+
+fn is_rust_lifetime(chars: &[char], index: usize) -> bool {
+    if !chars
+        .get(index + 1)
+        .is_some_and(|ch| ch.is_ascii_alphabetic() || *ch == '_')
+    {
+        return false;
+    }
+    let mut end = index + 2;
+    while chars
+        .get(end)
+        .is_some_and(|ch| ch.is_ascii_alphanumeric() || *ch == '_')
+    {
+        end += 1;
+    }
+    chars.get(end) != Some(&'\'')
 }
 
 pub(super) fn first_import_line(

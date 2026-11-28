@@ -745,18 +745,11 @@ out of scope. Configure producer and consumer file globs through
 Rust v1 is a language frontend at the Swift/.NET bar: configured
 `tests.rust.packages` emit `rust-use` / `rust-mod` / `rust-package` edges,
 `tests plan cargo` selects crate tests, and static Axum / Actix / Rocket
-<<<<<<< HEAD
-registrations emit `route` edges. Language `symbols` / `call-sites`
-and PostgreSQL rules over SQL in Rust code
-([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)) are later work.
-`Cargo.lock` diffs participate in `lockfile diff`.
-=======
 registrations emit `route` edges. `symbols`, `call-sites`, and `dead-exports`
-answer from those rust-use facts. `Cargo.lock` diffs and PostgreSQL rules over
-SQL in Rust code
+answer from those `rust-use` facts. `Cargo.lock` diffs participate in
+`lockfile diff`. PostgreSQL rules over SQL in Rust code
 ([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)) are later work.
 There is no dedicated `no-mistakes rust` CLI.
->>>>>>> fb0aa563d1 (Answer symbols, call-sites, and dead-exports from language facts)
 
 | Feature          | TS/JS reference     | Rust equivalent                                                                                                                              |
 | ---------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1151,16 +1144,9 @@ call shapes outside the documented matchers.
 Queue cells that say `declined` are closed. Do not invent a framework for them.
 
 Keep using `rg` for holes the status table still marks `no` or later:
-<<<<<<< HEAD
 Laravel resource routes with computed options or arguments, Phoenix resource
-routes with options, Kafka calls outside the documented literal shapes, language
-`symbols`/`call-sites`, and rule families that apply only to TS/JS or `.sql`
-=======
-ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
-`Cargo.lock`, `Gemfile.lock`, `composer.lock`), Laravel resource routes with
-computed options or arguments, Phoenix resource routes with options,
-Kafka calls outside the documented literal shapes, and rule families that apply only to TS/JS or `.sql`
->>>>>>> fb0aa563d1 (Answer symbols, call-sites, and dead-exports from language facts)
+routes with options, Kafka calls outside the documented literal shapes, and rule
+families that apply only to TS/JS or `.sql`
 ([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)).
 
 See [Architecture](architecture.md) for the one-pass session rules,

@@ -69,4 +69,7 @@ fn quoted_import_lines_keep_string_specifiers_and_unicode_bounds_names() {
         ),
         (Some(3), Some(2), Some(4))
     );
+    let rust = root.join("rust_lifetime.rs");
+    let sources = store(&rust);
+    assert_eq!(first_name_line(&sources, &rust, "Greeter"), Some(1));
 }
