@@ -106,4 +106,29 @@ fn codebase_project_and_query_json_impls_reject_invalid_options() {
     assert!(crate::generate_postgres_catalog_json_impl(json!({ "output": 123 })).is_err());
     assert!(crate::lockfile_diff_json_impl(bad).is_err());
     assert!(crate::lockfile_diff_json_impl(json!({})).is_err());
+
+    #[cfg(feature = "mermaid-validation")]
+    {
+        assert!(
+            crate::validate_mermaid_markdown_json_impl(json!({ "unknownField": true })).is_err()
+        );
+        assert!(crate::validate_mermaid_markdown_json_impl(json!({})).is_err());
+    }
+
+    let empty = crate::analyze_project::analyze_project_value_impl(json!({
+        "reports": []
+    }))
+    .unwrap();
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(&empty).unwrap()["reports"],
+        json!([])
+    );
+    assert!(crate::analyze_project::analyze_project_value_impl(json!({
+        "reports": [{ "type": "testsComment", "planJson": "{" }]
+    }))
+    .is_err());
+    assert!(crate::analyze_project::analyze_project_value_impl(json!({
+        "reports": [{ "type": "testsGraph", "planJson": "{" }]
+    }))
+    .is_err());
 }

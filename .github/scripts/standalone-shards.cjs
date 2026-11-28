@@ -45,13 +45,24 @@ function testTargets(shard) {
       "no-mistakes-napi",
       "--exclude",
       "no-mistakes-ts-facts",
+      "--exclude",
+      "no-mistakes-postgres-sql",
       "--lib",
     ];
   }
   if (shard === 1) {
-    return ["--locked", "-p", "no-mistakes", "-p", "no-mistakes-ts-facts", "--lib"];
+    return ["--locked", "-p", "no-mistakes", "-p", "no-mistakes-napi", "--lib"];
   }
-  return ["--locked", "-p", "no-mistakes", "-p", "no-mistakes-napi", "--lib"];
+  return [
+    "--locked",
+    "-p",
+    "no-mistakes",
+    "-p",
+    "no-mistakes-ts-facts",
+    "-p",
+    "no-mistakes-postgres-sql",
+    "--lib",
+  ];
 }
 
 function buildCommand(bundle, shard) {

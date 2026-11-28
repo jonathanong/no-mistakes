@@ -15,9 +15,17 @@ const { test } = require("node:test");
 const { commands } = require("./standalone-shards.cjs");
 
 const SHARD_SCOPES = [
-  ["--workspace", "--exclude", "no-mistakes-napi", "--exclude", "no-mistakes-ts-facts"],
-  ["-p", "no-mistakes", "-p", "no-mistakes-ts-facts"],
+  [
+    "--workspace",
+    "--exclude",
+    "no-mistakes-napi",
+    "--exclude",
+    "no-mistakes-ts-facts",
+    "--exclude",
+    "no-mistakes-postgres-sql",
+  ],
   ["-p", "no-mistakes", "-p", "no-mistakes-napi"],
+  ["-p", "no-mistakes", "-p", "no-mistakes-ts-facts", "-p", "no-mistakes-postgres-sql"],
 ];
 
 test("standalone build retains the default-feature library-only scope", () => {
