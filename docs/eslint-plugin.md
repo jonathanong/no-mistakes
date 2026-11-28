@@ -381,7 +381,8 @@ Opt-in. Reports fixed temporary paths at known Node filesystem or process
 sinks. A local `const` alias can supply a path argument or the root of a
 `path.join` or `path.resolve` call. Unique-directory prefixes, including
 disposable variants, are allowed. Files that mock the filesystem with
-`vi.mock` or `jest.mock` are exempt. `unanalyzable?: "finding" | "ignore"`
+`jest.mock` are exempt. `vi.mock` does not exempt `require()`-based calls.
+`unanalyzable?: "finding" | "ignore"`
 defaults to `"finding"` when an `fs` binding comes from a non-static
 `require`. See
 [the rule reference](eslint-rules/test-no-fixed-temp-paths.md).

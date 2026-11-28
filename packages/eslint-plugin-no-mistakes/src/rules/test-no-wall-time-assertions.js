@@ -93,11 +93,18 @@ function opaqueNow(node, context) {
   return isUnresolved(moduleLoad(unwrap(callee.object), context));
 }
 
+function withoutNot(assertion) {
+  while (assertion?.type === "MemberExpression" && memberName(assertion) === "not") {
+    if (assertion.computed) return null;
+    assertion = unwrap(assertion.object);
+  }
+  return assertion;
+}
+
 function opaqueWallClock(node, context) {
   const callee = unwrap(node.callee);
   if (callee?.computed || !MATCHERS.has(memberName(callee))) return false;
-  let assertion = unwrap(callee.object);
-  while (memberName(assertion) === "not") assertion = unwrap(assertion.object);
+  const assertion = withoutNot(unwrap(callee.object));
   if (assertion?.type !== "CallExpression" || !isFrameworkExpect(assertion.callee, context)) {
     return false;
   }
@@ -111,8 +118,7 @@ function opaqueWallClock(node, context) {
 
 function isWallTimeAssertion(callee, context) {
   if (!MATCHERS.has(memberName(callee))) return false;
-  let assertion = unwrap(callee.object);
-  while (memberName(assertion) === "not") assertion = unwrap(assertion.object);
+  const assertion = withoutNot(unwrap(callee.object));
   return (
     assertion?.type === "CallExpression" &&
     isFrameworkExpect(assertion.callee, context) &&

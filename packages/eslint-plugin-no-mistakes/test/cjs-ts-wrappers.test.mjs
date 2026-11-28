@@ -226,6 +226,7 @@ const groups = [
       "local-fluent.test.ts",
       "late-fake-timers.test.ts",
       "computed-now.test.ts",
+      "computed-not.test.ts",
       "default-timers.test.ts",
     ],
   },
@@ -300,6 +301,7 @@ const groups = [
       "inline-require.test.ts",
       "let-binding.test.ts",
       "named-default.test.ts",
+      "namespace-alias.test.ts",
     ],
     valid: [
       "tuple.test.ts",
@@ -332,6 +334,7 @@ const groups = [
       "opaque-receiver.test.ts",
       "namespace-require.test.ts",
       "let-binding.test.ts",
+      "namespace-alias.test.ts",
     ],
   },
   {
@@ -385,6 +388,7 @@ const groups = [
       "computed-runner.js",
       "computed-dynamic.test.ts",
       "namespace-computed.js",
+      "nested-configured.js",
     ],
   },
   {

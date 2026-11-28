@@ -32,12 +32,12 @@ function propertyKey(property) {
   return literalString(property.key);
 }
 
-function patternBindingName(pattern, name) {
+function patternBindingName(pattern, name, directOnly = false) {
   for (const property of pattern.properties) {
     if (property.type !== "Property") continue;
     const value = unwrapBinding(property.value);
     if (value.type === "Identifier" && value.name === name) return propertyKey(property);
-    if (value.type === "ObjectPattern") {
+    if (!directOnly && value.type === "ObjectPattern") {
       const nested = patternBindingName(value, name);
       if (nested) return nested;
     }

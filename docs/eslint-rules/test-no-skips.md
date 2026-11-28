@@ -75,7 +75,9 @@ are fixture options, not test details, so an annotation object there is not a
 declaration skip. Cross-file fixture modules are not
 inferred and have no hardcoded path conventions: list their import specifiers
 in `testModules`. Only the exported `test` from those modules is admitted as
-Playwright's `test`. For namespace bindings, only `fixtures.test` is admitted;
+Playwright's `test`. A nested key is not that export:
+`const { helpers: { test: check } } = require("./fixtures")` stays silent when
+`./fixtures` is listed in `testModules`. For namespace bindings, only `fixtures.test` is admitted;
 `fixtures.describe` and `fixtures.it` stay ordinary. This applies to ESM,
 CommonJS, and awaited dynamic imports. A named `describe` import from the same
 module also stays ordinary. A fixtures module re-exporting Playwright's

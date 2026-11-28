@@ -91,7 +91,8 @@ function imported(node, context, namespace = false, seen = new Set()) {
         source = specifier?.type === "Literal" ? specifier.value : null;
       }
       if (declaration.id.type === "ObjectPattern") {
-        importedName = patternBindingName(declaration.id, node.name);
+        const configured = Boolean(source) && testModules.has(source) && !MODULES.has(source);
+        importedName = patternBindingName(declaration.id, node.name, configured);
       } else if (exported && declaration.id.name === node.name) {
         importedName = exported.name;
       } else if (declaration.id.type === "Identifier" && declaration.id.name === node.name) {
@@ -99,7 +100,11 @@ function imported(node, context, namespace = false, seen = new Set()) {
       }
       if (!source && init.type === "Identifier" && declaration.id.type === "ObjectPattern") {
         const namespaceSource = imported(init, context, true, seen);
-        if (!namespace && namespaceSource === CONFIGURED_NAMESPACE && importedName === "test") {
+        if (
+          !namespace &&
+          namespaceSource === CONFIGURED_NAMESPACE &&
+          patternBindingName(declaration.id, node.name, true) === "test"
+        ) {
           return { framework: "@playwright/test", name: "test" };
         }
         if (

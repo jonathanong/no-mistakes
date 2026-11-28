@@ -49,7 +49,7 @@ function opaqueFrameworkReceiver(receiver, sourceCode) {
   }
   return (
     frameworkModules.has(patternExportName(variable.node.id, receiver.name)) &&
-    requireResolution(variable.node.init, context)?.source === null
+    unresolvedRequire(variable.node.init, context)
   );
 }
 

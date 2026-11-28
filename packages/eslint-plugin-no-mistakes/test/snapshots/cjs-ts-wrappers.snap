@@ -3313,6 +3313,18 @@
       ]
     },
     {
+      "file": "nested-configured.js",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
       "file": "configured.test.ts",
       "findings": [
         {
@@ -4267,6 +4279,28 @@
           "singleExportPattern": "^enqueue$"
         }
       ]
+    },
+    {
+      "file": "namespace-alias.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 6,
+          "file": "namespace-alias.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
     }
   ],
   "test-no-typed-enqueue-fake:enqueue-ignore": [
@@ -4305,6 +4339,17 @@
     },
     {
       "file": "let-binding.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$",
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "namespace-alias.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -4437,6 +4482,12 @@
     },
     {
       "file": "computed-now.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-not.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null

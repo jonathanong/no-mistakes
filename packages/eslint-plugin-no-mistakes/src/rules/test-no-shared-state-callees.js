@@ -59,10 +59,9 @@ function isKnownTestCallee(callee, testCallees = TEST_CALLEES, namespaces = new 
   if (!prop) return false;
   const object = unwrapExpression(callee.object);
   if (
-    !callee.computed &&
     TEST_CALLEES.has(prop) &&
     object?.type === "Identifier" &&
-    (testCallees.has(object.name) || namespaces.has(object.name))
+    (testCallees.has(object.name) || (!callee.computed && namespaces.has(object.name)))
   ) {
     return true;
   }
