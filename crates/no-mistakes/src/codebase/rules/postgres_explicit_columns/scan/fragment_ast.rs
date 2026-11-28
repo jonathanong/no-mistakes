@@ -7,7 +7,7 @@ use sqlparser::ast::{
 mod exprs;
 mod items;
 use exprs::walk_subqueries;
-use items::{collect_items, collect_returning, target_rel, visit_join_constraint};
+use items::{collect_items, collect_returning, collect_table_expr, target_rel, visit_join_constraint};
 
 pub(super) const SYNTHETIC_TARGET: &str = "__nm_frag_target";
 
@@ -36,47 +36,53 @@ pub(super) fn collect_statements(statements: &[Statement], out: &mut Vec<Fragmen
 fn collect_statement(statement: &Statement, ctes: &[String], out: &mut Vec<FragmentStar>) {
     match statement {
         Statement::Query(query) => collect_query(query, ctes, false, out),
-        Statement::Insert(insert) => {
-            if let TableObject::TableName(name) = &insert.table {
-                let target = Rel {
-                    table: object_name_key(name),
-                    alias: insert.table_alias.as_ref().map(|a| ident_key(&a.alias)),
-                    is_local_derived: false,
-                };
-                collect_returning(&target, &[], ctes, insert.returning.as_deref(), out);
-            }
-            if let Some(source) = insert.source.as_deref() {
-                collect_query(source, ctes, false, out);
-            }
-        }
-        Statement::Update(update) => {
-            if let Some(target) = target_rel(&update.table.relation) {
-                let from = match &update.from {
-                    Some(
-                        UpdateTableFromKind::BeforeSet(tables)
-                        | UpdateTableFromKind::AfterSet(tables),
-                    ) => tables.as_slice(),
-                    None => &[],
-                };
-                let mut peers = collect_rels(from, ctes, out);
-                for join in &update.table.joins {
-                    push_factor(&join.relation, ctes, &mut peers, out);
-                    visit_join_constraint(&join.join_operator, ctes, out);
-                }
-                collect_returning(&target, &peers, ctes, update.returning.as_deref(), out);
-            }
-        }
-        Statement::Delete(delete) => {
-            let first = match &delete.from {
-                FromTable::WithFromKeyword(t) | FromTable::WithoutKeyword(t) => t.first(),
-            };
-            if let Some(target) = first.and_then(|table| target_rel(&table.relation)) {
-                let peers = collect_rels(delete.using.as_deref().unwrap_or_default(), ctes, out);
-                collect_returning(&target, &peers, ctes, delete.returning.as_deref(), out);
-            }
-        }
+        Statement::Insert(insert) => collect_insert(insert, ctes, out),
+        Statement::Update(update) => collect_update(update, ctes, out),
+        Statement::Delete(delete) => collect_delete(delete, ctes, out),
         Statement::Explain { statement, .. } => collect_statement(statement, ctes, out),
         _ => {}
+    }
+}
+
+fn collect_insert(insert: &sqlparser::ast::Insert, ctes: &[String], out: &mut Vec<FragmentStar>) {
+    if let TableObject::TableName(name) = &insert.table {
+        let target = Rel {
+            table: object_name_key(name),
+            alias: insert.table_alias.as_ref().map(|a| ident_key(&a.alias)),
+            is_local_derived: false,
+        };
+        collect_returning(&target, &[], ctes, insert.returning.as_deref(), out);
+    }
+    if let Some(source) = insert.source.as_deref() {
+        collect_query(source, ctes, false, out);
+    }
+}
+
+fn collect_update(update: &sqlparser::ast::Update, ctes: &[String], out: &mut Vec<FragmentStar>) {
+    let Some(target) = target_rel(&update.table.relation) else {
+        return;
+    };
+    let from = match &update.from {
+        Some(UpdateTableFromKind::BeforeSet(tables) | UpdateTableFromKind::AfterSet(tables)) => {
+            tables.as_slice()
+        }
+        None => &[],
+    };
+    let mut peers = collect_rels(from, ctes, out);
+    for join in &update.table.joins {
+        push_factor(&join.relation, ctes, &mut peers, out);
+        visit_join_constraint(&join.join_operator, ctes, out);
+    }
+    collect_returning(&target, &peers, ctes, update.returning.as_deref(), out);
+}
+
+fn collect_delete(delete: &sqlparser::ast::Delete, ctes: &[String], out: &mut Vec<FragmentStar>) {
+    let first = match &delete.from {
+        FromTable::WithFromKeyword(t) | FromTable::WithoutKeyword(t) => t.first(),
+    };
+    if let Some(target) = first.and_then(|table| target_rel(&table.relation)) {
+        let peers = collect_rels(delete.using.as_deref().unwrap_or_default(), ctes, out);
+        collect_returning(&target, &peers, ctes, delete.returning.as_deref(), out);
     }
 }
 
@@ -113,23 +119,7 @@ fn collect_set(expr: &SetExpr, ctes: &[String], in_exists: bool, out: &mut Vec<F
             collect_set(left, ctes, in_exists, out);
             collect_set(right, ctes, in_exists, out);
         }
-        SetExpr::Table(table) if !in_exists => {
-            if let Some(name) = &table.table_name {
-                let table_name = match &table.schema_name {
-                    Some(schema) => format!("{}.{}", ident_key(schema), ident_key(name)),
-                    None => ident_key(name),
-                };
-                if !ctes.iter().any(|cte| cte.eq_ignore_ascii_case(&table_name)) {
-                    out.push(FragmentStar {
-                        returning: false,
-                        qualifier: None,
-                        relation: Some(table_name),
-                        within_function: None,
-                        line: 1,
-                    });
-                }
-            }
-        }
+        SetExpr::Table(table) if !in_exists => collect_table_expr(table, ctes, out),
         _ => {}
     }
 }

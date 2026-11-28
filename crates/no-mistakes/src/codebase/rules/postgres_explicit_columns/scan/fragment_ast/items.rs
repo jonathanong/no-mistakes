@@ -160,3 +160,26 @@ pub(super) fn visit_join_constraint(
         walk_subqueries(expr, ctes, out);
     }
 }
+
+pub(super) fn collect_table_expr(
+    table: &sqlparser::ast::Table,
+    ctes: &[String],
+    out: &mut Vec<FragmentStar>,
+) {
+    let Some(name) = &table.table_name else {
+        return;
+    };
+    let table_name = match &table.schema_name {
+        Some(schema) => format!("{}.{}", ident_key(schema), ident_key(name)),
+        None => ident_key(name),
+    };
+    if !ctes.iter().any(|cte| cte.eq_ignore_ascii_case(&table_name)) {
+        out.push(FragmentStar {
+            returning: false,
+            qualifier: None,
+            relation: Some(table_name),
+            within_function: None,
+            line: 1,
+        });
+    }
+}

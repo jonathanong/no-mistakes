@@ -1,4 +1,4 @@
-use super::{is_kw, next_code, word_value, FragmentContext};
+use super::{is_kw, next_code, read_cte_name, word_value, FragmentContext};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
@@ -9,81 +9,119 @@ pub(super) fn extract_context_from_tokens(tokens: &[TokenWithSpan], ctx: &mut Fr
     let mut in_from = false;
     while let Some((i, token)) = next_code(tokens, index) {
         index = i + 1;
-        match &token.token {
-            Token::LParen => {
-                depth += 1;
-                continue;
-            }
-            Token::RParen => {
-                depth = depth.saturating_sub(1);
-                continue;
-            }
-            _ => {}
-        }
-        if depth > 0 {
+        if update_paren_depth(token, &mut depth) || depth > 0 {
             continue;
         }
-        if is_kw(token, Keyword::WITH) {
-            in_with = true;
-            in_from = false;
-            if let Some((next_i, next_tok)) = next_code(tokens, index) {
-                if is_kw(next_tok, Keyword::RECURSIVE) {
-                    index = next_i + 1;
-                }
-            }
-            if let Some((next_i, name)) = read_cte_name(tokens, index) {
-                ctx.ctes.push(name);
-                index = next_i;
-            }
-            continue;
+        index = step_top_level(tokens, i, token, index, &mut in_with, &mut in_from, ctx);
+    }
+}
+
+fn update_paren_depth(token: &TokenWithSpan, depth: &mut usize) -> bool {
+    match &token.token {
+        Token::LParen => {
+            *depth += 1;
+            true
         }
-        if in_with && matches!(token.token, Token::Comma) {
-            if let Some((next_i, name)) = read_cte_name(tokens, index) {
-                ctx.ctes.push(name);
-                index = next_i;
-                continue;
-            }
+        Token::RParen => {
+            *depth = depth.saturating_sub(1);
+            true
         }
-        if in_from && matches!(token.token, Token::Comma) {
-            if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
-                ctx.from_relations.push(rel);
-                index = next_i;
-                continue;
-            }
+        _ => false,
+    }
+}
+
+fn step_top_level(
+    tokens: &[TokenWithSpan],
+    i: usize,
+    token: &TokenWithSpan,
+    index: usize,
+    in_with: &mut bool,
+    in_from: &mut bool,
+    ctx: &mut FragmentContext,
+) -> usize {
+    if is_kw(token, Keyword::WITH) {
+        *in_with = true;
+        *in_from = false;
+        return consume_with_head(tokens, index, ctx);
+    }
+    if *in_with && matches!(token.token, Token::Comma) {
+        if let Some((next_i, name)) = read_cte_name(tokens, index) {
+            ctx.ctes.push(name);
+            return next_i;
         }
-        if is_kw(token, Keyword::UPDATE) {
-            in_with = false;
-            in_from = false;
-            if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
-                ctx.mutation_target = Some(rel);
-                index = next_i;
-            }
-        } else if is_kw(token, Keyword::INTO) || is_kw(token, Keyword::FROM) || is_kw(token, Keyword::USING) {
-            let is_into = is_kw(token, Keyword::INTO);
-            in_with = false;
-            in_from = !is_into;
-            if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
-                if is_into {
-                    ctx.mutation_target = Some(rel);
-                } else {
-                    if ctx.mutation_target.is_none()
-                        && tokens[..i].iter().any(|t| is_kw(t, Keyword::DELETE))
-                    {
-                        ctx.mutation_target = Some(rel.clone());
-                    }
-                    ctx.from_relations.push(rel);
-                }
-                index = next_i;
-            }
-        } else if is_kw(token, Keyword::JOIN) {
-            in_from = true;
-            if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
-                ctx.from_relations.push(rel);
-                index = next_i;
-            }
-        } else if ends_from_list(token) {
-            in_from = false;
+    }
+    if *in_from && matches!(token.token, Token::Comma) {
+        if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
+            ctx.from_relations.push(rel);
+            return next_i;
         }
+    }
+    consume_clause_relation(tokens, i, token, index, in_with, in_from, ctx)
+}
+
+fn consume_with_head(tokens: &[TokenWithSpan], mut index: usize, ctx: &mut FragmentContext) -> usize {
+    if let Some((next_i, next_tok)) = next_code(tokens, index) {
+        if is_kw(next_tok, Keyword::RECURSIVE) {
+            index = next_i + 1;
+        }
+    }
+    if let Some((next_i, name)) = read_cte_name(tokens, index) {
+        ctx.ctes.push(name);
+        return next_i;
+    }
+    index
+}
+
+fn consume_clause_relation(
+    tokens: &[TokenWithSpan],
+    i: usize,
+    token: &TokenWithSpan,
+    index: usize,
+    in_with: &mut bool,
+    in_from: &mut bool,
+    ctx: &mut FragmentContext,
+) -> usize {
+    if is_kw(token, Keyword::UPDATE) {
+        *in_with = false;
+        *in_from = false;
+        if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
+            ctx.mutation_target = Some(rel);
+            return next_i;
+        }
+    } else if is_kw(token, Keyword::INTO) || is_kw(token, Keyword::FROM) || is_kw(token, Keyword::USING) {
+        let is_into = is_kw(token, Keyword::INTO);
+        *in_with = false;
+        *in_from = !is_into;
+        if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
+            record_from_or_into(tokens, i, is_into, rel, ctx);
+            return next_i;
+        }
+    } else if is_kw(token, Keyword::JOIN) {
+        *in_from = true;
+        if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
+            ctx.from_relations.push(rel);
+            return next_i;
+        }
+    } else if ends_from_list(token) {
+        *in_from = false;
+    }
+    index
+}
+
+fn record_from_or_into(
+    tokens: &[TokenWithSpan],
+    i: usize,
+    is_into: bool,
+    rel: (String, Option<String>),
+    ctx: &mut FragmentContext,
+) {
+    if is_into {
+        ctx.mutation_target = Some(rel);
+    } else {
+        if ctx.mutation_target.is_none() && tokens[..i].iter().any(|t| is_kw(t, Keyword::DELETE)) {
+            ctx.mutation_target = Some(rel.clone());
+        }
+        ctx.from_relations.push(rel);
     }
 }
 
@@ -110,34 +148,6 @@ fn ends_from_list(token: &TokenWithSpan) -> bool {
                 | Keyword::WINDOW
         )
     )
-}
-
-fn read_cte_name(tokens: &[TokenWithSpan], index: usize) -> Option<(usize, String)> {
-    let (i, name_tok) = next_code(tokens, index)?;
-    let name = word_value(name_tok)?;
-    let (mut cursor, mut next) = next_code(tokens, i + 1)?;
-    if matches!(next.token, Token::LParen) {
-        let mut depth = 1usize;
-        cursor += 1;
-        while let Some(tok) = tokens.get(cursor) {
-            match tok.token {
-                Token::LParen => depth += 1,
-                Token::RParen => {
-                    depth -= 1;
-                    if depth == 0 {
-                        cursor += 1;
-                        break;
-                    }
-                }
-                _ => {}
-            }
-            cursor += 1;
-        }
-        let (as_idx, as_tok) = next_code(tokens, cursor)?;
-        cursor = as_idx;
-        next = as_tok;
-    }
-    is_kw(next, Keyword::AS).then_some((cursor + 1, name))
 }
 
 fn read_table_and_alias(

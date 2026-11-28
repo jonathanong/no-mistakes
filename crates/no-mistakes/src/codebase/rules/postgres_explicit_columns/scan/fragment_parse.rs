@@ -5,6 +5,8 @@ use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan, Tokenizer};
 
 mod context;
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod tests;
 mod tokens;
 use context::extract_context_from_tokens;
 
@@ -23,7 +25,12 @@ pub(super) fn parse_context(prefix: &str) -> FragmentContext {
 }
 
 pub(super) fn extract_fragment_stars(sql: &str, context_sql: Option<&str>) -> Vec<FragmentStar> {
-    if !sql.contains('*') {
+    if !sql.contains('*')
+        && !sql
+            .as_bytes()
+            .windows(5)
+            .any(|w| w.eq_ignore_ascii_case(b"table"))
+    {
         return Vec::new();
     }
     let mut out = Vec::new();
@@ -139,4 +146,35 @@ fn open_clause_at_end(tokens: &[TokenWithSpan]) -> (bool, bool) {
         }
     }
     (select, returning)
+}
+
+pub(super) fn read_cte_name(tokens: &[TokenWithSpan], index: usize) -> Option<(usize, String)> {
+    let (i, name_tok) = next_code(tokens, index)?;
+    let name = word_value(name_tok)?;
+    let (cursor, next) = next_code(tokens, i + 1)?;
+    let (as_idx, as_tok) = if matches!(next.token, Token::LParen) {
+        next_code(tokens, skip_paren_group(tokens, cursor))?
+    } else {
+        (cursor, next)
+    };
+    is_kw(as_tok, Keyword::AS).then_some((as_idx + 1, name))
+}
+
+fn skip_paren_group(tokens: &[TokenWithSpan], start: usize) -> usize {
+    let mut depth = 1usize;
+    let mut cursor = start + 1;
+    while let Some(tok) = tokens.get(cursor) {
+        match tok.token {
+            Token::LParen => depth += 1,
+            Token::RParen => {
+                depth -= 1;
+                if depth == 0 {
+                    return cursor + 1;
+                }
+            }
+            _ => {}
+        }
+        cursor += 1;
+    }
+    cursor
 }

@@ -119,25 +119,26 @@ fn tuple_string_literals(ty: &TSType<'_>) -> Option<Vec<String>> {
     };
     let mut values = Vec::new();
     for element in &tuple.element_types {
-        let item_ty = match element {
-            TSTupleElement::TSNamedTupleMember(named) => &named.element_type,
-            other => other,
-        };
-        let Some(TSType::TSLiteralType(lit)) = item_ty.as_ts_type() else {
-            return None;
-        };
-        let TSLiteral::StringLiteral(text) = &lit.literal else {
-            return None;
-        };
-        let value = crate::ast::js_literal(text).into_owned();
+        let value = tuple_element_string(element)?;
         if !values.contains(&value) {
             values.push(value);
         }
-        if values.len() > MAX_EMBEDDED_SQL_VARIANTS {
-            return None;
-        }
     }
-    (!values.is_empty()).then_some(values)
+    (!values.is_empty() && values.len() <= MAX_EMBEDDED_SQL_VARIANTS).then_some(values)
+}
+
+fn tuple_element_string(element: &TSTupleElement<'_>) -> Option<String> {
+    let item = match element {
+        TSTupleElement::TSNamedTupleMember(named) => &named.element_type,
+        other => other,
+    };
+    let TSType::TSLiteralType(lit) = item.as_ts_type()? else {
+        return None;
+    };
+    match &lit.literal {
+        TSLiteral::StringLiteral(text) => Some(crate::ast::js_literal(text).into_owned()),
+        _ => None,
+    }
 }
 
 fn as_const_array_literals(mut expr: &Expression<'_>) -> Option<Vec<String>> {
