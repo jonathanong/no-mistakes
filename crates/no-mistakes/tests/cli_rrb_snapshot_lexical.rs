@@ -357,7 +357,10 @@ fn swift_apple_module_imports_json_matches_snapshot() {
             "{clean}"
         );
     }
-    assert_eq!(reports["apple_platforms_package_portable_test"]["exitCode"], 1);
+    assert_eq!(
+        reports["apple_platforms_package_portable_test"]["exitCode"],
+        1
+    );
     assert_eq!(
         reports["portable_security_opt_in"]["report"]["rules"]
             .as_array()
