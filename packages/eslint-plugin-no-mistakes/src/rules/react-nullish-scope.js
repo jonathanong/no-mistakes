@@ -153,7 +153,7 @@ function createNullishState(context) {
       if (!type && status === "yes" && reassignedBinding(node.id, context)) status = "unresolved";
       if (!type && status === "yes") defineNamed("reactNodes", node.id.name, scope);
       else if (!type && status === "unresolved") defineUnresolved(node.id.name, scope);
-      rememberStatus(bindingStatus, node.id, status, context);
+      rememberStatus(bindingStatus, node.id, status, context, !type && node.parent?.kind === "var");
       defineObjectType(node.id, type, scope);
       if (!type) noteObjectAlias(node);
       return;
@@ -187,6 +187,7 @@ function createNullishState(context) {
         expressionStatus,
         facts,
         seen,
+        lookupMembers,
       );
       return later ?? storedStatus(bindingStatus, current, context) ?? variableStatus(current.name);
     }

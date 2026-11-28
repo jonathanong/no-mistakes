@@ -468,6 +468,11 @@ describe("typescript import wrappers", () => {
         "react-no-nullish-react-node",
       ),
       eslintCase(
+        "a const value replaces a ReactNode parameter",
+        "react-nullish-const-shadow.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
         "numeric literal keys stay on that property",
         "react-nullish-numeric-keys.tsx",
         "react-no-nullish-react-node",
@@ -957,7 +962,14 @@ describe("typescript import wrappers", () => {
       [332, "nullish"],
       [338, "unanalyzable"],
       [343, "nullish"],
+      [348, "nullish"],
+      [355, "nullish"],
+      [370, "nullish"],
+      [380, "nullish"],
     ]);
+    expect(
+      cases.find((item) => item.name === "a const value replaces a ReactNode parameter").findings,
+    ).toEqual([]);
     expect(
       cases
         .find((item) => item.name === "numeric literal keys stay on that property")
@@ -969,6 +981,8 @@ describe("typescript import wrappers", () => {
       [23, "nullish"],
       [28, "unanalyzable"],
       [32, "nullish"],
+      [36, "nullish"],
+      [41, "nullish"],
     ]);
     expect(
       cases
@@ -989,6 +1003,8 @@ describe("typescript import wrappers", () => {
       [94, "unanalyzable"],
       [107, "wrapper"],
       [112, "unanalyzable"],
+      [126, "unanalyzable"],
+      [132, "wrapper"],
     ]);
     expect(
       cases.find((item) => item.name === "reassigned alias chain stays bounded").findings,

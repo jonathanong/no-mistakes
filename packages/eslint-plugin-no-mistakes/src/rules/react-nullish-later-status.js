@@ -36,30 +36,58 @@ function initObjectType(init, context) {
   return def ? annotatedType(def.name) || annotatedType(def.node) : null;
 }
 
-function forwardPatternStatus(pattern, name, init, context, facts, annotation) {
+function recordedKeyStatus(init, key, lookup) {
+  const current = unwrapSequence(init);
+  if (current?.type !== "Identifier" || !lookup) return null;
+  const props = lookup(current, "objectTypes");
+  const unresolved = lookup(current, "unresolvedMembers");
+  if (key === undefined)
+    return props || unresolved ? (props?.size || unresolved?.size ? "unresolved" : "no") : null;
+  if (props?.has(key)) return "yes";
+  if (unresolved?.has(key)) return "unresolved";
+  return props || unresolved ? "no" : null;
+}
+
+function forwardPatternStatus(pattern, name, init, context, facts, annotation, lookup) {
   const key = patternPropertyKey(pattern, name, context);
   if (key === null) return "no";
   const type = annotation || initObjectType(init, context);
   const classified = type ? classifiedProps(type, facts) : null;
-  if (key === undefined) {
-    if (!classified) return "unresolved";
-    return classified.props?.size || classified.unresolved?.size ? "unresolved" : "no";
+  if (classified) {
+    if (key === undefined)
+      return classified.props?.size || classified.unresolved?.size ? "unresolved" : "no";
+    if (classified.props?.has(key)) return "yes";
+    if (classified.unresolved?.has(key)) return "unresolved";
+    return "no";
   }
-  if (classified?.props?.has(key)) return "yes";
-  if (classified?.unresolved?.has(key)) return "unresolved";
-  return "no";
+  return recordedKeyStatus(init, key, lookup) ?? (key === undefined ? "unresolved" : "no");
 }
 
-function laterBindingStatus(identifier, context, reactTypeStatus, expressionStatus, facts, seen) {
+function laterBindingStatus(
+  identifier,
+  context,
+  reactTypeStatus,
+  expressionStatus,
+  facts,
+  seen,
+  lookup,
+) {
   const variable = resolveVariable(identifier, context);
-  const defs = variable?.defs ?? [];
-  if (!defs.length || seen.has(variable)) return seen.has(variable) ? "unresolved" : null;
-  if (!defs.every((def) => def.node?.range?.[0] > identifier.range[0])) return null;
+  const defs = (variable?.defs ?? []).filter(
+    (def) => def.type !== "Type" && def.type !== "TypeParameter",
+  );
+  const laterDefs = defs.filter((def) => def.node?.range?.[0] > identifier.range[0]);
+  const forwardValue = laterDefs.some((def) => def.type === "Variable");
+  const active = forwardValue ? laterDefs : defs;
+  if (!active.length || seen.has(variable))
+    return seen.has(variable) && active.length ? "unresolved" : null;
+  if (!forwardValue && active.some((def) => !(def.node?.range?.[0] > identifier.range[0])))
+    return null;
   seen.add(variable);
   try {
     let annotated = false;
     let unresolved = false;
-    for (const def of defs) {
+    for (const def of active) {
       if (def.type !== "Variable") continue;
       if (def.node?.id?.type === "ObjectPattern") {
         const patternType = typeAnnotation(def.node.id);
@@ -72,6 +100,7 @@ function laterBindingStatus(identifier, context, reactTypeStatus, expressionStat
           context,
           facts,
           patternType,
+          lookup,
         );
         if (status === "yes") return "yes";
         if (status === "unresolved") unresolved = true;
@@ -89,7 +118,7 @@ function laterBindingStatus(identifier, context, reactTypeStatus, expressionStat
     if ((variable.references ?? []).some((reference) => reference.isWrite() && !reference.init)) {
       return "unresolved";
     }
-    for (const def of defs) {
+    for (const def of active) {
       if (def.type !== "Variable") continue;
       if (def.node?.id?.type === "ObjectPattern") {
         const status = forwardPatternStatus(
@@ -98,6 +127,8 @@ function laterBindingStatus(identifier, context, reactTypeStatus, expressionStat
           def.node.init,
           context,
           facts,
+          null,
+          lookup,
         );
         if (status === "yes") return "yes";
         if (status === "unresolved") unresolved = true;

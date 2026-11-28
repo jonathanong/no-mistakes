@@ -1,5 +1,6 @@
 "use strict";
 
+const { unwrapExpression } = require("./rules/async-ast");
 const { localTypeStatus } = require("./react-node-local-type");
 const { literalString } = require("./rules/module-mock-helpers");
 const { constStringKey } = require("./rules/react-use-callee");
@@ -15,8 +16,10 @@ function keyName(node) {
 }
 
 function computedKey(node) {
-  if (node?.type === "Literal" && typeof node.value === "number") return String(node.value);
-  return literalString(node);
+  const current = unwrapExpression(node);
+  if (current?.type === "Literal" && typeof current.value === "number")
+    return String(current.value);
+  return literalString(current);
 }
 
 const UNWRAP_TYPES = new Set(["TSParenthesizedType", "TSOptionalType", "TSRestType"]);

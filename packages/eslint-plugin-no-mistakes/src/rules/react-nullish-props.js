@@ -36,9 +36,8 @@ function withAliasSubstitutions(alias, type, outer) {
   if (!params.length) return outer;
   const args = typeArgumentsOf(type);
   const next = new Map(outer || []);
-  const matched = args.length === params.length;
   for (let index = 0; index < params.length; index += 1)
-    next.set(params[index], matched ? args[index] : UNSUBSTITUTED);
+    next.set(params[index], args[index] ?? params[index].default ?? UNSUBSTITUTED);
   return next;
 }
 

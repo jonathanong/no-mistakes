@@ -118,3 +118,16 @@ export async function plainLater(): Promise<Widget | null> {
   return plain("1");
 }
 plain = () => Promise.resolve(null);
+
+let other = (): Promise<null> => Promise.resolve(null);
+export async function assignedDefault(): Promise<Widget | null> {
+  let read;
+  ({ getWidget: read = other } = require("./data"));
+  return read();
+}
+
+export async function assignedSameDefault(): Promise<Widget | null> {
+  let read;
+  ({ getWidget: read = require("./data").getWidget } = require("./data"));
+  return read();
+}

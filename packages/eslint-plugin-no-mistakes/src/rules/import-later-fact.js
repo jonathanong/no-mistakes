@@ -1,7 +1,13 @@
 "use strict";
 
 const { literalString } = require("./logical-call");
-const { factAtPath, namespaceMember, patternPath } = require("./import-pattern-path");
+const {
+  factAtPath,
+  namespaceMember,
+  patternDefault,
+  patternPath,
+  withPatternDefault,
+} = require("./import-pattern-path");
 
 function assignmentValue(reference) {
   const parent = reference.identifier?.parent;
@@ -35,7 +41,10 @@ function patternFact(assignment, reference, context, seen, memo, importFact) {
   if (!source || source.typeOnly) return null;
   const path = patternPath(assignment.left, reference.identifier.name, literalString, [], context);
   if (path == null || source.unresolved) return { unresolved: true };
-  return factAtPath(source, path, namespaceMember) || { unresolved: true };
+  const fact = factAtPath(source, path, namespaceMember) || { unresolved: true };
+  const fallback = patternDefault(assignment.left, reference.identifier.name, context);
+  if (!fallback) return fact;
+  return withPatternDefault(fact, importFact(fallback, context, new Set(seen), memo));
 }
 
 function writeFact(reference, context, seen, memo, importFact) {
@@ -73,11 +82,13 @@ function laterFact(def, variable, context, seen, memo, importFact, use) {
   )
     return null;
   let matched = null;
+  let matchedAt = null;
   let noise = 0;
   let laterImport = false;
   for (const reference of variable.references ?? []) {
     if (!reference.isWrite() || reference.init) continue;
-    if (use?.range && reference.identifier?.range?.[0] >= use.range[0]) {
+    const start = reference.identifier?.range?.[0];
+    if (use?.range && start >= use.range[0]) {
       if (
         !laterImport &&
         readCanRunAfter(use, reference.identifier) &&
@@ -91,8 +102,11 @@ function laterFact(def, variable, context, seen, memo, importFact, use) {
       noise += 1;
       continue;
     }
-    if (matched) noise += 1;
-    else matched = fact;
+    if (matched && start !== matchedAt) noise += 1;
+    else if (!matched) {
+      matched = fact;
+      matchedAt = start;
+    }
   }
   if (!matched) return laterImport ? { unresolved: true } : null;
   return noise || matched.unresolved ? { unresolved: true } : matched;

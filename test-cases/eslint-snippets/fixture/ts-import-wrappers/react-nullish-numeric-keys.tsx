@@ -31,3 +31,16 @@ export function dynamicDestructure(p: { 0: ReactNode }) {
 export function numericType(value: { [0]: ReactNode }) {
   return value[0] ?? null;
 }
+
+export function assertedNumericMember(value: { 0: ReactNode }) {
+  return value[0 as const] ?? null;
+}
+
+export function assertedNumericDestructure(p: { 0: ReactNode }) {
+  const { [0 as const]: child } = p;
+  return child ?? null;
+}
+
+export function assertedDynamicMember(value: { 0: ReactNode }) {
+  return value[key as const] ?? null;
+}

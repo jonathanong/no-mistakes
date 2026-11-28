@@ -2,9 +2,10 @@
 
 const { resolveVariable } = require("./async-target-bindings");
 
-function rememberStatus(statuses, identifier, status, context) {
+function rememberStatus(statuses, identifier, status, context, keepPrior) {
   const variable = resolveVariable(identifier, context);
-  if (variable) statuses.set(variable, status);
+  if (!variable || (keepPrior && statuses.get(variable) === "yes")) return;
+  statuses.set(variable, status);
 }
 
 function storedStatus(statuses, identifier, context) {

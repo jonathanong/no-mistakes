@@ -386,6 +386,13 @@
       "rule": "react-no-iife-in-jsx"
     },
     {
+      "file": "react-nullish-const-shadow.tsx",
+      "findings": [],
+      "name": "a const value replaces a ReactNode parameter",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
       "file": "react-nullish-annotated.tsx",
       "findings": [],
       "name": "annotated string is not a ReactNode",
@@ -1082,6 +1089,28 @@
           "messageId": "nullish",
           "ruleId": "no-mistakes/react-no-nullish-react-node",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 35,
+          "endLine": 36,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-numeric-keys.tsx",
+          "line": 36,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 23,
+          "endLine": 41,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-numeric-keys.tsx",
+          "line": 41,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
         }
       ],
       "name": "numeric literal keys stay on that property",
@@ -1446,6 +1475,50 @@
           "endLine": 343,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
           "line": 343,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 35,
+          "endLine": 348,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 348,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 37,
+          "endLine": 355,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 355,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 370,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 370,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 23,
+          "endLine": 380,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 380,
           "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
           "messageId": "nullish",
           "ruleId": "no-mistakes/react-no-nullish-react-node",
@@ -2642,6 +2715,28 @@
           "line": 112,
           "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 16,
+          "endLine": 126,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-assigned-require.ts",
+          "line": 126,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 16,
+          "endLine": 132,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-assigned-require.ts",
+          "line": 132,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
           "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
           "severity": 2
         }
@@ -3955,6 +4050,20 @@
             "file": "nullable-assigned-require.ts",
             "line": 112,
             "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-assigned-require.ts",
+            "line": 126,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-assigned-require.ts",
+            "line": 132,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
           }
         ],
         "name": "nullable-assigned-require.ts",
@@ -4717,6 +4826,20 @@
             "file": "react-nullish-numeric-keys.tsx",
             "line": 32,
             "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-numeric-keys.tsx",
+            "line": 36,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-numeric-keys.tsx",
+            "line": 41,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
           }
         ],
         "name": "react-nullish-numeric-keys.tsx",
@@ -4954,6 +5077,34 @@
             "column": 10,
             "file": "react-nullish-scope-edges.tsx",
             "line": 343,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 22,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 348,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 24,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 355,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 370,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 380,
             "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
           }
         ],

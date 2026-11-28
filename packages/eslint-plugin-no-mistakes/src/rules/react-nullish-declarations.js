@@ -21,7 +21,7 @@ function bodyStatements(node, type) {
 
 function nearestDeclarations(type, name) {
   let current = type?.parent;
-  while (current && current.type !== "Program") {
+  while (current) {
     const found = [];
     const statements =
       current.body?.body && !containsNode(current.body, type)
@@ -41,6 +41,7 @@ function nearestDeclarations(type, name) {
         found.push(declaration);
     }
     if (found.length) return found;
+    if (current.type === "Program") return null;
     current = current.parent;
   }
   return null;

@@ -84,13 +84,13 @@ function importBindingFact(def) {
   return { unresolved: true };
 }
 
-function destructureFact(declarator, name, context, seen) {
+function destructureFact(declarator, name, context, seen, memo) {
   const imported = patternPath(declarator.id, name, literalString, [], context);
   if (imported === null) return null;
   const required = requireModule(declarator.init, context);
   let fact;
   if (required === undefined) {
-    const source = importFact(declarator.init, context, new Set(seen));
+    const source = importFact(declarator.init, context, new Set(seen), memo);
     if (!source) fact = null;
     else if (imported === undefined || source.unresolved || source.typeOnly)
       fact = source.typeOnly ? null : { unresolved: true };
@@ -104,13 +104,13 @@ function destructureFact(declarator, name, context, seen) {
     );
   const fallback = patternDefault(declarator.id, name, context);
   if (!fallback) return fact;
-  return withPatternDefault(fact, importFact(fallback, context, new Set(seen)));
+  return withPatternDefault(fact, importFact(fallback, context, new Set(seen), memo));
 }
 
-function factFromDef(def, name, context, seen) {
+function factFromDef(def, name, context, seen, memo) {
   if (def?.type === "ImportBinding") return importBindingFact(def);
   if (def?.type !== "Variable" || def.node?.id?.type !== "ObjectPattern") return null;
-  return destructureFact(def.node, name, context, seen);
+  return destructureFact(def.node, name, context, seen, memo);
 }
 
 function defMayBeImport(def, context, seen) {
@@ -171,7 +171,7 @@ function readBinding(variable, current, context, seen, memo) {
     return null;
   if (variable.defs.length !== 1) return { unresolved: true };
   const def = variable.defs[0];
-  const direct = factFromDef(def, current.name, context, seen);
+  const direct = factFromDef(def, current.name, context, seen, memo);
   const written = (variable.references ?? []).some(
     (reference) => reference.isWrite() && !reference.init,
   );

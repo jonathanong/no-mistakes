@@ -342,3 +342,40 @@ export function reassignedAnnotated(props: { children: ReactNode }) {
   slot = "ready";
   return slot ?? null;
 }
+
+export function aliasedForward(props: { child: ReactNode }) {
+  const alias = props;
+  const read = () => child ?? null;
+  const { child } = alias;
+  return read();
+}
+
+export function typeOnlyShadow(child: ReactNode) {
+  {
+    const read = () => child ?? null;
+    type child = string;
+    return read();
+  }
+}
+
+export function forwardValueShadow(child: ReactNode) {
+  const read = () => child ?? null;
+  var child = "text";
+  return read();
+}
+
+type DefaultBox<T = { child: ReactNode }> = T;
+
+export function defaultTypeArgument(value: DefaultBox) {
+  return value.child ?? null;
+}
+
+export function explicitDefaultOverride(value: DefaultBox<{ child: string }>) {
+  return value.child ?? null;
+}
+
+export function redeclaredVar(node: ReactNode, load: () => ReactNode) {
+  var child: ReactNode = node;
+  var child = load();
+  return child ?? null;
+}
