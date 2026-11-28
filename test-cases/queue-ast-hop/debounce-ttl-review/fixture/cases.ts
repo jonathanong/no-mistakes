@@ -84,6 +84,43 @@ function scopeMarker(): never {
 }
 void scopeMarker;
 
+const spreadChain0 = { mode: "debounce", ttl: 1 };
+const spreadChain1 = { ...spreadChain0 };
+const spreadChain2 = { ...spreadChain1 };
+const spreadChain3 = { ...spreadChain2 };
+const spreadChain4 = { ...spreadChain3 };
+const spreadChain5 = { ...spreadChain4 };
+const spreadChain6 = { ...spreadChain5 };
+const spreadChain7 = { ...spreadChain6 };
+const spreadChain8 = { ...spreadChain7 };
+const spreadChain9 = { ...spreadChain8 };
+const spreadChain10 = { ...spreadChain9 };
+const spreadChain11 = { ...spreadChain10 };
+const spreadChain12 = { ...spreadChain11 };
+const spreadChain13 = { ...spreadChain12 };
+const spreadChain14 = { ...spreadChain13 };
+const spreadChain15 = { ...spreadChain14 };
+const spreadChain16 = { ...spreadChain15 };
+const spreadChain17 = { ...spreadChain16 };
+const spreadChain18 = { ...spreadChain17 };
+const spreadChain19 = { ...spreadChain18 };
+const spreadChain20 = { ...spreadChain19 };
+const spreadChain21 = { ...spreadChain20 };
+const spreadChain22 = { ...spreadChain21 };
+const spreadChain23 = { ...spreadChain22 };
+const spreadChain24 = { ...spreadChain23 };
+const spreadChain25 = { ...spreadChain24 };
+const spreadChain26 = { ...spreadChain25 };
+const spreadChain27 = { ...spreadChain26 };
+const spreadChain28 = { ...spreadChain27 };
+const spreadChain29 = { ...spreadChain28 };
+const spreadChain30 = { ...spreadChain29 };
+const spreadChain31 = { ...spreadChain30 };
+const spreadChain32 = { ...spreadChain31 };
+const spreadChain33 = { ...spreadChain32 };
+const spreadChain34 = { ...spreadChain33 };
+const spreadChain35 = { ...spreadChain34 };
+
 export async function cases(): Promise<void> {
   await queue.add("alias-absent", {}, {
     deduplication: { id: "c", mode: "debounce", ttl: absent },
@@ -171,6 +208,7 @@ export async function cases(): Promise<void> {
   await flow.add({ name: "flow-alias-deep", queueName: "events", data: {}, opts: {}, children: [childAlias10, childNotObject, unboundChild] });
   await queue.add("dedup-cycle", {}, { deduplication: cycDedup });
   await queue.add("spread-budget", {}, { deduplication: { id: "u11", ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ mode: "debounce", ttl: 1 } } } } } } } } } } } } } } } } } } } } } } } } } } } } } } } } } } } });
+  await queue.add("spread-chain-budget", {}, { deduplication: { id: "u13", ...spreadChain35 } });
   await flow.add({ name: "flow-undeclared", queueName: "events", data: {}, opts: {}, ...undeclaredFlow, children: [] });
   await queue.addBulk(bulkBracketJobs);
   await queue.addBulk(bulkOptionalJobs);
