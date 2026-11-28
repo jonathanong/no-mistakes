@@ -69,16 +69,7 @@ fn match_positionals(
             None => ArgMatch::NotMatched,
         };
     }
-    if positionals.windows(matcher.tokens.len()).any(|window| {
-        window
-            .iter()
-            .zip(&matcher.tokens)
-            .all(|(word, expected)| word.text == *expected)
-    }) {
-        ArgMatch::Matched
-    } else {
-        ArgMatch::NotMatched
-    }
+    super::sequence::match_token_sequence(positionals, &matcher.tokens, command_dynamic)
 }
 
 fn match_flag_slice(
@@ -94,16 +85,7 @@ fn match_flag_slice(
         .unwrap_or(args.len());
     let region = &args[..stop];
     if matcher.tokens.len() > 2 {
-        return if region.windows(matcher.tokens.len()).any(|window| {
-            window
-                .iter()
-                .zip(&matcher.tokens)
-                .all(|(word, expected)| word.text == *expected)
-        }) {
-            ArgMatch::Matched
-        } else {
-            ArgMatch::NotMatched
-        };
+        return super::sequence::match_token_sequence(region, &matcher.tokens, command_dynamic);
     }
     let mut index = 0;
     let mut dynamic_hit = None;

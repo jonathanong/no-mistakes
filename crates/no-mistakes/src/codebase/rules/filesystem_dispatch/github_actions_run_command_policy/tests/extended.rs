@@ -292,3 +292,76 @@ git push origin HEAD foo baz
     )
     .unwrap();
 }
+
+#[test]
+fn multi_token_dynamic_words_abstain_instead_of_passing_silently() {
+    let when_gate = compile_yaml(
+        r#"
+commands:
+  - command: [git, push]
+    whenAnyArgs: [[origin, main]]
+    requireArgs: [--force-with-lease]
+"#,
+    );
+    let dynamic_when = scan_script(r#"git push "$REMOTE" main"#, &when_gate);
+    assert_eq!(dynamic_when.len(), 1, "{dynamic_when:?}");
+    assert!(matches!(dynamic_when[0].kind, HitKind::Unanalyzable { .. }));
+    assert!(scan_script("git push upstream feature", &when_gate).is_empty());
+    let literal_when = scan_script("git push origin main", &when_gate);
+    assert!(matches!(
+        literal_when.first().map(|hit| &hit.kind),
+        Some(HitKind::MissingRequired { .. })
+    ));
+
+    let unless_gate = compile_yaml(
+        r#"
+commands:
+  - command: [git, push]
+    unlessAnyArgs: [[origin, main]]
+    requireArgs: [--force-with-lease]
+"#,
+    );
+    let dynamic_unless = scan_script(r#"git push "$REMOTE" main"#, &unless_gate);
+    assert_eq!(dynamic_unless.len(), 1, "{dynamic_unless:?}");
+    assert!(matches!(
+        dynamic_unless[0].kind,
+        HitKind::Unanalyzable { .. }
+    ));
+    assert!(scan_script("git push origin main", &unless_gate).is_empty());
+    let definite = scan_script("git push upstream feature", &unless_gate);
+    assert!(matches!(
+        definite.first().map(|hit| &hit.kind),
+        Some(HitKind::MissingRequired { .. })
+    ));
+
+    let required = compile_yaml(
+        r#"
+commands:
+  - command: [git, push]
+    requireArgs: [[origin, main]]
+  - command: [tool, run]
+    requireArgs: [[--opt, alpha, beta]]
+"#,
+    );
+    assert!(scan_script("git push origin main", &required).is_empty());
+    let dynamic_required = scan_script(r#"git push "$REMOTE" main"#, &required);
+    assert_eq!(dynamic_required.len(), 1, "{dynamic_required:?}");
+    assert!(matches!(
+        dynamic_required[0].kind,
+        HitKind::Unanalyzable { .. }
+    ));
+    let missing = scan_script("git push upstream feature", &required);
+    assert!(matches!(
+        missing.first().map(|hit| &hit.kind),
+        Some(HitKind::MissingRequired { .. })
+    ));
+    assert!(scan_script("tool run --opt alpha beta", &required).is_empty());
+    let dynamic_flag = scan_script(r#"tool run --opt "$NAME" beta"#, &required);
+    assert_eq!(dynamic_flag.len(), 1, "{dynamic_flag:?}");
+    assert!(matches!(dynamic_flag[0].kind, HitKind::Unanalyzable { .. }));
+    let missing_flag = scan_script("tool run --opt other beta", &required);
+    assert!(matches!(
+        missing_flag.first().map(|hit| &hit.kind),
+        Some(HitKind::MissingRequired { .. })
+    ));
+}
