@@ -380,9 +380,8 @@ const groups = [
   {
     rule: "test-no-fixed-temp-paths",
     dir: "temp",
-    invalid: ["paths.test.ts", "dynamic.test.ts", "promises.test.ts"],
+    invalid: ["paths.test.ts", "dynamic.test.ts", "promises.test.ts", "mock-after.test.ts"],
     valid: [
-      "mock-after.test.ts",
       "other-member.test.ts",
       "computed-member.test.ts",
       "computed-pattern.test.ts",

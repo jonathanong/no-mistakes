@@ -23,8 +23,13 @@ non-empty segment.
 
 A file that mocks `fs`, `node:fs`, `fs/promises`, or `node:fs/promises` through
 Vitest's `vi.mock` or Jest's `jest.mock` is exempt, even if the mock call follows
-the filesystem use. That exemption also drops an `unanalyzable` report for a
-call whose filesystem binding is not static. That advisory includes `access`,
+the filesystem use. `jest.mock` also drops an `unanalyzable` report for a
+call whose filesystem binding is not static, because Jest replaces `require()`.
+`vi.mock` does not replace `require()`, so
+`const loaded = require(spec); loaded.writeFileSync("/tmp/a.txt", "a")` still
+reports `unanalyzable` beside `vi.mock("node:fs")`, and
+`require("node:fs").writeFileSync("/tmp/b.txt", "b")` still reports the fixed
+path. That advisory includes `access`,
 `chmod`, `readdir`, and `createWriteStream` on an unresolved `fs` binding.
 
 ## Disallowed
@@ -129,6 +134,8 @@ before the first code token to apply a broader suppression.
 - Only `vi.mock` and `jest.mock` trigger the file-wide mock exemption.
   `vi.doMock` and `jest.doMock` leave filesystem calls subject to the check.
   The exemption covers tests that later restore real filesystem methods.
+  A call reached through `require()` stays subject to the check when the file
+  uses `vi.mock`, and stays exempt when it uses `jest.mock`.
 
 ## Related rules
 

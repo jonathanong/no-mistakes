@@ -2173,12 +2173,6 @@
   ],
   "test-no-fixed-temp-paths:temp": [
     {
-      "file": "mock-after.test.ts",
-      "findings": [],
-      "kind": "valid",
-      "options": null
-    },
-    {
       "file": "other-member.test.ts",
       "findings": [],
       "kind": "valid",
@@ -2348,6 +2342,35 @@
           "line": 7,
           "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "mock-after.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 40,
+          "endLine": 5,
+          "file": "mock-after.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 30,
+          "endLine": 7,
+          "file": "mock-after.test.ts",
+          "line": 7,
+          "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+          "messageId": "fixedTempPath",
           "ruleId": "no-mistakes/test-no-fixed-temp-paths",
           "severity": 2
         }
