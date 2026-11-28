@@ -2,12 +2,7 @@
 use super::super::{keyword_of, next_non_ws};
 use sqlparser::{keywords::Keyword, tokenizer::Token};
 
-#[cfg(test)]
-pub(super) fn start(tokens: &[Token]) -> Option<usize> {
-    start_in(tokens, false, false)
-}
-
-fn start_in(tokens: &[Token], procedural_body: bool, after_loop: bool) -> Option<usize> {
+pub(super) fn start_in(tokens: &[Token], procedural_body: bool, after_loop: bool) -> Option<usize> {
     (0..tokens.len()).find_map(|index| ddl_start_at(tokens, index, procedural_body, after_loop))
 }
 

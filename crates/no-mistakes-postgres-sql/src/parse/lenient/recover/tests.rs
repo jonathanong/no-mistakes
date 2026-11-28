@@ -1,7 +1,11 @@
 use super::peel_do_body;
-use super::schema::{recover as recover_schema_ddl, start as schema_ddl_start};
+use super::schema::{recover as recover_schema_ddl, start_in};
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::tokenizer::{Token, Tokenizer};
+
+fn schema_ddl_start(tokens: &[Token]) -> Option<usize> {
+    start_in(tokens, false, false)
+}
 
 #[test]
 fn recovers_only_complete_postgres_partition_transitions() {
