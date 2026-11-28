@@ -16,7 +16,7 @@ pub(in crate::codebase::rules) struct Options {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct AllowEntry {
     pub(super) step: String,
     pub(super) reason: String,
