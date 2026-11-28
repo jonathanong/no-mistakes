@@ -117,7 +117,8 @@ the async matcher was not awaited at its creation.
 `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
 `.rejects` matcher whose `expect` comes from a non-static `require` reports
 `unanalyzable`. A computed identifier property, such as `check(promise)[rejects]`,
-is not that matcher. A suppression directive on `.rejects` silences the advisory.
+is not that matcher. A static computed key is still that matcher, including
+`check(promise)["rejects"]` and an expression-free template key. A suppression directive on `.rejects` silences the advisory.
 
 `const { expect } = require("vitest")`, an `expect` alias, `vt.expect` from
 `require("vitest")`, and `import vt = require("vitest")` are the same expect.

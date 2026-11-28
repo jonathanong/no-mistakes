@@ -105,6 +105,7 @@ function imported(node, context, namespace = false, seen = new Set()) {
           (namespaceSource === "vitest" || namespaceSource === "@playwright/test") &&
           NAMES.has(importedName)
         ) {
+          if (namespace) return namespaceSource;
           return { framework: namespaceSource, name: importedName };
         }
       }

@@ -8,6 +8,7 @@ const {
   traverse,
   unwrapExpression,
 } = require("./async-ast");
+const { memberPropertyName } = require("./logical-call");
 const { isUnresolved, moduleLoad } = require("./module-load");
 const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
 const { originDeclarator } = require("./test-no-delayed-rejects-promise-alias");
@@ -161,8 +162,7 @@ module.exports = rule(
           const expectation = unwrapExpression(node.object);
           const expectCallee = unwrapExpression(expectation?.callee);
           if (
-            !node.computed &&
-            node.property?.name === "rejects" &&
+            memberPropertyName(node) === "rejects" &&
             expectation?.type === "CallExpression" &&
             isUnresolved(moduleLoad(expectCallee, context))
           ) {

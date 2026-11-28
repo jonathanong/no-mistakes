@@ -1362,6 +1362,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "namespace-name.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 3,
+          "file": "namespace-name.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "no-vitest-sequential:sequential-ignore": [
@@ -1537,6 +1555,28 @@
           "endLine": 6,
           "file": "dynamic.test.ts",
           "line": 6,
+          "message": "Cannot tell whether this rejection matcher observes a rejection. Use a static expect from vitest.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 38,
+          "endLine": 9,
+          "file": "dynamic.test.ts",
+          "line": 9,
+          "message": "Cannot tell whether this rejection matcher observes a rejection. Use a static expect from vitest.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 38,
+          "endLine": 10,
+          "file": "dynamic.test.ts",
+          "line": 10,
           "message": "Cannot tell whether this rejection matcher observes a rejection. Use a static expect from vitest.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/test-no-delayed-rejects",
@@ -2236,6 +2276,12 @@
       "options": null
     },
     {
+      "file": "let-member-quiet.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "cjs.test.ts",
       "findings": [
         {
@@ -2509,6 +2555,53 @@
       "options": null
     },
     {
+      "file": "named-timeout.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 24,
+          "endLine": 4,
+          "file": "named-timeout.test.ts",
+          "line": 4,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 7,
+          "file": "named-timeout.test.ts",
+          "line": 7,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "default-mock.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 20,
+          "endLine": 13,
+          "file": "default-mock.test.ts",
+          "line": 13,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
       "file": "member-require.test.ts",
       "findings": [
         {
@@ -2594,6 +2687,17 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/test-no-shared-state",
           "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 34,
+          "file": "destructured-dynamic.test.ts",
+          "line": 32,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
         }
       ],
       "kind": "invalid",
@@ -2641,6 +2745,17 @@
           "endLine": 18,
           "file": "member-dynamic.test.ts",
           "line": 16,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 23,
+          "file": "member-dynamic.test.ts",
+          "line": 21,
           "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/test-no-shared-state",
@@ -3095,6 +3210,41 @@
           ]
         }
       ]
+    },
+    {
+      "file": "namespace-describe.test.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 11,
+          "endLine": 3,
+          "file": "namespace-describe.test.ts",
+          "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 60,
+          "endLine": 6,
+          "file": "namespace-describe.test.ts",
+          "line": 6,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
     }
   ],
   "test-no-skips:skips-ignore": [
@@ -3218,6 +3368,16 @@
     },
     {
       "file": "computed-method.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "callback-type.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [

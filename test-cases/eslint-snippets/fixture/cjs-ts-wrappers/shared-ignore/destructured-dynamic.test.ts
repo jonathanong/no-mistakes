@@ -27,3 +27,8 @@ const look = other;
 look("not a test", () => {
   bag.push(1);
 });
+const namespace = require(specifier);
+const { test: fromNamespace } = namespace;
+fromNamespace("from namespace", () => {
+  bag.push(1);
+});

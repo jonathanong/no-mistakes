@@ -25,6 +25,13 @@ test("renamed", () => {
   mockRenamed = 1;
 });
 
+import * as vitest from "vitest";
+let mockNamespace = 0;
+vitest.vi.mock("./namespace", () => ({ get: () => mockNamespace }));
+test("namespace", () => {
+  mockNamespace = 1;
+});
+
 let mockItems = [];
 vi.mock("./dependency", (() => ({ mockItems })) as any);
 test("case", () => {

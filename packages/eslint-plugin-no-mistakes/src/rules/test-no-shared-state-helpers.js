@@ -142,10 +142,10 @@ function childNodes(node) {
   return children;
 }
 
-function namedCallbackArgument(args) {
+function namedCallbackArgument(args, isCallback) {
   for (let index = args.length - 1; index >= 0; index -= 1) {
     const argument = unwrapExpression(args[index]);
-    if (argument.type === "Identifier") return argument;
+    if (argument?.type === "Identifier" && isCallback(argument)) return argument;
   }
 }
 

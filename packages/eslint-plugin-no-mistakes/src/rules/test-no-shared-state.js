@@ -147,7 +147,9 @@ module.exports = rule(
           reportOpaqueRegistration(node, context, suppressed, source);
         if (entered) {
           depth.test += 1;
-          const callback = namedCallbackArgument(node.arguments);
+          const callback = namedCallbackArgument(node.arguments, (argument) =>
+            resolveFunctionCallback(node, argument),
+          );
           if (callback && !setupCallbackKind(node, testCalleeNames, namespaces))
             pendingNamedCallbacks.push({
               declaration: resolveFunctionCallback(node, callback),

@@ -43,6 +43,7 @@ const groups = [
       "pattern-shape.js",
       "inline-dynamic.js",
       "import-static.test.ts",
+      "namespace-name.test.ts",
     ],
     valid: [
       "not-a-runner.test.ts",
@@ -158,6 +159,8 @@ const groups = [
       "shapes.test.ts",
       "shadow-cast.test.ts",
       "named-callback.test.ts",
+      "named-timeout.test.ts",
+      "default-mock.test.ts",
       "member-require.test.ts",
       "destructured-dynamic.test.ts",
       "member-dynamic.test.ts",
@@ -180,6 +183,7 @@ const groups = [
       "playwright-default.test.ts",
       "alias-let.test.ts",
       "computed-method.test.ts",
+      "let-member-quiet.test.ts",
     ],
   },
   {
@@ -287,6 +291,7 @@ const groups = [
       "other-require.test.ts",
       "computed-enqueue.test.ts",
       "computed-method.test.ts",
+      "callback-type.test.ts",
     ],
   },
   {
@@ -336,6 +341,7 @@ const groups = [
       "member-require.js",
       "dynamic-import.test.ts",
       "wrapped-import.test.ts",
+      "namespace-describe.test.ts",
     ],
     valid: ["not-a-runner.js", "computed-runner.js", "computed-dynamic.test.ts"],
   },

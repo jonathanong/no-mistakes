@@ -91,7 +91,7 @@ function acceptsRunner(root, context, namespaces) {
   }
   if (rejectedRunner(root, context)) return false;
   if (def.parent?.importKind === "type" || def.node?.importKind === "type") return false;
-  if (def.type !== "ImportBinding") return true;
+  if (def.type !== "ImportBinding") return !isUnshadowedNamespace(root, context, namespaces);
   if (def.node?.type === "ImportNamespaceSpecifier") return namespaces.has(root.name);
   if (def.node?.type === "ImportDefaultSpecifier") return def.parent?.source?.value !== "vitest";
   const imported = staticName(def.node?.imported, false);

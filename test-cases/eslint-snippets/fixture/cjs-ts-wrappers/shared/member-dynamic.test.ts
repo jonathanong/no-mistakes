@@ -16,3 +16,8 @@ const again = mid;
 again.skip("chained", () => {
   items.push(1);
 });
+const runner = require(spec);
+const fromRunner = runner.test;
+fromRunner("from runner", () => {
+  items.push(1);
+});

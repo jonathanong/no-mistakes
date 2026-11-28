@@ -1,6 +1,7 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
+const { resolveVariable } = require("./async-target-bindings");
 const { memberPropertyName } = require("./logical-call");
 const { frameworkBindingModule } = require("./module-mock-framework");
 const {
@@ -72,6 +73,25 @@ function walkSharedMutations(node, handlers) {
   for (const child of childNodes(node)) walkSharedMutations(child, handlers);
 }
 
+function defaultVitestReceiver(node, context, seen = new Set()) {
+  const current = unwrapExpression(node);
+  if (current?.type !== "Identifier") return false;
+  const variable = resolveVariable(current, context);
+  if (!variable || variable.defs.length !== 1 || seen.has(variable)) return false;
+  const def = variable.defs[0];
+  if (def.node?.type === "ImportDefaultSpecifier") return def.parent?.source?.value === "vitest";
+  if (
+    def.type !== "Variable" ||
+    def.parent?.kind !== "const" ||
+    def.node?.id?.type !== "Identifier" ||
+    !def.node.init
+  ) {
+    return false;
+  }
+  seen.add(variable);
+  return defaultVitestReceiver(def.node.init, context, seen);
+}
+
 function createViMockTracker(context, mutableTopLevel) {
   const factoryReferences = new Set();
   const capturedMutables = new Set();
@@ -88,7 +108,13 @@ function createViMockTracker(context, mutableTopLevel) {
       if (memberPropertyName(callee) !== "mock") return;
       const factory = node.arguments[1] && unwrapExpression(node.arguments[1]);
       if (!isFunctionNode(factory)) return;
-      if (frameworkBindingModule(unwrapExpression(callee.object), context) !== "vitest") return;
+      const object = unwrapExpression(callee.object);
+      if (
+        frameworkBindingModule(object, context) !== "vitest" ||
+        defaultVitestReceiver(object, context)
+      ) {
+        return;
+      }
       for (const { identifier } of context.sourceCode.getScope(factory).through) {
         factoryReferences.add(identifier.name);
         markIfCaptured(identifier.name);

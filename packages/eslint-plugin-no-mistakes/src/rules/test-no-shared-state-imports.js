@@ -105,8 +105,8 @@ function dynamicBinding(callee, context, seen = new Set()) {
 
 function dynamicDestructuredTest(callee, context) {
   const found = dynamicBinding(callee, context);
-  const resolution = requireResolution(found?.def.node?.init, context);
-  if (found?.def.node?.id?.type !== "ObjectPattern" || resolution?.source !== null) return false;
+  const loaded = moduleLoad(found?.def.node?.init, context);
+  if (found?.def.node?.id?.type !== "ObjectPattern" || !isUnresolved(loaded)) return false;
   return patternNames(found.def.node.id).some((entry) => entry.local.name === found.name);
 }
 
@@ -116,7 +116,7 @@ function dynamicMemberTest(callee, context) {
   if (declaration?.id?.type !== "Identifier") return false;
   if (init?.type !== "MemberExpression" || init.computed) return false;
   const key = init.property?.type === "Identifier" ? init.property.name : null;
-  return TEST_NAMES.has(key) && requireResolution(init.object, context)?.source === null;
+  return TEST_NAMES.has(key) && isUnresolved(moduleLoad(init.object, context));
 }
 
 function dynamicLetReceiver(node, context) {

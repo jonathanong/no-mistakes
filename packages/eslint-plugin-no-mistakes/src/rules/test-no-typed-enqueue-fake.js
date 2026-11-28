@@ -120,9 +120,12 @@ module.exports = rule(
 
     function typeQueryUnresolved(typeNode, lintContext) {
       if (typeNode?.type === "TSFunctionType") {
-        return typeNode.params.some((arg) =>
-          typeQueryUnresolved(arg.typeAnnotation?.typeAnnotation, lintContext),
-        );
+        return typeNode.params.some((arg) => {
+          const annotation = arg.typeAnnotation?.typeAnnotation;
+          return (
+            annotation?.type === "TSTypeReference" && typeQueryUnresolved(annotation, lintContext)
+          );
+        });
       }
       if (typeNode?.type === "TSTypeQuery") {
         if (excludedExport(typeNode.exprName)) return false;
