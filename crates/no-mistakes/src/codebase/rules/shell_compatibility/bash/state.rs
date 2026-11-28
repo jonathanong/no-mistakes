@@ -29,6 +29,7 @@ impl ArrayState {
 pub(super) enum UnanalyzableReason {
     LoopWidening,
     DynamicUnset,
+    MapfileCallback,
 }
 
 #[derive(Clone, Default)]
@@ -44,6 +45,8 @@ pub(super) struct State {
     empties: Option<FxHashSet<String>>,
     ci_empties: Option<FxHashSet<String>>,
     locals: Option<FxHashSet<String>>,
+    must_locals: FxHashSet<String>,
+    may_locals: FxHashSet<String>,
     dynamic_unset: bool,
 }
 
@@ -67,6 +70,8 @@ impl State {
 
     pub fn declare_local(&mut self, name: &str, empty: bool) {
         self.touch(name);
+        self.must_locals.insert(name.to_owned());
+        self.may_locals.insert(name.to_owned());
         if let Some(locals) = &mut self.locals {
             locals.insert(name.to_owned());
         }
@@ -81,6 +86,8 @@ impl State {
     pub fn write_array(&mut self, name: &str, nonempty: bool, is_local: bool, append: bool) {
         self.touch(name);
         if is_local {
+            self.must_locals.insert(name.to_owned());
+            self.may_locals.insert(name.to_owned());
             if let Some(locals) = &mut self.locals {
                 locals.insert(name.to_owned());
             }

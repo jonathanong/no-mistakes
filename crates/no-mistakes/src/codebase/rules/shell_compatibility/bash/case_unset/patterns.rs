@@ -1,5 +1,5 @@
 use super::super::super::lex::{identifier, Word};
-use super::super::assign::{has_expansion, indexed_name, single_word};
+use super::super::assign::{has_expansion, single_word};
 use crate::fx::{FxHashMap, FxHashSet};
 
 pub(in super::super) fn extract_single_var(raw: &str) -> Option<&str> {
@@ -92,11 +92,10 @@ fn push_literal_pattern(
         return None;
     }
     let unquoted = single_word(word.raw)?;
-    if let Some(base) = indexed_name(&unquoted) {
-        names.insert(base.to_owned());
-    } else if unquoted.contains('[') || (unquoted != "*" && unquoted.contains(['*', '?'])) {
+    if unquoted.contains('[') || (unquoted != "*" && unquoted.contains(['*', '?'])) {
         return None;
-    } else if identifier(&unquoted) {
+    }
+    if identifier(&unquoted) {
         names.insert(unquoted);
     }
     Some(())

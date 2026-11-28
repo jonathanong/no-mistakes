@@ -1,7 +1,10 @@
 use super::{
-    super::lex::{assignment, command_words, Boundary, Word},
+    super::{
+        lex::{assignment, command_words, Boundary, Word},
+        read_targets::targets,
+    },
     case_unset::CaseUnsetCtx,
-    remember_command,
+    command::remember_command,
     state::State,
 };
 use crate::fx::{FxHashMap, FxHashSet};
@@ -25,7 +28,7 @@ pub(super) struct WriteSets {
     ci_empties_by_scope: FxHashMap<usize, FxHashSet<String>>,
     locals_by_scope: FxHashMap<usize, FxHashSet<String>>,
     dynamic_unset_scopes: FxHashSet<usize>,
-    calls: FxHashMap<usize, (usize, String)>,
+    calls: FxHashMap<usize, (usize, String, bool)>,
     last_call_by_fn: FxHashMap<usize, usize>,
     empty_positions: FxHashMap<String, Vec<usize>>,
     ci_empty_positions: FxHashMap<String, Vec<usize>>,
@@ -52,15 +55,26 @@ impl WriteSets {
             let dynamic =
                 command.scope > 0 || stack.iter().any(|w| matches!(w.scope, Scope::Repeat));
             let pos = if dynamic { usize::MAX } else { index };
+            let read_target = targets(&command.words);
             let called = (!is_function_header(commands, index))
                 .then(|| {
+                    if let Some(Some(cb)) = read_target.as_ref().and_then(|t| t.callback.as_ref()) {
+                        return functions
+                            .get(cb.as_str())
+                            .map(|&fn_idx| (fn_idx, cb.clone(), true));
+                    }
                     command_words(&command.words)
                         .find(|word| assignment(word.raw).is_none())
-                        .and_then(|word| functions.get(word.raw).map(|&fn_idx| (fn_idx, word.raw)))
+                        .and_then(|word| {
+                            functions
+                                .get(word.raw)
+                                .map(|&fn_idx| (fn_idx, word.raw.to_owned(), false))
+                        })
                 })
                 .flatten();
-            if let Some((fn_idx, name)) = called {
-                summary.calls.insert(index, (fn_idx, name.to_owned()));
+            let callback_known = called.as_ref().is_some_and(|(_, _, is_cb)| *is_cb);
+            if let Some((fn_idx, name, is_cb)) = called {
+                summary.calls.insert(index, (fn_idx, name, is_cb));
                 summary
                     .last_call_by_fn
                     .entry(fn_idx)
@@ -69,7 +83,13 @@ impl WriteSets {
             }
             let mut state = State::collect_writes();
             state.derived_from = std::mem::take(&mut cases.derived);
-            remember_command(&command.words, command.scope > 0, &mut state, &mut cases);
+            remember_command(
+                &command.words,
+                command.scope > 0,
+                callback_known,
+                &mut state,
+                &mut cases,
+            );
             if let Some(var) = loop_var {
                 state.touch(var);
                 cases.invalidate(var);

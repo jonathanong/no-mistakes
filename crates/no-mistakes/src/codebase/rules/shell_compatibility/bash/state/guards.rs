@@ -3,6 +3,33 @@ use super::{ArrayState, State};
 use crate::fx::FxHashSet;
 
 impl State {
+    pub fn clear_current_locals(&mut self) {
+        self.must_locals.clear();
+        self.may_locals.clear();
+    }
+
+    pub fn redeclare_local(&mut self, name: &str, array: bool) {
+        if self.must_locals.contains(name) {
+            if let Some(locals) = &mut self.locals {
+                locals.insert(name.to_owned());
+            }
+            if array && !self.arrays.contains_key(name) {
+                self.write_array(name, false, true, true);
+            }
+            return;
+        }
+        let maybe_preserved = self.may_locals.contains(name)
+            && self
+                .arrays
+                .get(name)
+                .is_some_and(|s| *s != ArrayState::Empty);
+        let empty = array || self.arrays.contains_key(name);
+        self.declare_local(name, empty);
+        if maybe_preserved {
+            self.set_known(name, ArrayState::MaybeEmpty);
+        }
+    }
+
     pub fn mark_guarded_maybe(&mut self) {
         for (name, &state) in &self.arrays {
             if state == ArrayState::MaybeEmpty {

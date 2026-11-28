@@ -1,15 +1,13 @@
-use super::lex::{command_words, identifier, Boundary, Lexer, Shell, Word};
-use super::read_targets::targets;
-use assign::{array_assignment, forget_unset, remember_array};
-use case_unset::CaseUnsetCtx;
+use super::lex::{Boundary, Lexer, Shell};
+use command::remember_command;
 use flow::Flow;
-use guard::{flag, nounset};
-use state::{ArrayState, State, UnanalyzableReason};
+use state::{ArrayState, UnanalyzableReason};
 
 mod assign;
 mod branch_frame;
 mod case_frame;
 mod case_unset;
+mod command;
 mod condition;
 mod flow;
 mod frames;
@@ -71,6 +69,9 @@ pub(super) fn analyze(source: &str) -> ScanResult<'_> {
                                 let cause = match reason {
                                     UnanalyzableReason::LoopWidening => "after loop widening",
                                     UnanalyzableReason::DynamicUnset => "after dynamic `unset`",
+                                    UnanalyzableReason::MapfileCallback => {
+                                        "after `mapfile -C` callback"
+                                    }
                                 };
                                 ref_unanalyzable.push((
                                     line,
@@ -91,7 +92,13 @@ pub(super) fn analyze(source: &str) -> ScanResult<'_> {
                     }
                 });
             } else {
-                remember_command(&command.words, command.scope > 0, state, frames);
+                remember_command(
+                    &command.words,
+                    command.scope > 0,
+                    write_sets.call_is_callback(index),
+                    state,
+                    frames,
+                );
             }
         });
         flow.unanalyzable.extend(ref_unanalyzable);
@@ -106,98 +113,5 @@ pub(super) fn analyze(source: &str) -> ScanResult<'_> {
     ScanResult {
         findings: hits,
         unanalyzable: flow.unanalyzable,
-    }
-}
-
-fn remember_command<'a>(
-    words: &[Word<'a>],
-    in_function: bool,
-    state: &mut State,
-    case_ctx: &mut dyn CaseUnsetCtx,
-) {
-    condition::vars::collect_arithmetic_writes(words, |name| {
-        state.touch(name);
-        case_ctx.invalidate(name);
-    });
-    if let Some(read) = targets(words) {
-        for name in read.names {
-            let nonempty = read.keep && state.arrays.get(&name) == Some(&ArrayState::Nonempty);
-            state.write_array(&name, nonempty, false, read.keep);
-            if !nonempty {
-                state.set_known(&name, ArrayState::MaybeEmpty);
-            }
-            case_ctx.invalidate(&name);
-        }
-        for scalar in read.scalars {
-            state.touch(&scalar);
-            if state.arrays.get(&scalar) == Some(&ArrayState::Empty) {
-                state.set_known(&scalar, ArrayState::MaybeEmpty);
-            }
-            case_ctx.invalidate(&scalar);
-        }
-        return;
-    }
-    let mut command = command_words(words).peekable();
-    let Some(first) = command.peek() else {
-        return;
-    };
-    match first.raw {
-        "set" => {
-            if let Some(active) = nounset(command.skip(1)) {
-                state.set_nounset(active);
-            }
-        }
-        "shopt" => {
-            if command.skip(1).any(|word| {
-                flag(word.raw).is_some_and(|(on, f)| on && (f.contains('s') || f.contains('u')))
-            }) {
-                state.conditional.clear();
-            }
-        }
-        "unset" => forget_unset(command.skip(1), state, case_ctx),
-        "declare" | "local" => {
-            let mut array = false;
-            let mut global = false;
-            let mut display = false;
-            let local_kw = first.raw == "local";
-            command.next();
-            while let Some((enable, flags)) = command.peek().and_then(|word| flag(word.raw)) {
-                if flags.contains('a') {
-                    array = enable;
-                }
-                if flags.contains('g') {
-                    global = enable;
-                }
-                display |= enable && flags.contains(['p', 'f', 'F']);
-                command.next();
-            }
-            if display {
-                return;
-            }
-            let is_local = local_kw || (in_function && !global);
-            command.next_if(|word| word.raw == "--");
-            for word in command {
-                if identifier(word.raw) {
-                    if is_local {
-                        let empty = array || state.arrays.contains_key(word.raw);
-                        state.declare_local(word.raw, empty);
-                    } else if array && !state.arrays.contains_key(word.raw) {
-                        state.write_array(word.raw, false, false, true);
-                    }
-                    case_ctx.invalidate(word.raw);
-                }
-                if let Some(assignment) = array_assignment(word.raw) {
-                    remember_array(state, word, assignment, array, is_local, case_ctx);
-                }
-            }
-        }
-        _ => {
-            let assignments: Option<Vec<_>> = command
-                .map(|word| array_assignment(word.raw).map(|assignment| (word, assignment)))
-                .collect();
-            for (word, assignment) in assignments.into_iter().flatten() {
-                remember_array(state, word, assignment, false, false, case_ctx);
-            }
-        }
     }
 }

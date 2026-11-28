@@ -1,10 +1,11 @@
-use super::{super::lex::Word, guard::Leave, state::State};
-use crate::fx::{FxHashMap, FxHashSet};
+use super::{guard::Leave, state::State};
+use crate::fx::FxHashSet;
 
 const MAX_PASSES: u8 = 4;
 
 pub(super) struct LoopKind {
     pub always_enters: bool,
+    pub for_assigns_var: bool,
     pub infinite: bool,
     pub restart_at_header: bool,
     pub optional: bool,
@@ -63,6 +64,11 @@ impl<'a> Repeat<'a> {
     pub fn enter_body(&mut self, index: usize, counts: (usize, usize), state: &mut State) {
         if self.pass == 0 {
             self.do_index = Some(index);
+            if self.kind.for_assigns_var {
+                if let Some(var) = self.loop_var {
+                    state.write(var, true);
+                }
+            }
             self.entry = state.clone();
             if !self.kind.restart_at_header {
                 (self.hits_start, self.unanalyzable_start) = counts;
@@ -78,8 +84,7 @@ impl<'a> Repeat<'a> {
         if self.in_body {
             self.body_leave = self.body_leave.combine(leave);
         } else {
-            self.kind.infinite = false;
-            self.kind.always_enters = false;
+            self.invalidate_infinite();
         }
     }
 
@@ -109,7 +114,11 @@ impl<'a> Repeat<'a> {
         }
         next_entry.merge(&back);
         if let Some(var) = self.loop_var {
-            next_entry.invalidate_condition_var(var);
+            if self.kind.for_assigns_var {
+                next_entry.write(var, true);
+            } else {
+                next_entry.invalidate_condition_var(var);
+            }
         }
         if !self.entry.weakened_by(&next_entry) {
             return None;
@@ -122,11 +131,8 @@ impl<'a> Repeat<'a> {
         }
         self.entry = next_entry;
         *state = self.entry.clone();
-        self.back_edge = None;
-        self.break_exit = None;
-        self.continue_exit = None;
-        self.body_leave = Leave::None;
-        self.in_body = false;
+        (self.back_edge, self.break_exit, self.continue_exit) = (None, None, None);
+        (self.body_leave, self.in_body) = (Leave::None, false);
         self.pass = self.pass.saturating_add(1);
         let restart = if self.kind.restart_at_header {
             self.header_index
@@ -179,22 +185,4 @@ impl<'a> Repeat<'a> {
             self.body_leave
         }
     }
-}
-
-pub(super) fn is_infinite_loop(
-    keyword: &str,
-    rest: &[&Word<'_>],
-    seen_functions: &FxHashMap<&str, usize>,
-) -> bool {
-    match (keyword, rest) {
-        ("while", [word]) => {
-            matches!(word.raw, ":" | "true") && !seen_functions.contains_key(word.raw)
-        }
-        ("until", [word]) => word.raw == "false" && !seen_functions.contains_key("false"),
-        _ => false,
-    }
-}
-
-pub(super) fn for_has_literal_item(rest: &[&Word<'_>]) -> bool {
-    rest.get(1).is_some_and(|word| word.raw == "in") && rest[2..].iter().any(|word| !word.dynamic)
 }

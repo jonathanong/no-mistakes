@@ -142,7 +142,7 @@ fi
 
 #[test]
 fn indexed_case_pattern_and_quoted_arith_and_shopt() {
-    reports(
+    advises_at(
         r#"#!/bin/bash
 set -u
 items=(x)
@@ -152,7 +152,6 @@ case "$target" in
 esac
 printf '%s\n' "${items[@]}"
 "#,
-        "items",
         8,
     );
     advises_at(

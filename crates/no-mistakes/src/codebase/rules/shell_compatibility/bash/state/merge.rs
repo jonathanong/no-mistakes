@@ -27,6 +27,29 @@ impl State {
         self.conditional.clear();
     }
 
+    pub fn record_mapfile_callback(&mut self) {
+        self.dynamic_unset = true;
+        let nonempty: Vec<String> = self
+            .arrays
+            .iter()
+            .filter(|&(_, s)| s.is_nonempty())
+            .map(|(name, _)| name.clone())
+            .collect();
+        for name in nonempty {
+            self.arrays.remove(&name);
+            self.unanalyzable
+                .insert(name, UnanalyzableReason::MapfileCallback);
+        }
+        for state in self.arrays.values_mut() {
+            if *state == ArrayState::Empty {
+                *state = ArrayState::MaybeEmpty;
+            }
+        }
+        self.conditional.clear();
+        self.derived_from.clear();
+        self.guarded_maybe.clear();
+    }
+
     pub fn widen_unanalyzable(&mut self, empties: &FxHashSet<String>, touches: &FxHashSet<String>) {
         for name in empties {
             if self.arrays.get(name) == Some(&ArrayState::Nonempty) {
@@ -57,10 +80,19 @@ impl State {
             .derived_from
             .iter()
             .any(|(k, v)| next.derived_from.get(k) != Some(v));
+        let local_changed = self
+            .must_locals
+            .iter()
+            .any(|name| !next.must_locals.contains(name))
+            || next
+                .may_locals
+                .iter()
+                .any(|name| !self.may_locals.contains(name));
         (!self.active && next.active)
             || array
             || guard_lost
             || deriv_lost
+            || local_changed
             || self.conditional.iter().any(|(name, conds)| {
                 next.arrays.get(name) != Some(&ArrayState::Nonempty)
                     && conds
@@ -72,6 +104,9 @@ impl State {
     pub fn merge(&mut self, other: &Self) {
         self.active |= other.active;
         self.nounset_effect = merge_nounset_effect(self.nounset_effect, other.nounset_effect);
+        self.must_locals
+            .retain(|name| other.must_locals.contains(name));
+        self.may_locals.extend(other.may_locals.iter().cloned());
         self.merge_conditional(other);
         self.derived_from
             .retain(|k, v| other.derived_from.get(k) == Some(v));

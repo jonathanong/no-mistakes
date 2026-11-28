@@ -74,3 +74,120 @@ fn declare_print_does_not_declare_a_local() {
         5,
     );
 }
+
+#[test]
+fn mapfile_callback_effects_and_zero_input_safety() {
+    reports(
+        "set -u\nitems=(x)\nwipe() { items=(); }\nmapfile -c1 -C wipe lines <<< x\n: \"${items[@]}\"\n",
+        "items",
+        5,
+    );
+    reports(
+        "set -u\nitems=()\nfill() { items=(x); }\nmapfile -c1 -C fill lines < /dev/null\n: \"${items[@]}\"\n",
+        "items",
+        5,
+    );
+    let res =
+        analyze("set -u\nitems=(x)\nmapfile -c1 -C 'items=()' lines <<< x\n: \"${items[@]}\"\n");
+    assert!(res.findings.is_empty());
+    assert_eq!(res.unanalyzable.len(), 1);
+    assert_eq!(res.unanalyzable[0].0, 4);
+}
+
+#[test]
+fn repeated_local_declaration_preserves_existing_local_but_shadows_outer() {
+    quiet("set -u\nf() {\n  local -a items=(x)\n  local -a items\n  : \"${items[@]}\"\n}\nf\n");
+    reports(
+        "set -u\nitems=(x)\nf() {\n  local -a items\n  : \"${items[@]}\"\n}\nf\n",
+        "items",
+        5,
+    );
+    reports(
+        "set -u\nitems=(x)\nbad=()\nf() {\n  if cond; then\n    local -a items=(y)\n  fi\n  local -a items\n  if [[ ${#items[@]} -gt 0 ]]; then\n    : \"${bad[@]}\"\n  fi\n}\nf\n",
+        "bad",
+        10,
+    );
+}
+
+#[test]
+fn redirected_set_preserves_active_nounset() {
+    reports(
+        "set -u\nitems=()\nset +u > /nonexistent/path\n: \"${items[@]}\"\n",
+        "items",
+        4,
+    );
+}
+
+#[test]
+fn typeset_array_assignment_updates_state() {
+    reports(
+        "set -u\ngate=()\nbad=()\ntypeset -a gate=(x)\nif [[ ${#gate[@]} -gt 0 ]]; then\n  : \"${bad[@]}\"\nfi\n",
+        "bad",
+        6,
+    );
+    reports(
+        "set -u\nitems=(x)\ntypeset -a items=()\n: \"${items[@]}\"\n",
+        "items",
+        4,
+    );
+}
+
+#[test]
+fn indexed_case_pattern_unset_widens_instead_of_emptying() {
+    let res = analyze(
+        "set -u\ngate=(x y)\nbad=()\ncase $target in\n  'gate[0]')\n    unset \"$target\"\n    if [[ ${#gate[@]} -gt 0 ]]; then\n      : \"${bad[@]}\"\n    fi\n    ;;\nesac\n",
+    );
+    assert!(res.findings.iter().any(|&(n, l)| n == "bad" && l == 8));
+}
+
+#[test]
+fn indexed_assignment_subscript_arithmetic_invalidates_condition() {
+    let res = analyze(
+        "set -u\nn=0\nitems=()\nif [[ $n -eq 0 ]]; then\n  items=(x)\nfi\narr[n++]=1\nif [[ $n -eq 0 ]]; then\n  : \"${items[@]}\"\nfi\n",
+    );
+    assert!(res.findings.is_empty());
+    assert_eq!(res.unanalyzable.len(), 1);
+    assert_eq!(res.unanalyzable[0].0, 9);
+}
+
+#[test]
+fn for_loop_with_literal_item_populates_loop_var_in_body() {
+    reports(
+        "set -u\ngate=()\nbad=()\nfor gate in a b; do\n  if [[ ${#gate[@]} -gt 0 ]]; then\n    : \"${bad[@]}\"\n  fi\ndone\n",
+        "bad",
+        6,
+    );
+    reports(
+        "set -u\nitems=()\nfor items in a \"${items[@]}\"; do\n  : \"${items[@]}\"\ndone\n",
+        "items",
+        3,
+    );
+}
+
+#[test]
+fn read_array_mode_ignores_positional_scalars_and_subscripts() {
+    quiet(
+        "set -u\ngate=()\nbad=()\nread -a arr gate < input\nif [[ ${#gate[@]} -gt 0 ]]; then\n  : \"${bad[@]}\"\nfi\n",
+    );
+    quiet(
+        "set -u\ngate=()\nbad=()\nread -a 'gate[0]' < input\nif [[ ${#gate[@]} -gt 0 ]]; then\n  : \"${bad[@]}\"\nfi\n",
+    );
+    reports(
+        "set -u\ngate=()\nbad=()\nread 'gate[0]' < input\nif [[ ${#gate[@]} -gt 0 ]]; then\n  : \"${bad[@]}\"\nfi\n",
+        "bad",
+        6,
+    );
+}
+
+#[test]
+fn nested_multiline_double_parens_stay_linear() {
+    let mut script = String::from("#!/bin/bash\nset -u\n");
+    for _ in 0..400 {
+        script.push_str("((\n");
+    }
+    script.push_str("1\n");
+    for _ in 0..400 {
+        script.push_str("))\n");
+    }
+    let _ = analyze(&script);
+}

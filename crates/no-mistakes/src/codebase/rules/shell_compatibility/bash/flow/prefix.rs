@@ -6,9 +6,10 @@ use super::{
         case_unset::{subject_vars_from_header, CaseUnsetCtx},
         frames::Frame,
         guard::{Guard, Leave},
-        loop_frame::{for_has_literal_item, is_infinite_loop, LoopKind, Repeat},
+        loop_frame::{LoopKind, Repeat},
         write_sets::WriteSets,
     },
+    finish_loop::{for_has_literal_item, is_infinite_loop},
     Flow,
 };
 
@@ -163,9 +164,11 @@ impl<'a> Flow<'a> {
         let infinite = !redirected
             && outgoing == Boundary::End
             && is_infinite_loop(keyword, rest, &self.seen_functions);
-        let always_enters = infinite || (keyword == "for" && for_has_literal_item(rest));
+        let for_assigns_var = keyword == "for" && for_has_literal_item(rest);
+        let always_enters = infinite || for_assigns_var;
         let kind = LoopKind {
             always_enters,
+            for_assigns_var,
             infinite,
             restart_at_header: matches!(keyword, "while" | "until"),
             optional: self.incoming != Boundary::End,

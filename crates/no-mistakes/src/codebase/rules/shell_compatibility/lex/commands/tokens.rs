@@ -23,24 +23,19 @@ impl<'a> Lexer<'a> {
         let start = self.offset;
         let line = self.line;
         self.take("((");
-        let closed = self.skip_group(b')');
-        if !closed {
-            self.arith_unclosed = true;
-            self.offset = start;
-            self.line = line;
-            return None;
-        }
-        if self
-            .source
-            .get(start + 2..self.offset.saturating_sub(1))
-            .is_some_and(|body| allow_for_header || !body.contains([';', '\n']))
-            && self.take(")")
-        {
-            Some(Word::new(&self.source[start..self.offset], line))
-        } else {
-            self.offset = start;
-            self.line = line;
-            None
+        match self.skip_arith_group(!allow_for_header) {
+            Some(true) if self.take(")") => Some(Word::new(&self.source[start..self.offset], line)),
+            None => {
+                self.arith_unclosed = true;
+                self.offset = start;
+                self.line = line;
+                None
+            }
+            _ => {
+                self.offset = start;
+                self.line = line;
+                None
+            }
         }
     }
 

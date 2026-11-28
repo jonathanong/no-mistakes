@@ -21,25 +21,25 @@ impl WriteSets {
     pub fn call_touches(&self, index: usize) -> &FxHashSet<String> {
         self.calls
             .get(&index)
-            .map_or(&self.empty, |(function, _)| self.touches(*function))
+            .map_or(&self.empty, |(function, _, _)| self.touches(*function))
     }
 
     pub fn call_empties(&self, index: usize) -> &FxHashSet<String> {
         self.calls
             .get(&index)
-            .map_or(&self.empty, |(function, _)| self.empties(*function))
+            .map_or(&self.empty, |(function, _, _)| self.empties(*function))
     }
 
     pub fn call_ci_empties(&self, index: usize) -> &FxHashSet<String> {
         self.calls
             .get(&index)
-            .map_or(&self.empty, |(function, _)| self.ci_empties(*function))
+            .map_or(&self.empty, |(function, _, _)| self.ci_empties(*function))
     }
 
     pub fn call_dynamic_unset(&self, index: usize) -> bool {
         self.calls
             .get(&index)
-            .is_some_and(|(function, _)| self.dynamic_unset_scopes.contains(function))
+            .is_some_and(|(function, _, _)| self.dynamic_unset_scopes.contains(function))
     }
 
     pub fn dynamic_unset_after(&self, fn_index: usize) -> bool {
@@ -50,7 +50,11 @@ impl WriteSets {
     }
 
     pub fn called_function(&self, index: usize) -> Option<&str> {
-        self.calls.get(&index).map(|(_, name)| name.as_str())
+        self.calls.get(&index).map(|(_, name, _)| name.as_str())
+    }
+
+    pub fn call_is_callback(&self, index: usize) -> bool {
+        self.calls.get(&index).is_some_and(|(_, _, is_cb)| *is_cb)
     }
 
     fn last_call(&self, fn_index: usize) -> usize {

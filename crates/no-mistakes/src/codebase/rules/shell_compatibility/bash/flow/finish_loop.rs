@@ -1,7 +1,29 @@
 use super::{
-    super::{super::lex::Boundary, frames::Frame},
+    super::{
+        super::lex::{Boundary, Word},
+        frames::Frame,
+    },
     Flow,
 };
+use crate::fx::FxHashMap;
+
+pub(super) fn is_infinite_loop(
+    keyword: &str,
+    rest: &[&Word<'_>],
+    seen_functions: &FxHashMap<&str, usize>,
+) -> bool {
+    match (keyword, rest) {
+        ("while", [word]) => {
+            matches!(word.raw, ":" | "true") && !seen_functions.contains_key(word.raw)
+        }
+        ("until", [word]) => word.raw == "false" && !seen_functions.contains_key("false"),
+        _ => false,
+    }
+}
+
+pub(super) fn for_has_literal_item(rest: &[&Word<'_>]) -> bool {
+    rest.get(1).is_some_and(|word| word.raw == "in") && rest[2..].iter().any(|word| !word.dynamic)
+}
 
 impl<'a> Flow<'a> {
     pub(super) fn finish_loop(&mut self, line: usize, outgoing: Boundary<'a>, redirected: bool) {

@@ -59,6 +59,7 @@ impl<'a> Flow<'a> {
                 let before = self.state.clone();
                 if enters_function {
                     self.state.nounset_effect = None;
+                    self.state.clear_current_locals();
                     self.state.forget_nonempty_for_function(index, write_sets);
                 } else if matches!(self.incoming, And | Or) {
                     if let Some(guard) = self.pending {
@@ -88,6 +89,7 @@ impl<'a> Flow<'a> {
                     if !empty {
                         if group.enters_function {
                             let mut redir = group.before.clone();
+                            redir.clear_current_locals();
                             redir.forget_nonempty_for_function(group.open_index, write_sets);
                             analyze(&mut redir, &mut self.frames);
                         } else {

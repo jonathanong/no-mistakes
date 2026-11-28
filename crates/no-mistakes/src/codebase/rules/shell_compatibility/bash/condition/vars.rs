@@ -42,13 +42,10 @@ pub(in super::super) fn collect_arithmetic_writes(
             }
         }
     }
+    super::arith::scan_subscript_writes(words, &mut on_write, scan_arith_writes);
     for word in words {
-        scan_inline_arith_writes(word.raw, &mut on_write);
+        super::arith::scan_inline_arith_writes(word.raw, &mut on_write, scan_arith_writes);
     }
-}
-
-fn scan_inline_arith_writes(rest: &str, on_write: &mut impl FnMut(&str)) {
-    super::arith::scan_inline_arith_writes(rest, on_write, scan_arith_writes);
 }
 
 fn scan_arith_writes(expr: &str, on_write: &mut dyn FnMut(&str)) {

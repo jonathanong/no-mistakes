@@ -144,9 +144,12 @@ impl<'a> Flow<'a> {
     ) {
         let incoming = self.incoming;
         let called = write_sets.called_function(index);
+        let is_callback = write_sets.call_is_callback(index);
         let conditional = matches!(incoming, Boundary::And | Boundary::Or | Boundary::Other)
             || outgoing == Boundary::Other
-            || called.is_some_and(|name| redirected || self.fn_redirected.contains(name));
+            || redirected
+            || is_callback
+            || called.is_some_and(|name| self.fn_redirected.contains(name));
         let active_cond = (incoming == Boundary::And)
             .then(|| self.pending_cond.take())
             .flatten();
@@ -175,6 +178,8 @@ impl<'a> Flow<'a> {
         if let Some(mut before) = before {
             let gained = active_cond.filter(|cond| {
                 outgoing == Boundary::End
+                    && !redirected
+                    && !is_callback
                     && !leave.is_leaving()
                     && !cond
                         .vars()

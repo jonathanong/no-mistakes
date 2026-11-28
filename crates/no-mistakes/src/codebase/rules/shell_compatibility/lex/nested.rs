@@ -2,8 +2,19 @@ use super::{Lexer, Shell};
 
 impl Lexer<'_> {
     pub(super) fn skip_group(&mut self, end: u8) -> bool {
+        self.skip_group_inner(end, false) == Some(true)
+    }
+
+    pub(super) fn skip_arith_group(&mut self, stop_on_sep: bool) -> Option<bool> {
+        self.skip_group_inner(b')', stop_on_sep)
+    }
+
+    fn skip_group_inner(&mut self, end: u8, stop_on_sep: bool) -> Option<bool> {
         let mut ends = vec![end];
         while let (Some(byte), Some(&end)) = (self.current(), ends.last()) {
+            if stop_on_sep && matches!(byte, b';' | b'\n') {
+                return Some(false);
+            }
             if byte == end {
                 self.advance();
                 ends.pop();
@@ -30,7 +41,7 @@ impl Lexer<'_> {
             }
             self.advance();
         }
-        ends.is_empty()
+        ends.is_empty().then_some(true)
     }
 
     pub(super) fn skip_substitution(&mut self) -> bool {

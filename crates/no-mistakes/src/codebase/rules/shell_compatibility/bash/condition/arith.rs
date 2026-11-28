@@ -1,3 +1,57 @@
+use super::super::super::lex::{assignment, command_words, identifier, Word};
+use super::super::assign::single_word;
+
+pub(super) fn scan_subscript_writes(
+    words: &[Word<'_>],
+    on_write: &mut dyn FnMut(&str),
+    mut scan: impl FnMut(&str, &mut dyn FnMut(&str)),
+) {
+    let mut cmd = command_words(words).peekable();
+    while let Some(word) = cmd.peek() {
+        if let Some(sub) = assignment_subscript(word.raw) {
+            scan(sub, on_write);
+            cmd.next();
+        } else if assignment(word.raw).is_some() {
+            cmd.next();
+        } else {
+            break;
+        }
+    }
+    let Some(first) = cmd.next() else {
+        return;
+    };
+    if matches!(
+        first.raw,
+        "declare" | "typeset" | "local" | "readonly" | "export"
+    ) {
+        for word in cmd {
+            let unquoted = single_word(word.raw);
+            let raw = unquoted.as_deref().unwrap_or(word.raw);
+            if let Some(sub) = assignment_subscript(raw) {
+                scan(sub, on_write);
+            }
+        }
+    } else if matches!(first.raw, "unset" | "read") {
+        for word in cmd {
+            if let Some(unquoted) = single_word(word.raw) {
+                if let Some(sub) = indexed_subscript(&unquoted) {
+                    scan(sub, on_write);
+                }
+            }
+        }
+    }
+}
+
+fn assignment_subscript(raw: &str) -> Option<&str> {
+    let (lhs, _) = raw.split_once('=')?;
+    indexed_subscript(lhs.strip_suffix('+').unwrap_or(lhs))
+}
+
+fn indexed_subscript(raw: &str) -> Option<&str> {
+    let (name, sub) = raw.strip_suffix(']')?.split_once('[')?;
+    (identifier(name) && !sub.is_empty()).then_some(sub)
+}
+
 pub(super) fn scan_inline_arith_writes(
     raw: &str,
     on_write: &mut dyn FnMut(&str),
