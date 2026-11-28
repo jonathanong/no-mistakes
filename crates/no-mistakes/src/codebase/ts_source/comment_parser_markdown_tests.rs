@@ -49,7 +49,10 @@ fn comment_body_distinguishes_html_and_line_comments() {
 #[test]
 fn html_prefixes_that_are_not_comments_are_not_directives() {
     // An unclosed opener is not a leading comment, and a 1-byte `<` is not HTML.
-    assert!(super::html_leading_comment_body("<!-- unclosed").is_none());
-    assert!(!super::html_directive_comment("<div>", 0));
+    assert!(
+        no_mistakes_ts_analysis::comment_parser::html_leading_comment_body("<!-- unclosed")
+            .is_none()
+    );
+    assert!(!no_mistakes_ts_analysis::comment_parser::html_directive_comment("<div>", 0));
     assert!(super::matching_disable_directive_tracking("code", None, "my-rule", true).is_none());
 }

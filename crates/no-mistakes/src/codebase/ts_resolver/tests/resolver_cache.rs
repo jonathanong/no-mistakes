@@ -35,11 +35,11 @@ fn import_resolver_with_visible_keeps_cache_enabled() {
     };
     let visible: crate::fx::PathSet = [target].into_iter().collect();
     let resolver = ImportResolver::new(&tc).with_visible(&visible);
-    assert!(resolver.cache_enabled);
+    assert!(resolver.cache_enabled());
 
     resolver.resolve("./utils", &importer);
 
-    assert_eq!(resolver.cache.len(), 1);
+    assert_eq!(resolver.cache_len(), 1);
 }
 
 /// Regression test: calling `with_visible` on a resolver that already has

@@ -61,3 +61,17 @@ impl no_mistakes_rule_kernel::source_access::RuleSources for SourceStore {
         self.read_source_path(path)
     }
 }
+
+impl no_mistakes_ts_analysis::source_access::SourceAccess for SourceStore {
+    fn read_path(&self, path: &Path) -> SourceReadOutcome {
+        SourceStore::read_path(self, path)
+    }
+
+    fn read_source_path(&self, path: &Path) -> SourceReadOutcome {
+        SourceStore::read_source_path(self, path)
+    }
+
+    fn parse_json_path(&self, path: &Path) -> super::JsonParseOutcome {
+        SourceStore::parse_json_path(self, path)
+    }
+}

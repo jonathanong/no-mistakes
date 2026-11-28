@@ -1,4 +1,5 @@
 use super::*;
+use std::path::PathBuf;
 
 #[test]
 fn parallel_distinct_projections_share_canonical_successes_and_failures() {

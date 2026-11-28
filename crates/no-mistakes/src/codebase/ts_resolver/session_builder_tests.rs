@@ -1,4 +1,6 @@
 use super::*;
+use std::path::PathBuf;
+use std::sync::Arc;
 
 fn preserves_original_scope(builder: u8) {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

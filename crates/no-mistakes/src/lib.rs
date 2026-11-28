@@ -73,6 +73,15 @@ pub mod postgres_lock_inventory;
 mod package_analysis_registration;
 mod postgres_analysis_registration;
 mod react_analysis_registration;
+mod ts_analysis_hooks;
+
+ctor::declarative::ctor! {
+    // SAFETY: Registration stores a reference to an immutable static hooks table through OnceLock.
+    #[ctor(unsafe)]
+    fn register_ts_analysis() {
+        ts_analysis_hooks::ensure_registered();
+    }
+}
 
 ctor::declarative::ctor! {
     // SAFETY: Registration stores a reference to a static table through OnceLock.

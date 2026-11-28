@@ -7,18 +7,16 @@ use crate::codebase::ts_process_spawn::SpawnEdge;
 use crate::codebase::ts_resources::{ResourceCall, ResourceDiagnostic};
 use crate::codebase::ts_routes::refs::{RouteHelper, RouteHelperImport, RouteHelperRef, RouteRef};
 use crate::codebase::ts_symbols::FileSymbols;
+#[doc(hidden)]
+pub use no_mistakes_ts_analysis::ancestry;
 use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
-#[doc(hidden)]
-pub mod ancestry;
-mod ancestry_declarations;
-mod ancestry_namespaces;
 mod cache_types;
 use cache_types::{
     AppSelectorOccurrencesCache, AppTextTargetsCache, PlaywrightRoutesCache,
     RouteReachableFilesCache,
 };
-pub(crate) mod call_sites;
+pub(crate) use no_mistakes_ts_analysis::call_sites;
 mod collect;
 pub(crate) mod domain;
 mod map;

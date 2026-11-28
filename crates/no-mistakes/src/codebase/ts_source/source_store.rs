@@ -1,7 +1,6 @@
 use super::{FileId, FileInventory};
 use dashmap::{DashMap, DashSet};
 use std::cell::Cell;
-use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, OnceLock};
@@ -21,7 +20,7 @@ use read::{once_lock_slot, read_utf8_arc};
 use validation::ValidatedPathCache;
 
 /// Memoized result of a strict UTF-8 source read.
-pub type SourceReadOutcome = Result<Arc<str>, Arc<io::Error>>;
+pub use no_mistakes_ts_analysis::source_access::SourceReadOutcome;
 
 type JsonParseSlots = DashMap<PathBuf, Arc<OnceLock<JsonParseOutcome>>>;
 type YamlDocumentSlots = DashMap<(PathBuf, yaml::YamlProjection), Arc<OnceLock<yaml::CachedYaml>>>;

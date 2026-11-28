@@ -983,6 +983,9 @@ jobs:
           if [ -d crates/no-mistakes-ts-facts ]; then
             pkgs+=(no-mistakes-ts-facts)
           fi
+          if [ -d crates/no-mistakes-ts-analysis ]; then
+            pkgs+=(no-mistakes-ts-analysis)
+          fi
           if [ -d crates/no-mistakes-rule-kernel ]; then
             pkgs+=(no-mistakes-rule-kernel)
           fi

@@ -387,8 +387,8 @@ fn function_body<'a>(source: &'a str, signature: &str) -> &'a str {
 fn leftover_production_reads_go_through_source_store() {
     for source in [
         include_str!("../../../playwright/selectors/extract_app.rs"),
-        include_str!("../../../fetch/resolve.rs"),
-        include_str!("../../../fetch/imports.rs"),
+        include_str!("../../../../../no-mistakes-ts-analysis/src/fetch/resolve.rs"),
+        include_str!("../../../../../no-mistakes-ts-analysis/src/fetch/imports.rs"),
         include_str!("../../../fetch/file_analysis/legacy.rs"),
         include_str!("../../../playwright/playwright_config/load.rs"),
         include_str!("../../../react_traits/analyze/file.rs"),

@@ -1,0 +1,151 @@
+struct EmptySources;
+impl crate::source_access::SourceAccess for EmptySources {
+    fn read_path(&self, _path: &Path) -> crate::source_access::SourceReadOutcome {
+        Err(std::sync::Arc::new(std::io::Error::from(
+            std::io::ErrorKind::NotFound,
+        )))
+    }
+    fn read_source_path(&self, _path: &Path) -> crate::source_access::SourceReadOutcome {
+        Err(std::sync::Arc::new(std::io::Error::from(
+            std::io::ErrorKind::NotFound,
+        )))
+    }
+    fn parse_json_path(&self, _path: &Path) -> crate::source_access::JsonParseOutcome {
+        Err(crate::source_access::JsonLoadError::Io(
+            std::sync::Arc::new(std::io::Error::from(std::io::ErrorKind::NotFound)),
+        ))
+    }
+}
+
+use super::super::mode::ConditionMode;
+use super::{source_targets, targets};
+use serde_json::json;
+use std::path::Path;
+
+fn source(
+    exports: serde_json::Value,
+    subpath: &str,
+    mode: ConditionMode,
+) -> Result<Vec<String>, ()> {
+    Ok(source_targets(&exports, subpath, mode)?
+        .into_iter()
+        .map(|target| target.path)
+        .collect())
+}
+
+#[test]
+fn subpath_for_file_rejects_a_key_without_one_star() {
+    assert!(super::pattern::subpath_for_file("./*/*", "./*.ts", "./shape.ts").is_none());
+    assert!(super::pattern::subpath_for_file(".", "./*.ts", "./shape.ts").is_none());
+}
+
+#[test]
+fn star_subpath_substitutes_the_capture_into_the_target() {
+    let found = source(
+        json!({ "./*": "./*.mts" }),
+        "sub-module",
+        ConditionMode::Import,
+    )
+    .unwrap();
+    assert_eq!(found, vec!["./sub-module.mts".to_string()]);
+}
+
+#[test]
+fn an_exact_export_key_wins_over_a_star_pattern() {
+    let found = source(
+        json!({ "./*": "./*.mts", "./exact": "./exact.mts" }),
+        "exact",
+        ConditionMode::Import,
+    )
+    .unwrap();
+    assert_eq!(found, vec!["./exact.mts".to_string()]);
+}
+
+#[test]
+fn import_and_require_conditions_pick_their_star_target() {
+    let exports = json!({ "./*": { "import": "./*.mts", "require": "./*.cts" } });
+    assert_eq!(
+        source(exports.clone(), "list-files", ConditionMode::Import).unwrap(),
+        vec!["./list-files.mts".to_string()]
+    );
+    assert_eq!(
+        source(exports, "list-files", ConditionMode::Require).unwrap(),
+        vec!["./list-files.cts".to_string()]
+    );
+}
+
+#[test]
+fn a_longer_star_prefix_wins() {
+    let found = source(
+        json!({ "./*": "./broad/*.mts", "./sub/*": "./nested/*.mts" }),
+        "sub/name",
+        ConditionMode::Import,
+    )
+    .unwrap();
+    assert_eq!(found, vec!["./nested/name.mts".to_string()]);
+}
+
+#[test]
+fn a_pattern_without_a_star_in_the_target_does_not_resolve() {
+    assert!(source(
+        json!({ "./*": "./src/file.mts" }),
+        "file",
+        ConditionMode::Import
+    )
+    .is_err());
+    assert!(source(
+        json!({ "./*/*": "./*/*.mts" }),
+        "a/b",
+        ConditionMode::Import
+    )
+    .is_err());
+    assert!(source(json!({ "./*": "./*.mts" }), "../x", ConditionMode::Import).is_err());
+}
+
+#[test]
+fn a_capture_is_rejected_when_a_target_lacks_one_star() {
+    let mut targets = vec![super::Target {
+        path: "./src/file.mts".to_string(),
+        required: true,
+        known: true,
+    }];
+    assert!(super::pattern::apply_capture(&mut targets, Some("name")).is_err());
+    assert_eq!(targets[0].path, "./src/file.mts");
+}
+
+#[test]
+fn star_patterns_skip_arrays_and_non_string_values() {
+    let array = json!({ "./*": ["./*.mts"] });
+    assert!(super::pattern::pattern_export(array.as_object().unwrap(), "./name").is_none());
+    let null = json!({ "./*": null });
+    assert!(super::pattern::pattern_export(null.as_object().unwrap(), "./name").is_none());
+    let flag = json!({ "./*": true });
+    assert!(super::pattern::pattern_export(flag.as_object().unwrap(), "./name").is_none());
+    let number = json!({ "./*": 1 });
+    assert!(super::pattern::pattern_export(number.as_object().unwrap(), "./name").is_none());
+}
+
+#[test]
+fn declaration_targets_substitute_a_star_pattern() {
+    let sources = EmptySources;
+    let (typed, found) = targets(
+        &json!({ "./*": { "types": "./*.d.ts" } }),
+        "name",
+        Path::new("."),
+        ConditionMode::Import,
+        &sources,
+    )
+    .unwrap();
+    assert!(typed);
+    assert_eq!(found[0].path, "./name.d.ts");
+    let (typed, found) = targets(
+        &json!({ "./*": "./*.js" }),
+        "list-files",
+        Path::new("."),
+        ConditionMode::Import,
+        &sources,
+    )
+    .unwrap();
+    assert!(!typed);
+    assert_eq!(found[0].path, "./list-files.d.ts");
+}

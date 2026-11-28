@@ -1,4 +1,6 @@
 use super::*;
+use crate::codebase::ts_resolver;
+use std::path::PathBuf;
 
 fn queue_fixture_source(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
 pub(crate) mod component;
-pub(crate) mod server;
+pub(crate) use no_mistakes_ts_analysis::server_routes_extract::model as server;
 pub(crate) mod usages;
 
 type ComponentExtractor =

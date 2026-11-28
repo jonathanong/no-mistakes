@@ -10,7 +10,7 @@ fn fixture(name: &str) -> PathBuf {
 fn extract_file(path: &std::path::Path) -> anyhow::Result<crate::server_routes::model::FileFacts> {
     let source = std::fs::read_to_string(path)?;
     crate::ast::with_program(path, &source, |program, _| {
-        super::extract_program(path, &source, program)
+        super::extract::extract_program(path, &source, program)
     })
 }
 

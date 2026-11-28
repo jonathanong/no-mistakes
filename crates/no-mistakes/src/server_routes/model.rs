@@ -1,5 +1,5 @@
 pub(crate) use crate::codebase::ts_source::facts::react_analysis::server::{
-    Binding, FileFacts, ImportBinding, MountSite, RouteSite,
+    FileFacts, ImportBinding, RouteSite,
 };
 use crate::edge_index::PreparedRelationshipIndex;
 use crate::server_routes::types::{EdgeKind, RelationshipNode};

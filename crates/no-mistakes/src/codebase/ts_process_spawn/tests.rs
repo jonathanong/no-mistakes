@@ -1,6 +1,6 @@
 use super::*;
 use oxc_allocator::Allocator;
-use oxc_ast::ast::{ObjectPropertyKind, PropertyKey, Statement};
+use oxc_ast::ast::{Expression, ObjectPropertyKind, PropertyKey, Statement};
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 use std::fs;

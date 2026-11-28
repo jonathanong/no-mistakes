@@ -1,17 +1,22 @@
-pub mod cache;
-pub mod cache_opts;
+pub use no_mistakes_ts_analysis::fetch::{
+    cache, cache_opts, import_shape, types, url_extract, visit_helpers, visitor, visitor_state,
+};
+pub mod imports {
+    pub use no_mistakes_ts_analysis::fetch::imports::*;
+
+    #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+    mod tests;
+}
+pub mod resolve {
+    pub use no_mistakes_ts_analysis::fetch::resolve::*;
+
+    #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+    mod tests;
+}
 pub mod file_analysis;
 pub(crate) mod file_facts;
 pub mod import_routes;
-pub mod import_shape;
-pub mod imports;
-pub mod resolve;
 pub mod route_analysis;
-pub mod types;
-pub mod url_extract;
-pub mod visit_helpers;
-pub mod visitor;
-pub mod visitor_state;
 
 #[doc(hidden)]
 pub use file_facts::ParsedFileCache;

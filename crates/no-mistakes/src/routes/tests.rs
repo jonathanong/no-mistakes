@@ -1,4 +1,5 @@
 use super::*;
+use std::path::Path;
 use std::process::Command;
 
 fn git_init(dir: &Path) {

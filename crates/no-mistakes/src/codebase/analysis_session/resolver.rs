@@ -56,3 +56,33 @@ impl AnalysisSession {
         ))
     }
 }
+
+impl no_mistakes_ts_analysis::ts_resolver::ResolverSession for AnalysisSession {
+    fn resolver_cache_for_visible(
+        &self,
+        tsconfig: &TsConfig,
+        visible: Option<&dyn VisiblePathLookup>,
+    ) -> Arc<ResolverResultCache> {
+        AnalysisSession::resolver_cache_for_visible(self, tsconfig, visible)
+    }
+
+    fn resolver_cache_for_scope(&self, scope: ResolverCacheScopeKey) -> Arc<ResolverResultCache> {
+        AnalysisSession::resolver_cache_for_scope(self, scope)
+    }
+
+    fn normalized_visible(&self, visible: &dyn VisiblePathLookup) -> Arc<dyn VisiblePathLookup> {
+        AnalysisSession::normalized_visible(self, visible)
+    }
+
+    fn resolver_observer(
+        &self,
+    ) -> Option<Arc<dyn no_mistakes_ts_analysis::hooks::MetricsObserver>> {
+        self.observer()
+            .cloned()
+            .map(|observer| observer as Arc<dyn no_mistakes_ts_analysis::hooks::MetricsObserver>)
+    }
+
+    fn path_interner_arc(&self) -> Arc<PathInterner> {
+        AnalysisSession::interner_arc(self)
+    }
+}

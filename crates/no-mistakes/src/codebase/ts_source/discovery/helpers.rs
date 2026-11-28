@@ -37,6 +37,4 @@ pub fn discover_with_basenames(
         .collect()
 }
 
-pub fn line_number(source: &str, start: u32) -> usize {
-    byte_offset_to_line(source, start as usize) as usize
-}
+pub use no_mistakes_ts_analysis::text::line_number;

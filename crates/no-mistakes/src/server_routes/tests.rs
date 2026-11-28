@@ -1,7 +1,8 @@
 pub(crate) mod session_lang;
 
 use super::*;
-use crate::server_routes::model::{Binding, FileFacts, ImportBinding, MountSite, RouteSite};
+use crate::codebase::ts_source::facts::react_analysis::server::{Binding, MountSite};
+use crate::server_routes::model::{FileFacts, ImportBinding, RouteSite};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 

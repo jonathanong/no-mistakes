@@ -9,7 +9,7 @@ use std::sync::{Arc, OnceLock};
 #[path = "declarations/ambient.rs"]
 mod ambient;
 #[path = "declarations/package.rs"]
-mod package;
+pub(crate) mod package;
 pub(crate) use package::lookup_context as package_import_context;
 pub(crate) use package::matches_runtime_export as package_matches_runtime_export;
 pub(crate) use package::resolve_source as resolve_package_export_source;

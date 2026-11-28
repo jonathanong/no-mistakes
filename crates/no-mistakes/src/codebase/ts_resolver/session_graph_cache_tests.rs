@@ -1,4 +1,5 @@
 use super::*;
+use std::path::PathBuf;
 
 #[test]
 fn graph_classification_reuses_the_exact_domains_session_import_table() {
