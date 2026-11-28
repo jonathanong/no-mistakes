@@ -1,10 +1,7 @@
-use super::super::conditions::{boolean_result_is_fixed, visit_case_children};
+use super::super::conditions::collect_pruned_children;
 use super::{needs_original_frame, written_window_identity};
 use crate::fx::{FxHashMap, FxHashSet};
-use crate::idents::{function_arg_expr, ident_key};
-use crate::statements::keyed_lookups::function_clauses::{
-    coalesce_arguments, split_coalesce_arguments,
-};
+use crate::idents::ident_key;
 use sqlparser::ast::{Expr, Query, Spanned, Visitor, WindowSpec, WindowType};
 use sqlparser::tokenizer::Location;
 use std::ops::ControlFlow;
@@ -60,61 +57,28 @@ impl WindowReferences {
             return;
         }
 
-        match expr {
-            Expr::BinaryOp { left, op, right } if boolean_result_is_fixed(left, op, right) => {
-                self.blocked_roots
-                    .extend([left.as_ref(), right.as_ref()].map(std::ptr::from_ref));
-            }
-            Expr::Case {
-                operand,
-                conditions,
-                else_result,
-                ..
-            } => {
-                visit_case_children(
-                    operand.as_deref(),
-                    conditions,
-                    else_result.as_deref(),
-                    |child, reachable| {
-                        if !reachable {
-                            self.blocked_roots.insert(std::ptr::from_ref(child));
-                        }
-                    },
-                );
-            }
-            Expr::Function(function) => {
-                if let Some(arguments) = coalesce_arguments(function) {
-                    let (_, skipped) = split_coalesce_arguments(arguments);
-                    self.blocked_roots.extend(
-                        skipped
-                            .iter()
-                            .filter_map(function_arg_expr)
-                            .map(std::ptr::from_ref),
-                    );
+        collect_pruned_children(expr, &mut self.blocked_roots);
+        if let Expr::Function(function) = expr {
+            match &function.over {
+                Some(WindowType::NamedWindow(name)) => {
+                    *self.named.entry(ident_key(name)).or_default() |=
+                        needs_original_frame(function);
                 }
-                match &function.over {
-                    Some(WindowType::NamedWindow(name)) => {
-                        *self.named.entry(ident_key(name)).or_default() |=
-                            needs_original_frame(function);
+                Some(WindowType::WindowSpec(spec)) => {
+                    if let Some(name) = &spec.window_name {
+                        self.named.entry(ident_key(name)).or_default();
                     }
-                    Some(WindowType::WindowSpec(spec)) => {
-                        if let Some(name) = &spec.window_name {
-                            self.named.entry(ident_key(name)).or_default();
-                        }
-                        if spec.window_frame.is_some() {
-                            let needs_frame = self
-                                .inline
-                                .entry(written_window_identity(spec))
-                                .or_default();
-                            *needs_frame = Some(
-                                needs_frame.unwrap_or_default() || needs_original_frame(function),
-                            );
-                        }
+                    if spec.window_frame.is_some() {
+                        let needs_frame = self
+                            .inline
+                            .entry(written_window_identity(spec))
+                            .or_default();
+                        *needs_frame =
+                            Some(needs_frame.unwrap_or_default() || needs_original_frame(function));
                     }
-                    None => {}
                 }
+                None => {}
             }
-            _ => {}
         }
     }
 }

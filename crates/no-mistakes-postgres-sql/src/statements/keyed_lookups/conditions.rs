@@ -1,4 +1,6 @@
-use crate::idents::unwrap_expr;
+use super::function_clauses::{coalesce_arguments, split_coalesce_arguments};
+use crate::fx::FxHashSet;
+use crate::idents::{function_arg_expr, unwrap_expr};
 use sqlparser::ast::{BinaryOperator, CaseWhen, Expr, Value};
 
 pub(super) fn literal_condition(expr: &Expr) -> Option<bool> {
@@ -81,5 +83,42 @@ pub(super) fn cannot_match(expr: &Expr) -> bool {
             right,
         } => cannot_match(left) && cannot_match(right),
         _ => literal_condition(expr) == Some(false),
+    }
+}
+
+pub(super) fn collect_pruned_children(expr: &Expr, roots: &mut FxHashSet<*const Expr>) {
+    match expr {
+        Expr::BinaryOp { left, op, right } if boolean_result_is_fixed(left, op, right) => {
+            roots.extend([left.as_ref(), right.as_ref()].map(std::ptr::from_ref));
+        }
+        Expr::Case {
+            operand,
+            conditions,
+            else_result,
+            ..
+        } => {
+            visit_case_children(
+                operand.as_deref(),
+                conditions,
+                else_result.as_deref(),
+                |child, reachable| {
+                    if !reachable {
+                        roots.insert(std::ptr::from_ref(child));
+                    }
+                },
+            );
+        }
+        Expr::Function(function) => {
+            if let Some(arguments) = coalesce_arguments(function) {
+                let (_, skipped) = split_coalesce_arguments(arguments);
+                roots.extend(
+                    skipped
+                        .iter()
+                        .filter_map(function_arg_expr)
+                        .map(std::ptr::from_ref),
+                );
+            }
+        }
+        _ => {}
     }
 }
