@@ -1350,6 +1350,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "no-mistakes-coverage"
+version = "0.109.124"
+dependencies = [
+ "insta",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "no-mistakes-invocation"
 version = "0.109.124"
 dependencies = [

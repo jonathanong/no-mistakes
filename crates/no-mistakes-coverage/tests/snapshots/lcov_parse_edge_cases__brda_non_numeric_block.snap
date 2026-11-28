@@ -1,0 +1,22 @@
+---
+source: crates/no-mistakes-coverage/tests/lcov_parse_edge_cases.rs
+expression: pretty_parsed(&parsed)
+---
+{
+  "report": {
+    "files": {
+      "src/non_numeric_brda.ts": {
+        "functions": {},
+        "branches": {
+          "10,2,0": 4,
+          "10,10,0": 5,
+          "99,blockA,2": 7,
+          "99,blockA,10": 1,
+          "99,blockA,branchX": 3
+        },
+        "lines": {}
+      }
+    }
+  },
+  "diagnostics": []
+}

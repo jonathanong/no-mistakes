@@ -1,0 +1,67 @@
+---
+source: crates/no-mistakes-coverage/tests/lcov_path_normalization.rs
+expression: pretty_json(&parsed)
+---
+{
+  "report": {
+    "files": {
+      "src/safe.ts": {
+        "functions": {},
+        "branches": {},
+        "lines": {
+          "10": 2
+        }
+      }
+    }
+  },
+  "diagnostics": [
+    {
+      "line": 1,
+      "record_path": "../secret.ts",
+      "kind": "invalid_path",
+      "message": "relative path escapes root via '..'"
+    },
+    {
+      "line": 4,
+      "record_path": "src/../../escape.ts",
+      "kind": "invalid_path",
+      "message": "relative path escapes root via '..'"
+    },
+    {
+      "line": 7,
+      "record_path": "file:///repo/src/nul%00url.ts",
+      "kind": "invalid_path",
+      "message": "path contains a NUL byte"
+    },
+    {
+      "line": 10,
+      "record_path": "/etc/passwd",
+      "kind": "invalid_path",
+      "message": "absolute path is outside the configured root"
+    },
+    {
+      "line": 13,
+      "record_path": "C:\\Windows\\system.ts",
+      "kind": "invalid_path",
+      "message": "path uses a foreign OS absolute root"
+    },
+    {
+      "line": 16,
+      "record_path": "/repo/sub/../../etc/escaped.ts",
+      "kind": "invalid_path",
+      "message": "absolute path is outside the configured root"
+    },
+    {
+      "line": 19,
+      "record_path": "/repo",
+      "kind": "invalid_path",
+      "message": "path is empty after normalization"
+    },
+    {
+      "line": 22,
+      "record_path": "./",
+      "kind": "invalid_path",
+      "message": "path is empty after normalization"
+    }
+  ]
+}

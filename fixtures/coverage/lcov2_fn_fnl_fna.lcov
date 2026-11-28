@@ -1,0 +1,15 @@
+SF:src/lcov2.ts
+FN:1,5,threeFieldFn
+FNDA:2,threeFieldFn
+FNL:0,10,15
+FNA:0,4,indexedFn
+FNL:1,18
+FNA:1,0,indexedNoEndFn
+FNL:25,30,legacyFnlArrow
+FNDA:6,legacyFnlArrow
+FN:40,aliasFn
+FNA:3,aliasFn
+FN:50,genericFn(a, b)
+FNDA:1,genericFn(a, b)
+FNA:99,1,unindexedFna
+end_of_record

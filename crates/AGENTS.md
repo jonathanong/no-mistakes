@@ -4,12 +4,12 @@
 - `crates/no-mistakes-invocation` — invocation locking, deadlines, watchdogs, process trees, and `macos_invocation` (`hooks.rs`).
 - `crates/no-mistakes-postgres-sql` — pure PostgreSQL SQL parsing, statement/DML/lock/bound facts, and identifiers (no `no-mistakes` dep).
 - `crates/no-mistakes-rule-kernel` — shared rule findings, contexts, suppression, source access, diagnostics, path matching, and validator types.
+- `crates/no-mistakes-coverage` — pure LCOV parsing, merging, normalization, and serialization (no `no-mistakes` dep).
 - `crates/no-mistakes-ts-facts` — pure OXC TS parsing, module facts, and value-flow extraction (no `no-mistakes` dep; `hooks`).
 - `crates/no-mistakes-ts-analysis` — TS/JS resolution, routes/resources/queues/symbols/HTTP/spawn/tRPC/fetch/server-route extraction, comment scanning, and `PathInterner` (`SourceAccess`, `ResolverSession`, `hooks`).
 ## Performance Guidelines
-Core check/evaluator optimizations must also follow [the crate rules](no-mistakes/AGENTS.md).
+Core check/evaluator optimizations follow [the crate rules](no-mistakes/AGENTS.md). Keep Rust repository Markdown inputs in the [CI input folders](../docs/development/ci-builds.md#rust-markdown-inputs).
 ### Core architecture invariants
-- Keep Rust repository Markdown inputs in the [CI input folders](../docs/development/ci-builds.md#rust-markdown-inputs).
 - Discover files once per invocation, parse TS/JS once for the requested `TsFactPlan`, and share `TsFactMap`.
 - In-memory only: use invocation-scoped fact maps, resolver/traversal caches,
   and dependency maps. No disk caches, daemons, databases, or cross-run state.

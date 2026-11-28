@@ -1,0 +1,46 @@
+---
+source: crates/no-mistakes-coverage/tests/lcov_path_normalization.rs
+expression: pretty_parsed(&parsed)
+---
+{
+  "report": {
+    "files": {
+      "/home/runner/work/repo/repo-other/src/sibling.ts": {
+        "functions": {},
+        "branches": {},
+        "lines": {
+          "1": 7
+        }
+      },
+      "src/localhost.ts": {
+        "functions": {},
+        "branches": {},
+        "lines": {
+          "1": 5
+        }
+      },
+      "src/my file.ts": {
+        "functions": {},
+        "branches": {},
+        "lines": {
+          "1": 4
+        }
+      },
+      "src/triple_slash.ts": {
+        "functions": {},
+        "branches": {},
+        "lines": {
+          "1": 6
+        }
+      },
+      "web/lib/client.mts": {
+        "functions": {},
+        "branches": {},
+        "lines": {
+          "1": 6
+        }
+      }
+    }
+  },
+  "diagnostics": []
+}

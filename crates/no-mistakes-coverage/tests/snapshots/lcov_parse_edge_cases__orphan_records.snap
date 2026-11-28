@@ -1,0 +1,44 @@
+---
+source: crates/no-mistakes-coverage/tests/lcov_parse_edge_cases.rs
+expression: pretty_parsed(&parsed)
+---
+{
+  "report": {
+    "files": {
+      "src/valid.ts": {
+        "functions": {},
+        "branches": {},
+        "lines": {
+          "2": 1
+        }
+      }
+    }
+  },
+  "diagnostics": [
+    {
+      "line": 1,
+      "kind": "orphan_record",
+      "message": "record outside SF..end_of_record: DA:1,1"
+    },
+    {
+      "line": 2,
+      "kind": "orphan_record",
+      "message": "record outside SF..end_of_record: FN:5,orphanFn"
+    },
+    {
+      "line": 3,
+      "kind": "orphan_record",
+      "message": "record outside SF..end_of_record: FNDA:2,orphanFn"
+    },
+    {
+      "line": 4,
+      "kind": "orphan_record",
+      "message": "record outside SF..end_of_record: BRDA:1,0,0,1"
+    },
+    {
+      "line": 8,
+      "kind": "orphan_record",
+      "message": "record outside SF..end_of_record: DA:9,4"
+    }
+  ]
+}

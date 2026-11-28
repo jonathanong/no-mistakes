@@ -1,0 +1,27 @@
+---
+source: crates/no-mistakes-coverage/tests/lcov_parse_edge_cases.rs
+expression: pretty_parsed(&parsed)
+---
+{
+  "report": {
+    "files": {
+      "web/components/Foo.tsx": {
+        "functions": {
+          "render": {
+            "line": 1,
+            "hits": 5
+          }
+        },
+        "branches": {
+          "3,0,0": 5,
+          "3,0,1": 1
+        },
+        "lines": {
+          "1": 5,
+          "2": 1
+        }
+      }
+    }
+  },
+  "diagnostics": []
+}

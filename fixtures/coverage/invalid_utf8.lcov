@@ -1,0 +1,9 @@
+SF:src/before.ts
+DA:1,1
+end_of_record
+SF:src/bad_ÿþ_name.ts
+DA:2,3
+end_of_record
+SF:src/after.ts
+DA:4,5
+end_of_record

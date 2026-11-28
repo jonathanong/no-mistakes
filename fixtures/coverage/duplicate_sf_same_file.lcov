@@ -1,0 +1,15 @@
+SF:web/components/Foo.tsx
+FN:1,render
+FNDA:2,render
+BRDA:3,0,0,1
+DA:1,2
+DA:2,0
+end_of_record
+SF:web/components/Foo.tsx
+FN:1,render
+FNDA:3,render
+BRDA:3,0,0,4
+BRDA:3,0,1,1
+DA:1,3
+DA:2,1
+end_of_record

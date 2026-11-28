@@ -1,0 +1,22 @@
+[package]
+name = "no-mistakes-coverage"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "LCOV coverage parsing, merging, path normalization, and serialization for no-mistakes"
+repository.workspace = true
+documentation = "https://github.com/jongleberry/no-mistakes"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+insta = "1.49.0"
+serde_json = "1"

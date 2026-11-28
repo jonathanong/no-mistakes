@@ -1,0 +1,16 @@
+---
+source: crates/no-mistakes-coverage/tests/lcov_merge_and_serialize.rs
+expression: pretty_report(&merged)
+---
+{
+  "files": {
+    "src/checksum.ts": {
+      "functions": {},
+      "branches": {},
+      "lines": {
+        "1": 5,
+        "2": 4
+      }
+    }
+  }
+}

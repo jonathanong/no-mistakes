@@ -76,3 +76,4 @@ test-cases/rules/postgres-sql-statement-policy/fixture/issue-3856/src/policy.tes
 test-cases/rules/github-actions-no-insta-snapshot-updates/fixture/unreadable/.github/workflows/*.yml -text -whitespace
 
 test-cases/rules/github-actions-cache-setup-policy/fixture/unavailable/.github/workflows/invalid-utf8.yml -text -whitespace
+fixtures/coverage/** -text -whitespace

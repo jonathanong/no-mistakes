@@ -1,0 +1,175 @@
+---
+source: crates/no-mistakes-coverage/tests/lcov_parse_edge_cases.rs
+expression: pretty_parsed(&parsed)
+---
+{
+  "report": {
+    "files": {
+      "src/after_malformed.ts": {
+        "functions": {},
+        "branches": {},
+        "lines": {
+          "2": 3
+        }
+      },
+      "src/malformed.ts": {
+        "functions": {},
+        "branches": {},
+        "lines": {
+          "1": 7
+        }
+      }
+    }
+  },
+  "diagnostics": [
+    {
+      "line": 1,
+      "kind": "invalid_path",
+      "message": "path is empty after normalization"
+    },
+    {
+      "line": 5,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "malformed FN record: FN:nocomma"
+    },
+    {
+      "line": 6,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "invalid FN start line: FN:abc,badStart"
+    },
+    {
+      "line": 7,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "empty FN function name: FN:5,"
+    },
+    {
+      "line": 8,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "malformed FNDA record: FNDA:nohits"
+    },
+    {
+      "line": 9,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "invalid FNDA hit count: FNDA:abc,badHits"
+    },
+    {
+      "line": 10,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "empty FNDA function name: FNDA:1,"
+    },
+    {
+      "line": 11,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "malformed FNL record: FNL:nocomma"
+    },
+    {
+      "line": 12,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "invalid FNL number: FNL:abc,1"
+    },
+    {
+      "line": 13,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "invalid FNL start line: FNL:1,abc"
+    },
+    {
+      "line": 14,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "invalid FNL second field: FNL:1,abc,name"
+    },
+    {
+      "line": 15,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "empty FNL function name: FNL:1,2,"
+    },
+    {
+      "line": 16,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "malformed FNDA record: FNA:nocomma"
+    },
+    {
+      "line": 17,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "invalid FNDA hit count: FNA:abc,name"
+    },
+    {
+      "line": 18,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "malformed BRDA record: BRDA:1"
+    },
+    {
+      "line": 19,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "malformed BRDA record: BRDA:1,2"
+    },
+    {
+      "line": 20,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "malformed BRDA record: BRDA:1,2,3"
+    },
+    {
+      "line": 21,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "invalid BRDA line number: BRDA:abc,0,0,1"
+    },
+    {
+      "line": 22,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "empty BRDA block or branch id: BRDA:10,,0,1"
+    },
+    {
+      "line": 23,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "empty BRDA block or branch id: BRDA:10,0,,1"
+    },
+    {
+      "line": 24,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "invalid BRDA taken count: BRDA:10,0,0,notanumber"
+    },
+    {
+      "line": 25,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "malformed DA record: DA:nocomma"
+    },
+    {
+      "line": 26,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "invalid DA line number: DA:abc,1"
+    },
+    {
+      "line": 27,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "invalid DA hit count: DA:1,abc"
+    },
+    {
+      "line": 28,
+      "record_path": "src/malformed.ts",
+      "kind": "malformed_line",
+      "message": "invalid DA hit count: DA:1,-1"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+SF:src/checksum.ts
+DA:1,2,abcd1234
+DA:2,0,deadbeef
+end_of_record

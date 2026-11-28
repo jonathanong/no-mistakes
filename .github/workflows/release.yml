@@ -989,6 +989,9 @@ jobs:
           if [ -d crates/no-mistakes-rule-kernel ]; then
             pkgs+=(no-mistakes-rule-kernel)
           fi
+          if [ -d crates/no-mistakes-coverage ]; then
+            pkgs+=(no-mistakes-coverage)
+          fi
           pkgs+=(no-mistakes)
           for pkg in "${pkgs[@]}"; do
             if curl --fail --silent --output /dev/null "https://crates.io/api/v1/crates/$pkg/$version"; then

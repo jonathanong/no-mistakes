@@ -1,0 +1,26 @@
+---
+source: crates/no-mistakes-coverage/tests/lcov_merge_and_serialize.rs
+expression: pretty_report(&merged)
+---
+{
+  "files": {
+    "src/conflict.ts": {
+      "functions": {
+        "foo": {
+          "line": 1,
+          "end_line": 5,
+          "hits": 5
+        },
+        "lateDef": {
+          "line": 20,
+          "end_line": 30,
+          "hits": 5
+        }
+      },
+      "branches": {},
+      "lines": {
+        "1": 5
+      }
+    }
+  }
+}
