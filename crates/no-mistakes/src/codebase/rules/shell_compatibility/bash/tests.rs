@@ -5,6 +5,7 @@ mod edge;
 mod review;
 mod review_round;
 mod review_round_2;
+mod review_round_3;
 
 pub(super) fn scan(source: &str) -> Vec<(&str, usize)> {
     analyze(source).findings
