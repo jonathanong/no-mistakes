@@ -9,8 +9,9 @@ use oxc_span::{GetSpan, Span};
 mod bindings;
 mod calls;
 mod playwright_bindings;
+mod playwright_fixture_initializers;
 mod playwright_wrappers;
-pub(crate) use playwright_bindings::fixture_initializers;
+pub(crate) use playwright_fixture_initializers::fixture_initializers;
 mod configs;
 mod factories;
 

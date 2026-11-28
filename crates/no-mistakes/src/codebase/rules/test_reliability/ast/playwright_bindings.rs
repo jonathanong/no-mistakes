@@ -1,12 +1,11 @@
 use super::bindings::Bindings;
-use crate::codebase::dependencies::extract::ExportedBinding;
 use crate::codebase::rules::test_reliability::playwright_provenance::{
-    FixtureInitializer, FixtureInitializers, ImportRef, WrapperSummary,
+    FixtureInitializer, ImportRef, WrapperSummary,
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashSet;
-use oxc_ast::ast::{Expression, Program};
-use oxc_semantic::{Semantic, SymbolId};
+use oxc_ast::ast::Expression;
+use oxc_semantic::SymbolId;
 
 const MAX_VALUE_DEPTH: usize = 8;
 
@@ -26,55 +25,6 @@ impl ValueTrace {
     }
 }
 
-pub(crate) fn fixture_initializers<'a>(
-    program: &'a Program<'a>,
-    semantic: &Semantic<'a>,
-    exports: &[ExportedBinding],
-) -> FixtureInitializers {
-    let mut result = FixtureInitializers::default();
-    if exports.is_empty() {
-        return result;
-    }
-    let bindings = Bindings::new(program, semantic, false, true);
-    let scope = semantic.scoping();
-    for export in exports.iter().filter(|export| export.specifier.is_none()) {
-        let Some(symbol) = scope.get_binding(scope.root_scope_id(), export.local.as_str().into())
-        else {
-            continue;
-        };
-        let mut visited = FxHashSet::default();
-        if let Some(summary) = bindings.wrapper_summary(symbol, 0, &mut visited) {
-            result.wrappers.insert(export.local.clone(), summary);
-            continue;
-        }
-        let trace = if bindings.is_function_def(symbol) {
-            bindings.factory_return_origin(symbol, 0)
-        } else if scope.symbol_flags(symbol).is_const_variable() {
-            semantic
-                .nodes()
-                .kind(scope.symbol_declaration(symbol))
-                .as_variable_declarator()
-                .filter(|declaration| declaration.id.is_binding_identifier())
-                .and_then(|declaration| declaration.init.as_ref())
-                .map_or(ValueTrace::None, |init| {
-                    bindings.playwright_value_origin(init)
-                })
-        } else {
-            ValueTrace::None
-        };
-        match trace {
-            ValueTrace::Resolved(origin) => {
-                result.values.insert(export.local.clone(), origin);
-            }
-            ValueTrace::Unresolved(reason, candidates) => {
-                result.uncertain.insert(export.local.clone(), (reason, candidates));
-            }
-            ValueTrace::None => {}
-        }
-    }
-    result
-}
-
 impl Bindings<'_, '_> {
     pub(super) fn playwright_value_origin(&self, value: &Expression<'_>) -> ValueTrace {
         self.playwright_value_origin_depth(value, 0)
@@ -86,10 +36,8 @@ impl Bindings<'_, '_> {
         depth: usize,
     ) -> ValueTrace {
         if depth >= MAX_VALUE_DEPTH {
-            return self.unresolved_if_provenance(
-                value,
-                "fixture chain exceeded static trace depth",
-            );
+            return self
+                .unresolved_if_provenance(value, "fixture chain exceeded static trace depth");
         }
         let mut derived_at = None;
         let mut wrappers = Vec::new();
@@ -145,7 +93,10 @@ impl Bindings<'_, '_> {
                             .get(summary.param_index)
                             .and_then(|arg| arg.as_expression())
                         {
-                            super::playwright_wrappers::extend_unique(&mut wrappers, summary.wrappers);
+                            super::playwright_wrappers::extend_unique(
+                                &mut wrappers,
+                                summary.wrappers,
+                            );
                             derived_at = derived_at.or(summary.derived_at);
                             value = unwrap_ts_wrappers(arg);
                             continue;
