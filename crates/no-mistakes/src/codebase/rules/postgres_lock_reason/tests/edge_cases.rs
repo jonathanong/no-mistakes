@@ -132,13 +132,15 @@ fn repeated_labels_and_multiple_tags_cannot_satisfy_empty_fields() {
 fn multiline_ts_calls_and_sql_suffix_after_semicolon_find_reasons() {
     let multiline = concat!(
         "takeLock(\n",
-        "  // note\n",
-        "  /* lock-reason: prevents: duplicates; writer: worker */\n",
+        "  // note — utf8\n",
+        "  /* lock-reason: prevents: duplicates — utf8; writer: worker */\n",
         "  wrap(\"a)b\"),\n",
         ");\n",
     );
     let idx = CommentIndex::for_ts(multiline);
     assert_eq!(idx.status_for_ts_offset(1, 0), ReasonStatus::Valid);
+    assert_eq!(idx.status_for_ts_offset(0, 0), ReasonStatus::Absent);
+    assert_eq!(idx.status_for_ts_offset(99, 0), ReasonStatus::Absent);
 
     let unclosed = "takeLock(\n  id\n";
     assert_eq!(

@@ -53,19 +53,21 @@ fn native(
             .push(unanalyzable_finding(rel, 1, "SQL source could not be read"));
         return Ok(out);
     };
-    let mut comment_index: Option<CommentIndex> = None;
     for statement in statements {
         record_sql_gaps(rel, statement, &mut out.unanalyzable);
-        if statement.parse_failed || !statement_has_lock_work(options, statement) {
-            continue;
-        }
-        let comments = match &comment_index {
-            Some(index) => index,
-            None => {
-                let source = sources.read_source_path(path)?;
-                comment_index.insert(CommentIndex::for_sql(&source))
-            }
-        };
+    }
+    if !statements
+        .iter()
+        .any(|s| !s.parse_failed && statement_has_lock_work(options, s))
+    {
+        return Ok(out);
+    }
+    let source = sources.read_source_path(path)?;
+    let comments = CommentIndex::for_sql(&source);
+    for statement in statements
+        .iter()
+        .filter(|s| !s.parse_failed && statement_has_lock_work(options, s))
+    {
         for lock in statement
             .lock_inventory
             .iter()
