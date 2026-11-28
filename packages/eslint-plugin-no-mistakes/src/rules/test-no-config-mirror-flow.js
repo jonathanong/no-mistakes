@@ -53,7 +53,8 @@ function isPurelyTaintedVariable(variable, taintedWrites, context) {
   for (const ref of variable.references) {
     if (!ref.isWrite()) continue;
     const assigned = writeSourceExpression(ref);
-    if (assigned && !taintedWrites.has(assigned) && !isEmptyLiteral(assigned, context)) {
+    const emptyInit = assigned && ref.init && isEmptyLiteral(assigned, context);
+    if (assigned && !taintedWrites.has(assigned) && !emptyInit) {
       return false;
     }
   }

@@ -32,6 +32,7 @@ const defaultFiles = [
   "exemptions.test.ts",
   "exemptions-global-vi.test.ts",
   "shadowed.test.ts",
+  "fs-extra-and-replacement.test.ts",
   "helper.ts",
 ];
 

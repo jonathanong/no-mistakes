@@ -39,7 +39,12 @@ function isParserCallee(callee, resolve, configuredParsers, context) {
 
 function isReadCall(callNode, resolve, promisifiedVars, context) {
   const binding = resolve(callNode.callee);
-  if (binding && READ_METHODS.has(binding)) return { isCallback: binding === "fs.readFile" };
+  if (binding && READ_METHODS.has(binding)) {
+    const callbackStyle =
+      binding === "fs.readFile" ||
+      (binding === "fs-extra.readFile" && isFunction(unwrapExpression(callNode.arguments.at(-1))));
+    return { isCallback: callbackStyle };
+  }
   const callee = unwrapExpression(callNode.callee);
   if (callee?.type === "Identifier" && promisifiedVars.has(resolveVariable(callee, context))) {
     return { isCallback: false };
@@ -48,6 +53,7 @@ function isReadCall(callNode, resolve, promisifiedVars, context) {
 }
 
 function readHelperInfo(fn, resolve, promisifiedVars, configuredParsers, context) {
+  if (fn.generator) return null;
   if (fn.params.length > 1 || (fn.params.length === 1 && fn.params[0].type !== "Identifier")) {
     return null;
   }
