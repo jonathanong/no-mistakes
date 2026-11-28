@@ -1,0 +1,58 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "subshell_guards": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case.sh",
+          "line": 12,
+          "message": "Array `files` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${files[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${files[@]}\"",
+          "target": "files"
+        },
+        {
+          "file": "function.sh",
+          "line": 13,
+          "message": "Array `files` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${files[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${files[@]}\"",
+          "target": "files"
+        },
+        {
+          "file": "nested.sh",
+          "line": 14,
+          "message": "Array `files` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${files[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${files[@]}\"",
+          "target": "files"
+        },
+        {
+          "file": "pipeline.sh",
+          "line": 5,
+          "message": "Array `files` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${files[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${files[@]}\"",
+          "target": "files"
+        },
+        {
+          "file": "substitution.sh",
+          "line": 9,
+          "message": "Array `files` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${files[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"$output\" \"${files[@]}\"",
+          "target": "files"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

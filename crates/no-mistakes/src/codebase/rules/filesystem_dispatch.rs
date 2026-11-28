@@ -63,7 +63,7 @@ mod metadata;
 mod preserved;
 mod run_rule;
 mod run_rule_engines;
-pub(in crate::codebase::rules) mod shell_compatibility;
+pub mod shell_compatibility;
 #[macro_use]
 mod registry;
 use super::{
