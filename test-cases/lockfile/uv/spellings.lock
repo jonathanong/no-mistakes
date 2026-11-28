@@ -1,0 +1,25 @@
+version = 1
+
+[[package]]
+name = "sample-implicit"
+version = "1.2a"
+
+[[package]]
+name = "sample-pre"
+version = "1.0pre1"
+
+[[package]]
+name = "sample-post"
+version = "1.0-1"
+
+[[package]]
+name = "sample-joined"
+version = "1.2a.post1"
+
+[[package]]
+name = "sample-label"
+version = "1.0-post1"
+
+[[package]]
+name = "sample-dot"
+version = "1.2a."

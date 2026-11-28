@@ -1,0 +1,18 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    sample-b64 (1.0.0)
+    sample-url (1.0.0)
+    sample-bad (1.0.0)
+    sample-junk (1.0.0)
+    sample-pad (1.0.0)
+
+CHECKSUMS
+  sample-b64 (1.0.0) sha256=AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8
+  sample-url (1.0.0) sha256=__79_Pv6-fj39vX08_Lx8O_u7ezr6uno5-bl5OPi4eA=
+  sample-bad (1.0.0) sha256=@@@@
+  sample-junk (1.0.0) sha256=!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  sample-pad (1.0.0) sha256=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA===
+
+BUNDLED WITH
+   2.5.0
