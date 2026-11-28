@@ -1,6 +1,7 @@
 pub mod advisory_rules;
 pub(crate) mod allow_audit;
 mod byte_prefilter;
+pub(crate) mod call_policy;
 mod catalog_rule;
 mod config_diagnostic;
 mod configured_root;

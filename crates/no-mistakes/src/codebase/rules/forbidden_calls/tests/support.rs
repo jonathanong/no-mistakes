@@ -1,5 +1,5 @@
-use super::super::roots;
 use super::Options;
+use crate::codebase::rules::call_policy::roots;
 use std::path::{Path, PathBuf};
 
 pub(crate) fn expand_roots(
@@ -12,7 +12,8 @@ pub(crate) fn expand_roots(
         rule: super::super::RULE_ID,
         allow_sourceless: false,
         root,
-        options,
+        roots: &options.roots,
+        exclude_roots: options.exclude_roots.as_ref(),
         graph,
         vitest: None,
         playwright: None,

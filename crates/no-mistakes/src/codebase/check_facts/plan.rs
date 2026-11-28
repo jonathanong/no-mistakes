@@ -33,7 +33,7 @@ pub struct CheckFactPlan {
     pub call_site_paths: Arc<std::collections::BTreeSet<PathBuf>>,
     #[doc(hidden)]
     pub forbidden_call_arguments:
-        Option<Arc<crate::codebase::rules::forbidden_calls::ArgumentFactScope>>,
+        Option<Arc<crate::codebase::rules::call_policy::ArgumentFactScope>>,
     /// Explicit production-rule sources, including metadata and unknown extensions.
     /// Their import projection preserves the historical TypeScript/TSX parse mode.
     #[doc(hidden)]

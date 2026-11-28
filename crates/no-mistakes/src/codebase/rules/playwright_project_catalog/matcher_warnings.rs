@@ -6,7 +6,7 @@ use std::collections::BTreeSet;
 /// roots or integration suites. An explicit policy include replaces an uncertain matcher.
 pub(super) fn selected(config: &NoMistakesConfig, projects: &[ConfigProject]) -> Vec<String> {
     let selectors = config
-        .rule_applications(super::super::forbidden_calls::RULE_ID)
+        .rule_applications(super::super::call_policy::FORBIDDEN_CALLS_RULE_ID)
         .into_iter()
         .filter_map(|application| {
             application

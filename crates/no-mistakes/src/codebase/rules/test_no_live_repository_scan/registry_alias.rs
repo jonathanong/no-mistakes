@@ -1,5 +1,5 @@
 //! Which function a registry member names, and whether that function scans.
-use super::super::super::forbidden_calls::site_source_node;
+use super::super::super::call_policy::site_source_node;
 use super::super::config::Enumerator;
 use super::super::enumerators::scan_of;
 use super::home::{self, Home, Locate};

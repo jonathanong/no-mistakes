@@ -3,7 +3,7 @@ use super::cause::{function_site, kind_of, Cause, CauseKind};
 use super::setups::SetupGap;
 use super::Owners;
 use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite, TsFactLookup};
-use crate::codebase::rules::forbidden_calls::site_source_node;
+use crate::codebase::rules::call_policy::site_source_node;
 use crate::fx::FxHashMap;
 
 #[path = "route_cause_flow.rs"]

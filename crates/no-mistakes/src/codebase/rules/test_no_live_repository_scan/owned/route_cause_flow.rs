@@ -1,6 +1,6 @@
 //! Whether a judged parameter is an argument of a recorded call.
 use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite, TsFactLookup};
-use crate::codebase::rules::forbidden_calls::site_source_node;
+use crate::codebase::rules::call_policy::site_source_node;
 use crate::fx::FxHashMap;
 
 /// `Some` when this call's arguments were recorded. `None` when they were not.

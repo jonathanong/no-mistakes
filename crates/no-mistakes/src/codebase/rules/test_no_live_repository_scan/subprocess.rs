@@ -46,7 +46,7 @@ impl<'a> Gate<'a> {
             return;
         };
         let Some(arguments) =
-            super::super::forbidden_calls::call_argument_values(facts, site.offset)
+            super::super::call_policy::call_argument_values(facts, site.offset)
         else {
             return;
         };

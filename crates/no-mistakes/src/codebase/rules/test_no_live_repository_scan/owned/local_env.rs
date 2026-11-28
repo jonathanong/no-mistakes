@@ -1,7 +1,7 @@
 use super::env;
 use super::{path_provenance, Owners};
 use crate::codebase::dependencies::graph::{ResolvedCallSite, TsFactLookup};
-use crate::codebase::rules::forbidden_calls::site_source_node;
+use crate::codebase::rules::call_policy::site_source_node;
 use crate::codebase::ts_source::module_facts::arguments::WriteScope;
 
 impl Owners<'_> {

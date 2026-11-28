@@ -2,7 +2,7 @@
 use super::cause::{kind_of, Cause, CauseKind};
 use super::Owners;
 use crate::codebase::dependencies::graph::{NodeId, TsFactLookup};
-use crate::codebase::rules::forbidden_calls::site_source_node;
+use crate::codebase::rules::call_policy::site_source_node;
 use crate::fx::FxHashSet;
 
 impl Owners<'_> {

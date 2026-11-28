@@ -1,8 +1,14 @@
-use super::super::RULE_ID;
-use super::FunctionSelector;
+use super::FORBIDDEN_CALLS_RULE_ID as RULE_ID;
 use crate::config::v2::schema::StringOrList;
 use anyhow::{bail, Result};
 use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct FunctionSelector {
+    pub(crate) file: String,
+    pub(crate) symbol: String,
+}
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
@@ -66,7 +72,7 @@ pub(crate) fn catalog_names(selector: &CatalogSelector) -> Vec<String> {
     }
 }
 
-pub(super) fn validate_roots(roots: &[Root]) -> Result<()> {
+pub(crate) fn validate_roots(roots: &[Root]) -> Result<()> {
     for root in roots {
         match root {
             Root::Vitest(CatalogRoot {

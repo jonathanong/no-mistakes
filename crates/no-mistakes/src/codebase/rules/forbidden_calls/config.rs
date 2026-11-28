@@ -4,9 +4,8 @@ use anyhow::{bail, Result};
 use serde::Deserialize;
 
 mod arguments;
+pub(super) use super::super::call_policy::root::{validate_roots, FunctionSelector, Root};
 pub(super) use arguments::{ArgumentConditions, ArgumentPredicate, Literal, UnknownArguments};
-mod root;
-pub(super) use root::{catalog_names, PlaywrightRoot, Root};
 
 #[derive(Debug, Deserialize, Default)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
@@ -91,13 +90,6 @@ pub(super) struct ModuleExportSelector {
     pub(super) module: String,
     pub(super) export: String,
 }
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(super) struct FunctionSelector {
-    pub(super) file: String,
-    pub(super) symbol: String,
-}
-
 pub(in crate::codebase::rules) fn validate(options: &Options) -> Result<()> {
     if options.roots.is_empty() {
         bail!("{RULE_ID}: each application requires at least one options.roots selector");
@@ -108,7 +100,7 @@ pub(in crate::codebase::rules) fn validate(options: &Options) -> Result<()> {
     if options.max_depth == Some(0) {
         bail!("{RULE_ID}: maxDepth must be greater than zero");
     }
-    root::validate_roots(&options.roots)?;
+    validate_roots(&options.roots)?;
     if let Some(exclude_roots) = &options.exclude_roots {
         let patterns = exclude_roots.values();
         if patterns.is_empty() || patterns.iter().any(|pattern| pattern.trim().is_empty()) {

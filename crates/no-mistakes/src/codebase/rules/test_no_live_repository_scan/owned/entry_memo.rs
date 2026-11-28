@@ -1,7 +1,7 @@
 //! Caller-entry walks, once per symbol for the run.
 use super::Owners;
 use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite};
-use crate::codebase::rules::forbidden_calls::site_source_node;
+use crate::codebase::rules::call_policy::site_source_node;
 use crate::fx::{FxHashMap, FxHashSet};
 
 #[derive(Default)]

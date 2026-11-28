@@ -12,7 +12,7 @@ mod registry;
 mod requires;
 mod subprocess;
 use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
-use super::forbidden_calls::{expand_roots, site_source_node, SharedRoots};
+use super::call_policy::{expand_roots, site_source_node, SharedRoots};
 use crate::codebase::dependencies::graph::DepGraph;
 use crate::codebase::ts_source::module_facts::arguments::PathAnchor;
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig};

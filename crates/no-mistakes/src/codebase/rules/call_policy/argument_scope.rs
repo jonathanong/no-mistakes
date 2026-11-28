@@ -12,7 +12,7 @@ pub struct ArgumentFactScope {
     filters: Option<Vec<Arc<RulePathFilter>>>,
 }
 
-pub(super) fn requires_arguments(application: &RuleDef) -> bool {
+pub(crate) fn requires_arguments(application: &RuleDef) -> bool {
     application
         .options
         .get("targets")
@@ -54,13 +54,13 @@ fn for_config(root: &Path, config: &NoMistakesConfig) -> Option<Arc<ArgumentFact
     // from every graph file: a write in a file its `include` removes (a Vitest
     // setup file) still changes what an enumeration reads, so it is unfiltered.
     if !config
-        .rule_applications(crate::codebase::rules::test_no_live_repository_scan::RULE_ID)
+        .rule_applications(super::TEST_NO_LIVE_REPOSITORY_SCAN_RULE_ID)
         .is_empty()
     {
         return Some(Arc::new(ArgumentFactScope { filters: None }));
     }
     let mut applications = config
-        .rule_applications(super::RULE_ID)
+        .rule_applications(super::FORBIDDEN_CALLS_RULE_ID)
         .into_iter()
         .filter(|application| requires_arguments(application))
         .collect::<Vec<_>>();

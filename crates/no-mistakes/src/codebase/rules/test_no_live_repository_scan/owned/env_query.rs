@@ -1,6 +1,6 @@
 use super::{env, path_provenance, Owners};
 use crate::codebase::dependencies::graph::{ResolvedCallSite, TsFactLookup};
-use crate::codebase::rules::forbidden_calls::site_source_node;
+use crate::codebase::rules::call_policy::site_source_node;
 
 impl Owners<'_> {
     pub(super) fn overlapping_env(

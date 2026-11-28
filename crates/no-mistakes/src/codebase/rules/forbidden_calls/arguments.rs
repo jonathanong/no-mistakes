@@ -1,26 +1,6 @@
 use super::config::{ArgumentConditions, ArgumentPredicate, Literal};
+pub(crate) use super::super::call_policy::call_argument_values as for_call;
 use crate::codebase::ts_source::module_facts::arguments::{ArgumentValue, ArgumentValues};
-
-pub(crate) fn for_call(
-    facts: &crate::codebase::ts_source::facts::TsFileFacts,
-    offset: u32,
-) -> Option<&ArgumentValues> {
-    // Recovered syntax and failed semantic ownership cannot prove a predicate.
-    if facts.operational_error.is_some() || facts.parse_error.is_some() || facts.fatal_parse_error {
-        return None;
-    }
-    let module = facts.module_bindings.as_deref()?;
-    // The fact owner withholds argument proofs for binding-unsafe diagnostics;
-    // an unrelated opaque module load does not invalidate these recorded facts.
-    if !module
-        .diagnostics
-        .iter()
-        .all(crate::codebase::ts_source::module_facts::argument_safe_diagnostic)
-    {
-        return None;
-    }
-    module.call_arguments.as_deref()?.get(&offset)
-}
 
 #[derive(Debug, PartialEq, Eq)]
 pub(super) enum Match {

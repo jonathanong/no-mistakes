@@ -1,9 +1,18 @@
 //! Root selection shared with sibling call-graph rules.
-use super::config::Options;
+use super::root::{validate_roots, Root};
+use super::FORBIDDEN_CALLS_RULE_ID as RULE_ID;
 use crate::codebase::dependencies::graph::{DepGraph, NodeId};
 use crate::config::v2::schema::StringOrList;
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
+use serde::Deserialize;
 use std::path::{Path, PathBuf};
+
+#[derive(Debug, Deserialize, Default)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+struct RootOptions {
+    roots: Vec<Root>,
+    exclude_roots: Option<StringOrList>,
+}
 
 pub(crate) struct SharedRoots<'a> {
     pub rule: &'a str,
@@ -27,14 +36,24 @@ pub(crate) fn expand_roots(request: SharedRoots<'_>) -> Result<(Vec<NodeId>, Vec
     if let Some(exclude) = request.exclude_roots {
         mapping.insert("excludeRoots".into(), serde_yaml::to_value(exclude)?);
     }
-    let options: Options = serde_yaml::from_value(mapping.into())
+    let options: RootOptions = serde_yaml::from_value(mapping.into())
         .with_context(|| format!("{}: invalid roots", request.rule))?;
-    super::config::validate(&options)?;
+    if options.roots.is_empty() {
+        bail!("{RULE_ID}: each application requires at least one options.roots selector");
+    }
+    validate_roots(&options.roots)?;
+    if let Some(exclude_roots) = &options.exclude_roots {
+        let patterns = exclude_roots.values();
+        if patterns.is_empty() || patterns.iter().any(|pattern| pattern.trim().is_empty()) {
+            bail!("{RULE_ID}: excludeRoots must contain non-empty glob patterns");
+        }
+    }
     super::roots::expand_with_files(super::roots::ExpandRequest {
         rule: request.rule,
         allow_sourceless: true,
         root: request.root,
-        options: &options,
+        roots: &options.roots,
+        exclude_roots: options.exclude_roots.as_ref(),
         graph: request.graph,
         vitest: request.vitest,
         playwright: None,
