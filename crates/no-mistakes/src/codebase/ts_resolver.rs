@@ -1,12 +1,5 @@
 pub use no_mistakes_ts_analysis::ts_resolver::*;
 
-#[cfg(test)]
-use std::collections::{BTreeSet, HashSet};
-#[cfg(test)]
-use std::path::{Path, PathBuf};
-#[cfg(test)]
-use std::sync::Arc;
-
 #[path = "ts_resolver/declarations.rs"]
 pub(crate) mod declarations;
 

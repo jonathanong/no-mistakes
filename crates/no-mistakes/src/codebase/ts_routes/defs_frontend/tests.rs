@@ -1,4 +1,5 @@
 use super::*;
+use std::path::{Path, PathBuf};
 
 #[test]
 fn root_page_maps_to_slash() {

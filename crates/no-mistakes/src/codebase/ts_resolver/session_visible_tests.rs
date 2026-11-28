@@ -1,4 +1,6 @@
 use super::*;
+use std::collections::HashSet;
+use std::path::PathBuf;
 
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

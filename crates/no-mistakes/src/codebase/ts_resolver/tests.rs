@@ -1,4 +1,5 @@
 use super::*;
+use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 
 #[test]

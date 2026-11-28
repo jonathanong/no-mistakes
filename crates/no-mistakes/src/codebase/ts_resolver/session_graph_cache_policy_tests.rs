@@ -1,4 +1,5 @@
 use super::*;
+use std::path::PathBuf;
 
 fn queue_policy_fixture() -> (
     PathBuf,

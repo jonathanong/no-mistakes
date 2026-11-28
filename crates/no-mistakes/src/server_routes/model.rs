@@ -1,5 +1,3 @@
-#[cfg(test)]
-pub(crate) use crate::codebase::ts_source::facts::react_analysis::server::{Binding, MountSite};
 pub(crate) use crate::codebase::ts_source::facts::react_analysis::server::{
     FileFacts, ImportBinding, RouteSite,
 };

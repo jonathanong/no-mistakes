@@ -12,3 +12,6 @@ include!("workspace_resolution/path.rs");
 #[cfg(any(test, feature = "test-instrumentation"))]
 #[doc(hidden)]
 pub mod test_helpers;
+
+#[cfg(test)]
+mod tests;

@@ -1,15 +1,14 @@
 <!-- cspell:ignore rustc -->
 ## Workspace crates
-- `crates/no-mistakes` — CLI, N-API library, graph, and rules (`pub use no_mistakes_invocation as invocation;`; `codebase::postgres` re-exports the postgres-sql crate).
-- `crates/no-mistakes-invocation` — invocation locking, deadlines, watchdogs, process trees, and `macos_invocation` (inverted diagnostics hooks in `hooks.rs`).
-- `crates/no-mistakes-postgres-sql` — pure PostgreSQL SQL parsing, statement/DML/lock/bound facts, identifiers (no `no-mistakes` dep; `CatalogLifecycleLookup` + `source::record_global_rayon_threads`).
-- `crates/no-mistakes-rule-kernel` — shared rule findings, contexts, suppression, source access, diagnostics, path matching, and validator types. The facade owns family registration and prepared inputs.
-- `crates/no-mistakes-ts-facts` — pure OXC TS parsing, module facts, and value-flow extraction (must not depend on `no-mistakes`; diagnostics via `hooks`).
-- `crates/no-mistakes-ts-analysis` — TypeScript/JS module resolution (`ts_resolver`, `workspace_resolution`), routes/resources/queues/symbols/HTTP/process-spawn/tRPC/fetch/server-route extraction, comment/bound-comment scanning, and `PathInterner` (sits above `no-mistakes-ts-facts`; borrows request-scoped sources/sessions via `SourceAccess`, `ResolverSession`, and `hooks`).
+- `crates/no-mistakes` — CLI, N-API, graph, and rules (`invocation`, `codebase::postgres`, `ts_resolver`, etc. re-export the extracted crates).
+- `crates/no-mistakes-invocation` — invocation locking, deadlines, watchdogs, process trees, and `macos_invocation` (`hooks.rs`).
+- `crates/no-mistakes-postgres-sql` — pure PostgreSQL SQL parsing, statement/DML/lock/bound facts, and identifiers (no `no-mistakes` dep).
+- `crates/no-mistakes-rule-kernel` — shared rule findings, contexts, suppression, source access, diagnostics, path matching, and validator types.
+- `crates/no-mistakes-ts-facts` — pure OXC TS parsing, module facts, and value-flow extraction (no `no-mistakes` dep; `hooks`).
+- `crates/no-mistakes-ts-analysis` — TS/JS resolution, routes/resources/queues/symbols/HTTP/spawn/tRPC/fetch/server-route extraction, comment scanning, and `PathInterner` (`SourceAccess`, `ResolverSession`, `hooks`).
 ## Performance Guidelines
 Core check/evaluator optimizations must also follow [the crate rules](no-mistakes/AGENTS.md).
 ### Core architecture invariants
-
 - Keep Rust repository Markdown inputs in the [CI input folders](../docs/development/ci-builds.md#rust-markdown-inputs).
 - Discover files once per invocation, parse TS/JS once for the requested `TsFactPlan`, and share `TsFactMap`.
 - In-memory only: use invocation-scoped fact maps, resolver/traversal caches,

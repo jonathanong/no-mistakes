@@ -53,8 +53,6 @@ use no_mistakes_ts_analysis::comment_parser::{
     comment_body, is_word_char, leading_comment_text, line_comment_start, CommentKind,
     LineCommentScanState,
 };
-#[cfg(test)]
-use no_mistakes_ts_analysis::comment_parser::{html_directive_comment, html_leading_comment_body};
 
 include!("discovery.rs");
 include!("discovery_preserve.rs");

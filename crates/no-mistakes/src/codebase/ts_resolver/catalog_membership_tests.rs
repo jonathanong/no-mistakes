@@ -3,6 +3,9 @@ use super::*;
 use crate::codebase::ts_source::{FileInventory, SourceStore};
 use crate::codebase::workspaces::IndexedWorkspaceMap;
 use std::cell::Cell;
+use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 fn fixture(name: &str) -> PathBuf {
     normalize_path(
