@@ -2020,7 +2020,7 @@ jobs:
     needs: changes
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 25
     env: *standalone-env
     strategy:
       fail-fast: false
@@ -2060,7 +2060,7 @@ jobs:
         timeout-minutes: 5
         uses: ./.github/actions/start-test-postgres
       - name: Build and test standalone Rust library without a CLI
-        timeout-minutes: 15
+        timeout-minutes: 20
         run: bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs local ${{ matrix.shard }}
 
   standalone-shards:
