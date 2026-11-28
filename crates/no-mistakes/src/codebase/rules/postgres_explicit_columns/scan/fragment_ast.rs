@@ -1,13 +1,16 @@
 use no_mistakes_postgres_sql::idents::{ident_key, object_name_key};
 use sqlparser::ast::{
-    FromTable, Query, Select, SetExpr, Statement, TableFactor, TableObject, TableWithJoins,
+    Query, Select, SetExpr, Statement, TableFactor, TableObject, TableWithJoins,
     UpdateTableFromKind,
 };
 
 mod exprs;
 mod items;
 use exprs::walk_subqueries;
-use items::{collect_items, collect_returning, collect_table_expr, target_rel, visit_join_constraint};
+use items::{
+    collect_delete, collect_items, collect_returning, collect_table_expr, target_rel,
+    visit_join_constraint,
+};
 
 pub(super) const SYNTHETIC_TARGET: &str = "__nm_frag_target";
 
@@ -73,17 +76,13 @@ fn collect_update(update: &sqlparser::ast::Update, ctes: &[String], out: &mut Ve
         push_factor(&join.relation, ctes, &mut peers, out);
         visit_join_constraint(&join.join_operator, ctes, out);
     }
-    collect_returning(&target, &peers, ctes, update.returning.as_deref(), out);
-}
-
-fn collect_delete(delete: &sqlparser::ast::Delete, ctes: &[String], out: &mut Vec<FragmentStar>) {
-    let first = match &delete.from {
-        FromTable::WithFromKeyword(t) | FromTable::WithoutKeyword(t) => t.first(),
-    };
-    if let Some(target) = first.and_then(|table| target_rel(&table.relation)) {
-        let peers = collect_rels(delete.using.as_deref().unwrap_or_default(), ctes, out);
-        collect_returning(&target, &peers, ctes, delete.returning.as_deref(), out);
+    for assignment in &update.assignments {
+        walk_subqueries(&assignment.value, ctes, out);
     }
+    if let Some(selection) = &update.selection {
+        walk_subqueries(selection, ctes, out);
+    }
+    collect_returning(&target, &peers, ctes, update.returning.as_deref(), out);
 }
 
 pub(super) fn collect_query(
@@ -106,6 +105,13 @@ pub(super) fn collect_query(
         }
     }
     collect_set(&query.body, &ctes, in_exists, out);
+    if let Some(order_by) = &query.order_by {
+        if let sqlparser::ast::OrderByKind::Expressions(exprs) = &order_by.kind {
+            for expr in exprs {
+                walk_subqueries(&expr.expr, &ctes, out);
+            }
+        }
+    }
 }
 
 fn collect_set(expr: &SetExpr, ctes: &[String], in_exists: bool, out: &mut Vec<FragmentStar>) {
@@ -140,7 +146,7 @@ fn collect_select(select: &Select, ctes: &[String], in_exists: bool, out: &mut V
     }
 }
 
-fn collect_rels(from: &[TableWithJoins], ctes: &[String], out: &mut Vec<FragmentStar>) -> Vec<Rel> {
+pub(super) fn collect_rels(from: &[TableWithJoins], ctes: &[String], out: &mut Vec<FragmentStar>) -> Vec<Rel> {
     let mut rels = Vec::new();
     for table in from {
         push_factor(&table.relation, ctes, &mut rels, out);

@@ -48,16 +48,15 @@ pub(super) fn emit_bare(
         return;
     }
     for rel in rels {
-        if rel.is_local_derived {
-            continue;
+        if !rel.is_local_derived {
+            out.push(FragmentStar {
+                returning,
+                qualifier: None,
+                relation: (rel.table != SYNTHETIC_TARGET).then(|| rel.table.clone()),
+                within_function: func.clone(),
+                line,
+            });
         }
-        out.push(FragmentStar {
-            returning,
-            qualifier: None,
-            relation: (rel.table != SYNTHETIC_TARGET).then(|| rel.table.clone()),
-            within_function: func.clone(),
-            line,
-        });
     }
 }
 
@@ -121,19 +120,20 @@ pub(super) fn collect_returning(
 }
 
 pub(super) fn target_rel(factor: &TableFactor) -> Option<Rel> {
-    match factor {
-        TableFactor::Table {
-            name,
-            alias,
-            args: None,
-            ..
-        } => Some(Rel {
-            table: object_name_key(name),
-            alias: alias.as_ref().map(|a| ident_key(&a.name)),
-            is_local_derived: false,
-        }),
-        _ => None,
-    }
+    let TableFactor::Table {
+        name,
+        alias,
+        args: None,
+        ..
+    } = factor
+    else {
+        return None;
+    };
+    Some(Rel {
+        table: object_name_key(name),
+        alias: alias.as_ref().map(|a| ident_key(&a.name)),
+        is_local_derived: false,
+    })
 }
 
 pub(super) fn visit_join_constraint(
@@ -141,24 +141,22 @@ pub(super) fn visit_join_constraint(
     ctes: &[String],
     out: &mut Vec<FragmentStar>,
 ) {
-    let constraint = match op {
-        JoinOperator::Join(c)
-        | JoinOperator::Inner(c)
-        | JoinOperator::Left(c)
-        | JoinOperator::LeftOuter(c)
-        | JoinOperator::Right(c)
-        | JoinOperator::RightOuter(c)
-        | JoinOperator::FullOuter(c)
-        | JoinOperator::LeftSemi(c)
-        | JoinOperator::RightSemi(c)
-        | JoinOperator::LeftAnti(c)
-        | JoinOperator::RightAnti(c)
-        | JoinOperator::StraightJoin(c) => Some(c),
-        _ => None,
+    let (JoinOperator::Join(JoinConstraint::On(expr))
+    | JoinOperator::Inner(JoinConstraint::On(expr))
+    | JoinOperator::Left(JoinConstraint::On(expr))
+    | JoinOperator::LeftOuter(JoinConstraint::On(expr))
+    | JoinOperator::Right(JoinConstraint::On(expr))
+    | JoinOperator::RightOuter(JoinConstraint::On(expr))
+    | JoinOperator::FullOuter(JoinConstraint::On(expr))
+    | JoinOperator::LeftSemi(JoinConstraint::On(expr))
+    | JoinOperator::RightSemi(JoinConstraint::On(expr))
+    | JoinOperator::LeftAnti(JoinConstraint::On(expr))
+    | JoinOperator::RightAnti(JoinConstraint::On(expr))
+    | JoinOperator::StraightJoin(JoinConstraint::On(expr))) = op
+    else {
+        return;
     };
-    if let Some(JoinConstraint::On(expr)) = constraint {
-        walk_subqueries(expr, ctes, out);
-    }
+    walk_subqueries(expr, ctes, out);
 }
 
 pub(super) fn collect_table_expr(
@@ -169,10 +167,10 @@ pub(super) fn collect_table_expr(
     let Some(name) = &table.table_name else {
         return;
     };
-    let table_name = match &table.schema_name {
-        Some(schema) => format!("{}.{}", ident_key(schema), ident_key(name)),
-        None => ident_key(name),
-    };
+    let table_name = table.schema_name.as_ref().map_or_else(
+        || ident_key(name),
+        |schema| format!("{}.{}", ident_key(schema), ident_key(name)),
+    );
     if !ctes.iter().any(|cte| cte.eq_ignore_ascii_case(&table_name)) {
         out.push(FragmentStar {
             returning: false,
@@ -182,4 +180,21 @@ pub(super) fn collect_table_expr(
             line: 1,
         });
     }
+}
+
+pub(super) fn collect_delete(
+    delete: &sqlparser::ast::Delete,
+    ctes: &[String],
+    out: &mut Vec<FragmentStar>,
+) {
+    let tables = match &delete.from {
+        sqlparser::ast::FromTable::WithFromKeyword(t)
+        | sqlparser::ast::FromTable::WithoutKeyword(t) => t,
+    };
+    let Some(target) = tables.first().and_then(|table| target_rel(&table.relation)) else {
+        return;
+    };
+    let peers = super::collect_rels(delete.using.as_deref().unwrap_or_default(), ctes, out);
+    delete.selection.iter().for_each(|s| walk_subqueries(s, ctes, out));
+    collect_returning(&target, &peers, ctes, delete.returning.as_deref(), out);
 }

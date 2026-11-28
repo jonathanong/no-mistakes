@@ -59,3 +59,62 @@ export function fromBadTuple(table: (typeof BAD_TUPLE)[number], id: string) {
         vec!["SELECT * FROM sql_placeholder_1 WHERE id = $1"]
     );
 }
+
+#[test]
+fn alias_const_array_parameterized_tag_and_reassigned_helper() {
+    let source = r#"
+import { query } from "@example/db";
+import sql from "sql-template-strings";
+
+const NAMES = ["entries", "audit_view"] as const;
+const ALIAS = NAMES;
+
+export function fromAliasedArray(table: (typeof ALIAS)[number], id: string) {
+  return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
+}
+
+export function parameterizedStarValue(filter: any) {
+  const q = sql`SELECT ${"*"} FROM entries`;
+  if (filter) q.append(filter);
+  q.append(sql` UNION ALL SELECT ${"*"} FROM entries`);
+  return query(q);
+}
+
+export function reassignedHelper(other: () => any) {
+  let make = () => {
+    const q = sql`SELECT * FROM entries`;
+    return q;
+  };
+  make = other;
+  return query(make());
+}
+"#;
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let facts = extract_embedded_sql_from_source(Path::new("src/aliases.ts"), source, &options);
+    assert_eq!(facts.calls.len(), 3);
+    let frags = |idx: usize| -> Vec<String> {
+        facts
+            .call_fragments
+            .get(&facts.call_spans[idx])
+            .cloned()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|f| f.sql)
+            .collect()
+    };
+    assert_eq!(
+        frags(0),
+        vec![
+            "SELECT * FROM entries WHERE id = $1",
+            "SELECT * FROM audit_view WHERE id = $1",
+        ]
+    );
+    assert_eq!(
+        frags(1),
+        vec![
+            "SELECT $1 FROM entries",
+            " UNION ALL SELECT sql_placeholder_1 FROM entries",
+        ]
+    );
+    assert!(frags(2).is_empty());
+}

@@ -1,5 +1,6 @@
 use super::super::fragment_ast::FragmentStar;
 use super::context::extract_context_from_tokens;
+use super::token_scopes::{enclosing_function, scope_context};
 use super::{is_kw, word_value, FragmentContext};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
@@ -45,8 +46,10 @@ pub(super) fn extract_stars(
             }
             Token::Mul if !in_exists && (clause_returning || clause_select) => {
                 let line = (token.span.start.line as usize).max(1);
+                let scoped = scope_context(tokens, i, &ctx);
+                let active = scoped.as_ref().unwrap_or(&ctx);
                 if prev_code.is_some_and(|t| matches!(t.token, Token::Period)) {
-                    push_qualified(tokens, i, prev_prev, &ctx, clause_returning, line, out);
+                    push_qualified(tokens, i, prev_prev, active, clause_returning, line, out);
                 } else if prev_code.is_none()
                     || prev_code.is_some_and(|t| {
                         matches!(t.token, Token::Comma | Token::LParen)
@@ -55,7 +58,7 @@ pub(super) fn extract_stars(
                             || is_kw(t, Keyword::RETURNING)
                     })
                 {
-                    push_bare(tokens, i, &ctx, clause_returning, line, out);
+                    push_bare(tokens, i, active, clause_returning, line, out);
                 }
             }
             _ => {
@@ -135,45 +138,36 @@ fn push_bare(
     if func.as_deref().is_some_and(|f| f.eq_ignore_ascii_case("count")) {
         return;
     }
-    let relation = if returning {
-        ctx.mutation_target.as_ref().map(|(t, _)| t.clone())
-    } else if ctx.from_relations.len() == 1 {
-        let (t, _) = &ctx.from_relations[0];
-        if ctx.ctes.iter().any(|c| c.eq_ignore_ascii_case(t)) {
-            return;
-        }
-        Some(t.clone())
-    } else {
-        None
-    };
-    out.push(FragmentStar {
-        returning,
-        qualifier: None,
-        relation,
-        within_function: func,
-        line,
-    });
-}
-
-fn enclosing_function(tokens: &[TokenWithSpan], star_index: usize) -> Option<String> {
-    let mut depth = 0usize;
-    for i in (0..star_index).rev() {
-        match &tokens[i].token {
-            Token::RParen => depth += 1,
-            Token::LParen => {
-                if depth == 0 {
-                    for j in (0..i).rev() {
-                        if matches!(tokens[j].token, Token::Whitespace(_)) {
-                            continue;
-                        }
-                        return word_value(&tokens[j]);
-                    }
-                    return None;
-                }
-                depth -= 1;
-            }
-            _ => {}
-        }
+    if returning {
+        out.push(FragmentStar {
+            returning: true,
+            qualifier: None,
+            relation: ctx.mutation_target.as_ref().map(|(t, _)| t.clone()),
+            within_function: func,
+            line,
+        });
+        return;
     }
-    None
+    if ctx.from_relations.is_empty() {
+        out.push(FragmentStar {
+            returning: false,
+            qualifier: None,
+            relation: None,
+            within_function: func,
+            line,
+        });
+        return;
+    }
+    for (t, _) in &ctx.from_relations {
+        if !t.contains('.') && ctx.ctes.iter().any(|c| c.eq_ignore_ascii_case(t)) {
+            continue;
+        }
+        out.push(FragmentStar {
+            returning: false,
+            qualifier: None,
+            relation: Some(t.clone()),
+            within_function: func.clone(),
+            line,
+        });
+    }
 }

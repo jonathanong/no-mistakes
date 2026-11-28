@@ -103,6 +103,9 @@ fn consume_clause_relation(
             return next_i;
         }
     } else if ends_from_list(token) {
+        if is_kw(token, Keyword::SELECT) || is_kw(token, Keyword::DELETE) {
+            *in_with = false;
+        }
         *in_from = false;
     }
     index

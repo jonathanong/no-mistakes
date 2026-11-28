@@ -27,6 +27,14 @@ pub(super) struct CallFragmentState {
 }
 
 impl ScopeVisitor<'_> {
+    pub(super) fn clear_builder_fragment(&mut self, scope_index: usize, name: &str) {
+        self.call_fragment_state
+            .builders
+            .remove(&(scope_index, name.to_string()));
+        let key = self.plain_key(name);
+        self.call_fragment_state.function_returns.remove(&key);
+    }
+
     pub(super) fn note_builder_init(
         &mut self,
         scope_index: usize,
@@ -176,22 +184,7 @@ impl ScopeVisitor<'_> {
         if trace.prefix.is_none() {
             trace.prefix = context;
         }
-        extend_prefix(trace, &added, straight_line);
+        partial::extend_prefix(trace, &added, straight_line);
         trace.fragments.extend(added);
-    }
-}
-
-pub(super) fn extend_prefix(
-    trace: &mut BuilderTrace,
-    added: &[CallSqlFragment],
-    straight_line: bool,
-) {
-    if !straight_line || added.len() != 1 {
-        return;
-    }
-    if let Some(prefix) = &mut trace.prefix {
-        if prefix.len() + added[0].sql.len() <= MAX_PREFIX_BYTES {
-            prefix.push_str(&added[0].sql);
-        }
     }
 }

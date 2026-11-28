@@ -105,6 +105,7 @@ pub(super) fn record_declarator(
             // Conflicting initializer sites do not identify one statement.
             let binding = scope.get_mut(ident.name.as_str()).unwrap();
             clear_binding(binding);
+            visitor.clear_builder_fragment(scope_index, ident.name.as_str());
             return;
         }
         scope.insert(

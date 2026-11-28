@@ -71,27 +71,35 @@ fn inline_strings(ty: &TSType<'_>) -> Option<Vec<String>> {
 }
 
 impl ClosedValues {
-    pub(in crate::codebase::postgres::embedded::walk) fn push(&mut self) {
-        self.frames.push(FxHashMap::default());
-        self.relation_frames.push(FxHashMap::default());
-        self.const_literal_arrays.push(FxHashMap::default());
-        self.type_frames.push(FxHashMap::default());
-    }
-    pub(in crate::codebase::postgres::embedded::walk) fn pop(&mut self) {
-        self.frames.pop();
-        self.relation_frames.pop();
-        self.const_literal_arrays.pop();
-        self.type_frames.pop();
-    }
-    pub(super) fn remove_at(&mut self, index: usize, name: &str) {
-        if let Some(frame) = self.frames.get_mut(index) {
-            frame.remove(name);
+    pub(super) fn copy_const_alias(
+        &mut self,
+        from_scope: usize,
+        to_scope: usize,
+        from: &str,
+        to: &str,
+        unannotated: bool,
+    ) {
+        if let Some(arms) = self
+            .relation_frames
+            .get(from_scope)
+            .and_then(|f| f.get(from))
+            .cloned()
+        {
+            if let Some(frame) = self.relation_frames.get_mut(to_scope) {
+                frame.insert(to.to_string(), arms);
+            }
         }
-        if let Some(frame) = self.relation_frames.get_mut(index) {
-            frame.remove(name);
-        }
-        if let Some(frame) = self.const_literal_arrays.get_mut(index) {
-            frame.remove(name);
+        if unannotated {
+            if let Some(vals) = self
+                .const_literal_arrays
+                .get(from_scope)
+                .and_then(|f| f.get(from))
+                .cloned()
+            {
+                if let Some(frame) = self.const_literal_arrays.get_mut(to_scope) {
+                    frame.insert(to.to_string(), vals);
+                }
+            }
         }
     }
     pub(in crate::codebase::postgres::embedded::walk) fn roots(
@@ -129,6 +137,13 @@ impl ClosedValues {
 }
 
 impl ScopeVisitor<'_> {
+    pub(in crate::codebase::postgres::embedded::walk) fn is_closed_relation_type(
+        &self,
+        ty: &TSType<'_>,
+    ) -> bool {
+        strings(self, ty, 8).is_some()
+    }
+
     pub(in crate::codebase::postgres::embedded::walk) fn note_closed_parameter(
         &mut self,
         param: &FormalParameter<'_>,

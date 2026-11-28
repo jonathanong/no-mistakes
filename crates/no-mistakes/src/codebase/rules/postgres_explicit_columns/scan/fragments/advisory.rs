@@ -84,13 +84,13 @@ pub(super) fn resolved_relations(star: &FragmentStar, ctx: &FragmentContext) -> 
     }
     if star.returning {
         if let Some(q) = &star.qualifier {
-            return ctx
+            let candidates: Vec<_> = ctx
                 .mutation_target
                 .iter()
                 .chain(ctx.from_relations.iter())
-                .find(|(t, a)| a.as_deref() == Some(q.as_str()) || t == q)
-                .map(|(t, _)| vec![t.clone()])
-                .unwrap_or_default();
+                .cloned()
+                .collect();
+            return find_qualified(&candidates, q).into_iter().collect();
         }
         return ctx
             .mutation_target
@@ -99,17 +99,8 @@ pub(super) fn resolved_relations(star: &FragmentStar, ctx: &FragmentContext) -> 
             .unwrap_or_default();
     }
     if let Some(q) = &star.qualifier {
-        if let Some((t, _)) = ctx
-            .from_relations
-            .iter()
-            .find(|(_, a)| a.as_deref() == Some(q.as_str()))
-            .or_else(|| {
-                ctx.from_relations.iter().find(|(t, a)| {
-                    a.is_none() && (t == q || t.rsplit('.').next() == Some(q.as_str()))
-                })
-            })
-        {
-            return vec![t.clone()];
+        if let Some(table) = find_qualified(&ctx.from_relations, q) {
+            return vec![table];
         }
         if ctx.ctes.iter().any(|cte| cte.eq_ignore_ascii_case(q)) {
             return vec![q.clone()];
@@ -117,6 +108,18 @@ pub(super) fn resolved_relations(star: &FragmentStar, ctx: &FragmentContext) -> 
         return Vec::new();
     }
     ctx.from_relations.iter().map(|(t, _)| t.clone()).collect()
+}
+
+fn find_qualified(relations: &[(String, Option<String>)], q: &str) -> Option<String> {
+    relations
+        .iter()
+        .find(|(_, a)| a.as_deref() == Some(q))
+        .or_else(|| {
+            relations
+                .iter()
+                .find(|(t, a)| a.is_none() && (t == q || t.rsplit('.').next() == Some(q)))
+        })
+        .map(|(t, _)| t.clone())
 }
 
 pub(super) fn record_advisory(

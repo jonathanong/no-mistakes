@@ -60,28 +60,18 @@ pub(super) fn note_const_relation_and_array(
     name: &str,
 ) {
     if let Expression::Identifier(id) = unwrap_ts_wrappers(init) {
-        if let Some(arms) = visitor
+        if let Some(i) = visitor
             .scopes
             .iter()
             .rposition(|frame| frame.contains_key(id.name.as_str()))
-            .and_then(|i| {
-                visitor
-                    .literal_objects
-                    .closed
-                    .relation_frames
-                    .get(i)?
-                    .get(id.name.as_str())
-                    .cloned()
-            })
         {
-            if let Some(frame) = visitor
-                .literal_objects
-                .closed
-                .relation_frames
-                .get_mut(scope)
-            {
-                frame.insert(name.to_string(), arms);
-            }
+            visitor.literal_objects.closed.copy_const_alias(
+                i,
+                scope,
+                id.name.as_str(),
+                name,
+                type_annotation.is_none(),
+            );
         }
     }
     if let Some(values) = literal_array_values(type_annotation, init) {
@@ -183,13 +173,4 @@ fn as_const_array_literals(mut expr: &Expression<'_>) -> Option<Vec<String>> {
         }
     }
     (!values.is_empty()).then_some(values)
-}
-
-impl ScopeVisitor<'_> {
-    pub(in crate::codebase::postgres::embedded::walk) fn is_closed_relation_type(
-        &self,
-        ty: &TSType<'_>,
-    ) -> bool {
-        super::types::strings(self, ty, 8).is_some()
-    }
 }

@@ -7,10 +7,10 @@ use oxc_span::GetSpan;
 
 mod concat;
 mod relations;
-use concat::{collect_addition, partial_atom, partial_template, push_clean};
+use concat::{collect_addition, partial_atom, partial_parameterized_template, push_clean};
 use relations::partial_templates;
 pub(crate) use relations::publish_call_fragments;
-pub(super) use relations::{apply_relation_append, closed_relation_names};
+pub(super) use relations::{apply_relation_append, closed_relation_names, extend_prefix};
 
 pub(super) fn expr_fragments(
     visitor: &ScopeVisitor<'_>,
@@ -120,7 +120,7 @@ fn collect(
                 .imported_sql_tags()
                 .parameterizes_all(&tagged.tag);
             let sqls = if parameterized {
-                vec![partial_template(visitor, &tagged.quasi, depth - 1)]
+                vec![partial_parameterized_template(&tagged.quasi)]
             } else {
                 partial_templates(visitor, &tagged.quasi, depth - 1)
             };

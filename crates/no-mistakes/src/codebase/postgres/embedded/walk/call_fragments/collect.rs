@@ -1,6 +1,6 @@
 use super::super::resolve::compose;
 use super::super::ScopeVisitor;
-use super::{extend_prefix, partial};
+use super::partial;
 use crate::codebase::postgres::embedded::{
     first_call_argument, tags, CallSqlFragment, EmbeddedSqlCall,
 };
@@ -46,7 +46,7 @@ impl ScopeVisitor<'_> {
                     return;
                 }
                 let trace = self.call_fragment_state.builders.entry(key).or_default();
-                extend_prefix(
+                partial::extend_prefix(
                     trace,
                     &added,
                     self.control_depth == 0 && self.loop_depth == 0,
@@ -54,13 +54,11 @@ impl ScopeVisitor<'_> {
                 trace.fragments.extend(added);
             }
             AssignmentOperator::Assign => {
-                self.call_fragment_state.builders.remove(&key);
+                self.clear_builder_fragment(scope_index, id.name.as_str());
                 let line = byte_offset_to_line(self.source, assign.span.start as usize);
                 self.note_builder_init(scope_index, id.name.as_str(), &assign.right, None, line);
             }
-            _ => {
-                self.call_fragment_state.builders.remove(&key);
-            }
+            _ => self.clear_builder_fragment(scope_index, id.name.as_str()),
         }
     }
 

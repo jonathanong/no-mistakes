@@ -7,6 +7,7 @@ use sqlparser::tokenizer::{Token, TokenWithSpan, Tokenizer};
 mod context;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
+mod token_scopes;
 mod tokens;
 use context::extract_context_from_tokens;
 
@@ -107,7 +108,7 @@ pub(super) fn word_value(token: &TokenWithSpan) -> Option<String> {
 }
 
 fn open_clause_at_end(tokens: &[TokenWithSpan]) -> (bool, bool) {
-    let mut depth = 0usize;
+    let mut stack: Vec<(bool, bool)> = Vec::new();
     let mut select = false;
     let mut returning = false;
     for token in tokens {
@@ -115,9 +116,17 @@ fn open_clause_at_end(tokens: &[TokenWithSpan]) -> (bool, bool) {
             continue;
         }
         match &token.token {
-            Token::LParen => depth += 1,
-            Token::RParen => depth = depth.saturating_sub(1),
-            _ if depth > 0 => {}
+            Token::LParen => {
+                stack.push((select, returning));
+                select = false;
+                returning = false;
+            }
+            Token::RParen => {
+                if let Some((prev_select, prev_returning)) = stack.pop() {
+                    select = prev_select;
+                    returning = prev_returning;
+                }
+            }
             _ if is_kw(token, Keyword::SELECT) => {
                 select = true;
                 returning = false;

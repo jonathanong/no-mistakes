@@ -50,6 +50,18 @@ fn ast_covers_dml_set_ops_table_and_nested_subqueries() {
             "WITH cte AS (SELECT id FROM entries) INSERT INTO records SELECT * FROM cte RETURNING *",
             vec![(true, Some("records"))],
         ),
+        (
+            "UPDATE narrow SET n = (SELECT count(*) FROM (SELECT * FROM wide) w) WHERE id IN (SELECT * FROM extra)",
+            vec![(false, Some("wide")), (false, Some("extra"))],
+        ),
+        (
+            "DELETE FROM narrow WHERE id IN (SELECT * FROM wide)",
+            vec![(false, Some("wide"))],
+        ),
+        (
+            "SELECT id FROM narrow ORDER BY (SELECT count(*) FROM (SELECT * FROM wide) w)",
+            vec![(false, Some("wide"))],
+        ),
     ];
     for (sql, expected) in cases {
         let stars = extract_fragment_stars(sql, None);
@@ -104,4 +116,29 @@ fn context_and_token_fallback_handle_prefixes_ctes_commas_and_subqueries() {
     );
     assert_eq!(alias_over_cte.len(), 1);
     assert_eq!(alias_over_cte[0].relation.as_deref(), Some("wide"));
+
+    let nested_open = extract_fragment_stars("* FROM wide) q", Some("SELECT id FROM (SELECT "));
+    assert_eq!(nested_open.len(), 1);
+    assert_eq!(nested_open[0].relation.as_deref(), Some("wide"));
+
+    let with_main_select = extract_fragment_stars(
+        "WITH c AS (SELECT 1) SELECT *, wide AS payload FROM wide WHERE ",
+        None,
+    );
+    assert_eq!(with_main_select.len(), 1);
+    assert_eq!(with_main_select[0].relation.as_deref(), Some("wide"));
+
+    let scoped_subquery = extract_fragment_stars(
+        "SELECT (SELECT * FROM allowed_view LIMIT 1) FROM wide WHERE ",
+        None,
+    );
+    assert_eq!(scoped_subquery.len(), 1);
+    assert_eq!(scoped_subquery[0].relation.as_deref(), Some("allowed_view"));
+
+    let multi_from = extract_fragment_stars(
+        "SELECT * FROM narrow n JOIN wide w ON n.id = w.id WHERE ",
+        None,
+    );
+    let multi_rels: Vec<_> = multi_from.iter().map(|s| s.relation.as_deref()).collect();
+    assert_eq!(multi_rels, vec![Some("narrow"), Some("wide")]);
 }

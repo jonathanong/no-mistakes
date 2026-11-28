@@ -93,7 +93,8 @@ individual SQL fragments for `*`, `alias.*`, and `RETURNING *`:
   `FROM` relation comes from a closed union of string literals (inline unions,
   local type aliases, or `(typeof TABLE_LIST)[number]`). Each union member is
   checked against the schema catalog: any base table exceeding `maxColumns` (or
-  listed in `relations`) is reported, while catalog views remain allowed.
+  listed in `relations`) is reported, while catalog views not listed in
+  `relations` remain allowed.
 - **Shared SQL constants** — string constants such as
   `const RETURNING_ALL = 'RETURNING *'` concatenated, interpolated, or appended
   into multiple statements are traced to each statement that uses them.
@@ -394,7 +395,7 @@ For a whole-row JSON payload, keep the star inside a function listed in
 
 For assembled builders, interpolated tables, and shared constants, replace `*`
 and `RETURNING *` with an explicit column list (or restrict interpolated table
-unions to views):
+unions to catalog views not listed in `relations`):
 
 ```ts
 const RETURNING_COLUMNS = "RETURNING id, status";

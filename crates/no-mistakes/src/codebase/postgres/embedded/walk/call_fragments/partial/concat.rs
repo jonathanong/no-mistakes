@@ -74,6 +74,17 @@ fn flatten_add<'a>(expr: &'a Expression<'a>, out: &mut Vec<&'a Expression<'a>>) 
     out.push(expr);
 }
 
+pub(super) fn partial_parameterized_template(template: &TemplateLiteral<'_>) -> String {
+    let mut out = String::new();
+    for (index, quasi) in template.quasis.iter().enumerate() {
+        out.push_str(&tags::quasi_text(quasi, false));
+        if template.expressions.get(index).is_some() {
+            out.push_str(&placeholders::internal_placeholder(index + 1));
+        }
+    }
+    out
+}
+
 pub(super) fn partial_template(
     visitor: &ScopeVisitor<'_>,
     template: &TemplateLiteral<'_>,
