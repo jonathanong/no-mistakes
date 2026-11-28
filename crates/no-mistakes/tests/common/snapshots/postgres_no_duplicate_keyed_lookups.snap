@@ -78,6 +78,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "rules": [
         {
           "file": "queries/check.sql",
+          "line": 104,
+          "message": "queries/check.sql:104: duplicate keyed lookup of `accounts` on `id = $1` (already looked up at line 103). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "+ (SELECT b.m FROM accounts b WHERE b.id = $1)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
           "line": 14,
           "message": "queries/check.sql:14: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 13). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
@@ -138,6 +146,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "queries/check.sql:7: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 6). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "cached_tier = (SELECT a2.tier FROM accounts a2 WHERE a2.id = o.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 81,
+          "message": "queries/check.sql:81: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 80). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT d.tier FROM accounts d WHERE d.id = o.account_id);",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 89,
+          "message": "queries/check.sql:89: duplicate keyed lookup of `accounts` on `id = s.account_id` (already looked up at line 88). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT d.tier FROM accounts d WHERE d.id = s.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 95,
+          "message": "queries/check.sql:95: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 94). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "account_tier = (SELECT b.tier FROM accounts b WHERE b.id = o.account_id)",
           "target": "accounts"
         }
       ],
@@ -983,6 +1015,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "queries/check.sql",
+          "line": 304,
+          "message": "queries/check.sql:304: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 303). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "+ (SELECT b.m FROM accounts b WHERE b.id = o.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 311,
+          "message": "queries/check.sql:311: duplicate keyed lookup of `accounts` on `id = $1` (already looked up at line 309). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "pg_catalog.sum((SELECT b.m FROM accounts b WHERE b.id = $1))",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
           "line": 36,
           "message": "queries/check.sql:36: duplicate keyed lookup of `accounts` on `id = d.account_id` (already looked up at line 35). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
@@ -1277,6 +1325,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "queries/check.sql:37: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 36). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT b.m FROM accounts b WHERE b.id = o.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 385,
+          "message": "queries/check.sql:385: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 384). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT substring('xyz' FROM 1000) FROM accounts b WHERE b.id = o.account_id)",
           "target": "accounts"
         },
         {

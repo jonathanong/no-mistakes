@@ -298,3 +298,25 @@ SELECT
     (SELECT c.n FROM accounts c WHERE c.id = o.id LIMIT 1),
     (SELECT d.n FROM accounts d WHERE d.id = o.id LIMIT 1)
 FROM orders o;
+
+SELECT pg_catalog.sum(pg_catalog.sum(
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+    + (SELECT b.m FROM accounts b WHERE b.id = o.account_id)
+)) FILTER (WHERE FALSE) OVER ()
+FROM orders o;
+
+SELECT
+    pg_catalog.sum((SELECT a.n FROM accounts a WHERE a.id = $1))
+        FILTER (WHERE o.enabled) OVER (),
+    pg_catalog.sum((SELECT b.m FROM accounts b WHERE b.id = $1))
+        FILTER (WHERE o.enabled) OVER ()
+FROM orders o
+GROUP BY o.enabled;
+
+SELECT
+    pg_catalog.sum((SELECT a.n FROM accounts a WHERE a.id = $1))
+        FILTER (WHERE o.enabled) OVER (),
+    pg_catalog.sum((SELECT b.m FROM accounts b WHERE b.id = $1))
+        FILTER (WHERE o.active) OVER ()
+FROM orders o
+GROUP BY o.enabled, o.active;

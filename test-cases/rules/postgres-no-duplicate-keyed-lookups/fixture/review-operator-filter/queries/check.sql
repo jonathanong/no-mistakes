@@ -379,3 +379,8 @@ JOIN accounts b ON b.id = o.account_id
         ) || 'x'::text)
         ) || 'x'::text)
     ) = 'x'::text;
+
+SELECT
+    (SELECT substring('abc' FROM 1_000) FROM accounts a WHERE a.id = o.account_id),
+    (SELECT substring('xyz' FROM 1000) FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;

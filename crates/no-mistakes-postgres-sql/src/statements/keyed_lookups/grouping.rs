@@ -1,7 +1,7 @@
 use super::function_clauses::is_eager;
 use super::select_exprs::target_identity;
 use super::select_item_expr;
-use crate::fx::FxHashSet;
+use crate::fx::{FxHashMap, FxHashSet};
 use crate::idents::{ident_key, unwrap_expr};
 use sqlparser::ast::{
     Expr, GroupByExpr, Query, Select, SelectItem, Value, ValueWithSpan, VisitMut, VisitorMut,
@@ -82,18 +82,19 @@ fn collect_targets<'a>(
 }
 
 pub(super) struct GroupReuse {
-    keys: FxHashSet<Expr>,
+    keys: FxHashMap<Expr, usize>,
     kinds: FxHashSet<Discriminant<Expr>>,
 }
 
 impl GroupReuse {
     pub(super) fn new(grouping: &[&Expr], can_omit_keys: bool) -> Self {
-        let keys: FxHashSet<_> = grouping
+        let keys: FxHashMap<_, _> = grouping
             .iter()
             .filter(|expr| can_omit_keys || !matches!(unwrap_expr(expr), Expr::Value(_)))
-            .map(|expr| target_identity(expr))
+            .enumerate()
+            .map(|(position, expr)| (target_identity(expr), position))
             .collect();
-        let kinds = keys.iter().map(discriminant).collect();
+        let kinds = keys.keys().map(discriminant).collect();
         Self { keys, kinds }
     }
 
@@ -129,11 +130,12 @@ impl VisitorMut for GroupedExpressions<'_> {
     }
 
     fn pre_visit_expr(&mut self, expr: &mut Expr) -> ControlFlow<()> {
-        if self.depth == 0
-            && self.reuse.kinds.contains(&discriminant(unwrap_expr(expr)))
-            && self.reuse.keys.contains(&target_identity(expr))
-        {
-            *expr = Expr::Value(Value::Null.with_empty_span());
+        if self.depth == 0 && self.reuse.kinds.contains(&discriminant(unwrap_expr(expr))) {
+            if let Some(position) = self.reuse.keys.get(&target_identity(expr)) {
+                *expr = Expr::Value(
+                    Value::Placeholder(format!("GROUP BY {position}")).with_empty_span(),
+                );
+            }
         }
         if let Expr::Function(function) = expr {
             if function.over.is_none() && is_eager(function) {

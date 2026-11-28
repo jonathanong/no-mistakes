@@ -29,6 +29,11 @@ pub(super) fn coalesce_arguments(function: &Function) -> Option<&[FunctionArg]> 
 pub(super) fn visit_function_inputs(function: &Function, visit: &mut impl FnMut(&Expr)) {
     visit_arguments(&function.parameters, usize::MAX, visit);
     if filter_skips_inputs(function) {
+        if function.over.is_some() {
+            visit_arguments(&function.args, usize::MAX, &mut |argument| {
+                visit_eager_functions(argument, visit);
+            });
+        }
         return;
     }
     let argument_limit = if has_optional_window_default(function) {

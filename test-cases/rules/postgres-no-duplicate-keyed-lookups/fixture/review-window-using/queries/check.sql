@@ -203,3 +203,12 @@ WINDOW w AS (
         (SELECT a.n FROM accounts a WHERE a.id = o.account_id),
         (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
 );
+
+SELECT
+    pg_catalog.sum(o.amount) OVER (
+        ROWS ((SELECT a.n FROM accounts a WHERE a.id = $1)::INT) PRECEDING
+    ),
+    pg_catalog.avg(o.amount) OVER (
+        ROWS ((SELECT a.n FROM accounts a WHERE a.id = $1)::INTEGER) PRECEDING
+    )
+FROM orders o;

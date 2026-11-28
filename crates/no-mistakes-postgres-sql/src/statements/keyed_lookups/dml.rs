@@ -7,7 +7,7 @@ use sqlparser::ast::{
     Delete, Expr, FromTable, Insert, Merge, MergeAction, MergeClauseKind, MergeInsertKind,
     MergeUpdateKind, OnConflict, OnConflictAction, OnInsert, OutputClause, TableObject, Update,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub(super) fn walk_insert(
     insert: &Insert,
@@ -21,7 +21,7 @@ pub(super) fn walk_insert(
         Some(OnInsert::OnConflict(OnConflict {
             action: OnConflictAction::DoUpdate(update),
             ..
-        })) => Some(update),
+        })) if can_affect_rows(update.selection.as_ref()) => Some(update),
         _ => None,
     };
     let returning = insert.returning.as_deref();
@@ -60,6 +60,9 @@ pub(super) fn walk_update(
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
+    if !can_affect_rows(update.selection.as_ref()) {
+        return;
+    }
     scopes.push_frame();
     let mut seen = BTreeMap::new();
     register_table_with_joins(&update.table, scopes, &mut seen, out);
@@ -96,6 +99,9 @@ pub(super) fn walk_delete(
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
+    if !can_affect_rows(delete.selection.as_ref()) {
+        return;
+    }
     scopes.push_frame();
     let mut seen = BTreeMap::new();
     let from_tables = match &delete.from {
@@ -123,14 +129,16 @@ pub(super) fn walk_merge(
     register_table_factor(&merge.source, scopes, &mut base_seen, out);
     inspect_exprs(std::iter::once(&*merge.on), scopes, &mut base_seen, out);
     let mut category_seen = BTreeMap::new();
+    let mut closed_categories = BTreeSet::new();
     for clause in &merge.clauses {
-        if clause.predicate.as_ref().and_then(literal_condition) == Some(false) {
-            continue;
-        }
         let category = match clause.clause_kind {
             MergeClauseKind::NotMatchedByTarget => MergeClauseKind::NotMatched,
             kind => kind,
         };
+        let predicate = clause.predicate.as_ref();
+        if closed_categories.contains(&category) || !can_affect_rows(predicate) {
+            continue;
+        }
         let pred_seen = category_seen
             .entry(category)
             .or_insert_with(|| base_seen.clone());
@@ -141,6 +149,9 @@ pub(super) fn walk_merge(
         let mut exprs = Vec::new();
         collect_merge_action_exprs(&clause.action, &mut exprs);
         inspect_exprs(exprs, scopes, &mut action_seen, out);
+        if predicate.is_none() || predicate.and_then(literal_condition) == Some(true) {
+            closed_categories.insert(category);
+        }
     }
     if let Some(OutputClause::Returning { select_items, .. }) = &merge.output {
         scopes.add_returning_aliases(None);
@@ -153,6 +164,10 @@ pub(super) fn walk_merge(
         );
     }
     scopes.pop_frame();
+}
+
+fn can_affect_rows(predicate: Option<&Expr>) -> bool {
+    predicate.and_then(literal_condition) != Some(false)
 }
 
 fn collect_merge_action_exprs<'a>(action: &'a MergeAction, out: &mut Vec<&'a Expr>) {

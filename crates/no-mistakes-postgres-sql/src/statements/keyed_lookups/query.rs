@@ -1,7 +1,7 @@
 use super::{scope::ScopeStack, subquery, walk_nested_queries, walk_set_expr, LookupHistory};
-use crate::idents::visit_shallow_exprs;
+use crate::idents::{unwrap_expr, visit_shallow_exprs};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
-use sqlparser::ast::{Expr, OrderByKind, Query};
+use sqlparser::ast::{Expr, LimitClause, OrderByKind, Query, Value};
 
 pub(super) fn walk_query(
     query: &Query,
@@ -34,9 +34,25 @@ pub(super) fn walk_query_ordered(
         }
         _ => enclosing_order,
     };
-    let mut seen = walk_set_expr(&query.body, order, scopes, out);
+    let mut seen = if has_zero_limit(query.limit_clause.as_ref()) {
+        LookupHistory::new()
+    } else {
+        walk_set_expr(&query.body, order, scopes, out)
+    };
     inspect_limits(query, scopes, &mut seen, out);
     seen
+}
+
+pub(super) fn has_zero_limit(limit: Option<&LimitClause>) -> bool {
+    let Some(LimitClause::LimitOffset {
+        limit: Some(count), ..
+    }) = limit
+    else {
+        return false;
+    };
+    matches!(unwrap_expr(count), Expr::Value(value) if matches!(&value.value,
+        Value::Number(number, _) if number.starts_with('0')
+            && number.bytes().all(|digit| matches!(digit, b'0' | b'_'))))
 }
 
 fn inspect_limits(

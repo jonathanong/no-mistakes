@@ -6,7 +6,12 @@ pub(super) fn number_type(number: &str, negate: bool) -> BuiltinType {
     let (digits, negative) = number
         .strip_prefix('-')
         .map_or((number, negate), |digits| (digits, !negate));
-    let Ok(magnitude) = digits.parse::<u64>() else {
+    let magnitude = if digits.contains('_') {
+        digits.replace('_', "").parse::<u64>()
+    } else {
+        digits.parse()
+    };
+    let Ok(magnitude) = magnitude else {
         return BuiltinType::Numeric;
     };
     let signed_headroom = u64::from(negative);

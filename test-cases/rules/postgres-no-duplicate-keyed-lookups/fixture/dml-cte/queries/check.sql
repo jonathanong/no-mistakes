@@ -60,3 +60,46 @@ WHEN MATCHED AND FALSE THEN UPDATE SET
 WHEN MATCHED AND NULL THEN UPDATE SET
     account_name = (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
     account_tier = (SELECT b.tier FROM accounts b WHERE b.id = o.account_id);
+
+UPDATE orders AS o
+SET account_name = (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+    account_tier = (SELECT b.tier FROM accounts b WHERE b.id = o.account_id)
+WHERE FALSE
+RETURNING (SELECT c.name FROM accounts c WHERE c.id = o.account_id),
+          (SELECT d.tier FROM accounts d WHERE d.id = o.account_id);
+
+DELETE FROM orders AS o WHERE NULL
+RETURNING (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+          (SELECT b.tier FROM accounts b WHERE b.id = o.account_id);
+
+INSERT INTO orders AS o (id) VALUES (42)
+ON CONFLICT (id) DO UPDATE SET
+    account_name = (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+    account_tier = (SELECT b.tier FROM accounts b WHERE b.id = o.account_id)
+WHERE FALSE
+RETURNING (SELECT c.name FROM accounts c WHERE c.id = o.account_id),
+          (SELECT d.tier FROM accounts d WHERE d.id = o.account_id);
+
+MERGE INTO orders o USING incoming s ON o.id = s.id
+WHEN MATCHED AND TRUE THEN DO NOTHING
+WHEN MATCHED AND (SELECT a.enabled FROM accounts a WHERE a.id = o.account_id)
+    THEN UPDATE SET account_name = (SELECT b.name FROM accounts b WHERE b.id = o.account_id)
+WHEN NOT MATCHED THEN INSERT (account_name, account_tier) VALUES (
+    (SELECT c.name FROM accounts c WHERE c.id = s.account_id),
+    (SELECT d.tier FROM accounts d WHERE d.id = s.account_id)
+);
+
+WITH touched AS (
+    UPDATE orders o SET
+        account_name = (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+        account_tier = (SELECT b.tier FROM accounts b WHERE b.id = o.account_id)
+    RETURNING o.id
+)
+SELECT
+    (SELECT a.name FROM accounts a WHERE a.id = touched.id),
+    (SELECT b.tier FROM accounts b WHERE b.id = touched.id)
+FROM touched
+LIMIT 0 OFFSET (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = $1)
+         + (SELECT b.m FROM accounts b WHERE b.id = $1)
+);

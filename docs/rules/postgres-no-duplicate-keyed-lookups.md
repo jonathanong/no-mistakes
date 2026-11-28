@@ -68,7 +68,8 @@ The rule stays silent when the lookups are not proven to read the same row:
 - Results of searched `CASE` branches with literal false or null conditions,
   and branches after a literal true condition.
 - Window calls eliminated by literal `CASE` or `COALESCE` short-circuiting,
-  unreachable `MERGE` actions, and scalar lookups with a literal `LIMIT 0`.
+  unreachable DML actions, and query bodies with a literal `LIMIT 0`.
+  CTEs and limit expressions are still inspected.
 - Volatile key expressions (UUID generators such as `gen_random_uuid()`,
   `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined
   or unrecognized functions in keys or scalar projections, unresolved table
