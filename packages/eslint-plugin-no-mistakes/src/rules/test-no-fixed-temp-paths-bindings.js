@@ -100,9 +100,6 @@ function bindingResolver(context) {
       const object = resolve(node.object);
       const member = memberPropertyName(node);
       if (object === UNRESOLVED) return unresolvedMember(member);
-      if (object && member === null && ["fs", "fs/promises", "path", "os"].includes(object)) {
-        return UNRESOLVED;
-      }
       return memberBinding(object, member);
     }
     if (node?.type !== "Identifier") return null;

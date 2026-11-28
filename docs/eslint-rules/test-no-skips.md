@@ -29,7 +29,10 @@ the latter is treated as a context `skip()`.
 import { test } from "vitest";
 
 test("hidden", ({ skip: omit }) => omit()); // reported
-test("also hidden", (ctx) => { const omit = ctx.skip; omit(); }); // reported
+test("also hidden", (ctx) => {
+  const omit = ctx.skip;
+  omit();
+}); // reported
 test.each([{ skip() {} }])("row data", ({ skip }) => skip()); // allowed
 ```
 
@@ -119,7 +122,11 @@ check.skipIf(!process.env.API_KEY)("requires API access", () => {});
 describe.only("temporary focus", () => {});
 pw.fixme("known issue", async ({ page }) => {});
 
-const browser = pw.extend({ account: async ({}, use) => { await use("owner"); } });
+const browser = pw.extend({
+  account: async ({}, use) => {
+    await use("owner");
+  },
+});
 browser.skip("same-file fixture skip", async () => {});
 ```
 
@@ -168,7 +175,7 @@ A configured namespace and `const loaded = require("./custom-test")` both
 export `test`, so `const { test } = loaded; test.skip` reports. `describe`
 from that namespace is not that `test`. `ctx.skip`, `(ctx.skip as any)()`,
 a cast `skip` binding, a callback cast to `any`, and `(v as typeof v).test.skip`
-are skips. `const { test: check } = await require("vitest"); check.skip` is that same skip. `const check = require("vitest").test` and `require("vitest").test.skip` are too. A computed runner export such as `require("vitest")["test"].skip` or `const run = require("vitest")["test"]` stays silent. A non-static specifier still reports `unanalyzable`. `const { test: check } = await import(moduleName)` reports `unanalyzable` when `moduleName` is not a static string. `require("vitest").expect` is not a runner. `const { test } = loaded; test.describe("suite", { annotation: { type: "skip" } })` reports that annotation. A namespace lookup of that destructured `test` is not itself a test binding.
+are skips. `const { test: check } = await require("vitest"); check.skip` is that same skip. `const check = require("vitest").test` and `require("vitest").test.skip` are too. A computed runner export such as `require("vitest")["test"].skip`, `const run = require("vitest")["test"]`, or `const runner = require(specifier); runner["test"].skip` stays silent. A non-static specifier still reports `unanalyzable`. `const { test: check } = await import(moduleName)` reports `unanalyzable` when `moduleName` is not a static string. `require("vitest").expect` is not a runner. `const { test } = loaded; test.describe("suite", { annotation: { type: "skip" } })` reports that annotation. A namespace lookup of that destructured `test` is not itself a test binding.
 
 ```js
 "no-mistakes/test-no-skips": ["error", { testModules: ["./fixtures", "../fixtures", "@app/test"] }]
@@ -201,11 +208,13 @@ config `files` globs to select the test files that should be checked:
 ```js
 import noMistakes from "eslint-plugin-no-mistakes";
 
-export default [{
-  files: ["**/*.test.*", "tests/**"],
-  plugins: { "no-mistakes": noMistakes },
-  rules: { "no-mistakes/test-no-skips": "error" },
-}];
+export default [
+  {
+    files: ["**/*.test.*", "tests/**"],
+    plugins: { "no-mistakes": noMistakes },
+    rules: { "no-mistakes/test-no-skips": "error" },
+  },
+];
 ```
 
 Adjust the patterns to match the repository's test locations. Files outside

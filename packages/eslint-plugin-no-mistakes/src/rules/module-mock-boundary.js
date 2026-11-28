@@ -2,7 +2,8 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
-const { UNANALYZABLE_SCHEMA, reportUnanalyzable } = require("./rule-unanalyzable");
+const { boundaryOptions } = require("./module-mock-schema");
+const { reportUnanalyzable } = require("./rule-unanalyzable");
 const { baselineKey, baselineMap } = require("./module-mock-baseline");
 const { matchDirectMockCallApply } = require("./module-mock-call-apply");
 const { integrationAllows } = require("./module-mock-integration");
@@ -60,13 +61,7 @@ module.exports = rule(
       description: "enforce configured module mock boundaries",
       recommended: false,
     },
-    schema: [
-      {
-        type: "object",
-        additionalProperties: false,
-        properties: { unanalyzable: UNANALYZABLE_SCHEMA },
-      },
-    ],
+    schema: [boundaryOptions],
     messages: {
       boundary: "{{message}}",
       stale: "{{message}}",

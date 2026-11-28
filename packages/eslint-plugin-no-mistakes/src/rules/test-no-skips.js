@@ -171,7 +171,8 @@ module.exports = rule(
           const knownMember =
             object?.type === "MemberExpression" &&
             moduleLoad(object.object, context)?.source != null;
-          if (isUnresolved(moduleLoad(object, context)) && !knownMember) {
+          const computedRunner = object?.type === "MemberExpression" && object.computed;
+          if (isUnresolved(moduleLoad(object, context)) && !knownMember && !computedRunner) {
             reportUnanalyzable(context, node.property, "this modifier");
           }
           return;

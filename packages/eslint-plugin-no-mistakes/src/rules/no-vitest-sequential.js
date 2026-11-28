@@ -16,7 +16,7 @@ const {
   staticName,
   unresolvedSequential,
 } = require("./no-vitest-sequential-loads");
-const { rejectedRunner } = require("./no-vitest-sequential-require");
+const { forwardedCallee, rejectedRunner } = require("./no-vitest-sequential-require");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 const TEST_NAMES = new Set(["test", "it", "describe"]);
@@ -121,7 +121,7 @@ function isSequentialCall(node, context, roots, namespaces) {
     const accepted = acceptsRunner(info.root, context, namespaces);
     const named = info.names.every((name) => name !== null);
     const known =
-      (accepted && roots.has(info.root.name)) ||
+      (accepted && named && roots.has(info.root.name)) ||
       (isUnshadowedNamespace(info.root, context, namespaces) &&
         named &&
         info.names.some((name) => TEST_NAMES.has(name))) ||
@@ -165,7 +165,7 @@ module.exports = Object.assign(
             (hasSequentialMember(node.callee) ||
               chainInfo(node.callee, context).names.includes("sequential") ||
               hasSequentialOption(node)) &&
-            unresolvedSequential(node.callee, context) &&
+            unresolvedSequential(forwardedCallee(node.callee), context) &&
             !suppressed(node)
           ) {
             reportUnanalyzable(context, node.callee, "this call");

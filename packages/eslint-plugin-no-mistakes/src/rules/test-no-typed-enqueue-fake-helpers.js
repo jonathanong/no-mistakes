@@ -191,7 +191,7 @@ function resolveImportTarget(node, sourceCode) {
     const module = namespaceModule(node.left, sourceCode, true);
     return module ? { name: node.right.name, module } : null;
   }
-  if (node?.type === "MemberExpression") {
+  if (node?.type === "MemberExpression" && !node.computed) {
     const object = unwrapExpression(node.object);
     const name = memberPropertyName(node);
     if (!name) return null;

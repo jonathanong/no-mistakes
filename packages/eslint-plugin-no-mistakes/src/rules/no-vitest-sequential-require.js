@@ -103,6 +103,15 @@ function unknownComputedExport(root, context) {
   return exportKey(def.node.id, root.name) === null;
 }
 
+function forwardedCallee(node) {
+  const { staticName } = loads();
+  let current = unwrapSequence(node);
+  if (current?.type !== "MemberExpression") return current;
+  const name = staticName(current.property, current.computed);
+  if (name !== "call" && name !== "apply") return current;
+  return unwrapSequence(current.object);
+}
+
 function rejectedRunner(root, context) {
   return (
     reassignedDestructuredRunner(root, context) ||
@@ -125,6 +134,7 @@ function renamedNonRunner(root, context) {
 
 module.exports = {
   constAlias,
+  forwardedCallee,
   reassignedDestructuredRunner,
   reassignedVitestRequire,
   rejectedRunner,

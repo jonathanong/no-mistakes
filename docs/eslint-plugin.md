@@ -376,12 +376,13 @@ instead of passing silently. `require("react")` and
 
 ### `test-no-fixed-temp-paths`
 
-Opt-in. `unanalyzable?: "finding" | "ignore"` defaults to `"finding"` when an
-`fs` binding comes from a non-static `require`. Reports fixed temporary paths at known Node
-filesystem or process sinks. A local `const` alias can supply a path argument
-or the root of a `path.join` or `path.resolve` call. Unique-directory prefixes,
-including disposable variants, are allowed. Files that mock the filesystem
-with `vi.mock` or `jest.mock` are exempt. See
+Opt-in. Reports fixed temporary paths at known Node filesystem or process
+sinks. A local `const` alias can supply a path argument or the root of a
+`path.join` or `path.resolve` call. Unique-directory prefixes, including
+disposable variants, are allowed. Files that mock the filesystem with
+`vi.mock` or `jest.mock` are exempt. `unanalyzable?: "finding" | "ignore"`
+defaults to `"finding"` when an `fs` binding comes from a non-static
+`require`. See
 [the rule reference](eslint-rules/test-no-fixed-temp-paths.md).
 
 ### `test-no-shared-state`
@@ -417,10 +418,10 @@ See [the rule reference](eslint-rules/test-no-typed-enqueue-fake.md).
 ### `test-no-wall-time-assertions`
 
 Opt-in. `allowedPaths?: string[]` defaults to `[]` and exempts benchmark paths
-using globs relative to the ESLint working directory.
-`unanalyzable?: "finding" | "ignore"` defaults to `"finding"`. Numeric bounds on elapsed
+using globs relative to the ESLint working directory. Numeric bounds on elapsed
 `Date.now()` or `performance.now()` values are reported in test filenames;
-files that call Vitest or Jest fake timers are exempt. See
+files that call Vitest or Jest fake timers are exempt.
+`unanalyzable?: "finding" | "ignore"` defaults to `"finding"`. See
 [the rule reference](eslint-rules/test-no-wall-time-assertions.md).
 
 ### `ts-no-const-aliases`

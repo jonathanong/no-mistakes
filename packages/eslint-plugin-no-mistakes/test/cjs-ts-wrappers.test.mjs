@@ -46,6 +46,7 @@ const groups = [
       "alias-plain.test.ts",
       "nested-name.js",
       "computed-destructure.test.ts",
+      "computed-registered.test.ts",
     ],
   },
   {
@@ -236,6 +237,7 @@ const groups = [
       "computed-member.test.ts",
       "computed-vi.test.ts",
       "other-require.test.ts",
+      "computed-enqueue.test.ts",
     ],
   },
   {
@@ -284,7 +286,7 @@ const groups = [
       "member-require.js",
       "dynamic-import.test.ts",
     ],
-    valid: ["not-a-runner.js", "computed-runner.js"],
+    valid: ["not-a-runner.js", "computed-runner.js", "computed-dynamic.test.ts"],
   },
   {
     rule: "test-no-skips",
@@ -296,7 +298,7 @@ const groups = [
     rule: "test-no-fixed-temp-paths",
     dir: "temp",
     invalid: ["paths.test.ts", "dynamic.test.ts", "promises.test.ts"],
-    valid: ["mock-after.test.ts", "other-member.test.ts"],
+    valid: ["mock-after.test.ts", "other-member.test.ts", "computed-member.test.ts"],
   },
   {
     rule: "test-no-fixed-temp-paths",
