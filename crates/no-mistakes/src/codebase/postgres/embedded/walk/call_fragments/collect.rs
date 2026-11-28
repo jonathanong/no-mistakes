@@ -2,7 +2,7 @@ use super::super::resolve::compose;
 use super::super::ScopeVisitor;
 use super::{extend_prefix, partial};
 use crate::codebase::postgres::embedded::{
-    first_call_argument, placeholders, tags, CallSqlFragment, EmbeddedSqlCall,
+    first_call_argument, tags, CallSqlFragment, EmbeddedSqlCall,
 };
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use crate::fx::FxHashSet;
@@ -67,10 +67,16 @@ impl ScopeVisitor<'_> {
     pub(in crate::codebase::postgres::embedded::walk) fn pop_builder_fragments(
         &mut self,
         scope_index: usize,
+        scope_id: Option<u32>,
     ) {
         self.call_fragment_state
             .builders
             .retain(|(scope, _), _| *scope != scope_index);
+        if let Some(id) = scope_id {
+            self.call_fragment_state
+                .function_returns
+                .retain(|(owner_scope, _), _| *owner_scope != id);
+        }
     }
 
     pub(in crate::codebase::postgres::embedded::walk) fn note_returned_builder_fragments(
@@ -80,7 +86,7 @@ impl ScopeVisitor<'_> {
         if self.head_calls_only {
             return;
         }
-        let Some(name) = self.current_plain_function_name() else {
+        let Some(owner) = self.current_plain_function_key() else {
             return;
         };
         let Expression::Identifier(id) = unwrap_ts_wrappers(expr) else {
@@ -101,7 +107,7 @@ impl ScopeVisitor<'_> {
             if !trace.fragments.is_empty() {
                 self.call_fragment_state
                     .function_returns
-                    .entry(name)
+                    .entry(owner)
                     .or_default()
                     .extend(trace.fragments.iter().cloned());
             }
@@ -170,9 +176,10 @@ impl ScopeVisitor<'_> {
                 let Expression::Identifier(callee) = unwrap_ts_wrappers(&inner.callee) else {
                     return Vec::new();
                 };
+                let key = self.plain_key(callee.name.as_str());
                 self.call_fragment_state
                     .function_returns
-                    .get(callee.name.as_str())
+                    .get(&key)
                     .cloned()
                     .unwrap_or_default()
             }
@@ -187,14 +194,5 @@ impl ScopeVisitor<'_> {
             &mut |name| compose::tag_shadowed(name, self),
             self.functions.imported_sql_tags(),
         )
-    }
-}
-
-pub(crate) fn publish_call_fragments(fragments: &mut [CallSqlFragment]) {
-    for fragment in fragments {
-        fragment.sql = placeholders::publish_placeholders(std::mem::take(&mut fragment.sql));
-        if let Some(context) = fragment.context_sql.take() {
-            fragment.context_sql = Some(placeholders::publish_placeholders(context));
-        }
     }
 }

@@ -4,11 +4,17 @@ use super::{is_kw, word_value, FragmentContext};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
-pub(super) fn extract_stars(tokens: &[TokenWithSpan], out: &mut Vec<FragmentStar>) {
+pub(super) fn extract_stars(
+    tokens: &[TokenWithSpan],
+    initial_select: bool,
+    initial_returning: bool,
+    out: &mut Vec<FragmentStar>,
+) {
     let mut ctx = FragmentContext::default();
     extract_context_from_tokens(tokens, &mut ctx);
-    let mut clause_returning = false;
-    let mut clause_select = false;
+    let mut clause_returning = initial_returning;
+    let mut clause_select = initial_select;
+    let mut clause_stack: Vec<(bool, bool)> = Vec::new();
     let mut in_exists = false;
     let mut exists_depth = 0usize;
     let mut depth = 0usize;
@@ -20,6 +26,7 @@ pub(super) fn extract_stars(tokens: &[TokenWithSpan], out: &mut Vec<FragmentStar
         }
         match &token.token {
             Token::LParen => {
+                clause_stack.push((clause_select, clause_returning));
                 depth += 1;
                 if prev_code.is_some_and(|t| is_kw(t, Keyword::EXISTS)) && !in_exists {
                     in_exists = true;
@@ -31,17 +38,23 @@ pub(super) fn extract_stars(tokens: &[TokenWithSpan], out: &mut Vec<FragmentStar
                     in_exists = false;
                 }
                 depth = depth.saturating_sub(1);
+                if let Some((prev_select, prev_returning)) = clause_stack.pop() {
+                    clause_select = prev_select;
+                    clause_returning = prev_returning;
+                }
             }
             Token::Mul if !in_exists && (clause_returning || clause_select) => {
                 let line = (token.span.start.line as usize).max(1);
                 if prev_code.is_some_and(|t| matches!(t.token, Token::Period)) {
                     push_qualified(tokens, i, prev_prev, &ctx, clause_returning, line, out);
-                } else if prev_code.is_some_and(|t| {
-                    matches!(t.token, Token::Comma | Token::LParen)
-                        || is_kw(t, Keyword::SELECT)
-                        || is_kw(t, Keyword::DISTINCT)
-                        || is_kw(t, Keyword::RETURNING)
-                }) {
+                } else if prev_code.is_none()
+                    || prev_code.is_some_and(|t| {
+                        matches!(t.token, Token::Comma | Token::LParen)
+                            || is_kw(t, Keyword::SELECT)
+                            || is_kw(t, Keyword::DISTINCT)
+                            || is_kw(t, Keyword::RETURNING)
+                    })
+                {
                     push_bare(tokens, i, &ctx, clause_returning, line, out);
                 }
             }
@@ -76,19 +89,31 @@ fn push_qualified(
     out: &mut Vec<FragmentStar>,
 ) {
     let qualifier = prev_prev.and_then(word_value);
-    if qualifier
+    let relation = qualifier.as_deref().and_then(|q| {
+        ctx.from_relations
+            .iter()
+            .chain(ctx.mutation_target.iter())
+            .find(|(_, a)| a.as_deref() == Some(q))
+            .or_else(|| {
+                ctx.from_relations
+                    .iter()
+                    .chain(ctx.mutation_target.iter())
+                    .find(|(t, a)| {
+                        a.is_none() && (t == q || t.rsplit('.').next() == Some(q))
+                    })
+            })
+            .map(|(t, _)| t.clone())
+    });
+    if let Some(rel) = &relation {
+        if !rel.contains('.') && ctx.ctes.iter().any(|c| c.eq_ignore_ascii_case(rel)) {
+            return;
+        }
+    } else if qualifier
         .as_deref()
         .is_some_and(|q| ctx.ctes.iter().any(|c| c.eq_ignore_ascii_case(q)))
     {
         return;
     }
-    let relation = qualifier.as_deref().and_then(|q| {
-        ctx.from_relations
-            .iter()
-            .chain(ctx.mutation_target.iter())
-            .find(|(t, a)| a.as_deref() == Some(q) || t == q)
-            .map(|(t, _)| t.clone())
-    });
     out.push(FragmentStar {
         returning,
         qualifier,

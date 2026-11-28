@@ -6,7 +6,11 @@ use oxc_ast::ast::{BinaryOperator, Expression};
 use oxc_span::GetSpan;
 
 mod concat;
+mod relations;
 use concat::{collect_addition, partial_atom, partial_template, push_clean};
+use relations::partial_templates;
+pub(crate) use relations::publish_call_fragments;
+pub(super) use relations::{apply_relation_append, closed_relation_names};
 
 pub(super) fn expr_fragments(
     visitor: &ScopeVisitor<'_>,
@@ -93,15 +97,16 @@ fn collect(
             );
         }
         Expression::TemplateLiteral(template) => {
-            let sql = partial_template(visitor, template, depth - 1);
-            push_clean(
-                out,
-                sql,
-                line,
-                (span.start, span.end),
-                context_sql,
-                append_site,
-            );
+            for sql in partial_templates(visitor, template, depth - 1) {
+                push_clean(
+                    out,
+                    sql,
+                    line,
+                    (span.start, span.end),
+                    context_sql,
+                    append_site,
+                );
+            }
         }
         Expression::TaggedTemplateExpression(tagged)
             if tags::is_sql_tag(
@@ -110,15 +115,25 @@ fn collect(
                 visitor.functions.imported_sql_tags(),
             ) =>
         {
-            let sql = partial_template(visitor, &tagged.quasi, depth - 1);
-            push_clean(
-                out,
-                sql,
-                line,
-                (span.start, span.end),
-                context_sql,
-                append_site,
-            );
+            let parameterized = visitor
+                .functions
+                .imported_sql_tags()
+                .parameterizes_all(&tagged.tag);
+            let sqls = if parameterized {
+                vec![partial_template(visitor, &tagged.quasi, depth - 1)]
+            } else {
+                partial_templates(visitor, &tagged.quasi, depth - 1)
+            };
+            for sql in sqls {
+                push_clean(
+                    out,
+                    sql,
+                    line,
+                    (span.start, span.end),
+                    context_sql,
+                    append_site,
+                );
+            }
             for inner in &tagged.quasi.expressions {
                 if tags::fragments::is_sql_fragment(
                     inner,

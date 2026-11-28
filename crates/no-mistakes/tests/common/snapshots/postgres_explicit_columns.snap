@@ -184,40 +184,48 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "src/unresolved.ts",
-          "line": 11,
-          "message": "src/unresolved.ts:11: postgres-explicit-columns has unresolved SQL for select-star: unresolved relation `upserted` for SELECT * in SQL fragment",
+          "line": 13,
+          "message": "src/unresolved.ts:13: postgres-explicit-columns has unresolved SQL for select-star: unresolved relation `upserted` for SELECT * in SQL fragment",
           "rule": "postgres-explicit-columns",
           "sourceLine": "q.append(\" SELECT upserted.* FROM upserted\");",
           "target": "select-star"
         },
         {
           "file": "src/unresolved.ts",
-          "line": 15,
-          "message": "src/unresolved.ts:15: postgres-explicit-columns has unresolved SQL for select-star: unresolved interpolated relation for SELECT *; use a closed union of table-name literals or list explicit columns",
+          "line": 17,
+          "message": "src/unresolved.ts:17: postgres-explicit-columns has unresolved SQL for select-star: unresolved relation for SELECT * in SQL fragment",
           "rule": "postgres-explicit-columns",
-          "sourceLine": "return query(sql`SELECT * FROM ${table} WHERE id = ${id}`);",
+          "sourceLine": "const q = sql`SELECT * FROM `;",
           "target": "select-star"
         },
         {
           "file": "src/unresolved.ts",
-          "line": 19,
-          "message": "src/unresolved.ts:19: postgres-explicit-columns has unresolved SQL for select-star: unresolved interpolated relation for SELECT * in SQL fragment",
+          "line": 24,
+          "message": "src/unresolved.ts:24: postgres-explicit-columns has unresolved SQL for select-star: unresolved interpolated relation for SELECT * in SQL fragment",
           "rule": "postgres-explicit-columns",
           "sourceLine": "return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);",
           "target": "select-star"
         },
         {
           "file": "src/unresolved.ts",
-          "line": 23,
-          "message": "src/unresolved.ts:23: postgres-explicit-columns has unresolved SQL for returning-star: unresolved relation for RETURNING * in SQL fragment",
+          "line": 28,
+          "message": "src/unresolved.ts:28: postgres-explicit-columns has unresolved SQL for select-star: unresolved interpolated relation for SELECT * in SQL fragment",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);",
+          "target": "select-star"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "line": 32,
+          "message": "src/unresolved.ts:32: postgres-explicit-columns has unresolved SQL for returning-star: unresolved relation for RETURNING * in SQL fragment",
           "rule": "postgres-explicit-columns",
           "sourceLine": "return query(head + \" \" + RETURNING_ALL);",
           "target": "returning-star"
         },
         {
           "file": "src/unresolved.ts",
-          "line": 7,
-          "message": "src/unresolved.ts:7: postgres-explicit-columns has unresolved SQL for returning-star: unresolved relation for RETURNING * in SQL fragment",
+          "line": 9,
+          "message": "src/unresolved.ts:9: postgres-explicit-columns has unresolved SQL for returning-star: unresolved relation for RETURNING * in SQL fragment",
           "rule": "postgres-explicit-columns",
           "sourceLine": "q.append(sql` RETURNING *`);",
           "target": "returning-star"
@@ -273,15 +281,23 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 14,
           "message": "src/interpolated-table.ts:14: SELECT * reads all 14 columns of entries (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
-          "sourceLine": "return query(sql`SELECT * FROM ${table} WHERE id = ${id}`);",
+          "sourceLine": "const q = sql`SELECT * FROM `;",
           "target": "entries"
         },
         {
           "file": "src/interpolated-table.ts",
-          "line": 26,
-          "message": "src/interpolated-table.ts:26: SELECT * reads all 14 columns of records (limit 12); list the columns the caller uses",
+          "line": 32,
+          "message": "src/interpolated-table.ts:32: SELECT * reads all 14 columns of records (limit 12); list the columns the caller uses",
           "rule": "postgres-explicit-columns",
-          "sourceLine": "return query(sql`SELECT * FROM ${table} WHERE id = ${id}`);",
+          "sourceLine": "return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);",
+          "target": "records"
+        },
+        {
+          "file": "src/interpolated-table.ts",
+          "line": 40,
+          "message": "src/interpolated-table.ts:40: SELECT * reads all 14 columns of records (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "return query(`SELECT * FROM ${relation} WHERE id = $1`, [id]);",
           "target": "records"
         },
         {
@@ -326,40 +342,48 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "advisories": [
         {
           "file": "src/unresolved.ts",
-          "line": 11,
-          "message": "src/unresolved.ts:11: postgres-explicit-columns has unresolved SQL for select-star: unresolved relation `upserted` for SELECT * in SQL fragment",
+          "line": 13,
+          "message": "src/unresolved.ts:13: postgres-explicit-columns has unresolved SQL for select-star: unresolved relation `upserted` for SELECT * in SQL fragment",
           "rule": "postgres-explicit-columns",
           "sourceLine": "q.append(\" SELECT upserted.* FROM upserted\");",
           "target": "select-star"
         },
         {
           "file": "src/unresolved.ts",
-          "line": 15,
-          "message": "src/unresolved.ts:15: postgres-explicit-columns has unresolved SQL for select-star: unresolved interpolated relation for SELECT *; use a closed union of table-name literals or list explicit columns",
+          "line": 17,
+          "message": "src/unresolved.ts:17: postgres-explicit-columns has unresolved SQL for select-star: unresolved relation for SELECT * in SQL fragment",
           "rule": "postgres-explicit-columns",
-          "sourceLine": "return query(sql`SELECT * FROM ${table} WHERE id = ${id}`);",
+          "sourceLine": "const q = sql`SELECT * FROM `;",
           "target": "select-star"
         },
         {
           "file": "src/unresolved.ts",
-          "line": 19,
-          "message": "src/unresolved.ts:19: postgres-explicit-columns has unresolved SQL for select-star: unresolved interpolated relation for SELECT * in SQL fragment",
+          "line": 24,
+          "message": "src/unresolved.ts:24: postgres-explicit-columns has unresolved SQL for select-star: unresolved interpolated relation for SELECT * in SQL fragment",
           "rule": "postgres-explicit-columns",
           "sourceLine": "return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);",
           "target": "select-star"
         },
         {
           "file": "src/unresolved.ts",
-          "line": 23,
-          "message": "src/unresolved.ts:23: postgres-explicit-columns has unresolved SQL for returning-star: unresolved relation for RETURNING * in SQL fragment",
+          "line": 28,
+          "message": "src/unresolved.ts:28: postgres-explicit-columns has unresolved SQL for select-star: unresolved interpolated relation for SELECT * in SQL fragment",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);",
+          "target": "select-star"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "line": 32,
+          "message": "src/unresolved.ts:32: postgres-explicit-columns has unresolved SQL for returning-star: unresolved relation for RETURNING * in SQL fragment",
           "rule": "postgres-explicit-columns",
           "sourceLine": "return query(head + \" \" + RETURNING_ALL);",
           "target": "returning-star"
         },
         {
           "file": "src/unresolved.ts",
-          "line": 7,
-          "message": "src/unresolved.ts:7: postgres-explicit-columns has unresolved SQL for returning-star: unresolved relation for RETURNING * in SQL fragment",
+          "line": 9,
+          "message": "src/unresolved.ts:9: postgres-explicit-columns has unresolved SQL for returning-star: unresolved relation for RETURNING * in SQL fragment",
           "rule": "postgres-explicit-columns",
           "sourceLine": "q.append(sql` RETURNING *`);",
           "target": "returning-star"

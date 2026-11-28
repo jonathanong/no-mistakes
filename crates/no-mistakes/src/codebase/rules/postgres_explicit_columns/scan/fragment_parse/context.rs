@@ -6,6 +6,7 @@ pub(super) fn extract_context_from_tokens(tokens: &[TokenWithSpan], ctx: &mut Fr
     let mut index = 0;
     let mut depth = 0usize;
     let mut in_with = false;
+    let mut in_from = false;
     while let Some((i, token)) = next_code(tokens, index) {
         index = i + 1;
         match &token.token {
@@ -24,6 +25,7 @@ pub(super) fn extract_context_from_tokens(tokens: &[TokenWithSpan], ctx: &mut Fr
         }
         if is_kw(token, Keyword::WITH) {
             in_with = true;
+            in_from = false;
             if let Some((next_i, next_tok)) = next_code(tokens, index) {
                 if is_kw(next_tok, Keyword::RECURSIVE) {
                     index = next_i + 1;
@@ -42,15 +44,24 @@ pub(super) fn extract_context_from_tokens(tokens: &[TokenWithSpan], ctx: &mut Fr
                 continue;
             }
         }
+        if in_from && matches!(token.token, Token::Comma) {
+            if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
+                ctx.from_relations.push(rel);
+                index = next_i;
+                continue;
+            }
+        }
         if is_kw(token, Keyword::UPDATE) {
             in_with = false;
+            in_from = false;
             if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
                 ctx.mutation_target = Some(rel);
                 index = next_i;
             }
-        } else if is_kw(token, Keyword::INTO) || is_kw(token, Keyword::FROM) {
+        } else if is_kw(token, Keyword::INTO) || is_kw(token, Keyword::FROM) || is_kw(token, Keyword::USING) {
             let is_into = is_kw(token, Keyword::INTO);
             in_with = false;
+            in_from = !is_into;
             if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
                 if is_into {
                     ctx.mutation_target = Some(rel);
@@ -65,12 +76,40 @@ pub(super) fn extract_context_from_tokens(tokens: &[TokenWithSpan], ctx: &mut Fr
                 index = next_i;
             }
         } else if is_kw(token, Keyword::JOIN) {
+            in_from = true;
             if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
                 ctx.from_relations.push(rel);
                 index = next_i;
             }
+        } else if ends_from_list(token) {
+            in_from = false;
         }
     }
+}
+
+fn ends_from_list(token: &TokenWithSpan) -> bool {
+    matches!(
+        &token.token,
+        Token::Word(w) if matches!(
+            w.keyword,
+            Keyword::WHERE
+                | Keyword::GROUP
+                | Keyword::HAVING
+                | Keyword::ORDER
+                | Keyword::LIMIT
+                | Keyword::OFFSET
+                | Keyword::FETCH
+                | Keyword::UNION
+                | Keyword::INTERSECT
+                | Keyword::EXCEPT
+                | Keyword::RETURNING
+                | Keyword::SET
+                | Keyword::VALUES
+                | Keyword::SELECT
+                | Keyword::DELETE
+                | Keyword::WINDOW
+        )
+    )
 }
 
 fn read_cte_name(tokens: &[TokenWithSpan], index: usize) -> Option<(usize, String)> {

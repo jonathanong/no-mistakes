@@ -4,8 +4,10 @@ use sqlparser::ast::{
     UpdateTableFromKind,
 };
 
+mod exprs;
 mod items;
-use items::{collect_items, collect_returning, target_rel, walk_subqueries};
+use exprs::walk_subqueries;
+use items::{collect_items, collect_returning, target_rel, visit_join_constraint};
 
 pub(super) const SYNTHETIC_TARGET: &str = "__nm_frag_target";
 
@@ -41,7 +43,7 @@ fn collect_statement(statement: &Statement, ctes: &[String], out: &mut Vec<Fragm
                     alias: insert.table_alias.as_ref().map(|a| ident_key(&a.alias)),
                     is_local_derived: false,
                 };
-                collect_returning(&target, &[], insert.returning.as_deref(), out);
+                collect_returning(&target, &[], ctes, insert.returning.as_deref(), out);
             }
             if let Some(source) = insert.source.as_deref() {
                 collect_query(source, ctes, false, out);
@@ -59,8 +61,9 @@ fn collect_statement(statement: &Statement, ctes: &[String], out: &mut Vec<Fragm
                 let mut peers = collect_rels(from, ctes, out);
                 for join in &update.table.joins {
                     push_factor(&join.relation, ctes, &mut peers, out);
+                    visit_join_constraint(&join.join_operator, ctes, out);
                 }
-                collect_returning(&target, &peers, update.returning.as_deref(), out);
+                collect_returning(&target, &peers, ctes, update.returning.as_deref(), out);
             }
         }
         Statement::Delete(delete) => {
@@ -69,7 +72,7 @@ fn collect_statement(statement: &Statement, ctes: &[String], out: &mut Vec<Fragm
             };
             if let Some(target) = first.and_then(|table| target_rel(&table.relation)) {
                 let peers = collect_rels(delete.using.as_deref().unwrap_or_default(), ctes, out);
-                collect_returning(&target, &peers, delete.returning.as_deref(), out);
+                collect_returning(&target, &peers, ctes, delete.returning.as_deref(), out);
             }
         }
         Statement::Explain { statement, .. } => collect_statement(statement, ctes, out),
@@ -134,10 +137,16 @@ fn collect_set(expr: &SetExpr, ctes: &[String], in_exists: bool, out: &mut Vec<F
 fn collect_select(select: &Select, ctes: &[String], in_exists: bool, out: &mut Vec<FragmentStar>) {
     let rels = collect_rels(&select.from, ctes, out);
     if !in_exists {
-        collect_items(&select.projection, &rels, false, out);
+        collect_items(&select.projection, &rels, ctes, false, out);
     }
-    if let Some(selection) = &select.selection {
-        walk_subqueries(selection, ctes, out);
+    for expr in select
+        .selection
+        .iter()
+        .chain(select.having.iter())
+        .chain(select.qualify.iter())
+        .chain(select.prewhere.iter())
+    {
+        walk_subqueries(expr, ctes, out);
     }
 }
 
@@ -147,6 +156,7 @@ fn collect_rels(from: &[TableWithJoins], ctes: &[String], out: &mut Vec<Fragment
         push_factor(&table.relation, ctes, &mut rels, out);
         for join in &table.joins {
             push_factor(&join.relation, ctes, &mut rels, out);
+            visit_join_constraint(&join.join_operator, ctes, out);
         }
     }
     rels

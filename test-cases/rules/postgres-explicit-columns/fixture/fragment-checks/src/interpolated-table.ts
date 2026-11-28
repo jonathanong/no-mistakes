@@ -11,7 +11,10 @@ export function loadMixedUntagged(table: MixedTarget, id: string) {
 }
 
 export function loadMixedTagged(table: MixedTarget, id: string) {
-  return query(sql`SELECT * FROM ${table} WHERE id = ${id}`);
+  const q = sql`SELECT * FROM `;
+  q.append(table);
+  q.append(sql` WHERE id = ${id}`);
+  return query(q);
 }
 
 export function loadViewsUntagged(table: ViewOnlyTarget, id: string) {
@@ -19,9 +22,20 @@ export function loadViewsUntagged(table: ViewOnlyTarget, id: string) {
 }
 
 export function loadViewsTagged(table: ViewOnlyTarget, id: string) {
-  return query(sql`SELECT * FROM ${table} WHERE id = ${id}`);
+  const q = sql`SELECT * FROM `;
+  q.append(table);
+  q.append(sql` WHERE id = ${id}`);
+  return query(q);
 }
 
 export function loadIndexedUnion(table: IndexedTarget, id: string) {
-  return query(sql`SELECT * FROM ${table} WHERE id = ${id}`);
+  return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
+}
+
+export function loadDirectIndexedAndAlias(
+  table: (typeof TABLE_CHOICES)[number],
+  id: string,
+) {
+  const relation = table;
+  return query(`SELECT * FROM ${relation} WHERE id = $1`, [id]);
 }

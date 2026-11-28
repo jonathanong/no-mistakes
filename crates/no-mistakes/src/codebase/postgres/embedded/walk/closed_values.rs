@@ -33,6 +33,7 @@ mod parameter_members;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod parent_fields_tests;
 mod predicate;
+mod relation;
 mod state;
 use expression::expression;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
@@ -63,49 +64,10 @@ struct Arm {
 pub(super) struct ClosedValues {
     frames: Vec<FxHashMap<String, Vec<Arm>>>,
     relation_frames: Vec<FxHashMap<String, Vec<Arm>>>,
+    const_literal_arrays: Vec<FxHashMap<String, Vec<String>>>,
     type_frames: Vec<FxHashMap<String, Vec<String>>>,
     namespace_shadows: FxHashMap<u32, std::sync::Arc<crate::fx::FxHashSet<String>>>,
     assertions: FxHashMap<String, crate::codebase::postgres::embedded::SqlIdentifierAssertion>,
-}
-impl ClosedValues {
-    pub(super) fn push(&mut self) {
-        self.frames.push(FxHashMap::default());
-        self.relation_frames.push(FxHashMap::default());
-        self.type_frames.push(FxHashMap::default());
-    }
-    pub(super) fn pop(&mut self) {
-        self.frames.pop();
-        self.relation_frames.pop();
-        self.type_frames.pop();
-    }
-    pub(super) fn roots(
-        &self,
-        scopes: &[HashMap<String, super::BindingState>],
-        name: &str,
-    ) -> Vec<String> {
-        scopes
-            .iter()
-            .rposition(|scope| scope.contains_key(name))
-            .and_then(|i| self.frames.get(i))
-            .and_then(|frame| frame.get(name))
-            .into_iter()
-            .flatten()
-            .filter(|arm| !matches!(arm.node, Node::Text(_)))
-            .filter_map(|arm| arm.root.clone())
-            .collect()
-    }
-    pub(super) fn has(&self, scopes: &[HashMap<String, super::BindingState>], name: &str) -> bool {
-        scopes
-            .iter()
-            .enumerate()
-            .rev()
-            .find(|(_, scope)| scope.contains_key(name))
-            .is_some_and(|(i, _)| {
-                self.frames
-                    .get(i)
-                    .is_some_and(|frame| frame.contains_key(name))
-            })
-    }
 }
 fn lookup(visitor: &ScopeVisitor<'_>, name: &str) -> Option<Vec<Arm>> {
     let i = visitor
@@ -120,7 +82,7 @@ fn lookup(visitor: &ScopeVisitor<'_>, name: &str) -> Option<Vec<Arm>> {
         .get(name)
         .cloned()
 }
-pub(super) use types::recover_relation;
+pub(super) use relation::recover_relation;
 
 pub(super) fn recover(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>) -> Option<Vec<Recovered>> {
     if matches!(

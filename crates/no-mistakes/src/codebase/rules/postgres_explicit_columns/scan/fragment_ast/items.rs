@@ -1,13 +1,15 @@
+use super::exprs::{walk_expr_stars, walk_subqueries};
 use super::{FragmentStar, Rel, SYNTHETIC_TARGET};
 use no_mistakes_postgres_sql::idents::{ident_key, object_name_key};
 use sqlparser::ast::{
-    Expr, FunctionArg, FunctionArgExpr, FunctionArguments, ObjectName, SelectItem,
-    SelectItemQualifiedWildcardKind, Spanned, TableFactor,
+    JoinConstraint, JoinOperator, ObjectName, SelectItem, SelectItemQualifiedWildcardKind, Spanned,
+    TableFactor,
 };
 
 pub(super) fn collect_items(
     items: &[SelectItem],
     rels: &[Rel],
+    ctes: &[String],
     returning: bool,
     out: &mut Vec<FragmentStar>,
 ) {
@@ -21,14 +23,14 @@ pub(super) fn collect_items(
             SelectItem::UnnamedExpr(expr)
             | SelectItem::ExprWithAlias { expr, .. }
             | SelectItem::ExprWithAliases { expr, .. } => {
-                walk_expr_stars(expr, rels, returning, line, out);
+                walk_expr_stars(expr, rels, ctes, returning, line, out);
             }
             _ => {}
         }
     }
 }
 
-fn emit_bare(
+pub(super) fn emit_bare(
     rels: &[Rel],
     returning: bool,
     func: Option<String>,
@@ -59,7 +61,7 @@ fn emit_bare(
     }
 }
 
-fn emit_qualified(
+pub(super) fn emit_qualified(
     rels: &[Rel],
     name: &ObjectName,
     returning: bool,
@@ -99,50 +101,10 @@ fn emit_qualified(
     }
 }
 
-fn walk_expr_stars(
-    expr: &Expr,
-    rels: &[Rel],
-    returning: bool,
-    line: usize,
-    out: &mut Vec<FragmentStar>,
-) {
-    let line = (expr.span().start.line as usize).max(line);
-    match expr {
-        Expr::Function(func) => {
-            let name = object_name_key(&func.name);
-            let FunctionArguments::List(args) = &func.args else {
-                return;
-            };
-            for arg in &args.args {
-                let inner = match arg {
-                    FunctionArg::Unnamed(a)
-                    | FunctionArg::Named { arg: a, .. }
-                    | FunctionArg::ExprNamed { arg: a, .. } => a,
-                };
-                match inner {
-                    FunctionArgExpr::Wildcard if !name.eq_ignore_ascii_case("count") => {
-                        emit_bare(rels, returning, Some(name.clone()), line, out);
-                    }
-                    FunctionArgExpr::QualifiedWildcard(q) => {
-                        emit_qualified(rels, q, returning, Some(name.clone()), line, out);
-                    }
-                    FunctionArgExpr::Expr(e) => walk_expr_stars(e, rels, returning, line, out),
-                    _ => {}
-                }
-            }
-        }
-        Expr::Nested(inner) | Expr::Cast { expr: inner, .. } => {
-            walk_expr_stars(inner, rels, returning, line, out);
-        }
-        Expr::Exists { subquery, .. } => super::collect_query(subquery, &[], true, out),
-        Expr::Subquery(subquery) => super::collect_query(subquery, &[], false, out),
-        _ => {}
-    }
-}
-
 pub(super) fn collect_returning(
     target: &Rel,
     peers: &[Rel],
+    ctes: &[String],
     items: Option<&[SelectItem]>,
     out: &mut Vec<FragmentStar>,
 ) {
@@ -154,7 +116,7 @@ pub(super) fn collect_returning(
         } else {
             &all
         };
-        collect_items(std::slice::from_ref(item), visible, true, out);
+        collect_items(std::slice::from_ref(item), visible, ctes, true, out);
     }
 }
 
@@ -174,19 +136,27 @@ pub(super) fn target_rel(factor: &TableFactor) -> Option<Rel> {
     }
 }
 
-pub(super) fn walk_subqueries(expr: &Expr, ctes: &[String], out: &mut Vec<FragmentStar>) {
-    match expr {
-        Expr::Exists { subquery, .. } => super::collect_query(subquery, ctes, true, out),
-        Expr::Subquery(subquery) => {
-            super::collect_query(subquery, ctes, false, out);
-        }
-        Expr::BinaryOp { left, right, .. } => {
-            walk_subqueries(left, ctes, out);
-            walk_subqueries(right, ctes, out);
-        }
-        Expr::UnaryOp { expr: inner, .. } | Expr::Nested(inner) => {
-            walk_subqueries(inner, ctes, out);
-        }
-        _ => {}
+pub(super) fn visit_join_constraint(
+    op: &JoinOperator,
+    ctes: &[String],
+    out: &mut Vec<FragmentStar>,
+) {
+    let constraint = match op {
+        JoinOperator::Join(c)
+        | JoinOperator::Inner(c)
+        | JoinOperator::Left(c)
+        | JoinOperator::LeftOuter(c)
+        | JoinOperator::Right(c)
+        | JoinOperator::RightOuter(c)
+        | JoinOperator::FullOuter(c)
+        | JoinOperator::LeftSemi(c)
+        | JoinOperator::RightSemi(c)
+        | JoinOperator::LeftAnti(c)
+        | JoinOperator::RightAnti(c)
+        | JoinOperator::StraightJoin(c) => Some(c),
+        _ => None,
+    };
+    if let Some(JoinConstraint::On(expr)) = constraint {
+        walk_subqueries(expr, ctes, out);
     }
 }

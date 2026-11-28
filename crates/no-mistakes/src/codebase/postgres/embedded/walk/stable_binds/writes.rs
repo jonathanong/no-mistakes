@@ -104,19 +104,16 @@ impl<'a> Visit<'a> for Writes {
     }
 }
 
-fn primitive(ty: &TSType<'_>, alias_ok: &impl Fn(&str) -> bool) -> bool {
+fn primitive(ty: &TSType<'_>, extra_ok: &impl Fn(&TSType<'_>) -> bool) -> bool {
     match ty {
-        TSType::TSParenthesizedType(inner) => primitive(&inner.type_annotation, alias_ok),
-        TSType::TSUnionType(union) => union.types.iter().all(|t| primitive(t, alias_ok)),
+        TSType::TSParenthesizedType(inner) => primitive(&inner.type_annotation, extra_ok),
+        TSType::TSUnionType(union) => union.types.iter().all(|t| primitive(t, extra_ok)),
         TSType::TSLiteralType(literal) => matches!(literal.literal, TSLiteral::StringLiteral(_)),
-        TSType::TSTypeReference(reference) if reference.type_arguments.is_none() => {
-            matches!(&reference.type_name, TSTypeName::IdentifierReference(id) if alias_ok(id.name.as_str()))
-        }
         TSType::TSStringKeyword(_)
         | TSType::TSNumberKeyword(_)
         | TSType::TSBigIntKeyword(_)
         | TSType::TSBooleanKeyword(_) => true,
-        _ => false,
+        other => extra_ok(other),
     }
 }
 
@@ -176,7 +173,7 @@ impl Writes {
     pub(in crate::codebase::postgres::embedded::walk) fn parameters(
         &self,
         params: &FormalParameters<'_>,
-        alias_ok: impl Fn(&str) -> bool,
+        extra_ok: impl Fn(&TSType<'_>) -> bool,
     ) -> Vec<u32> {
         params
             .items
@@ -188,7 +185,7 @@ impl Writes {
                 let primitive = param
                     .type_annotation
                     .as_ref()
-                    .is_some_and(|ty| primitive(&ty.type_annotation, &alias_ok));
+                    .is_some_and(|ty| primitive(&ty.type_annotation, &extra_ok));
                 (primitive && !self.opaque && !self.names.contains(id.name.as_str()))
                     .then_some(id.span.start)
             })

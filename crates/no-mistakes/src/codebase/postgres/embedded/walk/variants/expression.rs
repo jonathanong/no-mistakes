@@ -105,13 +105,7 @@ pub(super) fn recover(
                 .imported_sql_tags()
                 .parameterizes_all(&tagged.tag)
             {
-                template::relation_slot::recover_parameterized(
-                    visitor,
-                    &tagged.quasi,
-                    depth - 1,
-                    constraints,
-                )
-                .or_else(|| literal(visitor, expr, line))
+                literal(visitor, expr, line)
             } else {
                 template::recover(visitor, &tagged.quasi, depth - 1, constraints)
             }

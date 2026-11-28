@@ -205,6 +205,22 @@ their existing scopes. See [the migration notes](../migrations/explicit-postgres
         }
       }
     }
+  },
+  "views": {
+    "orders_summary": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "audit_view": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    }
   }
 }
 ```
@@ -227,13 +243,14 @@ Assembled statements and closed-union templates that read only views, CTEs, or
 explicit columns also pass:
 
 ```ts
+// src/examples.ts
 import { query } from "@example/db";
 import sql, { SQLStatement } from "sql-template-strings";
 
 type ViewTarget = "orders_summary" | "audit_view";
 
 export function loadFromView(table: ViewTarget, id: string) {
-  return query(sql`SELECT * FROM ${table} WHERE id = ${id}`);
+  return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
 }
 
 export function loadFromCte(id: string, filter?: SQLStatement) {
@@ -288,6 +305,22 @@ export function loadFromCte(id: string, filter?: SQLStatement) {
         }
       }
     }
+  },
+  "views": {
+    "orders_summary": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    },
+    "audit_view": {
+      "columns": {
+        "id": {
+          "dataType": "uuid"
+        }
+      }
+    }
   }
 }
 ```
@@ -309,6 +342,7 @@ and shared `RETURNING *` constants are also reported (even under
 `unanalyzableSql: ignore`), and unresolvable fragment relations emit advisories:
 
 ```ts
+// src/examples.ts
 import { query } from "@example/db";
 import sql, { SQLStatement } from "sql-template-strings";
 
@@ -323,7 +357,7 @@ export function archiveOrder(id: string, filter?: SQLStatement) {
 }
 
 export function loadMixed(table: MixedTarget, id: string) {
-  return query(sql`SELECT * FROM ${table} WHERE id = ${id}`); // reported against orders
+  return query(`SELECT * FROM ${table} WHERE id = $1`, [id]); // reported against orders
 }
 
 export function deleteOrder(id: string) {

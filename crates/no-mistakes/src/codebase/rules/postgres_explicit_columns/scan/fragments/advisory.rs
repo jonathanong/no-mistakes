@@ -99,15 +99,22 @@ pub(super) fn resolved_relations(star: &FragmentStar, ctx: &FragmentContext) -> 
             .unwrap_or_default();
     }
     if let Some(q) = &star.qualifier {
+        if let Some((t, _)) = ctx
+            .from_relations
+            .iter()
+            .find(|(_, a)| a.as_deref() == Some(q.as_str()))
+            .or_else(|| {
+                ctx.from_relations.iter().find(|(t, a)| {
+                    a.is_none() && (t == q || t.rsplit('.').next() == Some(q.as_str()))
+                })
+            })
+        {
+            return vec![t.clone()];
+        }
         if ctx.ctes.iter().any(|cte| cte.eq_ignore_ascii_case(q)) {
             return vec![q.clone()];
         }
-        return ctx
-            .from_relations
-            .iter()
-            .find(|(t, a)| a.as_deref() == Some(q.as_str()) || t == q)
-            .map(|(t, _)| vec![t.clone()])
-            .unwrap_or_default();
+        return Vec::new();
     }
     ctx.from_relations.iter().map(|(t, _)| t.clone()).collect()
 }

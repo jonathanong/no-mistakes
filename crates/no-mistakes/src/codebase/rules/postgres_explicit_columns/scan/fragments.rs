@@ -82,7 +82,8 @@ struct FileScanner<'a> {
 
 impl FileScanner<'_> {
     fn scan_fragment(&mut self, fragment: &CallSqlFragment) {
-        let stars = fragment_parse::extract_fragment_stars(&fragment.sql);
+        let stars =
+            fragment_parse::extract_fragment_stars(&fragment.sql, fragment.context_sql.as_deref());
         if stars.is_empty() {
             return;
         }
@@ -128,7 +129,7 @@ impl FileScanner<'_> {
             return;
         }
         for relation in candidates {
-            if ctx.ctes.iter().any(|cte| cte.eq_ignore_ascii_case(&relation)) {
+            if !relation.contains('.') && ctx.ctes.iter().any(|cte| cte.eq_ignore_ascii_case(&relation)) {
                 continue;
             }
             if is_placeholder_relation(&relation) {

@@ -8,7 +8,7 @@ use oxc_span::GetSpan;
 
 mod collect;
 mod partial;
-pub(crate) use collect::publish_call_fragments;
+pub(crate) use partial::publish_call_fragments;
 
 const MAX_PREFIX_BYTES: usize = 4096;
 
@@ -21,7 +21,7 @@ pub(super) struct BuilderTrace {
 #[derive(Default)]
 pub(super) struct CallFragmentState {
     pub(super) builders: FxHashMap<(usize, String), BuilderTrace>,
-    pub(super) function_returns: FxHashMap<String, Vec<CallSqlFragment>>,
+    pub(super) function_returns: FxHashMap<(u32, String), Vec<CallSqlFragment>>,
     pub(super) call_fragments: FxHashMap<(u32, u32), Vec<CallSqlFragment>>,
     pub(super) param_appends: Vec<CallSqlFragment>,
 }
@@ -41,11 +41,8 @@ impl ScopeVisitor<'_> {
         let init = unwrap_ts_wrappers(init);
         if let Expression::CallExpression(call) = init {
             if let Expression::Identifier(callee) = unwrap_ts_wrappers(&call.callee) {
-                if let Some(returned) = self
-                    .call_fragment_state
-                    .function_returns
-                    .get(callee.name.as_str())
-                    .cloned()
+                let key = self.plain_key(callee.name.as_str());
+                if let Some(returned) = self.call_fragment_state.function_returns.get(&key).cloned()
                 {
                     let prefix = returned.first().map(|item| item.sql.clone());
                     self.call_fragment_state.builders.insert(
@@ -140,6 +137,33 @@ impl ScopeVisitor<'_> {
             .get(&key)
             .and_then(|trace| trace.prefix.clone())
             .or_else(|| binding.sql.clone());
+        let straight_line = self.control_depth == 0 && self.loop_depth == 0;
+        if binding.initialized {
+            if let Some(rels) = context
+                .as_deref()
+                .filter(|c| {
+                    crate::codebase::postgres::embedded::helpers::sentinel::in_relation_slot(
+                        c,
+                        c.len(),
+                    )
+                })
+                .and_then(|_| partial::closed_relation_names(self, arg))
+            {
+                let trace = self.call_fragment_state.builders.entry(key).or_default();
+                partial::apply_relation_append(
+                    trace,
+                    context.as_deref().unwrap_or_default(),
+                    &rels,
+                    straight_line,
+                    call.span.start,
+                    crate::codebase::ts_source::byte_offset_to_line(
+                        self.source,
+                        call.span.start as usize,
+                    ),
+                );
+                return;
+            }
+        }
         let added = partial::expr_fragments(self, arg, context.as_deref(), Some(call.span.start));
         if added.is_empty() {
             return;
@@ -152,11 +176,7 @@ impl ScopeVisitor<'_> {
         if trace.prefix.is_none() {
             trace.prefix = context;
         }
-        extend_prefix(
-            trace,
-            &added,
-            self.control_depth == 0 && self.loop_depth == 0,
-        );
+        extend_prefix(trace, &added, straight_line);
         trace.fragments.extend(added);
     }
 }

@@ -22,7 +22,7 @@ pub(super) fn parse_context(prefix: &str) -> FragmentContext {
     ctx
 }
 
-pub(super) fn extract_fragment_stars(sql: &str) -> Vec<FragmentStar> {
+pub(super) fn extract_fragment_stars(sql: &str, context_sql: Option<&str>) -> Vec<FragmentStar> {
     if !sql.contains('*') {
         return Vec::new();
     }
@@ -33,6 +33,9 @@ pub(super) fn extract_fragment_stars(sql: &str) -> Vec<FragmentStar> {
             return out;
         }
     }
+    let (ctx_select, ctx_returning) = context_sql
+        .map(|prefix| open_clause_at_end(&tokenize(prefix)))
+        .unwrap_or((false, false));
     let toks = tokenize(sql);
     if let Some((_, token)) = next_code(&toks, 0) {
         if is_kw(token, Keyword::RETURNING) {
@@ -42,14 +45,30 @@ pub(super) fn extract_fragment_stars(sql: &str) -> Vec<FragmentStar> {
                 return out;
             }
         } else if matches!(token.token, Token::Comma) {
-            let wrapped = format!("SELECT 1 {sql}");
+            let wrapped = if ctx_returning {
+                format!("DELETE FROM {SYNTHETIC_TARGET} RETURNING 1 {sql}")
+            } else {
+                format!("SELECT 1 {sql}")
+            };
+            if let Ok(statements) = parse_postgres_sql(&wrapped) {
+                fragment_ast::collect_statements(&statements, &mut out);
+                return out;
+            }
+        } else if ctx_select {
+            let wrapped = format!("SELECT {sql}");
+            if let Ok(statements) = parse_postgres_sql(&wrapped) {
+                fragment_ast::collect_statements(&statements, &mut out);
+                return out;
+            }
+        } else if ctx_returning {
+            let wrapped = format!("DELETE FROM {SYNTHETIC_TARGET} RETURNING {sql}");
             if let Ok(statements) = parse_postgres_sql(&wrapped) {
                 fragment_ast::collect_statements(&statements, &mut out);
                 return out;
             }
         }
     }
-    tokens::extract_stars(&toks, &mut out);
+    tokens::extract_stars(&toks, ctx_select, ctx_returning, &mut out);
     out
 }
 
@@ -78,4 +97,46 @@ pub(super) fn word_value(token: &TokenWithSpan) -> Option<String> {
         Token::Word(word) => Some(word.value.to_ascii_lowercase()),
         _ => None,
     }
+}
+
+fn open_clause_at_end(tokens: &[TokenWithSpan]) -> (bool, bool) {
+    let mut depth = 0usize;
+    let mut select = false;
+    let mut returning = false;
+    for token in tokens {
+        if matches!(token.token, Token::Whitespace(_)) {
+            continue;
+        }
+        match &token.token {
+            Token::LParen => depth += 1,
+            Token::RParen => depth = depth.saturating_sub(1),
+            _ if depth > 0 => {}
+            _ if is_kw(token, Keyword::SELECT) => {
+                select = true;
+                returning = false;
+            }
+            _ if is_kw(token, Keyword::RETURNING) => {
+                returning = true;
+                select = false;
+            }
+            _ if is_kw(token, Keyword::FROM)
+                || is_kw(token, Keyword::WHERE)
+                || is_kw(token, Keyword::INTO)
+                || is_kw(token, Keyword::SET)
+                || is_kw(token, Keyword::VALUES)
+                || is_kw(token, Keyword::GROUP)
+                || is_kw(token, Keyword::ORDER)
+                || is_kw(token, Keyword::LIMIT)
+                || is_kw(token, Keyword::HAVING)
+                || is_kw(token, Keyword::UNION)
+                || is_kw(token, Keyword::INTERSECT)
+                || is_kw(token, Keyword::EXCEPT) =>
+            {
+                select = false;
+                returning = false;
+            }
+            _ => {}
+        }
+    }
+    (select, returning)
 }

@@ -19,13 +19,6 @@ pub(super) fn argument(
             }
             _ => None,
         }
-    } else if matches!(
-        unwrap_ts_wrappers(argument),
-        Expression::TaggedTemplateExpression(_) | Expression::Identifier(_)
-    ) {
-        visitor
-            .recover_variants(argument)
-            .filter(|versions| versions.iter().any(|version| version.closed_domain))
     } else {
         None
     };
@@ -60,12 +53,11 @@ pub(super) fn publish(
                     versions
                         .iter()
                         .any(|version| version.enumerated || !version.choices.is_empty())
-                } else if kind == EmbeddedSqlKind::Composed {
-                    versions
-                        .iter()
-                        .any(|version| !version.append_sites.is_empty() || version.closed_domain)
                 } else {
-                    versions.iter().any(|version| version.closed_domain)
+                    kind == EmbeddedSqlKind::Composed
+                        && versions
+                            .iter()
+                            .any(|version| !version.append_sites.is_empty())
                 }
         })
         .unwrap_or_default()

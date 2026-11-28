@@ -9,7 +9,6 @@ pub(super) mod builder_text;
 pub(super) mod clauses;
 mod effects;
 mod piece;
-pub(super) mod relation_slot;
 
 pub(super) fn recover(
     visitor: &ScopeVisitor<'_>,
@@ -31,7 +30,6 @@ pub(super) fn recover(
                 &mut |name| compose::tag_shadowed(name, visitor),
                 visitor.functions.imported_sql_tags(),
             );
-            let mut expanded_relation = false;
             let pieces = if is_fragment {
                 expression::recover(visitor, expr, depth, constraints)?
                     .into_iter()
@@ -52,11 +50,6 @@ pub(super) fn recover(
                         value
                     })
                     .collect()
-            } else if let Some(relation_pieces) =
-                relation_slot::pieces(visitor, expr, &versions, depth, constraints)
-            {
-                expanded_relation = true;
-                relation_pieces
             } else {
                 let line = byte_offset_to_line(visitor.source, expr.span().start as usize);
                 let mut value = Recovered::empty(line);
@@ -65,7 +58,7 @@ pub(super) fn recover(
                 vec![value]
             };
             versions = combine(versions, pieces)?;
-            if is_fragment || expanded_relation {
+            if is_fragment {
                 for version in &mut versions {
                     version.enumerated = true;
                 }

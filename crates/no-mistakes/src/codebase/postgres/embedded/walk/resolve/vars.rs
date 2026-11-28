@@ -142,27 +142,23 @@ pub(super) fn record_declarator(
             },
         );
     }
-    visitor.note_builder_init(
-        scope_index,
-        ident.name.as_str(),
-        init,
-        init_sql.as_deref(),
-        line,
-    );
+    let init_name = ident.name.as_str();
+    visitor.note_builder_init(scope_index, init_name, init, init_sql.as_deref(), line);
     if let Some(index) = relative_executor_proof {
-        visitor.relative_proofs[scope_index].insert(ident.name.to_string(), index);
+        visitor.relative_proofs[scope_index].insert(init_name.to_string(), index);
     }
     if namespace_executor {
-        visitor.namespace_proofs[scope_index].insert(ident.name.to_string());
+        visitor.namespace_proofs[scope_index].insert(init_name.to_string());
     }
     if is_const {
-        visitor.note_const_object(init, scope_index, ident.name.as_str());
-        visitor.note_text_const(init, scope_index, ident.name.as_str());
+        let ann = declarator.type_annotation.as_deref();
+        visitor.note_const_object(ann, init, scope_index, init_name);
+        visitor.note_text_const(init, scope_index, init_name);
         super::super::imported::constants::note_fragment_const(
             visitor,
             init,
             scope_index,
-            ident.name.as_str(),
+            init_name,
         );
     }
 }
