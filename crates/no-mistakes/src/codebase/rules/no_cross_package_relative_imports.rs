@@ -1,5 +1,4 @@
 use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::check_outcome::CheckInputFailure;
