@@ -144,3 +144,63 @@ fn vitest_import_calls_distinguish_vitest_bindings_and_computed_args() {
         ]
     );
 }
+
+#[test]
+fn vitest_helper_imports_follow_the_unanalyzable_policy() {
+    use crate::codebase::rules::run_check;
+
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &crate::test_support::rule_fixture_root(RULE_ID),
+    );
+    let rows = |name: &str| {
+        let mut findings = run_check(&root, Some(&root.join(name)), None).unwrap();
+        findings.sort_by_key(|finding| (finding.line, finding.import.clone()));
+        findings
+            .into_iter()
+            .map(|finding| {
+                (
+                    finding.line,
+                    finding.import.unwrap_or_default(),
+                    finding.message,
+                )
+            })
+            .collect::<Vec<_>>()
+    };
+
+    let crossing = "../../shared/src/status.mts";
+    let receiver = "Unanalyzable import: the receiver of importActual or importMock is unresolved. Import vi directly from Vitest.";
+    assert_eq!(
+        rows("helper-vitest-report.yml"),
+        vec![
+            (5, crossing.to_owned(), receiver.to_owned()),
+            (6, crossing.to_owned(), receiver.to_owned()),
+            (8, crossing.to_owned(), receiver.to_owned()),
+            (9, "<computed>".to_owned(), receiver.to_owned()),
+        ]
+    );
+    assert!(rows("helper-vitest-ignore.yml").is_empty());
+    assert!(rows("helper-vitest-default.yml").is_empty());
+
+    let direct = rows("helper-vitest-direct.yml");
+    assert_eq!(
+        direct,
+        vec![
+            (
+                6,
+                "<computed>".to_owned(),
+                "Unanalyzable import: the specifier is computed. Use a literal import specifier."
+                    .to_owned(),
+            ),
+            (
+                8,
+                "../../shared/src/missing-topic.mts".to_owned(),
+                "Unanalyzable import: the relative specifier has no unique file target. Run resolve-check and fix resolution.".to_owned(),
+            ),
+            (
+                9,
+                crossing.to_owned(),
+                "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.".to_owned(),
+            ),
+        ]
+    );
+}
