@@ -74,3 +74,65 @@ SELECT (
     LIMIT 1
 )
 FROM orders o;
+
+SELECT (
+    SELECT sum(d.amount) OVER w1 + sum(d.amount) OVER w2
+    FROM details d
+    WINDOW w1 AS (ROWS (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING),
+           w2 AS (ROWS (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING)
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT (
+    SELECT pg_catalog.row_number() OVER w
+    FROM details d
+    WINDOW w AS (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT (
+    SELECT pg_catalog.row_number() OVER w + sum(d.amount) OVER w
+    FROM details d
+    WINDOW w AS (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT (
+    SELECT pg_catalog.row_number() OVER (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    FROM details d
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT (
+    SELECT pg_catalog.row_number() OVER w + sum(d.amount) OVER (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    FROM details d
+    WINDOW w AS (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT (
+    SELECT pg_catalog.row_number() OVER (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    + sum(d.amount) OVER (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    FROM details d
+    LIMIT 1
+)
+FROM orders o;

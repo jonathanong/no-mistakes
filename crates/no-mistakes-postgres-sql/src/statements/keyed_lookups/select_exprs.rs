@@ -1,16 +1,15 @@
-mod identity;
+pub(super) mod identity;
 
 use super::function_clauses::is_eager;
 use super::grouping;
 use super::join::register_table_with_joins;
 use super::scope::{ScopeSnapshot, ScopeStack};
 use super::subquery::inspect_expr;
-use super::windows::referenced_expressions;
+use super::windows::WindowPlan;
 use super::{select_item_expr, walk_nested_queries, LookupHistory};
 use crate::fx::{FxHashMap, FxHashSet};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 pub(super) use identity::target_identity;
-use identity::{normalize_sort_options, normalize_target};
 use sqlparser::ast::{Distinct, Expr, Function, Select, SelectItem, WindowSpec};
 use std::borrow::Cow;
 use std::cell::{OnceCell, RefCell};
@@ -21,7 +20,7 @@ pub(super) struct SelectTargets<'a> {
     grouping: Option<&'a grouping::GroupReuse>,
     before_grouping: Option<&'a ScopeSnapshot>,
     keys: OnceCell<RefCell<FxHashSet<Expr>>>,
-    windows: RefCell<FxHashSet<WindowSpec>>,
+    windows: Option<&'a WindowPlan>,
     filtered: RefCell<FxHashMap<Expr, LookupHistory>>,
 }
 
@@ -52,14 +51,9 @@ impl SelectTargets<'_> {
         self.filtered.borrow_mut().insert(filter, history);
     }
 
-    pub(super) fn reuses_window(&self, spec: &WindowSpec) -> bool {
-        if spec.window_frame.is_none() {
-            return false;
-        }
-        let mut key = spec.clone();
-        normalize_sort_options(&mut key.order_by);
-        normalize_target(&mut key);
-        !self.windows.borrow_mut().insert(key)
+    pub(super) fn take_inline_frame(&self, spec: &WindowSpec) -> Option<bool> {
+        self.windows
+            .map_or(Some(true), |windows| windows.take_inline_frame(spec))
     }
 
     pub(super) fn reuses(&self, expr: &Expr) -> bool {
@@ -95,15 +89,18 @@ pub(super) fn walk_select(
         scopes.refresh_bindings(0..scopes.binding_count());
         scopes.snapshot()
     });
-    let group_by = grouping::targets(&select.group_by, &select.projection);
+    let group_by = grouping::targets(select);
     let reuse = grouping::GroupReuse::new(&group_by);
+    let windows = WindowPlan::new(select, order_by);
     let targets = SelectTargets {
         projection: &select.projection,
         grouping: Some(&reuse),
         before_grouping: after_grouping.as_ref().map(|_| &before_grouping),
+        windows: Some(&windows),
         ..SelectTargets::default()
     };
-    for (expr, runs_before_grouping) in expressions(select, order_by, &targets, &group_by) {
+    for (expr, runs_before_grouping) in expressions(select, order_by, &targets, &group_by, &windows)
+    {
         let outer = after_grouping
             .as_ref()
             .filter(|_| !runs_before_grouping)
@@ -128,6 +125,7 @@ fn expressions<'a>(
     order_by: &'a [&'a Expr],
     select_targets: &'a SelectTargets<'a>,
     grouping_targets: &'a [&'a Expr],
+    windows: &'a WindowPlan,
 ) -> impl Iterator<Item = (Cow<'a, Expr>, bool)> {
     let distinct_on = match &select.distinct {
         Some(Distinct::On(expressions)) => expressions.as_slice(),
@@ -157,20 +155,16 @@ fn expressions<'a>(
                 .iter()
                 .map(|expr| (expr, Inspection::Projection)),
         )
-        .chain(
-            referenced_expressions(select, distinct_on, order_by, select_targets).map(
-                |(expr, can_reuse)| {
-                    (
-                        expr,
-                        if can_reuse {
-                            Inspection::Reusable
-                        } else {
-                            Inspection::Independent
-                        },
-                    )
+        .chain(windows.named_expressions(select).map(|(expr, can_reuse)| {
+            (
+                expr,
+                if can_reuse {
+                    Inspection::Reusable
+                } else {
+                    Inspection::Independent
                 },
-            ),
-        )
+            )
+        }))
         .chain(order_by.iter().copied().map(reusable))
         .filter_map(move |(expr, inspection)| match inspection {
             Inspection::BeforeGrouping => Some((Cow::Borrowed(expr), true)),

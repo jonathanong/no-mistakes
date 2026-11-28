@@ -1,9 +1,7 @@
-use super::function::{arguments_are_proven, bare_arguments, pure_name};
 use crate::idents::unwrap_expr;
-use sqlparser::ast::{
-    BinaryOperator, CaseWhen, DataType, Expr, Function, FunctionArg, FunctionArgExpr,
-    UnaryOperator, Value,
-};
+use sqlparser::ast::{BinaryOperator, CaseWhen, DataType, Expr, UnaryOperator, Value};
+mod calls;
+use calls::function_result;
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum BuiltinType {
@@ -58,6 +56,14 @@ pub(super) fn pattern_is_proven(expr: &Expr, pattern: &Expr, escape: Option<&Exp
         .into_iter()
         .flatten()
         .all(|expr| operand_type(expr) == Some(BuiltinType::Text))
+}
+
+pub(super) fn array_elements_are_proven(elements: &[Expr]) -> bool {
+    if let Some((first, rest)) = elements.split_first() {
+        list_operands_are_proven(first, rest)
+    } else {
+        false
+    }
 }
 
 pub(super) fn substring_is_proven(expr: &Expr, from: Option<&Expr>, length: Option<&Expr>) -> bool {
@@ -149,29 +155,6 @@ fn unary_result(op: UnaryOperator, expr: &Expr) -> Option<BuiltinType> {
         UnaryOperator::Plus | UnaryOperator::Minus if kind.numeric() => Some(kind),
         UnaryOperator::Not if kind == BuiltinType::Bool => Some(kind),
         UnaryOperator::BitwiseNot if kind.integer() => Some(kind),
-        _ => None,
-    }
-}
-
-fn function_result(function: &Function) -> Option<BuiltinType> {
-    let name = pure_name(function)?;
-    if name == "abs" {
-        let [FunctionArg::Unnamed(FunctionArgExpr::Expr(argument))] = bare_arguments(function)?
-        else {
-            return None;
-        };
-        return operand_type(argument).filter(|kind| kind.numeric());
-    }
-    if !arguments_are_proven(function) {
-        return None;
-    }
-    match name.as_str() {
-        "lower" | "upper" | "substr" | "substring" | "md5" | "replace" | "split_part" => {
-            Some(BuiltinType::Text)
-        }
-        "length" | "char_length" | "character_length" | "octet_length" => {
-            Some(BuiltinType::Integer)
-        }
         _ => None,
     }
 }

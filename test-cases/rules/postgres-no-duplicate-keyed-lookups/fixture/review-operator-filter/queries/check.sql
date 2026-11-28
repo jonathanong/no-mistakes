@@ -204,3 +204,37 @@ JOIN accounts b ON b.id = o.account_id
     AND (1::real + 2::double precision) = 3::double precision
     AND 2147483648 + 2147483648 = 4294967296
     AND 9223372036854775808 % 2.0 = 0.0;
+
+SELECT
+    (SELECT pg_catalog.substr('x'::bytea, 1) || 'y'::text
+     FROM accounts a WHERE a.id = o.account_id),
+    (SELECT pg_catalog.substr('x'::bytea, 1) || 'y'::text
+     FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT pg_catalog.substr('abc'::text, 1) || 'x'::text
+     FROM accounts a WHERE a.id = o.account_id),
+    (SELECT pg_catalog.substring(pg_catalog.lower('XYZ'), 1, 1) || 'y'::text
+     FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT a.x SIMILAR TO 'x%' FROM accounts a WHERE a.id = o.account_id),
+    (SELECT b.x SIMILAR TO 'x%' FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT 'abc' SIMILAR TO 'a%' FROM accounts a WHERE a.id = o.account_id),
+    (SELECT 'xyz' SIMILAR TO 'x%' ESCAPE '#' FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT ARRAY[a.raw, a.converted] FROM accounts a WHERE a.id = o.account_id),
+    (SELECT ARRAY[b.raw, b.converted] FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT ARRAY[1, 2] FROM accounts a WHERE a.id = o.account_id),
+    (SELECT ARRAY[3, 4] FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;

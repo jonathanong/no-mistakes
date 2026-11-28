@@ -1,7 +1,7 @@
 use super::function::{arguments_are_proven, pure_name};
 use super::operators::{
-    binary_is_proven, case_is_proven, comparable, list_operands_are_proven, pattern_is_proven,
-    substring_is_proven, unary_is_proven,
+    array_elements_are_proven, binary_is_proven, case_is_proven, comparable,
+    list_operands_are_proven, pattern_is_proven, substring_is_proven, unary_is_proven,
 };
 use crate::idents::unwrap_expr;
 use sqlparser::ast::{ArrayElemTypeDef, DataType, Expr, InTarget, Value};
@@ -62,6 +62,12 @@ pub(in crate::statements::keyed_lookups) fn projection_expr_is_unproven(expr: &E
             any,
             ..
         } => *any || !pattern_is_proven(expr, pattern, escape_char.as_deref()),
+        Expr::SimilarTo {
+            expr,
+            pattern,
+            escape_char,
+            ..
+        } => !pattern_is_proven(expr, pattern, escape_char.as_deref()),
         Expr::Substring {
             expr,
             substring_from,
@@ -79,6 +85,7 @@ pub(in crate::statements::keyed_lookups) fn projection_expr_is_unproven(expr: &E
             else_result,
             ..
         } => !case_is_proven(operand.as_deref(), conditions, else_result.as_deref()),
+        Expr::Array(array) => !array_elements_are_proven(&array.elem),
         Expr::Cast {
             expr, data_type, ..
         } => !has_builtin_type(expr) || cast_type(data_type).is_none(),

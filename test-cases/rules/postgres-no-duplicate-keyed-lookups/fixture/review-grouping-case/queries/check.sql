@@ -132,3 +132,23 @@ SELECT
 FROM orders o
 JOIN flags f ON f.id = (o.id IS NULL)
 GROUP BY CUBE(o.id);
+
+SELECT (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.account_id) AS probe
+    GROUP BY probe
+    HAVING (SELECT a.n FROM accounts a WHERE a.id = o.account_id) IS NOT NULL
+)
+FROM orders o;
+
+SELECT (SELECT a.id FROM accounts a WHERE a.id = o.account_id)::int
+FROM orders o
+ORDER BY (SELECT a.id FROM accounts a WHERE a.id = o.account_id)::integer;
+
+SELECT (SELECT a.id FROM accounts a WHERE a.id = o.account_id)::int
+FROM orders o
+ORDER BY (SELECT a.id FROM accounts a WHERE a.id = o.account_id)::bigint;
+
+SELECT (SELECT a.n FROM accounts a WHERE a.id = o.account_id) AS account_id
+FROM orders o
+GROUP BY account_id
+HAVING (SELECT a.n FROM accounts a WHERE a.id = o.account_id) IS NOT NULL;

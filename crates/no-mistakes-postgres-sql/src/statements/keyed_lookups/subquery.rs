@@ -91,9 +91,9 @@ fn inspect(
                     inspect(expr, input_scope, targets, seen, out, skip_eager);
                 });
             }
-            match &function.over {
-                Some(WindowType::WindowSpec(spec)) if !targets.reuses_window(spec) => {
-                    for (expr, can_reuse) in window_expressions(spec) {
+            if let Some(WindowType::WindowSpec(spec)) = &function.over {
+                if let Some(needs_frame) = targets.take_inline_frame(spec) {
+                    for (expr, can_reuse) in window_expressions(spec, needs_frame) {
                         if !can_reuse {
                             inspect(expr, outer, targets, seen, out, skip_eager);
                         } else if !targets.reuses(expr) {
@@ -102,7 +102,6 @@ fn inspect(
                         }
                     }
                 }
-                _ => {}
             }
         }
         other => visit_child_exprs(other, &mut |expr| {

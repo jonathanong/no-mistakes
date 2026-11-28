@@ -2,8 +2,8 @@ use super::super::table::lookup_table;
 use crate::idents::{ident_key, object_name_identity, relation_suffix_name, unwrap_expr};
 use crate::order::canonical_order_options;
 use sqlparser::ast::{
-    CastKind, Distinct, Expr, Ident, OrderByExpr, OrderByKind, OrderBySort, Query, Select,
-    SelectItem, SetExpr, TableFactor, TableInheritance, VisitMut, VisitorMut,
+    CastKind, DataType, Distinct, Expr, Ident, OrderByExpr, OrderByKind, OrderBySort, Query,
+    Select, SelectItem, SetExpr, TableFactor, TableInheritance, VisitMut, VisitorMut,
 };
 use std::ops::ControlFlow;
 
@@ -13,7 +13,7 @@ pub(in crate::statements::keyed_lookups) fn target_identity(expr: &Expr) -> Expr
     key
 }
 
-pub(super) fn normalize_target(node: &mut impl VisitMut) {
+pub(in crate::statements::keyed_lookups) fn normalize_target(node: &mut impl VisitMut) {
     struct Identifiers;
     impl VisitorMut for Identifiers {
         type Break = ();
@@ -38,11 +38,15 @@ pub(super) fn normalize_target(node: &mut impl VisitMut) {
                 *expr = unwrap_expr(expr).clone();
             }
             if let Expr::Cast {
-                kind: kind @ CastKind::DoubleColon,
-                ..
+                kind, data_type, ..
             } = expr
             {
-                *kind = CastKind::Cast;
+                if *kind == CastKind::DoubleColon {
+                    *kind = CastKind::Cast;
+                }
+                if matches!(data_type, DataType::Int(None) | DataType::Int4(None)) {
+                    *data_type = DataType::Integer(None);
+                }
             }
             ControlFlow::Continue(())
         }
@@ -89,7 +93,7 @@ pub(super) fn normalize_target(node: &mut impl VisitMut) {
     let _ = node.visit(&mut Identifiers);
 }
 
-pub(super) fn normalize_sort_options(order: &mut [OrderByExpr]) {
+pub(in crate::statements::keyed_lookups) fn normalize_sort_options(order: &mut [OrderByExpr]) {
     for item in order {
         if let Some((ascending, nulls_first)) = canonical_order_options(&item.options) {
             item.options.sort = Some(if ascending {

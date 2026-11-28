@@ -186,7 +186,19 @@ fn proves_using_bindings_and_distinguishes_reused_window_targets_from_frame_boun
         .iter()
         .map(|fact| (fact.first_line, fact.line))
         .collect();
-    assert_eq!(sites, [(19, 20), (32, 33), (40, 41), (71, 72)]);
+    assert_eq!(
+        sites,
+        [
+            (19, 20),
+            (32, 33),
+            (40, 41),
+            (71, 72),
+            (81, 82),
+            (101, 102),
+            (122, 123),
+            (130, 131)
+        ]
+    );
 }
 
 #[test]
@@ -279,7 +291,9 @@ fn separates_grouped_reuse_from_independent_expressions_and_case_arms() {
             (88, 89),
             (95, 96),
             (133, 130),
-            (129, 131)
+            (129, 131),
+            (147, 149),
+            (151, 154)
         ]
     );
 }
@@ -384,7 +398,10 @@ fn checks_operator_signatures_and_shares_only_compatible_lookup_history() {
             (127, 128),
             (144, 146),
             (158, 170),
-            (195, 201)
+            (195, 201),
+            (216, 218),
+            (228, 229),
+            (238, 239)
         ]
     );
 }
