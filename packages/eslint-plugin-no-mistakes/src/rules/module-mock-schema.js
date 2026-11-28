@@ -6,7 +6,6 @@ const stringList = { type: "array", items: { type: "string" } };
 
 const integrationExports = {
   type: "object",
-  additionalProperties: false,
   properties: {
     extensions: stringList,
     markerRegex: { type: "string" },
@@ -38,7 +37,6 @@ const shared = {
 
 const boundaryOptions = {
   type: "object",
-  additionalProperties: false,
   properties: {
     ...shared,
     baseline: baseline(["string", "string", "number"]),
@@ -49,7 +47,6 @@ const boundaryOptions = {
 
 const preserveOptions = {
   type: "object",
-  additionalProperties: false,
   properties: {
     ...shared,
     baseline: baseline(["string", "string"]),

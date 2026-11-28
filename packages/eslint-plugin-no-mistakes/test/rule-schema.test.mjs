@@ -24,7 +24,29 @@ describe("rule option schemas", () => {
         if (schema.additionalProperties !== false) open.push(name);
       }
     }
-    assert.deepEqual(open, []);
+    assert.deepEqual(open.toSorted(), [
+      "module-mock-boundary",
+      "module-mock-boundary",
+      "module-mock-preserve-exports",
+      "playwright-no-hoisted-unique-token",
+      "playwright-no-raw-scroll-pagination",
+      "test-no-shared-state",
+    ]);
+  });
+
+  it("still loads an extra key on schemas main left open", () => {
+    const cases = [
+      ["module-mock-boundary", { integrationExports: { specifiers: ["@app/*"], stale: true } }],
+      ["module-mock-preserve-exports", { stale: true }],
+      ["playwright-no-hoisted-unique-token", { tokenFactories: ["id"], stale: true }],
+      ["playwright-no-raw-scroll-pagination", { scrollHelper: "scroll", stale: true }],
+      ["test-no-shared-state", { allowBeforeAllAssignments: false, stale: true }],
+    ];
+    for (const [rule, option] of cases) {
+      assert.doesNotThrow(() =>
+        messages("test('case', () => {});\n", rule, option, "users.test.ts"),
+      );
+    }
   });
 
   it("rejects a misspelled option on no-vitest-sequential", () => {

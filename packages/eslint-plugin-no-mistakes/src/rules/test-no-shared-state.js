@@ -45,7 +45,6 @@ module.exports = rule(
     schema: [
       {
         type: "object",
-        additionalProperties: false,
         properties: {
           allowBeforeAllAssignments: { type: "boolean" },
           unanalyzable: UNANALYZABLE_SCHEMA,

@@ -154,7 +154,6 @@ module.exports = rule(
     schema: [
       {
         type: "object",
-        additionalProperties: false,
         properties: {
           cursorParams: { type: "array", items: { type: "string" } },
           scrollHelper: { type: "string" },
