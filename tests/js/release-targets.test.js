@@ -424,9 +424,7 @@ test("both native API jobs run the compiled download-integrity regression when i
   const { jobs } = readWorkflow(join(repoRoot, ".github", "workflows", "ci.yml"));
   const scripts = join(repoRoot, "packages", "no-mistakes", "scripts");
   const umbrella = readFileSync(join(scripts, "real-napi-api.test.js"), "utf8");
-  assert.match(umbrella, /require\("\.\/api-tests\/check-policy-native"\)/);
-  const policy = readFileSync(join(scripts, "api-tests", "check-policy-native.js"), "utf8");
-  assert.match(policy, /require\("\.\.\/github-actions-download-integrity-api\.test\.js"\)/);
+  assert.match(umbrella, /require\("\.\/github-actions-download-integrity-api\.test\.js"\)/);
 
   for (const [name, platform] of [
     ["native-api-tests", "windows"],

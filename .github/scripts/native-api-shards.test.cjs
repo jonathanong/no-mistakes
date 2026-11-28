@@ -6,12 +6,12 @@ const { partition, key } = require("./native-api-shards.cjs");
 const { platformFiles, linuxFiles } = require("./native-api-files.cjs");
 const inventory = require("../../test-cases/native-api-shards/inventory.json");
 
-test("native API shards collect every legacy file including the large real addon suite", () => {
-  assert.equal(platformFiles.length, 8);
-  assert.equal(new Set(platformFiles).size, 8);
-  assert.ok(platformFiles.includes("packages/no-mistakes/scripts/real-napi-api.test.js"));
+test("native API shards collect the platform-specific addon suite while Linux retains all rule suites", () => {
+  assert.deepEqual(platformFiles, ["packages/no-mistakes/scripts/real-napi-api.test.js"]);
+  assert.ok(linuxFiles.includes("packages/no-mistakes/scripts/real-napi-api.test.js"));
+  assert.ok(linuxFiles.includes("packages/no-mistakes/scripts/real-napi-rules-api.test.js"));
   assert.ok(
-    platformFiles.includes("packages/no-mistakes/scripts/dependabot-cooldown-policy-api.test.js"),
+    linuxFiles.includes("packages/no-mistakes/scripts/dependabot-cooldown-policy-api.test.js"),
   );
   const source = fs.readFileSync(path.join(__dirname, "native-api-shards.cjs"), "utf8");
   assert.match(source, /"list",\s*\.\.\.files,\s*"--no-static-parse"/);
@@ -83,7 +83,7 @@ test("native API runner collects dynamic cases and executes case filters without
       .map(JSON.parse);
     assert.equal(commands.length, 6);
     for (const args of commands) {
-      assert.deepEqual(args.slice(1, 9), platformFiles);
+      assert.deepEqual(args.slice(1, 1 + platformFiles.length), platformFiles);
       assert.ok(args.includes("--coverage=false"));
       assert.ok(!args.some((arg) => arg.includes("cargo")));
     }

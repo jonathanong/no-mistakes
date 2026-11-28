@@ -34,7 +34,47 @@ test("JavaScript coverage rejects any unsuccessful shard result", () => {
     const child = spawnSync("bash", ["-eu", "-c", script], {
       env: { ...process.env, SHARDS: fixture.result },
     });
-    assert.equal(child.status, fixture.exit, fixture.result);
+  assert.equal(child.status, fixture.exit, fixture.result);
+  }
+});
+
+test("Rust tests and coverage rejects any unsuccessful producer or shard on push and PR", () => {
+  const step = job("tests").split(
+    "      - name: Require successful Rust producer and all test shards\n",
+  )[1];
+  assert.ok(step);
+  const script = step
+    .split("        run: |\n")[1]
+    .replace(/^          /gm, "");
+  const passed = {
+    BUILD_RESULT: "success",
+    SHARD_RESULT: "success",
+    INTEGRATION_BUILD_RESULT: "success",
+    INTEGRATION_SHARD_RESULT: "success",
+  };
+  for (const eventName of ["push", "pull_request"]) {
+    for (const dependency of Object.keys(passed)) {
+      for (const fixture of results) {
+        const child = spawnSync("bash", ["-e", "-c", script], {
+          env: {
+            ...process.env,
+            EVENT_NAME: eventName,
+            ...passed,
+            [dependency]: fixture.result,
+          },
+        });
+        const required =
+          eventName === "pull_request" ||
+          dependency === "BUILD_RESULT" ||
+          dependency === "SHARD_RESULT";
+        const expected = required ? fixture.exit : 0;
+        assert.equal(
+          child.status,
+          expected,
+          `event=${eventName}, ${dependency}: ${fixture.result}`,
+        );
+      }
+    }
   }
 });
 
@@ -108,7 +148,6 @@ test("required names and every full test family remain in the aggregate", () => 
     "packages",
     "javascript-coverage",
     "linux-api-tests",
-    "native-build",
     "native-test-build",
     "native-rust-tests",
     "native-rust-tests-macos",
@@ -123,10 +162,11 @@ test("required names and every full test family remain in the aggregate", () => 
     assert.ok(job("tests-gate").includes(name), name);
   for (const name of [
     "rust-coverage-build",
+    "rust-coverage-build-integration",
     "rust-coverage-shards",
+    "rust-coverage-shards-integration",
     "standalone-build",
     "standalone-shards",
-    "native-build",
     "native-test-build",
     "native-rust-tests",
     "native-rust-tests-macos",
@@ -165,7 +205,7 @@ test("documentation tests cannot delay coverage archive consumers", () => {
 });
 
 test("native workspace caches preserve content-verified compiler inputs as one artifact", () => {
-  for (const id of ["native-build", "native-api-tests-macos"]) {
+  for (const id of ["native-api-tests", "native-api-tests-macos"]) {
     const body = job(id);
     assert.match(body, /shared-key: cargo-registry-v1/);
     assert.match(body, /cache-targets: false/);
@@ -181,11 +221,7 @@ test("native workspace caches preserve content-verified compiler inputs as one a
     assert.ok(fallback.includes("env.RUSTFLAGS"));
     assert.ok(fallback.includes("hashFiles('Cargo.toml'"));
     const restore = body.indexOf("cargo-cache-inputs.cjs restore");
-    const compile = body.indexOf(
-      id === "native-build" || id === "native-api-tests-macos"
-        ? "node .github/scripts/build-native.cjs"
-        : "node .github/scripts/native-test-archive.cjs build",
-    );
+    const compile = body.indexOf("node .github/scripts/build-native.cjs");
     const capture = body.indexOf("cargo-cache-inputs.cjs capture");
     assert.ok(restore > 0 && restore < compile && compile < capture);
     assert.match(body, /steps\.native-workspace-cache\.outputs\.cache-hit/);

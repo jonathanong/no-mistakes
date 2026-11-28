@@ -40,7 +40,7 @@ const nativeStepBudget = (name, platform) =>
   stepBudget(
     job(
       {
-        [buildName]: "native-build",
+        [buildName]: "native-api-tests",
         [precompileName]: "native-test-build",
         [rustName]: "native-rust-tests",
         [apiName]: "native-api-tests",
@@ -77,7 +77,7 @@ test("macOS build and Rust deadlines reserve time beyond completed observations"
   assert.ok(nativeStepBudget(buildName) + nativeStepBudget(rustName) >= rustRequired);
   assert.ok(nativeStepBudget(rustName) <= 540);
   assert.ok(
-    jobBudget(job("native-build")) >= nativeStepBudget(buildName) + data.postJobReserveSeconds,
+    jobBudget(job("native-api-tests")) >= nativeStepBudget(buildName) + data.postJobReserveSeconds,
   );
   assert.ok(
     jobBudget(job("native-rust-tests")) >= nativeStepBudget(rustName) + data.postJobReserveSeconds,
@@ -160,7 +160,6 @@ test("JavaScript API finalization has its own artifact consumer and bounded gate
 
 test("component job deadlines bound their steps while gates only aggregate results", () => {
   for (const name of [
-    "native-build",
     "native-test-build",
     "native-rust-tests",
     "native-rust-tests-macos",

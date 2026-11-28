@@ -62,7 +62,10 @@ The current validation graph is organized as follows:
   configured floors. Linux real-addon cases run in two isolated matrix jobs, using
   the shared case partitioning script even for tests registered through umbrella imports.
 - Rust coverage builds the instrumented library and integration targets in two
-  parallel PR jobs. Each archive feeds six execution shards. The report checks
+  parallel PR jobs (`rust-coverage-build` and `rust-coverage-build-integration`).
+  Each archive feeds its own six execution shards independently, so integration
+  shards start as soon as integration compilation finishes instead of waiting for
+  the library build. The report checks
   each shard against its own archive, combines the two binary inventories, and
   enforces coverage across both groups. On other events, one archive feeds six
   execution shards. Documentation tests run independently with their own ordinary Cargo
@@ -87,9 +90,14 @@ The current validation graph is organized as follows:
   both old and new paths.
 - Each native Rust lane builds only `no-mistakes-invocation`. Windows publishes
   an archive for one test runner. macOS builds and runs the harness on the
-  same runner. Both native API lanes run one shard. Each uses the platform CLI
-  and addon to exercise the full compiled API inventory, including addon
-  loading, cross-process locks, rename behavior, and invocation diagnostics.
+  same runner and also runs the macOS build-diagnostics unit tests off the
+  native API critical path. Both native API lanes build and test on one runner
+  and run one shard. Each uses the platform CLI and addon to exercise the
+  platform-specific compiled API suite (addon loading, CJS/ESM async parity,
+  filesystem freshness, path normalization, cross-process and worker locks,
+  atomic rename, invocation diagnostics, worker progress handling, and the
+  download-integrity CLI parity regression). Linux `linux-api-tests` runs the
+  complete compiled API and rule suite across two shards.
   The same jobs run a real CLI fixture and the `cli_smoke` harness with
   `NO_MISTAKES_CLI_BIN`. macOS retains Git filesystem monitor cleanup, Git timeout JSON,
   and blocked configuration tests. Windows retains a drive-qualified check
@@ -152,8 +160,7 @@ still checks dependency, feature, and profile fingerprints normally. This makes
 unchanged native and archived Rust test artifacts reusable across fresh checkouts
 without hiding source changes. Dependency caches remain reusable when Rust source
 changes. A cold or changed native library still requires compilation. All Rust target cache saves run on main only; pull requests restore those
-dependencies and workspace snapshots, then share their newly built outputs
-through artifacts without publishing another target cache.
+dependencies and workspace snapshots without publishing another target cache. Other multi-job pipelines share their newly built outputs through artifacts, while fresh Windows and macOS Native API PR builds use their binaries directly on the build runner and skip `Upload native-runtime`.
 
 The Linux Clippy jobs share a dependency-only cache for check metadata.
 Only the all-feature Clippy job saves that cache on main. Both Clippy commands

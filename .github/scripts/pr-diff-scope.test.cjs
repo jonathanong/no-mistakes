@@ -40,7 +40,7 @@ test("CLI requires a diff-base request and rejects unknown input", () => {
 });
 
 const macosJobs = ["native-api-tests-macos", "native-rust-tests-macos"];
-const windowsJobs = ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"];
+const windowsJobs = ["native-test-build", "native-rust-tests", "native-api-tests"];
 
 test("native suites use only the path scope to decide which jobs run", () => {
   for (const [platform, jobs] of [["macos", macosJobs], ["windows", windowsJobs]]) {

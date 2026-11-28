@@ -12,7 +12,7 @@ const diagnostics = "target/native-build-diagnostics";
 
 test("native workflow retains failure artifacts, literal deadlines and shared build outputs", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  const native = workflow.split("\n  native-build:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
+  const native = workflow.split("\n  native-api-tests:\n")[1].split(/\n  [a-z][a-z-]*:\n/)[0];
   const upload = native
     .split("- name: Upload native build diagnostics\n")[1]
     .split("\n      - name:")[0];

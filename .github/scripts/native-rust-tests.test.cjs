@@ -127,7 +127,7 @@ for (const platform of ["Windows", "macOS"]) {
 test("native workflow keeps independent runtime and Rust archive builds", () => {
   const workflow = fs.readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
   const job = (name) => workflowJob(workflow, name);
-  const runtime = job("native-build");
+  const runtime = job("native-api-tests");
   const archive = job("native-test-build");
   assert.match(runtime, /node \.github\/scripts\/build-native.cjs/);
   assert.match(runtime, /crate-type = \["rlib", "cdylib"\]/);
@@ -153,7 +153,7 @@ test("native workflow keeps independent runtime and Rust archive builds", () => 
     rust,
     /native-test-archive.cjs run \$\{\{ matrix.shard \}\} \$\{\{ matrix.total \}\}/,
   );
-  assert.match(api, /needs: \[changes, native-build\]/);
+  assert.match(api, /needs: changes/);
   assert.match(api, /native-api-shards.cjs \$\{\{ matrix.shard \}\} \$\{\{ matrix.total \}\}/);
   for (const [consumer, windowsCount] of [
     [`${rust}\n${job("native-rust-tests-macos")}`, 1],
@@ -176,29 +176,14 @@ test("native workflow keeps independent runtime and Rust archive builds", () => 
     }
     assert.match(consumer, /matrix.shard \}\}\/\$\{\{ matrix.total/);
   }
-  const apiFiles = [
-    "real-napi-api",
-    "unused-disable-directives-api",
-    "sql-verdicts-api",
-    "postgres-procedural-occurrence-api",
-    "postgres-procedural-loop-coverage-api",
-    "guarded-array-receiver-api",
-    "dependabot-cooldown-policy-api",
-    "forbidden-dependencies-globs-api",
-  ];
   const { platformFiles } = require("./native-api-files.cjs");
-  assert.deepEqual(
-    platformFiles,
-    apiFiles.map((file) => `packages/no-mistakes/scripts/${file}.test.js`),
-  );
+  assert.deepEqual(platformFiles, ["packages/no-mistakes/scripts/real-napi-api.test.js"]);
   assert.match(rust, /actions\/download-artifact@[a-f0-9]{40}/);
   assert.match(api, /python .github\/scripts\/download-native-runtime.py/);
-  for (const consumer of [rust, api]) {
-    assert.doesNotMatch(
-      consumer,
-      /cargo (build|test)|native-test-archive.cjs build|build-native.cjs/,
-    );
-  }
+  assert.doesNotMatch(
+    rust,
+    /cargo (build|test)|native-test-archive.cjs build|build-native.cjs/,
+  );
 });
 
 test("native job timing reports the split compile phases and rejects incomplete baselines", () => {

@@ -7,7 +7,6 @@ const rustJobs = new Set([
 ]);
 const macosJobs = new Set(["native-rust-tests-macos", "native-api-tests-macos"]);
 const windowsJobs = new Set([
-  "native-build",
   "native-test-build",
   "native-rust-tests",
   "native-api-tests",

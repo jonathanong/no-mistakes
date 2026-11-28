@@ -136,7 +136,7 @@ test("CI registers inline acquisitions and mutable receiver cases exactly once",
   const steps = Object.values(workflow.jobs).flatMap((job) =>
     (job.steps || []).filter((step) => step.name === "Run real N-API API test"),
   );
-  const bridge = readFileSync(join(__dirname, "real-napi-api.test.js"), "utf8");
+  const bridge = readFileSync(join(__dirname, "real-napi-rules-api.test.js"), "utf8");
   assert.equal(bridge.split('require("./inline-owned-member-api.test.js");').length - 1, 1);
   assert.equal(steps.length, 3, "Linux, Windows, and macOS addon steps");
   const { platformFiles, linuxFiles } = require("../../../.github/scripts/native-api-files.cjs");
@@ -150,8 +150,17 @@ test("CI registers inline acquisitions and mutable receiver cases exactly once",
       selected.filter((file) => file === "packages/no-mistakes/scripts/real-napi-api.test.js")
         .length,
       1,
-      "each native CI scope selects the inline acquisition bridge exactly once",
+      "each native CI scope selects the platform N-API entry exactly once",
     );
+    if (scope === "linux") {
+      assert.equal(
+        selected.filter(
+          (file) => file === "packages/no-mistakes/scripts/real-napi-rules-api.test.js",
+        ).length,
+        1,
+        "Linux native CI selects the inline acquisition bridge exactly once",
+      );
+    }
     return selected;
   });
   assert.equal(entries.filter((selected) => selected === linuxFiles).length, 1);
@@ -161,7 +170,7 @@ test("CI registers inline acquisitions and mutable receiver cases exactly once",
     process.execPath,
     [
       join(__dirname, "../../../fixtures/napi/compiled-test-registration/collect.js"),
-      ...new Set([mutable, ...entries.flat()]),
+      ...new Set([mutable, ...linuxFiles]),
     ],
     { cwd: join(__dirname, "../../.."), encoding: "utf8" },
   );
@@ -170,14 +179,12 @@ test("CI registers inline acquisitions and mutable receiver cases exactly once",
   const mutableNames = registrations.get(mutable);
   assert.ok(mutableNames.length > 0, "collect actual receiver tests without executing native work");
   assert.equal(new Set(mutableNames).size, mutableNames.length, "receiver test names are unique");
-  for (const selected of entries) {
-    const names = selected.flatMap((entry) => registrations.get(entry));
-    for (const name of mutableNames) {
-      assert.equal(
-        names.filter((registered) => registered === name).length,
-        1,
-        `each native CI step must register receiver test exactly once: ${name}`,
-      );
-    }
+  const linuxNames = linuxFiles.flatMap((entry) => registrations.get(entry));
+  for (const name of mutableNames) {
+    assert.equal(
+      linuxNames.filter((registered) => registered === name).length,
+      1,
+      `Linux native CI must register receiver test exactly once: ${name}`,
+    );
   }
 });

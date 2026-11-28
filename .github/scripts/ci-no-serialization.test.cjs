@@ -15,7 +15,7 @@ test("one main-only retention job waits for the cache producers without gating t
   const retain = ci.jobs["retain-caches"];
   assert.deepEqual(retain.needs, [
     "linux-runtime",
-    "native-build",
+    "native-api-tests",
     "native-api-tests-macos",
     "native-test-build",
     "native-rust-tests-macos",
@@ -24,7 +24,7 @@ test("one main-only retention job waits for the cache producers without gating t
   ]);
   assert.match(retain.if, /github.event_name == 'push' && github.ref == 'refs\/heads\/main'/);
   assert.match(retain.if, /contains\(needs\.\*\.result, 'success'\)/);
-  for (const producer of ["native-api-tests-macos", "native-rust-tests-macos"])
+  for (const producer of ["native-api-tests", "native-api-tests-macos", "native-rust-tests-macos"])
     assert.ok(retain.if.includes(`needs.${producer}.outputs.built == 'true'`));
   assert.equal(retain.uses, "./.github/workflows/cache-retention.yml");
   assert.equal(retain.with.best_effort, true);
