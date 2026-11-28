@@ -366,5 +366,5 @@ fn checks_operator_signatures_and_shares_only_compatible_lookup_history() {
         .iter()
         .map(|fact| (fact.first_line, fact.line))
         .collect();
-    assert_eq!(sites, [(17, 18), (31, 32), (36, 37), (49, 51)]);
+    assert_eq!(sites, [(17, 18), (31, 32), (36, 37), (49, 51), (55, 63)]);
 }

@@ -974,6 +974,14 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "WINDOW w AS (ROWS BETWEEN CURRENT ROW AND (SELECT a.n FROM accounts a WHERE a.id = $1) FOLLOWING);",
           "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 63,
+          "message": "queries/check.sql:63: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 55). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "JOIN accounts b ON b.id = o.account_id",
+          "target": "accounts"
         }
       ],
       "warnings": []
