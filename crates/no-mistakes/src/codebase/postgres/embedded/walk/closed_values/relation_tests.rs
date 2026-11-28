@@ -156,3 +156,44 @@ export function destructuredAssignClearsBuilder(obj: { q: any }) {
     assert!(frags(5).iter().any(|sql| sql == "SELECT * FROM entries"));
     assert!(frags(6).is_empty());
 }
+
+#[test]
+fn chained_append_init_and_branching_alt_prefix_extension() {
+    let source = r#"import { query } from "@example/db";
+import sql from "sql-template-strings";
+type Pair = "entries" | "records";
+export function check(table: Pair, flag: boolean, tail: string) {
+  const q = sql`UPDATE entries`.append(" AS t SET active = true").append(tail);
+  q.append(" RETURNING t.*");
+  query(q);
+  const b = sql`UPDATE `;
+  b.append(table);
+  b.append(flag ? " AS t SET active = true" : " AS t SET active = false");
+  b.append(tail);
+  b.append(" RETURNING t.*");
+  query(b);
+}"#;
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let facts = extract_embedded_sql_from_source(Path::new("src/chained_alt.ts"), source, &options);
+    let frags: Vec<_> = facts.call_fragments.values().flatten().collect();
+    for expected in [
+        "UPDATE entries AS t SET active = true",
+        "UPDATE entries AS t SET active = false",
+        "UPDATE records AS t SET active = true",
+        "UPDATE records AS t SET active = false",
+    ] {
+        assert!(frags.iter().any(|f| {
+            f.sql.contains("RETURNING t.*") && f.context_sql.as_deref() == Some(expected)
+        }));
+    }
+    assert!(
+        frags
+            .iter()
+            .filter(|f| {
+                f.sql.contains("RETURNING t.*")
+                    && f.context_sql.as_deref() == Some("UPDATE entries AS t SET active = true")
+            })
+            .count()
+            >= 2
+    );
+}

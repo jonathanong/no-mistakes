@@ -132,3 +132,26 @@ pub(super) fn word_value(token: &TokenWithSpan) -> Option<String> {
         _ => None,
     }
 }
+
+pub(super) fn update_paren_depth(token: &TokenWithSpan, depth: &mut usize) -> bool {
+    match &token.token {
+        Token::LParen => {
+            *depth += 1;
+            true
+        }
+        Token::RParen => {
+            *depth = depth.saturating_sub(1);
+            true
+        }
+        _ => false,
+    }
+}
+
+pub(super) fn starts_with_query(tokens: &[TokenWithSpan]) -> bool {
+    tokens
+        .iter()
+        .find(|t| !matches!(t.token, Token::Whitespace(_)))
+        .is_some_and(|t| {
+            is_kw(t, Keyword::SELECT) || is_kw(t, Keyword::WITH) || is_kw(t, Keyword::VALUES)
+        })
+}

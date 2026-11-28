@@ -363,7 +363,17 @@ fn scan_fragments_respects_returning_option_cte_vs_target_and_per_occurrence_ded
         "",
         &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
-    file.call_spans = vec![(0, 10), (11, 20), (21, 30), (31, 40), (41, 50)];
+    file.call_spans = vec![(0, 10), (11, 20), (21, 30), (31, 40), (41, 50), (51, 60)];
+    file.call_fragments.insert(
+        (51, 60),
+        vec![CallSqlFragment {
+            sql: "SELECT * FROM wide; UPDATE wide SET id = 1 RETURNING *".to_string(),
+            line: 5,
+            span: (51, 60),
+            context_sql: None,
+            append_site: None,
+        }],
+    );
     file.call_fragments.insert(
         (41, 50),
         vec![CallSqlFragment {
@@ -425,7 +435,7 @@ fn scan_fragments_respects_returning_option_cte_vs_target_and_per_occurrence_ded
         &facts,
         &mut findings,
     );
-    assert_eq!(findings.0.len(), 2);
+    assert_eq!(findings.0.len(), 4);
     assert_eq!(facts.sql_verdicts().len(), 1);
 
     let no_ret = compile_options(&Options {
@@ -446,5 +456,5 @@ fn scan_fragments_respects_returning_option_cte_vs_target_and_per_occurrence_ded
         &CheckFactMap::default(),
         &mut findings2,
     );
-    assert!(findings2.0.is_empty());
+    assert_eq!(findings2.0.len(), 1);
 }

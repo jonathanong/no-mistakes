@@ -78,20 +78,6 @@ pub(super) fn open_clause_at_end(tokens: &[TokenWithSpan]) -> OpenClause {
     }
 }
 
-pub(super) fn update_paren_depth(token: &TokenWithSpan, depth: &mut usize) -> bool {
-    match &token.token {
-        Token::LParen => {
-            *depth += 1;
-            true
-        }
-        Token::RParen => {
-            *depth = depth.saturating_sub(1);
-            true
-        }
-        _ => false,
-    }
-}
-
 pub(super) fn ends_from_list(token: &TokenWithSpan) -> bool {
     matches!(
         &token.token,
@@ -148,13 +134,6 @@ pub(super) fn is_implicit_alias_word(token: &TokenWithSpan) -> bool {
             ))
 }
 
-pub(super) fn starts_with_query(tokens: &[TokenWithSpan]) -> bool {
-    tokens
-        .iter()
-        .find(|t| !matches!(t.token, Token::Whitespace(_)))
-        .is_some_and(|t| is_kw(t, Keyword::SELECT) || is_kw(t, Keyword::WITH))
-}
-
 pub(super) fn consume_table_function(
     tokens: &[TokenWithSpan],
     index: usize,
@@ -179,7 +158,16 @@ pub(super) fn consume_table_function(
     if !matches!(paren_tok.token, Token::LParen) {
         return None;
     }
-    let after_args = skip_paren_group(tokens, paren_i);
+    let mut after_args = skip_paren_group(tokens, paren_i);
+    if let Some((with_i, with_tok)) = next_code(tokens, after_args) {
+        if is_kw(with_tok, Keyword::WITH) {
+            if let Some((ord_i, ord_tok)) = next_code(tokens, with_i + 1) {
+                if is_kw(ord_tok, Keyword::ORDINALITY) {
+                    after_args = ord_i + 1;
+                }
+            }
+        }
+    }
     let (mut end, alias) = read_optional_alias(tokens, after_args);
     if let Some((cols_i, cols_tok)) = next_code(tokens, end) {
         if matches!(cols_tok.token, Token::LParen) {

@@ -48,7 +48,16 @@ pub(super) fn push_factor(
             name, alias, args, ..
         } => {
             if let Some(table_args) = args {
-                visit_table_args(table_args, scope, out);
+                if !rels.is_empty() {
+                    let outer = extend_outer(rels, scope.outer_rels);
+                    let lat_scope = Scope {
+                        ctes: scope.ctes,
+                        outer_rels: &outer,
+                    };
+                    visit_table_args(table_args, lat_scope, out);
+                } else {
+                    visit_table_args(table_args, scope, out);
+                }
                 if let Some(alias) = alias {
                     rels.push(Rel {
                         table: String::new(),
@@ -73,9 +82,21 @@ pub(super) fn push_factor(
             });
         }
         TableFactor::Derived {
-            subquery, alias, ..
+            lateral,
+            subquery,
+            alias,
+            ..
         } => {
-            collect_query(subquery, scope, false, out);
+            if *lateral && !rels.is_empty() {
+                let outer = extend_outer(rels, scope.outer_rels);
+                let lat_scope = Scope {
+                    ctes: scope.ctes,
+                    outer_rels: &outer,
+                };
+                collect_query(subquery, lat_scope, false, out);
+            } else {
+                collect_query(subquery, scope, false, out);
+            }
             rels.push(Rel {
                 table: String::new(),
                 alias: alias.as_ref().map(|a| ident_key(&a.name)),

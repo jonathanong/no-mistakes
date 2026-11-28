@@ -87,7 +87,7 @@ pub(super) fn inline_append_fragments(
             &state.alt_prefixes,
             link.span.start,
         );
-        super::inline::extend_prefix(&mut state, &added, true);
+        super::trace::extend_prefix(&mut state, &added, true);
         out.extend(added);
     }
     Some(out)

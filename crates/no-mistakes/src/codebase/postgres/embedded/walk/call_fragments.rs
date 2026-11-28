@@ -1,7 +1,5 @@
 use super::ScopeVisitor;
-use crate::codebase::postgres::embedded::{
-    first_call_argument, CallSqlFragment, MAX_EMBEDDED_SQL_VARIANTS,
-};
+use crate::codebase::postgres::embedded::{first_call_argument, CallSqlFragment};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashMap;
 use oxc_ast::ast::{CallExpression, Expression};
@@ -11,50 +9,16 @@ mod collect;
 mod inline;
 mod inline_append;
 mod partial;
+mod trace;
 pub(crate) use inline_append::publish_call_fragments;
+use trace::BuilderTrace;
 
 const MAX_PREFIX_BYTES: usize = 4096;
 
-#[derive(Clone, Default)]
-pub(super) struct BuilderTrace {
-    pub(super) prefix: Option<String>,
-    pub(super) alt_prefixes: Vec<String>,
-    pub(super) fragments: Vec<CallSqlFragment>,
-    pub(super) decl_depth: (usize, usize),
-}
-
-impl BuilderTrace {
-    pub(super) fn merge(&mut self, other: Self) {
-        if self.fragments.is_empty() && self.prefix.is_none() && self.alt_prefixes.is_empty() {
-            *self = other;
-            return;
-        }
-        let mut prefixes = Vec::new();
-        for p in self
-            .prefix
-            .take()
-            .into_iter()
-            .chain(self.alt_prefixes.drain(..))
-            .chain(other.prefix)
-            .chain(other.alt_prefixes)
-        {
-            if !prefixes.contains(&p) && prefixes.len() < MAX_EMBEDDED_SQL_VARIANTS {
-                prefixes.push(p);
-            }
-        }
-        if prefixes.len() == 1 {
-            self.prefix = prefixes.pop();
-        } else {
-            self.alt_prefixes = prefixes;
-        }
-        self.fragments.extend(other.fragments);
-    }
-}
-
 #[derive(Default)]
 pub(super) struct CallFragmentState {
-    pub(super) builders: FxHashMap<(usize, String), BuilderTrace>,
-    pub(super) function_returns: FxHashMap<(u32, String), BuilderTrace>,
+    builders: FxHashMap<(usize, String), BuilderTrace>,
+    function_returns: FxHashMap<(u32, String), BuilderTrace>,
     pub(super) call_fragments: FxHashMap<(u32, u32), Vec<CallSqlFragment>>,
     pub(super) param_appends: Vec<CallSqlFragment>,
 }
@@ -187,7 +151,7 @@ impl ScopeVisitor<'_> {
         if trace.prefix.is_none() {
             trace.prefix = context;
         }
-        inline::extend_prefix(trace, &added, straight_line);
+        trace::extend_prefix(trace, &added, straight_line);
         trace.fragments.extend(added);
     }
 }

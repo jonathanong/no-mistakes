@@ -5,7 +5,8 @@ use super::readers::{
     is_bare_star_prev, read_qualified_name_backwards, split_top_level_statements,
 };
 use super::token_scopes::{
-    enclosing_function, is_known_cte_or_derived, resolve_qualified_relation, scope_context,
+    enclosing_function, is_cte_relation, is_known_cte_or_derived, resolve_qualified_relation,
+    scope_context,
 };
 use super::{is_kw, FragmentContext};
 use sqlparser::keywords::Keyword;
@@ -29,12 +30,11 @@ fn extract_statement_stars(
 ) {
     let mut ctx = FragmentContext::default();
     extract_context_from_tokens(tokens, &mut ctx);
-    let mut clause_returning = initial.returning;
-    let mut clause_select = initial.select;
-    let mut in_exists = initial.in_exists;
+    let (mut clause_select, mut clause_returning, mut in_exists) =
+        (initial.select, initial.returning, initial.in_exists);
     let mut clause_stack: Vec<(bool, bool, bool)> = Vec::new();
-    let mut prev_code: Option<(usize, &TokenWithSpan)> = None;
-    let mut prev_prev_idx: Option<usize> = None;
+    let (mut prev_code, mut prev_prev_idx): (Option<(usize, &TokenWithSpan)>, Option<usize>) =
+        (None, None);
     for (i, token) in tokens.iter().enumerate() {
         if matches!(token.token, Token::Whitespace(_)) {
             continue;
@@ -112,7 +112,7 @@ fn push_qualified(
             .collect();
         if !joined.is_empty() {
             for rel in joined {
-                if !rel.contains('.') && ctx.ctes.iter().any(|c| c == &rel) {
+                if is_cte_relation(ctx, &rel) {
                     continue;
                 }
                 out.push(FragmentStar {
@@ -130,7 +130,7 @@ fn push_qualified(
         .as_deref()
         .and_then(|q| resolve_qualified_relation(ctx, q, returning));
     if let Some((rel, is_physical_target)) = &resolved {
-        if !is_physical_target && !rel.contains('.') && ctx.ctes.iter().any(|c| c == rel) {
+        if !is_physical_target && is_cte_relation(ctx, rel) {
             return;
         }
     } else if qualifier
@@ -186,7 +186,7 @@ fn push_bare(
         return;
     }
     for (t, _) in &ctx.from_relations {
-        if !t.contains('.') && ctx.ctes.iter().any(|c| c == t) {
+        if is_cte_relation(ctx, t) {
             continue;
         }
         out.push(FragmentStar {

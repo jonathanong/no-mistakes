@@ -79,6 +79,22 @@ fn dml_correlated_case_window_distinct_join_on_quoted_and_token_edges() {
             "SELECT * FROM narrow; SELECT id FROM wide WHERE",
             vec![(Some("narrow"), None)],
         ),
+        (
+            "SELECT s.doc FROM wide w CROSS JOIN LATERAL (SELECT row_to_json(w.*) AS doc) s",
+            vec![(Some("wide"), Some("row_to_json"))],
+        ),
+        (
+            r#"SELECT * FROM "audit.log" WHERE"#,
+            vec![(Some(r#""audit.log""#), None)],
+        ),
+        (
+            "SELECT g.* FROM generate_series(1, 3) WITH ORDINALITY AS g(n, ord) WHERE",
+            vec![],
+        ),
+        (
+            "SELECT v.* FROM (VALUES (1)) v WHERE",
+            vec![],
+        ),
     ];
     for (sql, expected) in cases {
         let stars = extract_fragment_stars(sql, None);

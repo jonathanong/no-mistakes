@@ -74,7 +74,7 @@ struct FileScanner<'a> {
     opts: &'a CompiledOptions,
     catalog: &'a SchemaCatalog,
     prepared: &'a dyn SqlFactContext,
-    seen: FxHashSet<(u32, usize, String)>,
+    seen: FxHashSet<(u32, usize, bool, String)>,
     findings: &'a mut crate::codebase::rules::PostgresFindings,
 }
 
@@ -137,9 +137,11 @@ impl FileScanner<'_> {
         }
         for (relation, is_physical_target) in candidates {
             if !is_physical_target
-                && !relation.contains('.')
-                && (ctx.ctes.iter().any(|cte| cte == &relation)
-                    || ctx.derived_aliases.iter().any(|a| a == &relation))
+                && no_mistakes_postgres_sql::idents::relation_suffix_key(&relation) == relation
+                && (ctx.ctes.iter().any(|cte| {
+                    cte == &relation
+                        || cte == &no_mistakes_postgres_sql::idents::relation_suffix_name(&relation)
+                }) || ctx.derived_aliases.iter().any(|a| a == &relation))
             {
                 continue;
             }
@@ -154,7 +156,10 @@ impl FileScanner<'_> {
                 continue;
             }
             if let Some(text) = relation_message(kind, verb, &relation, self.opts, self.catalog) {
-                if self.seen.insert((origin, line, relation.clone())) {
+                if self
+                    .seen
+                    .insert((origin, line, star.returning, relation.clone()))
+                {
                     self.findings.push(sql_finding(self.rel, line, &text, &relation));
                 }
             } else if self.catalog.relation(&relation).is_none()
@@ -172,7 +177,7 @@ impl FileScanner<'_> {
     }
 
     fn emit_advisory(&mut self, origin: u32, line: usize, key: &str, returning: bool, detail: String) {
-        if self.seen.insert((origin, line, key.to_string())) {
+        if self.seen.insert((origin, line, returning, key.to_string())) {
             record_advisory(self.prepared, self.opts, self.rel, self.source, line, returning, detail);
         }
     }

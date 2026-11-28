@@ -21,7 +21,7 @@ pub(super) fn scope_context(
         extract_context_from_tokens(slice, &mut inner);
         if !inner.from_relations.is_empty()
             || inner.mutation_target.is_some()
-            || super::clauses::starts_with_query(slice)
+            || super::starts_with_query(slice)
         {
             collect_ancestors(tokens, open, outer, &mut inner);
             return Some(inner);
@@ -98,7 +98,7 @@ fn matching_close_paren(tokens: &[TokenWithSpan], open: usize) -> usize {
 pub(super) fn enclosing_function(tokens: &[TokenWithSpan], star_index: usize) -> Option<String> {
     let mut cursor = star_index;
     while let Some(open) = enclosing_open_paren(tokens, cursor) {
-        if super::clauses::starts_with_query(&tokens[open + 1..star_index]) {
+        if super::starts_with_query(&tokens[open + 1..star_index]) {
             return None;
         }
         let prev = (0..open)
@@ -186,4 +186,12 @@ pub(super) fn is_known_cte_or_derived(ctx: &FragmentContext, q: &str) -> bool {
             .outer_scopes
             .iter()
             .any(|s| s.derived_aliases.iter().any(|a| a == q))
+}
+
+pub(super) fn is_cte_relation(ctx: &FragmentContext, rel: &str) -> bool {
+    relation_suffix_key(rel) == rel
+        && ctx
+            .ctes
+            .iter()
+            .any(|c| c == rel || c == &relation_suffix_name(rel))
 }

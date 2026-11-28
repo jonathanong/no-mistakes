@@ -68,13 +68,14 @@ pub(super) fn read_table_and_alias(
             tok = inner.1;
         }
     }
-    let mut name = word_value(tok)?;
+    let raw_first = word_value(tok)?;
+    let mut name = relation_part_key(&raw_first);
     let mut next_i = i + 1;
     if let Some((dot_i, dot)) = next_code(tokens, next_i) {
         if matches!(dot.token, Token::Period) {
             if let Some((part_i, part)) = next_code(tokens, dot_i + 1) {
                 if let Some(second) = word_value(part) {
-                    name = format!("{}.{}", relation_part_key(&name), relation_part_key(&second));
+                    name = format!("{name}.{}", relation_part_key(&second));
                     next_i = part_i + 1;
                 }
             }

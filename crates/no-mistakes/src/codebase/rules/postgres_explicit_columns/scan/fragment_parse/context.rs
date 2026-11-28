@@ -19,7 +19,7 @@ pub(super) fn extract_context_from_tokens(tokens: &[TokenWithSpan], ctx: &mut Fr
     let mut state = ClauseState::default();
     while let Some((i, token)) = next_code(tokens, index) {
         index = i + 1;
-        if super::clauses::update_paren_depth(token, &mut depth) || depth > 0 {
+        if super::update_paren_depth(token, &mut depth) || depth > 0 {
             continue;
         }
         index = step_top_level(tokens, i, token, index, &mut state, ctx);
@@ -80,7 +80,7 @@ fn consume_from_factor(
                     after
                 };
                 let inner = &tokens[paren_i + 1..inner_end];
-                if super::clauses::starts_with_query(inner) {
+                if super::starts_with_query(inner) {
                     ctx.has_derived_from = true;
                     if let Some(name) = alias {
                         ctx.derived_aliases.push(name);

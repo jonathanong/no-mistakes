@@ -77,6 +77,7 @@ impl ScopeVisitor<'_> {
         let covered_sites: FxHashSet<u32> = recovered
             .variants
             .iter()
+            .filter(|variant| !variant.sql_text.contains("sql_placeholder_"))
             .flat_map(|variant| variant.append_sites.iter().copied())
             .collect();
         let variants_cover_init = !recovered.variants.is_empty()
