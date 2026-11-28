@@ -60,6 +60,17 @@ pub(super) fn is_clean_scoped_local(
         )
 }
 
+pub(super) fn is_opaque_handle_result(env: &FileEnv<'_>, expr: &ValueExpression) -> bool {
+    let expr = match expr {
+        ValueExpression::Awaited(inner) => inner.as_ref(),
+        other => other,
+    };
+    matches!(expr, ValueExpression::Call(start, end)
+        if env.calls_by_span.get(&(*start, *end)).is_some_and(|call| {
+            super::super::scoped::is_owned_handle_call(env, call, 0)
+        }))
+}
+
 pub(super) fn inner_call_is_clean(
     env: &FileEnv<'_>,
     start: u32,

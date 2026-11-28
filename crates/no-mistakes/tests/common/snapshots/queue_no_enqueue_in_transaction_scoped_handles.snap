@@ -152,6 +152,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/statements.ts",
+          "import": "<unknown>.items.push",
+          "line": 54,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "tx.getQueue().items.push(job);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
           "import": "beginTransaction",
           "line": 18,
           "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
@@ -194,6 +203,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "queue-no-enqueue-in-transaction",
           "sourceLine": "items.map(() => enqueue({ receiptId: \"map\" }));",
           "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 62,
+          "message": "publish inside an async built-in callback may run after the transaction closes; move the publish after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId: \"deferred\" });",
+          "target": "unanalyzable"
         },
         {
           "file": "src/unresolved.ts",
@@ -349,6 +367,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "src/statements.ts",
+          "import": "<unknown>.items.push",
+          "line": 54,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "tx.getQueue().items.push(job);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
           "import": "beginTransaction",
           "line": 18,
           "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
@@ -372,6 +399,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
           "rule": "queue-no-enqueue-in-transaction",
           "sourceLine": "const tx = beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 62,
+          "message": "publish inside an async built-in callback may run after the transaction closes; move the publish after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId: \"deferred\" });",
           "target": "unanalyzable"
         },
         {

@@ -48,3 +48,18 @@ export async function builtinShapes(value: Promise<{ id: string }>, items: numbe
   tx.insertReceipt().then(enqueue);
   await tx.commit();
 }
+
+export async function opaqueResultMember(job: { receiptId: string }) {
+  const tx = await beginTransaction();
+  tx.getQueue().items.push(job);
+  await tx.commit();
+}
+
+export async function asyncCallbackDeferred(gate: Promise<void>) {
+  const tx = await beginTransaction();
+  [0].forEach(async () => {
+    await gate;
+    await enqueue({ receiptId: "deferred" });
+  });
+  await tx.commit();
+}

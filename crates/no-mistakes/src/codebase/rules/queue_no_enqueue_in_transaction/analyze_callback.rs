@@ -48,6 +48,10 @@ pub(super) fn check_callback_site(
             match reexports::follow_export(ctx, env.file, api.0, api.1, &|module, export| {
                 ctx.targets.publishers.contains(&(module, export))
             }) {
+                ResolvedApi::Target(..) if deferred_in_async_callback(env, site, tx_owner) => {
+                    walk.report_unanalyzable(env, site,
+                        "publish inside an async built-in callback may run after the transaction closes; move the publish after commit");
+                }
                 ResolvedApi::Target(spec, export) => {
                     walk.report_publish(env, site, (spec.as_str(), export.as_str()));
                 }
@@ -96,4 +100,9 @@ fn any_global_callback(site: &ResolvedCallSite) -> bool {
             KnownCallTargetRef::Global { name } if builtins::global_target_callbacks(name).is_some()
         )
     }) || site.alternatives.iter().any(any_global_callback)
+}
+
+fn deferred_in_async_callback(env: &FileEnv<'_>, site: &ResolvedCallSite, tx_owner: CallableId) -> bool {
+    site.caller_id
+        .is_some_and(|caller| caller != tx_owner && env.file_facts.value_flow.async_callables.contains(&caller))
 }

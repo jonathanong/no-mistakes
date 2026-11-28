@@ -172,7 +172,8 @@ fn is_local_or_builtin_receiver(
                 && builtins::GLOBAL_STATIC_OBJECTS.contains(&name.as_str())
         }
         ValueExpression::Member(inner, _) => {
-            is_local_or_builtin_receiver(env, inner, method, call_offset, tx_owner, depth)
+            !local::is_opaque_handle_result(env, inner)
+                && is_local_or_builtin_receiver(env, inner, method, call_offset, tx_owner, depth)
         }
         ValueExpression::Array(..) => true,
         ValueExpression::Awaited(inner) => {
