@@ -38,3 +38,7 @@ pub(super) fn report<'a>(
         }
     }
 }
+
+#[cfg(test)]
+#[path = "scoped_candidates_tests.rs"]
+mod tests;

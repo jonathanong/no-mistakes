@@ -378,6 +378,7 @@ fn queue_no_enqueue_in_transaction_scoped_handles_json_matches_snapshot() {
     assert_eq!(
         uncertain,
         [
+            "src/ambiguous.ts",
             "src/conditional.ts",
             "src/edges.ts",
             "src/escape.ts",
