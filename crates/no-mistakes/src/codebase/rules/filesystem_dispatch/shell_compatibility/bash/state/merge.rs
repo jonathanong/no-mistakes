@@ -146,6 +146,12 @@ impl State {
             .filter(|(_, state)| state.is_nonempty())
             .map(|(name, _)| name.clone())
             .collect();
+        for (name, &reason) in &exit.unanalyzable {
+            self.guarded_maybe.remove(name);
+            self.conditional.remove(name);
+            self.arrays.remove(name);
+            self.unanalyzable.entry(name.clone()).or_insert(reason);
+        }
         for name in proven {
             if self.arrays.get(&name) == Some(&ArrayState::Nonempty) {
                 continue;

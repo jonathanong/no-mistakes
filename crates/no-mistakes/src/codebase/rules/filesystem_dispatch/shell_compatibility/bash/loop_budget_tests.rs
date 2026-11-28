@@ -58,6 +58,20 @@ fn nest_exhaustion_abstains_on_a_refilled_array() {
 }
 
 #[test]
+fn nest_exhaustion_keeps_an_uncertain_array_uncertain() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/shell-compatibility/exhaustion-refill/uncertain-unset.sh"
+    ));
+    let result = analyze(source);
+    assert!(
+        !result.findings.iter().any(|(name, _)| *name == "a"),
+        "{:?}",
+        result.findings
+    );
+}
+
+#[test]
 fn infinite_loop_exhaustion_keeps_the_break_nounset_state() {
     let source = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
