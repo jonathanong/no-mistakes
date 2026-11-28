@@ -62,6 +62,8 @@ The rule stays silent when the lookups are not proven to read the same row:
   the rule can prove the filter is repeatable.
 - Optional default expressions in `lag` and `lead` window calls. PostgreSQL
   evaluates them only when the requested row falls outside the partition.
+- `COALESCE` arguments after a known non-null literal. Aggregate and window
+  inputs still follow their separate evaluation rules.
 - Volatile key expressions (UUID generators such as `gen_random_uuid()`,
   `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined
   or unrecognized functions in keys or scalar projections, unresolved table
@@ -85,6 +87,8 @@ frame bounds. An aggregate can also reuse an argument in its ordering clause. Th
 rule counts an identical reused expression once. A matching grouping
 expression is also reused in projections, `HAVING`, `ORDER BY`, and window
 function arguments. Ordinary aggregate inputs are evaluated before grouping.
+Grouping sets can replace omitted keys with nulls, so the rule distinguishes
+lookups that use a source row from those that use grouped values.
 
 The rule recognizes PostgreSQL 18's default `OLD` and `NEW` qualifiers in
 `RETURNING`. It distinguishes pre-change and post-change rows and respects

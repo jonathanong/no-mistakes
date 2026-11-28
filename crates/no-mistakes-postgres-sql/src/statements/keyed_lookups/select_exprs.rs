@@ -1,8 +1,9 @@
 mod identity;
 
+use super::function_clauses::is_eager;
 use super::grouping;
 use super::join::register_table_with_joins;
-use super::scope::ScopeStack;
+use super::scope::{ScopeSnapshot, ScopeStack};
 use super::subquery::inspect_expr;
 use super::windows::referenced_expressions;
 use super::{select_item_expr, walk_nested_queries, LookupHistory};
@@ -10,7 +11,7 @@ use crate::fx::{FxHashMap, FxHashSet};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 pub(super) use identity::target_identity;
 use identity::{normalize_sort_options, normalize_target};
-use sqlparser::ast::{Distinct, Expr, Select, SelectItem, WindowSpec};
+use sqlparser::ast::{Distinct, Expr, Function, Select, SelectItem, WindowSpec};
 use std::borrow::Cow;
 use std::cell::{OnceCell, RefCell};
 
@@ -18,18 +19,21 @@ use std::cell::{OnceCell, RefCell};
 pub(super) struct SelectTargets<'a> {
     projection: &'a [SelectItem],
     grouping: Option<&'a grouping::GroupReuse>,
+    before_grouping: Option<&'a ScopeSnapshot>,
     keys: OnceCell<RefCell<FxHashSet<Expr>>>,
     windows: RefCell<FxHashSet<WindowSpec>>,
     filtered: RefCell<FxHashMap<Expr, LookupHistory>>,
 }
 
-impl<'a> SelectTargets<'a> {
-    fn new(projection: &'a [SelectItem], grouping: &'a grouping::GroupReuse) -> Self {
-        Self {
-            projection,
-            grouping: Some(grouping),
-            ..Self::default()
-        }
+impl SelectTargets<'_> {
+    pub(super) fn function_input_scope<'scope>(
+        &'scope self,
+        function: &Function,
+        outer: &'scope ScopeSnapshot,
+    ) -> &'scope ScopeSnapshot {
+        self.before_grouping
+            .filter(|_| function.over.is_none() && is_eager(function))
+            .unwrap_or(outer)
     }
 
     pub(super) fn filter_grouped<'expr>(&self, expr: &'expr Expr) -> Cow<'expr, Expr> {
@@ -86,12 +90,25 @@ pub(super) fn walk_select(
     for table in &select.from {
         register_table_with_joins(table, scopes, &mut seen, out);
     }
-    let outer = scopes.snapshot();
+    let before_grouping = scopes.snapshot();
+    let after_grouping = grouping::can_omit_keys(&select.group_by).then(|| {
+        scopes.refresh_bindings(0..scopes.binding_count());
+        scopes.snapshot()
+    });
     let group_by = grouping::targets(&select.group_by, &select.projection);
     let reuse = grouping::GroupReuse::new(&group_by);
-    let targets = SelectTargets::new(&select.projection, &reuse);
-    for expr in expressions(select, order_by, &targets, &group_by) {
-        inspect_expr(&expr, &outer, &targets, &mut seen, out);
+    let targets = SelectTargets {
+        projection: &select.projection,
+        grouping: Some(&reuse),
+        before_grouping: after_grouping.as_ref().map(|_| &before_grouping),
+        ..SelectTargets::default()
+    };
+    for (expr, runs_before_grouping) in expressions(select, order_by, &targets, &group_by) {
+        let outer = after_grouping
+            .as_ref()
+            .filter(|_| !runs_before_grouping)
+            .unwrap_or(&before_grouping);
+        inspect_expr(&expr, outer, &targets, &mut seen, out);
         walk_nested_queries(expr.as_ref(), scopes, out);
     }
     scopes.pop_frame();
@@ -99,6 +116,7 @@ pub(super) fn walk_select(
 }
 
 enum Inspection {
+    BeforeGrouping,
     Independent,
     Projection,
     Grouping,
@@ -110,7 +128,7 @@ fn expressions<'a>(
     order_by: &'a [&'a Expr],
     select_targets: &'a SelectTargets<'a>,
     grouping_targets: &'a [&'a Expr],
-) -> impl Iterator<Item = Cow<'a, Expr>> {
+) -> impl Iterator<Item = (Cow<'a, Expr>, bool)> {
     let distinct_on = match &select.distinct {
         Some(Distinct::On(expressions)) => expressions.as_slice(),
         _ => &[],
@@ -126,7 +144,7 @@ fn expressions<'a>(
             select
                 .selection
                 .iter()
-                .map(|expr| (expr, Inspection::Independent)),
+                .map(|expr| (expr, Inspection::BeforeGrouping)),
         )
         .chain(
             grouping_targets
@@ -155,17 +173,18 @@ fn expressions<'a>(
         )
         .chain(order_by.iter().copied().map(reusable))
         .filter_map(move |(expr, inspection)| match inspection {
-            Inspection::Independent => Some(Cow::Borrowed(expr)),
-            Inspection::Projection => Some(select_targets.filter_grouped(expr)),
+            Inspection::BeforeGrouping => Some((Cow::Borrowed(expr), true)),
+            Inspection::Independent => Some((Cow::Borrowed(expr), false)),
+            Inspection::Projection => Some((select_targets.filter_grouped(expr), false)),
             Inspection::Reusable => {
-                (!select_targets.reuses(expr)).then(|| select_targets.filter_grouped(expr))
+                (!select_targets.reuses(expr)).then(|| (select_targets.filter_grouped(expr), false))
             }
             Inspection::Grouping => {
                 if !seen_grouping.insert(target_identity(expr)) {
                     return None;
                 }
                 select_targets.reuses(expr);
-                Some(Cow::Borrowed(expr))
+                Some((Cow::Borrowed(expr), true))
             }
         })
 }

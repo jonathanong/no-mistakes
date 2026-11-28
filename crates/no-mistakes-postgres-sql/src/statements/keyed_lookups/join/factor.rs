@@ -50,6 +50,7 @@ pub(super) fn register_factor(
             inspect_exprs(std::iter::once(json_expr), scopes, seen, out);
             scopes.add_alias_only(alias.as_ref())
         }
+        TableFactor::XmlTable { alias, .. } => scopes.add_alias_only(alias.as_ref()),
         TableFactor::Derived {
             subquery, alias, ..
         } => {

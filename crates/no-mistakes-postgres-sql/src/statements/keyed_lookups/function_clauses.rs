@@ -1,7 +1,26 @@
 use super::select_exprs::target_identity;
 use crate::fx::FxHashSet;
 use crate::idents::{function_arg_expr, ident_key, visit_shallow_exprs};
-use sqlparser::ast::{Expr, Function, FunctionArgumentClause, FunctionArguments};
+use sqlparser::ast::{
+    DuplicateTreatment, Expr, Function, FunctionArg, FunctionArgumentClause, FunctionArguments,
+};
+
+pub(super) fn coalesce_arguments(function: &Function) -> Option<&[FunctionArg]> {
+    let [name] = function.name.0.as_slice() else {
+        return None;
+    };
+    let name = name.as_ident()?;
+    if name.quote_style.is_some()
+        || !name.value.eq_ignore_ascii_case("coalesce")
+        || is_eager(function)
+    {
+        return None;
+    }
+    match &function.args {
+        FunctionArguments::List(list) => Some(&list.args),
+        _ => None,
+    }
+}
 
 pub(super) fn visit_function_inputs(function: &Function, visit: &mut impl FnMut(&Expr)) {
     visit_arguments(&function.parameters, usize::MAX, visit);
@@ -70,7 +89,7 @@ pub(super) fn is_eager(function: &sqlparser::ast::Function) -> bool {
         return true;
     }
     if let FunctionArguments::List(list) = &function.args {
-        if list.duplicate_treatment.is_some()
+        if list.duplicate_treatment == Some(DuplicateTreatment::Distinct)
             || list
                 .clauses
                 .iter()

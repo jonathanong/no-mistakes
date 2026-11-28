@@ -10,6 +10,12 @@ use std::borrow::Cow;
 use std::mem::{discriminant, Discriminant};
 use std::ops::ControlFlow;
 
+pub(super) fn can_omit_keys(group_by: &GroupByExpr) -> bool {
+    matches!(group_by, GroupByExpr::Expressions(expressions, _) if expressions.iter().any(|expr|
+        matches!(unwrap_expr(expr), Expr::GroupingSets(_) | Expr::Rollup(_) | Expr::Cube(_))
+    ))
+}
+
 pub(super) fn targets<'a>(
     group_by: &'a GroupByExpr,
     projection: &'a [SelectItem],
@@ -44,11 +50,7 @@ fn collect_targets<'a>(expr: &'a Expr, known_outputs: &[&'a Expr], targets: &mut
                 .parse::<usize>()
                 .ok()
                 .and_then(|ordinal| ordinal.checked_sub(1));
-            targets.push(
-                index
-                    .and_then(|index| known_outputs.get(index).copied())
-                    .unwrap_or(expr),
-            );
+            targets.extend(index.and_then(|index| known_outputs.get(index).copied()));
         }
         _ => targets.push(expr),
     }

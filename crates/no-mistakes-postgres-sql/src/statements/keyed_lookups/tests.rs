@@ -275,7 +275,11 @@ fn separates_grouped_reuse_from_independent_expressions_and_case_arms() {
             (47, 49),
             (61, 62),
             (67, 68),
-            (72, 75)
+            (72, 75),
+            (88, 89),
+            (95, 96),
+            (133, 130),
+            (129, 131)
         ]
     );
 }

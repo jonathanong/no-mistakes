@@ -1,13 +1,15 @@
 use super::expr_norm::ExprNormalizer;
-use super::function_clauses::{is_eager, visit_eager_functions, visit_function_inputs};
+use super::function_clauses::{
+    coalesce_arguments, is_eager, visit_eager_functions, visit_function_inputs,
+};
 use super::join::record_lookup;
 use super::normalize::LookupKey;
 use super::scope::ScopeSnapshot;
 use super::select_exprs::{target_identity, SelectTargets};
 use super::windows::window_expressions;
-use crate::idents::{unwrap_expr, visit_child_exprs};
+use crate::idents::{function_arg_expr, unwrap_expr, visit_child_exprs};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
-use sqlparser::ast::{Expr, WindowType};
+use sqlparser::ast::{Expr, FunctionArg, Value, WindowType};
 use std::collections::BTreeMap;
 mod lookup;
 
@@ -65,23 +67,28 @@ fn inspect(
         }
         Expr::Function(function) if skip_eager && is_eager(function) => {}
         Expr::Function(function) => {
+            if let Some(arguments) = coalesce_arguments(function) {
+                inspect_coalesce(expr, arguments, outer, targets, seen, out, skip_eager);
+                return;
+            }
+            let input_scope = targets.function_input_scope(function, outer);
             if let Some(filter) = &function.filter {
-                inspect(filter, outer, targets, seen, out, skip_eager);
-                let key = ExprNormalizer::new(None, true, outer)
+                inspect(filter, input_scope, targets, seen, out, skip_eager);
+                let key = ExprNormalizer::new(None, true, input_scope)
                     .normalize(filter)
                     .map(|_| target_identity(filter));
                 let mut filtered = key
                     .as_ref()
                     .map_or_else(BTreeMap::new, |key| targets.take_filter_history(key));
                 visit_function_inputs(function, &mut |expr| {
-                    inspect(expr, outer, targets, &mut filtered, out, skip_eager);
+                    inspect(expr, input_scope, targets, &mut filtered, out, skip_eager);
                 });
                 if let Some(key) = key {
                     targets.save_filter_history(key, filtered);
                 }
             } else {
                 visit_function_inputs(function, &mut |expr| {
-                    inspect(expr, outer, targets, seen, out, skip_eager);
+                    inspect(expr, input_scope, targets, seen, out, skip_eager);
                 });
             }
             match &function.over {
@@ -101,6 +108,29 @@ fn inspect(
         other => visit_child_exprs(other, &mut |expr| {
             inspect(expr, outer, targets, seen, out, skip_eager);
         }),
+    }
+}
+
+fn inspect_coalesce(
+    expr: &Expr,
+    arguments: &[FunctionArg],
+    outer: &ScopeSnapshot,
+    targets: &SelectTargets<'_>,
+    seen: &mut super::LookupHistory,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
+    skip_eager: bool,
+) {
+    if !skip_eager {
+        visit_eager_functions(expr, &mut |eager| {
+            inspect(eager, outer, targets, seen, out, false);
+        });
+    }
+    for argument in arguments.iter().filter_map(function_arg_expr) {
+        inspect(argument, outer, targets, seen, out, true);
+        if matches!(unwrap_expr(argument), Expr::Value(value) if !matches!(value.value, Value::Null | Value::Placeholder(_)))
+        {
+            break;
+        }
     }
 }
 
