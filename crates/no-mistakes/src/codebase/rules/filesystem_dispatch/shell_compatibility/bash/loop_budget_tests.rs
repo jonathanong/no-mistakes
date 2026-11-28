@@ -33,3 +33,26 @@ fn independent_flat_loops_do_not_share_the_replay_budget() {
         .collect::<Vec<_>>();
     assert_eq!(result.findings, expected);
 }
+
+#[test]
+fn nest_exhaustion_abstains_on_a_refilled_array() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/shell-compatibility/exhaustion-refill/refill.sh"
+    ));
+    let result = analyze(source);
+    assert!(
+        !result.findings.iter().any(|(name, _)| *name == "safe"),
+        "{:?}",
+        result.findings
+    );
+    assert_eq!(result.findings, [("carry", 266)]);
+    let safe_uncertain = result.unanalyzable.iter().any(|(line, detail)| {
+        *line == 265 && detail.contains("array `safe`") && detail.contains("loop widening")
+    });
+    assert!(safe_uncertain, "{:?}", result.unanalyzable);
+    let exhausted = result.unanalyzable.iter().any(|(line, detail)| {
+        *line == 264 && detail.starts_with("Bash loop nest replay budget exhausted")
+    });
+    assert!(exhausted, "{:?}", result.unanalyzable);
+}
