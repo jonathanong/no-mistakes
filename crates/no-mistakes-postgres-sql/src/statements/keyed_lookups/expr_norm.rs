@@ -1,4 +1,5 @@
 pub(super) mod function;
+mod operators;
 pub(super) mod types;
 
 use super::scope::ScopeSnapshot;
@@ -78,11 +79,11 @@ impl<'a> ExprNormalizer<'a> {
             }
             Expr::IsNull(inner) => Some(format!("is_null({})", self.normalize(inner)?)),
             Expr::IsNotNull(inner) => Some(format!("is_not_null({})", self.normalize(inner)?)),
-            Expr::UnaryOp { op, expr } if types::unary_is_proven(*op, expr) => {
+            Expr::UnaryOp { op, expr } if operators::unary_is_proven(*op, expr) => {
                 let inner = self.normalize(expr)?;
                 Some(format!("unary({op},{})", atom(&inner)))
             }
-            Expr::BinaryOp { left, op, right } if types::binary_is_proven(op, left, right) => {
+            Expr::BinaryOp { left, op, right } if operators::binary_is_proven(op, left, right) => {
                 Some(format!(
                     "bin({op},{},{})",
                     atom(&self.normalize(left)?),
@@ -117,7 +118,7 @@ impl<'a> ExprNormalizer<'a> {
             Expr::IsTrue(inner) => ("is_true", inner),
             Expr::IsFalse(inner) => ("is_false", inner),
             Expr::IsDistinctFrom(left, right) | Expr::IsNotDistinctFrom(left, right)
-                if types::has_builtin_type(left) && types::has_builtin_type(right) =>
+                if operators::comparable(left, right) =>
             {
                 let operator = if matches!(expr, Expr::IsDistinctFrom(..)) {
                     "is_distinct"
@@ -135,7 +136,7 @@ impl<'a> ExprNormalizer<'a> {
                 target: InTarget::List(items),
                 negated,
                 ..
-            } if types::list_operands_are_proven(expr, items) => {
+            } if operators::list_operands_are_proven(expr, items) => {
                 return self.in_list(expr, items, *negated)
             }
             _ => return None,

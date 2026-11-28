@@ -1,3 +1,4 @@
+use super::select_exprs::SelectTargets;
 use super::select_item_expr;
 use crate::fx::FxHashSet;
 use crate::idents::ident_key;
@@ -10,6 +11,7 @@ pub(super) fn referenced_expressions<'a>(
     select: &'a Select,
     distinct_on: &'a [Expr],
     order_by: &'a [&'a Expr],
+    targets: &'a SelectTargets<'a>,
 ) -> impl Iterator<Item = (&'a Expr, bool)> {
     let mut references = WindowReferences::default();
     if !select.named_window.is_empty() {
@@ -43,6 +45,7 @@ pub(super) fn referenced_expressions<'a>(
             }
             _ => None,
         })
+        .filter(|spec| !targets.reuses_window(spec))
         .flat_map(window_expressions)
 }
 

@@ -1,12 +1,22 @@
 use super::select_exprs::target_identity;
 use crate::fx::FxHashSet;
 use crate::idents::{function_arg_expr, visit_shallow_exprs};
-use sqlparser::ast::{Expr, FunctionArgumentClause, FunctionArguments};
+use sqlparser::ast::{Expr, Function, FunctionArgumentClause, FunctionArguments};
 
-pub(super) fn visit_argument_clauses(arguments: &FunctionArguments, visit: &mut impl FnMut(&Expr)) {
+pub(super) fn visit_function_inputs(function: &Function, visit: &mut impl FnMut(&Expr)) {
+    for arguments in [&function.parameters, &function.args] {
+        visit_arguments(arguments, visit);
+    }
+    visit_shallow_exprs(&function.within_group, visit);
+}
+
+fn visit_arguments(arguments: &FunctionArguments, visit: &mut impl FnMut(&Expr)) {
     let FunctionArguments::List(list) = arguments else {
         return;
     };
+    for arg in list.args.iter().filter_map(function_arg_expr) {
+        visit(arg);
+    }
     for clause in &list.clauses {
         if let FunctionArgumentClause::OrderBy(order_by) = clause {
             let mut targets: FxHashSet<_> = list

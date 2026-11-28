@@ -37,7 +37,7 @@ SELECT (SELECT a.name FROM accounts a WHERE a.id = o.account_id) IS NOT NULL
 FROM orders o
 GROUP BY (SELECT a.name FROM accounts a WHERE a.id = o.account_id);
 
-SELECT count((SELECT a.name FROM accounts a WHERE a.id = o.account_id))
+SELECT pg_catalog.count((SELECT a.name FROM accounts a WHERE a.id = o.account_id))
 FROM orders o
 GROUP BY (SELECT a.name FROM accounts a WHERE a.id = o.account_id);
 

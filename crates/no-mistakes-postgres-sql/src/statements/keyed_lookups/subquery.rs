@@ -1,10 +1,10 @@
-use super::function_clauses::{is_eager, visit_argument_clauses, visit_eager_functions};
+use super::function_clauses::{is_eager, visit_eager_functions, visit_function_inputs};
 use super::join::record_lookup;
 use super::normalize::LookupKey;
 use super::scope::ScopeSnapshot;
-use super::select_exprs::SelectTargets;
+use super::select_exprs::{target_identity, SelectTargets};
 use super::windows::window_expressions;
-use crate::idents::{unwrap_expr, visit_child_exprs, visit_shallow_exprs};
+use crate::idents::{unwrap_expr, visit_child_exprs};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{Expr, WindowType};
 use std::collections::BTreeMap;
@@ -63,28 +63,37 @@ fn inspect(
             merge_history(seen, cond_seen);
         }
         Expr::Function(function) if skip_eager && is_eager(function) => {}
-        other => {
-            let mut visit = |child: &Expr| inspect(child, outer, targets, seen, out, skip_eager);
-            visit_child_exprs(other, &mut visit);
-            if let Expr::Function(function) = other {
-                for arguments in [&function.parameters, &function.args] {
-                    visit_argument_clauses(arguments, &mut visit);
-                }
-                match &function.over {
-                    Some(WindowType::WindowSpec(spec)) if !targets.reuses_window(spec) => {
-                        for (expr, can_reuse) in window_expressions(spec) {
-                            if !can_reuse {
-                                visit(expr);
-                            } else if !targets.reuses(expr) {
-                                visit(&targets.filter_grouped(expr));
-                            }
+        Expr::Function(function) => {
+            if let Some(filter) = &function.filter {
+                inspect(filter, outer, targets, seen, out, skip_eager);
+                let key = target_identity(filter);
+                let mut filtered = targets.take_filter_history(&key);
+                visit_function_inputs(function, &mut |expr| {
+                    inspect(expr, outer, targets, &mut filtered, out, skip_eager);
+                });
+                targets.save_filter_history(key, filtered);
+            } else {
+                visit_function_inputs(function, &mut |expr| {
+                    inspect(expr, outer, targets, seen, out, skip_eager);
+                });
+            }
+            match &function.over {
+                Some(WindowType::WindowSpec(spec)) if !targets.reuses_window(spec) => {
+                    for (expr, can_reuse) in window_expressions(spec) {
+                        if !can_reuse {
+                            inspect(expr, outer, targets, seen, out, skip_eager);
+                        } else if !targets.reuses(expr) {
+                            let expr = targets.filter_grouped(expr);
+                            inspect(&expr, outer, targets, seen, out, skip_eager);
                         }
                     }
-                    _ => {}
                 }
-                visit_shallow_exprs(&function.within_group, &mut visit);
+                _ => {}
             }
         }
+        other => visit_child_exprs(other, &mut |expr| {
+            inspect(expr, outer, targets, seen, out, skip_eager);
+        }),
     }
 }
 

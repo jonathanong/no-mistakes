@@ -842,7 +842,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 68,
           "message": "queries/check.sql:68: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 67). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
-          "sourceLine": "AND count((SELECT b.tier FROM accounts b WHERE b.id = o.account_id)) > 0;",
+          "sourceLine": "AND pg_catalog.count((SELECT b.tier FROM accounts b WHERE b.id = o.account_id)) > 0;",
           "target": "accounts"
         },
         {
@@ -858,7 +858,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 9,
           "message": "queries/check.sql:9: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 8). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
-          "sourceLine": "HAVING count((SELECT a.name FROM accounts a WHERE a.id = o.account_id)) > 0;",
+          "sourceLine": "HAVING pg_catalog.count((SELECT a.name FROM accounts a WHERE a.id = o.account_id)) > 0;",
           "target": "accounts"
         }
       ],
@@ -929,6 +929,51 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "LEFT JOIN flags c ON c.flag = (o.id IS NULL);",
           "target": "flags"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_operator_filter": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries/check.sql",
+          "line": 18,
+          "message": "queries/check.sql:18: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 17). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT CAST(b.x IS NULL AS integer) BETWEEN 0 AND 2 FROM accounts b WHERE b.id = o.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 32,
+          "message": "queries/check.sql:32: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 31). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "sum((SELECT b.m FROM accounts b WHERE b.id = o.account_id)) FILTER (WHERE o.enabled)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 37,
+          "message": "queries/check.sql:37: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 36). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT b.m FROM accounts b WHERE b.id = o.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 51,
+          "message": "queries/check.sql:51: duplicate keyed lookup of `accounts` on `id = $1` (already looked up at line 49). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "WINDOW w AS (ROWS BETWEEN CURRENT ROW AND (SELECT a.n FROM accounts a WHERE a.id = $1) FOLLOWING);",
+          "target": "accounts"
         }
       ],
       "warnings": []
@@ -1155,7 +1200,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "line": 47,
           "message": "queries/check.sql:47: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 46). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
-          "sourceLine": "ORDER BY count((SELECT a.name FROM accounts a WHERE a.id = o.account_id));",
+          "sourceLine": "ORDER BY pg_catalog.count((SELECT a.name FROM accounts a WHERE a.id = o.account_id));",
           "target": "accounts"
         },
         {

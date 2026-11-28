@@ -6,7 +6,7 @@ HAVING (SELECT a.name FROM accounts a WHERE a.id = o.account_id) IS NOT NULL;
 SELECT count(*)
 FROM orders o
 GROUP BY (SELECT a.name FROM accounts a WHERE a.id = o.account_id)
-HAVING count((SELECT a.name FROM accounts a WHERE a.id = o.account_id)) > 0;
+HAVING pg_catalog.count((SELECT a.name FROM accounts a WHERE a.id = o.account_id)) > 0;
 
 SELECT count(*)
 FROM orders o
@@ -64,8 +64,8 @@ FROM orders o;
 
 SELECT count(*)
 FROM orders o
-HAVING count((SELECT a.name FROM accounts a WHERE a.id = o.account_id)) > 0
-   AND count((SELECT b.tier FROM accounts b WHERE b.id = o.account_id)) > 0;
+HAVING pg_catalog.count((SELECT a.name FROM accounts a WHERE a.id = o.account_id)) > 0
+   AND pg_catalog.count((SELECT b.tier FROM accounts b WHERE b.id = o.account_id)) > 0;
 
 SELECT
     CASE WHEN o.enabled THEN 'active'

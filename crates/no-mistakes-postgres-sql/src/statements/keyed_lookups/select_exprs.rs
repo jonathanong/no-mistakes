@@ -6,7 +6,7 @@ use super::scope::ScopeStack;
 use super::subquery::inspect_expr;
 use super::windows::referenced_expressions;
 use super::{select_item_expr, walk_nested_queries, LookupHistory};
-use crate::fx::FxHashSet;
+use crate::fx::{FxHashMap, FxHashSet};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 pub(super) use identity::target_identity;
 use identity::{normalize_sort_options, normalize_target};
@@ -20,6 +20,7 @@ pub(super) struct SelectTargets<'a> {
     grouping: Option<&'a grouping::GroupReuse>,
     keys: OnceCell<RefCell<FxHashSet<Expr>>>,
     windows: RefCell<FxHashSet<WindowSpec>>,
+    filtered: RefCell<FxHashMap<Expr, LookupHistory>>,
 }
 
 impl<'a> SelectTargets<'a> {
@@ -34,6 +35,17 @@ impl<'a> SelectTargets<'a> {
     pub(super) fn filter_grouped<'expr>(&self, expr: &'expr Expr) -> Cow<'expr, Expr> {
         self.grouping
             .map_or(Cow::Borrowed(expr), |grouping| grouping.filter(expr))
+    }
+
+    pub(super) fn take_filter_history(&self, filter: &Expr) -> LookupHistory {
+        self.filtered
+            .borrow_mut()
+            .remove(filter)
+            .unwrap_or_default()
+    }
+
+    pub(super) fn save_filter_history(&self, filter: Expr, history: LookupHistory) {
+        self.filtered.borrow_mut().insert(filter, history);
     }
 
     pub(super) fn reuses_window(&self, spec: &WindowSpec) -> bool {
@@ -128,16 +140,18 @@ fn expressions<'a>(
                 .map(|expr| (expr, Inspection::Projection)),
         )
         .chain(
-            referenced_expressions(select, distinct_on, order_by).map(|(expr, can_reuse)| {
-                (
-                    expr,
-                    if can_reuse {
-                        Inspection::Reusable
-                    } else {
-                        Inspection::Independent
-                    },
-                )
-            }),
+            referenced_expressions(select, distinct_on, order_by, select_targets).map(
+                |(expr, can_reuse)| {
+                    (
+                        expr,
+                        if can_reuse {
+                            Inspection::Reusable
+                        } else {
+                            Inspection::Independent
+                        },
+                    )
+                },
+            ),
         )
         .chain(order_by.iter().copied().map(reusable))
         .filter_map(move |(expr, inspection)| match inspection {

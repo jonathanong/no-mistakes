@@ -1,4 +1,4 @@
-use super::expr_norm::function::pure_name;
+use super::function_clauses::is_eager;
 use super::select_exprs::target_identity;
 use crate::fx::FxHashSet;
 use crate::idents::unwrap_expr;
@@ -83,14 +83,14 @@ impl VisitorMut for GroupedExpressions<'_> {
         {
             *expr = Expr::Value(Value::Null.with_empty_span());
         }
-        if matches!(expr, Expr::Function(function) if pure_name(function).is_none()) {
+        if matches!(expr, Expr::Function(function) if is_eager(function)) {
             self.depth += 1;
         }
         ControlFlow::Continue(())
     }
 
     fn post_visit_expr(&mut self, expr: &mut Expr) -> ControlFlow<()> {
-        if matches!(expr, Expr::Function(function) if pure_name(function).is_none()) {
+        if matches!(expr, Expr::Function(function) if is_eager(function)) {
             self.depth -= 1;
         }
         ControlFlow::Continue(())

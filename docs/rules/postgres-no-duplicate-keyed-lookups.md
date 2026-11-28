@@ -57,7 +57,8 @@ The rule stays silent when the lookups are not proven to read the same row:
 - Mutually exclusive `CASE WHEN ... THEN (SELECT ...) ELSE (SELECT ...) END`
   branches. A lookup in an arm can still repeat one in an independent
   expression. Inputs to recognized aggregates can repeat across arms because
-  PostgreSQL evaluates the aggregates before choosing an arm.
+  PostgreSQL evaluates the aggregates before choosing an arm. Aggregate
+  arguments with filters are compared within the same filter expression.
 - Volatile key expressions (UUID generators such as `gen_random_uuid()`,
   `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined
   or unrecognized functions in keys or scalar projections, unresolved table
@@ -67,17 +68,18 @@ The rule stays silent when the lookups are not proven to read the same row:
   need known built-in types, and casts also need known built-in target types.
   The rule skips function arguments and casts of columns or parameters whose
   types it cannot establish. It also skips operators in compound expressions
-  when their operand types or behavior are unknown, including the comparisons
-  used by `IS DISTINCT FROM` and `IN`.
+  when their signatures are unknown, including the comparisons used by
+  `IS DISTINCT FROM`, `IN`, and `BETWEEN`. Signature matching assumes
+  the standard PostgreSQL operator definitions.
 - Sampled table scans, `ONLY` table scans, or scalar subqueries that lock rows.
 
 PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
 (including grouping sets), `ORDER BY`, and window partition and ordering
-clauses. Identical inline window specifications share their frame bounds. An
-aggregate can also reuse an argument in its ordering clause. The
+clauses. Identical named and inline window specifications can share their
+frame bounds. An aggregate can also reuse an argument in its ordering clause. The
 rule counts an identical reused expression once. A matching grouping
-expression is also reused in projections, `HAVING`, `ORDER BY`, and arguments to
-recognized scalar functions. The rule still checks aggregate inputs
+expression is also reused in projections, `HAVING`, and `ORDER BY`. The
+rule checks the inputs of recognized aggregates and window functions
 independently.
 
 Findings point at the duplicate join or scalar subquery and name the line of the

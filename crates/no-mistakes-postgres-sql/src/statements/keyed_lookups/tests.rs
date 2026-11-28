@@ -356,3 +356,15 @@ fn preserves_sql_target_identity_and_proves_equality_predicate_inputs() {
         ]
     );
 }
+
+#[test]
+fn checks_operator_signatures_and_shares_only_compatible_lookup_history() {
+    let facts = fixture_facts("review-operator-filter");
+    assert!(!facts.parse_failed);
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+    assert_eq!(sites, [(17, 18), (31, 32), (36, 37), (49, 51)]);
+}
