@@ -105,7 +105,7 @@ module.exports = rule(
         }
       },
       FunctionDeclaration(node) {
-        helperCandidates.push({ id: node.id, fn: node });
+        if (node.id) helperCandidates.push({ id: node.id, fn: node });
       },
       CallExpression(node) {
         if (mocksFilesystem) return;

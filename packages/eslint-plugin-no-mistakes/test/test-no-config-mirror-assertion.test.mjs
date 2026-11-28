@@ -16,6 +16,7 @@ const defaultFiles = [
   "sources-cjs.spec.cjs",
   "statements-and-import-equals.test.ts",
   "edge-cases.test.ts",
+  "anonymous-default.test.ts",
   "sinks.test.ts",
   "parsed.test.ts",
   "custom-parser.test.ts",

@@ -1,6 +1,25 @@
 {
   "eslint": [
     {
+      "file": "anonymous-default.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 46,
+          "endLine": 10,
+          "file": "anonymous-default.test.ts",
+          "line": 10,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        }
+      ],
+      "name": "anonymous-default.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
       "file": "cross-file.test.ts",
       "findings": [],
       "name": "cross-file.test.ts",
@@ -849,6 +868,13 @@
     }
   ],
   "oxlint": [
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/anonymous-default.test.ts",
+      "line": 10,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
     {
       "code": "no-mistakes(test-no-config-mirror-assertion)",
       "column": 3,
