@@ -1,6 +1,6 @@
 use super::conditions::{case_condition, visit_case_children};
 use super::function_clauses::{
-    coalesce_arguments, filter_skips_inputs, has_optional_window_default, nth_value_skipped_input,
+    coalesce_arguments, filter_skips_inputs, has_optional_window_default, null_position_inputs,
     split_coalesce_arguments, visit_eager_functions, visit_function_inputs,
     visit_ordered_set_arguments,
 };
@@ -40,7 +40,7 @@ impl Nested<'_> {
             Expr::Function(function)
                 if filter_skips_inputs(function)
                     || has_optional_window_default(function)
-                    || nth_value_skipped_input(function).is_some() =>
+                    || null_position_inputs(function).is_some() =>
             {
                 self.blocked_expression_depth = 1;
                 walk_nested_queries(&function.filter, self.scopes, self.out);

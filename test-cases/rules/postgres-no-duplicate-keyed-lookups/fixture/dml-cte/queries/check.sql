@@ -176,3 +176,49 @@ WITH RECURSIVE sequence_numbers(n) AS (
 SELECT (TABLE sequence_numbers LIMIT 1);
 
 CREATE TABLE summary_orders (id bigint);
+
+WITH unread_values AS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    FROM orders o
+    UNION ALL
+    SELECT 0
+)
+SELECT 1 AS unread_values;
+
+WITH read_values AS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    FROM orders o
+    UNION ALL
+    SELECT 0
+)
+SELECT * FROM read_values;
+
+WITH shadowed AS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    FROM orders o
+)
+SELECT (WITH shadowed AS (SELECT 1) TABLE shadowed);
+
+WITH referenced AS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    FROM orders o
+)
+SELECT (WITH referenced AS (TABLE referenced) TABLE referenced);
+
+WITH local_numbers AS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    FROM orders o
+)
+SELECT (
+    WITH RECURSIVE local_numbers(n) AS (
+        VALUES (1)
+        UNION ALL
+        SELECT n + 1 FROM local_numbers WHERE n < 2
+    )
+    TABLE local_numbers LIMIT 1
+);

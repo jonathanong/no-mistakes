@@ -64,8 +64,9 @@ The rule stays silent when the lookups are not proven to read the same row:
   when the filter is a literal false or null.
 - Optional default expressions in `lag` and `lead` window calls. PostgreSQL
   evaluates them only when the requested row falls outside the partition.
-  The value argument of `pg_catalog.nth_value` is also skipped when its
-  position is a literal null. Earlier aggregate inputs remain eligible.
+  The rule also skips value arguments of `pg_catalog.lag`, `pg_catalog.lead`,
+  and `pg_catalog.nth_value` when their offset or position is a literal
+  null. Earlier aggregate inputs remain eligible.
   Value inputs of row-selecting windows such as `first_value` and
   `last_value` can run on different rows. The rule checks each for
   repeated work within that input.
@@ -77,7 +78,7 @@ The rule stays silent when the lookups are not proven to read the same row:
 - Window calls eliminated by literal `CASE` or `COALESCE` short-circuiting,
   unreachable DML actions, and query bodies with a literal `LIMIT 0`.
   CTEs and limit expressions are still inspected.
-- Unreferenced `SELECT` CTEs when their lack of references can be proven,
+- Unreferenced read-only CTEs when their lack of references can be proven,
   and discarded projections in simple `EXISTS` queries. Data-modifying
   CTEs and `EXISTS` conditions still receive analysis.
 - Volatile key expressions (UUID generators such as `gen_random_uuid()`,
@@ -85,13 +86,13 @@ The rule stays silent when the lookups are not proven to read the same row:
   or unrecognized functions in keys or scalar projections, unresolved table
   column alias lists, distinct `LIMIT` clauses, or ambiguous expressions.
 - Function calls require a vetted built-in qualified with `pg_catalog` or
-  PostgreSQL syntax such as `COALESCE`. Function arguments and cast inputs
-  need known built-in types, and casts also need known built-in target types.
+  PostgreSQL syntax such as `COALESCE`. Function arguments need known
+  built-in types, and casts need a recognized PostgreSQL conversion.
   The rule skips function arguments and casts of columns or parameters whose
   types it cannot establish. It also skips operators in compound expressions
   when their signatures are unknown, including the comparisons used by
   `IS DISTINCT FROM`, `IN`, `BETWEEN`, `NULLIF`, Boolean tests, and pattern
-  matching. Signature matching assumes the standard PostgreSQL operator definitions.
+  matching. Signature matching assumes the standard PostgreSQL cast and operator definitions.
 - Scalar projections with expression forms whose repeatability is unproven.
   Examples include arrays with unknown element conversions and unqualified
   comma-style `SUBSTRING` calls.

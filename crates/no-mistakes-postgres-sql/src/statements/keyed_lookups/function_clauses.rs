@@ -10,7 +10,7 @@ use sqlparser::ast::{
     DuplicateTreatment, Expr, Function, FunctionArg, FunctionArgumentClause, FunctionArguments,
     Value,
 };
-pub(super) use window::{has_optional_window_default, nth_value_skipped_input, row_window_value};
+pub(super) use window::{has_optional_window_default, null_position_inputs, row_window_value};
 
 pub(super) fn coalesce_arguments(function: &Function) -> Option<&[FunctionArg]> {
     let [name] = function.name.0.as_slice() else {
@@ -39,8 +39,10 @@ pub(super) fn visit_function_inputs(function: &Function, visit: &mut impl FnMut(
         }
         return;
     }
-    if let Some(value) = nth_value_skipped_input(function) {
-        visit_eager_functions(value, visit);
+    if let Some(args) = null_position_inputs(function) {
+        for input in args.iter().filter_map(function_arg_expr) {
+            visit_eager_functions(input, visit);
+        }
         return;
     }
     let has_default = has_optional_window_default(function);

@@ -55,7 +55,7 @@ impl<'a> ExprNormalizer<'a> {
                 }
                 Some(format!("val:{value}"))
             }
-            Expr::TypedString(typed) => {
+            Expr::TypedString(typed) if operators::known_cast_target(&typed.data_type) => {
                 self.mark_anchor();
                 Some(format!(
                     "typed({},{})",
@@ -69,7 +69,7 @@ impl<'a> ExprNormalizer<'a> {
                 data_type,
                 format: None,
                 ..
-            } if types::has_builtin_type(expr) => {
+            } if operators::cast_is_proven(expr, data_type) => {
                 let inner = self.normalize(expr)?;
                 Some(format!(
                     "cast({},{})",

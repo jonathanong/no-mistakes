@@ -1,3 +1,4 @@
+use super::grouping::grouped_position;
 use super::normalize::LookupKey;
 use super::scope::ScopeSnapshot;
 use crate::idents::{ident_key, unwrap_expr};
@@ -5,7 +6,11 @@ use sqlparser::ast::{Expr, UnaryOperator};
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
-type Column = (usize, String);
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+enum Column {
+    Bound(usize, String),
+    Grouped(usize),
+}
 type Site = (usize, usize);
 
 const TRUE: u8 = 1;
@@ -67,23 +72,10 @@ impl LookupHistory {
     }
 
     pub(super) fn restrict(&mut self, condition: &Expr, outer: &ScopeSnapshot, taken: bool) {
-        let (column, test) = match unwrap_expr(condition) {
-            Expr::UnaryOp {
-                op: UnaryOperator::Not,
-                expr,
-            } => (unwrap_expr(expr), FALSE),
-            column => (column, TRUE),
-        };
-        let Expr::CompoundIdentifier(parts) = column else {
-            return;
-        };
-        let [qualifier, column] = parts.as_slice() else {
-            return;
-        };
-        let column = ident_key(column);
-        if let Some(binding) = outer.resolve_column(&ident_key(qualifier), &column) {
+        let (operand, test) = boolean_test(condition);
+        if let Some(column) = guard_column(operand, outer) {
             let allowed = if taken { test } else { ANY ^ test };
-            *self.active.columns.entry((binding, column)).or_insert(ANY) &= allowed;
+            *self.active.columns.entry(column).or_insert(ANY) &= allowed;
         }
     }
 
@@ -123,4 +115,35 @@ impl LookupHistory {
 
 fn site_is_new(sites: &[(Guards, Site)], guards: &Guards) -> bool {
     sites.iter().all(|(existing, _)| existing != guards)
+}
+
+fn boolean_test(expr: &Expr) -> (&Expr, u8) {
+    match unwrap_expr(expr) {
+        Expr::UnaryOp {
+            op: UnaryOperator::Not,
+            expr,
+        }
+        | Expr::IsFalse(expr) => (expr, FALSE),
+        Expr::IsTrue(expr) => (expr, TRUE),
+        Expr::IsUnknown(expr) => (expr, NULL),
+        Expr::IsNotFalse(expr) => (expr, TRUE | NULL),
+        Expr::IsNotTrue(expr) => (expr, FALSE | NULL),
+        Expr::IsNotUnknown(expr) => (expr, TRUE | FALSE),
+        operand => (operand, TRUE),
+    }
+}
+
+fn guard_column(operand: &Expr, outer: &ScopeSnapshot) -> Option<Column> {
+    if let Some(position) = grouped_position(operand) {
+        return Some(Column::Grouped(position));
+    }
+    let Expr::CompoundIdentifier(parts) = unwrap_expr(operand) else {
+        return None;
+    };
+    let [qualifier, column] = parts.as_slice() else {
+        return None;
+    };
+    let column = ident_key(column);
+    let binding = outer.resolve_column(&ident_key(qualifier), &column)?;
+    Some(Column::Bound(binding, column))
 }

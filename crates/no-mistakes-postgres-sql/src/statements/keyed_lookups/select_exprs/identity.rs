@@ -82,9 +82,7 @@ fn normalize(node: &mut impl VisitMut, normalize_targets: bool) {
                 if *kind == CastKind::DoubleColon {
                     *kind = CastKind::Cast;
                 }
-                if matches!(data_type, DataType::Int(None))
-                    || self.normalize_targets && matches!(data_type, DataType::Int4(None))
-                {
+                if matches!(data_type, DataType::Int(None)) {
                     *data_type = DataType::Integer(None);
                 }
             }

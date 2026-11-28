@@ -43,13 +43,19 @@ pub(in crate::statements::keyed_lookups) fn row_window_value(function: &Function
     function_arg_expr(args.first()?)
 }
 
-pub(in crate::statements::keyed_lookups) fn nth_value_skipped_input(
+pub(in crate::statements::keyed_lookups) fn null_position_inputs(
     function: &Function,
-) -> Option<&Expr> {
-    if function.name.0.len() != 2 || window_name(function).as_deref()? != "nth_value" {
+) -> Option<&[FunctionArg]> {
+    if function.name.0.len() != 2
+        || !matches!(
+            window_name(function).as_deref(),
+            Some("nth_value" | "lag" | "lead")
+        )
+    {
         return None;
     }
-    let [value, position] = arguments(function)? else {
+    let args = arguments(function)?;
+    let [_, position, ..] = args else {
         return None;
     };
     let position = unwrap_expr(function_arg_expr(position)?);
@@ -61,9 +67,5 @@ pub(in crate::statements::keyed_lookups) fn nth_value_skipped_input(
         } => expr.as_ref(),
         other => other,
     };
-    if matches!(literal(position), Some(Value::Null)) {
-        function_arg_expr(value)
-    } else {
-        None
-    }
+    matches!(literal(position), Some(Value::Null)).then_some(args)
 }

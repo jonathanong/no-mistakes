@@ -320,3 +320,33 @@ SELECT
         FILTER (WHERE o.active) OVER ()
 FROM orders o
 GROUP BY o.enabled, o.active;
+
+SELECT
+    CASE WHEN o.enabled THEN (SELECT a.n FROM accounts a WHERE a.id = o.id) END,
+    CASE WHEN NOT o.enabled THEN (SELECT b.n FROM accounts b WHERE b.id = o.id) END
+FROM orders o
+GROUP BY o.id, o.enabled;
+
+SELECT
+    CASE WHEN o.enabled THEN (SELECT a.n FROM accounts a WHERE a.id = o.id) END,
+    CASE WHEN o.enabled IS TRUE THEN (SELECT b.n FROM accounts b WHERE b.id = o.id) END
+FROM orders o
+GROUP BY o.id, o.enabled;
+
+SELECT COALESCE(0, (SELECT a.n FROM accounts a WHERE a.id = o.id)),
+       0,
+       (SELECT b.n FROM accounts b WHERE b.id = o.id)
+FROM orders o
+GROUP BY o.id, 2, ROLLUP(o.region);
+
+SELECT COALESCE(0, (SELECT a.n FROM accounts a WHERE a.id = o.id)),
+       0,
+       (SELECT b.n FROM accounts b WHERE b.id = o.id)
+FROM orders o
+GROUP BY o.id, GROUPING SETS ((2, o.region), (2));
+
+SELECT COALESCE(0, (SELECT a.n FROM accounts a WHERE a.id = o.id)),
+       0,
+       (SELECT b.n FROM accounts b WHERE b.id = o.id)
+FROM orders o
+GROUP BY o.id, GROUPING SETS ((2, o.region), ());

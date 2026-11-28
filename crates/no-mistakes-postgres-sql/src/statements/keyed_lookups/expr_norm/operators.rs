@@ -1,8 +1,10 @@
 use crate::idents::unwrap_expr;
-use sqlparser::ast::{BinaryOperator, CaseWhen, DataType, Expr, UnaryOperator, Value};
+use sqlparser::ast::{BinaryOperator, CaseWhen, CastKind, DataType, Expr, UnaryOperator, Value};
 mod calls;
+mod casts;
 mod literals;
 use calls::function_result;
+pub(super) use casts::{cast_is_proven, known_cast_target};
 use literals::{negated_literal_type, number_type};
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -122,7 +124,13 @@ fn operand_type(expr: &Expr) -> Option<BuiltinType> {
             }
             _ => None,
         },
-        Expr::Cast { data_type, .. } => type_name(data_type),
+        Expr::Cast {
+            kind: CastKind::Cast | CastKind::DoubleColon,
+            expr,
+            data_type,
+            format: None,
+            ..
+        } if cast_is_proven(expr, data_type) => type_name(data_type),
         Expr::TypedString(typed) => type_name(&typed.data_type),
         Expr::IsNull(_) | Expr::IsNotNull(_) => Some(BuiltinType::Bool),
         Expr::Function(function) => function_result(function),

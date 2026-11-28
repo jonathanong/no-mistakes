@@ -6,7 +6,9 @@ use super::select_item_expr;
 use super::{scope::ScopeStack, subquery, walk_nested_queries, walk_set_expr, LookupHistory};
 use crate::idents::{unwrap_expr, visit_shallow_exprs};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
-use sqlparser::ast::{Distinct, Expr, GroupByExpr, LimitClause, OrderByKind, Query, Select, Value};
+use sqlparser::ast::{
+    CastKind, DataType, Distinct, Expr, GroupByExpr, LimitClause, OrderByKind, Query, Select, Value,
+};
 
 pub(super) fn walk_query(
     query: &Query,
@@ -94,6 +96,16 @@ pub(super) fn has_zero_limit(limit: Option<&LimitClause>) -> bool {
     }) = limit
     else {
         return false;
+    };
+    let count = match unwrap_expr(count) {
+        Expr::Cast {
+            kind: CastKind::Cast | CastKind::DoubleColon,
+            expr,
+            data_type: DataType::BigInt(None),
+            format: None,
+            ..
+        } => expr.as_ref(),
+        count => count,
     };
     match literal(count) {
         Some(Value::Number(number, _)) => {

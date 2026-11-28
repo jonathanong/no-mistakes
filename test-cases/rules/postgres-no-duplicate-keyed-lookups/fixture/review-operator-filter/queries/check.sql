@@ -646,3 +646,66 @@ SELECT EXISTS (SELECT 1 FROM orders GROUP BY id);
 SELECT EXISTS (SELECT 1 FROM orders HAVING COUNT(*) > 1);
 SELECT EXISTS (SELECT DISTINCT ON (id) id FROM orders);
 SELECT EXISTS (WITH keys AS (SELECT 1 AS id) SELECT id FROM keys);
+
+SELECT
+    (SELECT 1::date FROM accounts a WHERE a.id = o.account_id),
+    (SELECT 1::date FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT o.id FROM orders o
+JOIN accounts a ON a.id = o.account_id AND CAST(1 AS date) IS NOT NULL
+JOIN accounts b ON b.id = o.account_id AND CAST(1 AS date) IS NOT NULL;
+
+SELECT
+    (SELECT 1::bigint FROM accounts a WHERE a.id = o.account_id),
+    (SELECT DATE '2020-01-01' FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT pg_catalog.lag(
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+    + (SELECT b.n FROM accounts b WHERE b.id = o.account_id),
+    NULL::integer
+) OVER ()
+FROM orders o;
+
+SELECT pg_catalog.lead(
+    pg_catalog.sum((SELECT a.n FROM accounts a WHERE a.id = o.account_id)), NULL,
+    pg_catalog.sum((SELECT b.n FROM accounts b WHERE b.id = o.account_id))
+) OVER ()
+FROM orders o;
+
+SELECT
+    CASE WHEN o.enabled IS TRUE THEN (SELECT a.n FROM accounts a WHERE a.id = o.id) END,
+    CASE WHEN o.enabled IS FALSE THEN (SELECT b.n FROM accounts b WHERE b.id = o.id) END,
+    CASE WHEN o.enabled IS UNKNOWN THEN (SELECT c.n FROM accounts c WHERE c.id = o.id) END
+FROM orders o;
+
+SELECT
+    CASE WHEN o.enabled IS NOT TRUE THEN (SELECT a.n FROM accounts a WHERE a.id = o.id) END,
+    CASE WHEN o.enabled IS NOT FALSE THEN (SELECT b.n FROM accounts b WHERE b.id = o.id) END,
+    CASE WHEN o.enabled IS NOT UNKNOWN THEN (SELECT c.n FROM accounts c WHERE c.id = o.id) END
+FROM orders o;
+
+SELECT
+    pg_catalog.sum((SELECT a.n FROM accounts a WHERE a.id = o.id)) FILTER (WHERE o.enabled),
+    pg_catalog.max(CASE WHEN NOT o.enabled THEN (SELECT b.n FROM accounts b WHERE b.id = o.id) END)
+FROM orders o;
+
+SELECT
+    pg_catalog.sum((SELECT a.n FROM accounts a WHERE a.id = o.id)) FILTER (WHERE o.enabled),
+    pg_catalog.max(CASE WHEN o.enabled IS TRUE THEN (SELECT b.n FROM accounts b WHERE b.id = o.id) END)
+FROM orders o;
+
+SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)::integer
+FROM orders o
+ORDER BY (SELECT a.n FROM accounts a WHERE a.id = o.id)::int4;
+
+SELECT
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id LIMIT CAST(0 AS bigint)),
+    (SELECT b.n FROM accounts b WHERE b.id = o.account_id LIMIT CAST(0 AS bigint))
+FROM orders o;
+
+SELECT
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id LIMIT CAST(1 AS bigint)),
+    (SELECT b.n FROM accounts b WHERE b.id = o.account_id LIMIT CAST(1 AS bigint))
+FROM orders o;

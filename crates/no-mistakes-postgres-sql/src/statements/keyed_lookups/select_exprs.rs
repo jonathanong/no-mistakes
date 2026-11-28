@@ -87,8 +87,8 @@ pub(super) fn walk_select(
         scopes.refresh_bindings(0..scopes.binding_count());
         scopes.snapshot()
     });
-    let group_by = grouping::targets(select);
-    let reuse = grouping::GroupReuse::new(&group_by, after_grouping.is_some());
+    let group_by = grouping::GroupingTargets::new(select);
+    let reuse = grouping::GroupReuse::new(&group_by);
     let windows = WindowPlan::new(select, order_by);
     let targets = SelectTargets {
         projection: &select.projection,
@@ -97,7 +97,8 @@ pub(super) fn walk_select(
         windows: Some(&windows),
         ..SelectTargets::default()
     };
-    for (expr, runs_before_grouping) in expressions(select, order_by, &targets, &group_by, &windows)
+    for (expr, runs_before_grouping) in
+        expressions(select, order_by, &targets, &group_by.all, &windows)
     {
         let outer = after_grouping
             .as_ref()

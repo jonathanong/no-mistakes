@@ -312,7 +312,9 @@ fn separates_grouped_reuse_from_independent_expressions_and_case_arms() {
             (282, 283),
             (298, 299),
             (303, 304),
-            (309, 311)
+            (309, 311),
+            (331, 332),
+            (348, 350)
         ]
     );
 }
@@ -451,7 +453,14 @@ fn checks_operator_signatures_and_shares_only_compatible_lookup_history() {
             (614, 615),
             (620, 621),
             (631, 632),
-            (636, 637)
+            (636, 637),
+            (660, 661),
+            (672, 673),
+            (684, 685),
+            (684, 686),
+            (695, 696),
+            (699, 701),
+            (709, 710)
         ]
     );
 }

@@ -103,6 +103,7 @@ fn inspect(
                     .map(|_| target_identity(filter));
                 let mut filtered = seen.clone();
                 filtered.mark_filtered(key);
+                filtered.restrict(filter, input_scope, true);
                 inspect_function_inputs(
                     function,
                     input_scope,

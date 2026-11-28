@@ -1,14 +1,14 @@
+mod targets;
+
 use super::function_clauses::is_eager;
 use super::select_exprs::target_identity;
-use super::select_item_expr;
 use crate::fx::{FxHashMap, FxHashSet};
-use crate::idents::{ident_key, unwrap_expr};
-use sqlparser::ast::{
-    Expr, GroupByExpr, Query, Select, SelectItem, Value, ValueWithSpan, VisitMut, VisitorMut,
-};
+use crate::idents::unwrap_expr;
+use sqlparser::ast::{Expr, GroupByExpr, Query, Value, VisitMut, VisitorMut};
 use std::borrow::Cow;
 use std::mem::{discriminant, Discriminant};
 use std::ops::ControlFlow;
+pub(super) use targets::GroupingTargets;
 
 pub(super) fn can_omit_keys(group_by: &GroupByExpr) -> bool {
     matches!(group_by, GroupByExpr::Expressions(expressions, _) if expressions.iter().any(|expr|
@@ -16,69 +16,13 @@ pub(super) fn can_omit_keys(group_by: &GroupByExpr) -> bool {
     ))
 }
 
-pub(super) fn targets(select: &Select) -> Vec<&Expr> {
-    let mut targets = Vec::new();
-    if let GroupByExpr::Expressions(expressions, _) = &select.group_by {
-        let known_outputs: Vec<_> = select
-            .projection
-            .iter()
-            .map_while(select_item_expr)
-            .collect();
-        let alias_outputs = if select.from.is_empty()
-            && select
-                .projection
-                .iter()
-                .all(|item| matches!(item, SelectItem::ExprWithAlias { .. }))
-        {
-            select.projection.as_slice()
-        } else {
-            &[]
-        };
-        for expr in expressions {
-            collect_targets(expr, &known_outputs, alias_outputs, &mut targets);
-        }
-    }
-    targets
-}
+const GROUPED_VALUE_PREFIX: &str = "GROUP BY ";
 
-fn collect_targets<'a>(
-    expr: &'a Expr,
-    known_outputs: &[&'a Expr],
-    alias_outputs: &'a [SelectItem],
-    targets: &mut Vec<&'a Expr>,
-) {
-    match unwrap_expr(expr) {
-        Expr::GroupingSets(sets) | Expr::Cube(sets) | Expr::Rollup(sets) => {
-            for member in sets.iter().flatten() {
-                collect_targets(member, known_outputs, alias_outputs, targets);
-            }
-        }
-        Expr::Tuple(members) => {
-            for member in members {
-                collect_targets(member, known_outputs, alias_outputs, targets);
-            }
-        }
-        Expr::Value(ValueWithSpan {
-            value: Value::Number(number, _),
-            ..
-        }) => {
-            let index = number
-                .parse::<usize>()
-                .ok()
-                .and_then(|ordinal| ordinal.checked_sub(1));
-            targets.extend(index.and_then(|index| known_outputs.get(index).copied()));
-        }
-        Expr::Identifier(ident) if !alias_outputs.is_empty() => {
-            let name = ident_key(ident);
-            let mut aliases = alias_outputs.iter().filter_map(|item| match item {
-                SelectItem::ExprWithAlias { expr, alias } if ident_key(alias) == name => Some(expr),
-                _ => None,
-            });
-            let first = aliases.next();
-            targets.push(first.filter(|_| aliases.next().is_none()).unwrap_or(expr));
-        }
-        _ => targets.push(expr),
-    }
+pub(super) fn grouped_position(expr: &Expr) -> Option<usize> {
+    let Value::Placeholder(name) = super::conditions::literal(expr)? else {
+        return None;
+    };
+    name.strip_prefix(GROUPED_VALUE_PREFIX)?.parse().ok()
 }
 
 pub(super) struct GroupReuse {
@@ -87,12 +31,18 @@ pub(super) struct GroupReuse {
 }
 
 impl GroupReuse {
-    pub(super) fn new(grouping: &[&Expr], can_omit_keys: bool) -> Self {
+    pub(super) fn new(grouping: &GroupingTargets<'_>) -> Self {
         let keys: FxHashMap<_, _> = grouping
+            .all
             .iter()
-            .filter(|expr| can_omit_keys || !matches!(unwrap_expr(expr), Expr::Value(_)))
             .enumerate()
-            .map(|(position, expr)| (target_identity(expr), position))
+            .filter_map(|(position, expr)| {
+                let key = target_identity(expr);
+                if matches!(key, Expr::Value(_)) && grouping.required.contains(&key) {
+                    return None;
+                }
+                Some((key, position))
+            })
             .collect();
         let kinds = keys.keys().map(discriminant).collect();
         Self { keys, kinds }
@@ -133,7 +83,8 @@ impl VisitorMut for GroupedExpressions<'_> {
         if self.depth == 0 && self.reuse.kinds.contains(&discriminant(unwrap_expr(expr))) {
             if let Some(position) = self.reuse.keys.get(&target_identity(expr)) {
                 *expr = Expr::Value(
-                    Value::Placeholder(format!("GROUP BY {position}")).with_empty_span(),
+                    Value::Placeholder(format!("{GROUPED_VALUE_PREFIX}{position}"))
+                        .with_empty_span(),
                 );
             }
         }
