@@ -60,7 +60,7 @@ The rule is disabled by default in both presets.
 `import * as ph from "node:perf_hooks"`, `import ph = require("node:perf_hooks")`,
 and `const { performance } = ph` are the same clock. A cast such as
 `(v as typeof v).expect(Date.now() - start)` is still `expect`. A cast
-`v.vi.useFakeTimers()` still exempts the whole file. A later `vi.useFakeTimers()` also drops an earlier opaque elapsed assertion. A local fluent helper is not `expect`.
+`v.vi.useFakeTimers()` still exempts the whole file. `import vt from "vitest"; vt.vi.useFakeTimers()` does too. A later `vi.useFakeTimers()` also drops an earlier opaque elapsed assertion. A local fluent helper is not `expect`.
 
 ## Suppression
 

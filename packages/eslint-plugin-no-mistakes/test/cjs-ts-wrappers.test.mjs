@@ -40,10 +40,13 @@ const groups = [
       "each-static.test.ts",
       "each-dynamic.test.ts",
       "each-nested.test.ts",
+      "pattern-shape.js",
     ],
     valid: [
       "not-a-runner.test.ts",
       "redeclare.js",
+      "two-defs.test.js",
+      "option-call.test.ts",
       "type-only.test.ts",
       "computed-member.test.ts",
       "alias-plain.test.ts",
@@ -87,6 +90,7 @@ const groups = [
       "resolved-computed.test.ts",
       "inline-other.test.ts",
       "let-alias.test.ts",
+      "import-equals.test.ts",
     ],
   },
   {
@@ -157,6 +161,8 @@ const groups = [
       "reassign.test.ts",
       "computed-key.test.ts",
       "reassigned-dynamic.test.ts",
+      "member-receiver.test.ts",
+      "playwright-default.test.ts",
     ],
   },
   {
@@ -185,6 +191,7 @@ const groups = [
       "local-fluent.test.ts",
       "late-fake-timers.test.ts",
       "computed-now.test.ts",
+      "default-timers.test.ts",
     ],
   },
   {
@@ -205,8 +212,14 @@ const groups = [
       "default-namespace.test.ts",
       "spread-apply.test.ts",
       "static-apply.test.ts",
+      "default-expect.test.ts",
     ],
-    valid: ["default-direct.test.ts", "spread-call.test.ts", "spread-apply-site.test.ts"],
+    valid: [
+      "default-direct.test.ts",
+      "spread-call.test.ts",
+      "spread-apply-site.test.ts",
+      "named-member.test.ts",
+    ],
   },
   {
     rule: "test-no-error-message-matching",
@@ -295,6 +308,7 @@ const groups = [
     options: [{ testModules: ["./custom-test"] }],
     invalid: [
       "configured.test.ts",
+      "default-import.test.ts",
       "wrappers.test.ts",
       "dynamic.test.ts",
       "awaited.test.ts",

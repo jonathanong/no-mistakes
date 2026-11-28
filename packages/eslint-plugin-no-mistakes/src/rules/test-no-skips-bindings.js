@@ -69,9 +69,10 @@ function imported(node, context, namespace = false, seen = new Set()) {
       } else if (def.parent?.source) {
         source = def.parent.source.value;
         if (def.node.type === "ImportNamespaceSpecifier") importedName = "*";
-        else if (def.node.type === "ImportDefaultSpecifier")
+        else if (def.node.type === "ImportDefaultSpecifier") {
           importedName = source === "@playwright/test" ? "test" : null;
-        else importedName = importSpecifierName(def.node);
+          if (source === "vitest" && namespace) importedName = "*";
+        } else importedName = importSpecifierName(def.node);
         if (importedName === "default" && source === "@playwright/test") importedName = "test";
       }
     } else if (def.type === "Variable") {

@@ -491,6 +491,17 @@
       "file": "suite.test.ts",
       "findings": [
         {
+          "column": 18,
+          "endColumn": 22,
+          "endLine": 9,
+          "file": "suite.test.ts",
+          "line": 9,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
           "column": 4,
           "endColumn": 10,
           "endLine": 17,

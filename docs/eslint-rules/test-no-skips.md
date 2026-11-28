@@ -229,7 +229,7 @@ Replace timer-based waits with an explicit completion signal or test fixture
 barrier. For a known defect, keep an ordinary failing test that records the
 behavior to restore; use `todo` only when the team has explicitly allowed it.
 
-A same-file default import of `@playwright/test` is `test`. A string or expression-free template member, and `const { test } = namespace`, are the same binding. Vitest's default import is not a runner. Another file's re-export is not visible here: `import { check } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { test as check } from "vitest"` or `export * from "vitest"`. A parameter default such as `function run({ test } = vitest)` is not judged, because the caller can pass a different object.
+A same-file default import of `@playwright/test` is `test`. A string or expression-free template member, and `const { test } = namespace`, are the same binding. Vitest's default import is not a runner, and `import vt from "vitest"; vt.test.skip` is a skip. Another file's re-export is not visible here: `import { check } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { test as check } from "vitest"` or `export * from "vitest"`. A parameter default such as `function run({ test } = vitest)` is not judged, because the caller can pass a different object.
 
 ## Immutable computed keys
 

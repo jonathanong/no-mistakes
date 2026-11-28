@@ -8,4 +8,8 @@ test("reads", () => {
   exact.apply(null, [...[err.message]]).toBe("x");
   exact.call(null, err.message, ...values).toBe("x");
   exact.apply(null, [err.message], ...values).toBe("x");
+  exact.call(null, ...[null, err.message, ...values]).toBe("x");
+  exact.call(...[...[null, err.message]]).toBe("x");
+  exact.call(null, ...[err.message, ,]).toBe("x");
+  exact.apply(...values).toBe("x");
 });

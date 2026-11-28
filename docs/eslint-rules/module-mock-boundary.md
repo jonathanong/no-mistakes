@@ -49,7 +49,7 @@ controls.
 `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
 mock whose `vitest` or `@jest/globals` binding comes from a non-static
 `require` reports `unanalyzable`. A type-only or non-external `import =` is
-not that binding. An identifier alias of the non-static `require`, and `.call`
+not that binding. `import local = require("./dep")` is not a framework mock. An identifier alias of the non-static `require`, and `.call`
 or a literal-array `.apply` on its `mock` or `doMock`, report `unanalyzable`
 instead of a boundary finding. See the exhaustive table in
 [`eslint-plugin`](../eslint-plugin.md#rule-options).
