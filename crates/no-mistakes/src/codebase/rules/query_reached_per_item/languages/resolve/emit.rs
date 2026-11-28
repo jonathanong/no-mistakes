@@ -60,7 +60,13 @@ pub(super) fn unproven(
     })
 }
 
-pub(super) fn suppressed(ctx: &Ctx<'_>, file: &str, callee: &str, line: u32, function: &str) -> bool {
+pub(super) fn suppressed(
+    ctx: &Ctx<'_>,
+    file: &str,
+    callee: &str,
+    line: u32,
+    function: &str,
+) -> bool {
     let matches = ctx
         .allow
         .iter()
@@ -82,5 +88,8 @@ pub(super) fn allowance_matches(
     entry.file == file
         && entry.callee.as_ref().is_none_or(|value| value == callee)
         && entry.line.is_none_or(|value| value == line)
-        && entry.function.as_deref().is_none_or(|name| name == function)
+        && entry
+            .function
+            .as_deref()
+            .is_none_or(|name| name == function)
 }

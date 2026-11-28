@@ -32,6 +32,9 @@ pub(super) fn bare_header(line: &str) -> Option<Header> {
 
 fn function_declarator(line: &str, paren: usize, name: &str) -> bool {
     let before = &line[..paren];
+    if before.contains('=') {
+        return false;
+    }
     if words(before)
         .iter()
         .any(|word| matches!(*word, "fn" | "func" | "function" | "fun" | "def"))

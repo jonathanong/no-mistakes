@@ -1,11 +1,13 @@
 use super::calls::per_item_callees;
 use super::carry::Carry;
 use super::notes::{record, record_inline_body, record_loop_line, record_saved};
-use super::statement::{close_unbraced, delimiter_delta, params_of, params_of_loop, Unbraced};
+use super::statement::{close_unbraced, params_of, params_of_loop, release_armed, Unbraced};
 use super::syntax::{
-    bare_header, block_header, brace_block, brace_header, end_count, indent_header, opener_count,
+    bare_header, block_header, brace_block, brace_header, end_count, opener_count,
 };
 use super::{close_brace_loops, push, Header, Scan};
+
+pub(super) use super::indent::scan_indent;
 
 struct Pending {
     header: Header,
@@ -28,6 +30,7 @@ pub(super) fn scan_brace(source: &str) -> Scan {
             carry.clear();
             continue;
         }
+        release_armed(&mut stack, &mut unbraced, trimmed);
         if trimmed.starts_with('{') {
             if let Some(waiting) = pending.take() {
                 push(
@@ -79,10 +82,7 @@ pub(super) fn scan_brace(source: &str) -> Scan {
             );
             record_saved(&mut scan, &stack, waiting.line, &waiting.calls);
             record(&mut scan, &stack, line, line_no, &mut carry, false);
-            unbraced = Some(Unbraced {
-                depth,
-                delimiters: 0,
-            });
+            unbraced = Some(Unbraced::at(depth));
         } else {
             record(&mut scan, &stack, line, line_no, &mut carry, false);
         }
@@ -96,53 +96,7 @@ pub(super) fn scan_brace(source: &str) -> Scan {
                 _ => {}
             }
         }
-        close_unbraced(&mut stack, &mut unbraced, depth, line);
-    }
-    scan
-}
-
-pub(super) fn scan_indent(source: &str) -> Scan {
-    let mut scan = Scan::default();
-    let mut stack: Vec<super::Frame> = Vec::new();
-    let mut carry = Carry::default();
-    let mut delimiters = 0i32;
-    for (index, line) in source.lines().enumerate() {
-        if line.trim().is_empty() {
-            carry.clear();
-            continue;
-        }
-        let line_no = index as u32 + 1;
-        if delimiters == 0 {
-            let indent = line
-                .chars()
-                .take_while(|ch| *ch == ' ' || *ch == '\t')
-                .count();
-            while stack.last().is_some_and(|frame| frame.open() >= indent) {
-                stack.pop();
-            }
-            if let Some(header) = indent_header(line) {
-                let is_loop = matches!(header, Header::Loop(_));
-                push(
-                    &mut stack,
-                    &mut scan,
-                    header,
-                    indent,
-                    false,
-                    params_of_loop(is_loop, line),
-                );
-                if is_loop {
-                    record_loop_line(&mut scan, &stack, line, line_no, &mut carry);
-                } else {
-                    record_inline_body(&mut scan, &stack, line, line_no, false);
-                    carry.note(line, line_no);
-                }
-            } else {
-                record(&mut scan, &stack, line, line_no, &mut carry, false);
-            }
-        } else {
-            record(&mut scan, &stack, line, line_no, &mut carry, false);
-        }
-        delimiters = (delimiters + delimiter_delta(line)).max(0);
+        close_unbraced(&stack, &mut unbraced, depth, line);
     }
     scan
 }

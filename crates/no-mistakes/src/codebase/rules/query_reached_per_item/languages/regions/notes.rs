@@ -1,4 +1,6 @@
-use super::calls::{calls, is_callee_byte, is_keyword, per_item_callees, split_separator};
+use super::calls::{
+    calls, initializer_callees, is_callee_byte, is_keyword, per_item_callees, split_separator,
+};
 use super::carry::Carry;
 use super::params::signature_body;
 use super::{Frame, LoopCall, Scan};
@@ -39,6 +41,18 @@ pub(super) fn record_loop_line(
         .collect::<Vec<_>>();
     carry.note(line, line_no);
     record_callees(scan, stack, &callees);
+    let initializer = initializer_callees(line, construct)
+        .into_iter()
+        .map(|callee| (line_no, callee))
+        .collect::<Vec<_>>();
+    if initializer.is_empty() {
+        return;
+    }
+    let mut outer = stack.to_vec();
+    if matches!(outer.last(), Some(Frame::Loop { .. })) {
+        outer.pop();
+    }
+    record_callees(scan, &outer, &initializer);
 }
 
 pub(super) fn record_saved(scan: &mut Scan, stack: &[Frame], line_no: u32, callees: &[String]) {
@@ -138,9 +152,10 @@ fn paren_free_calls(line: &str) -> Vec<String> {
             && (bytes[cursor].is_ascii_alphanumeric()
                 || matches!(
                     bytes[cursor],
-                    b'_' | b'$' | b'\'' | b'"' | b'@' | b'[' | b'{' | b'-' | b'+'
+                    b'_' | b'$' | b'\'' | b'"' | b'@' | b'[' | b'{' | b'-'
                 ));
-        if cursor == end || !argument {
+        let zero_arg = cursor >= bytes.len() || matches!(bytes.get(cursor), Some(b';' | b'#'));
+        if !argument && !zero_arg {
             continue;
         }
         let name = line[start..end].trim_start_matches(['.', ':', '\\', '>', '-']);

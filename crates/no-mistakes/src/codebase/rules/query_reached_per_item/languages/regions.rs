@@ -1,5 +1,6 @@
 mod calls;
 mod carry;
+mod indent;
 mod lex;
 mod notes;
 mod params;
@@ -37,6 +38,7 @@ enum Header {
     Loop(&'static str),
 }
 
+#[derive(Clone)]
 enum Frame {
     Function {
         name: String,

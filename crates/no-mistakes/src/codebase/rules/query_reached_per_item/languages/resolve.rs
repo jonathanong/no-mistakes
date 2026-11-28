@@ -99,7 +99,7 @@ fn classify_loop(
 fn shadowed(shadows: &[(String, Vec<String>)], function: &str, callee: &str) -> bool {
     let mut rows = shadows.iter().filter(|(name, _)| name == function);
     match (rows.next(), rows.next()) {
-        (Some((_, names)), None) => names.iter().any(|name| name == callee),
+        (Some((_, names)), None) => names.iter().any(|name| name == "*" || name == callee),
         (Some(_), Some(_)) => true,
         (None, _) => false,
     }

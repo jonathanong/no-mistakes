@@ -4,6 +4,7 @@ pub(super) fn prepare(source: &str, extension: &str) -> String {
     let normalized = match extension {
         "py" => keep_floor_div(source),
         "rs" => neutralize_rust_quotes(source),
+        "go" => neutralize_go_raw_strings(source),
         _ => source.to_string(),
     };
     mask_strings(&strip_comments_keep_strings(&normalized))
@@ -47,6 +48,25 @@ fn is_lifetime_or_label(chars: &[char], index: usize) -> bool {
         end += 1;
     }
     chars.get(end) != Some(&'\'')
+}
+
+/// Go raw strings are backticks. The shared strip does not treat them as strings.
+fn neutralize_go_raw_strings(source: &str) -> String {
+    let mut out = String::with_capacity(source.len());
+    let mut raw = false;
+    for ch in source.chars() {
+        if ch == '`' {
+            out.push(' ');
+            raw = !raw;
+            continue;
+        }
+        if raw && ch != '\n' {
+            out.push(' ');
+        } else {
+            out.push(ch);
+        }
+    }
+    out
 }
 
 /// Python `//` is floor division. The shared comment strip treats `//` as a line comment.

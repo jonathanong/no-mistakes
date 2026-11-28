@@ -13,7 +13,7 @@ impl Carry {
     }
 
     pub(super) fn note(&mut self, line: &str, line_no: u32) {
-        if line.trim().is_empty() || line.contains('(') {
+        if line.trim().is_empty() {
             self.clear();
             return;
         }

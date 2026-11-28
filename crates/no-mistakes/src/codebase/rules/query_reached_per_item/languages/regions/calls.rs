@@ -11,9 +11,22 @@ pub(super) fn per_item_callees(line: &str, construct: &str) -> Vec<String> {
         || construct == "each"
         || is_for_in(line)
         || (construct == "for" && line.contains(" : ") && !line.contains(';'));
+    let init_end = c_style_init_end(line, construct);
     call_spans(line)
         .into_iter()
+        .filter(|(index, _)| init_end.is_none_or(|end| *index >= end))
         .filter(|(index, _)| body_at.is_some_and(|at| *index > at) || !iterable)
+        .map(|(_, callee)| callee)
+        .collect()
+}
+
+pub(super) fn initializer_callees(line: &str, construct: &str) -> Vec<String> {
+    let Some(end) = c_style_init_end(line, construct) else {
+        return Vec::new();
+    };
+    call_spans(line)
+        .into_iter()
+        .filter(|(index, _)| *index < end)
         .map(|(_, callee)| callee)
         .collect()
 }
@@ -57,6 +70,13 @@ fn is_for_in(line: &str) -> bool {
     [" in ", " of ", " as ", " range ", " <- "]
         .iter()
         .any(|token| line.contains(token))
+}
+
+fn c_style_init_end(line: &str, construct: &str) -> Option<usize> {
+    if construct != "for" || is_for_in(line) {
+        return None;
+    }
+    line.find(';')
 }
 
 fn call_spans(line: &str) -> Vec<(usize, String)> {
@@ -158,8 +178,5 @@ pub(super) fn is_keyword(callee: &str) -> bool {
         "for", "foreach", "while", "if", "switch", "catch", "func", "fn", "function", "def", "fun",
         "return", "elif", "else", "do", "end", "class", "new",
     ];
-    let tail = split_separator(callee)
-        .map(|(_, tail)| tail)
-        .unwrap_or(callee);
-    KEYWORDS.contains(&callee) || KEYWORDS.contains(&tail)
+    split_separator(callee).is_none() && KEYWORDS.contains(&callee)
 }

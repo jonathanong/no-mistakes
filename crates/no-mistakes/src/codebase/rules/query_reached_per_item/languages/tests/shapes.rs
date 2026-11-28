@@ -204,3 +204,188 @@ fn split_lines_inline_bodies_unbraced_loops_and_false_proofs() {
         .iter()
         .any(|finding| finding.message.contains("load → read_row")));
 }
+
+#[test]
+fn once_only_headers_keep_later_calls_in_the_loop() {
+    let initializer = project_ext(
+        "void load(List<Row> items) {\n    for (int i = example.store.read_row(items); i < count; i++) {\n        item.fetch();\n    }\n}\n",
+        "java",
+    );
+    assert!(
+        initializer
+            .iter()
+            .all(|finding| !finding.message.contains("read_row")),
+        "{initializer:#?}"
+    );
+    let condition = project_ext(
+        "void load(List<Row> items) {\n    for (int i = 0; example.store.read_row(items); i++) {\n    }\n}\n",
+        "java",
+    );
+    assert!(
+        condition
+            .iter()
+            .any(|finding| finding.message.contains("read_row")),
+        "{condition:#?}"
+    );
+    let outer = project_ext(
+        "void load(List<Row> items) {\n    for (Row item : items) {\n        for (int i = example.store.read_row(item); i < count; i++) {\n        }\n    }\n}\n",
+        "java",
+    );
+    assert!(
+        outer
+            .iter()
+            .any(|finding| finding.message.contains("read_row")),
+        "{outer:#?}"
+    );
+    let keyword = project_ext(
+        "fn load(items: &[&str]) {\n    for item in items {\n        other.mod.new(item);\n    }\n}\n",
+        "rs",
+    );
+    assert!(
+        keyword.iter().any(|finding| {
+            finding
+                .causes
+                .first()
+                .is_some_and(|cause| cause.kind == "unresolved-dispatch")
+                && finding.message.contains("other.mod.new")
+        }),
+        "{keyword:#?}"
+    );
+    let carried = project_ext(
+        "fn load(items: &[&str]) {\n    for item in items {\n        audit(); example.store.read_row\n            (item);\n    }\n}\n",
+        "rs",
+    );
+    assert!(
+        carried.iter().any(|finding| {
+            finding.line == 3 && finding.message.contains("example.store.read_row")
+        }),
+        "{carried:#?}"
+    );
+    let ruby = project_ext(
+        "def load(items)\n  for item in items do\n    example.store.read_row\n  end\nend\n",
+        "rb",
+    );
+    assert!(
+        ruby.iter()
+            .any(|finding| finding.message.contains("load → read_row")),
+        "{ruby:#?}"
+    );
+    let added = project_ext(
+        "def load(items)\n  for item in items do\n    total = example.store.read_row + 1\n  end\nend\n",
+        "rb",
+    );
+    assert!(
+        added
+            .iter()
+            .all(|finding| !finding.message.contains("read_row")),
+        "{added:#?}"
+    );
+    let elixir = project_ext(
+        "defmodule Worker do\n  def load(items) do\n    for item <- items do\n      example.store.read_row\n    end\n  end\nend\n",
+        "ex",
+    );
+    assert!(
+        elixir
+            .iter()
+            .any(|finding| finding.message.contains("load → read_row")),
+        "{elixir:#?}"
+    );
+    let unclosed = project_ext(
+        "def helper(item):\n    example.store.read_row(item)\ndef run(\n    helper,\n    items,\n):\n    for item in items:\n        helper(item)\n",
+        "py",
+    );
+    assert!(
+        unclosed.iter().any(|finding| {
+            finding
+                .causes
+                .first()
+                .is_some_and(|cause| cause.kind == "unresolved-dispatch")
+                && finding.message.contains("`helper`")
+        }),
+        "{unclosed:#?}"
+    );
+    assert!(
+        unclosed
+            .iter()
+            .all(|finding| !finding.message.contains("→ helper →")),
+        "{unclosed:#?}"
+    );
+    let raw = project_ext(
+        "func load(items []string) {\n    url := `https://example.test`\n    for _, item := range items {\n        example.store.read_row(item)\n    }\n}\n",
+        "go",
+    );
+    assert!(
+        raw.iter()
+            .any(|finding| finding.message.contains("load → read_row")),
+        "{raw:#?}"
+    );
+    let unbraced = project_ext(
+        "void load(List<Row> rows) {\n    for (Row row : rows)\n        if (ready(row))\n            example.store.read_row(row);\n}\n",
+        "java",
+    );
+    assert!(
+        unbraced
+            .iter()
+            .any(|finding| finding.message.contains("load → read_row")),
+        "{unbraced:#?}"
+    );
+    let otherwise = project_ext(
+        "void load(List<Row> rows) {\n    for (Row row : rows)\n        if (ready(row))\n            skip(row);\n        else\n            example.store.read_row(row);\n}\n",
+        "java",
+    );
+    assert!(
+        otherwise
+            .iter()
+            .any(|finding| finding.message.contains("load → read_row")),
+        "{otherwise:#?}"
+    );
+    let assigned = project_ext(
+        "fun fetch(item: Item) {\n    example.store.read_row(item)\n}\nfun load(items: List<Item>) {\n    for (item in items) {\n        val row = fetch(item)\n    }\n}\n",
+        "kt",
+    );
+    assert!(
+        assigned
+            .iter()
+            .any(|finding| finding.message.contains("load → fetch → read_row")),
+        "{assigned:#?}"
+    );
+    let iterable = project_ext(
+        "def load(items):\n    for item in (\n        example.store.read_row(items)\n    ):\n        pass\n",
+        "py",
+    );
+    assert!(
+        iterable
+            .iter()
+            .all(|finding| !finding.message.contains("read_row")),
+        "{iterable:#?}"
+    );
+    let body = project_ext(
+        "def load(items):\n    for item in (\n        items\n    ):\n        example.store.read_row(item)\n",
+        "py",
+    );
+    assert!(
+        body.iter()
+            .any(|finding| finding.message.contains("load → read_row")),
+        "{body:#?}"
+    );
+    let enclosed = project_ext(
+        "def load(items):\n    for outer in items:\n        for item in (\n            example.store.read_row(outer)\n        ):\n            pass\n",
+        "py",
+    );
+    assert!(
+        enclosed
+            .iter()
+            .any(|finding| finding.message.contains("read_row")),
+        "{enclosed:#?}"
+    );
+    let condition_lines = project_ext(
+        "def load(items):\n    while (\n        example.store.read_row(items)\n    ):\n        pass\n",
+        "py",
+    );
+    assert!(
+        condition_lines
+            .iter()
+            .any(|finding| finding.message.contains("read_row")),
+        "{condition_lines:#?}"
+    );
+}

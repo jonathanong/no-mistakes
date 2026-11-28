@@ -424,15 +424,19 @@ and the path `enclosing → export`. One bare local call is also proven when tha
 function reaches a sink and every other call in its body is a different export
 of a configured sink module. A call on the same line as its function header
 counts in that body. A bare name that appears in the enclosing function's
-parameter list is unproven. A qualified head that is not that module
+parameter list is unproven. An unclosed parameter list makes every bare
+call in that function unproven. A qualified head that is not that module
 (`other.module.lookup`, `self.db.query`, `crate::db::query`) is unproven. The
 path is then `enclosing → local → export`.
 The enclosing name is the nearest function, or `<module>` at file scope. A Go
 method `func (s *Server) load` uses `load`. A brace header's `{` may be on that
-line or on the next non-empty line. An unbraced loop body is the next
-statement. Python uses indentation, including
+line or on the next non-empty line. An assignment such as
+`val row = fetch(item)` is a call, not a function declaration. An unbraced
+loop body is the next statement, including a nested unbraced `if` or `else`.
+Python uses indentation, including
 `async for`, and ignores indentation inside `()`, `[]`, and `{}`. `//` in
-Python is floor division, not a comment. Ruby and Elixir use `def`/`fun`/`end`
+Python is floor division, not a comment. A Go raw string delimited by
+backticks does not hide later calls. Ruby and Elixir use `def`/`fun`/`end`
 and `for`/`while`/`do`/`end`. `else`, `elsif`, `elseif`, `elif`, and a postfix
 `if` or `unless` do not open a block. `begin`/`end` and `value = if` do. A
 nested `if`/`else`/`end` stays inside the loop, and the loop closes on its own
@@ -441,13 +445,19 @@ the line also has ` do`, ends with `do`, or contains `{`. `forEach` and
 `ForEach` are loops when the header line contains `{`, or when that `{` is on
 the next non-empty line. A `while` condition is per-item. The iterable of `for`
 or `foreach`, including a Java enhanced `for` separated by `:`, is not. A
-function nested in a loop is a boundary, so a call inside that function is
+C-style `for` initializer, before the first `;`, runs once in the enclosing
+scope. Text after that `;` is per-item. A multiline `for` iterable stays
+outside that loop while its `()`, `[]`, or `{}` is open; a `while` condition
+on the following lines stays per-item. A keyword that is only the tail of a
+qualified name (`store::new`) remains a call. A function nested in a loop
+is a boundary, so a call inside that function is
 not a call of the outer loop. A call inside a helper's
 own loop still counts as a call in that helper, including one bare hop from an
 outer loop. A space or line break before `(` is still that call, reported on
-the callee's line. Rust lifetimes and loop labels are not quotes. Type
+the callee's line, and an earlier call on that line does not drop it. Rust lifetimes and loop labels are not quotes. Type
 arguments before `(` are not part of the callee. Ruby and Elixir may call a
-qualified name without parentheses. A member call on a receiver
+qualified name without parentheses, including a name with no arguments. A `+`
+after that name is not a call. A member call on a receiver
 that is not a configured module (`item.fetch`, `$item->fetch`), a second hop, a
 duplicate function name, or a file that cannot be read is unproven. A call on a
 configured module whose export does not match is silent. The `call-sites`

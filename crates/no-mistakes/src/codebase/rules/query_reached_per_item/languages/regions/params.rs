@@ -1,4 +1,7 @@
 pub(super) fn parameter_names(line: &str) -> Vec<String> {
+    if super::syntax::header_paren(line).is_some() && parameter_text(line).is_none() {
+        return vec!["*".to_string()];
+    }
     let Some(text) = parameter_text(line) else {
         return Vec::new();
     };
