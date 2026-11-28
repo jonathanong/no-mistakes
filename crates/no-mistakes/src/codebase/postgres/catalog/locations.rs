@@ -25,7 +25,7 @@ pub(super) fn catalog_locations(
     let mut locations = CatalogLocations::default();
     for table in &tables.properties {
         let table_name = table.name.as_str().to_string();
-        let table_line = line_starts.partition_point(|start| *start < table.range.start) + 1;
+        let table_line = line_starts.partition_point(|start| *start <= table.range.start) + 1;
         locations.tables.insert(table_name.clone(), table_line);
         let Some(columns) = table
             .value
@@ -36,7 +36,7 @@ pub(super) fn catalog_locations(
             continue;
         };
         for column in &columns.properties {
-            let line = line_starts.partition_point(|start| *start < column.range.start) + 1;
+            let line = line_starts.partition_point(|start| *start <= column.range.start) + 1;
             locations
                 .columns
                 .insert((table_name.clone(), column.name.as_str().to_string()), line);

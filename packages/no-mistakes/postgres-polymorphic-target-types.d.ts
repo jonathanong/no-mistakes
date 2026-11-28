@@ -6,8 +6,8 @@ export interface PostgresPolymorphicTargetAllowEntry {
 }
 /** Options for the postgres-polymorphic-target rule. */
 export interface PostgresPolymorphicTargetOptions {
-  /** Repository-relative path to the complete PostgreSQL schema catalog. */
-  schemaCatalogPath: string;
+  /** Repository-relative path to the complete PostgreSQL schema catalog (optional when inherited from projects.<name>.postgres). */
+  schemaCatalogPath?: string;
   /** Column name suffix for the discriminator column (default: "_type"). */
   typeSuffix?: string;
   /** Column name suffix for the target identifier column (default: "_id"). */

@@ -593,7 +593,7 @@ test("polymorphic target options export named suffix and exception contracts", (
   for (const name of ["PostgresPolymorphicTargetAllowEntry", "PostgresPolymorphicTargetOptions"]) {
     assert.match(declarations, new RegExp(`export interface ${name}\\b`));
   }
-  assert.match(declarations, /schemaCatalogPath: string;/);
+  assert.match(declarations, /schemaCatalogPath\?: string;/);
   assert.match(declarations, /typeSuffix\?: string;/);
   assert.match(declarations, /idSuffix\?: string;/);
   assert.match(declarations, /allow\?: PostgresPolymorphicTargetAllowEntry\[\];/);
