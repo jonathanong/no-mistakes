@@ -96,7 +96,7 @@ pub(in crate::statements::keyed_lookups) fn normalize_target(node: &mut impl Vis
     let _ = node.visit(&mut Identifiers);
 }
 
-pub(in crate::statements::keyed_lookups) fn normalize_sort_options(order: &mut [OrderByExpr]) {
+fn normalize_sort_options(order: &mut [OrderByExpr]) {
     for item in order {
         if let Some((ascending, nulls_first)) = canonical_order_options(&item.options) {
             item.options.sort = Some(if ascending {

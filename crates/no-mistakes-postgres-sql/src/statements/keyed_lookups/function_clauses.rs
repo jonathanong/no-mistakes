@@ -44,6 +44,10 @@ pub(super) fn split_coalesce_arguments(
     arguments.split_at(evaluated.map_or(arguments.len(), |index| index + 1))
 }
 
+pub(super) fn condition_is_never_true(expr: &Expr) -> bool {
+    matches!(unwrap_expr(expr), Expr::Value(value) if matches!(value.value, Value::Boolean(false) | Value::Null))
+}
+
 fn has_optional_window_default(function: &Function) -> bool {
     function.over.is_some()
         && match function.name.0.as_slice() {

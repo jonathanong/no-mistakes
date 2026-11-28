@@ -283,3 +283,8 @@ SELECT
     (SELECT TRIM(BOTH FROM 'ab', a.marker) FROM accounts a WHERE a.id = o.account_id),
     (SELECT TRIM(BOTH b.marker FROM 'xy') FROM accounts b WHERE b.id = o.account_id)
 FROM orders o;
+
+SELECT
+    (SELECT a.x = ANY(ARRAY['a', 'b']) FROM accounts a WHERE a.id = o.account_id),
+    (SELECT b.x = ALL(ARRAY['a', 'b']) FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;

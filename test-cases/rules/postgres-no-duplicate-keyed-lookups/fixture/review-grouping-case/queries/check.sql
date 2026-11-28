@@ -200,3 +200,39 @@ SELECT
     (SELECT b.n FROM accounts b WHERE b.id = o.id)
 FROM orders o
 GROUP BY GROUPING SETS ((o.id, 2), (o.id));
+
+SELECT
+    CASE WHEN FALSE THEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.id)
+    ELSE 0 END,
+    (SELECT b.n FROM accounts b WHERE b.id = o.id)
+FROM orders o;
+
+SELECT CASE WHEN FALSE THEN (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+) ELSE 0 END
+FROM orders o;
+
+SELECT
+    CASE FALSE WHEN FALSE THEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.id)
+    ELSE 0 END,
+    (SELECT b.n FROM accounts b WHERE b.id = o.id)
+FROM orders o;
+
+SELECT CASE WHEN FALSE THEN pg_catalog.sum((
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+)) ELSE 0 END
+FROM orders o;
+
+SELECT CASE
+    WHEN NULL THEN 0
+    WHEN o.enabled THEN (
+        SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+             + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    )
+    ELSE 0
+END
+FROM orders o;

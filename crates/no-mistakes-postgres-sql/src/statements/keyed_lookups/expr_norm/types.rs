@@ -112,6 +112,12 @@ pub(in crate::statements::keyed_lookups) fn projection_expr_is_unproven(expr: &E
             expr, data_type, ..
         } => !has_builtin_type(expr) || cast_type(data_type).is_none(),
         Expr::TypedString(typed) => cast_type(&typed.data_type).is_none(),
-        _ => false,
+        Expr::Identifier(_)
+        | Expr::CompoundIdentifier(_)
+        | Expr::Value(_)
+        | Expr::Nested(_)
+        | Expr::IsNull(_)
+        | Expr::IsNotNull(_) => false,
+        _ => true,
     }
 }

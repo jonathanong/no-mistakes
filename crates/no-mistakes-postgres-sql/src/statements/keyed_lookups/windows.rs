@@ -1,4 +1,4 @@
-use super::select_exprs::identity::{normalize_sort_options, normalize_target};
+use super::select_exprs::identity::normalize_target;
 use super::select_item_expr;
 use crate::fx::FxHashMap;
 use crate::idents::ident_key;
@@ -96,7 +96,6 @@ impl WindowPlan {
 
 fn window_identity(spec: &WindowSpec) -> WindowSpec {
     let mut key = spec.clone();
-    normalize_sort_options(&mut key.order_by);
     normalize_target(&mut key);
     key
 }

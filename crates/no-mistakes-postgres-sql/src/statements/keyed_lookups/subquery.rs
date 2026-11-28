@@ -1,7 +1,7 @@
 use super::expr_norm::ExprNormalizer;
 use super::function_clauses::{
-    coalesce_arguments, is_eager, split_coalesce_arguments, visit_eager_functions,
-    visit_function_inputs,
+    coalesce_arguments, condition_is_never_true, is_eager, split_coalesce_arguments,
+    visit_eager_functions, visit_function_inputs,
 };
 use super::join::record_lookup;
 use super::normalize::LookupKey;
@@ -56,6 +56,9 @@ fn inspect(
             }
             let mut cond_seen = seen.clone();
             for branch in conditions {
+                if operand.is_none() && condition_is_never_true(&branch.condition) {
+                    continue;
+                }
                 inspect(&branch.condition, outer, targets, &mut cond_seen, out, true);
                 let mut arm_seen = cond_seen.clone();
                 inspect(&branch.result, outer, targets, &mut arm_seen, out, true);

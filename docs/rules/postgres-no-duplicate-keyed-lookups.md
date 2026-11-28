@@ -64,6 +64,7 @@ The rule stays silent when the lookups are not proven to read the same row:
   evaluates them only when the requested row falls outside the partition.
 - `COALESCE` arguments after a known non-null literal. Aggregate and window
   inputs still follow their separate evaluation rules.
+- Results of searched `CASE` branches with literal false or null conditions.
 - Volatile key expressions (UUID generators such as `gen_random_uuid()`,
   `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined
   or unrecognized functions in keys or scalar projections, unresolved table
@@ -76,15 +77,17 @@ The rule stays silent when the lookups are not proven to read the same row:
   when their signatures are unknown, including the comparisons used by
   `IS DISTINCT FROM`, `IN`, `BETWEEN`, `NULLIF`, Boolean tests, and pattern
   matching. Signature matching assumes the standard PostgreSQL operator definitions.
-- Scalar projections with `CASE` branches or array elements that require unproven conversions
-  or an unqualified comma-style `SUBSTRING` call.
+- Scalar projections with expression forms whose repeatability is unproven.
+  Examples include arrays with unknown element conversions and unqualified
+  comma-style `SUBSTRING` calls.
 - Sampled table scans, `ONLY` table scans, or scalar subqueries that lock rows.
 
 PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
 (including positions and grouping sets), `ORDER BY`, and window partition and ordering
 clauses. Identical named and inline window specifications can share their
-frame bounds. Each explicitly referenced named declaration keeps its own
-identity. The rule skips frame bounds when all calls sharing the window are
+frame bounds when their written ordering options match. Each explicitly
+referenced named declaration keeps its own identity. The rule skips frame
+bounds when all calls sharing the window are
 `pg_catalog.row_number()` and PostgreSQL replaces the frame. An aggregate can
 also reuse an argument in its ordering clause. The
 rule counts an identical reused expression once. A matching grouping
