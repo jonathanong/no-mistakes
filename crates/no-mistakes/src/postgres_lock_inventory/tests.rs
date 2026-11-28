@@ -236,3 +236,20 @@ fn git(root: &Path, args: &[&str]) {
         String::from_utf8_lossy(&output.stderr)
     );
 }
+
+#[test]
+fn publish_and_staged_deletion_enforce_parent_and_file_invariants() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let baseline = LockInventoryBaseline {
+        version: 1,
+        sites: Vec::new(),
+        unanalyzed: Vec::new(),
+    };
+    super::write::publish(root, "nested/sub/baseline.json", &baseline, false).unwrap();
+    assert!(super::write::publish(root, "nested/sub/baseline.json", &baseline, false).is_err());
+    super::write::publish(root, "nested/sub/baseline.json", &baseline, true).unwrap();
+    assert!(super::write::publish(root, "nested/sub", &baseline, true).is_err());
+    assert!(super::write::publish(root, "missing.json", &baseline, true).is_err());
+    assert!(super::write::staged_deletion(root, "baseline.json").is_err());
+}

@@ -85,3 +85,15 @@ fn check_sorts_by_file_then_line() {
         assert!(a <= b);
     }
 }
+
+#[test]
+fn check_file_covers_missing_disabled_plain_and_unparseable_inputs() {
+    let root = fixture("unit");
+    let missing = check_file(&root.join("missing.rs"), &root);
+    assert_eq!(missing[0].target.as_deref(), Some("unanalyzable"));
+    assert!(check_file(&root.join("disable_file.rs"), &root).is_empty());
+    assert!(check_file(&root.join("clean.rs"), &root).is_empty());
+    let doc = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/rules/rust-no-inline-tests.md");
+    let unparseable = check_file(&doc, Path::new(env!("CARGO_MANIFEST_DIR")));
+    assert_eq!(unparseable[0].target.as_deref(), Some("unanalyzable"));
+}
