@@ -1,9 +1,9 @@
 use super::args::{is_option_token, match_invocation, ArgMatch};
 use super::ParsedInvocation;
-use crate::codebase::rules::filesystem_dispatch::github_actions_run_command_policy::judge::{
+use crate::codebase::rules::github_actions_run_command_policy::judge::{
     Hit, HitKind,
 };
-use crate::codebase::rules::filesystem_dispatch::github_actions_run_command_policy::options::{
+use crate::codebase::rules::github_actions_run_command_policy::options::{
     ArgScope, CompiledPolicy,
 };
 use crate::codebase::rules::github_actions_download_integrity::words::Word;

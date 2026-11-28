@@ -1,6 +1,8 @@
 pub mod coverage_producer_assertion_owner;
 pub mod integration_test_no_mocks;
 pub mod no_test_git_sha;
+pub mod production_exports_test_only;
+pub mod require_test_per_subdir;
 pub mod test_email_domain_policy;
 pub mod test_fixture_size_cap;
 pub mod test_no_dependency_pins;

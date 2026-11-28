@@ -7,14 +7,9 @@ pub use super::csharp_max_lines_per_file::RULE_ID as CSHARP_MAX_LINES_PER_FILE;
 pub use super::csharp_no_async_void_delegate::RULE_ID as CSHARP_NO_ASYNC_VOID_DELEGATE;
 pub use super::csp_allowed_origins::RULE_ID as CSP_ALLOWED_ORIGINS;
 pub use super::declared_payload_compatibility::RULE_ID as DECLARED_PAYLOAD_COMPATIBILITY;
+pub use super::dependabot_cooldown_policy::RULE_ID as DEPENDABOT_COOLDOWN_POLICY;
 pub use super::doc_consistency::RULE_ID as DOC_CONSISTENCY;
 pub use super::file_extension_policy::RULE_ID as FILE_EXTENSION_POLICY;
-pub use super::filesystem_dispatch::dependabot_cooldown_policy::RULE_ID as DEPENDABOT_COOLDOWN_POLICY;
-pub use super::filesystem_dispatch::github_actions_run_command_policy::RULE_ID as GITHUB_ACTIONS_RUN_COMMAND_POLICY;
-pub use super::filesystem_dispatch::github_actions_workflow_script_paths::RULE_ID as GITHUB_ACTIONS_WORKFLOW_SCRIPT_PATHS;
-pub use super::filesystem_dispatch::shell_compatibility::{
-    BASH_EMPTY_ARRAY_NOUNSET, ZSH_READONLY_PARAMETER,
-};
 pub use super::finite_set_consistency::RULE_ID as FINITE_SET_CONSISTENCY;
 pub use super::forbidden_calls::RULE_ID as FORBIDDEN_CALLS;
 pub use super::forbidden_dependencies::RULE_ID as FORBIDDEN_DEPENDENCIES;
@@ -28,9 +23,11 @@ pub use super::github_actions_job_timeouts::RULE_ID as GITHUB_ACTIONS_JOB_TIMEOU
 pub use super::github_actions_local_action_checkout::RULE_ID as GITHUB_ACTIONS_LOCAL_ACTION_CHECKOUT;
 pub use super::github_actions_no_insta_snapshot_updates::RULE_ID as GITHUB_ACTIONS_NO_INSTA_SNAPSHOT_UPDATES;
 pub use super::github_actions_no_required_pr_path_filters::RULE_ID as GITHUB_ACTIONS_NO_REQUIRED_PR_PATH_FILTERS;
+pub use super::github_actions_run_command_policy::RULE_ID as GITHUB_ACTIONS_RUN_COMMAND_POLICY;
 pub use super::github_actions_step_timeouts::RULE_ID as GITHUB_ACTIONS_STEP_TIMEOUTS;
 pub use super::github_actions_test_timeout_literals::RULE_ID as GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS;
 pub use super::github_actions_workflow_files::env_policy::RULE_ID as GITHUB_ACTIONS_ENV_POLICY;
+pub use super::github_actions_workflow_script_paths::RULE_ID as GITHUB_ACTIONS_WORKFLOW_SCRIPT_PATHS;
 pub use super::integration_test_no_mocks::RULE_ID as INTEGRATION_TEST_NO_MOCKS;
 pub use super::lockfile_allowlist::RULE_ID as LOCKFILE_ALLOWLIST;
 pub use super::markdown_child_links::RULE_ID as MARKDOWN_CHILD_LINKS;
@@ -117,6 +114,7 @@ pub use super::rust_max_lines_per_file::RULE_ID as RUST_MAX_LINES_PER_FILE;
 pub use super::rust_no_inline_allows::RULE_ID as RUST_NO_INLINE_ALLOWS;
 pub use super::rust_no_inline_tests::RULE_ID as RUST_NO_INLINE_TESTS;
 pub use super::server_route_client_boundary::RULE_ID as SERVER_ROUTE_CLIENT_BOUNDARY;
+pub use super::shell_compatibility::{BASH_EMPTY_ARRAY_NOUNSET, ZSH_READONLY_PARAMETER};
 pub use super::shellcheck_runner::RULE_ID as SHELLCHECK_RUNNER;
 pub use super::strict_package_layout::RULE_ID as STRICT_PACKAGE_LAYOUT;
 pub use super::structured_config_policy::RULE_ID as STRUCTURED_CONFIG_POLICY;
