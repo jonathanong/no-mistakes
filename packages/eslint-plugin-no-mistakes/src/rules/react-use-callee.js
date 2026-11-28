@@ -22,7 +22,10 @@ function patternKey(pattern, name) {
     let value = property.value;
     while (value?.type === "AssignmentPattern") value = value.left;
     if (value?.type === "Identifier" && value.name === name) {
-      return property.computed ? literalString(property.key) : staticName(property.key, false);
+      if (!property.computed) return staticName(property.key, false);
+      const key = literalString(property.key);
+      // undefined: this name's key is not static. null: the pattern does not bind it.
+      return key == null ? undefined : key;
     }
   }
   return null;
@@ -55,8 +58,9 @@ function valueKind(node, context) {
 function constStringKey(node, context) {
   const current = unwrapSequence(node);
   if (current?.type !== "Identifier" || valueKind(current, context) !== "const") return null;
-  const init = resolveVariable(current, context)?.defs[0]?.node?.init;
-  return init ? literalString(init) : null;
+  const declarator = resolveVariable(current, context)?.defs[0]?.node;
+  if (declarator?.id?.type !== "Identifier" || !declarator.init) return null;
+  return literalString(declarator.init);
 }
 
 function selectorName(property, computed, context) {
@@ -107,7 +111,10 @@ function reactUseStatus(node, context, useNames, seen = new Set()) {
         if (def.node.id.type === "Identifier") {
           return reactUseStatus(def.node.init, context, useNames, seen);
         }
-        if (patternKey(def.node.id, callee.name) !== "use") return "no";
+        const key = patternKey(def.node.id, callee.name);
+        if (key === undefined)
+          return namespaceStatus(def.node.init, context) === "no" ? "no" : "unresolved";
+        if (key !== "use") return "no";
         return namespaceStatus(def.node.init, context);
       }
       if (def.node.id?.type === "Identifier") {

@@ -160,3 +160,12 @@ const typedRead = Types[typeKey];
 export function typeOnlyDynamic() {
   return typedRead(Promise.resolve(1));
 }
+declare const dynamicUse: string;
+export function dynamicDestructure() {
+  const { [dynamicUse]: use } = React;
+  return use(Promise.resolve(1));
+}
+const [destructuredKey] = "use";
+export function arrayKey() {
+  return React[destructuredKey](Promise.resolve(1));
+}

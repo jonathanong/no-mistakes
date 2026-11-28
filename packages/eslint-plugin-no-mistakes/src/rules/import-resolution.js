@@ -5,7 +5,7 @@ const { memberFact, rootIdentifier } = require("./import-member");
 const { laterFact } = require("./import-later-fact");
 const { factAtPath, patternPath } = require("./import-pattern-path");
 const { literalString } = require("./logical-call");
-const { resolveVariable } = require("./async-target-bindings");
+const { resolveRuntimeVariable, resolveVariable } = require("./async-target-bindings");
 
 function reportsUnanalyzable(context) {
   return (context.options?.[0]?.unanalyzable ?? "finding") === "finding";
@@ -15,7 +15,7 @@ function isFreeRequire(node, context) {
   const current = unwrapSequence(node);
   if (current?.type !== "Identifier" || current.name !== "require") return false;
   if (!context?.sourceCode?.getScope) return true;
-  const variable = resolveVariable(current, context);
+  const variable = resolveRuntimeVariable(current, context);
   if (!variable || variable.defs.length === 0) return true;
   return !variable.defs.some(
     (def) =>

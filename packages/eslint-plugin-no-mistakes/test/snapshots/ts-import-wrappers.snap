@@ -1240,6 +1240,25 @@
       "rule": "react-no-use-promise-resolve"
     },
     {
+      "file": "react-use-inner-type-require.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 43,
+          "endLine": 4,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-inner-type-require.tsx",
+          "line": 4,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "name": "inner type require does not hide an outer parameter",
+      "options": null,
+      "rule": "react-no-use-promise-resolve"
+    },
+    {
       "file": "promise-type-query.tsx",
       "findings": [
         {
@@ -1500,6 +1519,28 @@
           "line": 155,
           "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
           "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 33,
+          "endLine": 166,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 166,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 52,
+          "endLine": 170,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 170,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
           "severity": 2
         }
@@ -4140,6 +4181,20 @@
             "file": "react-use-bindings.tsx",
             "line": 155,
             "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 166,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 170,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
           }
         ],
         "name": "react-use-bindings.tsx",
@@ -4171,6 +4226,20 @@
           }
         ],
         "name": "react-use-cjs.tsx",
+        "options": null
+      },
+      {
+        "file": "react-use-inner-type-require.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-inner-type-require.tsx",
+            "line": 4,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          }
+        ],
+        "name": "react-use-inner-type-require.tsx",
         "options": null
       },
       {

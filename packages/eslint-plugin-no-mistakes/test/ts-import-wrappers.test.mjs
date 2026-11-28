@@ -221,6 +221,11 @@ describe("typescript import wrappers", () => {
         "react-no-use-promise-resolve",
       ),
       eslintCase(
+        "inner type require does not hide an outer parameter",
+        "react-use-inner-type-require.tsx",
+        "react-no-use-promise-resolve",
+      ),
+      eslintCase(
         "annotated string is not a ReactNode",
         "react-nullish-annotated.tsx",
         "react-no-nullish-react-node",
@@ -628,6 +633,8 @@ describe("typescript import wrappers", () => {
       [147, "resolve"],
       [152, "unanalyzable"],
       [155, "resolve"],
+      [166, "unanalyzable"],
+      [170, "unanalyzable"],
     ]);
     expect(
       cases.find((item) => item.name === "promise type query alias").findings.map((f) => f.line),
@@ -650,6 +657,11 @@ describe("typescript import wrappers", () => {
     expect(cases.find((item) => item.name === "value require shadows the loader").findings).toEqual(
       [],
     );
+    expect(
+      cases
+        .find((item) => item.name === "inner type require does not hide an outer parameter")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([[4, "resolve"]]);
     expect(
       cases.find((item) => item.name === "annotated string is not a ReactNode").findings,
     ).toEqual([]);
@@ -979,6 +991,7 @@ describe("typescript import wrappers", () => {
         "promise-type-query.tsx",
         "react-use-type-require.tsx",
         "react-use-value-require.tsx",
+        "react-use-inner-type-require.tsx",
       ]),
       nullish: oxlintOn(".oxlintrc-nullish.json", [
         "react-nullish.tsx",
