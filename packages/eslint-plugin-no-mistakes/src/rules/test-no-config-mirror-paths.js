@@ -117,7 +117,11 @@ function createPathResolver(context, resolve, fixtureDirs) {
     }
     if (binding === "url.fileURLToPath") return resolvePath(node.arguments[0], env, seen);
     if (binding === "path.dirname") return resolveDirnamePath(node.arguments[0], env, seen);
-    if (binding?.startsWith("path.") && PATH_JOIN_METHODS.has(binding.slice(5))) {
+    if (
+      typeof binding === "string" &&
+      binding.startsWith("path.") &&
+      PATH_JOIN_METHODS.has(binding.slice(5))
+    ) {
       return resolveJoinedPath(node.arguments, env, seen);
     }
     return null;

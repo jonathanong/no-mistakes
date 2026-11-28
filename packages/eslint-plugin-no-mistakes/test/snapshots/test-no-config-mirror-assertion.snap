@@ -117,6 +117,13 @@
       "rule": "test-no-config-mirror-assertion"
     },
     {
+      "file": "dynamic-require.test.ts",
+      "findings": [],
+      "name": "dynamic-require.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
       "file": "edge-cases.test.ts",
       "findings": [
         {

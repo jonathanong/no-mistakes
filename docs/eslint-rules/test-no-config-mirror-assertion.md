@@ -133,9 +133,12 @@ The rule is disabled by default in both presets. Configure it with `"warn"` for
 advisory mode or `"error"` to fail lint:
 
 ```js
-export default [
+const noMistakes = require("eslint-plugin-no-mistakes");
+
+module.exports = [
   {
     files: ["**/*.test.*", "**/*.spec.*"],
+    plugins: { "no-mistakes": noMistakes },
     rules: {
       "no-mistakes/test-no-config-mirror-assertion": [
         "warn",
