@@ -29,3 +29,4 @@ include!("source_json_tests.rs");
 include!("source_toml_tests.rs");
 include!("source_text_tests.rs");
 include!("source_legacy_tests.rs");
+include!("source_identity_tests.rs");
