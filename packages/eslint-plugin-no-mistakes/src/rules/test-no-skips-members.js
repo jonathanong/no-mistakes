@@ -47,7 +47,7 @@ function patternBindingName(pattern, name) {
 
 // `const check = require("vitest").test` is the named export, not the module.
 function requireExport(init, context) {
-  if (init?.type !== "MemberExpression") return null;
+  if (init?.type !== "MemberExpression" || init.computed) return null;
   const name = memberName(init, context);
   if (!name) return null;
   const required = requireResolution(unwrapExpression(init.object), context);

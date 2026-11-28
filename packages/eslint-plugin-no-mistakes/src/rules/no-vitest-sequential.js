@@ -16,10 +16,7 @@ const {
   staticName,
   unresolvedSequential,
 } = require("./no-vitest-sequential-loads");
-const {
-  reassignedDestructuredRunner,
-  renamedNonRunner,
-} = require("./no-vitest-sequential-require");
+const { rejectedRunner } = require("./no-vitest-sequential-require");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 const TEST_NAMES = new Set(["test", "it", "describe"]);
@@ -88,7 +85,7 @@ function acceptsRunner(root, context, namespaces) {
   if (def.type === "Variable" && requireResolution(def.node?.init, context)?.source === null) {
     return false;
   }
-  if (reassignedDestructuredRunner(root, context) || renamedNonRunner(root, context)) return false;
+  if (rejectedRunner(root, context)) return false;
   if (def.parent?.importKind === "type" || def.node?.importKind === "type") return false;
   if (def.type !== "ImportBinding") return true;
   if (def.node?.type === "ImportNamespaceSpecifier") return namespaces.has(root.name);

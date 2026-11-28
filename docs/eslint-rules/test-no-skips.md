@@ -168,7 +168,7 @@ A configured namespace and `const loaded = require("./custom-test")` both
 export `test`, so `const { test } = loaded; test.skip` reports. `describe`
 from that namespace is not that `test`. `ctx.skip`, `(ctx.skip as any)()`,
 a cast `skip` binding, a callback cast to `any`, and `(v as typeof v).test.skip`
-are skips. `const { test: check } = await require("vitest"); check.skip` is that same skip. `const check = require("vitest").test` and `require("vitest").test.skip` are too, including `require("vitest")["test"]`. A non-static specifier still reports `unanalyzable`. `require("vitest").expect` is not a runner. `const { test } = loaded; test.describe("suite", { annotation: { type: "skip" } })` reports that annotation. A namespace lookup of that destructured `test` is not itself a test binding.
+are skips. `const { test: check } = await require("vitest"); check.skip` is that same skip. `const check = require("vitest").test` and `require("vitest").test.skip` are too. A computed runner export such as `require("vitest")["test"].skip` or `const run = require("vitest")["test"]` stays silent. A non-static specifier still reports `unanalyzable`. `const { test: check } = await import(moduleName)` reports `unanalyzable` when `moduleName` is not a static string. `require("vitest").expect` is not a runner. `const { test } = loaded; test.describe("suite", { annotation: { type: "skip" } })` reports that annotation. A namespace lookup of that destructured `test` is not itself a test binding.
 
 ```js
 "no-mistakes/test-no-skips": ["error", { testModules: ["./fixtures", "../fixtures", "@app/test"] }]

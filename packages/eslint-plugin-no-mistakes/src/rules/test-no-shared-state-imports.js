@@ -14,15 +14,12 @@ const REGISTRATION_MODIFIERS = new Set(["concurrent", "each", "fails", "only", "
 function patternNames(pattern) {
   const found = [];
   for (const property of pattern?.properties || []) {
-    if (property.type !== "Property") continue;
+    if (property.type !== "Property" || property.computed) continue;
     let value = property.value;
     while (value?.type === "AssignmentPattern") value = value.left;
     if (value?.type !== "Identifier") continue;
-    const key = property.computed
-      ? literalString(property.key)
-      : property.key?.type === "Identifier"
-        ? property.key.name
-        : literalString(property.key);
+    const key =
+      property.key?.type === "Identifier" ? property.key.name : literalString(property.key);
     if (TEST_NAMES.has(key)) found.push({ key, local: value });
   }
   return found;
@@ -108,6 +105,36 @@ function dynamicDestructuredTest(callee, context) {
   return patternNames(def.node.id).some((entry) => entry.local.name === callee.name);
 }
 
+function dynamicMemberTest(callee, context) {
+  if (callee?.type !== "Identifier") return false;
+  const variable = resolveVariable(callee, context);
+  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  if (
+    def?.type !== "Variable" ||
+    def.node?.id?.type !== "Identifier" ||
+    isReassigned(def.node.id, context)
+  ) {
+    return false;
+  }
+  const init = unwrapExpression(def.node.init);
+  if (init?.type !== "MemberExpression" || init.computed) return false;
+  const key = init.property?.type === "Identifier" ? init.property.name : null;
+  return TEST_NAMES.has(key) && requireResolution(init.object, context)?.source === null;
+}
+
+function dynamicLetReceiver(node, context) {
+  const target = unwrapExpression(node);
+  if (target?.type !== "Identifier") return false;
+  const variable = resolveVariable(target, context);
+  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  return (
+    def?.type === "Variable" &&
+    def.parent?.kind !== "const" &&
+    def.node?.id?.type === "Identifier" &&
+    requireResolution(def.node.init, context)?.source === null
+  );
+}
+
 function registrationMember(node) {
   let current = unwrapExpression(node);
   while (current?.type === "CallExpression") current = unwrapExpression(current.callee);
@@ -128,8 +155,17 @@ function reportOpaqueRegistration(call, context, suppressed, source) {
     return;
   }
   const registration = registrationMember(callee);
-  const unresolvedMember = registration && isUnresolved(moduleLoad(registration.object, context));
-  if (!unresolvedMember && !dynamicDestructuredTest(callee, context)) return;
+  const unresolvedMember =
+    registration &&
+    (isUnresolved(moduleLoad(registration.object, context)) ||
+      dynamicLetReceiver(registration.object, context));
+  if (
+    !unresolvedMember &&
+    !dynamicDestructuredTest(callee, context) &&
+    !dynamicMemberTest(callee, context)
+  ) {
+    return;
+  }
   if (!suppressed(source)) {
     reportUnanalyzable(context, call.loc ? call : source, "this test registration");
   }

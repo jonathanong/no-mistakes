@@ -35,6 +35,8 @@ const groups = [
       "let-dynamic.test.ts",
       "member-require.test.ts",
       "reassigned-destructure.test.ts",
+      "alias-reassigned.test.ts",
+      "reassigned-test-name.test.ts",
     ],
     valid: [
       "not-a-runner.test.ts",
@@ -49,7 +51,13 @@ const groups = [
     rule: "no-vitest-sequential",
     dir: "sequential-ignore",
     options: [{ unanalyzable: "ignore" }],
-    valid: ["dynamic.test.ts", "let-dynamic.test.ts", "reassigned-destructure.test.ts"],
+    valid: [
+      "dynamic.test.ts",
+      "let-dynamic.test.ts",
+      "reassigned-destructure.test.ts",
+      "alias-reassigned.test.ts",
+      "reassigned-test-name.test.ts",
+    ],
   },
   {
     rule: "module-mock-boundary",
@@ -107,7 +115,7 @@ const groups = [
       "alias.mock.test.ts",
       "mutable-alias.mock.test.ts",
     ],
-    valid: ["foo.mock.test.ts", "expect-only.test.ts"],
+    valid: ["foo.mock.test.ts", "expect-only.test.ts", "default-alias.test.ts"],
   },
   {
     rule: "vitest-mock-test-file-naming",
@@ -127,14 +135,26 @@ const groups = [
       "named-callback.test.ts",
       "member-require.test.ts",
       "destructured-dynamic.test.ts",
+      "member-dynamic.test.ts",
+      "let-dynamic.test.ts",
     ],
-    valid: ["not-a-callee.test.ts", "suppressed.test.ts", "reassign.test.ts"],
+    valid: [
+      "not-a-callee.test.ts",
+      "suppressed.test.ts",
+      "reassign.test.ts",
+      "computed-key.test.ts",
+    ],
   },
   {
     rule: "test-no-shared-state",
     dir: "shared-ignore",
     options: [{ unanalyzable: "ignore" }],
-    valid: ["dynamic.test.ts", "destructured-dynamic.test.ts"],
+    valid: [
+      "dynamic.test.ts",
+      "destructured-dynamic.test.ts",
+      "member-dynamic.test.ts",
+      "let-dynamic.test.ts",
+    ],
   },
   {
     rule: "test-no-wall-time-assertions",
@@ -209,6 +229,7 @@ const groups = [
       "other-export.test.ts",
       "local-parameters.test.ts",
       "opaque-quiet.test.ts",
+      "computed-member.test.ts",
     ],
   },
   {
@@ -255,14 +276,15 @@ const groups = [
       "dynamic.test.ts",
       "awaited.test.ts",
       "member-require.js",
+      "dynamic-import.test.ts",
     ],
-    valid: ["not-a-runner.js"],
+    valid: ["not-a-runner.js", "computed-runner.js"],
   },
   {
     rule: "test-no-skips",
     dir: "skips-ignore",
     options: [{ testModules: ["./custom-test"], unanalyzable: "ignore" }],
-    valid: ["dynamic.test.ts"],
+    valid: ["dynamic.test.ts", "dynamic-import.test.ts"],
   },
   {
     rule: "test-no-fixed-temp-paths",

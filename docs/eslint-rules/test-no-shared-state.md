@@ -32,7 +32,10 @@ test("user", () => {
   `require` reports `unanalyzable`. `.skip` and `.each` on that call, such as
   `vt.test.skip(...)` and `vt.test.each(rows)(...)`, report `unanalyzable` too. A destructured `test`, `it`, or `describe`
   from that require, such as `const { test: check } = require(specifier)`, reports
-  `unanalyzable`. A destructured `expect` does not.
+  `unanalyzable`. A destructured `expect` does not. A computed key such as
+  `const { ["test"]: check } = require("vitest")` is not a test registration.
+  `const check = require(spec).test` and `let vt = require(spec); vt.test(...)`
+  report `unanalyzable`.
 
 `const vt = require("vitest")`, `const { test } = require("vitest")`,
 `const check = require("vitest").test`,

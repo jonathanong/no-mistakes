@@ -15,10 +15,25 @@ const MOCK_TEST_FILE_PATTERN = /\.mock\.test\.[cm]?[jt]sx?$/;
 // module mocks (issue #388).
 const MOCK_METHODS = new Set(["mock", "doMock", "unmock", "doUnmock"]);
 
-function isDefaultImport(node, context) {
-  const variable = resolveVariable(node, context);
-  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
-  return def?.node?.type === "ImportDefaultSpecifier";
+function isDefaultImport(node, context, seen = new Set()) {
+  let current = unwrapExpression(node);
+  while (current?.type === "Identifier") {
+    if (seen.has(current.name)) return false;
+    const variable = resolveVariable(current, context);
+    const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+    if (def?.node?.type === "ImportDefaultSpecifier") return true;
+    if (
+      def?.type !== "Variable" ||
+      def.node?.parent?.kind !== "const" ||
+      def.node.id?.type !== "Identifier" ||
+      !def.node.init
+    ) {
+      return false;
+    }
+    seen.add(current.name);
+    current = unwrapExpression(def.node.init);
+  }
+  return false;
 }
 
 function isTestFile(filename) {

@@ -5,6 +5,7 @@ const { requireResolution, requireSource } = require("./async-target-sources");
 const { literalString, logicalCall } = require("./logical-call");
 const { isUnresolved, moduleLoad } = require("./module-load");
 const {
+  constAlias,
   reassignedDestructuredRunner,
   reassignedVitestRequire,
 } = require("./no-vitest-sequential-require");
@@ -168,7 +169,7 @@ function dynamicLetRequire(callee, context) {
 }
 
 function unresolvedSequential(callee, context) {
-  const target = unwrapSequence(callee);
+  const target = constAlias(callee, context);
   return (
     isUnresolved(moduleLoad(target, context)) ||
     reassignedVitestRequire(target, context) ||

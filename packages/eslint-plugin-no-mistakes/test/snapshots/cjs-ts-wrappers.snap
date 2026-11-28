@@ -1059,6 +1059,42 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "alias-reassigned.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 4,
+          "file": "alias-reassigned.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "reassigned-test-name.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 3,
+          "file": "reassigned-test-name.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "no-vitest-sequential:sequential-ignore": [
@@ -1084,6 +1120,26 @@
     },
     {
       "file": "reassigned-destructure.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "alias-reassigned.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "reassigned-test-name.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -1602,6 +1658,12 @@
       "options": null
     },
     {
+      "file": "computed-key.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "cjs.test.ts",
       "findings": [
         {
@@ -1781,17 +1843,6 @@
         },
         {
           "column": 3,
-          "endColumn": 22,
-          "endLine": 21,
-          "file": "shapes.test.ts",
-          "line": 21,
-          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
-          "messageId": "shared",
-          "ruleId": "no-mistakes/test-no-shared-state",
-          "severity": 2
-        },
-        {
-          "column": 3,
           "endColumn": 16,
           "endLine": 32,
           "file": "shapes.test.ts",
@@ -1931,6 +1982,42 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "member-dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 6,
+          "file": "member-dynamic.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "let-dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 6,
+          "file": "let-dynamic.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-shared-state:shared-ignore": [
@@ -1953,11 +2040,43 @@
           "unanalyzable": "ignore"
         }
       ]
+    },
+    {
+      "file": "member-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "let-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
     }
   ],
   "test-no-skips:skips": [
     {
       "file": "not-a-runner.js",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "computed-runner.js",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -2187,15 +2306,28 @@
           "messageId": "modifier",
           "ruleId": "no-mistakes/test-no-skips",
           "severity": 2
-        },
+        }
+      ],
+      "kind": "invalid",
+      "options": [
         {
-          "column": 27,
-          "endColumn": 31,
-          "endLine": 5,
-          "file": "member-require.js",
-          "line": 5,
-          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
-          "messageId": "modifier",
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "dynamic-import.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 4,
+          "file": "dynamic-import.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this modifier skips a test. Use a static test, it, or describe binding.",
+          "messageId": "unanalyzable",
           "ruleId": "no-mistakes/test-no-skips",
           "severity": 2
         }
@@ -2213,6 +2345,19 @@
   "test-no-skips:skips-ignore": [
     {
       "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ],
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "dynamic-import.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -2268,6 +2413,16 @@
     },
     {
       "file": "opaque-quiet.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "computed-member.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -2841,6 +2996,12 @@
     },
     {
       "file": "expect-only.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "default-alias.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null

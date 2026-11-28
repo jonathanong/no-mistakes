@@ -1,6 +1,6 @@
 "use strict";
 
-const { unwrapExpression } = require("./async-ast");
+const { unwrapExpression, unwrapSequence } = require("./async-ast");
 const { requireSource } = require("./async-target-sources");
 const { literalString } = require("./logical-call");
 const { moduleLoad } = require("./module-load");
@@ -62,6 +62,45 @@ function exportKey(pattern, name) {
   return undefined;
 }
 
+function constAlias(node, context, seen = new Set()) {
+  let current = unwrapSequence(node);
+  if (current?.type === "MemberExpression" || current?.type === "CallExpression") {
+    let root = current;
+    while (root?.type === "MemberExpression" || root?.type === "CallExpression") {
+      root = unwrapSequence(root.type === "CallExpression" ? root.callee : root.object);
+    }
+    if (root?.type !== "Identifier") return current;
+    const followed = constAlias(root, context, seen);
+    return followed === root ? current : followed;
+  }
+  while (current?.type === "Identifier") {
+    if (seen.has(current.name)) return current;
+    const variable = resolveVariable(current, context);
+    const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+    if (
+      def?.type !== "Variable" ||
+      def.node?.parent?.kind !== "const" ||
+      def.node.id?.type !== "Identifier" ||
+      !def.node.init
+    ) {
+      return current;
+    }
+    seen.add(current.name);
+    const next = unwrapSequence(def.node.init);
+    if (next?.type !== "Identifier") return next;
+    current = next;
+  }
+  return current;
+}
+
+function rejectedRunner(root, context) {
+  return (
+    reassignedDestructuredRunner(root, context) ||
+    renamedNonRunner(root, context) ||
+    reassignedVitestRequire(root, context)
+  );
+}
+
 function renamedNonRunner(root, context) {
   if (root?.type !== "Identifier") return false;
   const variable = resolveVariable(root, context);
@@ -73,4 +112,10 @@ function renamedNonRunner(root, context) {
   return typeof exported === "string" && !TEST_NAMES.has(exported);
 }
 
-module.exports = { reassignedDestructuredRunner, reassignedVitestRequire, renamedNonRunner };
+module.exports = {
+  constAlias,
+  reassignedDestructuredRunner,
+  reassignedVitestRequire,
+  rejectedRunner,
+  renamedNonRunner,
+};

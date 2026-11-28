@@ -50,6 +50,14 @@ function importLoad(definition) {
 function moduleLoad(node, context, seen = new Set()) {
   node = unwrapExpression(node);
   if (!node) return null;
+  if (node.type === "AwaitExpression") {
+    const awaited = unwrapExpression(node.argument);
+    if (awaited?.type === "ImportExpression") node = awaited;
+  }
+  if (node.type === "ImportExpression") {
+    const source = literalString(unwrapExpression(node.source));
+    if (source === null) return { source: null };
+  }
   const required = requireResolution(node, context);
   if (required)
     return required.source === null

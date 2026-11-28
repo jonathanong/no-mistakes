@@ -134,13 +134,9 @@ function testBinding(node, context, visited = new Set()) {
   if (node.type !== "MemberExpression") return null;
   const name = memberName(node, context);
   const object = unwrapExpression(node.object);
-  const requiredMember = requireMemberBinding(
-    object,
-    name,
-    context,
-    admit,
-    testModulesFor(context),
-  );
+  const requiredMember = node.computed
+    ? null
+    : requireMemberBinding(object, name, context, admit, testModulesFor(context));
   if (requiredMember) return requiredMember;
   if (NAMES.has(name) && object?.type === "Identifier") {
     const framework = imported(object, context, true);

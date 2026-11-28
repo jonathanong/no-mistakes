@@ -176,7 +176,7 @@ function resolveImportTarget(node, sourceCode) {
       return name && module ? { name, module } : null;
     }
     if (variable.parent?.kind !== "const" || variable.node?.id?.type !== "Identifier") return null;
-    if (init?.type !== "MemberExpression") return null;
+    if (init?.type !== "MemberExpression" || init.computed) return null;
     const name = memberPropertyName(init);
     const module = requireSource(unwrapExpression(init.object), scopeContext(sourceCode));
     return name && module ? { name, module } : null;
