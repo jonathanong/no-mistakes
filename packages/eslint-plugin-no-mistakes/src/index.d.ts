@@ -119,6 +119,16 @@ declare namespace plugin {
     unanalyzable?: RuleUnanalyzable;
   }
 
+  export interface TestNoConfigMirrorParser {
+    module: string;
+    name: string;
+  }
+
+  export interface TestNoConfigMirrorAssertionOptions {
+    fixtureDirs?: string[];
+    parsers?: TestNoConfigMirrorParser[];
+  }
+
   export interface TestNoWallTimeAssertionsOptions {
     allowedPaths?: string[];
     unanalyzable?: RuleUnanalyzable;

@@ -787,6 +787,29 @@ Oxlint 50:10 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable en
 Oxlint 56:10 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
 Oxlint 60:22 no-mistakes(server-require-nullable-fetch-wrapper) Wrap nullable entity fetch 'serverApi.get' in nullableEntity so missing entities map to null consistently.
 
+## test-no-config-mirror-assertion
+eslint-snippets/fixture/test-no-config-mirror-assertion/sources.test.ts
+ESLint 17:3 no-mistakes/test-no-config-mirror-assertion (configMirror) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+ESLint 22:3 no-mistakes/test-no-config-mirror-assertion (configMirror) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+ESLint 27:3 no-mistakes/test-no-config-mirror-assertion (configMirror) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+ESLint 32:3 no-mistakes/test-no-config-mirror-assertion (configMirror) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+ESLint 36:9 no-mistakes/test-no-config-mirror-assertion (configMirror) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+ESLint 43:5 no-mistakes/test-no-config-mirror-assertion (configMirror) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+ESLint 49:3 no-mistakes/test-no-config-mirror-assertion (configMirror) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+ESLint 54:5 no-mistakes/test-no-config-mirror-assertion (configMirror) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+ESLint 59:3 no-mistakes/test-no-config-mirror-assertion (configMirror) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+ESLint 69:3 no-mistakes/test-no-config-mirror-assertion (configMirror) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+Oxlint 17:3 no-mistakes(test-no-config-mirror-assertion) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+Oxlint 22:3 no-mistakes(test-no-config-mirror-assertion) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+Oxlint 27:3 no-mistakes(test-no-config-mirror-assertion) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+Oxlint 32:3 no-mistakes(test-no-config-mirror-assertion) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+Oxlint 36:9 no-mistakes(test-no-config-mirror-assertion) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+Oxlint 43:5 no-mistakes(test-no-config-mirror-assertion) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+Oxlint 49:3 no-mistakes(test-no-config-mirror-assertion) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+Oxlint 54:5 no-mistakes(test-no-config-mirror-assertion) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+Oxlint 59:3 no-mistakes(test-no-config-mirror-assertion) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+Oxlint 69:3 no-mistakes(test-no-config-mirror-assertion) Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.
+
 ## test-no-style-class-assertion
 eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx
 ESLint 1:1 no-mistakes/test-no-style-class-assertion (styleClassAssertion) Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state.

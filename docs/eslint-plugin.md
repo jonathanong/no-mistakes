@@ -375,6 +375,18 @@ instead of passing silently. `require("react")` and
 (default `false`), `topLevelEntityPathPatterns?: string[]`, and
 `unanalyzable?: "finding" | "ignore"` (default `"finding"`).
 
+### `test-no-config-mirror-assertion`
+
+Opt-in. `fixtureDirs?: string[]` replaces the default `["fixtures", "__fixtures__", "test-cases"]`
+segment list treated as test fixtures. `parsers?: { module: string; name: string }[]`
+registers additional parser imports alongside `JSON.parse`, `yaml`, and `js-yaml`.
+Reports tests that read a static non-fixture file only to assert literals in its
+text or parsed fields; exempts cross-file invariants, executed scripts, fixtures,
+and files written by the test. `no-mistakes-disable-*` directives require a
+nonempty reason after `--`. The plugin exports `TestNoConfigMirrorAssertionOptions`
+and `TestNoConfigMirrorParser`. See
+[the rule reference](eslint-rules/test-no-config-mirror-assertion.md).
+
 ### `test-no-fixed-temp-paths`
 
 Opt-in. Reports fixed temporary paths at known Node filesystem or process

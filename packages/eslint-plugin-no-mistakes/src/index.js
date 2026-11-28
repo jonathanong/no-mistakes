@@ -56,6 +56,7 @@ const rules = {
   "react-no-use-promise-resolve": require("./rules/react-no-use-promise-resolve"),
   "require-options-on-imported-call": require("./rules/require-options-on-imported-call"),
   "server-require-nullable-fetch-wrapper": require("./rules/server-require-nullable-fetch-wrapper"),
+  "test-no-config-mirror-assertion": require("./rules/test-no-config-mirror-assertion"),
   "test-no-error-message-matching": require("./rules/test-no-error-message-matching"),
   "test-no-fixed-temp-paths": require("./rules/test-no-fixed-temp-paths"),
   "test-no-wall-time-assertions": require("./rules/test-no-wall-time-assertions"),

@@ -70,6 +70,7 @@ produce scoped aggregate-check warnings; see
 [matcher recovery](configuration/tests.md#playwright-file-matchers).
 
 The ESLint plugin provides opt-in, file-local test hygiene checks for
+[config-mirror assertions](eslint-rules/test-no-config-mirror-assertion.md),
 [fixed temporary paths](eslint-rules/test-no-fixed-temp-paths.md),
 [style class assertions](eslint-rules/test-no-style-class-assertion.md),
 [typed enqueue fakes](eslint-rules/test-no-typed-enqueue-fake.md), and

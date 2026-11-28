@@ -1,0 +1,1197 @@
+{
+  "eslint": [
+    {
+      "file": "cross-file.test.ts",
+      "findings": [],
+      "name": "cross-file.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "custom-fixture-dirs.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 90,
+          "endLine": 6,
+          "file": "custom-fixture-dirs.test.ts",
+          "line": 6,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        }
+      ],
+      "name": "custom-fixture-dirs.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "custom-fixture-dirs.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 90,
+          "endLine": 5,
+          "file": "custom-fixture-dirs.test.ts",
+          "line": 5,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        }
+      ],
+      "name": "custom-fixture-dirs.test.ts (testdata)",
+      "options": {
+        "fixtureDirs": [
+          "testdata"
+        ]
+      },
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "custom-parser.test.ts",
+      "findings": [],
+      "name": "custom-parser.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "custom-parser.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 45,
+          "endLine": 8,
+          "file": "custom-parser.test.ts",
+          "line": 8,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 30,
+          "endLine": 11,
+          "file": "custom-parser.test.ts",
+          "line": 11,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        }
+      ],
+      "name": "custom-parser.test.ts (configured parsers)",
+      "options": {
+        "parsers": [
+          {
+            "module": "smol-toml",
+            "name": "parse"
+          },
+          {
+            "module": "custom-ini",
+            "name": "default"
+          }
+        ]
+      },
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "edge-cases.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 50,
+          "endLine": 46,
+          "file": "edge-cases.test.ts",
+          "line": 46,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 40,
+          "endLine": 47,
+          "file": "edge-cases.test.ts",
+          "line": 47,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 52,
+          "endLine": 48,
+          "file": "edge-cases.test.ts",
+          "line": 48,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 36,
+          "endLine": 49,
+          "file": "edge-cases.test.ts",
+          "line": 49,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 40,
+          "endLine": 50,
+          "file": "edge-cases.test.ts",
+          "line": 50,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 40,
+          "endLine": 51,
+          "file": "edge-cases.test.ts",
+          "line": 51,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 39,
+          "endLine": 52,
+          "file": "edge-cases.test.ts",
+          "line": 52,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 56,
+          "endLine": 53,
+          "file": "edge-cases.test.ts",
+          "line": 53,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 62,
+          "endLine": 54,
+          "file": "edge-cases.test.ts",
+          "line": 54,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 49,
+          "endLine": 55,
+          "file": "edge-cases.test.ts",
+          "line": 55,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 26,
+          "endLine": 59,
+          "file": "edge-cases.test.ts",
+          "line": 59,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 30,
+          "endLine": 60,
+          "file": "edge-cases.test.ts",
+          "line": 60,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 28,
+          "endLine": 61,
+          "file": "edge-cases.test.ts",
+          "line": 61,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 28,
+          "endLine": 62,
+          "file": "edge-cases.test.ts",
+          "line": 62,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 81,
+          "endLine": 107,
+          "file": "edge-cases.test.ts",
+          "line": 107,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 55,
+          "endLine": 124,
+          "file": "edge-cases.test.ts",
+          "line": 124,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        }
+      ],
+      "name": "edge-cases.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "executed.test.ts",
+      "findings": [],
+      "name": "executed.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "exemptions-global-vi.test.ts",
+      "findings": [],
+      "name": "exemptions-global-vi.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "exemptions.test.ts",
+      "findings": [],
+      "name": "exemptions.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "fixtures-and-written.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 4,
+          "endLine": 46,
+          "file": "fixtures-and-written.test.ts",
+          "line": 44,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 4,
+          "endLine": 49,
+          "file": "fixtures-and-written.test.ts",
+          "line": 47,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        }
+      ],
+      "name": "fixtures-and-written.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "helper.ts",
+      "findings": [],
+      "name": "helper.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "mixed-module.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 46,
+          "endLine": 13,
+          "file": "mixed-module.test.ts",
+          "line": 13,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        }
+      ],
+      "name": "mixed-module.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "parsed.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 28,
+          "endLine": 9,
+          "file": "parsed.test.ts",
+          "line": 9,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 50,
+          "endLine": 10,
+          "file": "parsed.test.ts",
+          "line": 10,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 51,
+          "endLine": 15,
+          "file": "parsed.test.ts",
+          "line": 15,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 35,
+          "endLine": 18,
+          "file": "parsed.test.ts",
+          "line": 18,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 65,
+          "endLine": 23,
+          "file": "parsed.test.ts",
+          "line": 23,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 50,
+          "endLine": 26,
+          "file": "parsed.test.ts",
+          "line": 26,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 29,
+          "endLine": 31,
+          "file": "parsed.test.ts",
+          "line": 31,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        }
+      ],
+      "name": "parsed.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "shadowed.test.ts",
+      "findings": [],
+      "name": "shadowed.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "sinks.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 40,
+          "endLine": 9,
+          "file": "sinks.test.ts",
+          "line": 9,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 52,
+          "endLine": 10,
+          "file": "sinks.test.ts",
+          "line": 10,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 48,
+          "endLine": 11,
+          "file": "sinks.test.ts",
+          "line": 11,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 40,
+          "endLine": 12,
+          "file": "sinks.test.ts",
+          "line": 12,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 63,
+          "endLine": 13,
+          "file": "sinks.test.ts",
+          "line": 13,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 33,
+          "endLine": 18,
+          "file": "sinks.test.ts",
+          "line": 18,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 38,
+          "endLine": 19,
+          "file": "sinks.test.ts",
+          "line": 19,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 47,
+          "endLine": 20,
+          "file": "sinks.test.ts",
+          "line": 20,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 46,
+          "endLine": 21,
+          "file": "sinks.test.ts",
+          "line": 21,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 54,
+          "endLine": 22,
+          "file": "sinks.test.ts",
+          "line": 22,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 58,
+          "endLine": 23,
+          "file": "sinks.test.ts",
+          "line": 23,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        }
+      ],
+      "name": "sinks.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "sources-cjs.spec.cjs",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 55,
+          "endLine": 9,
+          "file": "sources-cjs.spec.cjs",
+          "line": 9,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 35,
+          "endLine": 11,
+          "file": "sources-cjs.spec.cjs",
+          "line": 11,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 44,
+          "endLine": 16,
+          "file": "sources-cjs.spec.cjs",
+          "line": 16,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        }
+      ],
+      "name": "sources-cjs.spec.cjs",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion",
+      "sourceType": "commonjs"
+    },
+    {
+      "file": "sources.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 55,
+          "endLine": 17,
+          "file": "sources.test.ts",
+          "line": 17,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 45,
+          "endLine": 22,
+          "file": "sources.test.ts",
+          "line": 22,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 44,
+          "endLine": 27,
+          "file": "sources.test.ts",
+          "line": 27,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 45,
+          "endLine": 32,
+          "file": "sources.test.ts",
+          "line": 32,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 4,
+          "endLine": 38,
+          "file": "sources.test.ts",
+          "line": 36,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 45,
+          "endLine": 43,
+          "file": "sources.test.ts",
+          "line": 43,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 44,
+          "endLine": 49,
+          "file": "sources.test.ts",
+          "line": 49,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 5,
+          "endColumn": 43,
+          "endLine": 54,
+          "file": "sources.test.ts",
+          "line": 54,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 91,
+          "endLine": 59,
+          "file": "sources.test.ts",
+          "line": 59,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 65,
+          "endLine": 69,
+          "file": "sources.test.ts",
+          "line": 69,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        }
+      ],
+      "name": "sources.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "suppressed-file-no-reason.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 55,
+          "endLine": 7,
+          "file": "suppressed-file-no-reason.test.ts",
+          "line": 7,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        }
+      ],
+      "name": "suppressed-file-no-reason.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "suppressed-file.test.ts",
+      "findings": [],
+      "name": "suppressed-file.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    },
+    {
+      "file": "suppressions.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 48,
+          "endLine": 11,
+          "file": "suppressions.test.ts",
+          "line": 11,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 51,
+          "endLine": 14,
+          "file": "suppressions.test.ts",
+          "line": 14,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 45,
+          "endLine": 17,
+          "file": "suppressions.test.ts",
+          "line": 17,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        }
+      ],
+      "name": "suppressions.test.ts",
+      "options": null,
+      "rule": "test-no-config-mirror-assertion"
+    }
+  ],
+  "oxlint": [
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/custom-fixture-dirs.test.ts",
+      "line": 6,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 46,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 47,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 48,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 49,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 50,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 51,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 52,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 53,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 54,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 55,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 59,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 60,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 61,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 62,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 107,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 1,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/edge-cases.test.ts",
+      "line": 124,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/fixtures-and-written.test.ts",
+      "line": 44,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/fixtures-and-written.test.ts",
+      "line": 47,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/mixed-module.test.ts",
+      "line": 13,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/parsed.test.ts",
+      "line": 9,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/parsed.test.ts",
+      "line": 10,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/parsed.test.ts",
+      "line": 15,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/parsed.test.ts",
+      "line": 18,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/parsed.test.ts",
+      "line": 23,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/parsed.test.ts",
+      "line": 26,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/parsed.test.ts",
+      "line": 31,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sinks.test.ts",
+      "line": 9,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sinks.test.ts",
+      "line": 10,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sinks.test.ts",
+      "line": 11,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sinks.test.ts",
+      "line": 12,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sinks.test.ts",
+      "line": 13,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sinks.test.ts",
+      "line": 18,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sinks.test.ts",
+      "line": 19,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sinks.test.ts",
+      "line": 20,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sinks.test.ts",
+      "line": 21,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sinks.test.ts",
+      "line": 22,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sinks.test.ts",
+      "line": 23,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sources-cjs.spec.cjs",
+      "line": 9,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sources-cjs.spec.cjs",
+      "line": 11,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sources-cjs.spec.cjs",
+      "line": 16,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sources.test.ts",
+      "line": 17,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sources.test.ts",
+      "line": 22,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sources.test.ts",
+      "line": 27,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sources.test.ts",
+      "line": 32,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 9,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sources.test.ts",
+      "line": 36,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 5,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sources.test.ts",
+      "line": 43,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sources.test.ts",
+      "line": 49,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 5,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sources.test.ts",
+      "line": 54,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sources.test.ts",
+      "line": 59,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/sources.test.ts",
+      "line": 69,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/suppressed-file-no-reason.test.ts",
+      "line": 7,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/suppressions.test.ts",
+      "line": 11,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/suppressions.test.ts",
+      "line": 14,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "test-cases/eslint-snippets/fixture/test-no-config-mirror-assertion/suppressions.test.ts",
+      "line": 17,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
+    }
+  ]
+}

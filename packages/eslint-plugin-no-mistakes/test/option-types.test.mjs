@@ -5,7 +5,11 @@ import { __dirname } from "./helpers.mjs";
 
 it("checks the exported rule option types", () => {
   const program = ts.createProgram(
-    [resolve(__dirname, "option-types.ts"), resolve(__dirname, "option-types-unanalyzable.ts")],
+    [
+      resolve(__dirname, "option-types.ts"),
+      resolve(__dirname, "option-types-unanalyzable.ts"),
+      resolve(__dirname, "option-types-config-mirror.ts"),
+    ],
     {
       noEmit: true,
       skipLibCheck: true,
