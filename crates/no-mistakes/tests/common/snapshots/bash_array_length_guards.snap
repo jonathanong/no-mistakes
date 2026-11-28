@@ -1,0 +1,504 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+assertion_line: 189
+---
+{
+  "guards_and_neighbors": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 39,
+          "message": "Cannot prove bash array safety: array `nested` safety could not be proved under guarding condition; guard with ${nested[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${nested[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 92,
+          "message": "Cannot prove bash array safety: array `mode_items` safety could not be proved under guarding condition; guard with ${mode_items[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${mode_items[@]}\"",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 100,
+          "message": "Array `selected` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${selected[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${selected[@]}\"",
+          "target": "selected"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 106,
+          "message": "Array `compound` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${compound[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${compound[@]}\"",
+          "target": "compound"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 108,
+          "message": "Array `compound` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${compound[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${compound[@]}\"",
+          "target": "compound"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 11,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 110,
+          "message": "Array `compound` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${compound[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${compound[@]}\"",
+          "target": "compound"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 114,
+          "message": "Array `piped` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${piped[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${piped[@]}\"",
+          "target": "piped"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 118,
+          "message": "Array `skipped` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${skipped[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${skipped[@]}\"",
+          "target": "skipped"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 122,
+          "message": "Array `skipped_test` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${skipped_test[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${skipped_test[@]}\"",
+          "target": "skipped_test"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 126,
+          "message": "Array `exact_count` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${exact_count[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${exact_count[@]}\"",
+          "target": "exact_count"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 18,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 22,
+          "message": "Array `values` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${values[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${values[@]}\"",
+          "target": "values"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 24,
+          "message": "Array `values` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${values[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${values[@]}\"",
+          "target": "values"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 28,
+          "message": "Array `optional` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${optional[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${optional[@]}\"",
+          "target": "optional"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 30,
+          "message": "Array `optional` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${optional[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${optional[@]}\"",
+          "target": "optional"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 32,
+          "message": "Array `optional` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${optional[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${optional[@]}\"",
+          "target": "optional"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 41,
+          "message": "Array `nested` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${nested[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${nested[@]}\"",
+          "target": "nested"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 46,
+          "message": "Array `reset` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${reset[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${reset[@]}\"",
+          "target": "reset"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 5,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 56,
+          "message": "Array `in_loop` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${in_loop[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${in_loop[@]}\"",
+          "target": "in_loop"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 61,
+          "message": "Array `redirected` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${redirected[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${redirected[@]}\"",
+          "target": "redirected"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 67,
+          "message": "Array `grouped` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${grouped[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${grouped[@]}\"",
+          "target": "grouped"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 74,
+          "message": "Array `scoped` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${scoped[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${scoped[@]}\"",
+          "target": "scoped"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 79,
+          "message": "Array `literal` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${literal[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${literal[@]}\"",
+          "target": "literal"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 83,
+          "message": "Array `literal` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${literal[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${literal[@]}\"",
+          "target": "literal"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 9,
+          "message": "Array `other` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${other[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\" \"${other[@]}\"",
+          "target": "other"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 95,
+          "message": "Array `mode_items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${mode_items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${mode_items[@]}\"",
+          "target": "mode_items"
+        },
+        {
+          "file": "length-guard-neighbors.sh",
+          "line": 99,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "selected=(\"${items[@]}\")",
+          "target": "items"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 101,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${stored[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 104,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${stored[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 106,
+          "message": "Array `stored` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${stored[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${stored[@]}\"",
+          "target": "stored"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 110,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${joined[*]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 13,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${limit[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 19,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "(collect \"${single[@]}\" \"${unknown[@]}\")",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 25,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${equal[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 27,
+          "message": "Array `equal` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${equal[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${equal[@]}\"",
+          "target": "equal"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 32,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${negated[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 34,
+          "message": "Array `negated` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${negated[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${negated[@]}\"",
+          "target": "negated"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 38,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${branch[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 43,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${fallback[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 47,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${arithmetic[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 51,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${inverted[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 54,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${literal[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 56,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${literal[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 60,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "empty_copy=(\"${unknown[@]}\")",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 61,
+          "message": "Array `empty_copy` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${empty_copy[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${copy[@]}\" \"${guarded_copy[@]}\" \"${empty_copy[@]}\"",
+          "target": "empty_copy"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 63,
+          "message": "Array `copy` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${copy[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${copy[@]}\"",
+          "target": "copy"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 65,
+          "message": "Array `guarded_copy` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${guarded_copy[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${guarded_copy[@]}\"",
+          "target": "guarded_copy"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 67,
+          "message": "Array `bracket` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${bracket[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${bracket[@]}\"",
+          "target": "bracket"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 71,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${inline[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 75,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${positive[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 79,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${alternative[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 83,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${logged[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 87,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${block[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 9,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${bracket[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 91,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${stored[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 94,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${stored[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        },
+        {
+          "file": "length-guards.sh",
+          "line": 98,
+          "message": "Array `unknown` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unknown[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${stored[@]}\" \"${unknown[@]}\"",
+          "target": "unknown"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "repro": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

@@ -1,0 +1,1153 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+assertion_line: 189
+---
+{
+  "adversarial_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "arithmetic-write.sh",
+          "line": 11,
+          "message": "Cannot prove bash array safety: array `items` safety could not be proved under guarding condition; guard with ${items[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${items[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "c-style-for.sh",
+          "line": 44,
+          "message": "Cannot prove bash array safety: array `corr` safety could not be proved under guarding condition; guard with ${corr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${corr[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 110,
+          "message": "Cannot prove bash array safety: array `status_arr` safety could not be proved under guarding condition; guard with ${status_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ $? -eq 0 ]]; then printf '%s\\n' \"${status_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 115,
+          "message": "Cannot prove bash array safety: array `pos_arr` safety could not be proved under guarding condition; guard with ${pos_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ $# -gt 0 ]]; then printf '%s\\n' \"${pos_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 12,
+          "message": "Cannot prove bash array safety: array `arith_cond` safety could not be proved under guarding condition; guard with ${arith_cond[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${arith_cond[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 120,
+          "message": "Cannot prove bash array safety: array `arg_arr` safety could not be proved under guarding condition; guard with ${arg_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ \"$1\" == prod ]]; then printf '%s\\n' \"${arg_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 124,
+          "message": "Cannot prove bash array safety: array `rand_arr` safety could not be proved under guarding condition; guard with ${rand_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ $RANDOM -eq 0 ]]; then printf '%s\\n' \"${rand_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 21,
+          "message": "Cannot prove bash array safety: array `fs_cond` safety could not be proved under guarding condition; guard with ${fs_cond[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${fs_cond[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 51,
+          "message": "Cannot prove bash array safety: array `inc_arr` safety could not be proved under guarding condition; guard with ${inc_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ ++inc -eq 2 ]]; then printf '%s\\n' \"${inc_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 57,
+          "message": "Cannot prove bash array safety: array `flag_arr` safety could not be proved under guarding condition; guard with ${flag_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ -v flags[0] ]]; then printf '%s\\n' \"${flag_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 66,
+          "message": "Cannot prove bash array safety: array `reply_arr` safety could not be proved under guarding condition; guard with ${reply_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ $REPLY == 1 ]]; then printf '%s\\n' \"${reply_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 71,
+          "message": "Cannot prove bash array safety: array `sub_arr` safety could not be proved under guarding condition; guard with ${sub_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ \"${slots[0]}\" == 1 ]]; then printf '%s\\n' \"${sub_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 88,
+          "message": "Cannot prove bash array safety: array `loop_var_arr` safety could not be proved under guarding condition; guard with ${loop_var_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${loop_var_arr[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "dynamic-unset.sh",
+          "line": 26,
+          "message": "Cannot prove bash array safety: array `helper_target` safety could not be proved after dynamic `unset`; guard with ${helper_target[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${helper_target[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "dynamic-unset.sh",
+          "line": 7,
+          "message": "Cannot prove bash array safety: array `tracked` safety could not be proved after dynamic `unset`; guard with ${tracked[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${tracked[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "inline-subshell-exit.sh",
+          "line": 12,
+          "message": "Cannot prove bash array safety: unmodeled inline subshell or group syntax; rewrite the guard as a top-level test or guard the expansion with ${name[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "time ( :; exit 1 )",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 12,
+          "message": "Cannot prove bash array safety: array `ok` safety could not be proved after loop widening; guard with ${ok[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "use \"${ok[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 23,
+          "message": "Cannot prove bash array safety: array `ok` safety could not be proved after loop widening; guard with ${ok[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "use \"${ok[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "redefined-function.sh",
+          "line": 13,
+          "message": "Cannot prove bash array safety: function `fill` is redefined; cannot soundly prove array safety across redefinitions",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "fill() ( : )",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "redefined-function.sh",
+          "line": 5,
+          "message": "Cannot prove bash array safety: function `die` is redefined; cannot soundly prove array safety across redefinitions",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "die() ( : )",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "bare-local.sh",
+          "line": 10,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "bare-local.sh",
+          "line": 15,
+          "message": "Array `present` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${present[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${present[@]}\"",
+          "target": "present"
+        },
+        {
+          "file": "c-style-for.sh",
+          "line": 15,
+          "message": "Array `plain_empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${plain_empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${plain_empty[@]}\"",
+          "target": "plain_empty"
+        },
+        {
+          "file": "c-style-for.sh",
+          "line": 24,
+          "message": "Array `nested_empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${nested_empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${nested_empty[@]}\"",
+          "target": "nested_empty"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 104,
+          "message": "Array `maybe_branch_items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${maybe_branch_items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${maybe_branch_items[@]}\"",
+          "target": "maybe_branch_items"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 130,
+          "message": "Array `redir_u` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${redir_u[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${redir_u[@]}\"",
+          "target": "redir_u"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 28,
+          "message": "Array `created` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${created[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${created[@]}\"",
+          "target": "created"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 32,
+          "message": "Array `hdr` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${hdr[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "while test -n \"${hdr[*]}\" && hdr=(filled); do",
+          "target": "hdr"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 61,
+          "message": "Array `brace_arr` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${brace_arr[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${brace_arr[@]}\"",
+          "target": "brace_arr"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 76,
+          "message": "Array `redir_arr` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${redir_arr[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${redir_arr[@]}\"",
+          "target": "redir_arr"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 83,
+          "message": "Array `skipped_arr` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${skipped_arr[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${skipped_arr[@]}\"",
+          "target": "skipped_arr"
+        },
+        {
+          "file": "inline-subshell-exit.sh",
+          "line": 14,
+          "message": "Array `timed_items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${timed_items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${timed_items[@]}\"",
+          "target": "timed_items"
+        },
+        {
+          "file": "inline-subshell-exit.sh",
+          "line": 8,
+          "message": "Array `nested_items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${nested_items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${nested_items[@]}\"",
+          "target": "nested_items"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 15,
+          "message": "Array `a` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${a[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "use \"${a[@]}\"",
+          "target": "a"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 16,
+          "message": "Array `b` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${b[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "a=(\"${b[@]}\")",
+          "target": "b"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 17,
+          "message": "Array `c` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${c[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "b=(\"${c[@]}\")",
+          "target": "c"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 18,
+          "message": "Array `d` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${d[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "c=(\"${d[@]}\")",
+          "target": "d"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 19,
+          "message": "Array `e` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${e[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "d=(\"${e[@]}\")",
+          "target": "e"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 20,
+          "message": "Array `f` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${f[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "e=(\"${f[@]}\")",
+          "target": "f"
+        },
+        {
+          "file": "redefined-function.sh",
+          "line": 10,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "redefined-function.sh",
+          "line": 16,
+          "message": "Array `filled` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${filled[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${filled[@]}\"",
+          "target": "filled"
+        },
+        {
+          "file": "subshell-return-in-function.sh",
+          "line": 21,
+          "message": "Array `leaked` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${leaked[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${leaked[@]}\"",
+          "target": "leaked"
+        },
+        {
+          "file": "subshell-return-in-function.sh",
+          "line": 29,
+          "message": "Array `still_empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${still_empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${still_empty[@]}\"",
+          "target": "still_empty"
+        },
+        {
+          "file": "while-condition-write.sh",
+          "line": 8,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${items[@]}\"",
+          "target": "items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "adversarial_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "arithmetic-write.sh",
+          "line": 11,
+          "message": "Cannot prove bash array safety: array `items` safety could not be proved under guarding condition; guard with ${items[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${items[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "bare-local.sh",
+          "line": 10,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "bare-local.sh",
+          "line": 15,
+          "message": "Array `present` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${present[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${present[@]}\"",
+          "target": "present"
+        },
+        {
+          "file": "c-style-for.sh",
+          "line": 15,
+          "message": "Array `plain_empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${plain_empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${plain_empty[@]}\"",
+          "target": "plain_empty"
+        },
+        {
+          "file": "c-style-for.sh",
+          "line": 24,
+          "message": "Array `nested_empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${nested_empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${nested_empty[@]}\"",
+          "target": "nested_empty"
+        },
+        {
+          "file": "c-style-for.sh",
+          "line": 44,
+          "message": "Cannot prove bash array safety: array `corr` safety could not be proved under guarding condition; guard with ${corr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${corr[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 104,
+          "message": "Array `maybe_branch_items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${maybe_branch_items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${maybe_branch_items[@]}\"",
+          "target": "maybe_branch_items"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 110,
+          "message": "Cannot prove bash array safety: array `status_arr` safety could not be proved under guarding condition; guard with ${status_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ $? -eq 0 ]]; then printf '%s\\n' \"${status_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 115,
+          "message": "Cannot prove bash array safety: array `pos_arr` safety could not be proved under guarding condition; guard with ${pos_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ $# -gt 0 ]]; then printf '%s\\n' \"${pos_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 12,
+          "message": "Cannot prove bash array safety: array `arith_cond` safety could not be proved under guarding condition; guard with ${arith_cond[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${arith_cond[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 120,
+          "message": "Cannot prove bash array safety: array `arg_arr` safety could not be proved under guarding condition; guard with ${arg_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ \"$1\" == prod ]]; then printf '%s\\n' \"${arg_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 124,
+          "message": "Cannot prove bash array safety: array `rand_arr` safety could not be proved under guarding condition; guard with ${rand_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ $RANDOM -eq 0 ]]; then printf '%s\\n' \"${rand_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 130,
+          "message": "Array `redir_u` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${redir_u[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${redir_u[@]}\"",
+          "target": "redir_u"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 21,
+          "message": "Cannot prove bash array safety: array `fs_cond` safety could not be proved under guarding condition; guard with ${fs_cond[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${fs_cond[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 28,
+          "message": "Array `created` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${created[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${created[@]}\"",
+          "target": "created"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 32,
+          "message": "Array `hdr` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${hdr[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "while test -n \"${hdr[*]}\" && hdr=(filled); do",
+          "target": "hdr"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 51,
+          "message": "Cannot prove bash array safety: array `inc_arr` safety could not be proved under guarding condition; guard with ${inc_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ ++inc -eq 2 ]]; then printf '%s\\n' \"${inc_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 57,
+          "message": "Cannot prove bash array safety: array `flag_arr` safety could not be proved under guarding condition; guard with ${flag_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ -v flags[0] ]]; then printf '%s\\n' \"${flag_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 61,
+          "message": "Array `brace_arr` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${brace_arr[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${brace_arr[@]}\"",
+          "target": "brace_arr"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 66,
+          "message": "Cannot prove bash array safety: array `reply_arr` safety could not be proved under guarding condition; guard with ${reply_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ $REPLY == 1 ]]; then printf '%s\\n' \"${reply_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 71,
+          "message": "Cannot prove bash array safety: array `sub_arr` safety could not be proved under guarding condition; guard with ${sub_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "if [[ \"${slots[0]}\" == 1 ]]; then printf '%s\\n' \"${sub_arr[@]}\"; fi",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 76,
+          "message": "Array `redir_arr` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${redir_arr[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${redir_arr[@]}\"",
+          "target": "redir_arr"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 83,
+          "message": "Array `skipped_arr` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${skipped_arr[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${skipped_arr[@]}\"",
+          "target": "skipped_arr"
+        },
+        {
+          "file": "condition-and-call-empties.sh",
+          "line": 88,
+          "message": "Cannot prove bash array safety: array `loop_var_arr` safety could not be proved under guarding condition; guard with ${loop_var_arr[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${loop_var_arr[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "dynamic-unset.sh",
+          "line": 26,
+          "message": "Cannot prove bash array safety: array `helper_target` safety could not be proved after dynamic `unset`; guard with ${helper_target[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${helper_target[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "dynamic-unset.sh",
+          "line": 7,
+          "message": "Cannot prove bash array safety: array `tracked` safety could not be proved after dynamic `unset`; guard with ${tracked[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${tracked[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "inline-subshell-exit.sh",
+          "line": 12,
+          "message": "Cannot prove bash array safety: unmodeled inline subshell or group syntax; rewrite the guard as a top-level test or guard the expansion with ${name[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "time ( :; exit 1 )",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "inline-subshell-exit.sh",
+          "line": 14,
+          "message": "Array `timed_items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${timed_items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${timed_items[@]}\"",
+          "target": "timed_items"
+        },
+        {
+          "file": "inline-subshell-exit.sh",
+          "line": 8,
+          "message": "Array `nested_items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${nested_items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${nested_items[@]}\"",
+          "target": "nested_items"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 12,
+          "message": "Cannot prove bash array safety: array `ok` safety could not be proved after loop widening; guard with ${ok[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "use \"${ok[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 15,
+          "message": "Array `a` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${a[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "use \"${a[@]}\"",
+          "target": "a"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 16,
+          "message": "Array `b` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${b[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "a=(\"${b[@]}\")",
+          "target": "b"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 17,
+          "message": "Array `c` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${c[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "b=(\"${c[@]}\")",
+          "target": "c"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 18,
+          "message": "Array `d` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${d[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "c=(\"${d[@]}\")",
+          "target": "d"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 19,
+          "message": "Array `e` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${e[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "d=(\"${e[@]}\")",
+          "target": "e"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 20,
+          "message": "Array `f` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${f[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "e=(\"${f[@]}\")",
+          "target": "f"
+        },
+        {
+          "file": "loop-widening-refill.sh",
+          "line": 23,
+          "message": "Cannot prove bash array safety: array `ok` safety could not be proved after loop widening; guard with ${ok[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "use \"${ok[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "redefined-function.sh",
+          "line": 10,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "redefined-function.sh",
+          "line": 13,
+          "message": "Cannot prove bash array safety: function `fill` is redefined; cannot soundly prove array safety across redefinitions",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "fill() ( : )",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "redefined-function.sh",
+          "line": 16,
+          "message": "Array `filled` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${filled[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${filled[@]}\"",
+          "target": "filled"
+        },
+        {
+          "file": "redefined-function.sh",
+          "line": 5,
+          "message": "Cannot prove bash array safety: function `die` is redefined; cannot soundly prove array safety across redefinitions",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "die() ( : )",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "subshell-return-in-function.sh",
+          "line": 21,
+          "message": "Array `leaked` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${leaked[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${leaked[@]}\"",
+          "target": "leaked"
+        },
+        {
+          "file": "subshell-return-in-function.sh",
+          "line": 29,
+          "message": "Array `still_empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${still_empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${still_empty[@]}\"",
+          "target": "still_empty"
+        },
+        {
+          "file": "while-condition-write.sh",
+          "line": 8,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${items[@]}\"",
+          "target": "items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "case_scoped_unset_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "unresolved.sh",
+          "line": 13,
+          "message": "Cannot prove bash array safety: array `kept_glob` safety could not be proved after dynamic `unset`; guard with ${kept_glob[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${kept_glob[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "unresolved.sh",
+          "line": 21,
+          "message": "Cannot prove bash array safety: array `kept_unrelated` safety could not be proved after dynamic `unset`; guard with ${kept_unrelated[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${kept_unrelated[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "unresolved.sh",
+          "line": 30,
+          "message": "Cannot prove bash array safety: array `kept_suffix` safety could not be proved after dynamic `unset`; guard with ${kept_suffix[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${kept_suffix[@]}\"",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "resolved.sh",
+          "line": 27,
+          "message": "Array `alpha` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${alpha[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${alpha[@]}\"",
+          "target": "alpha"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "case_scoped_unset_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "resolved.sh",
+          "line": 27,
+          "message": "Array `alpha` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${alpha[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${alpha[@]}\"",
+          "target": "alpha"
+        },
+        {
+          "file": "unresolved.sh",
+          "line": 13,
+          "message": "Cannot prove bash array safety: array `kept_glob` safety could not be proved after dynamic `unset`; guard with ${kept_glob[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${kept_glob[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "unresolved.sh",
+          "line": 21,
+          "message": "Cannot prove bash array safety: array `kept_unrelated` safety could not be proved after dynamic `unset`; guard with ${kept_unrelated[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${kept_unrelated[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "unresolved.sh",
+          "line": 30,
+          "message": "Cannot prove bash array safety: array `kept_suffix` safety could not be proved after dynamic `unset`; guard with ${kept_suffix[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${kept_suffix[@]}\"",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "correlated_conditions_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "correlated-flag.sh",
+          "line": 11,
+          "message": "Cannot prove bash array safety: array `a` safety could not be proved under guarding condition; guard with ${a[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${a[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "function-condition.sh",
+          "line": 13,
+          "message": "Cannot prove bash array safety: array `tasks` safety could not be proved under guarding condition; guard with ${tasks[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${tasks[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "local-guard-mutation.sh",
+          "line": 13,
+          "message": "Cannot prove bash array safety: array `items` safety could not be proved under guarding condition; guard with ${items[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${items[@]}\"",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "correlated-flag.sh",
+          "line": 18,
+          "message": "Array `unguarded` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unguarded[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${unguarded[@]}\"",
+          "target": "unguarded"
+        },
+        {
+          "file": "correlated-flag.sh",
+          "line": 22,
+          "message": "Array `never_filled` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${never_filled[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${never_filled[@]}\"",
+          "target": "never_filled"
+        },
+        {
+          "file": "correlated-flag.sh",
+          "line": 30,
+          "message": "Array `inner_reset` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${inner_reset[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${inner_reset[@]}\"",
+          "target": "inner_reset"
+        },
+        {
+          "file": "correlated-flag.sh",
+          "line": 38,
+          "message": "Array `checked_empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${checked_empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${checked_empty[@]}\"",
+          "target": "checked_empty"
+        },
+        {
+          "file": "function-condition.sh",
+          "line": 16,
+          "message": "Array `tasks` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${tasks[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${tasks[@]}\"",
+          "target": "tasks"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "correlated_conditions_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "correlated-flag.sh",
+          "line": 11,
+          "message": "Cannot prove bash array safety: array `a` safety could not be proved under guarding condition; guard with ${a[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${a[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "correlated-flag.sh",
+          "line": 18,
+          "message": "Array `unguarded` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${unguarded[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${unguarded[@]}\"",
+          "target": "unguarded"
+        },
+        {
+          "file": "correlated-flag.sh",
+          "line": 22,
+          "message": "Array `never_filled` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${never_filled[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${never_filled[@]}\"",
+          "target": "never_filled"
+        },
+        {
+          "file": "correlated-flag.sh",
+          "line": 30,
+          "message": "Array `inner_reset` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${inner_reset[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${inner_reset[@]}\"",
+          "target": "inner_reset"
+        },
+        {
+          "file": "correlated-flag.sh",
+          "line": 38,
+          "message": "Array `checked_empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${checked_empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${checked_empty[@]}\"",
+          "target": "checked_empty"
+        },
+        {
+          "file": "function-condition.sh",
+          "line": 13,
+          "message": "Cannot prove bash array safety: array `tasks` safety could not be proved under guarding condition; guard with ${tasks[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${tasks[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "function-condition.sh",
+          "line": 16,
+          "message": "Array `tasks` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${tasks[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${tasks[@]}\"",
+          "target": "tasks"
+        },
+        {
+          "file": "local-guard-mutation.sh",
+          "line": 13,
+          "message": "Cannot prove bash array safety: array `items` safety could not be proved under guarding condition; guard with ${items[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${items[@]}\"",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "function_scope_arrays": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "script.sh",
+          "line": 13,
+          "message": "Array `queued` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${queued[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${queued[@]}\"",
+          "target": "queued"
+        },
+        {
+          "file": "script.sh",
+          "line": 7,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${items[@]}\"",
+          "target": "items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "function_scope_nounset": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "called-helpers.sh",
+          "line": 15,
+          "message": "Array `enabled_items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${enabled_items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${enabled_items[@]}\"",
+          "target": "enabled_items"
+        },
+        {
+          "file": "uncalled-disable.sh",
+          "line": 7,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${items[@]}\"",
+          "target": "items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "redirected_function_calls": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "call.sh",
+          "line": 6,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${items[@]}\"",
+          "target": "items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "regression_cases": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "same-condition.sh",
+          "line": 17,
+          "message": "Cannot prove bash array safety: array `steps` safety could not be proved under guarding condition; guard with ${steps[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${steps[@]}\"",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "case-without-catchall.sh",
+          "line": 8,
+          "message": "Array `partial` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${partial[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${partial[@]}\"",
+          "target": "partial"
+        },
+        {
+          "file": "loop-conditional-append.sh",
+          "line": 8,
+          "message": "Array `arguments` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${arguments[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "printf '%s\\n' \"${arguments[@]}\"",
+          "target": "arguments"
+        },
+        {
+          "file": "zero-iteration-fill.sh",
+          "line": 13,
+          "message": "Array `y` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${y[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "use \"${y[@]}\"",
+          "target": "y"
+        },
+        {
+          "file": "zero-iteration-fill.sh",
+          "line": 20,
+          "message": "Array `arr` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${arr[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "cmd \"${arr[@]}\"",
+          "target": "arr"
+        },
+        {
+          "file": "zero-iteration-fill.sh",
+          "line": 29,
+          "message": "Array `nested` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${nested[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "cmd \"${nested[@]}\"",
+          "target": "nested"
+        },
+        {
+          "file": "zero-iteration-fill.sh",
+          "line": 7,
+          "message": "Array `x` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${x[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "use \"${x[@]}\"",
+          "target": "x"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unused_disable_after_guard": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "guarded.sh",
+          "line": 8,
+          "message": "directive for `bash-empty-array-nounset` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line bash-empty-array-nounset -- length guard above ensures non-empty",
+          "target": "bash-empty-array-nounset"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

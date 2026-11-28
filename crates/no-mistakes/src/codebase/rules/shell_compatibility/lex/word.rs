@@ -5,28 +5,36 @@ pub(in super::super) struct Word<'a> {
     pub line: usize,
     pub refs: Vec<(&'a str, usize)>,
     pub array_literal: Option<bool>,
+    pub array_copies: Vec<&'a str>,
     pub redirect: bool,
-    dynamic: bool,
+    pub dynamic: bool,
+}
+
+impl<'a> Word<'a> {
+    pub(super) fn new(raw: &'a str, line: usize) -> Self {
+        Self {
+            raw,
+            line,
+            refs: Vec::new(),
+            array_literal: None,
+            array_copies: Vec::new(),
+            redirect: false,
+            dynamic: false,
+        }
+    }
 }
 
 impl<'a> Lexer<'a> {
     pub(super) fn word(&mut self) -> Word<'a> {
         let start = self.offset;
-        let mut word = Word {
-            raw: "",
-            line: self.line,
-            refs: Vec::new(),
-            array_literal: None,
-            redirect: false,
-            dynamic: false,
-        };
+        let mut word = Word::new("", self.line);
         let mut double_quoted = false;
         while let Some(byte) = self.current() {
             if !double_quoted && is_boundary(byte) {
                 let prefix = &self.source[start..self.offset];
                 if byte == b'(' && prefix.ends_with('=') && assignment(prefix).is_some() {
                     self.advance();
-                    word.array_literal = Some(self.array_elements(&mut word.refs));
+                    word.array_literal = Some(self.array_elements(&mut word));
                 }
                 break;
             }
@@ -58,7 +66,7 @@ impl<'a> Lexer<'a> {
         word
     }
 
-    fn array_elements(&mut self, references: &mut Vec<(&'a str, usize)>) -> bool {
+    fn array_elements(&mut self, word: &mut Word<'a>) -> bool {
         let mut literal = false;
         while let Some(byte) = self.current() {
             if self.continuation() {
@@ -79,7 +87,15 @@ impl<'a> Lexer<'a> {
                     self.skip_literal_array_index();
                     let item = self.word();
                     literal |= !item.dynamic;
-                    references.extend(item.refs);
+                    if let Some(name) = item
+                        .raw
+                        .strip_prefix("\"${")
+                        .and_then(|body| body.strip_suffix("[@]}\""))
+                        .filter(|name| identifier(name))
+                    {
+                        word.array_copies.push(name);
+                    }
+                    word.refs.extend(item.refs);
                 }
             }
         }
@@ -114,7 +130,9 @@ impl<'a> Lexer<'a> {
         if let Some(end) = self.take_expansion_start() {
             let start = self.offset;
             let line = self.line;
-            if self.skip_group(end) && end == b'}' && double_quoted {
+            if end == b')' {
+                self.skip_substitution();
+            } else if self.skip_group(end) && double_quoted {
                 let body = &self.source[start..self.offset - 1];
                 word.dynamic |= body.starts_with('@')
                     || body.contains("[@]")

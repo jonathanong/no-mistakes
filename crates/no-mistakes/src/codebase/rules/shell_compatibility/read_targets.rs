@@ -2,7 +2,9 @@ use super::lex::{assignment, command_words, identifier, Word};
 
 pub(super) struct Targets {
     pub names: Vec<String>,
+    pub scalars: Vec<String>,
     pub keep: bool,
+    pub callback: Option<Option<String>>,
 }
 
 pub(super) fn targets(words: &[Word<'_>]) -> Option<Targets> {
@@ -14,6 +16,7 @@ pub(super) fn targets(words: &[Word<'_>]) -> Option<Targets> {
     };
     let takes = if mapfile { "dnOsuCc" } else { "adinNptu" };
     let (mut names, mut positional, mut keep) = (Vec::new(), Vec::new(), false);
+    let (mut has_array_opt, mut callback) = (false, None);
     while let Some(word) = command.next() {
         if word.raw == "--" {
             positional.extend(command.map(|word| word.raw));
@@ -34,14 +37,40 @@ pub(super) fn targets(words: &[Word<'_>]) -> Option<Targets> {
         };
         keep |= letter == 'O';
         if letter == 'a' && !mapfile {
+            has_array_opt = true;
             names.extend(argument);
+        } else if letter == 'C' && mapfile {
+            callback = argument.and_then(decode_callback);
         }
     }
-    if mapfile {
-        names = vec![positional.first().copied().unwrap_or("MAPFILE")];
-    }
+    let scalars = if mapfile || has_array_opt {
+        if mapfile {
+            names = vec![positional.first().copied().unwrap_or("MAPFILE")];
+        }
+        Vec::new()
+    } else if positional.is_empty() {
+        vec!["REPLY".to_owned()]
+    } else {
+        positional
+            .into_iter()
+            .filter_map(decode_scalar_target)
+            .collect()
+    };
     let names = names.into_iter().filter_map(decode_target).collect();
-    Some(Targets { names, keep })
+    Some(Targets {
+        names,
+        scalars,
+        keep,
+        callback,
+    })
+}
+
+fn decode_callback(raw: &str) -> Option<Option<String>> {
+    match decode_unquoted(raw) {
+        Some((decoded, false)) if decoded.is_empty() => None,
+        Some((decoded, false)) if identifier(&decoded) => Some(Some(decoded)),
+        _ => Some(None),
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -50,10 +79,11 @@ enum Quote {
     Double,
 }
 
-fn decode_target(raw: &str) -> Option<String> {
+fn decode_unquoted(raw: &str) -> Option<(String, bool)> {
     let mut out = String::with_capacity(raw.len());
     let mut chars = raw.chars();
     let mut quote = None;
+    let mut expanded = false;
     while let Some(ch) = chars.next() {
         match (quote, ch) {
             (Some(Quote::Single), '\'') | (Some(Quote::Double), '"') => quote = None,
@@ -74,10 +104,28 @@ fn decode_target(raw: &str) -> Option<String> {
                     out.push(next);
                 }
             }
+            (Some(Quote::Double) | None, '$' | '`') => {
+                expanded = true;
+                out.push(ch);
+            }
             _ => out.push(ch),
         }
     }
-    (quote.is_none() && identifier(&out)).then_some(out)
+    quote.is_none().then_some((out, expanded))
+}
+
+fn decode_target(raw: &str) -> Option<String> {
+    let (out, _) = decode_unquoted(raw)?;
+    identifier(&out).then_some(out)
+}
+
+fn decode_scalar_target(raw: &str) -> Option<String> {
+    let (out, _) = decode_unquoted(raw)?;
+    let base = out
+        .strip_suffix(']')
+        .and_then(|s| s.split_once('['))
+        .map_or(out.as_str(), |(n, _)| n);
+    identifier(base).then(|| base.to_owned())
 }
 
 #[cfg(test)]
