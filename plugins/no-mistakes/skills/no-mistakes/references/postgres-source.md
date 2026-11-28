@@ -89,8 +89,9 @@ its occurrences include no `utility` or `dml`, the block is not parsed, so an
 `EXECUTE` has no typed statement even in statement position. That includes a
 non-literal command and a literal `controlFlow` command.
 Dollar-quoted (`bodyEncoding: "dollarQuoted"`), standard single-quoted
-(`singleQuoted`, doubled quotes), and PostgreSQL `E` escape strings
-(`escapedString`) are the projected literal forms. They are decoded by the
+(`singleQuoted`, doubled quotes), PostgreSQL `E` escape strings
+(`escapedString`), and wholly literal `||` concatenations (`concatenated`)
+are the projected literal forms. The quoted forms are decoded by the
 prepared tokenizer and parsed through the same SQL fact pipeline.
 The enclosing statement and `literalSpan` retain original source coordinates;
 `decodedSql` owns nested command statement, expression, and diagnostic coordinates.

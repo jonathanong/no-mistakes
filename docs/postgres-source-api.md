@@ -843,8 +843,10 @@ The decoded command still contains typed `$1` placeholders: parameter expression
 are preserved as syntax and never substituted or interpreted at runtime.
 Variables, unknown concatenation operands, format calls, and unsupported modifiers
 remain incomplete occurrences. An unquoted `INTO` target ends the command expression
-the same way `USING` does: the occurrence is classified from the literal, and the
-block stays incomplete. Source facts imply no execution or replay policy.
+the same way `USING` does, and the occurrence is classified from the literal.
+In statement position that leftover modifier keeps the block incomplete. Inside a
+loop or `CASE` arm, `INTO` adds no diagnostic of its own, so a decoded
+`controlFlow` command can still leave the block complete. Source facts imply no execution or replay policy.
 Supported IF/ELSIF/ELSE branches, including nested branches, share this literal
 projection. SQL CASE expressions and quoted EXECUTE identifiers retain their
 ordinary SQL meaning.
