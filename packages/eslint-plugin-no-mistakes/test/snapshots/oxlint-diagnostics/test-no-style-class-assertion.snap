@@ -1,0 +1,114 @@
+[
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 1,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 2,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 3,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 4,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 5,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 6,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 7,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 8,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 9,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 10,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 11,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 12,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 13,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 14,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 15,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  },
+  {
+    "code": "no-mistakes(test-no-style-class-assertion)",
+    "column": 1,
+    "file": "eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx",
+    "line": 16,
+    "message": "Avoid asserting on styling class names. Assert the behavior instead: toBeVisible() / not.toBeVisible(), the accessible name or role, an aria-* state (aria-expanded, aria-selected, aria-current), or a data-* attribute the component sets for its state."
+  }
+]

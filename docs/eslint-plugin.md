@@ -397,6 +397,14 @@ wrappers stay bound; `testModules` names import specifiers whose exported
 See [the rule reference](eslint-rules/test-no-skips.md) for import matching,
 table callbacks, configuration, and `no-mistakes` suppression directives.
 
+### `test-no-style-class-assertion`
+
+Opt-in with no rule-local options. Reports Vitest and Jest assertions on
+`className`, `toHaveClass(...)`, `classList.contains(...)`, and
+`getAttribute("class")` in test filenames, with no default class exemptions.
+`no-mistakes-disable-*` directives require a non-empty `-- <reason>`. See
+[the rule reference](eslint-rules/test-no-style-class-assertion.md).
+
 ### `test-no-typed-enqueue-fake`
 
 Opt-in. `singleExportPattern?: string` matches the imported export name with a

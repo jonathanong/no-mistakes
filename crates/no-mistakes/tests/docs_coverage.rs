@@ -363,6 +363,7 @@ fn test_file_hygiene_eslint_rules_have_public_docs_and_options() {
     let plugin_docs = read(&root.join("docs/eslint-plugin.md"));
     for rule in [
         "test-no-fixed-temp-paths",
+        "test-no-style-class-assertion",
         "test-no-typed-enqueue-fake",
         "test-no-wall-time-assertions",
     ] {
