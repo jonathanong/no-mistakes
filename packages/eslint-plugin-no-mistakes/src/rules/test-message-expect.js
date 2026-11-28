@@ -167,7 +167,7 @@ function expectArguments(node, context) {
       args = elements;
     }
   }
-  return isExpectCallee(callee, context) ? args : null;
+  return isExpectCallee(callee, context, new Set(), null, { allowForwarding: false }) ? args : null;
 }
 
 function isExpectCall(node, context) {

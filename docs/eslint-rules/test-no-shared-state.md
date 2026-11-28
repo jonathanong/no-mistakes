@@ -43,7 +43,7 @@ test("user", () => {
   A destructured `expect` does not. A computed key such as
   `const { ["test"]: check } = require("vitest")` is not a test registration.
   `const check = require(spec).test` and `let vt = require(spec); vt.test(...)`
-  report `unanalyzable`.
+  report `unanalyzable`. A stable `let { runner } = require(specifier); runner.test(...)` does too. A later write of `runner`, and `let { [key]: named }`, do not.
 
 `const vt = require("vitest")`, `const { test } = require("vitest")`,
 `const check = require("vitest").test`,

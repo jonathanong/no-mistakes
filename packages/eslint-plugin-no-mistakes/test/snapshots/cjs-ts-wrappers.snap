@@ -601,6 +601,12 @@
       "options": null
     },
     {
+      "file": "import-expect.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "inline-other.js",
       "findings": [],
       "kind": "valid",
@@ -1316,6 +1322,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "import-static.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 2,
+          "file": "import-static.test.ts",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "no-vitest-sequential:sequential-ignore": [
@@ -1875,6 +1899,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "nested-forward.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 46,
+          "endLine": 6,
+          "file": "nested-forward.test.ts",
+          "line": 6,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-error-message-matching:message-ignore": [
@@ -2131,6 +2173,12 @@
     },
     {
       "file": "reassigned-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "let-namespace-quiet.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -2587,6 +2635,24 @@
       "options": null
     },
     {
+      "file": "let-namespace.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 6,
+          "file": "let-namespace.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
       "file": "nested-call.test.ts",
       "findings": [
         {
@@ -2638,6 +2704,16 @@
     },
     {
       "file": "let-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "let-namespace.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -2949,6 +3025,30 @@
           "line": 4,
           "message": "Cannot tell whether this modifier skips a test. Use a static test, it, or describe binding.",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "wrapped-import.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 3,
+          "file": "wrapped-import.test.ts",
+          "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
           "ruleId": "no-mistakes/test-no-skips",
           "severity": 2
         }
@@ -3389,6 +3489,28 @@
           "singleExportPattern": "^enqueue$"
         }
       ]
+    },
+    {
+      "file": "let-binding.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 4,
+          "file": "let-binding.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
     }
   ],
   "test-no-typed-enqueue-fake:enqueue-ignore": [
@@ -3405,6 +3527,17 @@
     },
     {
       "file": "opaque-receiver.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$",
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "let-binding.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [

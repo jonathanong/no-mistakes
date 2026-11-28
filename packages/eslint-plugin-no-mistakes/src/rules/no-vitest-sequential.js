@@ -129,7 +129,7 @@ function isSequentialCall(node, context, roots, namespaces) {
       (isUnshadowedNamespace(info.root, context, namespaces) &&
         named &&
         info.names.some((name) => TEST_NAMES.has(name))) ||
-      destructuredTest(info.root, context, namespaces) ||
+      (named && destructuredTest(info.root, context, namespaces)) ||
       (info.vitestRequire && named && info.names.some((name) => TEST_NAMES.has(name)));
     return known && (info.names.includes("sequential") || hasSequentialOption(node));
   };

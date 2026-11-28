@@ -4,6 +4,8 @@ const { posix } = require("node:path");
 const { options, rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { isTransparentExpression, unwrapExpression } = require("./async-ast");
+const { isReassigned, resolveVariable } = require("./async-target-bindings");
+const { requireResolution } = require("./async-target-sources");
 const { isUnresolved, moduleLoad } = require("./module-load");
 const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
 const { memberPropertyName } = require("./logical-call");
@@ -17,6 +19,15 @@ const {
 } = require("./test-no-typed-enqueue-fake-helpers");
 
 const id = "test-no-typed-enqueue-fake";
+
+function stableLetLoad(node, context) {
+  const target = unwrapExpression(node);
+  if (target?.type !== "Identifier" || isReassigned(target, context)) return false;
+  const variable = resolveVariable(target, context);
+  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  if (def?.type !== "Variable" || def.parent?.kind === "const") return false;
+  return requireResolution(def.node?.init, context)?.source === null;
+}
 
 function exportPattern(pattern) {
   if (pattern === undefined) return null;
@@ -158,9 +169,9 @@ module.exports = rule(
         const argument = unwrapExpression(node.arguments[0]);
         if (!isFrameworkReceiver(callee.object, sourceCode)) {
           const unresolved =
-            method === "mocked"
-              ? isUnresolved(moduleLoad(argument, context))
-              : method === "fn" && unresolvedTypedTarget(typeArgParams(typeNode), context);
+            (method === "mocked" &&
+              (isUnresolved(moduleLoad(argument, context)) || stableLetLoad(argument, context))) ||
+            (method === "fn" && unresolvedTypedTarget(typeArgParams(typeNode), context));
           if (
             unresolved &&
             opaqueFrameworkReceiver(callee.object, sourceCode) &&
@@ -180,6 +191,7 @@ module.exports = rule(
           !suppressed(node) &&
           !(method === "mocked" && excludedExport(argument)) &&
           (isUnresolved(moduleLoad(method === "mocked" ? argument : callee, context)) ||
+            stableLetLoad(method === "mocked" ? argument : callee, context) ||
             (method === "fn" && unresolvedTypedTarget(typeArgParams(typeNode), context)))
         ) {
           reportUnanalyzable(context, node, "this enqueue fake");

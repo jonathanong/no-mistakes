@@ -42,6 +42,7 @@ const groups = [
       "each-nested.test.ts",
       "pattern-shape.js",
       "inline-dynamic.js",
+      "import-static.test.ts",
     ],
     valid: [
       "not-a-runner.test.ts",
@@ -55,6 +56,7 @@ const groups = [
       "nested-name.js",
       "computed-destructure.test.ts",
       "computed-registered.test.ts",
+      "import-expect.test.ts",
       "inline-other.js",
     ],
   },
@@ -160,6 +162,7 @@ const groups = [
       "destructured-dynamic.test.ts",
       "member-dynamic.test.ts",
       "let-dynamic.test.ts",
+      "let-namespace.test.ts",
       "nested-call.test.ts",
     ],
     valid: [
@@ -172,6 +175,7 @@ const groups = [
       "reassign.test.ts",
       "computed-key.test.ts",
       "reassigned-dynamic.test.ts",
+      "let-namespace-quiet.test.ts",
       "member-receiver.test.ts",
       "playwright-default.test.ts",
       "alias-let.test.ts",
@@ -186,6 +190,7 @@ const groups = [
       "destructured-dynamic.test.ts",
       "member-dynamic.test.ts",
       "let-dynamic.test.ts",
+      "let-namespace.test.ts",
     ],
   },
   {
@@ -225,6 +230,7 @@ const groups = [
       "spread-apply.test.ts",
       "static-apply.test.ts",
       "default-expect.test.ts",
+      "nested-forward.test.ts",
     ],
     valid: [
       "default-direct.test.ts",
@@ -267,6 +273,7 @@ const groups = [
       "member-export.test.ts",
       "opaque-receiver.test.ts",
       "inline-require.test.ts",
+      "let-binding.test.ts",
     ],
     valid: [
       "tuple.test.ts",
@@ -290,7 +297,7 @@ const groups = [
     rule: "test-no-typed-enqueue-fake",
     dir: "enqueue-ignore",
     options: [{ singleExportPattern: "^enqueue$", unanalyzable: "ignore" }],
-    valid: ["dynamic.test.ts", "opaque-receiver.test.ts"],
+    valid: ["dynamic.test.ts", "opaque-receiver.test.ts", "let-binding.test.ts"],
   },
   {
     rule: "vitest-timeout-cap",
@@ -326,6 +333,7 @@ const groups = [
       "awaited.test.ts",
       "member-require.js",
       "dynamic-import.test.ts",
+      "wrapped-import.test.ts",
     ],
     valid: ["not-a-runner.js", "computed-runner.js", "computed-dynamic.test.ts"],
   },

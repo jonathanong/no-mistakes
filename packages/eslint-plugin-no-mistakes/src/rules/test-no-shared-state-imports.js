@@ -47,13 +47,8 @@ function recordModuleBinding(source, id, testCalleeNames, namespaces, testAliase
 
 function recordMemberRequire(declaration, testCalleeNames, testAliases, context) {
   const init = unwrapExpression(declaration?.init);
-  if (
-    init?.type !== "MemberExpression" ||
-    init.computed ||
-    declaration?.id?.type !== "Identifier"
-  ) {
-    return false;
-  }
+  if (init?.type !== "MemberExpression" || init.computed) return false;
+  if (declaration?.id?.type !== "Identifier") return false;
   const source = requireSource(init.object, context);
   const key = init.property?.type === "Identifier" ? init.property.name : null;
   if ((source !== "vitest" && source !== "@playwright/test") || !TEST_NAMES.has(key)) return false;
@@ -129,11 +124,13 @@ function dynamicLetReceiver(node, context) {
   if (target?.type !== "Identifier") return false;
   const variable = resolveVariable(target, context);
   const def = variable?.defs.length === 1 ? variable.defs[0] : null;
-  return (
-    def?.type === "Variable" &&
-    def.parent?.kind !== "const" &&
-    def.node?.id?.type === "Identifier" &&
-    requireResolution(def.node.init, context)?.source === null
+  if (def?.type !== "Variable" || def.parent?.kind === "const") return false;
+  if (requireResolution(def.node?.init, context)?.source !== null) return false;
+  const id = def.node.id;
+  if (id?.type === "Identifier") return true;
+  if (isReassigned(target, context)) return false;
+  return (id?.properties || []).some(
+    (property) => !property.computed && property.value?.name === target.name,
   );
 }
 

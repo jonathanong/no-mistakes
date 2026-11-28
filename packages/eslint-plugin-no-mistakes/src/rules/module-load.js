@@ -57,6 +57,7 @@ function moduleLoad(node, context, seen = new Set()) {
   if (node.type === "ImportExpression") {
     const source = literalString(unwrapExpression(node.source));
     if (source === null) return { source: null };
+    return { source, exportName: "*" };
   }
   const required = requireResolution(node, context);
   if (required)

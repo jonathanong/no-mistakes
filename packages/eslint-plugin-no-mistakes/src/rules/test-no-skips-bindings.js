@@ -86,7 +86,8 @@ function imported(node, context, namespace = false, seen = new Set()) {
       if (exported) source = exported.source;
       else if (required) source = required.source;
       else if (init.type === "ImportExpression" && awaited) {
-        source = init.source?.type === "Literal" ? init.source.value : null;
+        const specifier = unwrapExpression(init.source);
+        source = specifier?.type === "Literal" ? specifier.value : null;
       }
       if (declaration.id.type === "ObjectPattern") {
         importedName = patternBindingName(declaration.id, node.name);
