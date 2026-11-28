@@ -69,7 +69,15 @@ fn configured_excluded_dependency_preserves_each_root_context() {
     assert_eq!(report["rules"], serde_json::json!([]), "{report}");
     assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
     assert_eq!(diagnostics.work["postgres.annotation.roots"], 2);
-    assert_eq!(diagnostics.work["postgres.annotation.module"], 4);
+    assert_eq!(
+        diagnostics.work["postgres.annotation.shared_init.builds"],
+        1
+    );
+    assert_eq!(
+        diagnostics.work["postgres.annotation.shared_init.cache_hits"],
+        1
+    );
+    assert_eq!(diagnostics.work["postgres.annotation.module"], 3);
 }
 
 #[test]
@@ -80,5 +88,13 @@ fn excluded_scalar_preparation_preserves_many_root_contexts() {
     assert_eq!(report["rules"], serde_json::json!([]), "{report}");
     assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
     assert_eq!(diagnostics.work["postgres.annotation.roots"], 32);
-    assert_eq!(diagnostics.work["postgres.annotation.module"], 64);
+    assert_eq!(
+        diagnostics.work["postgres.annotation.shared_init.builds"],
+        1
+    );
+    assert_eq!(
+        diagnostics.work["postgres.annotation.shared_init.cache_hits"],
+        31
+    );
+    assert_eq!(diagnostics.work["postgres.annotation.module"], 33);
 }

@@ -16,6 +16,12 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
             ids,
         );
     modules.insert(module_id, 1);
+    modules
+        .capture_on_init
+        .insert(module_id, vec![(1, Default::default())]);
+    modules
+        .captured_inits
+        .insert(module_id, Some((1, Default::default())));
     let mut evaluator = Evaluator {
         files: &files,
         resolve: |_: &str, _: &Path| -> Option<PathBuf> { None },
@@ -87,6 +93,8 @@ fn snapshot_pruning_reuses_compaction_for_cyclic_arguments_and_builder_updates()
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
     evaluator.prune_snapshot_state();
+    assert!(evaluator.modules.capture_on_init.is_empty());
+    assert!(evaluator.modules.captured_inits.is_empty());
     assert_eq!(evaluator.scopes.len(), 2);
     assert_eq!(evaluator.modules[&module_id], 0);
     assert!(matches!(

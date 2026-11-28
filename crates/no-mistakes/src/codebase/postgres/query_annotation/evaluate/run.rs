@@ -1,13 +1,17 @@
 use super::{Evaluator, Value};
-use crate::codebase::postgres::query_annotation::Expr;
-use crate::fx::FxHashMap;
+use crate::codebase::postgres::query_annotation::{Expr, Function};
+use crate::fx::{FxHashMap, FxHashSet};
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 mod entrypoints;
+pub(in crate::codebase::postgres::query_annotation) mod preload;
 mod reachability;
+mod snapshot;
 
 use reachability::export_reachable_globals;
+use snapshot::RunSnapshot;
 
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub fn run(&mut self, path: &Path) {
@@ -18,62 +22,16 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             self.prune_snapshot_state()
         });
         let env = self.modules[&self.module_ids().id(path)];
-        let unmodeled = &file.facts.unmodeled_calls;
-        let timing = super::super::progress::timing("postgres.annotation.snapshot_clone");
-        let scopes = self.scopes.clone();
-        let modules = self.modules.clone();
-        let invalidated = self.invalidated_builders.clone();
-        let deleted = self.deleted_argument_slots.clone();
-        let mapped = self.mapped_arguments.clone();
-        let fresh = self.fresh_mapped_parameters.clone();
-        let objects = self.argument_objects.clone();
-        let extra_slots = self.argument_extra_slots.clone();
-        let definite = self.definite_deleted_argument_slots.clone();
-        let recreated = self.recreated_argument_slots.clone();
-        let disconnected = self.disconnected_argument_slots.clone();
-        let builder_updates = self.builder_updates.clone();
-        let untrusted_array_intrinsics = self.untrusted_array_intrinsics;
-        let captured_bindings = self.captured_bindings.clone();
-        let captured_binding_readers = self.captured_binding_readers.clone();
-        let mapped_argument_owners = self.mapped_argument_owners.clone();
-        let mapped_parameter_indices = self.mapped_parameter_indices.clone();
-        drop(timing);
-        for call in unmodeled {
-            if file.facts.precise_records
-                && matches!(call, Expr::Call { start, end, .. } if file.facts.branch_calls.contains(&(*start, *end)))
-            {
-                continue;
-            }
-            if matches!(call, Expr::Call { start, end, .. } if !file.executors.contains(&(*start, *end)))
-            {
-                let timing = super::super::progress::timing("postgres.annotation.snapshot_restore");
-                self.scopes.clone_from(&scopes);
-                self.modules.clone_from(&modules);
-                self.invalidated_builders.clone_from(&invalidated);
-                self.deleted_argument_slots.clone_from(&deleted);
-                self.mapped_arguments.clone_from(&mapped);
-                self.fresh_mapped_parameters.clone_from(&fresh);
-                self.rebuild_fresh_mapped_argument_bindings();
-                self.argument_objects.clone_from(&objects);
-                self.argument_extra_slots.clone_from(&extra_slots);
-                self.definite_deleted_argument_slots.clone_from(&definite);
-                self.recreated_argument_slots.clone_from(&recreated);
-                self.disconnected_argument_slots.clone_from(&disconnected);
-                self.builder_updates.clone_from(&builder_updates);
-                self.untrusted_array_intrinsics = untrusted_array_intrinsics;
-                self.captured_bindings.clone_from(&captured_bindings);
-                self.captured_binding_readers
-                    .clone_from(&captured_binding_readers);
-                self.mapped_argument_owners
-                    .clone_from(&mapped_argument_owners);
-                self.mapped_parameter_indices
-                    .clone_from(&mapped_parameter_indices);
-                drop(timing);
-                let timing = super::super::progress::timing("postgres.annotation.unmodeled_call");
-                self.expr(call, path, &env, 16, false);
-                drop(timing);
-            }
-        }
+        let runnable_unmodeled = file
+            .facts
+            .unmodeled_calls
+            .iter()
+            .filter(|call| {
+                !(file.facts.precise_records
+                    && matches!(call, Expr::Call { start, end, .. } if file.facts.branch_calls.contains(&(*start, *end))))
+                    && matches!(call, Expr::Call { start, end, .. } if !file.executors.contains(&(*start, *end)))
+            })
+            .collect::<Vec<_>>();
         // Function declarations describe possible entrypoints; contextual
         // callback invocations take precedence over this unknown input.
         let reachable = file.facts.precise_records.then(|| {
@@ -88,6 +46,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             )
         });
         let mut seen_functions = BTreeSet::new();
+        let mut runnable_functions = Vec::new();
         for (name, expr) in globals {
             // Only exported functions are independently callable by a
             // supplied-source consumer. A private callback still contributes
@@ -99,64 +58,80 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             {
                 continue;
             }
-            let mut functions = Vec::new();
             if file.facts.precise_records {
                 entrypoints::collect(
                     globals,
                     expr,
                     &mut BTreeSet::new(),
                     &mut seen_functions,
-                    &mut functions,
+                    &mut runnable_functions,
                 );
             } else if let Expr::Function(function) = expr {
-                functions.push(std::sync::Arc::clone(function));
-            }
-            for function in functions {
-                // Speculative entrypoints share initialized facts, never effects
-                // from an unrelated function considered earlier in name order.
-                let timing = super::super::progress::timing("postgres.annotation.snapshot_restore");
-                self.scopes.clone_from(&scopes);
-                self.modules.clone_from(&modules);
-                self.invalidated_builders.clone_from(&invalidated);
-                self.deleted_argument_slots.clone_from(&deleted);
-                self.mapped_arguments.clone_from(&mapped);
-                self.fresh_mapped_parameters.clone_from(&fresh);
-                self.rebuild_fresh_mapped_argument_bindings();
-                self.argument_objects.clone_from(&objects);
-                self.argument_extra_slots.clone_from(&extra_slots);
-                self.definite_deleted_argument_slots.clone_from(&definite);
-                self.recreated_argument_slots.clone_from(&recreated);
-                self.disconnected_argument_slots.clone_from(&disconnected);
-                self.builder_updates.clone_from(&builder_updates);
-                self.untrusted_array_intrinsics = untrusted_array_intrinsics;
-                self.captured_bindings.clone_from(&captured_bindings);
-                self.captured_binding_readers
-                    .clone_from(&captured_binding_readers);
-                self.mapped_argument_owners
-                    .clone_from(&mapped_argument_owners);
-                self.mapped_parameter_indices
-                    .clone_from(&mapped_parameter_indices);
-                drop(timing);
-                let mut values: FxHashMap<String, Value> = function
-                    .params
-                    .iter()
-                    .map(|name| (name.clone(), Value::Unknown))
-                    .collect();
-                if !function.arrow {
-                    values.insert("arguments".into(), Value::Unknown);
-                }
-                if let Some(name) = &function.self_name {
-                    values.insert(name.clone(), Value::Unknown);
-                }
-                let mut env = self.environment(values);
-                super::super::progress::trace(
-                    "postgres.annotation.entrypoint",
-                    path,
-                    Some(function.start),
-                    || self.steps(&function.body, path, &mut env, 16, true),
-                );
+                runnable_functions.push(Arc::clone(function));
             }
         }
+        let total_tasks = runnable_unmodeled.len() + runnable_functions.len();
+        if total_tasks == 0 {
+            return;
+        }
+        if total_tasks == 1 {
+            if let Some(call) = runnable_unmodeled.first() {
+                let timing = super::super::progress::timing("postgres.annotation.unmodeled_call");
+                self.expr(call, path, &env, 16, false);
+                drop(timing);
+            } else if let Some(function) = runnable_functions.first() {
+                self.run_entrypoint(path, function);
+            }
+            return;
+        }
+        let mut snapshot = RunSnapshot::capture(self);
+        let mut unpromotable = FxHashSet::default();
+        let mut completed = 0usize;
+        for call in runnable_unmodeled {
+            if completed > 0 {
+                snapshot.restore(self);
+            }
+            let timing = super::super::progress::timing("postgres.annotation.unmodeled_call");
+            self.expr(call, path, &env, 16, false);
+            drop(timing);
+            completed += 1;
+            if completed < total_tasks {
+                snapshot.promote_reused(self, &mut unpromotable, total_tasks - completed);
+            }
+        }
+        for function in runnable_functions {
+            // Speculative entrypoints share initialized facts, never effects
+            // from an unrelated function considered earlier in name order.
+            if completed > 0 {
+                snapshot.restore(self);
+            }
+            self.run_entrypoint(path, &function);
+            completed += 1;
+            if completed < total_tasks {
+                snapshot.promote_reused(self, &mut unpromotable, total_tasks - completed);
+            }
+        }
+    }
+
+    fn run_entrypoint(&mut self, path: &Path, function: &Function) {
+        let mut values: FxHashMap<String, Value> = function
+            .params
+            .iter()
+            .map(|name| (name.clone(), Value::Unknown))
+            .collect();
+        if !function.arrow {
+            values.insert("arguments".into(), Value::Unknown);
+        }
+        if let Some(name) = &function.self_name {
+            values.insert(name.clone(), Value::Unknown);
+        }
+        let mut env = self.environment(values);
+        super::super::progress::trace(
+            "postgres.annotation.entrypoint",
+            path,
+            Some(function.start),
+            || self.steps(&function.body, path, &mut env, 16, true),
+        );
     }
 }
 

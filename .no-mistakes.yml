@@ -136,11 +136,13 @@ rules:
 
   - rule: github-actions-step-timeouts
     scope: repository
+    exclude: *fixture_excludes
     options:
       include: &ci_budget_workflows [.github/workflows/ci.yml, .github/workflows/benchmarks.yml]
       maxMinutes: 30
   - rule: github-actions-job-timeouts
     scope: repository
+    exclude: *fixture_excludes
     options:
       include: *ci_budget_workflows
       maxMinutes: 30

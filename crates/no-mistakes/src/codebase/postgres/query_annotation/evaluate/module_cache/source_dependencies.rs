@@ -28,6 +28,10 @@ impl SourceDependencies {
         }))))
     }
 
+    pub fn is_tracking(&self) -> bool {
+        self.0.is_some()
+    }
+
     pub fn consult(&self, path: &Path) {
         let Some(state) = &self.0 else { return };
         let mut state = state.lock().unwrap();

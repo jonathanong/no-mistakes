@@ -12,12 +12,18 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     // demand::roots mirrors file reach through runtime import/re-export edges.
     // Any new non-import route into another file must also be represented there
     // before executor-free roots can safely be pruned.
-    pub(super) fn module_environment(&mut self, path: &Path) -> Environment {
+    pub(in crate::codebase::postgres::query_annotation) fn module_environment(
+        &mut self,
+        path: &Path,
+    ) -> Environment {
         self.modules.sources.consult(path);
         let module_id = self.module_ids().id(path);
         if let Some(env) = self.modules.get(&module_id) {
             self.modules.sources.replay(path);
             return *env;
+        }
+        if let Some(env) = self.try_install_shared_module(path, module_id) {
+            return env;
         }
         self.modules.sources.begin(path);
         self.modules.sources.consult(path);
@@ -66,6 +72,10 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                 self.invalidate_live_builders();
             }
         }
+        let shared_guard = self.begin_shared_capture(module_id, env);
+        let before = shared_guard
+            .as_ref()
+            .map_or_else(|| self.init_purity_snapshot(env), |guard| guard.before());
         let facts = &files[path].facts;
         self.steps(&facts.roots, path, &mut env, 16, true);
         // A dependency's top-level opaque effect may mutate a builder owned
@@ -104,6 +114,20 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             }
         }
         self.record_alternative_module_initial(path, env);
+        if let Some(guard) = shared_guard {
+            self.finish_shared_capture(module_id, env, guard);
+        }
+        if let Some(expected_deps) = self.modules.capture_on_init.remove(&module_id) {
+            let deps_unchanged = expected_deps.iter().all(|(dep_env, expected)| {
+                self.scopes
+                    .get(*dep_env)
+                    .is_some_and(|cur| cur.same_bindings(expected) || cur == expected)
+            });
+            let clean = deps_unchanged && self.is_clean_init(env, before);
+            self.modules
+                .captured_inits
+                .insert(module_id, clean.then(|| (env, self.scopes[env].clone())));
+        }
         env
     }
 }

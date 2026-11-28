@@ -5,21 +5,24 @@ fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
 }
 
-#[test]
-fn annotation_scope_counters_are_verbose_only_and_preserve_json() {
-    let root =
-        fixture("rules", "postgres-require-query-annotation").join("helper-tracing-excluded-roots");
-    let args = [
+fn check_json(root: &std::path::Path, extra: &[&str]) -> Output {
+    let mut args = vec![
         "check",
         "--root",
         root.to_str().unwrap(),
         "--format",
         "json",
     ];
-    let plain = run(&args);
-    let mut observed_args = args.to_vec();
-    observed_args.push("--verbose-timings");
-    let observed = run(&observed_args);
+    args.extend_from_slice(extra);
+    run(&args)
+}
+
+#[test]
+fn annotation_scope_counters_are_verbose_only_and_preserve_json() {
+    let base = fixture("rules", "postgres-require-query-annotation");
+    let root = base.join("helper-tracing-excluded-roots");
+    let plain = check_json(&root, &[]);
+    let observed = check_json(&root, &["--verbose-timings"]);
     assert_eq!(plain.status.code(), Some(1));
     assert_eq!(plain.status.code(), observed.status.code());
     assert_eq!(plain.stdout, observed.stdout);
@@ -45,9 +48,21 @@ fn annotation_scope_counters_are_verbose_only_and_preserve_json() {
         err.contains("[timing] postgres.annotation.shared_init.build: 0.000ms"),
         "{err}"
     );
-    let mut timing_args = args.to_vec();
-    timing_args.push("--timings");
-    let coarse = run(&timing_args);
+    assert!(err.contains("[note] postgres.annotation.shared_init.profile[0]: disabled (reason=fewer_than_two_roots, roots=1)"), "{err}");
+    for (name, reason) in [
+        (
+            "helper-tracing-shared-init-no-shared-imports",
+            "no_shared_imports",
+        ),
+        (
+            "helper-tracing-shared-init-failed-sql-sources",
+            "failed_sql_sources",
+        ),
+    ] {
+        let note_err = stderr(&check_json(&base.join(name), &["--verbose-timings"]));
+        assert!(note_err.contains(&format!("[note] postgres.annotation.shared_init.profile[0]: disabled (reason={reason}, roots=2)")), "{note_err}");
+    }
+    let coarse = check_json(&root, &["--timings"]);
     assert_eq!(plain.stdout, coarse.stdout);
     assert!(!stderr(&coarse).contains("roots_before_scoping"));
 }
@@ -85,15 +100,7 @@ fn stderr(output: &Output) -> String {
 #[test]
 fn global_check_timings_are_reported_in_phase_order() {
     let root = fixture("codebase-analysis", "check-configured-only");
-    let output = run(&[
-        "check",
-        "--root",
-        root.to_str().unwrap(),
-        "--format",
-        "json",
-        "--timings",
-    ]);
-
+    let output = check_json(&root, &["--timings"]);
     assert!(output.status.success());
     let err = stderr(&output);
     let mut previous = 0;
@@ -109,15 +116,7 @@ fn global_check_timings_are_reported_in_phase_order() {
 #[test]
 fn global_check_verbose_timings_reports_fine_grained_labels() {
     let root = fixture("codebase-analysis", "forbidden-dependencies-basic");
-    let output = run(&[
-        "check",
-        "--root",
-        root.to_str().unwrap(),
-        "--format",
-        "json",
-        "--timings",
-        "--verbose-timings",
-    ]);
+    let output = check_json(&root, &["--timings", "--verbose-timings"]);
 
     assert_eq!(output.status.code(), Some(1));
     let err = stderr(&output);

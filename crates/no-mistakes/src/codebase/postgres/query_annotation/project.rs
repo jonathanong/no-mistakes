@@ -13,6 +13,7 @@ mod merge;
 pub(in crate::codebase::postgres::query_annotation) mod output;
 mod parallel;
 mod prepare;
+pub(in crate::codebase::postgres::query_annotation) mod shared_init;
 mod work;
 
 #[derive(Clone, Debug, Eq, PartialEq)]

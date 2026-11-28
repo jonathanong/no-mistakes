@@ -278,3 +278,106 @@ fn missing_prepared_eager_and_runtime_modules_remain_observed_on_cache_hits() {
         super::super::Value::Unknown
     ));
 }
+
+#[test]
+fn promote_reused_captures_pure_without_extra_init_and_skips_impure() {
+    use crate::codebase::postgres::query_annotation::{Expr, QueryAnnotationFileFacts, Step};
+    use std::sync::Arc;
+    let impure = PathBuf::from("impure.mts");
+    let pure = PathBuf::from("pure.mts");
+    let mut impure_facts = QueryAnnotationFileFacts::default();
+    impure_facts.roots.push(Step::Effect(Expr::Call {
+        callee: Box::new(Expr::Name("query".into())),
+        args: vec![Expr::Text("SELECT 1".into())],
+        start: 10,
+        end: 25,
+    }));
+    let mut pure_facts = QueryAnnotationFileFacts::default();
+    pure_facts
+        .roots
+        .push(Step::Bind("label".into(), Expr::Text("ok".into())));
+    let mut files = FxHashMap::default();
+    files.insert(
+        impure.clone(),
+        File {
+            facts: &impure_facts,
+            module: Arc::new(Module::new(Arc::new(TsFileFacts::default()))),
+            executors: [(10, 25)].into_iter().collect(),
+        },
+    );
+    files.insert(
+        pure.clone(),
+        File {
+            facts: &pure_facts,
+            module: Arc::new(Module::new(Arc::new(TsFileFacts::default()))),
+            executors: Default::default(),
+        },
+    );
+    let mut evaluator = super::super::Evaluator {
+        files: &files,
+        resolve: |_: &str, _: &std::path::Path| None,
+        events: Default::default(),
+        event_log: Default::default(),
+        scopes: Vec::new(),
+        modules: Default::default(),
+        active_module_initials: Default::default(),
+        transient_roots: Default::default(),
+        active_callback_functions: Default::default(),
+        active_callback_executions: Default::default(),
+        untrusted_array_intrinsics: false,
+        next_builder: 0,
+        builder_tags: Default::default(),
+        invalidated_builders: Default::default(),
+        builder_updates: Default::default(),
+        captured_bindings: Default::default(),
+        captured_binding_readers: Default::default(),
+        mapped_argument_owners: Default::default(),
+        mapped_parameter_indices: Default::default(),
+        deleted_argument_slots: Default::default(),
+        argument_objects: Default::default(),
+        argument_extra_slots: Default::default(),
+        definite_deleted_argument_slots: Default::default(),
+        recreated_argument_slots: Default::default(),
+        disconnected_argument_slots: Default::default(),
+        fresh_mapped_parameters: Default::default(),
+        fresh_mapped_argument_bindings: Default::default(),
+        mapped_arguments: Default::default(),
+    };
+    let mut snapshot = super::RunSnapshot::capture(&evaluator);
+    let mut unpromotable = crate::fx::FxHashSet::default();
+    let impure_id = evaluator.module_ids().id(&impure);
+    let pure_id = evaluator.module_ids().id(&pure);
+
+    // Task 0 loads both impure and pure modules naturally.
+    evaluator.module_environment(&impure);
+    evaluator.module_environment(&pure);
+    snapshot.promote_reused(&mut evaluator, &mut unpromotable, 3);
+    assert!(unpromotable.contains(&impure_id));
+    assert!(snapshot.modules.capture_on_init.contains_key(&pure_id));
+    assert!(!snapshot.modules.contains_key(&pure_id));
+
+    // Task 1 restores snapshot and loads pure module naturally -> captured in-place.
+    snapshot.restore(&mut evaluator);
+    evaluator.module_environment(&pure);
+    snapshot.promote_reused(&mut evaluator, &mut unpromotable, 2);
+    assert!(snapshot.modules.contains_key(&pure_id));
+    assert!(!snapshot.modules.capture_on_init.contains_key(&pure_id));
+
+    // Direct reference-bearing or foreign-env captured scopes are rejected.
+    let mut ref_vals = FxHashMap::default();
+    ref_vals.insert("arr".into(), super::super::Value::Array(1));
+    evaluator
+        .modules
+        .captured_inits
+        .insert(impure_id, Some((99, super::super::Scope::from(ref_vals))));
+    unpromotable.remove(&impure_id);
+    evaluator.modules.insert(impure_id, 99);
+    snapshot.promote_reused(&mut evaluator, &mut unpromotable, 1);
+    assert!(unpromotable.contains(&impure_id));
+
+    // Rejected in-place capture (e.g. intrinsic-trust mutation) marks unpromotable.
+    evaluator.modules.captured_inits.insert(impure_id, None);
+    unpromotable.remove(&impure_id);
+    snapshot.promote_reused(&mut evaluator, &mut unpromotable, 1);
+    assert!(unpromotable.contains(&impure_id));
+}

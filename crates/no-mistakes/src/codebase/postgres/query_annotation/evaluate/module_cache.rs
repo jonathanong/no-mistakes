@@ -1,4 +1,4 @@
-use super::{Environment, Evaluator};
+use super::{Environment, Evaluator, Scope};
 use crate::codebase::postgres::query_annotation::module_ids::{ModuleId, ModuleIds};
 use crate::fx::FxHashMap;
 use std::ops::{Deref, DerefMut};
@@ -10,10 +10,19 @@ use std::sync::{Arc, OnceLock};
 pub(in crate::codebase::postgres::query_annotation) struct ModuleCache {
     ids: OnceLock<Arc<ModuleIds>>,
     values: FxHashMap<ModuleId, Environment>,
+    pub(in crate::codebase::postgres::query_annotation) shared: Option<Arc<shared::SharedInit>>,
     pub(in crate::codebase::postgres::query_annotation) sources:
         source_dependencies::SourceDependencies,
+    pub(in crate::codebase::postgres::query_annotation) capture_on_init:
+        FxHashMap<ModuleId, Vec<(Environment, Scope)>>,
+    pub(in crate::codebase::postgres::query_annotation) captured_inits:
+        FxHashMap<ModuleId, Option<(Environment, Scope)>>,
+    pub(in crate::codebase::postgres::query_annotation) untrusted_intrinsic_writes: u64,
+    pub(in crate::codebase::postgres::query_annotation) untrusted_intrinsic_reads: u64,
+    pub(in crate::codebase::postgres::query_annotation) builder_update_writes: u64,
 }
 
+pub(in crate::codebase::postgres::query_annotation) mod shared;
 pub(in crate::codebase::postgres::query_annotation) mod source_dependencies;
 
 impl PartialEq for ModuleCache {
@@ -28,7 +37,13 @@ impl ModuleCache {
         Self {
             ids: OnceLock::from(ids),
             values: FxHashMap::default(),
+            shared: None,
             sources: Default::default(),
+            capture_on_init: FxHashMap::default(),
+            captured_inits: FxHashMap::default(),
+            untrusted_intrinsic_writes: 0,
+            untrusted_intrinsic_reads: 0,
+            builder_update_writes: 0,
         }
     }
 }
@@ -45,9 +60,59 @@ impl DerefMut for ModuleCache {
     }
 }
 
+#[derive(Clone, Copy)]
+pub(in crate::codebase::postgres::query_annotation) struct InitPuritySnapshot {
+    pub(in crate::codebase::postgres::query_annotation) untrusted: bool,
+    pub(in crate::codebase::postgres::query_annotation) untrusted_reads: u64,
+    untrusted_writes: u64,
+    events: usize,
+    invalidated: usize,
+    builder_updates: usize,
+    builder_update_writes: u64,
+    captured_prefix: usize,
+}
+
 impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
     pub(super) fn module_ids(&self) -> &ModuleIds {
         self.shared_module_ids()
+    }
+
+    pub(in crate::codebase::postgres::query_annotation) fn init_purity_snapshot(
+        &self,
+        env: Environment,
+    ) -> InitPuritySnapshot {
+        InitPuritySnapshot {
+            untrusted: self.untrusted_array_intrinsics,
+            untrusted_reads: self.modules.untrusted_intrinsic_reads,
+            untrusted_writes: self.modules.untrusted_intrinsic_writes,
+            events: self.event_log.len(),
+            invalidated: self.invalidated_builders.len(),
+            builder_updates: self.builder_updates.len(),
+            builder_update_writes: self.modules.builder_update_writes,
+            captured_prefix: self.captured_prefix_count(env),
+        }
+    }
+
+    pub(in crate::codebase::postgres::query_annotation) fn is_clean_init(
+        &self,
+        env: Environment,
+        before: InitPuritySnapshot,
+    ) -> bool {
+        self.untrusted_array_intrinsics == before.untrusted
+            && self.modules.untrusted_intrinsic_writes == before.untrusted_writes
+            && self.event_log.len() == before.events
+            && self.invalidated_builders.len() == before.invalidated
+            && self.builder_updates.len() == before.builder_updates
+            && self.modules.builder_update_writes == before.builder_update_writes
+            && self.captured_prefix_count(env) == before.captured_prefix
+            && !self.scopes[env].contains_reference()
+    }
+
+    fn captured_prefix_count(&self, env: Environment) -> usize {
+        self.captured_bindings
+            .keys()
+            .filter(|&&frame| frame <= env)
+            .count()
     }
 
     pub(in crate::codebase::postgres::query_annotation) fn shared_module_ids(
