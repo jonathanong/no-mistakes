@@ -1,4 +1,4 @@
-import type { Unanalyzable } from "./invocation-types";
+import type { Unanalyzable } from "./traversal-types";
 
 export interface QueueRateLimitErrorDelayTarget {
   /** Import specifier or repository module exporting the rate-limit error or static factory. */
