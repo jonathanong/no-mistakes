@@ -3,10 +3,7 @@ use crate::codebase::rules;
 
 pub(super) const VALIDATORS: &[RuleValidator] = &[
     (rules::DEPENDABOT_COOLDOWN_POLICY, |rule, _| {
-        rules::filesystem_dispatch::dependabot_cooldown_policy::compile_options(
-            &rule.strict_rule_options()?,
-        )
-        .map(drop)
+        rules::dependabot_cooldown_policy::compile_options(&rule.strict_rule_options()?).map(drop)
     }),
     (
         rules::github_actions_checkout_credentials::RULE_ID,

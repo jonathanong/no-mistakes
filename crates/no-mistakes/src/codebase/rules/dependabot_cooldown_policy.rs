@@ -23,7 +23,7 @@ pub(in crate::codebase::rules) struct Options {
     exempt_ecosystems: Vec<String>,
 }
 
-pub(super) fn check_with_files(
+pub(crate) fn check_with_files(
     root: &Path,
     config: &NoMistakesConfig,
     files: &[PathBuf],
@@ -35,7 +35,7 @@ pub(super) fn check_with_files(
     })
 }
 
-pub(super) fn check_prepared(
+pub(crate) fn check_prepared(
     root: &Path,
     config: &NoMistakesConfig,
     files: &[PathBuf],

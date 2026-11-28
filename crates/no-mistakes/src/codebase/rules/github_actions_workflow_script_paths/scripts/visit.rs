@@ -1,6 +1,6 @@
 use super::paths::{self, unanalyzable};
 use super::{ScanState, ScriptHit, WorkingDir, MAX_NESTED_DEPTH};
-use crate::codebase::rules::filesystem_dispatch::github_actions_workflow_script_paths::extract::{
+use crate::codebase::rules::github_actions_workflow_script_paths::extract::{
     self, ScriptArg,
 };
 use crate::codebase::rules::github_actions_download_integrity::words::{self, Command};

@@ -34,10 +34,8 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
         )
     }),
     (rules::GITHUB_ACTIONS_RUN_COMMAND_POLICY, |rule, _| {
-        rules::filesystem_dispatch::github_actions_run_command_policy::options::compile(
-            rule.strict_rule_options()?,
-        )
-        .map(drop)
+        rules::github_actions_run_command_policy::options::compile(rule.strict_rule_options()?)
+            .map(drop)
     }),
     (rules::GITHUB_ACTIONS_WORKFLOW_SCRIPT_PATHS, |rule, _| {
         rules::github_actions_workflow_script_paths::options::compile(rule.strict_rule_options()?)

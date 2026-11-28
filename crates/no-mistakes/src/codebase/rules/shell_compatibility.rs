@@ -1,4 +1,4 @@
-use super::super as rules;
+use super as rules;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
@@ -21,7 +21,7 @@ pub(in crate::codebase::rules) struct Options {
     files: Vec<String>,
 }
 
-pub(super) fn check_with_sources(
+pub(crate) fn check_with_sources(
     id: &str,
     root: &Path,
     config: &NoMistakesConfig,
