@@ -19,6 +19,8 @@ interface FixtureExpect {
   <T>(actual: T): FixtureMatchers<T>;
   soft<T>(actual: T): FixtureMatchers<T>;
   poll<T>(fn: () => T): FixtureMatchers<T>;
+  assertions(count: number): void;
+  hasAssertions(): void;
 }
 
 declare module "vitest" {
@@ -45,6 +47,10 @@ declare module "@testing-library/dom" {
 }
 
 declare module "@testing-library/jest-dom/vitest" {}
+declare module "@testing-library/jest-dom" {}
+declare module "@testing-library/jest-dom/matchers" {
+  export const toBeVisible: unknown;
+}
 
 declare module "@playwright/test" {
   export interface Locator {

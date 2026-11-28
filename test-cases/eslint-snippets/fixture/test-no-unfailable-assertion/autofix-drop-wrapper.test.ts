@@ -12,6 +12,7 @@ export async function asyncQueries() {
   await expect(screen.findByText("Loaded")).resolves.not.toBeNull();
   expect(screen.findByText("Loaded")).toBeDefined();
   expect(screen.findByText("Loaded")).resolves.toBeDefined();
+  expect((void 0, screen.findByText("Seq"))).toBeDefined();
 
   expect(await screen.findAllByRole("listitem")).toBeTruthy();
   await expect(screen.findAllByRole("listitem")).resolves.toBeDefined();
@@ -28,3 +29,13 @@ export function syncQueries() {
 }
 
 expect(screen.findByText("TopLevel")).toBeDefined();
+
+export function withAssertionCount() {
+  expect.assertions(1);
+  expect(screen.getByText("Save")).toBeDefined();
+}
+
+export async function withHasAssertions() {
+  expect.hasAssertions();
+  expect(screen.findByText("Loaded")).toBeDefined();
+}

@@ -1,12 +1,14 @@
 {
   "dropWrapper": {
-    "output": "import { expect } from \"vitest\";\nimport { screen } from \"@testing-library/react\";\n\nexport async function asyncQueries() {\n  screen.getByText(\"Save\");\n  screen.getByText(\"Save\");\n  screen.getByText(\"Save\");\n  screen.getAllByRole(\"button\");\n  screen.getAllByRole(\"button\");\n\n  await screen.findByText(\"Loaded\");\n  await screen.findByText(\"Loaded\");\n  await screen.findByText(\"Loaded\");\n  await screen.findByText(\"Loaded\");\n\n  await screen.findAllByRole(\"listitem\");\n  await screen.findAllByRole(\"listitem\");\n  await screen.findAllByRole(\"listitem\");\n\n  const btn = screen.getByRole(\"button\");\n  expect(btn).toBeDefined();\n}\n\nexport function syncQueries() {\n  expect(screen.findByText(\"Loaded\")).toBeDefined();\n  expect(screen.findByText(\"Loaded\")).resolves.toBeDefined();\n  expect(screen.findAllByRole(\"listitem\")).not.toBeNull();\n}\n\nexpect(screen.findByText(\"TopLevel\")).toBeDefined();\n",
+    "output": "import { expect } from \"vitest\";\nimport { screen } from \"@testing-library/react\";\n\nexport async function asyncQueries() {\n  screen.getByText(\"Save\");\n  screen.getByText(\"Save\");\n  screen.getByText(\"Save\");\n  screen.getAllByRole(\"button\");\n  screen.getAllByRole(\"button\");\n\n  await screen.findByText(\"Loaded\");\n  await screen.findByText(\"Loaded\");\n  await screen.findByText(\"Loaded\");\n  await screen.findByText(\"Loaded\");\n  await (void 0, screen.findByText(\"Seq\"));\n\n  await screen.findAllByRole(\"listitem\");\n  await screen.findAllByRole(\"listitem\");\n  await screen.findAllByRole(\"listitem\");\n\n  const btn = screen.getByRole(\"button\");\n  expect(btn).toBeDefined();\n}\n\nexport function syncQueries() {\n  expect(screen.findByText(\"Loaded\")).toBeDefined();\n  expect(screen.findByText(\"Loaded\")).resolves.toBeDefined();\n  expect(screen.findAllByRole(\"listitem\")).not.toBeNull();\n}\n\nexpect(screen.findByText(\"TopLevel\")).toBeDefined();\n\nexport function withAssertionCount() {\n  expect.assertions(1);\n  expect(screen.getByText(\"Save\")).toBeDefined();\n}\n\nexport async function withHasAssertions() {\n  expect.hasAssertions();\n  expect(screen.findByText(\"Loaded\")).toBeDefined();\n}\n",
     "remainingLines": [
-      21,
-      25,
+      22,
       26,
       27,
-      30
+      28,
+      31,
+      35,
+      40
     ]
   },
   "jestDomCommentedSetup": {
@@ -18,6 +20,9 @@
       30,
       31
     ]
+  },
+  "jestDomMatchersOnly": {
+    "output": "import type {} from \"@testing-library/jest-dom\";\nimport { toBeVisible } from \"@testing-library/jest-dom/matchers\";\nimport { expect } from \"vitest\";\nimport { screen } from \"@testing-library/react\";\n\nvoid toBeVisible;\nscreen.getByText(\"Save\");\n"
   },
   "jestDomPackageJson": {
     "output": "import { expect } from \"vitest\";\nimport { screen } from \"@testing-library/react\";\n\nexpect(screen.getByText(\"Save\")).toBeInTheDocument();\n"

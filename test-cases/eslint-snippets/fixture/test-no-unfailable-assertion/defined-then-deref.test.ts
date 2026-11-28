@@ -77,4 +77,30 @@ export async function definedThenDeref() {
   expect(reassigned).toBeDefined();
   reassigned = loadUser();
   expect(reassigned!.name).toBe("Bob");
+
+  const undefAlias = undefined;
+  const withAliasUndef = loadUser();
+  expect(withAliasUndef).toBeDefined();
+  expect(withAliasUndef?.nickname).toBe(undefAlias);
+
+  let preAlias = loadUser();
+  const captured = preAlias?.name;
+  preAlias = undefined;
+  expect(preAlias).toBeDefined();
+  expect(captured).toBe("Alice");
+
+  const state = loadResult();
+  expect(state.item).toBeDefined();
+  state.item = { status: "new" };
+  expect(state.item!.status).toBe("new");
+
+  const delState = loadResult();
+  expect(delState.item).toBeDefined();
+  delete delState.item;
+  expect(delState.item!.status).toBe("new");
+
+  const early = loadUser();
+  expect(early).toBeDefined();
+  if (!early) return;
+  expect(early!.name).toBe("Alice");
 }

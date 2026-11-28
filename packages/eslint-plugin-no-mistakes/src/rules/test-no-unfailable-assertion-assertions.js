@@ -71,7 +71,7 @@ function immutableConstDef(identifier, context) {
 
 function isConstPrimitiveLiteral(node, context) {
   const current = unwrap(node);
-  if (current.type === "Literal") return true;
+  if (current.type === "Literal") return !current.regex;
   if (current.type === "TemplateLiteral") return current.expressions.length === 0;
   if (
     current.type === "UnaryExpression" &&

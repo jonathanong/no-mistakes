@@ -152,6 +152,7 @@ describe(rule, () => {
   it("snapshots throwing-query autofixes with and without jest-dom, async, and non-async cases", async () => {
     const drop = fixFixture("autofix-drop-wrapper.test.ts");
     const directImport = fixFixture("autofix-jest-dom-import.test.ts");
+    const matchersOnly = fixFixture("autofix-jest-dom-matchers-only.test.ts");
     const cjsRequire = fixFixture("autofix-jest-dom-require.test.cjs", { sourceType: "commonjs" });
     const setupFile = fixFixture("jest-dom-setup/setup-fixture.test.ts");
     const commentedSetup = fixFixture("jest-dom-commented/commented-setup.test.ts");
@@ -170,11 +171,13 @@ describe(rule, () => {
 
     expect(drop.fixed).toBe(true);
     expect(drop.messages.map((m) => [m.line, m.messageId])).toEqual([
-      [21, "throwing-query"],
-      [25, "throwing-query"],
+      [22, "throwing-query"],
       [26, "throwing-query"],
       [27, "throwing-query"],
-      [30, "throwing-query"],
+      [28, "throwing-query"],
+      [31, "throwing-query"],
+      [35, "throwing-query"],
+      [40, "throwing-query"],
     ]);
 
     expect(directImport.fixed).toBe(true);
@@ -183,6 +186,8 @@ describe(rule, () => {
       [31, "throwing-query"],
     ]);
 
+    expect(matchersOnly.fixed).toBe(true);
+    expect(matchersOnly.output).not.toContain("toBeInTheDocument");
     expect(cjsRequire.fixed).toBe(true);
     expect(cjsRequire.messages).toEqual([]);
     expect(setupFile.fixed).toBe(true);
@@ -204,6 +209,7 @@ describe(rule, () => {
           output: directImport.output,
           remainingLines: directImport.messages.map((m) => m.line),
         },
+        jestDomMatchersOnly: { output: matchersOnly.output },
         jestDomRequire: { output: cjsRequire.output },
         jestDomSetupFile: { output: setupFile.output },
         jestDomCommentedSetup: { output: commentedSetup.output },

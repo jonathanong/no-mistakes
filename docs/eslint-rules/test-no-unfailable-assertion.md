@@ -210,8 +210,11 @@ The rule is disabled by default in both presets.
   `"advisory"` for `throwing-query`, `discarded-locator`, and
   `defined-then-deref`.
 - `report` defaults to `"all"`. Set it to `"error"` or `"advisory"` to emit
-  only codes at that configured severity (useful when splitting error and
-  warning rule instances in flat config).
+  only codes at that configured severity. In ESLint flat config, two matching
+  config objects using the same rule ID override rather than merge (the later
+  entry replaces the earlier one); to run both report groups together, register
+  the plugin under distinct aliases (for example `"no-mistakes"` and
+  `"no-mistakes-advisory"`) or run two separate lint passes.
 
 ```json
 {

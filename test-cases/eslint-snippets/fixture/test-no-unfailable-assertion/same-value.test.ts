@@ -56,6 +56,9 @@ expect(pending).resolves.toBe(pending);
 expect(getItem(0)).toBe(getItem(0));
 expect(items[idx]).toBe(items[idx]);
 
+const pattern = /foo/g;
+expect(pattern).toBe(other);
+
 function shadowedExpect() {
   const expect = (v: unknown) => ({ toBe: (_: unknown) => v });
   expect(1).toBe(1);

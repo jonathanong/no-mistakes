@@ -11,6 +11,20 @@ const {
 
 const OPTIONAL_ALLOWS_UNDEFINED = new Set(["toBeUndefined", "toBeFalsy", "toBeNull"]);
 const EQUALITY_MATCHERS = new Set(["toBe", "toEqual", "toStrictEqual"]);
+const CONTROL_FLOW_STATEMENTS = new Set([
+  "BreakStatement",
+  "ContinueStatement",
+  "DoWhileStatement",
+  "ForInStatement",
+  "ForOfStatement",
+  "ForStatement",
+  "IfStatement",
+  "ReturnStatement",
+  "SwitchStatement",
+  "ThrowStatement",
+  "TryStatement",
+  "WhileStatement",
+]);
 
 function unwrapStatementCall(statement) {
   if (statement.type !== "ExpressionStatement") return null;
@@ -29,11 +43,11 @@ function isDefinedMatcher(assertion) {
 
 function isUndefinedLiteral(node, context) {
   const current = unwrap(node);
-  return (
-    current.type === "Identifier" &&
-    current.name === "undefined" &&
-    !resolveVariable(current, context)?.defs.length
-  );
+  if (current.type !== "Identifier") return false;
+  const variable = resolveVariable(current, context);
+  if (!variable?.defs.length) return current.name === "undefined";
+  const decl = immutableConstDef(current, context);
+  return decl?.id.type === "Identifier" && isUndefinedLiteral(decl.init, context);
 }
 
 function optionalAssertionFailsOnUndefined(assertion, context) {
@@ -49,12 +63,14 @@ function optionalAssertionFailsOnUndefined(assertion, context) {
   return true;
 }
 
-function derefKind(node, target, context) {
-  if (node.type === "ChainExpression") return derefKind(node.expression, target, context);
-  if (node.type === "AwaitExpression") return derefKind(node.argument, target, context);
+function derefKind(node, target, context, afterPos) {
+  if (node.type === "ChainExpression") return derefKind(node.expression, target, context, afterPos);
+  if (node.type === "AwaitExpression") return derefKind(node.argument, target, context, afterPos);
   if (node.type === "Identifier") {
     const decl = immutableConstDef(node, context);
-    return decl?.id.type === "Identifier" ? derefKind(decl.init, target, context) : null;
+    return decl?.id.type === "Identifier" && decl.init.range[0] > afterPos
+      ? derefKind(decl.init, target, context, afterPos)
+      : null;
   }
   if (node.type === "MemberExpression" || node.type === "CallExpression") {
     const base = node.type === "MemberExpression" ? node.object : node.callee;
@@ -65,21 +81,43 @@ function derefKind(node, target, context) {
       return "non-null";
     }
     if (node.optional && samePath(canonicalPath(base, context), target)) return "optional";
-    return derefKind(base, target, context);
+    return derefKind(base, target, context, afterPos);
   }
   return null;
 }
 
-function writesRootVariable(statement, rootVar) {
-  if (!rootVar) return false;
+function pathPrefixMatches(prefix, full) {
+  if (!prefix || prefix.segments.length > full.segments.length) return false;
+  if (prefix.rootVar || full.rootVar) {
+    if (prefix.rootVar !== full.rootVar) return false;
+  } else if (prefix.rootName !== full.rootName) {
+    return false;
+  }
+  return prefix.segments.every((segment, index) => segment === full.segments[index]);
+}
+
+function writesTarget(statement, target, context) {
   const [start, end] = statement.range;
-  return rootVar.references.some(
-    (ref) =>
-      ref.isWrite() &&
-      !ref.init &&
-      ref.identifier.range[0] >= start &&
-      ref.identifier.range[1] <= end,
-  );
+  if (
+    target.rootVar?.references.some(
+      (ref) =>
+        ref.isWrite() &&
+        !ref.init &&
+        ref.identifier.range[0] >= start &&
+        ref.identifier.range[1] <= end,
+    )
+  ) {
+    return true;
+  }
+  if (statement.type !== "ExpressionStatement") return false;
+  const expr = unwrap(statement.expression);
+  const mutated =
+    expr.type === "AssignmentExpression"
+      ? expr.left
+      : expr.type === "UnaryExpression" && expr.operator === "delete"
+        ? expr.argument
+        : null;
+  return Boolean(mutated && pathPrefixMatches(canonicalPath(mutated, context), target));
 }
 
 function findDefinedThenDeref(statements, context, reportedAssertions) {
@@ -93,11 +131,13 @@ function findDefinedThenDeref(statements, context, reportedAssertions) {
     if (!target) continue;
     for (let next = index + 1; next < statements.length; next++) {
       const sibling = statements[next];
-      if (writesRootVariable(sibling, target.rootVar)) break;
+      if (CONTROL_FLOW_STATEMENTS.has(sibling.type) || writesTarget(sibling, target, context)) {
+        break;
+      }
       const nextCall = unwrapStatementCall(sibling);
       const nextAssertion = nextCall && parseAssertion(nextCall, context);
       if (!nextAssertion || isDefinedMatcher(nextAssertion)) continue;
-      const kind = derefKind(nextAssertion.actual, target, context);
+      const kind = derefKind(nextAssertion.actual, target, context, call.range[1]);
       if (
         kind === "non-null" ||
         (kind === "optional" && optionalAssertionFailsOnUndefined(nextAssertion, context))
