@@ -4,8 +4,8 @@ const { existsSync, readFileSync, statSync } = require("node:fs");
 const { dirname, join, resolve } = require("node:path");
 const { memberName, unwrap } = require("./test-message-expect");
 const { immutableConstDef } = require("./test-no-unfailable-assertion-assertions");
-const { getExpressionType } = require("./test-no-unfailable-assertion-types");
 
+const BLOCK_PARENTS = new Set(["Program", "BlockStatement", "StaticBlock", "SwitchCase"]);
 const COMMENT_OR_STRING_RE =
   /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\/\/[^\r\n]*|\/\*[\s\S]*?\*\//g;
 const JEST_DOM_REGISTER_MODULE =
@@ -143,7 +143,7 @@ function isAwaitedQueryVar(node, context) {
   return init.type === "AwaitExpression" || isAwaitedQueryVar(init, context);
 }
 
-function createThrowingQueryFix(node, assertion, query, context, typeCtx, cache) {
+function createThrowingQueryFix(node, assertion, query, context, cache) {
   const isMulti = MULTI_QUERY_RE.test(query);
   const isFind = FIND_QUERY_RE.test(query);
   const outerAwait = node.parent?.type === "AwaitExpression" ? node.parent : null;
@@ -157,19 +157,13 @@ function createThrowingQueryFix(node, assertion, query, context, typeCtx, cache)
   const isAwaitedValue =
     directAwait || (!directCall && isAwaitedQueryVar(actualUnwrapped, context));
   const ownerFn = enclosingFunction(node);
-  const inAsync = Boolean(ownerFn?.async);
+  const inAsync = Boolean(ownerFn?.async && node.range[0] >= ownerFn.body.range[0]);
 
   if (cache.fileOrSetup === null) {
     cache.fileOrSetup =
       hasJestDomInFile(context.sourceCode) || hasJestDomInSetupFiles(context.filename);
   }
-  const hasJestDom =
-    !isMulti &&
-    (cache.fileOrSetup ||
-      Boolean(
-        typeCtx &&
-        getExpressionType(assertion.expectCall, typeCtx, false)?.getProperty("toBeInTheDocument"),
-      ));
+  const hasJestDom = !isMulti && cache.fileOrSetup;
   const { sourceCode } = context;
   const actualText = sourceCode.getText(assertion.actual);
   const awaitedActual =
@@ -206,8 +200,14 @@ function createThrowingQueryFix(node, assertion, query, context, typeCtx, cache)
     return (fixer) => fixer.replaceText(outerExpr, `await ${awaitedActual}`);
   }
   const keepAwait = outerAwait && !directAwait;
-  return (fixer) =>
-    fixer.replaceText(outerExpr, keepAwait ? `await ${awaitedActual}` : awaitedActual);
+  const replacement = keepAwait ? `await ${awaitedActual}` : awaitedActual;
+  const prev = sourceCode.getTokenBefore(outerExpr);
+  const needsSemicolon =
+    replacement.startsWith("(") &&
+    prev &&
+    ![";", "{", "}"].includes(prev.value) &&
+    BLOCK_PARENTS.has(outerExpr.parent.parent?.type);
+  return (fixer) => fixer.replaceText(outerExpr, needsSemicolon ? `;${replacement}` : replacement);
 }
 
 module.exports = { createThrowingQueryFix };

@@ -44,3 +44,15 @@ export async function withHasAssertions() {
 export async function keepsOuterAwait() {
   await expect(screen.getByText("Await")).toBeTruthy();
 }
+
+export async function paramInitializer(
+  value = expect(screen.findByText("Save")).toBeDefined(),
+) {
+  return value;
+}
+
+export function noSemicolonBoundary() {
+  const marker = 1
+  expect(({}, screen.getByText("Save"))).toBeTruthy()
+  return marker;
+}

@@ -137,14 +137,7 @@ module.exports = rule(
           const query = throwingQueryName(assertion.actual, context);
           if (query) {
             reportedAssertions.add(node);
-            const fix = createThrowingQueryFix(
-              node,
-              assertion,
-              query,
-              context,
-              typeCtx,
-              jestDomCache,
-            );
+            const fix = createThrowingQueryFix(node, assertion, query, context, jestDomCache);
             report(node, "throwing-query", { query }, fix);
             return;
           }
@@ -153,18 +146,10 @@ module.exports = rule(
         const definedCheck = isDefinedCheck(assertion);
         const truthyCheck = isTruthyCheck(assertion);
         if ((!definedCheck && !truthyCheck) || !typeCtx || !typeCtx.strictNullChecks) return;
-        if (
-          assertion.asyncModifier !== "resolves" &&
-          isUncheckedIndexedAccess(assertion.actual, context, typeCtx)
-        ) {
-          return;
-        }
+        if (assertion.asyncModifier === "resolves") return;
+        if (isUncheckedIndexedAccess(assertion.actual, context, typeCtx)) return;
 
-        const type = getExpressionType(
-          assertion.actual,
-          typeCtx,
-          assertion.asyncModifier === "resolves",
-        );
+        const type = getExpressionType(assertion.actual, typeCtx, false);
         if (!type) return;
 
         if (

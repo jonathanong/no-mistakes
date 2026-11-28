@@ -108,7 +108,7 @@ describe(rule, () => {
 
     const byName = Object.fromEntries(cases.map((item) => [item.name, item.findings]));
     expect(byName["defined-by-type (typed)"].map((f) => f.messageId)).toEqual(
-      Array(8).fill("defined-by-type"),
+      Array(7).fill("defined-by-type"),
     );
     expect(byName["defined-by-type (untyped)"]).toEqual([]);
     expect(byName["same-value (typed)"]).toEqual(byName["same-value (untyped)"]);
@@ -178,6 +178,7 @@ describe(rule, () => {
       [32, "throwing-query"],
       [36, "throwing-query"],
       [41, "throwing-query"],
+      [49, "throwing-query"],
     ]);
 
     expect(directImport.fixed).toBe(true);

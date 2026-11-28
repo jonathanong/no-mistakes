@@ -59,7 +59,7 @@ function isUncheckedIndexedAccess(node, context, typeCtx) {
   if (typeCtx.noUncheckedIndexedAccess) return false;
   let current = unwrap(node);
   while (current.type === "Identifier") {
-    const decl = immutableConstDef(current, context);
+    const decl = immutableConstDef(current, context, true);
     if (decl?.id.type === "ArrayPattern") {
       return isArrayElement(decl, current, getExpressionType(decl.init, typeCtx, false));
     }

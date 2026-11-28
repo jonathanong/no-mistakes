@@ -67,3 +67,11 @@ export function unconstrained<T>(value: T) {
 const emptyList: string[] = [];
 const [firstEmpty] = emptyList;
 expect(firstEmpty).toBeDefined();
+
+const lettedValues: string[] = [];
+let lettedFirst = lettedValues[0];
+expect(lettedFirst).toBeDefined();
+
+const readonlyValues: readonly string[] = [];
+const [readonlyFirst] = readonlyValues;
+expect(readonlyFirst).toBeDefined();

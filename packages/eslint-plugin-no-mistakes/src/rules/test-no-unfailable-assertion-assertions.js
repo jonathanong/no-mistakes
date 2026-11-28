@@ -77,13 +77,13 @@ function parseAssertion(node, context) {
   };
 }
 
-function immutableConstDef(identifier, context) {
+function immutableConstDef(identifier, context, allowLet = false) {
   const variable = resolveVariable(identifier, context);
   if (variable?.defs.length !== 1) return null;
   const [def] = variable.defs;
   if (
     def.type !== "Variable" ||
-    def.parent.kind !== "const" ||
+    (def.parent.kind !== "const" && !(allowLet && def.parent.kind === "let")) ||
     !def.node.init ||
     def.node.init.range[1] > identifier.range[0] ||
     variable.references.some((ref) => ref.isWrite() && !ref.init)

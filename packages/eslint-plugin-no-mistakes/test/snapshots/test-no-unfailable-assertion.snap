@@ -156,17 +156,6 @@
       },
       {
         "column": 1,
-        "endColumn": 46,
-        "endLine": 32,
-        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
-        "line": 32,
-        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
-        "messageId": "defined-by-type",
-        "ruleId": "no-mistakes/test-no-unfailable-assertion",
-        "severity": 2
-      },
-      {
-        "column": 1,
         "endColumn": 39,
         "endLine": 33,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
@@ -971,28 +960,6 @@
         "severity": 2
       },
       {
-        "column": 9,
-        "endColumn": 67,
-        "endLine": 21,
-        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
-        "line": 21,
-        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
-        "messageId": "defined-by-type",
-        "ruleId": "no-mistakes/test-no-unfailable-assertion",
-        "severity": 2
-      },
-      {
-        "column": 9,
-        "endColumn": 78,
-        "endLine": 23,
-        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
-        "line": 23,
-        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
-        "messageId": "defined-by-type",
-        "ruleId": "no-mistakes/test-no-unfailable-assertion",
-        "severity": 2
-      },
-      {
         "column": 3,
         "endColumn": 43,
         "endLine": 26,
@@ -1042,17 +1009,6 @@
         "endLine": 33,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
         "line": 33,
-        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
-        "messageId": "defined-by-type",
-        "ruleId": "no-mistakes/test-no-unfailable-assertion",
-        "severity": 2
-      },
-      {
-        "column": 9,
-        "endColumn": 63,
-        "endLine": 35,
-        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
-        "line": 35,
         "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
         "messageId": "defined-by-type",
         "ruleId": "no-mistakes/test-no-unfailable-assertion",
