@@ -1,6 +1,6 @@
 use super::super::resolve::compose;
 use super::super::ScopeVisitor;
-use super::partial;
+use super::{partial, BuilderTrace};
 use crate::codebase::postgres::embedded::{
     first_call_argument, placeholders, tags, CallSqlFragment, EmbeddedSqlCall,
 };
@@ -34,34 +34,33 @@ impl ScopeVisitor<'_> {
         let Some(owner) = self.current_plain_function_key() else {
             return;
         };
-        let mut fragments = Vec::new();
-        match unwrap_ts_wrappers(expr) {
-            Expression::Identifier(id) => {
-                if let Some(scope_index) = self.lookup_scope(id.name.as_str()) {
-                    if let Some(trace) = self
-                        .call_fragment_state
+        let returned = match unwrap_ts_wrappers(expr) {
+            Expression::Identifier(id) => self
+                .lookup_scope(id.name.as_str())
+                .and_then(|s| {
+                    self.call_fragment_state
                         .builders
-                        .get(&(scope_index, id.name.to_string()))
-                    {
-                        fragments.extend(trace.fragments.iter().cloned());
-                    }
-                }
-            }
+                        .get(&(s, id.name.to_string()))
+                })
+                .cloned(),
             Expression::BinaryExpression(bin) if bin.operator == BinaryOperator::Addition => {
+                let mut fragments = Vec::new();
                 collect_return_operand_traces(self, expr, &mut fragments);
                 fragments.extend(partial::expr_fragments(self, expr, None, None));
+                (!fragments.is_empty()).then(|| BuilderTrace::from_fragments(fragments))
             }
             _ if partial::is_sql_like_init(self, expr) => {
-                fragments.extend(partial::expr_fragments(self, expr, None, None));
+                let fragments = partial::expr_fragments(self, expr, None, None);
+                (!fragments.is_empty()).then(|| BuilderTrace::from_fragments(fragments))
             }
-            _ => {}
-        }
-        if !fragments.is_empty() {
+            _ => None,
+        };
+        if let Some(trace) = returned {
             self.call_fragment_state
                 .function_returns
                 .entry(owner)
                 .or_default()
-                .extend(fragments);
+                .merge(trace);
         }
     }
 
@@ -125,7 +124,7 @@ impl ScopeVisitor<'_> {
                         .call_fragment_state
                         .function_returns
                         .get(&self.plain_key(callee.name.as_str()))
-                        .cloned()
+                        .map(|trace| trace.fragments.clone())
                         .unwrap_or_default();
                 }
                 if let Some(frags) = super::inline_append::inline_append_fragments(

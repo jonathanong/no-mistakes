@@ -1,6 +1,8 @@
 use super::exprs::walk_expr_stars;
 use super::{FragmentStar, Rel, Scope, SYNTHETIC_TARGET};
-use no_mistakes_postgres_sql::idents::object_name_key;
+use no_mistakes_postgres_sql::idents::{
+    object_name_key, relation_suffix_key, relation_suffix_name,
+};
 use sqlparser::ast::{ObjectName, SelectItem, SelectItemQualifiedWildcardKind, Spanned};
 
 pub(super) fn collect_items(
@@ -71,7 +73,9 @@ pub(super) fn emit_qualified(
         return;
     }
     if resolve_in(rels, &ident, returning, &func, line, out)
-        || resolve_in(outer_rels, &ident, returning, &func, line, out)
+        || outer_rels
+            .chunk_by(|a, b| a.depth == b.depth)
+            .any(|level| resolve_in(level, &ident, returning, &func, line, out))
     {
         return;
     }
@@ -98,7 +102,9 @@ fn resolve_in(
         .or_else(|| {
             rels.iter().find(|rel| {
                 rel.alias.is_none()
-                    && (rel.table == ident || rel.table.rsplit('.').next() == Some(ident))
+                    && (rel.table == ident
+                        || relation_suffix_key(&rel.table) == ident
+                        || relation_suffix_name(&rel.table) == ident)
             })
         });
     if let Some(rel) = found {

@@ -43,6 +43,7 @@ pub(super) fn inline_append_fragments(
         }),
         alt_prefixes: trace.map(|t| t.alt_prefixes.clone()).unwrap_or_default(),
         fragments: Vec::new(),
+        decl_depth: (0, 0),
     };
     for link in links {
         if covered_sites.contains(&link.span.start) {
@@ -118,7 +119,7 @@ pub(super) fn try_copy_builder_init(
 ) -> bool {
     let init = unwrap_ts_wrappers(init);
     if let Expression::Identifier(src) = init {
-        if let Some(trace) = visitor
+        if let Some(mut trace) = visitor
             .lookup_scope(src.name.as_str())
             .and_then(|s| {
                 visitor
@@ -128,6 +129,7 @@ pub(super) fn try_copy_builder_init(
             })
             .cloned()
         {
+            trace.decl_depth = (visitor.control_depth, visitor.loop_depth);
             visitor
                 .call_fragment_state
                 .builders
@@ -138,16 +140,17 @@ pub(super) fn try_copy_builder_init(
     if let Expression::CallExpression(call) = init {
         if let Expression::Identifier(callee) = unwrap_ts_wrappers(&call.callee) {
             let key = visitor.plain_key(callee.name.as_str());
-            if let Some(returned) = visitor
+            if let Some(mut returned) = visitor
                 .call_fragment_state
                 .function_returns
                 .get(&key)
                 .cloned()
             {
-                visitor.call_fragment_state.builders.insert(
-                    (scope_index, name.to_string()),
-                    BuilderTrace::from_fragments(returned),
-                );
+                returned.decl_depth = (visitor.control_depth, visitor.loop_depth);
+                visitor
+                    .call_fragment_state
+                    .builders
+                    .insert((scope_index, name.to_string()), returned);
                 return true;
             }
         }

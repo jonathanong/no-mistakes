@@ -101,7 +101,18 @@ function buildComposed(dyn: string) {
   return q + " ORDER BY id";
 }
 
-export function reviewEdgeCases(p: Pair, one: One, dyn: string) {
+function makeUpdate(flag: boolean) {
+  if (flag) {
+    const a = sql`UPDATE entries`;
+    a.append(" AS t SET active = true");
+    return a;
+  }
+  const b = sql`UPDATE records`;
+  b.append(" AS t SET active = false");
+  return b;
+}
+
+export function reviewEdgeCases(p: Pair, one: One, dyn: string, flag: boolean) {
   let logical = "SELECT * FROM entries";
   logical ||= "SELECT * FROM records";
   logical += dyn;
@@ -129,6 +140,11 @@ export function reviewEdgeCases(p: Pair, one: One, dyn: string) {
   query(copy);
 
   query(buildComposed(dyn));
+
+  const returnedBuilder = makeUpdate(flag);
+  returnedBuilder.append(dyn);
+  returnedBuilder.append(" RETURNING t.*");
+  query(returnedBuilder);
 }
 "#;
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
@@ -166,5 +182,17 @@ export function reviewEdgeCases(p: Pair, one: One, dyn: string) {
     assert!(frags
         .iter()
         .any(|f| f.sql.contains("UNION ALL SELECT entries.* FROM entries")));
-    assert_eq!(facts.call_fragments.len(), 6);
+    assert!(frags.iter().any(|f| {
+        f.sql.contains("RETURNING t.*")
+            && f.context_sql
+                .as_deref()
+                .is_some_and(|c| c.contains("UPDATE entries AS t SET active = true"))
+    }));
+    assert!(frags.iter().any(|f| {
+        f.sql.contains("RETURNING t.*")
+            && f.context_sql
+                .as_deref()
+                .is_some_and(|c| c.contains("UPDATE records AS t SET active = false"))
+    }));
+    assert_eq!(facts.call_fragments.len(), 7);
 }

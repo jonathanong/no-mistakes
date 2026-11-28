@@ -169,6 +169,9 @@ fn push_bare(
         return;
     }
     if ctx.from_relations.is_empty() {
+        if ctx.has_derived_from {
+            return;
+        }
         out.push(FragmentStar {
             returning: false,
             qualifier: None,

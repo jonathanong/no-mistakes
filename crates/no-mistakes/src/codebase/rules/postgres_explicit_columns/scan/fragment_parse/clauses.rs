@@ -61,6 +61,20 @@ pub(super) fn open_clause_at_end(tokens: &[TokenWithSpan]) -> (bool, bool, bool)
     (select, returning, in_exists)
 }
 
+pub(super) fn update_paren_depth(token: &TokenWithSpan, depth: &mut usize) -> bool {
+    match &token.token {
+        Token::LParen => {
+            *depth += 1;
+            true
+        }
+        Token::RParen => {
+            *depth = depth.saturating_sub(1);
+            true
+        }
+        _ => false,
+    }
+}
+
 pub(super) fn ends_from_list(token: &TokenWithSpan) -> bool {
     matches!(
         &token.token,
@@ -84,4 +98,35 @@ pub(super) fn ends_from_list(token: &TokenWithSpan) -> bool {
                 | Keyword::WINDOW
         )
     )
+}
+
+pub(super) fn is_implicit_alias_word(token: &TokenWithSpan) -> bool {
+    let Token::Word(word) = &token.token else {
+        return false;
+    };
+    word.quote_style.is_some()
+        || (!sqlparser::keywords::RESERVED_FOR_TABLE_ALIAS.contains(&word.keyword)
+            && !ends_from_list(token)
+            && !matches!(
+                word.keyword,
+                Keyword::AS
+                    | Keyword::ON
+                    | Keyword::USING
+                    | Keyword::JOIN
+                    | Keyword::INNER
+                    | Keyword::LEFT
+                    | Keyword::RIGHT
+                    | Keyword::FULL
+                    | Keyword::OUTER
+                    | Keyword::CROSS
+                    | Keyword::NATURAL
+                    | Keyword::LATERAL
+                    | Keyword::FOR
+                    | Keyword::DO
+                    | Keyword::CONFLICT
+                    | Keyword::INTO
+                    | Keyword::UPDATE
+                    | Keyword::INSERT
+                    | Keyword::FROM
+            ))
 }

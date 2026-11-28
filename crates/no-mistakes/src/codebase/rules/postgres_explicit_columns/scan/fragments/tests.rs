@@ -190,6 +190,47 @@ fn placeholder_and_resolved_relations_cover_all_branches() {
             ("accounts".to_string(), false),
         ]
     );
+
+    let dotted_ctx = super::super::fragment_parse::parse_context(
+        r#"UPDATE public."audit.log" SET id = 1"#,
+    );
+    let dotted_star = FragmentStar {
+        returning: true,
+        qualifier: Some("audit.log".to_string()),
+        relation: None,
+        within_function: None,
+        line: 1,
+    };
+    assert_eq!(
+        resolved_relations(&dotted_star, &dotted_ctx),
+        vec![(r#"public."audit.log""#.to_string(), true)]
+    );
+
+    let join_ctx = super::super::fragment_parse::parse_context(
+        "UPDATE target SET id = 1 FROM (wide w JOIN narrow n ON w.id = n.id) AS j",
+    );
+    let join_ret = FragmentStar {
+        returning: true,
+        qualifier: Some("j".to_string()),
+        relation: None,
+        within_function: None,
+        line: 1,
+    };
+    assert_eq!(
+        resolved_relations(&join_ret, &join_ctx),
+        vec![("wide".to_string(), false), ("narrow".to_string(), false)]
+    );
+    let join_sel = FragmentStar {
+        returning: false,
+        qualifier: Some("j".to_string()),
+        relation: None,
+        within_function: None,
+        line: 1,
+    };
+    assert_eq!(
+        resolved_relations(&join_sel, &join_ctx),
+        vec![("wide".to_string(), false), ("narrow".to_string(), false)]
+    );
 }
 
 #[test]

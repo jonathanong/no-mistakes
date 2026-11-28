@@ -1,5 +1,8 @@
 use super::context::extract_context_from_tokens;
 use super::{is_kw, word_value, FragmentContext};
+use no_mistakes_postgres_sql::idents::{
+    relation_part_key, relation_suffix_key, relation_suffix_name,
+};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
@@ -154,7 +157,17 @@ pub(super) fn read_qualified_name_backwards(
         cursor = prev_idx;
     }
     parts.reverse();
-    Some(parts.join("."))
+    if parts.len() == 1 {
+        Some(parts.pop().unwrap())
+    } else {
+        Some(
+            parts
+                .iter()
+                .map(|p| relation_part_key(p))
+                .collect::<Vec<_>>()
+                .join("."),
+        )
+    }
 }
 
 pub(super) fn resolve_qualified_relation(ctx: &FragmentContext, q: &str) -> Option<String> {
@@ -164,7 +177,7 @@ pub(super) fn resolve_qualified_relation(ctx: &FragmentContext, q: &str) -> Opti
             .or_else(|| {
                 rels.iter().find(|(t, a)| {
                     a.is_none()
-                        && (t == q || (!q.contains('.') && t.rsplit('.').next() == Some(q)))
+                        && (t == q || relation_suffix_key(t) == q || relation_suffix_name(t) == q)
                 })
             })
             .map(|(t, _)| t.clone())
@@ -175,5 +188,11 @@ pub(super) fn resolve_qualified_relation(ctx: &FragmentContext, q: &str) -> Opti
         .chain(ctx.mutation_target.iter())
         .cloned()
         .collect();
-    find_in(&local).or_else(|| find_in(&ctx.outer_relations))
+    if let Some(found) = find_in(&local) {
+        return Some(found);
+    }
+    if ctx.derived_aliases.iter().any(|a| a == q) {
+        return None;
+    }
+    find_in(&ctx.outer_relations)
 }

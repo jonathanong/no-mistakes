@@ -1,5 +1,7 @@
 use super::ScopeVisitor;
-use crate::codebase::postgres::embedded::{first_call_argument, CallSqlFragment};
+use crate::codebase::postgres::embedded::{
+    first_call_argument, CallSqlFragment, MAX_EMBEDDED_SQL_VARIANTS,
+};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashMap;
 use oxc_ast::ast::{CallExpression, Expression};
@@ -18,31 +20,46 @@ pub(super) struct BuilderTrace {
     pub(super) prefix: Option<String>,
     pub(super) alt_prefixes: Vec<String>,
     pub(super) fragments: Vec<CallSqlFragment>,
+    pub(super) decl_depth: (usize, usize),
+}
+
+impl BuilderTrace {
+    pub(super) fn merge(&mut self, other: Self) {
+        if self.fragments.is_empty() && self.prefix.is_none() && self.alt_prefixes.is_empty() {
+            *self = other;
+            return;
+        }
+        let mut prefixes = Vec::new();
+        for p in self
+            .prefix
+            .take()
+            .into_iter()
+            .chain(self.alt_prefixes.drain(..))
+            .chain(other.prefix)
+            .chain(other.alt_prefixes)
+        {
+            if !prefixes.contains(&p) && prefixes.len() < MAX_EMBEDDED_SQL_VARIANTS {
+                prefixes.push(p);
+            }
+        }
+        if prefixes.len() == 1 {
+            self.prefix = prefixes.pop();
+        } else {
+            self.alt_prefixes = prefixes;
+        }
+        self.fragments.extend(other.fragments);
+    }
 }
 
 #[derive(Default)]
 pub(super) struct CallFragmentState {
     pub(super) builders: FxHashMap<(usize, String), BuilderTrace>,
-    pub(super) function_returns: FxHashMap<(u32, String), Vec<CallSqlFragment>>,
+    pub(super) function_returns: FxHashMap<(u32, String), BuilderTrace>,
     pub(super) call_fragments: FxHashMap<(u32, u32), Vec<CallSqlFragment>>,
     pub(super) param_appends: Vec<CallSqlFragment>,
 }
 
 impl ScopeVisitor<'_> {
-    pub(super) fn clear_builder_fragment(&mut self, scope_index: usize, name: &str) {
-        self.call_fragment_state
-            .builders
-            .remove(&(scope_index, name.to_string()));
-        let key = self.plain_key(name);
-        self.call_fragment_state.function_returns.remove(&key);
-    }
-
-    pub(super) fn clear_builder_fragment_by_name(&mut self, name: &str) {
-        if let Some(index) = self.lookup_scope(name) {
-            self.clear_builder_fragment(index, name);
-        }
-    }
-
     pub(super) fn note_builder_init(
         &mut self,
         scope_index: usize,
@@ -82,10 +99,11 @@ impl ScopeVisitor<'_> {
         if fragments.is_empty() {
             return;
         }
-        self.call_fragment_state.builders.insert(
-            (scope_index, name.to_string()),
-            BuilderTrace::from_fragments(fragments),
-        );
+        let mut trace = BuilderTrace::from_fragments(fragments);
+        trace.decl_depth = (self.control_depth, self.loop_depth);
+        self.call_fragment_state
+            .builders
+            .insert((scope_index, name.to_string()), trace);
     }
 
     pub(super) fn note_call_fragment_append(&mut self, call: &CallExpression<'_>) {
@@ -125,14 +143,14 @@ impl ScopeVisitor<'_> {
         if !known_builder {
             return;
         }
-        let (context, alt_prefixes) = self
+        let (context, alt_prefixes, decl_depth) = self
             .call_fragment_state
             .builders
             .get(&key)
-            .map(|t| (t.prefix.clone(), t.alt_prefixes.clone()))
+            .map(|t| (t.prefix.clone(), t.alt_prefixes.clone(), t.decl_depth))
             .unwrap_or_default();
         let context = context.or_else(|| binding.sql.clone());
-        let straight_line = self.control_depth == 0 && self.loop_depth == 0;
+        let straight_line = (self.control_depth, self.loop_depth) == decl_depth;
         if binding.initialized
             && partial::try_relation_append(
                 self,

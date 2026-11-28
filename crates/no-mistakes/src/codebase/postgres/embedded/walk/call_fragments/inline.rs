@@ -23,11 +23,33 @@ impl BuilderTrace {
             prefix,
             alt_prefixes,
             fragments,
+            decl_depth: (0, 0),
         }
     }
 }
 
 impl ScopeVisitor<'_> {
+    pub(in crate::codebase::postgres::embedded::walk) fn clear_builder_fragment(
+        &mut self,
+        scope_index: usize,
+        name: &str,
+    ) {
+        self.call_fragment_state
+            .builders
+            .remove(&(scope_index, name.to_string()));
+        let key = self.plain_key(name);
+        self.call_fragment_state.function_returns.remove(&key);
+    }
+
+    pub(in crate::codebase::postgres::embedded::walk) fn clear_builder_fragment_by_name(
+        &mut self,
+        name: &str,
+    ) {
+        if let Some(index) = self.lookup_scope(name) {
+            self.clear_builder_fragment(index, name);
+        }
+    }
+
     pub(in crate::codebase::postgres::embedded::walk) fn note_assignment_fragment(
         &mut self,
         assign: &AssignmentExpression<'_>,
@@ -77,13 +99,13 @@ impl ScopeVisitor<'_> {
     }
 
     fn append_assignment_expr(&mut self, key: (usize, String), rhs: &Expression<'_>, site: u32) {
-        let (context, alt_prefixes) = self
+        let (context, alt_prefixes, decl_depth) = self
             .call_fragment_state
             .builders
             .get(&key)
-            .map(|t| (t.prefix.clone(), t.alt_prefixes.clone()))
+            .map(|t| (t.prefix.clone(), t.alt_prefixes.clone(), t.decl_depth))
             .unwrap_or_default();
-        let straight_line = self.control_depth == 0 && self.loop_depth == 0;
+        let straight_line = (self.control_depth, self.loop_depth) == decl_depth;
         if matches!(unwrap_ts_wrappers(rhs), Expression::Identifier(_))
             && partial::try_relation_append(
                 self,

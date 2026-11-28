@@ -5,8 +5,14 @@ use sqlparser::ast::{TableFactor, TableWithJoins};
 
 pub(super) fn extend_outer(local: &[Rel], outer: &[Rel]) -> Vec<Rel> {
     let mut combined = Vec::with_capacity(local.len() + outer.len());
-    combined.extend_from_slice(local);
-    combined.extend_from_slice(outer);
+    combined.extend(local.iter().cloned().map(|mut r| {
+        r.depth = 0;
+        r
+    }));
+    combined.extend(outer.iter().cloned().map(|mut r| {
+        r.depth += 1;
+        r
+    }));
     combined
 }
 
@@ -44,6 +50,7 @@ pub(super) fn push_factor(
                         alias: Some(ident_key(&alias.name)),
                         join_aliases: Vec::new(),
                         is_local_derived: true,
+                        depth: 0,
                     });
                 }
                 return;
@@ -55,6 +62,7 @@ pub(super) fn push_factor(
                 alias: alias.as_ref().map(|a| ident_key(&a.name)),
                 join_aliases: Vec::new(),
                 is_local_derived: is_cte,
+                depth: 0,
             });
         }
         TableFactor::Derived {
@@ -66,6 +74,7 @@ pub(super) fn push_factor(
                 alias: alias.as_ref().map(|a| ident_key(&a.name)),
                 join_aliases: Vec::new(),
                 is_local_derived: true,
+                depth: 0,
             });
         }
         TableFactor::NestedJoin {

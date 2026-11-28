@@ -220,6 +220,20 @@ fn ast_covers_dml_set_ops_table_and_nested_subqueries() {
         None,
     )
     .is_empty());
+
+    let filter_stars = extract_fragment_stars(
+        "SELECT count(*) FILTER (WHERE (SELECT count(*) FROM (SELECT * FROM wide) w) > 0) FROM narrow WHERE count(*) FILTER (WHERE (SELECT count(*) FROM (SELECT * FROM extra) e) > 0) > 0",
+        None,
+    );
+    let filter_rels: Vec<_> = filter_stars.iter().map(|s| s.relation.as_deref()).collect();
+    assert_eq!(filter_rels, vec![Some("wide"), Some("extra")]);
+
+    let nearer_scope = extract_fragment_stars(
+        "SELECT (SELECT (SELECT row_to_json(wide.*)) FROM wide LIMIT 1) FROM narrow AS wide",
+        None,
+    );
+    assert_eq!(nearer_scope.len(), 1);
+    assert_eq!(nearer_scope[0].relation.as_deref(), Some("wide"));
 }
 
 #[test]
@@ -434,6 +448,26 @@ fn context_and_token_fallback_handle_prefixes_ctes_commas_and_subqueries() {
     let truncated_lit = extract_fragment_stars("SELECT * FROM wide WHERE note = '", None);
     assert_eq!(truncated_lit.len(), 1);
     assert_eq!(truncated_lit[0].relation.as_deref(), Some("wide"));
+
+    let non_reserved_alias = extract_fragment_stars("SELECT value.* FROM wide value WHERE", None);
+    assert_eq!(non_reserved_alias.len(), 1);
+    assert_eq!(non_reserved_alias[0].relation.as_deref(), Some("wide"));
+
+    let unmatched_paren = extract_fragment_stars("SELECT * FROM (", None);
+    assert_eq!(unmatched_paren.len(), 1);
+    assert_eq!(unmatched_paren[0].relation, None);
+
+    let join_using = extract_fragment_stars("SELECT * FROM narrow JOIN wide USING (id) WHERE", None);
+    let join_using_rels: Vec<_> = join_using.iter().map(|s| s.relation.as_deref()).collect();
+    assert_eq!(join_using_rels, vec![Some("narrow"), Some("wide")]);
+
+    assert!(extract_fragment_stars(
+        "SELECT (SELECT q.* FROM (SELECT 1 AS id) q) FROM wide q WHERE",
+        None,
+    )
+    .is_empty());
+
+    assert!(extract_fragment_stars("SELECT * FROM (SELECT id FROM wide) q WHERE", None).is_empty());
 
     let edge_ctxs = [
         "WITH a(x, (y)) AS (SELECT 1), 1 SELECT 1",

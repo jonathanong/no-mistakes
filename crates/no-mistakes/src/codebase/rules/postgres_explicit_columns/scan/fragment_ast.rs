@@ -27,6 +27,7 @@ pub(super) struct Rel {
     pub(super) alias: Option<String>,
     pub(super) join_aliases: Vec<String>,
     pub(super) is_local_derived: bool,
+    pub(super) depth: usize,
 }
 
 #[derive(Clone, Copy)]

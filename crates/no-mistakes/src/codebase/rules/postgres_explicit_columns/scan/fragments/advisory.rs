@@ -5,6 +5,7 @@ use super::super::{CompiledOptions, RULE_ID};
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::statements::SqlStarProjectionFact;
 use crate::codebase::postgres::{SchemaCatalog, SqlObligationVerdict, SqlVerdictStatus};
+use no_mistakes_postgres_sql::idents::{relation_suffix_key, relation_suffix_name};
 
 pub(crate) fn is_placeholder_relation(name: &str) -> bool {
     let lower = name.to_ascii_lowercase();
@@ -92,6 +93,10 @@ pub(super) fn resolved_relations(star: &FragmentStar, ctx: &FragmentContext) -> 
             if let Some(table) = find_qualified(&ctx.from_relations, q) {
                 return vec![(table, false)];
             }
+            let joined = find_join_alias(ctx, q);
+            if !joined.is_empty() {
+                return joined;
+            }
             if ctx.ctes.iter().any(|cte| cte == q) || ctx.derived_aliases.iter().any(|a| a == q) {
                 return vec![(q.clone(), false)];
             }
@@ -107,6 +112,10 @@ pub(super) fn resolved_relations(star: &FragmentStar, ctx: &FragmentContext) -> 
         if let Some(table) = find_qualified(&ctx.from_relations, q) {
             return vec![(table, false)];
         }
+        let joined = find_join_alias(ctx, q);
+        if !joined.is_empty() {
+            return joined;
+        }
         if ctx.ctes.iter().any(|cte| cte == q) || ctx.derived_aliases.iter().any(|a| a == q) {
             return vec![(q.clone(), false)];
         }
@@ -118,14 +127,23 @@ pub(super) fn resolved_relations(star: &FragmentStar, ctx: &FragmentContext) -> 
         .collect()
 }
 
+fn find_join_alias(ctx: &FragmentContext, q: &str) -> Vec<(String, bool)> {
+    ctx.join_aliases
+        .iter()
+        .filter(|(a, _)| a == q)
+        .map(|(_, t)| (t.clone(), false))
+        .collect()
+}
+
 fn find_qualified(relations: &[(String, Option<String>)], q: &str) -> Option<String> {
     relations
         .iter()
         .find(|(_, a)| a.as_deref() == Some(q))
         .or_else(|| {
-            relations
-                .iter()
-                .find(|(t, a)| a.is_none() && (t == q || t.rsplit('.').next() == Some(q)))
+            relations.iter().find(|(t, a)| {
+                a.is_none()
+                    && (t == q || relation_suffix_key(t) == q || relation_suffix_name(t) == q)
+            })
         })
         .map(|(t, _)| t.clone())
 }

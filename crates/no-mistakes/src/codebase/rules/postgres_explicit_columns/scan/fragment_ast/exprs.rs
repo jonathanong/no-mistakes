@@ -92,6 +92,9 @@ fn walk_function_subqueries(func: &Function, scope: Scope<'_>, out: &mut Vec<Fra
         }
         FunctionArguments::None => {}
     }
+    if let Some(filter) = &func.filter {
+        walk_subqueries(filter, scope, out);
+    }
 }
 
 fn walk_function_stars(
@@ -138,6 +141,9 @@ fn walk_function_stars(
             }
         }
         FunctionArguments::None => {}
+    }
+    if let Some(filter) = &func.filter {
+        walk_expr_stars(filter, rels, scope, returning, None, line, out);
     }
 }
 

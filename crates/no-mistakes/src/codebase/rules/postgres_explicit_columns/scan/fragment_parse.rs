@@ -1,4 +1,5 @@
 use super::fragment_ast::{self, FragmentStar, SYNTHETIC_TARGET};
+use no_mistakes_postgres_sql::idents::relation_part_key;
 use no_mistakes_postgres_sql::parse::parse_postgres_sql;
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::keywords::Keyword;
@@ -16,6 +17,7 @@ use context::extract_context_from_tokens;
 pub(super) struct FragmentContext {
     pub(super) ctes: Vec<String>,
     pub(super) derived_aliases: Vec<String>,
+    pub(super) has_derived_from: bool,
     pub(super) join_aliases: Vec<(String, String)>,
     pub(super) mutation_target: Option<(String, Option<String>)>,
     pub(super) from_relations: Vec<(String, Option<String>)>,
@@ -162,7 +164,7 @@ pub(super) fn read_table_and_alias(
         if matches!(dot.token, Token::Period) {
             if let Some((part_i, part)) = next_code(tokens, dot_i + 1) {
                 if let Some(second) = word_value(part) {
-                    name = format!("{name}.{second}");
+                    name = format!("{}.{}", relation_part_key(&name), relation_part_key(&second));
                     next_i = part_i + 1;
                 }
             }
@@ -185,10 +187,8 @@ pub(super) fn read_optional_alias(
                 return (id_i + 1, Some(alias));
             }
         }
-    } else if let Token::Word(word) = &alias_tok.token {
-        if word.keyword == Keyword::NoKeyword {
-            return (alias_i + 1, word_value(alias_tok));
-        }
+    } else if clauses::is_implicit_alias_word(alias_tok) {
+        return (alias_i + 1, word_value(alias_tok));
     }
     (next_i, None)
 }

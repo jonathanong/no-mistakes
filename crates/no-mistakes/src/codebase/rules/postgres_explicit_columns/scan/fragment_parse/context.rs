@@ -5,31 +5,23 @@ use super::{
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
+#[derive(Default)]
+struct ClauseState {
+    in_with: bool,
+    in_from: bool,
+    in_join: bool,
+}
+
 pub(super) fn extract_context_from_tokens(tokens: &[TokenWithSpan], ctx: &mut FragmentContext) {
     let mut index = 0;
     let mut depth = 0usize;
-    let mut in_with = false;
-    let mut in_from = false;
+    let mut state = ClauseState::default();
     while let Some((i, token)) = next_code(tokens, index) {
         index = i + 1;
-        if update_paren_depth(token, &mut depth) || depth > 0 {
+        if super::clauses::update_paren_depth(token, &mut depth) || depth > 0 {
             continue;
         }
-        index = step_top_level(tokens, i, token, index, &mut in_with, &mut in_from, ctx);
-    }
-}
-
-fn update_paren_depth(token: &TokenWithSpan, depth: &mut usize) -> bool {
-    match &token.token {
-        Token::LParen => {
-            *depth += 1;
-            true
-        }
-        Token::RParen => {
-            *depth = depth.saturating_sub(1);
-            true
-        }
-        _ => false,
+        index = step_top_level(tokens, i, token, index, &mut state, ctx);
     }
 }
 
@@ -38,27 +30,28 @@ fn step_top_level(
     i: usize,
     token: &TokenWithSpan,
     index: usize,
-    in_with: &mut bool,
-    in_from: &mut bool,
+    state: &mut ClauseState,
     ctx: &mut FragmentContext,
 ) -> usize {
     if is_kw(token, Keyword::WITH) {
-        *in_with = true;
-        *in_from = false;
+        state.in_with = true;
+        state.in_from = false;
+        state.in_join = false;
         return consume_with_head(tokens, index, ctx);
     }
-    if *in_with && matches!(token.token, Token::Comma) {
+    if state.in_with && matches!(token.token, Token::Comma) {
         if let Some((next_i, name)) = read_cte_name(tokens, index) {
             ctx.ctes.push(name);
             return next_i;
         }
     }
-    if *in_from && matches!(token.token, Token::Comma) {
+    if state.in_from && matches!(token.token, Token::Comma) {
+        state.in_join = false;
         if let Some(next_i) = consume_from_factor(tokens, index, false, i, ctx) {
             return next_i;
         }
     }
-    consume_clause_relation(tokens, i, token, index, in_with, in_from, ctx)
+    consume_clause_relation(tokens, i, token, index, state, ctx)
 }
 
 fn consume_from_factor(
@@ -73,8 +66,16 @@ fn consume_from_factor(
             if matches!(tok.token, Token::LParen) {
                 let after = skip_paren_group(tokens, paren_i);
                 let (end, alias) = read_optional_alias(tokens, after);
-                let inner = &tokens[paren_i + 1..after.saturating_sub(1)];
+                let inner_end = if after > paren_i + 1
+                    && matches!(tokens.get(after - 1).map(|t| &t.token), Some(Token::RParen))
+                {
+                    after - 1
+                } else {
+                    after
+                };
+                let inner = &tokens[paren_i + 1..inner_end];
                 if super::token_scopes::starts_with_query(inner) {
+                    ctx.has_derived_from = true;
                     if let Some(name) = alias {
                         ctx.derived_aliases.push(name);
                     }
@@ -107,6 +108,7 @@ fn extract_parenthesized_join(
     ctx.from_relations.extend(sub.from_relations);
     ctx.join_aliases.extend(sub.join_aliases);
     ctx.derived_aliases.extend(sub.derived_aliases);
+    ctx.has_derived_from |= sub.has_derived_from;
 }
 
 fn consume_with_head(tokens: &[TokenWithSpan], mut index: usize, ctx: &mut FragmentContext) -> usize {
@@ -127,13 +129,13 @@ fn consume_clause_relation(
     i: usize,
     token: &TokenWithSpan,
     index: usize,
-    in_with: &mut bool,
-    in_from: &mut bool,
+    state: &mut ClauseState,
     ctx: &mut FragmentContext,
 ) -> usize {
     if is_kw(token, Keyword::UPDATE) {
-        *in_with = false;
-        *in_from = false;
+        state.in_with = false;
+        state.in_from = false;
+        state.in_join = false;
         let is_do = (0..i)
             .rev()
             .find(|&j| !matches!(tokens[j].token, Token::Whitespace(_)))
@@ -144,23 +146,31 @@ fn consume_clause_relation(
                 return next_i;
             }
         }
-    } else if is_kw(token, Keyword::INTO) || is_kw(token, Keyword::FROM) || is_kw(token, Keyword::USING) {
+    } else if is_kw(token, Keyword::INTO)
+        || is_kw(token, Keyword::FROM)
+        || (is_kw(token, Keyword::USING)
+            && !state.in_join
+            && tokens[..i].iter().any(|t| is_kw(t, Keyword::DELETE)))
+    {
         let is_into = is_kw(token, Keyword::INTO);
-        *in_with = false;
-        *in_from = !is_into;
+        state.in_with = false;
+        state.in_from = !is_into;
+        state.in_join = false;
         if let Some(next_i) = consume_from_factor(tokens, index, is_into, i, ctx) {
             return next_i;
         }
     } else if is_kw(token, Keyword::JOIN) {
-        *in_from = true;
+        state.in_from = true;
+        state.in_join = true;
         if let Some(next_i) = consume_from_factor(tokens, index, false, i, ctx) {
             return next_i;
         }
     } else if super::clauses::ends_from_list(token) {
         if is_kw(token, Keyword::SELECT) || is_kw(token, Keyword::DELETE) {
-            *in_with = false;
+            state.in_with = false;
         }
-        *in_from = false;
+        state.in_from = false;
+        state.in_join = false;
     }
     index
 }
