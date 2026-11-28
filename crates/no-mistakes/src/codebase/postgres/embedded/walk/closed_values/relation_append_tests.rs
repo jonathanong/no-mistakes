@@ -12,7 +12,13 @@ type Pair = "entries" | "records";
 type Single = "entries";
 
 export function fromParenTuple(table: (typeof PAREN_TUPLE)[number], suffix: string) {
-  return query(`SELECT * FROM ${table}` + suffix);
+  return query(`SELECT * FROM ${table} ` + suffix);
+}
+
+export function plusEqualsTemplateWithContext(table: Pair) {
+  let q = "UPDATE ";
+  q += `${table} SET active = true RETURNING *`;
+  return query(q);
 }
 
 export function multiRelationReturning(table: Pair) {
@@ -62,25 +68,36 @@ export function multiInitAndTemplateLeaf(table: Pair, suffix: string) {
   let q = `UPDATE ${table}`;
   q += " SET active = true RETURNING *";
   query(q);
+  query("SELECT * FROM " + `${table} ` + suffix);
   return query("SELECT * FROM " + `${table}` + suffix);
 }
 "#;
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
     let facts = extract_embedded_sql_from_source(Path::new("src/multi.ts"), source, &options);
-    assert_eq!(facts.calls.len(), 10);
-    let first: Vec<String> = facts
-        .call_fragments
-        .get(&facts.call_spans[0])
-        .cloned()
-        .unwrap_or_default()
-        .into_iter()
-        .map(|f| f.sql)
-        .collect();
+    assert_eq!(facts.calls.len(), 12);
+    let frags_of = |idx: usize| -> Vec<String> {
+        facts
+            .call_fragments
+            .get(&facts.call_spans[idx])
+            .cloned()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|f| f.sql)
+            .collect()
+    };
     assert_eq!(
-        first,
+        frags_of(0),
         vec![
-            "SELECT * FROM entriessql_placeholder_1".to_string(),
-            "SELECT * FROM audit_viewsql_placeholder_1".to_string(),
+            "SELECT * FROM entries sql_placeholder_1".to_string(),
+            "SELECT * FROM audit_view sql_placeholder_1".to_string(),
+        ]
+    );
+    assert_eq!(
+        frags_of(1),
+        vec![
+            "UPDATE ".to_string(),
+            "entries SET active = true RETURNING *".to_string(),
+            "records SET active = true RETURNING *".to_string(),
         ]
     );
     let returning_ctxs = |idx: usize| -> Vec<Option<String>> {
@@ -95,7 +112,7 @@ export function multiInitAndTemplateLeaf(table: Pair, suffix: string) {
             .collect()
     };
     assert_eq!(
-        returning_ctxs(1),
+        returning_ctxs(2),
         vec![
             Some(
                 "UPDATE entries AS t SET flag = true FROM wide_join AS j WHERE t.id = j.id"
@@ -108,58 +125,41 @@ export function multiInitAndTemplateLeaf(table: Pair, suffix: string) {
         ]
     );
     assert_eq!(
-        returning_ctxs(2),
+        returning_ctxs(3),
         vec![
             Some("UPDATE entries".to_string()),
             Some("UPDATE records".to_string()),
         ]
     );
-    assert!(returning_ctxs(3)
+    assert!(returning_ctxs(4)
         .iter()
         .any(|c| c.as_deref() == Some("UPDATE entries SET a = 1")));
-    assert!(facts
-        .call_fragments
-        .get(&facts.call_spans[4])
-        .cloned()
-        .unwrap_or_default()
-        .is_empty());
-    assert_eq!(returning_ctxs(5), vec![Some("UPDATE entries".to_string())]);
+    assert!(frags_of(5).is_empty());
+    assert_eq!(returning_ctxs(6), vec![Some("UPDATE entries".to_string())]);
     assert_eq!(
-        returning_ctxs(6),
+        returning_ctxs(7),
         vec![
             Some("UPDATE entries".to_string()),
             Some("UPDATE records".to_string()),
         ]
     );
-    let arrow_frags: Vec<String> = facts
-        .call_fragments
-        .get(&facts.call_spans[7])
-        .cloned()
-        .unwrap_or_default()
-        .into_iter()
-        .map(|f| f.sql)
-        .collect();
-    assert!(arrow_frags.iter().any(|s| s == "SELECT * FROM entries"));
+    assert!(frags_of(8).iter().any(|s| s == "SELECT * FROM entries"));
     assert_eq!(
-        returning_ctxs(8),
+        returning_ctxs(9),
         vec![
             Some("UPDATE entries".to_string()),
             Some("UPDATE records".to_string()),
         ]
     );
-    let leaf_frags: Vec<String> = facts
-        .call_fragments
-        .get(&facts.call_spans[9])
-        .cloned()
-        .unwrap_or_default()
-        .into_iter()
-        .map(|f| f.sql)
-        .collect();
     assert_eq!(
-        leaf_frags,
+        frags_of(10),
         vec![
-            "SELECT * FROM entriessql_placeholder_1".to_string(),
-            "SELECT * FROM recordssql_placeholder_1".to_string(),
+            "SELECT * FROM entries sql_placeholder_1".to_string(),
+            "SELECT * FROM records sql_placeholder_1".to_string(),
         ]
+    );
+    assert_eq!(
+        frags_of(11),
+        vec!["SELECT * FROM sql_placeholder_1".to_string()]
     );
 }

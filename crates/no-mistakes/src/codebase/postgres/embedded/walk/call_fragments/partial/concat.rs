@@ -36,7 +36,9 @@ pub(super) fn collect_addition<'a>(
                 } else {
                     trailing.push((piece.clone(), leaf_line, (leaf_span.start, leaf_span.end)));
                 }
-            } else if combined.len().saturating_mul(pieces.len()) <= cap {
+                continue;
+            }
+            if combined.len().saturating_mul(pieces.len()) <= cap {
                 let mut next = Vec::with_capacity(combined.len() * pieces.len());
                 for base in &combined {
                     for piece in &pieces {
@@ -49,19 +51,17 @@ pub(super) fn collect_addition<'a>(
                         trailing.push((piece, leaf_line, (leaf_span.start, leaf_span.end)));
                     }
                 }
-            } else {
-                seen_opaque = true;
-                placeholders_used += 1;
-                let ph = placeholders::internal_placeholder(placeholders_used);
-                combined.iter_mut().for_each(|c| c.push_str(&ph));
+                continue;
             }
-        } else {
-            seen_opaque = true;
-            placeholders_used += 1;
-            let ph = placeholders::internal_placeholder(placeholders_used);
-            combined.iter_mut().for_each(|c| c.push_str(&ph));
         }
+        seen_opaque = true;
+        placeholders_used += 1;
+        let ph = placeholders::internal_placeholder(placeholders_used);
+        combined
+            .iter_mut()
+            .for_each(|c| append_opaque_placeholder(c, &ph));
     }
+    combined.dedup();
     for sql in combined {
         if !sql.trim().is_empty() {
             push_clean(
@@ -86,6 +86,18 @@ pub(super) fn collect_addition<'a>(
             }
         }
     }
+}
+
+fn append_opaque_placeholder(c: &mut String, ph: &str) {
+    let ident_len = c
+        .bytes()
+        .rev()
+        .take_while(|b| b.is_ascii_alphanumeric() || *b == b'_')
+        .count();
+    if ident_len > 0 && sentinel::in_relation_slot(c, c.len() - ident_len) {
+        c.truncate(c.len() - ident_len);
+    }
+    c.push_str(ph);
 }
 
 fn flatten_add<'a>(expr: &'a Expression<'a>, out: &mut Vec<&'a Expression<'a>>) {
@@ -178,23 +190,4 @@ pub(super) fn push_clean(
         context_sql: context_sql.map(str::to_string),
         append_site,
     });
-}
-
-pub(in super::super) fn self_addition_parts<'a>(
-    expr: &'a Expression<'a>,
-    target: &str,
-) -> Option<Vec<&'a Expression<'a>>> {
-    let mut parts = Vec::new();
-    let mut cur = expr;
-    while let Expression::BinaryExpression(bin) = unwrap_ts_wrappers(cur) {
-        if bin.operator != BinaryOperator::Addition {
-            return None;
-        }
-        parts.push(&bin.right);
-        cur = &bin.left;
-    }
-    matches!(unwrap_ts_wrappers(cur), Expression::Identifier(id) if id.name == target).then(|| {
-        parts.reverse();
-        parts
-    })
 }

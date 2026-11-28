@@ -49,7 +49,9 @@ impl ScopeVisitor<'_> {
                 self.append_assignment_expr(key, &assign.right, assign.span.start);
             }
             AssignmentOperator::Assign => {
-                if let Some(parts) = partial::self_addition_parts(&assign.right, id.name.as_str()) {
+                if let Some(parts) =
+                    super::collect::self_addition_parts(&assign.right, id.name.as_str())
+                {
                     for part in parts {
                         self.append_assignment_expr(key.clone(), part, assign.span.start);
                     }

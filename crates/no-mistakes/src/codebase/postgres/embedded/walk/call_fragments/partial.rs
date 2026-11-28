@@ -7,7 +7,6 @@ use oxc_span::GetSpan;
 
 mod concat;
 mod relations;
-pub(super) use concat::self_addition_parts;
 use concat::{collect_addition, partial_atom, partial_parameterized_template, push_clean};
 use relations::partial_templates;
 pub(super) use relations::{extend_prefix, try_relation_append};
@@ -97,7 +96,8 @@ fn collect(
             );
         }
         Expression::TemplateLiteral(template) => {
-            for sql in partial_templates(visitor, template, &[], depth - 1) {
+            let prefixes: Vec<String> = context_sql.into_iter().map(str::to_string).collect();
+            for sql in partial_templates(visitor, template, &prefixes, depth - 1) {
                 push_clean(
                     out,
                     sql,
@@ -122,7 +122,8 @@ fn collect(
             let sqls = if parameterized {
                 vec![partial_parameterized_template(&tagged.quasi)]
             } else {
-                partial_templates(visitor, &tagged.quasi, &[], depth - 1)
+                let prefixes: Vec<String> = context_sql.into_iter().map(str::to_string).collect();
+                partial_templates(visitor, &tagged.quasi, &prefixes, depth - 1)
             };
             for sql in sqls {
                 push_clean(

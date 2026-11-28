@@ -59,7 +59,8 @@ pub(super) fn note_const_relation_and_array(
     scope: usize,
     name: &str,
 ) {
-    if let Some(id_name) = unwrap_alias_ident(init) {
+    if let (Expression::Identifier(id), _) = unwrap_const_preserving(init) {
+        let id_name = id.name.as_str();
         if let Some(i) = visitor
             .scopes
             .iter()
@@ -114,9 +115,12 @@ fn tuple_string_literals(mut ty: &TSType<'_>) -> Option<Vec<String>> {
         let value = tuple_element_string(element)?;
         if !values.contains(&value) {
             values.push(value);
+            if values.len() > MAX_EMBEDDED_SQL_VARIANTS {
+                return None;
+            }
         }
     }
-    (!values.is_empty() && values.len() <= MAX_EMBEDDED_SQL_VARIANTS).then_some(values)
+    (!values.is_empty()).then_some(values)
 }
 
 fn tuple_element_string(element: &TSTupleElement<'_>) -> Option<String> {
@@ -143,21 +147,7 @@ fn is_as_const(ty: &TSType<'_>) -> bool {
     )
 }
 
-fn unwrap_alias_ident<'a>(mut expr: &'a Expression<'a>) -> Option<&'a str> {
-    loop {
-        match expr {
-            Expression::ParenthesizedExpression(inner) => expr = &inner.expression,
-            Expression::TSSatisfiesExpression(inner) => expr = &inner.expression,
-            Expression::TSAsExpression(as_expr) if is_as_const(&as_expr.type_annotation) => {
-                expr = &as_expr.expression;
-            }
-            Expression::Identifier(id) => return Some(id.name.as_str()),
-            _ => return None,
-        }
-    }
-}
-
-fn as_const_array_literals(mut expr: &Expression<'_>) -> Option<Vec<String>> {
+fn unwrap_const_preserving<'a>(mut expr: &'a Expression<'a>) -> (&'a Expression<'a>, bool) {
     let mut saw_as_const = false;
     loop {
         match expr {
@@ -167,27 +157,27 @@ fn as_const_array_literals(mut expr: &Expression<'_>) -> Option<Vec<String>> {
                 saw_as_const = true;
                 expr = &as_expr.expression;
             }
-            Expression::TSAsExpression(_) => return None,
-            _ => break,
+            _ => return (expr, saw_as_const),
         }
     }
-    if !saw_as_const {
-        return None;
-    }
-    let Expression::ArrayExpression(array) = expr else {
+}
+
+fn as_const_array_literals(expr: &Expression<'_>) -> Option<Vec<String>> {
+    let (Expression::ArrayExpression(array), true) = unwrap_const_preserving(expr) else {
         return None;
     };
     let mut values = Vec::new();
     for item in &array.elements {
-        let Expression::StringLiteral(text) = unwrap_ts_wrappers(item.as_expression()?) else {
+        let (Expression::StringLiteral(text), _) = unwrap_const_preserving(item.as_expression()?)
+        else {
             return None;
         };
         let value = crate::ast::js_literal(text).into_owned();
         if !values.contains(&value) {
             values.push(value);
-        }
-        if values.len() > MAX_EMBEDDED_SQL_VARIANTS {
-            return None;
+            if values.len() > MAX_EMBEDDED_SQL_VARIANTS {
+                return None;
+            }
         }
     }
     (!values.is_empty()).then_some(values)

@@ -6,7 +6,7 @@ use crate::codebase::postgres::embedded::{
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashSet;
-use oxc_ast::ast::{CallExpression, Expression};
+use oxc_ast::ast::{BinaryOperator, CallExpression, Expression};
 
 impl ScopeVisitor<'_> {
     pub(in crate::codebase::postgres::embedded::walk) fn pop_builder_fragments(
@@ -159,4 +159,23 @@ pub(crate) fn publish_call_fragments(fragments: &mut [CallSqlFragment]) {
             fragment.context_sql = Some(placeholders::publish_placeholders(context));
         }
     }
+}
+
+pub(super) fn self_addition_parts<'a>(
+    expr: &'a Expression<'a>,
+    target: &str,
+) -> Option<Vec<&'a Expression<'a>>> {
+    let mut parts = Vec::new();
+    let mut cur = expr;
+    while let Expression::BinaryExpression(bin) = unwrap_ts_wrappers(cur) {
+        if bin.operator != BinaryOperator::Addition {
+            return None;
+        }
+        parts.push(&bin.right);
+        cur = &bin.left;
+    }
+    matches!(unwrap_ts_wrappers(cur), Expression::Identifier(id) if id.name == target).then(|| {
+        parts.reverse();
+        parts
+    })
 }

@@ -31,13 +31,16 @@ pub(super) fn scan_embedded_fragments(
         let rel = relative_slash_path(root, &file.path);
         let source =
             no_mistakes_rule_kernel::source_access::read_language_source(sources, &file.path);
-        let executed_append_sites: FxHashSet<u32> = file
-            .calls
-            .iter()
-            .filter(|call| !call.is_unanalyzable())
-            .flat_map(|call| call.variants.iter())
-            .flat_map(|variant| variant.append_sites.iter().copied())
-            .collect();
+        let has_unanalyzable = file.calls.iter().any(|call| call.is_unanalyzable());
+        let executed_append_sites: FxHashSet<u32> = if has_unanalyzable {
+            FxHashSet::default()
+        } else {
+            file.calls
+                .iter()
+                .flat_map(|call| call.variants.iter())
+                .flat_map(|variant| variant.append_sites.iter().copied())
+                .collect()
+        };
         let mut scanner = FileScanner {
             rel: &rel,
             source: source.as_deref(),
@@ -85,7 +88,16 @@ impl FileScanner<'_> {
         let context = fragment
             .context_sql
             .as_deref()
-            .map(fragment_parse::parse_context)
+            .map(|ctx_sql| {
+                if crate::codebase::postgres::embedded::helpers::sentinel::in_relation_slot(
+                    ctx_sql,
+                    ctx_sql.len(),
+                ) {
+                    fragment_parse::parse_context(&format!("{ctx_sql}{}", fragment.sql))
+                } else {
+                    fragment_parse::parse_context(ctx_sql)
+                }
+            })
             .unwrap_or_default();
         for star in &stars {
             if star.returning && !self.opts.check_returning {

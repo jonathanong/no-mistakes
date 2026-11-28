@@ -60,3 +60,28 @@ pub(super) fn open_clause_at_end(tokens: &[TokenWithSpan]) -> (bool, bool, bool)
     }
     (select, returning, in_exists)
 }
+
+pub(super) fn ends_from_list(token: &TokenWithSpan) -> bool {
+    matches!(
+        &token.token,
+        Token::Word(w) if matches!(
+            w.keyword,
+            Keyword::WHERE
+                | Keyword::GROUP
+                | Keyword::HAVING
+                | Keyword::ORDER
+                | Keyword::LIMIT
+                | Keyword::OFFSET
+                | Keyword::FETCH
+                | Keyword::UNION
+                | Keyword::INTERSECT
+                | Keyword::EXCEPT
+                | Keyword::RETURNING
+                | Keyword::SET
+                | Keyword::VALUES
+                | Keyword::SELECT
+                | Keyword::DELETE
+                | Keyword::WINDOW
+        )
+    )
+}

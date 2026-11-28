@@ -404,6 +404,26 @@ fn context_and_token_fallback_handle_prefixes_ctes_commas_and_subqueries() {
     assert!(extract_fragment_stars("   ", None).is_empty());
     assert!(extract_fragment_stars("/* * */", None).is_empty());
 
+    let table_line = extract_fragment_stars("SELECT 1;\nTABLE wide", None);
+    assert_eq!(table_line.len(), 1);
+    assert_eq!(table_line[0].line, 2);
+
+    let paren_join = extract_fragment_stars(
+        "SELECT j.* FROM (wide w JOIN narrow n ON w.id = n.id) AS j WHERE",
+        None,
+    );
+    let paren_join_rels: Vec<_> = paren_join.iter().map(|s| s.relation.as_deref()).collect();
+    assert_eq!(paren_join_rels, vec![Some("wide"), Some("narrow")]);
+
+    let corr_tok = extract_fragment_stars(
+        "SELECT (SELECT row_to_json(w.*)) FROM wide w WHERE",
+        None,
+    );
+    assert_eq!(corr_tok.len(), 1);
+    assert_eq!(corr_tok[0].relation.as_deref(), Some("wide"));
+
+    assert!(extract_fragment_stars("SELECT pg_catalog.count(*) FROM wide WHERE", None).is_empty());
+
     let edge_ctxs = [
         "WITH a(x, (y)) AS (SELECT 1), 1 SELECT 1",
         "WITH a(x",

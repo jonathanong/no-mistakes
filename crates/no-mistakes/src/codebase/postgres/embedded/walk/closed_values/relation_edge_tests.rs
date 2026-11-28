@@ -15,7 +15,9 @@ const EMPTY_ARR = [] as const;
 const NUM_ARR = [1] as const;
 const NOT_ARR = "entries" as const;
 const AS_STR = ["entries"] as string[];
+const ELEM_AS_STR = ["entries" as string] as const;
 const BIG = ["a1","a2","a3","a4","a5","a6","a7","a8","a9","a10","a11","a12","a13","a14","a15","a16","a17"] as const;
+const BIG_TUPLE: readonly ["a1","a2","a3","a4","a5","a6","a7","a8","a9","a10","a11","a12","a13","a14","a15","a16","a17"] = ["a1","a2","a3","a4","a5","a6","a7","a8","a9","a10","a11","a12","a13","a14","a15","a16","a17"];
 type Five = "t1" | "t2" | "t3" | "t4" | "t5";
 type Pair = "entries" | "records";
 const STATIC_TBL = "entries";
@@ -28,7 +30,9 @@ export function wrapperAliases(
   e: (typeof NUM_ARR)[number],
   f: (typeof NOT_ARR)[number],
   g: (typeof AS_STR)[number],
+  g2: (typeof ELEM_AS_STR)[number],
   h: (typeof BIG)[number],
+  h2: (typeof BIG_TUPLE)[number],
   m: (typeof MISSING)[number],
   n: string[number],
   x: string,
@@ -36,6 +40,8 @@ export function wrapperAliases(
   query(`SELECT * FROM ${a}`);
   query(`SELECT * FROM ${b}`);
   query(`SELECT * FROM ${c}`);
+  query(`SELECT * FROM ${g2}`);
+  query(`SELECT * FROM ${h2}`);
   query(`SELECT * FROM ${d} ${e} ${f} ${g} ${h} ${m} ${n}`);
   return query(`SELECT * FROM ${STATIC_TBL} WHERE id = ${x}`);
 }

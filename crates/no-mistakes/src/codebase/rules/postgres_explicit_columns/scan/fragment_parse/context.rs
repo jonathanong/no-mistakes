@@ -73,8 +73,13 @@ fn consume_from_factor(
             if matches!(tok.token, Token::LParen) {
                 let after = skip_paren_group(tokens, paren_i);
                 let (end, alias) = read_optional_alias(tokens, after);
-                if let Some(name) = alias {
-                    ctx.derived_aliases.push(name);
+                let inner = &tokens[paren_i + 1..after.saturating_sub(1)];
+                if super::token_scopes::starts_with_query(inner) {
+                    if let Some(name) = alias {
+                        ctx.derived_aliases.push(name);
+                    }
+                } else {
+                    extract_parenthesized_join(inner, alias.as_deref(), ctx);
                 }
                 return Some(end);
             }
@@ -83,6 +88,25 @@ fn consume_from_factor(
     let (next_i, rel) = read_table_and_alias(tokens, index)?;
     record_from_or_into(tokens, kw_i, is_into, rel, ctx);
     Some(next_i)
+}
+
+fn extract_parenthesized_join(
+    inner: &[TokenWithSpan],
+    outer_alias: Option<&str>,
+    ctx: &mut FragmentContext,
+) {
+    let mut sub = FragmentContext::default();
+    if let Some(next_i) = consume_from_factor(inner, 0, false, 0, &mut sub) {
+        extract_context_from_tokens(&inner[next_i..], &mut sub);
+    }
+    if let Some(alias) = outer_alias {
+        for (table, _) in &sub.from_relations {
+            ctx.join_aliases.push((alias.to_string(), table.clone()));
+        }
+    }
+    ctx.from_relations.extend(sub.from_relations);
+    ctx.join_aliases.extend(sub.join_aliases);
+    ctx.derived_aliases.extend(sub.derived_aliases);
 }
 
 fn consume_with_head(tokens: &[TokenWithSpan], mut index: usize, ctx: &mut FragmentContext) -> usize {
@@ -132,7 +156,7 @@ fn consume_clause_relation(
         if let Some(next_i) = consume_from_factor(tokens, index, false, i, ctx) {
             return next_i;
         }
-    } else if ends_from_list(token) {
+    } else if super::clauses::ends_from_list(token) {
         if is_kw(token, Keyword::SELECT) || is_kw(token, Keyword::DELETE) {
             *in_with = false;
         }
@@ -156,29 +180,4 @@ fn record_from_or_into(
         }
         ctx.from_relations.push(rel);
     }
-}
-
-fn ends_from_list(token: &TokenWithSpan) -> bool {
-    matches!(
-        &token.token,
-        Token::Word(w) if matches!(
-            w.keyword,
-            Keyword::WHERE
-                | Keyword::GROUP
-                | Keyword::HAVING
-                | Keyword::ORDER
-                | Keyword::LIMIT
-                | Keyword::OFFSET
-                | Keyword::FETCH
-                | Keyword::UNION
-                | Keyword::INTERSECT
-                | Keyword::EXCEPT
-                | Keyword::RETURNING
-                | Keyword::SET
-                | Keyword::VALUES
-                | Keyword::SELECT
-                | Keyword::DELETE
-                | Keyword::WINDOW
-        )
-    )
 }

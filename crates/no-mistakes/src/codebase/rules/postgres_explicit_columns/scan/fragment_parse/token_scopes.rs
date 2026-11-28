@@ -21,7 +21,7 @@ pub(super) fn scope_context(
             || inner.mutation_target.is_some()
             || starts_with_query(slice)
         {
-            collect_ancestor_ctes(tokens, open, &mut inner.ctes);
+            collect_ancestors(tokens, open, outer, &mut inner);
             return Some(inner);
         }
         cursor = open;
@@ -29,13 +29,23 @@ pub(super) fn scope_context(
     None
 }
 
-fn collect_ancestor_ctes(tokens: &[TokenWithSpan], mut cursor: usize, ctes: &mut Vec<String>) {
+fn collect_ancestors(
+    tokens: &[TokenWithSpan],
+    mut cursor: usize,
+    outer: &FragmentContext,
+    inner: &mut FragmentContext,
+) {
     while let Some(open) = enclosing_open_paren(tokens, cursor) {
-        let mut parent = FragmentContext::default();
-        extract_context_from_tokens(&tokens[open + 1..cursor], &mut parent);
-        ctes.extend(parent.ctes);
+        let close = matching_close_paren(tokens, open);
+        let mut parent_ctes = FragmentContext::default();
+        extract_context_from_tokens(&tokens[open + 1..cursor], &mut parent_ctes);
+        inner.ctes.extend(parent_ctes.ctes);
+        let mut parent_full = FragmentContext::default();
+        extract_context_from_tokens(&tokens[open + 1..close], &mut parent_full);
+        inner.outer_relations.extend(parent_full.from_relations);
         cursor = open;
     }
+    inner.outer_relations.extend(outer.from_relations.iter().cloned());
 }
 
 pub(super) fn is_distinct_on_rparen(tokens: &[TokenWithSpan], rparen_index: usize) -> bool {
@@ -57,7 +67,7 @@ fn prev_code_index(tokens: &[TokenWithSpan], before: usize) -> Option<usize> {
         .find(|&j| !matches!(tokens[j].token, Token::Whitespace(_)))
 }
 
-fn starts_with_query(tokens: &[TokenWithSpan]) -> bool {
+pub(super) fn starts_with_query(tokens: &[TokenWithSpan]) -> bool {
     tokens
         .iter()
         .find(|t| !matches!(t.token, Token::Whitespace(_)))
@@ -145,4 +155,25 @@ pub(super) fn read_qualified_name_backwards(
     }
     parts.reverse();
     Some(parts.join("."))
+}
+
+pub(super) fn resolve_qualified_relation(ctx: &FragmentContext, q: &str) -> Option<String> {
+    let find_in = |rels: &[(String, Option<String>)]| {
+        rels.iter()
+            .find(|(_, a)| a.as_deref() == Some(q))
+            .or_else(|| {
+                rels.iter().find(|(t, a)| {
+                    a.is_none()
+                        && (t == q || (!q.contains('.') && t.rsplit('.').next() == Some(q)))
+                })
+            })
+            .map(|(t, _)| t.clone())
+    };
+    let local: Vec<_> = ctx
+        .from_relations
+        .iter()
+        .chain(ctx.mutation_target.iter())
+        .cloned()
+        .collect();
+    find_in(&local).or_else(|| find_in(&ctx.outer_relations))
 }

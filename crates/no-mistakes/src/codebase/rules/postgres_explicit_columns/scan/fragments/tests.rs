@@ -53,6 +53,7 @@ fn placeholder_and_resolved_relations_cover_all_branches() {
             ("public.items".to_string(), None),
             ("accounts".to_string(), Some("a".to_string())),
         ],
+        ..Default::default()
     };
 
     let direct = FragmentStar {
@@ -321,7 +322,17 @@ fn scan_fragments_respects_returning_option_cte_vs_target_and_per_occurrence_ded
         "",
         &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
-    file.call_spans = vec![(0, 10), (11, 20), (21, 30), (31, 40)];
+    file.call_spans = vec![(0, 10), (11, 20), (21, 30), (31, 40), (41, 50)];
+    file.call_fragments.insert(
+        (41, 50),
+        vec![CallSqlFragment {
+            sql: "wide SET a = 1 RETURNING *".to_string(),
+            line: 3,
+            span: (41, 50),
+            context_sql: Some("UPDATE ".to_string()),
+            append_site: None,
+        }],
+    );
     file.call_fragments.insert(
         (0, 10),
         vec![CallSqlFragment {
@@ -373,7 +384,7 @@ fn scan_fragments_respects_returning_option_cte_vs_target_and_per_occurrence_ded
         &facts,
         &mut findings,
     );
-    assert_eq!(findings.0.len(), 1);
+    assert_eq!(findings.0.len(), 2);
     assert_eq!(facts.sql_verdicts().len(), 1);
 
     let no_ret = compile_options(&Options {

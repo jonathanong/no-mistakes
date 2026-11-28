@@ -1,7 +1,8 @@
 use super::super::fragment_ast::FragmentStar;
 use super::context::extract_context_from_tokens;
 use super::token_scopes::{
-    enclosing_function, is_distinct_on_rparen, read_qualified_name_backwards, scope_context,
+    enclosing_function, is_distinct_on_rparen, read_qualified_name_backwards,
+    resolve_qualified_relation, scope_context,
 };
 use super::{is_kw, FragmentContext};
 use sqlparser::keywords::Keyword;
@@ -97,22 +98,33 @@ fn push_qualified(
     out: &mut Vec<FragmentStar>,
 ) {
     let qualifier = prev_prev_idx.and_then(|idx| read_qualified_name_backwards(tokens, idx));
-    let relation = qualifier.as_deref().and_then(|q| {
-        ctx.from_relations
+    let func = enclosing_function(tokens, index);
+    if let Some(q) = qualifier.as_deref() {
+        let joined: Vec<_> = ctx
+            .join_aliases
             .iter()
-            .chain(ctx.mutation_target.iter())
-            .find(|(_, a)| a.as_deref() == Some(q))
-            .or_else(|| {
-                ctx.from_relations
-                    .iter()
-                    .chain(ctx.mutation_target.iter())
-                    .find(|(t, a)| {
-                        a.is_none()
-                            && (t == q || (!q.contains('.') && t.rsplit('.').next() == Some(q)))
-                    })
-            })
-            .map(|(t, _)| t.clone())
-    });
+            .filter(|(a, _)| a == q)
+            .map(|(_, t)| t.clone())
+            .collect();
+        if !joined.is_empty() {
+            for rel in joined {
+                if !rel.contains('.') && ctx.ctes.iter().any(|c| c == &rel) {
+                    continue;
+                }
+                out.push(FragmentStar {
+                    returning,
+                    qualifier: qualifier.clone(),
+                    relation: Some(rel),
+                    within_function: func.clone(),
+                    line,
+                });
+            }
+            return;
+        }
+    }
+    let relation = qualifier
+        .as_deref()
+        .and_then(|q| resolve_qualified_relation(ctx, q));
     if let Some(rel) = &relation {
         if !rel.contains('.') && ctx.ctes.iter().any(|c| c == rel) {
             return;
@@ -127,7 +139,7 @@ fn push_qualified(
         returning,
         qualifier,
         relation,
-        within_function: enclosing_function(tokens, index),
+        within_function: func,
         line,
     });
 }
@@ -141,7 +153,9 @@ fn push_bare(
     out: &mut Vec<FragmentStar>,
 ) {
     let func = enclosing_function(tokens, index);
-    if func.as_deref().is_some_and(|f| f.eq_ignore_ascii_case("count")) {
+    if func.as_deref().is_some_and(|f| {
+        f.eq_ignore_ascii_case("count") || f.eq_ignore_ascii_case("pg_catalog.count")
+    }) {
         return;
     }
     if returning {

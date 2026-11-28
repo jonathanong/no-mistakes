@@ -80,12 +80,13 @@ pub(super) fn collect_table_expr(table: &Table, ctes: &[String], out: &mut Vec<F
         |schema| format!("{}.{}", ident_key(schema), ident_key(name)),
     );
     if !ctes.iter().any(|cte| cte == &table_name) {
+        let line = (name.span.start.line as usize).max(1);
         out.push(FragmentStar {
             returning: false,
             qualifier: None,
             relation: Some(table_name),
             within_function: None,
-            line: 1,
+            line,
         });
     }
 }

@@ -16,8 +16,10 @@ use context::extract_context_from_tokens;
 pub(super) struct FragmentContext {
     pub(super) ctes: Vec<String>,
     pub(super) derived_aliases: Vec<String>,
+    pub(super) join_aliases: Vec<(String, String)>,
     pub(super) mutation_target: Option<(String, Option<String>)>,
     pub(super) from_relations: Vec<(String, Option<String>)>,
+    pub(super) outer_relations: Vec<(String, Option<String>)>,
 }
 
 pub(super) fn parse_context(prefix: &str) -> FragmentContext {
