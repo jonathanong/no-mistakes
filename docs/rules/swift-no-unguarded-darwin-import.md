@@ -85,8 +85,8 @@ check report use the same rule.
 ## Valid example
 
 ```swift
-// swift-tools-version: 5.9
 // Package.swift
+// swift-tools-version: 5.9
 import PackageDescription
 
 let package = Package(
@@ -114,8 +114,8 @@ final class ClockTests: XCTestCase {
 ## Counterexample
 
 ```swift
-// swift-tools-version: 5.9
 // Package.swift
+// swift-tools-version: 5.9
 import PackageDescription
 
 let package = Package(

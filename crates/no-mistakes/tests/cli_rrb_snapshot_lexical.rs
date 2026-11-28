@@ -284,7 +284,7 @@ fn swift_apple_module_imports_json_matches_snapshot() {
                 "../configs/apple-opt-in.yml",
             ),
             c(
-                "apple_platforms_package_skipped",
+                "apple_platforms_package_portable_test",
                 "swift-no-unguarded-darwin-import/scope-apple-platforms",
                 "../configs/apple-opt-in.yml",
             ),
@@ -347,7 +347,6 @@ fn swift_apple_module_imports_json_matches_snapshot() {
         "empty_modules",
         "macos_app_source_skipped",
         "xcodegen_app_skipped",
-        "apple_platforms_package_skipped",
         "apple_guard_conjunctions",
         "portable_security_default",
     ] {
@@ -358,6 +357,7 @@ fn swift_apple_module_imports_json_matches_snapshot() {
             "{clean}"
         );
     }
+    assert_eq!(reports["apple_platforms_package_portable_test"]["exitCode"], 1);
     assert_eq!(
         reports["portable_security_opt_in"]["report"]["rules"]
             .as_array()

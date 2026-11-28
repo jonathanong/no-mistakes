@@ -14,15 +14,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
-  "apple_platforms_package_skipped": {
-    "exitCode": 0,
+  "apple_platforms_package_portable_test": {
+    "exitCode": 1,
     "report": {
       "advisories": [],
       "codebase": [],
       "integration": [],
       "queues": [],
       "react": [],
-      "rules": [],
+      "rules": [
+        {
+          "file": "Tests/AppleKitTests/AppleKitTests.swift",
+          "line": 1,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin"
+        },
+        {
+          "file": "Tests/AppleKitTests/AppleKitTests.swift",
+          "line": 2,
+          "message": "Wrap the UIKit import and the tests that use it in `#if canImport(UIKit)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import UIKit"
+        },
+        {
+          "file": "Tests/AppleKitTests/AppleKitTests.swift",
+          "line": 3,
+          "message": "Wrap the AppKit import and the tests that use it in `#if canImport(AppKit)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import AppKit"
+        }
+      ],
       "warnings": []
     }
   },
