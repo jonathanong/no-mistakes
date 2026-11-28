@@ -87,7 +87,9 @@ impl PackageIndex {
     }
 
     pub(super) fn classify(&self, path: &Path) -> FileScope {
-        if path.file_name().and_then(|n| n.to_str()) == Some("Package.swift") {
+        if path.file_name().and_then(|n| n.to_str()) == Some("Package.swift")
+            || is_versioned_manifest(path)
+        {
             return FileScope::Skip;
         }
         let Some(package) = self.packages.iter().find(|pkg| path.starts_with(&pkg.root)) else {
