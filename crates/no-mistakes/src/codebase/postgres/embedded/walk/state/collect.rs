@@ -1,4 +1,4 @@
-use super::super::{executors::MemberQueryProof, imported, resolve};
+use super::super::{executors::MemberQueryProof, imported};
 use super::{CollectedCalls, ScopeVisitor};
 use crate::codebase::postgres::embedded::{
     bindings::sql_statement_type_bindings, helpers, relative::PendingRelativeSpan,
@@ -27,20 +27,7 @@ pub(crate) fn collect_calls<'a>(
     } else {
         super::super::finite_identifiers::vitest_it_imports(program)
     };
-    let functions = if head_calls_only {
-        resolve::LocalFunctions::collect_heads_with_raw(
-            program,
-            &options.trusted_sql_tags,
-            &options.raw_sql_tags,
-        )
-    } else {
-        resolve::LocalFunctions::collect_with_raw(
-            program,
-            source,
-            &options.trusted_sql_tags,
-            &options.raw_sql_tags,
-        )
-    };
+    let functions = super::collected::collect_functions(program, source, options, head_calls_only);
     let mut visitor = ScopeVisitor {
         #[cfg(feature = "test-instrumentation")]
         lock_summary_passes: 0,
@@ -133,6 +120,7 @@ pub(crate) fn collect_calls<'a>(
         clause_unions: crate::fx::fx_set(),
         exported_constants: Default::default(),
         plain: Default::default(),
+        call_fragment_state: Default::default(),
         frozen_aliases: Vec::new(),
         site_groups: Default::default(),
     };
@@ -190,6 +178,8 @@ pub(crate) fn collect_calls<'a>(
         fragments: visitor.fragments,
         fragment_variants: visitor.fragment_variants,
         fragment_sites: visitor.fragment_sites,
+        call_fragments: visitor.call_fragment_state.call_fragments,
+        param_append_fragments: visitor.call_fragment_state.param_appends,
         pending_calls: visitor.pending_calls,
         diagnostic_member_sequences,
         confirmed_order: visitor.confirmed_order,

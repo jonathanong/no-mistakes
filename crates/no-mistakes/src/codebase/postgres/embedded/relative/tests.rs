@@ -53,6 +53,8 @@ fn facts(calls: Vec<EmbeddedSqlCall>, pending: PendingRelativeScope) -> Embedded
         fragments: Vec::new(),
         fragment_variants: Vec::new(),
         fragment_sites: Vec::new(),
+        call_fragments: Default::default(),
+        param_append_fragments: Vec::new(),
         matched_factory_names: Vec::new(),
         matched_type_names: Vec::new(),
         pending_relative: pending,

@@ -1,5 +1,4 @@
 use super::{CompiledOptions, RULE_ID};
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::SqlFactContext;
 use crate::codebase::postgres::statements::SqlFactSite;
 use crate::codebase::postgres::statements::SqlStarProjectionFact;
@@ -8,9 +7,12 @@ use crate::codebase::ts_source::relative_slash_path;
 use std::path::{Path, PathBuf};
 
 mod finding;
+mod fragment_ast;
+mod fragment_parse;
+mod fragments;
 mod source;
 mod verdicts;
-use finding::sql_finding;
+use finding::{message, sql_finding, star_findings};
 use source::physical_source;
 
 pub(super) fn scan(
@@ -40,7 +42,7 @@ pub(super) fn scan(
     if prepared.wants_sql_verdicts() {
         verdicts::record(root, opts, &embedded, catalog, prepared)?;
     }
-    for file in embedded {
+    for file in &embedded {
         let rel = relative_slash_path(root, &file.path);
         for call in &file.calls {
             if opts.fail_unanalyzable && call.is_unanalyzable() {
@@ -84,19 +86,35 @@ pub(super) fn scan(
                 );
             }
         }
+        let from_variant = file.variant_locations.is_some();
         for (select_index, select) in file.selects.iter().enumerate() {
             for (star_index, star) in select.star_projections.iter().enumerate() {
                 let site = SqlFactSite::Star(select_index, star_index);
                 let (physical_rel, physical_source) =
                     physical_source(root, sources, file, &site, &rel, source.as_ref());
-                for finding in star_findings(
+                let produced = star_findings(
                     &physical_rel,
                     std::slice::from_ref(star),
                     "SELECT *",
                     "reads",
                     opts,
                     catalog,
-                ) {
+                );
+                if produced.is_empty() && file_index >= native_statement_count {
+                    fragments::check_executed_unresolved_star(
+                        prepared,
+                        opts,
+                        catalog,
+                        fragments::ExecutedStarContext {
+                            rel: &physical_rel,
+                            source: physical_source.as_deref(),
+                            returning: false,
+                            from_variant,
+                        },
+                        star,
+                    );
+                }
+                for finding in produced {
                     dedup.push(
                         &mut findings,
                         file,
@@ -112,14 +130,29 @@ pub(super) fn scan(
                 let site = SqlFactSite::ReturningStar(star_index);
                 let (physical_rel, physical_source) =
                     physical_source(root, sources, file, &site, &rel, source.as_ref());
-                for finding in star_findings(
+                let produced = star_findings(
                     &physical_rel,
                     std::slice::from_ref(star),
                     "RETURNING *",
                     "returns",
                     opts,
                     catalog,
-                ) {
+                );
+                if produced.is_empty() && file_index >= native_statement_count {
+                    fragments::check_executed_unresolved_star(
+                        prepared,
+                        opts,
+                        catalog,
+                        fragments::ExecutedStarContext {
+                            rel: &physical_rel,
+                            source: physical_source.as_deref(),
+                            returning: true,
+                            from_variant,
+                        },
+                        star,
+                    );
+                }
+                for finding in produced {
                     dedup.push(
                         &mut findings,
                         file,
@@ -131,68 +164,15 @@ pub(super) fn scan(
             }
         }
     }
+    fragments::scan_embedded_fragments(
+        root,
+        opts,
+        &embedded,
+        catalog,
+        sources,
+        prepared,
+        &mut findings,
+    );
     findings.sort();
     Ok(findings)
-}
-
-fn star_findings(
-    file: &str,
-    stars: &[SqlStarProjectionFact],
-    kind: &str,
-    verb: &str,
-    opts: &CompiledOptions,
-    catalog: &SchemaCatalog,
-) -> Vec<RuleFinding> {
-    let mut findings = Vec::new();
-    for star in stars {
-        if let Some(function) = &star.within_function {
-            if opts
-                .whole_row_functions
-                .iter()
-                .any(|allowed| allowed.eq_ignore_ascii_case(function))
-            {
-                continue;
-            }
-        }
-        let Some(text) = message(kind, verb, star, opts, catalog) else {
-            continue;
-        };
-        findings.push(sql_finding(file, star.line.max(1), &text, &star.relation));
-    }
-    findings
-}
-
-fn message(
-    kind: &str,
-    verb: &str,
-    star: &SqlStarProjectionFact,
-    opts: &CompiledOptions,
-    catalog: &SchemaCatalog,
-) -> Option<String> {
-    let listed = opts
-        .relations
-        .iter()
-        .any(|relation| relation.eq_ignore_ascii_case(&star.relation));
-    if listed {
-        return Some(format!(
-            "{kind} {verb} all columns of {table}, which is configured in relations; list the columns the caller uses",
-            table = star.relation
-        ));
-    }
-    let info = catalog.relation(&star.relation)?;
-    if opts.max_columns == 0 {
-        return Some(format!(
-            "{kind} {verb} every column of {table}, including columns added later; list the columns the caller uses",
-            table = star.relation
-        ));
-    }
-    let width = info.columns.len();
-    if width <= opts.max_columns as usize {
-        return None;
-    }
-    Some(format!(
-        "{kind} {verb} all {width} columns of {table} (limit {limit}); list the columns the caller uses",
-        table = star.relation,
-        limit = opts.max_columns
-    ))
 }

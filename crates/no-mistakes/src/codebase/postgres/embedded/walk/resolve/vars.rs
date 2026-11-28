@@ -95,6 +95,7 @@ pub(super) fn record_declarator(
     } else {
         visitor.scopes.len().saturating_sub(1)
     };
+    let init_sql = sql.clone();
     if let Some(scope) = visitor.scopes.get_mut(scope_index) {
         if is_var
             && scope
@@ -141,6 +142,13 @@ pub(super) fn record_declarator(
             },
         );
     }
+    visitor.note_builder_init(
+        scope_index,
+        ident.name.as_str(),
+        init,
+        init_sql.as_deref(),
+        line,
+    );
     if let Some(index) = relative_executor_proof {
         visitor.relative_proofs[scope_index].insert(ident.name.to_string(), index);
     }

@@ -59,6 +59,7 @@ impl<'a> ScopeVisitor<'a> {
         }
         walk::walk_assignment_expression(self, assign);
         self.builder_reference_exemptions.truncate(exemptions);
+        self.note_assignment_fragment(assign);
         if let AssignmentTarget::AssignmentTargetIdentifier(ident) = &assign.left {
             self.mark_dynamic(ident.name.as_str());
             self.set_variants(ident.name.as_str(), variants);

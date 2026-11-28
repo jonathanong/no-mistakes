@@ -1,0 +1,65 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "entries": {
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "owner_id": { "dataType": "uuid", "ordinalPosition": 2 },
+        "status": { "dataType": "text", "ordinalPosition": 3 },
+        "c04": { "dataType": "text", "ordinalPosition": 4 },
+        "c05": { "dataType": "text", "ordinalPosition": 5 },
+        "c06": { "dataType": "text", "ordinalPosition": 6 },
+        "c07": { "dataType": "text", "ordinalPosition": 7 },
+        "c08": { "dataType": "text", "ordinalPosition": 8 },
+        "c09": { "dataType": "text", "ordinalPosition": 9 },
+        "c10": { "dataType": "text", "ordinalPosition": 10 },
+        "c11": { "dataType": "text", "ordinalPosition": 11 },
+        "c12": { "dataType": "text", "ordinalPosition": 12 },
+        "c13": { "dataType": "text", "ordinalPosition": 13 },
+        "c14": { "dataType": "text", "ordinalPosition": 14 }
+      }
+    },
+    "records": {
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "status": { "dataType": "text", "ordinalPosition": 2 },
+        "r03": { "dataType": "text", "ordinalPosition": 3 },
+        "r04": { "dataType": "text", "ordinalPosition": 4 },
+        "r05": { "dataType": "text", "ordinalPosition": 5 },
+        "r06": { "dataType": "text", "ordinalPosition": 6 },
+        "r07": { "dataType": "text", "ordinalPosition": 7 },
+        "r08": { "dataType": "text", "ordinalPosition": 8 },
+        "r09": { "dataType": "text", "ordinalPosition": 9 },
+        "r10": { "dataType": "text", "ordinalPosition": 10 },
+        "r11": { "dataType": "text", "ordinalPosition": 11 },
+        "r12": { "dataType": "text", "ordinalPosition": 12 },
+        "r13": { "dataType": "text", "ordinalPosition": 13 },
+        "r14": { "dataType": "text", "ordinalPosition": 14 }
+      }
+    },
+    "narrow_tags": {
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "slug": { "dataType": "text", "ordinalPosition": 2 },
+        "label": { "dataType": "text", "ordinalPosition": 3 }
+      }
+    }
+  },
+  "views": {
+    "entries_summary": {
+      "definition": "SELECT id, owner_id FROM entries",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "owner_id": { "dataType": "uuid", "ordinalPosition": 2 }
+      }
+    },
+    "audit_view": {
+      "definition": "SELECT id, label FROM narrow_tags",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "label": { "dataType": "text", "ordinalPosition": 2 }
+      }
+    }
+  }
+}

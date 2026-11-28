@@ -62,6 +62,7 @@ struct Arm {
 #[derive(Default)]
 pub(super) struct ClosedValues {
     frames: Vec<FxHashMap<String, Vec<Arm>>>,
+    relation_frames: Vec<FxHashMap<String, Vec<Arm>>>,
     type_frames: Vec<FxHashMap<String, Vec<String>>>,
     namespace_shadows: FxHashMap<u32, std::sync::Arc<crate::fx::FxHashSet<String>>>,
     assertions: FxHashMap<String, crate::codebase::postgres::embedded::SqlIdentifierAssertion>,
@@ -69,10 +70,12 @@ pub(super) struct ClosedValues {
 impl ClosedValues {
     pub(super) fn push(&mut self) {
         self.frames.push(FxHashMap::default());
+        self.relation_frames.push(FxHashMap::default());
         self.type_frames.push(FxHashMap::default());
     }
     pub(super) fn pop(&mut self) {
         self.frames.pop();
+        self.relation_frames.pop();
         self.type_frames.pop();
     }
     pub(super) fn roots(
@@ -80,11 +83,10 @@ impl ClosedValues {
         scopes: &[HashMap<String, super::BindingState>],
         name: &str,
     ) -> Vec<String> {
-        let Some(i) = scopes.iter().rposition(|scope| scope.contains_key(name)) else {
-            return Vec::new();
-        };
-        self.frames
-            .get(i)
+        scopes
+            .iter()
+            .rposition(|scope| scope.contains_key(name))
+            .and_then(|i| self.frames.get(i))
             .and_then(|frame| frame.get(name))
             .into_iter()
             .flatten()
@@ -118,6 +120,8 @@ fn lookup(visitor: &ScopeVisitor<'_>, name: &str) -> Option<Vec<Arm>> {
         .get(name)
         .cloned()
 }
+pub(super) use types::recover_relation;
+
 pub(super) fn recover(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>) -> Option<Vec<Recovered>> {
     if matches!(
         unwrap_ts_wrappers(expr),
@@ -126,6 +130,14 @@ pub(super) fn recover(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>) -> Opti
         return None;
     }
     let arms = expression(visitor, expr, 8)?;
+    materialize_arms(visitor, expr, arms)
+}
+
+fn materialize_arms(
+    visitor: &ScopeVisitor<'_>,
+    expr: &Expression<'_>,
+    arms: Vec<Arm>,
+) -> Option<Vec<Recovered>> {
     if arms
         .iter()
         .all(|arm| arm.choices.is_empty() && arm.root.is_none())

@@ -43,7 +43,9 @@ impl<'a> ScopeVisitor<'a> {
             oxc_ast_visit::Visit::visit_function_body(&mut writes, body);
         }
         self.stable_primitives
-            .extend(writes.parameters(&function.params));
+            .extend(writes.parameters(&function.params, |name| {
+                self.literal_objects.closed.has_string_type_alias(name)
+            }));
         self.stable_parameter_fields
             .extend(writes.fields(&function.params));
         self.enter_plain_function(declaration_name, function.span.start);
@@ -124,7 +126,9 @@ impl<'a> ScopeVisitor<'a> {
         super::stable_binds::parameter_effects(&mut writes, &arrow.params);
         oxc_ast_visit::Visit::visit_arrow_function_body(&mut writes, &arrow.body);
         self.stable_primitives
-            .extend(writes.parameters(&arrow.params));
+            .extend(writes.parameters(&arrow.params, |name| {
+                self.literal_objects.closed.has_string_type_alias(name)
+            }));
         self.stable_parameter_fields
             .extend(writes.fields(&arrow.params));
         self.push_scope();

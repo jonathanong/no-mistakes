@@ -88,6 +88,7 @@ pub(crate) use projection::extract_embedded_sql_from_program_with_projections;
 pub(crate) use projection::extract_with_scopes;
 
 mod fragment_debug;
+pub(crate) use fragment_debug::CallSqlFragment;
 pub use fragment_debug::{EmbeddedSqlFileFacts, EmbeddedSqlFragment};
 
 pub(super) fn first_call_argument<'a>(call: &'a CallExpression<'a>) -> Option<&'a Expression<'a>> {

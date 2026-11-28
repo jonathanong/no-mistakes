@@ -19,6 +19,7 @@ impl ScopeVisitor<'_> {
 
     pub(super) fn pop_scope(&mut self) {
         let index = self.scopes.len().saturating_sub(1);
+        self.pop_builder_fragments(index);
         self.clause_unions.retain(|(scope, _)| *scope != index);
         self.frozen_aliases.retain(|alias| alias.scope != index);
         self.literal_objects.pop_frame();

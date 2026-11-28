@@ -1,0 +1,187 @@
+use no_mistakes_postgres_sql::idents::{ident_key, object_name_key};
+use sqlparser::ast::{
+    FromTable, Query, Select, SetExpr, Statement, TableFactor, TableObject, TableWithJoins,
+    UpdateTableFromKind,
+};
+
+mod items;
+use items::{collect_items, collect_returning, target_rel, walk_subqueries};
+
+pub(super) const SYNTHETIC_TARGET: &str = "__nm_frag_target";
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct FragmentStar {
+    pub(super) returning: bool,
+    pub(super) qualifier: Option<String>,
+    pub(super) relation: Option<String>,
+    pub(super) within_function: Option<String>,
+    pub(super) line: usize,
+}
+
+#[derive(Clone)]
+pub(super) struct Rel {
+    pub(super) table: String,
+    pub(super) alias: Option<String>,
+    pub(super) is_local_derived: bool,
+}
+
+pub(super) fn collect_statements(statements: &[Statement], out: &mut Vec<FragmentStar>) {
+    for statement in statements {
+        collect_statement(statement, &[], out);
+    }
+}
+
+fn collect_statement(statement: &Statement, ctes: &[String], out: &mut Vec<FragmentStar>) {
+    match statement {
+        Statement::Query(query) => collect_query(query, ctes, false, out),
+        Statement::Insert(insert) => {
+            if let TableObject::TableName(name) = &insert.table {
+                let target = Rel {
+                    table: object_name_key(name),
+                    alias: insert.table_alias.as_ref().map(|a| ident_key(&a.alias)),
+                    is_local_derived: false,
+                };
+                collect_returning(&target, &[], insert.returning.as_deref(), out);
+            }
+            if let Some(source) = insert.source.as_deref() {
+                collect_query(source, ctes, false, out);
+            }
+        }
+        Statement::Update(update) => {
+            if let Some(target) = target_rel(&update.table.relation) {
+                let from = match &update.from {
+                    Some(
+                        UpdateTableFromKind::BeforeSet(tables)
+                        | UpdateTableFromKind::AfterSet(tables),
+                    ) => tables.as_slice(),
+                    None => &[],
+                };
+                let mut peers = collect_rels(from, ctes, out);
+                for join in &update.table.joins {
+                    push_factor(&join.relation, ctes, &mut peers, out);
+                }
+                collect_returning(&target, &peers, update.returning.as_deref(), out);
+            }
+        }
+        Statement::Delete(delete) => {
+            let first = match &delete.from {
+                FromTable::WithFromKeyword(t) | FromTable::WithoutKeyword(t) => t.first(),
+            };
+            if let Some(target) = first.and_then(|table| target_rel(&table.relation)) {
+                let peers = collect_rels(delete.using.as_deref().unwrap_or_default(), ctes, out);
+                collect_returning(&target, &peers, delete.returning.as_deref(), out);
+            }
+        }
+        Statement::Explain { statement, .. } => collect_statement(statement, ctes, out),
+        _ => {}
+    }
+}
+
+pub(super) fn collect_query(
+    query: &Query,
+    outer_ctes: &[String],
+    in_exists: bool,
+    out: &mut Vec<FragmentStar>,
+) {
+    let mut ctes = outer_ctes.to_vec();
+    if let Some(with) = &query.with {
+        for cte in &with.cte_tables {
+            let name = ident_key(&cte.alias.name);
+            if with.recursive {
+                ctes.push(name.clone());
+            }
+            collect_query(&cte.query, &ctes, false, out);
+            if !with.recursive {
+                ctes.push(name);
+            }
+        }
+    }
+    collect_set(&query.body, &ctes, in_exists, out);
+}
+
+fn collect_set(expr: &SetExpr, ctes: &[String], in_exists: bool, out: &mut Vec<FragmentStar>) {
+    match expr {
+        SetExpr::Select(select) => collect_select(select, ctes, in_exists, out),
+        SetExpr::Query(query) => collect_query(query, ctes, in_exists, out),
+        SetExpr::Insert(stmt) | SetExpr::Update(stmt) | SetExpr::Delete(stmt) => {
+            collect_statement(stmt, ctes, out);
+        }
+        SetExpr::SetOperation { left, right, .. } => {
+            collect_set(left, ctes, in_exists, out);
+            collect_set(right, ctes, in_exists, out);
+        }
+        SetExpr::Table(table) if !in_exists => {
+            if let Some(name) = &table.table_name {
+                let table_name = match &table.schema_name {
+                    Some(schema) => format!("{}.{}", ident_key(schema), ident_key(name)),
+                    None => ident_key(name),
+                };
+                if !ctes.iter().any(|cte| cte.eq_ignore_ascii_case(&table_name)) {
+                    out.push(FragmentStar {
+                        returning: false,
+                        qualifier: None,
+                        relation: Some(table_name),
+                        within_function: None,
+                        line: 1,
+                    });
+                }
+            }
+        }
+        _ => {}
+    }
+}
+
+fn collect_select(select: &Select, ctes: &[String], in_exists: bool, out: &mut Vec<FragmentStar>) {
+    let rels = collect_rels(&select.from, ctes, out);
+    if !in_exists {
+        collect_items(&select.projection, &rels, false, out);
+    }
+    if let Some(selection) = &select.selection {
+        walk_subqueries(selection, ctes, out);
+    }
+}
+
+fn collect_rels(from: &[TableWithJoins], ctes: &[String], out: &mut Vec<FragmentStar>) -> Vec<Rel> {
+    let mut rels = Vec::new();
+    for table in from {
+        push_factor(&table.relation, ctes, &mut rels, out);
+        for join in &table.joins {
+            push_factor(&join.relation, ctes, &mut rels, out);
+        }
+    }
+    rels
+}
+
+fn push_factor(factor: &TableFactor, ctes: &[String], rels: &mut Vec<Rel>, out: &mut Vec<FragmentStar>) {
+    match factor {
+        TableFactor::Table {
+            name,
+            alias,
+            args: None,
+            ..
+        } => {
+            let table = object_name_key(name);
+            let is_cte = !table.contains('.')
+                && ctes.iter().any(|cte| cte.eq_ignore_ascii_case(&table));
+            rels.push(Rel {
+                table,
+                alias: alias.as_ref().map(|a| ident_key(&a.name)),
+                is_local_derived: is_cte,
+            });
+        }
+        TableFactor::Derived {
+            subquery, alias, ..
+        } => {
+            collect_query(subquery, ctes, false, out);
+            rels.push(Rel {
+                table: String::new(),
+                alias: alias.as_ref().map(|a| ident_key(&a.name)),
+                is_local_derived: true,
+            });
+        }
+        TableFactor::NestedJoin {
+            table_with_joins, ..
+        } => rels.extend(collect_rels(std::slice::from_ref(table_with_joins), ctes, out)),
+        _ => {}
+    }
+}

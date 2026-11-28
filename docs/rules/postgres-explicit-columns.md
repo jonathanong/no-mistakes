@@ -78,6 +78,32 @@ explicit-column paths pass without an unanalyzable finding. Recovery is capped
 at 16 versions and preserves branch-fragment source locations for suppressions.
 Opaque or over-cap calls retain `unanalyzableSql` behavior.
 
+### Fragment-level checks on assembled statements
+
+Even when an assembled statement cannot be recovered as one complete SQL string
+(for example, under `unanalyzableSql: ignore`), the rule still inspects
+individual SQL fragments for `*`, `alias.*`, and `RETURNING *`:
+
+- **Appended builder fragments** — both `sql`-tagged fragments (such as
+  `q.append(sql\` RETURNING *\`)`) and plain-string appends (such as
+  `q.append(' SELECT records.* FROM records')`), plus the builder's own leading
+  SQL prefix when a later append is opaque. When the builder prefix declares a
+  target table or `WITH` CTE, appended fragments resolve against it.
+- **Interpolated table names** — untagged or `sql`-tagged templates whose
+  `FROM` relation comes from a closed union of string literals (inline unions,
+  local type aliases, or `(typeof TABLE_LIST)[number]`). Each union member is
+  checked against the schema catalog: any base table exceeding `maxColumns` (or
+  listed in `relations`) is reported, while catalog views remain allowed.
+- **Shared SQL constants** — string constants such as
+  `const RETURNING_ALL = 'RETURNING *'` concatenated, interpolated, or appended
+  into multiple statements are traced to each statement that uses them.
+- **Unresolved fragment relations** — when a fragment or template contains a
+  star whose relation cannot be resolved (an open `string` table name, a
+  parameter builder with no known target table, or a relation absent from both
+  the schema catalog and visible CTEs), the rule emits a non-failing advisory
+  in `advisories` rather than skipping it silently. Views and CTEs remain
+  allowed.
+
 ## Options and defaults
 
 `unanalyzableSql: advise` reports residual uncertainty in non-failing advisories.
@@ -197,6 +223,27 @@ WITH r AS (SELECT id, status FROM orders) SELECT * FROM r;
 in `relations`, so the explicit list and the `row_to_json` wrapper pass even
 though its catalog lists only three columns.
 
+Assembled statements and closed-union templates that read only views, CTEs, or
+explicit columns also pass:
+
+```ts
+import { query } from "@example/db";
+import sql, { SQLStatement } from "sql-template-strings";
+
+type ViewTarget = "orders_summary" | "audit_view";
+
+export function loadFromView(table: ViewTarget, id: string) {
+  return query(sql`SELECT * FROM ${table} WHERE id = ${id}`);
+}
+
+export function loadFromCte(id: string, filter?: SQLStatement) {
+  const q = sql`WITH inserted AS (INSERT INTO orders (id) VALUES (${id}) RETURNING id)`;
+  if (filter) q.append(filter);
+  q.append(" SELECT inserted.* FROM inserted");
+  return query(q);
+}
+```
+
 ## Counterexample
 
 ```jsonc
@@ -257,6 +304,37 @@ WITH recent AS (SELECT * FROM orders WHERE id > $1) SELECT id FROM recent;
 when that name is in `relations` and the query stars it. The CTE reports the
 inner `SELECT *`.
 
+Assembled builders, closed-union table interpolations containing a base table,
+and shared `RETURNING *` constants are also reported (even under
+`unanalyzableSql: ignore`), and unresolvable fragment relations emit advisories:
+
+```ts
+import { query } from "@example/db";
+import sql, { SQLStatement } from "sql-template-strings";
+
+const RETURNING_ALL = "RETURNING *";
+type MixedTarget = "orders" | "orders_summary";
+
+export function archiveOrder(id: string, filter?: SQLStatement) {
+  const q = sql`UPDATE orders SET status = 'archived' WHERE id = ${id}`;
+  if (filter) q.append(filter);
+  q.append(sql` RETURNING *`); // reported against orders
+  return query(q);
+}
+
+export function loadMixed(table: MixedTarget, id: string) {
+  return query(sql`SELECT * FROM ${table} WHERE id = ${id}`); // reported against orders
+}
+
+export function deleteOrder(id: string) {
+  return query(`DELETE FROM orders WHERE id = $1 ${RETURNING_ALL}`, [id]); // reported against orders
+}
+
+export function appendUnknown(q: SQLStatement) {
+  q.append(sql` RETURNING *`); // reported as an unresolved advisory
+}
+```
+
 When a local or directly imported helper returns a static SQL template, a
 finding points to the star in that helper's source file and literal. Assignment
 to a local variable and static `.append()` fragments retain the file and line
@@ -279,6 +357,15 @@ SELECT id, status FROM orders WHERE id = $1;
 
 For a whole-row JSON payload, keep the star inside a function listed in
 `allowWholeRowFunctions`, such as `row_to_json(o.*)`.
+
+For assembled builders, interpolated tables, and shared constants, replace `*`
+and `RETURNING *` with an explicit column list (or restrict interpolated table
+unions to views):
+
+```ts
+const RETURNING_COLUMNS = "RETURNING id, status";
+q.append(sql` RETURNING id, status`);
+```
 
 ## Analysis
 

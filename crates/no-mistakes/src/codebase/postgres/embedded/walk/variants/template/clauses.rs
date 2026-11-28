@@ -38,7 +38,7 @@ pub(in crate::codebase::postgres::embedded::walk::variants) fn recover(visitor: 
     for (index, quasi) in template.quasis.iter().enumerate() {
         versions = combine(versions, vec![piece::quasi(visitor, quasi)])?;
         if let Some(expr) = template.expressions.get(index) {
-            let mut values = value_text::bind(bind_values, visitor, expr, &versions).or_else(|| clause(visitor, expr, depth - 1, constraints))?;
+            let mut values = value_text::bind(bind_values, visitor, expr, &versions).or_else(|| clause(visitor, expr, depth - 1, constraints)).or_else(|| (!bind_values).then(|| super::super::relation_slot::pieces(visitor, expr, &versions, depth, constraints)).flatten())?;
             if !plain(&values) { return None; }
             for value in &mut values { value.value = ValueKind::Sql; }
             versions = combine(versions, values)?;

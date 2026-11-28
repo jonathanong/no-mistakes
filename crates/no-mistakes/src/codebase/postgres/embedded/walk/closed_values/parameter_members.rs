@@ -4,47 +4,6 @@ fn member_key(identity: u32) -> String {
     format!("\0parameter-member:{identity}")
 }
 
-fn strings(visitor: &ScopeVisitor<'_>, ty: &TSType<'_>, depth: u8) -> Option<Vec<String>> {
-    let depth = depth.checked_sub(1)?;
-    match ty {
-        TSType::TSLiteralType(literal) => match &literal.literal {
-            TSLiteral::StringLiteral(value) => {
-                Some(vec![crate::ast::js_literal(value).into_owned()])
-            }
-            _ => None,
-        },
-        TSType::TSUnionType(union) => {
-            let mut values = Vec::new();
-            for ty in &union.types {
-                for value in strings(visitor, ty, depth)? {
-                    if !values.contains(&value) {
-                        values.push(value);
-                    }
-                    if values.len() > MAX_EMBEDDED_SQL_VARIANTS {
-                        return None;
-                    }
-                }
-            }
-            Some(values)
-        }
-        TSType::TSTypeReference(reference) if reference.type_arguments.is_none() => {
-            let TSTypeName::IdentifierReference(name) = &reference.type_name else {
-                return None;
-            };
-            visitor
-                .literal_objects
-                .closed
-                .type_frames
-                .iter()
-                .rev()
-                .find_map(|frame| frame.get(name.name.as_str()))
-                .filter(|values| !values.is_empty())
-                .cloned()
-        }
-        _ => None,
-    }
-}
-
 fn arms(values: Vec<String>, identity: u32) -> Vec<Arm> {
     values
         .into_iter()
@@ -79,7 +38,7 @@ impl ScopeVisitor<'_> {
         let values = alias
             .type_parameters
             .is_none()
-            .then(|| super::types::strings(&alias.type_annotation))
+            .then(|| super::types::strings(self, &alias.type_annotation, 8))
             .flatten();
         let values = values.unwrap_or_default();
         self.literal_objects
@@ -127,7 +86,7 @@ impl ScopeVisitor<'_> {
             let Some(values) = property
                 .type_annotation
                 .as_ref()
-                .and_then(|annotation| strings(self, &annotation.type_annotation, 8))
+                .and_then(|annotation| super::types::strings(self, &annotation.type_annotation, 8))
             else {
                 continue;
             };

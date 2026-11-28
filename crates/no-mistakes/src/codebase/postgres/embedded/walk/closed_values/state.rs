@@ -9,6 +9,9 @@ impl ScopeVisitor<'_> {
             if let Some(frame) = self.literal_objects.closed.frames.get_mut(i) {
                 frame.remove(name);
             }
+            if let Some(frame) = self.literal_objects.closed.relation_frames.get_mut(i) {
+                frame.remove(name);
+            }
             self.frozen_aliases
                 .retain(|alias| alias.scope != i || alias.name != name);
         }
