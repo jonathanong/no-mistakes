@@ -41,9 +41,12 @@ For each configured entry in `options.commands`:
   arithmetic expansions are not executed as commands.
 - If `whenAnyArgs` is non-empty, the policy applies only when at least one
   listed argument or argument pair is present on the invocation. A dynamic
-  word that does not start with `-` is uncertain when it could expand to a
-  listed flag (`tool run "$MODE"` with `whenAnyArgs: [--write]`), so the
-  policy abstains instead of treating that flag as absent.
+  word is uncertain when it could expand to a listed flag, including an
+  option-shaped word (`tool run "$MODE"` or `tool run "--${MODE}"` with
+  `whenAnyArgs: [--write]`). The policy abstains only when that uncertainty
+  could still hide a missing requirement or exemption. A requirement that is
+  already present stays quiet (`tool run --strict "--${MODE}"` with
+  `requireArgs: [--strict]`).
 - If `unlessAnyArgs` is non-empty, the policy is skipped when any listed
   argument or argument pair is present (for example `unlessAnyArgs: [graphql]`
   so `gh api graphql -f query=...` stays exempt from requiring `--method`).
@@ -52,7 +55,10 @@ For each configured entry in `options.commands`:
   dynamic word that could expand to a `valueFlags` entry makes a following
   positional exemption uncertain: `tool emit "$OPT" exempt` with
   `valueFlags: [--label]` and `unlessAnyArgs: [exempt]` does not skip the
-  policy. Literal `--label exempt` still consumes `exempt`.
+  policy. An option-shaped dynamic word is treated the same way
+  (`gh api "--${FLAG}" graphql` with `valueFlags: [--jq]` and
+  `unlessAnyArgs: [graphql]`). Literal `--label exempt` and literal
+  `--jq graphql` still consume the following word.
 - Every entry in `requireArgs` must be present. If `requireAnyArgs` is
   non-empty, at least one listed alternative must be present. Flag matchers
   skip values consumed by `valueFlags`, accept separate (`--method GET`,
@@ -77,7 +83,8 @@ argument, a dynamic value for a required flag (`--method "$METHOD"`), a dynamic 
 that could match an `unlessAnyArgs` exemption when a requirement would
 otherwise fail (`gh api -f x=1 "$ENDPOINT"` with `unlessAnyArgs: [graphql]`),
 a dynamic word that could expand to a configured flag (`tool run "$MODE"`
-with `whenAnyArgs: [--write]`), to an inline `flag=value` or attached short
+or `tool run "--${MODE}"` with `whenAnyArgs: [--write]`; a requirement that
+is already present does not abstain), to an inline `flag=value` or attached short
 form on a `whenAnyArgs` or `unlessAnyArgs` gate (`tool run "$ARG"` with
 `whenAnyArgs: [[--mode, write]]`), or to a `valueFlags` entry that would
 consume the next word (`tool emit "$OPT" exempt` with `valueFlags: [--label]`,
@@ -86,7 +93,8 @@ a dynamic word that could expand to `--` before a later required flag
 (`tool run "$STOP" --strict`, including when another flag sits between them),
 a configured token whose text equals an expansion's source (`tool run "$REMOTE"`
 with `unlessAnyArgs: ["$REMOTE"]`), a command substitution whose `)` sits inside
-quotes (`--method="$( : ')' )"`), or an unterminated quote, expansion, or
+quotes (`--method="$( : ')' )"`), an escaped closing `)` (`--method="$( : \) )"`),
+quotes inside a nested `$(...)`, or an unterminated quote, expansion, or
 here-document—it abstains from
 reporting a policy violation and records a diagnostic under the configured
 uncertainty policy. A variable-prefixed
@@ -259,12 +267,14 @@ steps:
   (such as `--method "$METHOD"`), dynamic arguments that could match an
   `unlessAnyArgs` exemption when a policy would otherwise fail (such as
   `gh api -f x=1 "$ENDPOINT"` with `unlessAnyArgs: [graphql]`), a dynamic
-  word that could expand to a configured flag, to an inline `flag=value` or
+  word that could expand to a configured flag (including an option-shaped word,
+  and only when a requirement or exemption could still fail), to an inline `flag=value` or
   attached short form on a when or unless gate, or to a `valueFlags` entry
   that would consume the next exemption or flag, a dynamic word that could expand to
   `--` before a later required flag, a configured token whose text equals an
   expansion's source, a command substitution whose `)` sits
-  inside quotes, and
+  inside quotes, an escaped closing `)` or a nested `$(...)` whose quotes would
+  otherwise end the substitution, and
   unterminated quotes, expansions, or here-documents abstain from policy failure
   and emit a diagnostic governed by the effective unanalyzable policy.
 - Variable-prefixed script paths whose final path segment is a literal matching

@@ -64,6 +64,12 @@ pub(super) fn match_single_flag(
             }
         }
     }
+    if dynamic_word_could_match_literal(word, command_dynamic, target) {
+        return ArgMatch::DynamicValue {
+            token: word.text.clone(),
+            line: word.line,
+        };
+    }
     ArgMatch::NotMatched
 }
 
@@ -128,7 +134,29 @@ pub(super) fn match_flag_pair(
             }
         }
     }
+    if dynamic_pair(word, next, flag, value, value_flags, command_dynamic) {
+        return ArgMatch::DynamicValue {
+            token: word.text.clone(),
+            line: word.line,
+        };
+    }
     ArgMatch::NotMatched
+}
+
+fn dynamic_pair(
+    word: &Word,
+    next: Option<&Word>,
+    flag: &str,
+    value: &str,
+    value_flags: &[String],
+    command_dynamic: bool,
+) -> bool {
+    let name_matches = dynamic_word_could_match_literal(word, command_dynamic, flag);
+    let next_matches = next.is_some_and(|val| {
+        val.text == value || dynamic_word_could_match_literal(val, command_dynamic, value)
+    });
+    (name_matches && next_matches)
+        || dynamic_inline_pair(word, command_dynamic, flag, value, value_flags)
 }
 
 fn is_short_flag(text: &str) -> bool {

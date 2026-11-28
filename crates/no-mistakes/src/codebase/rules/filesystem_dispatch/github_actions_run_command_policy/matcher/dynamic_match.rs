@@ -85,31 +85,77 @@ fn split_dynamic_segments(text: &str) -> Vec<&str> {
     parts
 }
 
-fn delimited_end(bytes: &[u8], mut index: usize, open: u8, close: u8) -> usize {
-    let mut depth = 1usize;
-    let mut quote = 0u8;
-    while index < bytes.len() && depth > 0 {
+fn delimited_end(bytes: &[u8], mut index: usize, close: u8) -> usize {
+    let mut frames = vec![(close, 0u8)];
+    while index < bytes.len() && !frames.is_empty() {
         let byte = bytes[index];
+        let (frame_close, quote) = frames[frames.len() - 1];
         if quote != 0 {
             if quote == b'"' && byte == b'\\' && index + 1 < bytes.len() {
                 index += 2;
                 continue;
             }
+            if quote == b'"' {
+                if let Some(nested) = substitution_close(bytes, index) {
+                    frames.push((nested, 0));
+                    index += 2;
+                    continue;
+                }
+            }
             if byte == quote {
-                quote = 0;
+                let last = frames.len() - 1;
+                frames[last].1 = 0;
             }
             index += 1;
             continue;
         }
+        if byte == b'\\' && index + 1 < bytes.len() {
+            index += 2;
+            continue;
+        }
         if byte == b'\'' || byte == b'"' {
-            quote = byte;
+            let last = frames.len() - 1;
+            frames[last].1 = byte;
             index += 1;
             continue;
         }
-        depth = depth + usize::from(byte == open) - usize::from(byte == close);
+        if let Some(nested) = substitution_close(bytes, index) {
+            frames.push((nested, 0));
+            index += 2;
+            continue;
+        }
+        if byte == frame_close {
+            frames.pop();
+            index += 1;
+            continue;
+        }
+        if byte == opener_for(frame_close) {
+            frames.push((frame_close, 0));
+            index += 1;
+            continue;
+        }
         index += 1;
     }
     index
+}
+
+fn substitution_close(bytes: &[u8], index: usize) -> Option<u8> {
+    if bytes.get(index) != Some(&b'$') {
+        return None;
+    }
+    match bytes.get(index + 1) {
+        Some(b'(') => Some(b')'),
+        Some(b'{') => Some(b'}'),
+        _ => None,
+    }
+}
+
+fn opener_for(close: u8) -> u8 {
+    if close == b')' {
+        b'('
+    } else {
+        b'{'
+    }
 }
 
 fn dynamic_span_end(text: &str, start: usize) -> Option<usize> {
@@ -134,7 +180,7 @@ fn dynamic_span_end(text: &str, start: usize) -> Option<usize> {
     }
     if next == b'{' || next == b'(' {
         let close = if next == b'{' { b'}' } else { b')' };
-        return Some(delimited_end(bytes, start + 2, next, close));
+        return Some(delimited_end(bytes, start + 2, close));
     }
     if next.is_ascii_digit() {
         return Some(start + 2);

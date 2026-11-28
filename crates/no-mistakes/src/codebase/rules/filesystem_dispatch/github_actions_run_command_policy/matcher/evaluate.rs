@@ -12,46 +12,46 @@ pub(in super::super) fn evaluate_policy(
     inv: &ParsedInvocation<'_>,
     policy: &CompiledPolicy,
 ) -> Vec<Hit> {
-    if let Some(early) = check_when_gate(inv, policy) {
-        return early;
-    }
+    let uncertain_when = match check_when_gate(inv, policy) {
+        UnlessGate::Exempt => return Vec::new(),
+        UnlessGate::Apply(uncertain) => uncertain,
+    };
     let uncertain_unless = match check_unless_gate(inv, policy) {
         UnlessGate::Exempt => return Vec::new(),
         UnlessGate::Apply(uncertain) => uncertain,
     };
     let mut hits = Vec::new();
-    let mut uncertain_req = check_requirements(inv, policy, &mut hits);
+    let uncertain_req = check_requirements(inv, policy, &mut hits);
     collect_forbidden_hits(inv, policy, &mut hits);
     if !hits.is_empty() {
-        if let Some((token, line)) = uncertain_unless {
-            return vec![dynamic_abstention(line, &token, &policy.label)];
+        if let Some((token, line)) = uncertain_when.as_ref().or(uncertain_unless.as_ref()) {
+            return vec![dynamic_abstention(*line, token, &policy.label)];
         }
     }
-    if let Some((token, line)) = uncertain_req.take() {
+    if let Some((token, line)) = uncertain_req {
         hits.push(dynamic_abstention(line, &token, &policy.label));
     }
     hits
 }
 
-fn check_when_gate(inv: &ParsedInvocation<'_>, policy: &CompiledPolicy) -> Option<Vec<Hit>> {
+fn check_when_gate(inv: &ParsedInvocation<'_>, policy: &CompiledPolicy) -> UnlessGate {
     if policy.when_any_args.is_empty() {
-        return None;
+        return UnlessGate::Apply(None);
     }
     let mut dynamic_trigger = None;
     for matcher in &policy.when_any_args {
         match match_invocation(inv, matcher, &policy.value_flags, false) {
-            ArgMatch::Matched => return None,
+            ArgMatch::Matched => return UnlessGate::Apply(None),
             ArgMatch::DynamicValue { token, line } => {
                 dynamic_trigger.get_or_insert((token, line));
             }
             ArgMatch::NotMatched => {}
         }
     }
-    let split = super::split_hit(inv, super::flags_only(&policy.when_any_args));
-    if let Some((token, line)) = split.as_ref().or(dynamic_trigger.as_ref()) {
-        return Some(vec![dynamic_abstention(*line, token, &policy.label)]);
+    match super::split_hit(inv, super::flags_only(&policy.when_any_args)).or(dynamic_trigger) {
+        Some(hit) => UnlessGate::Apply(Some(hit)),
+        None => UnlessGate::Exempt,
     }
-    Some(Vec::new())
 }
 
 enum UnlessGate {

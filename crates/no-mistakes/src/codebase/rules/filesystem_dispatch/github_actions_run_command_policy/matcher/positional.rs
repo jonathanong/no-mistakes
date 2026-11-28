@@ -90,6 +90,9 @@ fn positional_words<'a>(
         }
         if !opaque && !after_terminator && is_option_token(&word.text) {
             let skip_value = !word.text.contains('=') && takes_value(&word.text, value_flags);
+            if !skip_value && could_be_value_flag(word, command_dynamic, value_flags) {
+                opaque = true;
+            }
             index += 1 + usize::from(skip_value);
             continue;
         }

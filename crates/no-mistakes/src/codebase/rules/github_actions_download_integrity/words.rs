@@ -18,6 +18,7 @@ pub(in crate::codebase::rules) struct Command {
     pub(in crate::codebase::rules) words: Vec<Word>,
 }
 
+mod expansion;
 mod scan;
 
 pub(in crate::codebase::rules) struct HeredocBody {
@@ -61,50 +62,6 @@ fn skip_arithmetic(chars: &[char], mut index: usize, line: &mut usize) -> usize 
         index += 1;
     }
     index
-}
-
-fn take_expansion(
-    chars: &[char],
-    mut index: usize,
-    word: &mut String,
-    line: &mut usize,
-) -> (usize, bool) {
-    let open = chars[index + 1];
-    let close = if open == '(' { ')' } else { '}' };
-    word.push('$');
-    word.push(open);
-    index += 2;
-    let mut depth = 1i32;
-    let mut quote = '\0';
-    while index < chars.len() && depth > 0 {
-        let ch = chars[index];
-        if ch == '\n' {
-            *line += 1;
-        }
-        if quote != '\0' {
-            if quote == '"' && ch == '\\' && index + 1 < chars.len() {
-                word.push(ch);
-                word.push(chars[index + 1]);
-                if chars[index + 1] == '\n' {
-                    *line += 1;
-                }
-                index += 2;
-                continue;
-            }
-            if ch == quote {
-                quote = '\0';
-            }
-        } else if ch == '\'' || ch == '"' {
-            quote = ch;
-        } else if ch == open {
-            depth += 1;
-        } else if ch == close {
-            depth -= 1;
-        }
-        word.push(ch);
-        index += 1;
-    }
-    (index, depth == 0)
 }
 
 fn push_char(word: &mut String, word_line: &mut usize, line: usize, ch: char) {

@@ -1,4 +1,5 @@
-use super::super::{flush_word, push_char, take_expansion};
+use super::super::expansion::take_expansion;
+use super::super::{flush_word, push_char};
 use super::Scan;
 
 impl Scan<'_> {

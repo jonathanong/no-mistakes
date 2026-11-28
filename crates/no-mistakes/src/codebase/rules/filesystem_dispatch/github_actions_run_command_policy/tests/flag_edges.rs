@@ -109,3 +109,138 @@ commands:
         "{hits:?}"
     );
 }
+
+#[test]
+fn dynamic_option_name_is_uncertain_until_the_policy_holds() {
+    let compiled = compile_yaml(
+        r#"
+commands:
+  - command: [tool, run]
+    whenAnyArgs: [--write]
+    requireArgs: [--strict]
+"#,
+    );
+    let missing = scan_script(r#"tool run "--${MODE}""#, &compiled);
+    assert!(
+        matches!(
+            missing.first().map(|hit| &hit.kind),
+            Some(HitKind::Unanalyzable { .. })
+        ),
+        "{missing:?}"
+    );
+    let satisfied = scan_script(r#"tool run --strict "--${MODE}""#, &compiled);
+    assert!(satisfied.is_empty(), "{satisfied:?}");
+    let absent = scan_script("tool run --read", &compiled);
+    assert!(absent.is_empty(), "{absent:?}");
+    let definite = scan_script("tool run --write", &compiled);
+    assert!(
+        matches!(
+            definite.first().map(|hit| &hit.kind),
+            Some(HitKind::MissingRequired { .. })
+        ),
+        "{definite:?}"
+    );
+}
+
+#[test]
+fn dynamic_option_can_hide_a_positional_exemption() {
+    let compiled = compile_yaml(
+        r#"
+commands:
+  - command: [gh, api]
+    valueFlags: [--jq]
+    unlessAnyArgs: [graphql]
+    whenAnyArgs: [-f]
+    requireArgs: [--method]
+"#,
+    );
+    let uncertain = scan_script(
+        r#"gh api "--${FLAG}" graphql -f x=1 repos/my-org/my-repo/labels"#,
+        &compiled,
+    );
+    assert!(
+        matches!(
+            uncertain.first().map(|hit| &hit.kind),
+            Some(HitKind::Unanalyzable { .. })
+        ),
+        "{uncertain:?}"
+    );
+    let literal = scan_script(
+        "gh api --jq graphql -f x=1 repos/my-org/my-repo/labels",
+        &compiled,
+    );
+    assert!(
+        matches!(
+            literal.first().map(|hit| &hit.kind),
+            Some(HitKind::MissingRequired { .. })
+        ),
+        "{literal:?}"
+    );
+}
+
+#[test]
+fn dynamic_option_name_can_match_a_when_pair() {
+    let compiled = compile_yaml(
+        r#"
+commands:
+  - command: [tool, run]
+    whenAnyArgs: [[--mode, write]]
+    requireArgs: [--confirm]
+"#,
+    );
+    let separate = scan_script(r#"tool run "--${MODE}" write"#, &compiled);
+    assert!(
+        matches!(
+            separate.first().map(|hit| &hit.kind),
+            Some(HitKind::Unanalyzable { .. })
+        ),
+        "{separate:?}"
+    );
+    let inline = scan_script(r#"tool run "--${MODE}" read"#, &compiled);
+    assert!(
+        matches!(
+            inline.first().map(|hit| &hit.kind),
+            Some(HitKind::Unanalyzable { .. })
+        ),
+        "{inline:?}"
+    );
+    let literal = scan_script("tool run --other read", &compiled);
+    assert!(literal.is_empty(), "{literal:?}");
+}
+
+#[test]
+fn escaped_and_nested_substitutions_keep_the_following_command() {
+    let compiled = compile_yaml(
+        r#"
+commands:
+  - command: [gh, api]
+    valueFlags: [-f, --method]
+    whenAnyArgs: [-f]
+    requireArgs: [--method]
+"#,
+    );
+    for script in [
+        r#"value=$(printf \"); gh api -f x=1 repos/my-org/my-repo/labels"#,
+        r#"value=$(printf '%s' "$(printf '"')"); gh api -f x=1 repos/my-org/my-repo/labels"#,
+    ] {
+        let hits = scan_script(script, &compiled);
+        assert!(
+            matches!(
+                hits.first().map(|hit| &hit.kind),
+                Some(HitKind::MissingRequired { .. })
+            ),
+            "{script}: {hits:?}"
+        );
+    }
+    let escaped_value = scan_script(
+        r#"gh api -f x=1 --method="$( : \) )" repos/my-org/my-repo/labels"#,
+        &compiled,
+    );
+    assert!(
+        matches!(
+            escaped_value.first().map(|hit| &hit.kind),
+            Some(HitKind::Unanalyzable { .. })
+        ),
+        "{escaped_value:?}"
+    );
+}
