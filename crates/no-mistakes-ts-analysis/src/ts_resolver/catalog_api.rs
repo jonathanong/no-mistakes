@@ -1,5 +1,9 @@
 impl TsConfigCatalog {
     /// Build an automatic catalog from the caller's already-discovered paths.
+    ///
+    /// Workspace package-root discovery delegates to `crate::hooks::load_workspace_from_files`
+    /// when no prepared workspace is supplied; register hooks via `crate::hooks::register_hooks`
+    /// or use `Self::from_visible_and_sources_with_workspace` for standalone callers.
     #[doc(hidden)]
     pub fn from_visible(
         root: &Path,
@@ -9,7 +13,8 @@ impl TsConfigCatalog {
         CatalogBuilder::new(root, candidate_roots, visible_paths, None, None).build()
     }
 
-    /// Same as [`Self::from_visible`], reusing the invocation source cache.
+    /// Same as [`Self::from_visible`], reusing the invocation source cache
+    /// (requires registered analysis hooks for workspace package-root discovery).
     #[doc(hidden)]
     pub fn from_visible_and_sources(
         root: &Path,

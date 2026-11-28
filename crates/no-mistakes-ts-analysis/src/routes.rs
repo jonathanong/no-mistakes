@@ -11,9 +11,9 @@ pub struct Route {
 /// Collect `Route`s under `frontend_root` whose file stem is in `stems` and whose
 /// extension is one of `PAGE_EXTS`.
 ///
-/// Candidates come from shared Git-visible discovery, with `.gitignore` still
-/// applied outside Git repositories. Route-specific dot-directory filtering is
-/// then applied in memory.
+/// Candidates come from `crate::hooks::discover_visible_paths`, so standalone
+/// callers must register analysis hooks via `crate::hooks::register_hooks` (or
+/// call `collect_routes_from_visible_paths` with pre-discovered paths).
 pub fn collect_routes(frontend_root: &Path, stems: &[&str]) -> Vec<Route> {
     if !frontend_root.exists() {
         return Vec::new();

@@ -50,8 +50,9 @@ impl<'a> CatalogBuilder<'a> {
             candidate_roots.iter().map(|path| normalize_path(path)).collect()
         };
         // Prepared callers pass their request-owned workspace so manifest
-        // parsing is shared. Compatibility callers without one retain the
-        // historical filesystem-backed package-root discovery.
+        // parsing is shared. Without a prepared workspace, package-root
+        // discovery delegates to registered analysis hooks (no-op when hooks
+        // are unregistered; `no-mistakes` registers them at load time).
         let workspace_roots: Option<Vec<PathBuf>> = workspace
             .map(|workspace| {
                 workspace

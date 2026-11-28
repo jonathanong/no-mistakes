@@ -5,6 +5,9 @@ const PAGE_EXTS: &[&str] = &["tsx", "ts", "jsx", "js"];
 
 /// Walk `frontend_root` (absolute path) and return `(file_path, route_pattern)` pairs
 /// for all `page.{tsx,ts,jsx,js}` files.
+///
+/// Requires `crate::hooks::register_hooks` for path discovery; standalone callers
+/// without hooks should pass discovered paths to `collect_frontend_routes_from_files`.
 pub fn collect_frontend_routes_with_files(frontend_root: &Path) -> Vec<(PathBuf, String)> {
     let files: Vec<PathBuf> = crate::hooks::discover_visible_paths(frontend_root)
         .into_iter()
@@ -46,7 +49,7 @@ pub fn collect_frontend_routes(frontend_root: &Path) -> Vec<String> {
 }
 
 /// Translate a relative path (relative to `frontend_root`) to a route pattern.
-/// E.g. "(user)/user/[idOrUsername]/page.tsx" → "/user/:idOrUsername"
+/// E.g. `"(user)/user/[idOrUsername]/page.tsx"` → `"/user/:idOrUsername"`
 pub fn path_to_route_pattern(relative: &Path) -> String {
     let dir: PathBuf = relative
         .parent()

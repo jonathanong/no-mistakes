@@ -30,6 +30,9 @@ pub fn extract_backend_routes_from_program<'a>(
 
 /// Scan all `.mts`/`.ts` files under `dir` for backend route definitions using
 /// `register_object` as the chain object. Returns `(file, pattern)` pairs.
+///
+/// Requires `crate::hooks::register_hooks` for path discovery; standalone callers
+/// without hooks should pass discovered paths to `collect_backend_routes_from_files`.
 pub fn collect_backend_routes_in_dir(
     dir: &std::path::Path,
     register_object: &str,

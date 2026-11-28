@@ -1,5 +1,18 @@
 pub use no_mistakes_ts_analysis::ts_resolver::*;
 
+/// Load a `TsConfig` from `--tsconfig` if given, else search upward from `root`,
+/// else return an empty config anchored at `root`.
+///
+/// Shared by every command that resolves import/re-export specifiers so the
+/// `--tsconfig` fallback behaves identically across the CLI and N-API surface.
+pub fn resolve_tsconfig(
+    arg: Option<&std::path::Path>,
+    root: &std::path::Path,
+) -> anyhow::Result<TsConfig> {
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(root);
+    resolve_tsconfig_from_visible(arg, root, &visible_paths)
+}
+
 #[path = "ts_resolver/declarations.rs"]
 pub(crate) mod declarations;
 

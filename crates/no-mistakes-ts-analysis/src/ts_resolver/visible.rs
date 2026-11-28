@@ -1,8 +1,8 @@
 /// Membership test for a frozen visible-path universe.
 ///
-/// Graph construction uses [`crate::codebase::dependencies::graph::GraphFiles`]
-/// so lookups binary-search interned paths instead of hashing cloned PathBufs.
-/// HashSet remains for callers that already own a path set.
+/// Graph construction uses `GraphFiles` so lookups binary-search interned
+/// paths instead of hashing cloned PathBufs. HashSet remains for callers that
+/// already own a path set.
 pub trait VisiblePathLookup: Send + Sync {
     fn contains_visible(&self, path: &Path) -> bool;
 

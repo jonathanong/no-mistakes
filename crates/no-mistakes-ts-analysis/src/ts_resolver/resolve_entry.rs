@@ -171,16 +171,6 @@ fn emitted_fallback_candidates(extension: &str) -> &'static [&'static str] {
         _ => &[],
     }
 }
-/// Load a `TsConfig` from `--tsconfig` if given, else search upward from `root`,
-/// else return an empty config anchored at `root`.
-///
-/// Shared by every command that resolves import/re-export specifiers so the
-/// `--tsconfig` fallback behaves identically across the CLI and N-API surface.
-pub fn resolve_tsconfig(arg: Option<&Path>, root: &Path) -> Result<TsConfig> {
-    let visible_paths = crate::hooks::discover_visible_paths(root);
-    resolve_tsconfig_from_visible(arg, root, &visible_paths)
-}
-
 /// Resolve `specifier` (as it appears in an import in `importing_file`) to an
 /// absolute path on disk. Returns `None` for bare npm specifiers or if no file
 /// is found.
