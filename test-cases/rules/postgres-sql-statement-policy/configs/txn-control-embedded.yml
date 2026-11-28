@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options:
+      importSpecifier: '@example.invalid/db'
+      trustedSqlTags: [{ module: '@example.invalid/db', name: sql }]
+      sqlInclude: ['migrations/**/*.sql']
+      bannedStatements: [transaction-control]

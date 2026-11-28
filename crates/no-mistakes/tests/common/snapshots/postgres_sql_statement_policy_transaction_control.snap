@@ -1,0 +1,499 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "begin_commit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001_begin_commit.sql",
+          "line": 1,
+          "message": "migrations/001_begin_commit.sql:1: SQL files matching this rule must not use BEGIN; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "BEGIN;",
+          "target": "BEGIN"
+        },
+        {
+          "file": "migrations/001_begin_commit.sql",
+          "line": 14,
+          "message": "migrations/001_begin_commit.sql:14: SQL files matching this rule must not use COMMIT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "COMMIT;",
+          "target": "COMMIT"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 10,
+          "message": "migrations/002_all_kinds.sql:10: SQL files matching this rule must not use COMMIT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "COMMIT AND CHAIN;",
+          "target": "COMMIT"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 5,
+          "message": "migrations/002_all_kinds.sql:5: SQL files matching this rule must not use BEGIN; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "BEGIN WORK;",
+          "target": "BEGIN"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "embedded": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001_begin_commit.sql",
+          "line": 1,
+          "message": "migrations/001_begin_commit.sql:1: SQL files matching this rule must not use BEGIN; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "BEGIN;",
+          "target": "BEGIN"
+        },
+        {
+          "file": "migrations/001_begin_commit.sql",
+          "line": 14,
+          "message": "migrations/001_begin_commit.sql:14: SQL files matching this rule must not use COMMIT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "COMMIT;",
+          "target": "COMMIT"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 10,
+          "message": "migrations/002_all_kinds.sql:10: SQL files matching this rule must not use COMMIT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "COMMIT AND CHAIN;",
+          "target": "COMMIT"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 11,
+          "message": "migrations/002_all_kinds.sql:11: SQL files matching this rule must not use ROLLBACK; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ROLLBACK TRANSACTION;",
+          "target": "ROLLBACK"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 12,
+          "message": "migrations/002_all_kinds.sql:12: SQL files matching this rule must not use END; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "END WORK;",
+          "target": "END"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 5,
+          "message": "migrations/002_all_kinds.sql:5: SQL files matching this rule must not use BEGIN; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "BEGIN WORK;",
+          "target": "BEGIN"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 6,
+          "message": "migrations/002_all_kinds.sql:6: SQL files matching this rule must not use START TRANSACTION; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "START TRANSACTION READ ONLY;",
+          "target": "START TRANSACTION"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 7,
+          "message": "migrations/002_all_kinds.sql:7: SQL files matching this rule must not use SAVEPOINT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SAVEPOINT before_backfill;",
+          "target": "SAVEPOINT"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 8,
+          "message": "migrations/002_all_kinds.sql:8: SQL files matching this rule must not use ROLLBACK TO SAVEPOINT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ROLLBACK TO SAVEPOINT before_backfill;",
+          "target": "ROLLBACK TO SAVEPOINT"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 9,
+          "message": "migrations/002_all_kinds.sql:9: SQL files matching this rule must not use RELEASE SAVEPOINT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "RELEASE SAVEPOINT before_backfill;",
+          "target": "RELEASE SAVEPOINT"
+        },
+        {
+          "file": "src/runner.ts",
+          "line": 4,
+          "message": "src/runner.ts:4: executed SQL must not use BEGIN; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "await query(sql`BEGIN`);",
+          "target": "BEGIN"
+        },
+        {
+          "file": "src/runner.ts",
+          "line": 6,
+          "message": "src/runner.ts:6: executed SQL must not use COMMIT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "await query(sql`COMMIT`);",
+          "target": "COMMIT"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "group": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001_begin_commit.sql",
+          "line": 1,
+          "message": "migrations/001_begin_commit.sql:1: SQL files matching this rule must not use BEGIN; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "BEGIN;",
+          "target": "BEGIN"
+        },
+        {
+          "file": "migrations/001_begin_commit.sql",
+          "line": 14,
+          "message": "migrations/001_begin_commit.sql:14: SQL files matching this rule must not use COMMIT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "COMMIT;",
+          "target": "COMMIT"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 10,
+          "message": "migrations/002_all_kinds.sql:10: SQL files matching this rule must not use COMMIT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "COMMIT AND CHAIN;",
+          "target": "COMMIT"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 11,
+          "message": "migrations/002_all_kinds.sql:11: SQL files matching this rule must not use ROLLBACK; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ROLLBACK TRANSACTION;",
+          "target": "ROLLBACK"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 12,
+          "message": "migrations/002_all_kinds.sql:12: SQL files matching this rule must not use END; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "END WORK;",
+          "target": "END"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 5,
+          "message": "migrations/002_all_kinds.sql:5: SQL files matching this rule must not use BEGIN; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "BEGIN WORK;",
+          "target": "BEGIN"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 6,
+          "message": "migrations/002_all_kinds.sql:6: SQL files matching this rule must not use START TRANSACTION; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "START TRANSACTION READ ONLY;",
+          "target": "START TRANSACTION"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 7,
+          "message": "migrations/002_all_kinds.sql:7: SQL files matching this rule must not use SAVEPOINT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SAVEPOINT before_backfill;",
+          "target": "SAVEPOINT"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 8,
+          "message": "migrations/002_all_kinds.sql:8: SQL files matching this rule must not use ROLLBACK TO SAVEPOINT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ROLLBACK TO SAVEPOINT before_backfill;",
+          "target": "ROLLBACK TO SAVEPOINT"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 9,
+          "message": "migrations/002_all_kinds.sql:9: SQL files matching this rule must not use RELEASE SAVEPOINT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "RELEASE SAVEPOINT before_backfill;",
+          "target": "RELEASE SAVEPOINT"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "only_begin": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001_begin_commit.sql",
+          "line": 1,
+          "message": "migrations/001_begin_commit.sql:1: SQL files matching this rule must not use BEGIN; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "BEGIN;",
+          "target": "BEGIN"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 5,
+          "message": "migrations/002_all_kinds.sql:5: SQL files matching this rule must not use BEGIN; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "BEGIN WORK;",
+          "target": "BEGIN"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "only_commit": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 3,
+          "message": "directive for `postgres-sql-statement-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-sql-statement-policy",
+          "target": "postgres-sql-statement-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/001_begin_commit.sql",
+          "line": 14,
+          "message": "migrations/001_begin_commit.sql:14: SQL files matching this rule must not use COMMIT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "COMMIT;",
+          "target": "COMMIT"
+        },
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 10,
+          "message": "migrations/002_all_kinds.sql:10: SQL files matching this rule must not use COMMIT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "COMMIT AND CHAIN;",
+          "target": "COMMIT"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "only_end": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 3,
+          "message": "directive for `postgres-sql-statement-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-sql-statement-policy",
+          "target": "postgres-sql-statement-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 12,
+          "message": "migrations/002_all_kinds.sql:12: SQL files matching this rule must not use END; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "END WORK;",
+          "target": "END"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "only_release_savepoint": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 3,
+          "message": "directive for `postgres-sql-statement-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-sql-statement-policy",
+          "target": "postgres-sql-statement-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 9,
+          "message": "migrations/002_all_kinds.sql:9: SQL files matching this rule must not use RELEASE SAVEPOINT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "RELEASE SAVEPOINT before_backfill;",
+          "target": "RELEASE SAVEPOINT"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "only_rollback": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 3,
+          "message": "directive for `postgres-sql-statement-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-sql-statement-policy",
+          "target": "postgres-sql-statement-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 11,
+          "message": "migrations/002_all_kinds.sql:11: SQL files matching this rule must not use ROLLBACK; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ROLLBACK TRANSACTION;",
+          "target": "ROLLBACK"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "only_rollback_to_savepoint": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 3,
+          "message": "directive for `postgres-sql-statement-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-sql-statement-policy",
+          "target": "postgres-sql-statement-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 8,
+          "message": "migrations/002_all_kinds.sql:8: SQL files matching this rule must not use ROLLBACK TO SAVEPOINT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "ROLLBACK TO SAVEPOINT before_backfill;",
+          "target": "ROLLBACK TO SAVEPOINT"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "only_savepoint": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 3,
+          "message": "directive for `postgres-sql-statement-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-sql-statement-policy",
+          "target": "postgres-sql-statement-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 7,
+          "message": "migrations/002_all_kinds.sql:7: SQL files matching this rule must not use SAVEPOINT; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "SAVEPOINT before_backfill;",
+          "target": "SAVEPOINT"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "only_start_transaction": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 3,
+          "message": "directive for `postgres-sql-statement-policy` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "-- no-mistakes-disable-next-line postgres-sql-statement-policy",
+          "target": "postgres-sql-statement-policy"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "migrations/002_all_kinds.sql",
+          "line": 6,
+          "message": "migrations/002_all_kinds.sql:6: SQL files matching this rule must not use START TRANSACTION; the migration runner already owns the transaction",
+          "rule": "postgres-sql-statement-policy",
+          "sourceLine": "START TRANSACTION READ ONLY;",
+          "target": "START TRANSACTION"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

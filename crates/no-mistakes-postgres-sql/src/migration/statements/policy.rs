@@ -41,6 +41,17 @@ pub const SUPPORTED_KINDS: &[&str] = &[
     "ALTER TYPE",
 ];
 
+pub const TRANSACTION_CONTROL_KINDS: &[&str] = &[
+    "BEGIN",
+    "START TRANSACTION",
+    "COMMIT",
+    "END",
+    "ROLLBACK",
+    "SAVEPOINT",
+    "RELEASE SAVEPOINT",
+    "ROLLBACK TO SAVEPOINT",
+];
+
 pub(in super::super) fn record(sql: &str, facts: &mut SqlSchemaFileFacts) {
     direct(sql, false, facts);
     // Dollar-quoted DO bodies are already peeled into AST metadata. Only the

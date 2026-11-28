@@ -182,7 +182,7 @@ fn word(token: &Token, expected: &str) -> bool {
 fn is_begin_or_end(statement: &Statement) -> bool {
     matches!(
         statement,
-        Statement::StartTransaction { .. } | Statement::Commit { .. }
+        Statement::StartTransaction { begin: true, .. } | Statement::Commit { end: true, .. }
     )
 }
 

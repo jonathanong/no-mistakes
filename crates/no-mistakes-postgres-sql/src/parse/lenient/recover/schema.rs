@@ -2,18 +2,16 @@
 use super::super::{keyword_of, next_non_ws};
 use sqlparser::{keywords::Keyword, tokenizer::Token};
 
-pub(super) fn start(tokens: &[Token]) -> Option<usize> {
-    let mut index = 0;
-    while index < tokens.len() {
-        if let Some(start) = ddl_start_at(tokens, index) {
-            return Some(start);
-        }
-        index += 1;
-    }
-    None
+pub(super) fn start_in(tokens: &[Token], procedural_body: bool, after_loop: bool) -> Option<usize> {
+    (0..tokens.len()).find_map(|index| ddl_start_at(tokens, index, procedural_body, after_loop))
 }
 
-fn ddl_start_at(tokens: &[Token], index: usize) -> Option<usize> {
+fn ddl_start_at(
+    tokens: &[Token],
+    index: usize,
+    procedural_body: bool,
+    after_loop: bool,
+) -> Option<usize> {
     match keyword_of(&tokens[index]) {
         Some(Keyword::ALTER) => (follows_keyword(tokens, index, Keyword::TABLE)
             || utility_start(tokens, index))
@@ -28,6 +26,13 @@ fn ddl_start_at(tokens: &[Token], index: usize) -> Option<usize> {
             | Keyword::DELETE
             | Keyword::MERGE,
         ) => Some(index),
+        Some(Keyword::COMMIT | Keyword::ROLLBACK)
+            if procedural_body
+                && ((after_loop && index == 0)
+                    || (index > 0 && guarded_prefix(&tokens[..index], true))) =>
+        {
+            Some(index)
+        }
         _ => None,
     }
 }
@@ -49,24 +54,21 @@ fn create_ddl_start(tokens: &[Token], index: usize) -> Option<usize> {
 
 fn modified_view_start(tokens: &[Token], mut next: usize) -> bool {
     if keyword_of(&tokens[next]) == Some(Keyword::OR) {
-        let Some(replace) = next_non_ws(tokens, next + 1) else {
+        let Some(replace) = next_non_ws(tokens, next + 1)
+            .filter(|&i| keyword_of(&tokens[i]) == Some(Keyword::REPLACE))
+        else {
             return false;
         };
-        if keyword_of(&tokens[replace]) != Some(Keyword::REPLACE) {
-            return false;
-        }
         let Some(after) = next_non_ws(tokens, replace + 1) else {
             return false;
         };
         next = after;
     }
-    if matches!(
-        keyword_of(&tokens[next]),
-        Some(Keyword::TEMP | Keyword::TEMPORARY)
-    ) {
-        return follows_keyword(tokens, next, Keyword::VIEW);
+    match keyword_of(&tokens[next]) {
+        Some(Keyword::TEMP | Keyword::TEMPORARY) => follows_keyword(tokens, next, Keyword::VIEW),
+        Some(Keyword::VIEW) => true,
+        _ => false,
     }
-    keyword_of(&tokens[next]) == Some(Keyword::VIEW)
 }
 
 fn drop_ddl_start(tokens: &[Token], index: usize) -> Option<usize> {
@@ -102,18 +104,28 @@ fn utility_start(tokens: &[Token], index: usize) -> bool {
                 || word(1, "TRIGGER")
                 || word(1, "TEXT") && word(2, "SEARCH")
                 || word(1, "OR") && word(2, "REPLACE") && word(3, "TRIGGER"));
-    recognized && guarded_prefix(&tokens[..index])
+    recognized && guarded_prefix(&tokens[..index], false)
 }
 
-fn guarded_prefix(prefix: &[Token]) -> bool {
-    let first = prefix
+fn guarded_prefix(prefix: &[Token], allow_case_when: bool) -> bool {
+    let prefix = if allow_case_when {
+        super::label::strip_label(prefix)
+    } else {
+        prefix
+    };
+    let Some(first) = prefix
         .iter()
-        .find(|token| !matches!(token, Token::Whitespace(_)));
-    if first.is_none() {
+        .find(|token| !matches!(token, Token::Whitespace(_)))
+    else {
         return true;
-    }
-    if !matches!(first, Some(Token::Word(word)) if word.quote_style.is_none()
-        && ["BEGIN", "ELSE", "IF", "ELSIF"].iter().any(|value| word.value.eq_ignore_ascii_case(value)))
+    };
+    let allowed: &[&str] = if allow_case_when {
+        &["BEGIN", "ELSE", "IF", "ELSIF", "CASE", "WHEN"]
+    } else {
+        &["BEGIN", "ELSE", "IF", "ELSIF"]
+    };
+    if !matches!(first, Token::Word(word) if word.quote_style.is_none()
+        && allowed.iter().any(|value| word.value.eq_ignore_ascii_case(value)))
     {
         return false;
     }
@@ -133,20 +145,22 @@ pub(super) fn recover(
 ) -> Option<super::super::LocatedStatement> {
     use sqlparser::{dialect::PostgreSqlDialect, parser::Parser, tokenizer::TokenWithSpan};
     // A row-lock UPDATE belongs to the validated loop header, never its action.
-    let action = if procedural_body {
-        match super::queries::loop_action_start(tokens) {
-            Ok(action) => action,
-            // Keep definite suffix facts while the caller retains header uncertainty.
-            Err(()) => super::queries::loop_header::fallback_action_start(tokens),
-        }
-    } else {
-        None
-    };
+    let action = procedural_body
+        .then(|| {
+            super::queries::loop_action_start(tokens)
+                .unwrap_or_else(|()| super::queries::loop_header::fallback_action_start(tokens))
+        })
+        .flatten();
     let start = action.map_or_else(
-        || start(tokens),
-        |at| start(&tokens[at..]).map(|start| at + start),
+        || start_in(tokens, procedural_body, false),
+        |at| start_in(&tokens[at..], procedural_body, true).map(|start| at + start),
     )?;
-    if action.is_some_and(|at| !guarded_prefix(&tokens[at..start])) {
+    let is_txn_action = procedural_body
+        && matches!(
+            keyword_of(&tokens[start]),
+            Some(Keyword::COMMIT | Keyword::ROLLBACK)
+        );
+    if action.is_some_and(|at| !guarded_prefix(&tokens[at..start], is_txn_action)) {
         return None;
     }
     if let Some((change, _)) = super::partition::recover_partition_change(
@@ -156,16 +170,14 @@ pub(super) fn recover(
     ) {
         return Some(super::super::LocatedStatement::plain(change));
     }
-    let mut located = original.map_or_else(
-        || {
-            tokens[start..]
-                .iter()
-                .cloned()
-                .map(TokenWithSpan::wrap)
-                .collect()
-        },
-        |tokens| tokens[start..].to_vec(),
-    );
+    let mut located = match original {
+        Some(tokens) => tokens[start..].to_vec(),
+        None => tokens[start..]
+            .iter()
+            .cloned()
+            .map(TokenWithSpan::wrap)
+            .collect(),
+    };
     super::super::super::ddl_compat::normalize(&mut located);
     crate::source::conceal_body_keyword(&mut located);
     let mut parser = Parser::new(&PostgreSqlDialect {}).with_tokens_with_locations(located);
@@ -176,7 +188,7 @@ pub(super) fn recover(
     {
         return None;
     }
-    let utility = utility_start(tokens, start);
+    let utility = utility_start(tokens, start) || is_txn_action;
     if (utility || action.is_some()) && parser.peek_token().token != Token::EOF {
         return None;
     }

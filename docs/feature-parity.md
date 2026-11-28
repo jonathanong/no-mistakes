@@ -411,7 +411,10 @@ Tagged builder fragments accessed through namespaces stay unknown because the
 exported object can mutate.
 Named imports, factory handles, and typed executor parameters honor configured
 scope; SQL-file selection retains `sqlInclude` semantics. The `ddl` group covers
-29 statement kinds, including routines and database utility commands.
+29 statement kinds, including routines and database utility commands, and the
+`transaction-control` group covers 8 transaction-control kinds (`BEGIN`,
+`START TRANSACTION`, `COMMIT`, `END`, `ROLLBACK`, `SAVEPOINT`,
+`RELEASE SAVEPOINT`, and `ROLLBACK TO SAVEPOINT`).
 `bannedSettings` checks named settings in SET commands and literal `set_config`
 calls, including recovered routine bodies and static EXECUTE. Opt-in
 `bannedClauses` rejects explicit extension versions and cascading drops, including

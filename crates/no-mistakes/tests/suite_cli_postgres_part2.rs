@@ -8,6 +8,8 @@ mod cli_postgres_snapshot_sql_shape_policy_bounded;
 mod cli_postgres_snapshot_sql_shape_policy_returns;
 #[path = "cli_postgres_snapshot_sql_statement_policy.rs"]
 mod cli_postgres_snapshot_sql_statement_policy;
+#[path = "cli_postgres_snapshot_sql_statement_policy_txn.rs"]
+mod cli_postgres_snapshot_sql_statement_policy_txn;
 #[path = "cli_postgres_snapshot_status_lifecycle.rs"]
 mod cli_postgres_snapshot_status_lifecycle;
 #[path = "cli_postgres_snapshot_table_shape.rs"]

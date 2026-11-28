@@ -15,6 +15,7 @@ pub struct StatementPolicySources<'a> {
     pub share_lock_writes: bool,
     pub redundant_prelocks: bool,
     pub tokens: Option<&'a [Option<Arc<[TokenWithSpan]>>]>,
+    pub statement_locations: Option<&'a [sqlparser::tokenizer::Location]>,
     pub schema: Option<&'a crate::SqlSchemaFileFacts>,
     pub functions: &'a [crate::SqlFunctionCallFact],
 }
