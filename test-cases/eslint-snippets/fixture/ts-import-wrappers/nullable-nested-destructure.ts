@@ -21,3 +21,8 @@ export async function dynamicNested(): Promise<Widget | null> {
   } = require("./data");
   return read(id);
 }
+
+export async function defaultedObject(): Promise<Widget | null> {
+  const { api: { getWidget: read } = { getWidget: missing } } = require("./data");
+  return read(id);
+}

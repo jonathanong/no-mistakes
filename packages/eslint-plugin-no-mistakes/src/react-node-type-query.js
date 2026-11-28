@@ -1,5 +1,6 @@
 "use strict";
 
+const { localTypeStatus } = require("./react-node-local-type");
 const { literalString } = require("./rules/module-mock-helpers");
 const { constStringKey } = require("./rules/react-use-callee");
 
@@ -83,41 +84,6 @@ function assertedType(node) {
   return null;
 }
 
-function containsNode(root, node) {
-  for (let current = node; current; current = current.parent) if (current === root) return true;
-  return false;
-}
-
-function localTypeStatus(node, name, facts, seen) {
-  let current = node?.parent;
-  while (current) {
-    const statements = Array.isArray(current.body)
-      ? current.body
-      : Array.isArray(current.body?.body)
-        ? current.body.body
-        : null;
-    for (const statement of statements ?? []) {
-      const declaration = statement.declaration ?? statement;
-      const typed =
-        declaration.type === "TSTypeAliasDeclaration" ||
-        declaration.type === "TSInterfaceDeclaration";
-      if (!typed || declaration.id?.name !== name || containsNode(declaration, node)) continue;
-      const scope =
-        declaration.parent?.type === "ExportNamedDeclaration"
-          ? declaration.parent.parent
-          : declaration.parent;
-      if (!containsNode(scope, node)) continue;
-      if (declaration.type === "TSInterfaceDeclaration") return "no";
-      if (seen.has(declaration)) return "unresolved";
-      const next = new Set(seen);
-      next.add(declaration);
-      return reactTypeStatus(declaration.typeAnnotation, facts, next);
-    }
-    current = current.parent;
-  }
-  return null;
-}
-
 function reactTypeStatus(type, facts, seen = new Set()) {
   const current = unwrapType(type);
   if (!current || !facts) return "no";
@@ -142,7 +108,7 @@ function reactTypeStatus(type, facts, seen = new Set()) {
   }
   const name = typeName(current);
   if (name && current.type === "TSTypeReference" && !name.includes(".")) {
-    const local = localTypeStatus(current, name, facts, seen);
+    const local = localTypeStatus(current, name, facts, seen, reactTypeStatus);
     if (local !== null) return local;
   }
   const root = name?.split(".")[0];

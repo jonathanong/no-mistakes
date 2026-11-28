@@ -383,6 +383,16 @@ describe("typescript import wrappers", () => {
         "react-no-nullish-react-node",
       ),
       eslintCase(
+        "erased require and a later assignment",
+        "nullable-assigned-require.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
         "var require and inline require calls",
         "nullable-binding-shapes.ts",
         "server-require-nullable-fetch-wrapper",
@@ -420,6 +430,21 @@ describe("typescript import wrappers", () => {
       eslintCase(
         "local merged interface and alias cycle",
         "react-nullish-local-cycle.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
+        "direct type alias cycle reaches the cycle guard",
+        "react-nullish-self-alias.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
+        "nested heritage uses the nearest declaration",
+        "react-nullish-nested-heritage.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
+        "mixed nested heritage stays unfinished",
+        "react-nullish-mixed-heritage.tsx",
         "react-no-nullish-react-node",
       ),
       eslintCase(
@@ -816,6 +841,37 @@ describe("typescript import wrappers", () => {
       [37, "unanalyzable"],
     ]);
     expect(
+      cases
+        .find((item) => item.name === "direct type alias cycle reaches the cycle guard")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [3, "unanalyzable"],
+      [8, "unanalyzable"],
+    ]);
+    expect(
+      cases
+        .find((item) => item.name === "nested heritage uses the nearest declaration")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [15, "nullish"],
+      [26, "unanalyzable"],
+      [35, "nullish"],
+    ]);
+    expect(
+      cases.find((item) => item.name === "mixed nested heritage stays unfinished").findings,
+    ).toEqual([]);
+    expect(
+      cases
+        .find((item) => item.name === "erased require and a later assignment")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [5, "wrapper"],
+      [10, "wrapper"],
+      [16, "wrapper"],
+      [31, "unanalyzable"],
+      [37, "unanalyzable"],
+    ]);
+    expect(
       cases.find((item) => item.name === "reassigned alias chain stays bounded").findings,
     ).toEqual([]);
     expect(
@@ -842,6 +898,7 @@ describe("typescript import wrappers", () => {
       [8, "wrapper"],
       [15, "wrapper"],
       [22, "unanalyzable"],
+      [27, "wrapper"],
     ]);
     expect(
       cases
@@ -919,6 +976,8 @@ describe("typescript import wrappers", () => {
         "react-nullish-computed-props.tsx",
         "react-nullish-merged.tsx",
         "react-nullish-loop-class.tsx",
+        "react-nullish-self-alias.tsx",
+        "react-nullish-nested-heritage.tsx",
       ]),
       "nullish-ignore": oxlintOn(".oxlintrc-nullish-ignore.json", ["react-nullish-unresolved.tsx"]),
       fetch: oxlintOn(".oxlintrc-fetch.json", [
@@ -955,6 +1014,7 @@ describe("typescript import wrappers", () => {
         "nullable-computed-member.ts",
         "nullable-unresolved-wrapper.ts",
         "nullable-binding-shapes.ts",
+        "nullable-assigned-require.ts",
       ]),
       "nullable-qualified": oxlintOn(".oxlintrc-nullable-qualified.json", [
         "nullable-qualified-member.ts",

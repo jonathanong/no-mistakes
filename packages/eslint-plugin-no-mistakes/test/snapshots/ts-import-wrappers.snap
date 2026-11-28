@@ -549,6 +549,36 @@
       "rule": "react-no-nullish-react-node"
     },
     {
+      "file": "react-nullish-self-alias.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 23,
+          "endLine": 3,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-self-alias.tsx",
+          "line": 3,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 23,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-self-alias.tsx",
+          "line": 8,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "direct type alias cycle reaches the cycle guard",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
       "file": "react-nullish-unresolved.tsx",
       "findings": [],
       "name": "ignored unresolved ReactNode import",
@@ -847,6 +877,13 @@
       "rule": "react-no-nullish-react-node"
     },
     {
+      "file": "react-nullish-mixed-heritage.tsx",
+      "findings": [],
+      "name": "mixed nested heritage stays unfinished",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
       "file": "react-nullish-named-default.tsx",
       "findings": [
         {
@@ -903,6 +940,47 @@
         }
       ],
       "name": "named unresolved ReactNode members",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
+      "file": "react-nullish-nested-heritage.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 15,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-nested-heritage.tsx",
+          "line": 15,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 26,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-nested-heritage.tsx",
+          "line": 26,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 35,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-nested-heritage.tsx",
+          "line": 35,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "nested heritage uses the nearest declaration",
       "options": null,
       "rule": "react-no-nullish-react-node"
     },
@@ -1711,6 +1789,77 @@
       "rule": "server-require-nullable-fetch-wrapper"
     },
     {
+      "file": "nullable-assigned-require.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 16,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-assigned-require.ts",
+          "line": 5,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 16,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-assigned-require.ts",
+          "line": 10,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 16,
+          "endLine": 16,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-assigned-require.ts",
+          "line": 16,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 16,
+          "endLine": 31,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-assigned-require.ts",
+          "line": 31,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 16,
+          "endLine": 37,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-assigned-require.ts",
+          "line": 37,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "erased require and a later assignment",
+      "options": {
+        "getterCalleePatterns": [
+          "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
       "file": "nullable-forwarded-member.ts",
       "findings": [
         {
@@ -2031,6 +2180,17 @@
           "line": 22,
           "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 18,
+          "endLine": 27,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-nested-destructure.ts",
+          "line": 27,
+          "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
           "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
           "severity": 2
         }
@@ -2728,6 +2888,13 @@
             "file": "nullable-nested-destructure.ts",
             "line": 22,
             "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-nested-destructure.ts",
+            "line": 27,
+            "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently."
           }
         ],
         "name": "nullable-nested-destructure.ts",
@@ -2814,6 +2981,48 @@
       }
     ],
     "nullable-widget": [
+      {
+        "file": "nullable-assigned-require.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-assigned-require.ts",
+            "line": 5,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-assigned-require.ts",
+            "line": 10,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-assigned-require.ts",
+            "line": 16,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-assigned-require.ts",
+            "line": 31,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-assigned-require.ts",
+            "line": 37,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          }
+        ],
+        "name": "nullable-assigned-require.ts",
+        "options": null
+      },
       {
         "file": "nullable-binding-shapes.ts",
         "findings": [
@@ -3451,6 +3660,34 @@
         "options": null
       },
       {
+        "file": "react-nullish-nested-heritage.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-nested-heritage.tsx",
+            "line": 15,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-nested-heritage.tsx",
+            "line": 26,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-nested-heritage.tsx",
+            "line": 35,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          }
+        ],
+        "name": "react-nullish-nested-heritage.tsx",
+        "options": null
+      },
+      {
         "file": "react-nullish-pattern-shadows.tsx",
         "findings": [
           {
@@ -3462,6 +3699,27 @@
           }
         ],
         "name": "react-nullish-pattern-shadows.tsx",
+        "options": null
+      },
+      {
+        "file": "react-nullish-self-alias.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-self-alias.tsx",
+            "line": 3,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-self-alias.tsx",
+            "line": 8,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          }
+        ],
+        "name": "react-nullish-self-alias.tsx",
         "options": null
       },
       {

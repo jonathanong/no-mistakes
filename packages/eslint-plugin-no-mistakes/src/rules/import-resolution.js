@@ -2,6 +2,7 @@
 
 const { unwrapSequence } = require("./async-ast");
 const { memberFact, rootIdentifier } = require("./import-member");
+const { laterFact } = require("./import-later-fact");
 const { factAtPath, patternPath } = require("./import-pattern-path");
 const { literalString } = require("./logical-call");
 const { resolveVariable } = require("./async-target-bindings");
@@ -17,7 +18,10 @@ function isFreeRequire(node, context) {
   const variable = resolveVariable(current, context);
   if (!variable || variable.defs.length === 0) return true;
   return !variable.defs.some(
-    (def) => def.type && def.type !== "ImplicitGlobalVariable" && !typeOnlyImport(def),
+    (def) =>
+      def.type &&
+      !["ImplicitGlobalVariable", "Type", "TypeParameter"].includes(def.type) &&
+      !typeOnlyImport(def),
   );
 }
 
@@ -169,7 +173,7 @@ function readBinding(variable, current, context, seen, memo) {
   );
   if (direct) return written && !direct.unresolved ? { unresolved: true } : direct;
   const init = def.type === "Variable" && def.node?.id?.type === "Identifier" && def.node.init;
-  if (!init) return null;
+  if (!init) return laterFact(def, variable, context, seen, memo, importFact);
   if (def.parent?.kind !== "const" && written)
     return reassignedFact(def, variable, context, seen, memo);
   return importFact(init, context, seen, memo);
