@@ -134,6 +134,26 @@ fn abstains_on_dynamic_commands_eval_and_unterminated_syntax() {
 }
 
 #[test]
+fn apostrophes_in_heredocs_comments_and_ansi_c_strings_do_not_open_quotes() {
+    let compiled = default_policy();
+    for script in [
+        "body=$(cat <<'EOF'\ndon't merge\nEOF\n)\ngit commit -m hi\n",
+        "body=$(cat <<-EOF\n\tit's\n\tEOF\n)\ngit commit -m hi\n",
+        "body=$(\n  # user's name\n  printf hello\n)\ngit commit -m hi\n",
+        "body=$(printf '%s' $'it\\'s')\ngit commit -m hi\n",
+        "body=$(printf '%s' $'A\\'s')\ngit commit -m hi\n",
+    ] {
+        let hits = scan_script(script, &compiled);
+        assert_eq!(hits.len(), 1, "{script:?}: {hits:?}");
+        assert!(
+            matches!(hits[0].kind, HitKind::MissingRequired { .. }),
+            "{script:?}: {hits:?}"
+        );
+        assert_eq!(hits[0].line, script.lines().count(), "{script:?}");
+    }
+}
+
+#[test]
 fn quoted_parenthesis_in_substitution_stays_unanalyzable() {
     let compiled = default_policy();
     let hits = scan_script(

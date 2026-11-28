@@ -19,6 +19,7 @@ pub(in crate::codebase::rules) struct Command {
 }
 
 mod expansion;
+mod shell_syntax;
 mod scan;
 
 pub(in crate::codebase::rules) struct HeredocBody {

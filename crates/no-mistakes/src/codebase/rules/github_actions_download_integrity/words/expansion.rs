@@ -1,3 +1,9 @@
+use super::shell_syntax::{
+    is_comment_start, take_comment, take_heredoc_bodies, take_heredoc_start,
+};
+
+pub(super) const ANSI_C: char = '\u{1}';
+
 /// Walk one `$(...)` or `${...}` span.
 ///
 /// Nested command substitutions start a fresh quote context. Parameter
@@ -13,6 +19,7 @@ pub(super) fn take_expansion(
     word.push(chars[index + 1]);
     index += 2;
     let mut frames = vec![(close, '\0')];
+    let mut heredocs = Vec::new();
     while index < chars.len() && !frames.is_empty() {
         let ch = chars[index];
         if ch == '\n' {
@@ -20,7 +27,7 @@ pub(super) fn take_expansion(
         }
         let (frame_close, quote) = frames[frames.len() - 1];
         if quote != '\0' {
-            if quote == '"' && ch == '\\' && index + 1 < chars.len() {
+            if matches!(quote, '"' | ANSI_C) && ch == '\\' && index + 1 < chars.len() {
                 push_escaped(chars, &mut index, word, line);
                 continue;
             }
@@ -30,7 +37,7 @@ pub(super) fn take_expansion(
                     continue;
                 }
             }
-            if ch == quote {
+            if (quote == ANSI_C && ch == '\'') || (quote != ANSI_C && ch == quote) {
                 let last = frames.len() - 1;
                 frames[last].1 = '\0';
             }
@@ -42,9 +49,27 @@ pub(super) fn take_expansion(
             push_escaped(chars, &mut index, word, line);
             continue;
         }
+        if frame_close == ')' {
+            if is_comment_start(chars, index) {
+                take_comment(chars, &mut index, word);
+                continue;
+            }
+            if let Some(doc) = take_heredoc_start(chars, &mut index, word) {
+                heredocs.push(doc);
+                continue;
+            }
+            if ch == '\n' && !heredocs.is_empty() {
+                take_heredoc_bodies(chars, &mut index, word, line, &mut heredocs);
+                continue;
+            }
+        }
         if ch == '\'' || ch == '"' {
             let last = frames.len() - 1;
-            frames[last].1 = ch;
+            frames[last].1 = if ch == '\'' && index > 0 && chars[index - 1] == '$' {
+                ANSI_C
+            } else {
+                ch
+            };
             word.push(ch);
             index += 1;
             continue;

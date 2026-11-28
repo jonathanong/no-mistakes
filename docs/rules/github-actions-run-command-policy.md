@@ -85,7 +85,7 @@ otherwise fail (`gh api -f x=1 "$ENDPOINT"` with `unlessAnyArgs: [graphql]`),
 a dynamic word that could expand to a configured flag (`tool run "$MODE"`
 or `tool run "--${MODE}"` with `whenAnyArgs: [--write]`; a requirement that
 is already present does not abstain), to an inline `flag=value` or attached short
-form on a `whenAnyArgs` or `unlessAnyArgs` gate (`tool run "$ARG"` with
+form on a `whenAnyArgs` or `unlessAnyArgs` pair gate (`tool run "$ARG"` with
 `whenAnyArgs: [[--mode, write]]`), or to a `valueFlags` entry that would
 consume the next word (`tool emit "$OPT" exempt` with `valueFlags: [--label]`,
 or `tool run "--label${TAIL}" --skip` with `unlessAnyArgs: [--skip]`),
@@ -269,7 +269,7 @@ steps:
   `gh api -f x=1 "$ENDPOINT"` with `unlessAnyArgs: [graphql]`), a dynamic
   word that could expand to a configured flag (including an option-shaped word,
   and only when a requirement or exemption could still fail), to an inline `flag=value` or
-  attached short form on a when or unless gate, or to a `valueFlags` entry
+  attached short form on a when or unless pair gate, or to a `valueFlags` entry
   that would consume the next exemption or flag, a dynamic word that could expand to
   `--` before a later required flag, a configured token whose text equals an
   expansion's source, a command substitution whose `)` sits
