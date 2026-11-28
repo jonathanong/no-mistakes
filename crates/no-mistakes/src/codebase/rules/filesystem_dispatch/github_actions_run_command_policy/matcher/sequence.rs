@@ -1,5 +1,5 @@
 use super::args::ArgMatch;
-use super::dynamic_match::dynamic_word_could_match_literal;
+use super::dynamic_match::{dynamic_word_could_match_literal, possible_terminator};
 use crate::codebase::rules::github_actions_download_integrity::words::Word;
 
 pub(super) fn match_token_sequence_skipping(
@@ -28,10 +28,18 @@ pub(super) fn match_token_sequence_masked(
             continue;
         }
         match match_token_window(window, tokens, command_dynamic) {
-            ArgMatch::Matched if window_indefinite(indefinite, start, token_len) => {
-                dynamic_hit.get_or_insert_with(|| (words[start].text.clone(), words[start].line));
+            ArgMatch::Matched => {
+                let indefinite_window = window_indefinite(indefinite, start, token_len);
+                let terminator = earlier_terminator(words, start, consumed_starts, command_dynamic);
+                if indefinite_window {
+                    dynamic_hit
+                        .get_or_insert_with(|| (words[start].text.clone(), words[start].line));
+                } else if let Some(hit) = terminator {
+                    dynamic_hit.get_or_insert(hit);
+                } else {
+                    return ArgMatch::Matched;
+                }
             }
-            ArgMatch::Matched => return ArgMatch::Matched,
             ArgMatch::DynamicValue { token, line } => {
                 dynamic_hit.get_or_insert((token, line));
             }
@@ -42,6 +50,20 @@ pub(super) fn match_token_sequence_masked(
         Some((token, line)) => ArgMatch::DynamicValue { token, line },
         None => ArgMatch::NotMatched,
     }
+}
+
+fn earlier_terminator(
+    words: &[&Word],
+    end: usize,
+    consumed: &[bool],
+    command_dynamic: bool,
+) -> Option<(String, usize)> {
+    words[..end].iter().enumerate().find_map(|(index, word)| {
+        if consumed.get(index).copied().unwrap_or(false) {
+            return None;
+        }
+        possible_terminator(word, command_dynamic)
+    })
 }
 
 fn window_indefinite(indefinite: &[bool], start: usize, len: usize) -> bool {

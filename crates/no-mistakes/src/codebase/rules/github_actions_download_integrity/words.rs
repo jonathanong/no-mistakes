@@ -75,12 +75,28 @@ fn take_expansion(
     word.push(open);
     index += 2;
     let mut depth = 1i32;
+    let mut quote = '\0';
     while index < chars.len() && depth > 0 {
         let ch = chars[index];
         if ch == '\n' {
             *line += 1;
         }
-        if ch == open {
+        if quote != '\0' {
+            if quote == '"' && ch == '\\' && index + 1 < chars.len() {
+                word.push(ch);
+                word.push(chars[index + 1]);
+                if chars[index + 1] == '\n' {
+                    *line += 1;
+                }
+                index += 2;
+                continue;
+            }
+            if ch == quote {
+                quote = '\0';
+            }
+        } else if ch == '\'' || ch == '"' {
+            quote = ch;
+        } else if ch == open {
             depth += 1;
         } else if ch == close {
             depth -= 1;

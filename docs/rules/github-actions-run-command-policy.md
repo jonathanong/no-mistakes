@@ -76,7 +76,10 @@ otherwise fail (`gh api -f x=1 "$ENDPOINT"` with `unlessAnyArgs: [graphql]`),
 a dynamic word that could expand to a configured flag (`tool run "$MODE"`
 with `whenAnyArgs: [--write]`) or to a `valueFlags` entry that would consume
 a later exemption (`tool emit "$OPT" exempt` with `valueFlags: [--label]`),
-or an unterminated quote, expansion, or here-document—it abstains from
+a dynamic word that could expand to `--` before a later required flag
+(`tool run "$STOP" --strict`), a command substitution whose `)` sits inside
+quotes (`--method="$( : ')' )"`), or an unterminated quote, expansion, or
+here-document—it abstains from
 reporting a policy violation and records a diagnostic under the configured
 uncertainty policy. A variable-prefixed
 path whose final path segment is a literal matching no configured policy
@@ -249,7 +252,9 @@ steps:
   `unlessAnyArgs` exemption when a policy would otherwise fail (such as
   `gh api -f x=1 "$ENDPOINT"` with `unlessAnyArgs: [graphql]`), a dynamic
   word that could expand to a configured flag or to a `valueFlags` entry
-  that would consume a later exemption, and
+  that would consume a later exemption, a dynamic word that could expand to
+  `--` before a later required flag, a command substitution whose `)` sits
+  inside quotes, and
   unterminated quotes, expansions, or here-documents abstain from policy failure
   and emit a diagnostic governed by the effective unanalyzable policy.
 - Variable-prefixed script paths whose final path segment is a literal matching

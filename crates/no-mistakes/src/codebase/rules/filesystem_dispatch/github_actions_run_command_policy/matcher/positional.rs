@@ -3,6 +3,33 @@ use super::dynamic_match::{could_be_value_flag, dynamic_word_could_match_literal
 use super::sequence::match_token_sequence_masked;
 use crate::codebase::rules::github_actions_download_integrity::words::Word;
 
+pub(super) fn extract_positionals<'a>(args: &[&'a Word], value_flags: &[String]) -> Vec<&'a Word> {
+    let mut out = Vec::new();
+    let mut index = 0;
+    let mut after_dd = false;
+    while index < args.len() {
+        let word = args[index];
+        if after_dd {
+            out.push(word);
+            index += 1;
+            continue;
+        }
+        if word.text == "--" {
+            after_dd = true;
+            index += 1;
+            continue;
+        }
+        if is_option_token(&word.text) {
+            let skip_value = !word.text.contains('=') && takes_value(&word.text, value_flags);
+            index += 1 + usize::from(skip_value);
+            continue;
+        }
+        out.push(word);
+        index += 1;
+    }
+    out
+}
+
 pub(super) fn match_positionals(
     args: &[&Word],
     tokens: &[String],

@@ -70,8 +70,13 @@ impl Scan<'_> {
         }
         let body_start = self.index + 2;
         let body_line = self.line;
+        let word_at = self.word.len();
         let (next, terminated) =
             take_expansion(self.chars, self.index, &mut self.word, &mut self.line);
+        if self.quoting.is_some() {
+            let len = self.word.len() - word_at;
+            self.word_quoted_expansion = self.word_quoted_expansion.or(Some((word_at, len)));
+        }
         if !terminated {
             self.unterminated_substitution = true;
         } else if open == '(' && self.chars.get(body_start) != Some(&'(') {

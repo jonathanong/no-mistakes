@@ -11,6 +11,11 @@ pub(super) fn could_be_value_flag(
         .any(|flag| dynamic_word_could_match_literal(word, command_dynamic, flag))
 }
 
+pub(super) fn possible_terminator(word: &Word, command_dynamic: bool) -> Option<(String, usize)> {
+    dynamic_word_could_match_literal(word, command_dynamic, "--")
+        .then(|| (word.text.clone(), word.line))
+}
+
 pub(super) fn dynamic_word_could_match_literal(
     word: &Word,
     command_dynamic: bool,
@@ -76,6 +81,33 @@ fn split_dynamic_segments(text: &str) -> Vec<&str> {
     parts
 }
 
+fn delimited_end(bytes: &[u8], mut index: usize, open: u8, close: u8) -> usize {
+    let mut depth = 1usize;
+    let mut quote = 0u8;
+    while index < bytes.len() && depth > 0 {
+        let byte = bytes[index];
+        if quote != 0 {
+            if quote == b'"' && byte == b'\\' && index + 1 < bytes.len() {
+                index += 2;
+                continue;
+            }
+            if byte == quote {
+                quote = 0;
+            }
+            index += 1;
+            continue;
+        }
+        if byte == b'\'' || byte == b'"' {
+            quote = byte;
+            index += 1;
+            continue;
+        }
+        depth = depth + usize::from(byte == open) - usize::from(byte == close);
+        index += 1;
+    }
+    index
+}
+
 fn dynamic_span_end(text: &str, start: usize) -> Option<usize> {
     let bytes = text.as_bytes();
     if bytes[start] == b'`' {
@@ -98,13 +130,7 @@ fn dynamic_span_end(text: &str, start: usize) -> Option<usize> {
     }
     if next == b'{' || next == b'(' {
         let close = if next == b'{' { b'}' } else { b')' };
-        let mut depth = 1usize;
-        let mut i = start + 2;
-        while i < bytes.len() && depth > 0 {
-            depth = depth + usize::from(bytes[i] == next) - usize::from(bytes[i] == close);
-            i += 1;
-        }
-        return Some(i);
+        return Some(delimited_end(bytes, start + 2, next, close));
     }
     if next.is_ascii_digit() {
         return Some(start + 2);

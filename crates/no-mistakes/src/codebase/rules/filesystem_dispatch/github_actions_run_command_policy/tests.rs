@@ -133,6 +133,50 @@ fn abstains_on_dynamic_commands_eval_and_unterminated_syntax() {
 }
 
 #[test]
+fn quoted_parenthesis_in_substitution_stays_unanalyzable() {
+    let compiled = default_policy();
+    let hits = scan_script(
+        r#"gh api --method="$( : ')' )" -f x=1 repos/my-org/my-repo/labels"#,
+        &compiled,
+    );
+    assert!(
+        matches!(
+            hits.first().map(|hit| &hit.kind),
+            Some(HitKind::Unanalyzable { .. })
+        ),
+        "{hits:?}"
+    );
+}
+
+#[test]
+fn dynamic_option_terminator_hides_a_later_required_flag() {
+    let compiled = compile_yaml(
+        r#"
+commands:
+  - command: [tool, run]
+    requireArgs: [--strict]
+"#,
+    );
+    let hidden = scan_script(r#"tool run "$STOP" --strict"#, &compiled);
+    assert!(
+        matches!(
+            hidden.first().map(|hit| &hit.kind),
+            Some(HitKind::Unanalyzable { .. })
+        ),
+        "{hidden:?}"
+    );
+    assert!(scan_script("tool run --strict", &compiled).is_empty());
+    let missing = scan_script("tool run --loose", &compiled);
+    assert!(
+        matches!(
+            missing.first().map(|hit| &hit.kind),
+            Some(HitKind::MissingRequired { .. })
+        ),
+        "{missing:?}"
+    );
+}
+
+#[test]
 fn quoted_scalar_value_does_not_hide_missing_required_arg() {
     let compiled = default_policy();
     let hits = scan_script(

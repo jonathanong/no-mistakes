@@ -1,4 +1,4 @@
-use super::dynamic_match::dynamic_word_could_match_literal;
+use super::dynamic_match::{dynamic_word_could_match_literal, possible_terminator};
 use super::flag_match::{match_flag_pair, match_single_flag};
 use super::ParsedInvocation;
 use crate::codebase::rules::github_actions_download_integrity::words::Word;
@@ -72,6 +72,7 @@ fn match_flag_slice(
     }
     let mut index = 0;
     let mut dynamic_hit = None;
+    let mut opaque_terminator = None;
     while index < region.len() {
         let word = region[index];
         if is_option_token(&word.text) {
@@ -99,7 +100,11 @@ fn match_flag_slice(
                 )
             };
             match outcome {
-                ArgMatch::Matched => return ArgMatch::Matched,
+                ArgMatch::Matched => {
+                    return opaque_terminator.map_or(ArgMatch::Matched, |(token, line)| {
+                        ArgMatch::DynamicValue { token, line }
+                    });
+                }
                 ArgMatch::DynamicValue { token, line } => {
                     dynamic_hit.get_or_insert((token, line));
                 }
@@ -119,6 +124,9 @@ fn match_flag_slice(
                 });
             if could_be_flag && pair_value_ok {
                 dynamic_hit.get_or_insert_with(|| (word.text.clone(), word.line));
+            }
+            if opaque_terminator.is_none() {
+                opaque_terminator = possible_terminator(word, command_dynamic);
             }
             index += 1;
         }
@@ -150,33 +158,6 @@ fn option_terminator(args: &[&Word], value_flags: &[String]) -> (usize, Vec<bool
         index += 1;
     }
     (args.len(), consumed)
-}
-
-pub(super) fn extract_positionals<'a>(args: &[&'a Word], value_flags: &[String]) -> Vec<&'a Word> {
-    let mut out = Vec::new();
-    let mut index = 0;
-    let mut after_dd = false;
-    while index < args.len() {
-        let word = args[index];
-        if after_dd {
-            out.push(word);
-            index += 1;
-            continue;
-        }
-        if word.text == "--" {
-            after_dd = true;
-            index += 1;
-            continue;
-        }
-        if is_option_token(&word.text) {
-            let skip_value = !word.text.contains('=') && takes_value(&word.text, value_flags);
-            index += 1 + usize::from(skip_value);
-            continue;
-        }
-        out.push(word);
-        index += 1;
-    }
-    out
 }
 
 pub(super) fn is_option_token(text: &str) -> bool {

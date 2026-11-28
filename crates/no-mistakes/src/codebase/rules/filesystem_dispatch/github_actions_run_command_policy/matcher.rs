@@ -8,8 +8,9 @@ mod flag_match;
 mod positional;
 mod sequence;
 
-use args::{extract_positionals, is_option_token, takes_value, unwrap_group};
+use args::{is_option_token, takes_value, unwrap_group};
 pub(super) use evaluate::evaluate_policy;
+use positional::extract_positionals;
 
 pub(super) enum MatchOutcome<'a> {
     NoMatch,
