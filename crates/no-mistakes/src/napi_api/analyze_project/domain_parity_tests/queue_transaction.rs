@@ -27,7 +27,7 @@ fn scoped_queue_transaction_advisories_match_in_batched_checks() {
     );
     assert_eq!(
         standalone["advisories"].as_array().unwrap().len(),
-        14,
+        15,
         "{standalone:#}"
     );
     let batch = analyze_project_json_impl(json!({
