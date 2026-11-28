@@ -11,7 +11,7 @@ mod reachable;
 mod registry;
 mod requires;
 mod subprocess;
-use super::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use super::forbidden_calls::{expand_roots, site_source_node, SharedRoots};
 use crate::codebase::dependencies::graph::DepGraph;
 use crate::codebase::ts_source::module_facts::arguments::PathAnchor;

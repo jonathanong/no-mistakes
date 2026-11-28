@@ -19,7 +19,7 @@ fn malformed_selection_uses_only_prepared_source_and_never_recovers_exports() {
     let include = GlobMatcher::new(&opts.include).unwrap();
     let exclude = GlobMatcher::new(&opts.exclude).unwrap();
     let cfg = config("");
-    let test_filter = crate::codebase::test_filter::TestFileFilter::new(&root, &cfg);
+    let test_filter = crate::codebase::testing_analysis::test_filter::TestFileFilter::new(&root, &cfg);
     let select = |facts: &CheckFactMap| {
         selection::selected_components(
             &root,

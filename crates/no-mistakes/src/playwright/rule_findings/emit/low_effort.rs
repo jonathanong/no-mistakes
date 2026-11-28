@@ -1,9 +1,9 @@
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::Unanalyzable;
 use crate::playwright::analysis::types::CoverageReport;
 use crate::playwright::rules::PLAYWRIGHT_UNIQUE_HTML_IDS;
 use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 
 pub(in crate::playwright::rule_findings) fn unanalyzable(
     diagnostics: &mut AnalysisDiagnostics,

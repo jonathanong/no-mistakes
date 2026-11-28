@@ -9,7 +9,7 @@ mod selector_gaps;
 mod traversal;
 mod used_in_file;
 
-use super::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use super::path_filter::RulePathFilter;
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::CheckFactMap;

@@ -4,9 +4,9 @@ use super::super::{
 use super::*;
 use crate::codebase::dependencies::graph::VitestSetupProject;
 use crate::codebase::dotnet::DotnetFactMap;
+use crate::codebase::playwright_facts::integration::RouteOccurrence;
 use crate::codebase::swift::SwiftFactMap;
 use crate::codebase::ts_source::facts::TsFactMap;
-use crate::playwright::integration_routes::RouteOccurrence;
 use std::collections::BTreeMap;
 
 impl PreparedProjects for PreparedTestProjects {

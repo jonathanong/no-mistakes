@@ -36,7 +36,7 @@ pub(super) fn check_rule(inputs: RuleCheck<'_>) -> Result<AnalysisDiagnostics> {
     let allow_files = GlobMatcher::new(opts.allow_files.keys())?;
     let selected_sources = super::super::source_failures::SourceFailures::new(shared);
     let catalog_sources = super::super::source_failures::SourceFailures::new(shared);
-    let test_filter = crate::codebase::test_filter::TestFileFilter::new(root, config);
+    let test_filter = crate::codebase::testing_analysis::test_filter::TestFileFilter::new(root, config);
     let (components, mut unanalyzable) = selected_components(
         root,
         project_root,

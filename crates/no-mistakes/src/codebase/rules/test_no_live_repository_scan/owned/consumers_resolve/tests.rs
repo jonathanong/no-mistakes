@@ -3,7 +3,7 @@ use crate::codebase::ts_resolver::{ImportResolver, TsConfig, VisiblePathLookup};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_source::module_facts::arguments::PathProvenance;
 use crate::codebase::ts_source::module_facts::{ModuleDiagnostic, TypeScriptModuleFacts};
-use crate::codebase::workspaces::{IndexedWorkspaceMap, WorkspacePackage};
+use crate::codebase::workspace_resolution::{IndexedWorkspaceMap, WorkspacePackage};
 use crate::fx::PathSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;

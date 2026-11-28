@@ -1,4 +1,5 @@
-use super::{analysis_policy::AnalysisDiagnostics, RuleFinding};
+use super::RuleFinding;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 
 pub const ADVISORY_RULE_IDS: &[&str] = &[
     super::POSTGRES_JSON_RELATION_IDS,

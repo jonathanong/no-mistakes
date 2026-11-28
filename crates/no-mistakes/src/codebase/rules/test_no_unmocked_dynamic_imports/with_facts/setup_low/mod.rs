@@ -3,7 +3,7 @@ pub(crate) mod classify;
 use super::super::setup_helper_graph;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::{Effort, NoMistakesConfig, Unanalyzable};
 use anyhow::Result;

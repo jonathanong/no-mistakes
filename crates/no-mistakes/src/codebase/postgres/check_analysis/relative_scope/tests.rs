@@ -8,10 +8,10 @@ use crate::codebase::check_facts::{
     collect_check_facts_with_graph_files_playwright_sources_and_session, CheckFactMap,
     CheckFactPlan, CheckFileFacts,
 };
+use crate::codebase::package_analysis::load_indexed_from_source_store;
 use crate::codebase::postgres::{EmbeddedSqlCall, EmbeddedSqlFileFacts, EmbeddedSqlOptions};
 use crate::codebase::ts_resolver::{normalize_path, TsConfig};
 use crate::codebase::ts_source::{discover_visible_paths, FileIdMap, FileInventory, SourceStore};
-use crate::codebase::workspaces::load_indexed_from_source_store;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;

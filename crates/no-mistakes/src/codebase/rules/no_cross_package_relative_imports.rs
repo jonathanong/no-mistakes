@@ -1,13 +1,13 @@
-use super::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::check_outcome::CheckInputFailure;
 use crate::codebase::dependencies::extract::ImportKind;
 use crate::codebase::dependencies::graph::{DepGraph, ImportTarget, TsFactLookup};
 use crate::codebase::ts_source::relative_slash_path;
-use crate::codebase::workspaces::{IndexedWorkspaceMap, WorkspacePackage};
+use crate::codebase::workspace_resolution::{IndexedWorkspaceMap, WorkspacePackage};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use rayon::prelude::*;
 use std::path::Path;

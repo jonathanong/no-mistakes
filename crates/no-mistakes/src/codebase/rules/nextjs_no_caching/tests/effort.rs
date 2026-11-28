@@ -37,7 +37,7 @@ fn prepared(
 fn run(
     effort: Option<Effort>,
     policy: Unanalyzable,
-) -> super::super::super::analysis_policy::AnalysisDiagnostics {
+) -> no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics {
     let (root, config, facts) = prepared(effort, policy);
     diagnostics_with_facts_for_aggregate(&root, &config, &facts, None, false).unwrap()
 }

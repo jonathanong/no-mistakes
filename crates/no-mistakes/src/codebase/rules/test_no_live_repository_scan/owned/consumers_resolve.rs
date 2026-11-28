@@ -4,7 +4,7 @@ use super::Consumed;
 use crate::codebase::ts_resolver::{normalize_path, ImportResolution, VisiblePathLookup};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_source::module_facts::arguments::PathProvenance;
-use crate::codebase::workspaces::IndexedWorkspaceMap;
+use crate::codebase::workspace_resolution::IndexedWorkspaceMap;
 use std::path::{Path, PathBuf};
 
 #[path = "consumer_selections.rs"]

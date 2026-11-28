@@ -1,5 +1,5 @@
 use super::*;
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::config::v2::schema::{RuleDef, RuleScope};
 use crate::config::v2::{EffectiveRuleAnalysis, Effort, Unanalyzable};
 

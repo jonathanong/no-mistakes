@@ -1,5 +1,5 @@
 use super::*;
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::config::v2::NoMistakesConfig;
 use rayon::prelude::*;
 

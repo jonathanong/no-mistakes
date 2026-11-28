@@ -43,7 +43,7 @@ pub fn diagnostics_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
-) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     diagnostics_with_parser(
         root,
         config,
@@ -61,7 +61,7 @@ pub(super) fn diagnostics_with_parser(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
     parse: impl Fn(&str) -> syn::Result<syn::File> + Sync,
-) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     let mut work = BTreeMap::<PathBuf, RustWork>::new();
     add_max_lines_work(root, config, all_files, &mut work)?;
     add_inline_tests_work(root, config, all_files, &mut work)?;
@@ -72,7 +72,7 @@ pub(super) fn diagnostics_with_parser(
         .map(|(path, work)| {
             let findings =
                 scan::scan_file_outputs(root, path, work, sources, defer_suppression, &parse);
-            let mut diagnostics = super::analysis_policy::AnalysisDiagnostics::default();
+            let mut diagnostics = no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics::default();
             for (rule, limit) in &work.applications {
                 let selected = findings
                     .iter()
@@ -91,7 +91,7 @@ pub(super) fn diagnostics_with_parser(
             Ok(diagnostics)
         })
         .collect();
-    let mut diagnostics = super::analysis_policy::AnalysisDiagnostics::default();
+    let mut diagnostics = no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics::default();
     for output in outputs? {
         diagnostics.append(output);
     }

@@ -26,7 +26,7 @@ pub fn diagnostics_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
-) -> Result<super::super::analysis_policy::AnalysisDiagnostics> {
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     let outputs: Result<Vec<_>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -55,7 +55,7 @@ pub fn diagnostics_with_files_and_sources(
             )
         })
         .collect();
-    let mut diagnostics = super::super::analysis_policy::AnalysisDiagnostics::default();
+    let mut diagnostics = no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics::default();
     for output in outputs? {
         diagnostics.append(output);
     }

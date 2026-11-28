@@ -2,7 +2,7 @@ use crate::codebase::ci_workflows::{
     ParsedWorkflowDocument, ParsedWorkflowSet, PreparedWorkflowTopologyInputs,
     WorkflowDocumentError, WorkflowDocumentErrorKind,
 };
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use std::path::Path;
 use std::sync::Arc;
 

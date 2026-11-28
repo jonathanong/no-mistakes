@@ -2,7 +2,7 @@ use no_mistakes_rule_kernel::finding::RuleFinding;
 use super::super::extract::{ExtractedDestination, ExtractedDestinations};
 use super::super::routes::{destination_matches, should_skip_destination, strip_query_and_hash};
 use super::{contains_word, finding, word_line};
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::config::v2::{EffectiveRuleAnalysis, Effort, Unanalyzable};
 use std::collections::BTreeSet;
 

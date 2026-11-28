@@ -88,8 +88,9 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
                 resolved?
             }
         };
-        let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, &sources)
-            .unwrap_or_default();
+        let workspace =
+            crate::codebase::package_analysis::load_indexed_from_source_store(root, &sources)
+                .unwrap_or_default();
         Some(
             crate::codebase::check_facts::PlaywrightModuleResolution::new(
                 std::sync::Arc::new(tsconfig),

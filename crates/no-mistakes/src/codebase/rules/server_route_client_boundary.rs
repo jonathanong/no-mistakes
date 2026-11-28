@@ -51,7 +51,7 @@ pub(crate) fn diagnostics_with_facts_for_aggregate_and_session(
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     defer_suppression: bool,
     session: Option<&crate::codebase::analysis_session::AnalysisSession>,
-) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let mut facts = Vec::new();
     for path in shared.files() {

@@ -98,3 +98,17 @@ ctor::declarative::ctor! {
         codebase::playwright_hooks::register(&playwright::prepared_facts::HOOKS);
     }
 }
+
+static RULE_ANALYSIS_HOOKS: codebase::rule_analysis_hooks::Hooks =
+    codebase::rule_analysis_hooks::Hooks {
+        prepare_requested_rule_config:
+            codebase::rules::analysis_policy::prepare_requested_rule_config,
+    };
+
+ctor::declarative::ctor! {
+    // SAFETY: Registration stores a reference to a static table through OnceLock.
+    #[ctor(unsafe)]
+    fn register_rule_analysis() {
+        codebase::rule_analysis_hooks::register(&RULE_ANALYSIS_HOOKS);
+    }
+}

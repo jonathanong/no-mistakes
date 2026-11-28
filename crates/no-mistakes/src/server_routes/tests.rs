@@ -47,11 +47,13 @@ fn configured_mounts_and_client_calls_share_canonical_relationships() {
         crate::test_support::materialize_saved_fixture(&root_fixture("canonical-relationships"));
     let root = fixture.path().canonicalize().unwrap();
     let prepared = prepare_analysis(&root, None).unwrap();
-    assert!(crate::codebase::test_filter::TestFileFilter::new(
-        &root,
-        prepared.config.as_ref().unwrap(),
-    )
-    .is_match(&root, &root.join("backend/client.test.ts")));
+    assert!(
+        crate::codebase::testing_analysis::test_filter::TestFileFilter::new(
+            &root,
+            prepared.config.as_ref().unwrap(),
+        )
+        .is_match(&root, &root.join("backend/client.test.ts"))
+    );
     assert_eq!(
         prepared.facts[&root.join("backend/client.ts")]
             .route_refs

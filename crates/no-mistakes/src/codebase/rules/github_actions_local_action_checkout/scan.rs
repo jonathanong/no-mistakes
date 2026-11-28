@@ -1,5 +1,5 @@
 use super::RULE_ID;
-use crate::codebase::rules::{analysis_policy::AnalysisDiagnostics};
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::config::v2::Unanalyzable;
 use serde_yaml::Value;

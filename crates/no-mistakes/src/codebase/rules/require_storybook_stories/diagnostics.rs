@@ -1,7 +1,8 @@
 use super::{GlobMatcher, NoMistakesConfig};
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::rules::{analysis_policy::AnalysisDiagnostics, path_filter::RulePathFilter};
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
+use crate::codebase::rules::{path_filter::RulePathFilter};
 use crate::codebase::ts_resolver::ImportResolution;
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::Unanalyzable;

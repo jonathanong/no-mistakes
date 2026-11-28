@@ -122,5 +122,16 @@ pub(crate) fn run_with_origin<O: serde::de::DeserializeOwned + Default>(
     })
 }
 
+pub(crate) fn config_rel(root: &Path, all_files: &[PathBuf]) -> String {
+    all_files
+        .iter()
+        .find_map(|path| {
+            let name = path.file_name()?.to_str()?;
+            (name == ".no-mistakes.yml" || name == ".no-mistakes.yaml")
+                .then(|| crate::codebase::ts_source::relative_slash_path(root, path))
+        })
+        .unwrap_or_else(|| ".no-mistakes.yml".to_string())
+}
+
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;

@@ -4,7 +4,7 @@ use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use crate::codebase::ts_resolver::{
     normalize_path, ImportResolver, ScopedImportResolver, TsConfig, VisiblePathLookup,
 };
-use crate::codebase::workspaces::IndexedWorkspaceMap;
+use crate::codebase::workspace_resolution::IndexedWorkspaceMap;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;

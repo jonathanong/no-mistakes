@@ -1,5 +1,5 @@
 use super::{extract, SetSpec, RULE_ID, TS_CALL_FIRST_STRING_ARGUMENT};
-use crate::codebase::rules::{analysis_policy::AnalysisDiagnostics};
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::EffectiveRuleAnalysis;

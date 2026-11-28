@@ -2,7 +2,7 @@ use super::extract::{extract_named_destinations_from_program, ExtractedDestinati
 use super::scan::{check_named_section, finding, NamedCheck};
 use super::words::contains_word;
 use super::RULE_ID;
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path};
 use crate::config::v2::{EffectiveRuleAnalysis, Effort};
 mod resolve;

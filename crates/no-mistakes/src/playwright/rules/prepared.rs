@@ -65,7 +65,7 @@ pub(super) fn prepare_with_settings(
     config: &NoMistakesConfig,
     snapshot: Arc<VisiblePathSnapshot>,
     tsconfig: Arc<crate::codebase::ts_resolver::TsConfig>,
-    workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+    workspace: Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
     options: PreparationOptions,
     settings_for_project: &mut SettingsForProject<'_>,
 ) -> Result<Option<PreparedPlaywrightRules>> {

@@ -1,5 +1,5 @@
 use crate::codebase::ts_resolver::normalize_path;
-use crate::codebase::workspaces::IndexedWorkspaceMap;
+use crate::codebase::workspace_resolution::IndexedWorkspaceMap;
 use std::path::{Path, PathBuf};
 
 /// Package portion of a bare specifier. Relative and absolute specifiers are `None`.

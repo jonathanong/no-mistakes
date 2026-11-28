@@ -19,8 +19,9 @@ pub(crate) fn standalone_facts(
             None, root, &paths, &sources,
         );
         let tsconfig = tsconfig?;
-        let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, &sources)
-            .unwrap_or_default();
+        let workspace =
+            crate::codebase::package_analysis::load_indexed_from_source_store(root, &sources)
+                .unwrap_or_default();
         fact_plan.configure_module_resolution(
             std::sync::Arc::new(tsconfig),
             std::sync::Arc::new(workspace),

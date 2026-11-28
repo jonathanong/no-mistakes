@@ -1,5 +1,5 @@
 use crate::codebase::analysis_session::AnalysisSession;
-use crate::codebase::test_filter::TestFileFilter;
+use crate::codebase::testing_analysis::test_filter::TestFileFilter;
 use crate::config::v2::NoMistakesConfig;
 use crate::integration_tests::project_config::discovered_config_paths;
 use crate::integration_tests::types::Framework;

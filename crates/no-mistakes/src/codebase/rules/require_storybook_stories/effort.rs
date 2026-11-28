@@ -48,7 +48,7 @@ pub(crate) fn prepare_low_config(
     files: &[std::path::PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> anyhow::Result<Option<crate::config::v2::NoMistakesConfig>> {
-    super::super::analysis_policy::prepare_requested_rule_config(
+    crate::codebase::rule_analysis_hooks::prepare_requested_rule_config(
         root, RULE_ID, config, files, sources,
     )
 }

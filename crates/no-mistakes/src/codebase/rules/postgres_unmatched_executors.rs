@@ -82,7 +82,7 @@ pub(crate) fn check(
             &standalone
         }
     };
-    let config_file = super::no_mistakes_config::config_rel(root, all_files);
+    let config_file = super::configured_root::config_rel(root, all_files);
     let mut findings = Vec::new();
     for rule in config.rule_applications(rule_id) {
         let mut opts: Options = rule.try_rule_options()?;

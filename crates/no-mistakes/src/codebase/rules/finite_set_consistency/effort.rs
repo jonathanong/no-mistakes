@@ -1,8 +1,9 @@
 use super::scan::{scan, ScanInput};
 use super::{NoMistakesConfig, Options, RULE_ID};
 use crate::codebase::dependencies::graph::TsFactLookup;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::rules::{
-    analysis_policy::AnalysisDiagnostics, file_allowed_by_roots_and_skip, path_filter,
+    file_allowed_by_roots_and_skip, path_filter,
     skip_dir_set, target_roots,
 };
 use no_mistakes_rule_kernel::finding::sort_findings;

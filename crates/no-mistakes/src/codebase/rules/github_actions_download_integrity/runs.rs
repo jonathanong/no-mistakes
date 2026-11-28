@@ -1,7 +1,7 @@
 use super::judge::{self, Hit};
 use super::{ SkipAnnotationScope, RULE_ID};
 use no_mistakes_rule_kernel::finding::RuleFinding;
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::rules::github_actions_script_expressions::{step_run_lines, StepRun};
 use crate::config::v2::Unanalyzable;
 use serde_yaml::{Mapping, Value};

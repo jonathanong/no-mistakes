@@ -60,9 +60,9 @@ pub(crate) fn diagnostics_with_facts_for_aggregate(
     shared: &crate::codebase::check_facts::CheckFactMap,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     defer_suppression: bool,
-) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
-    let mut diagnostics = super::analysis_policy::AnalysisDiagnostics::default();
+    let mut diagnostics = no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics::default();
     let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
     for rule in config.rule_applications(RULE_ID) {
         let policy = config.effective_rule_analysis(rule)?;

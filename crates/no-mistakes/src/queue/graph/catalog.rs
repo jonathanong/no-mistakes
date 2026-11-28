@@ -97,7 +97,7 @@ pub(super) fn analyze_with<T>(
         session.workspace(root)
     } else {
         std::sync::Arc::new(
-            crate::codebase::workspaces::load_indexed_from_files(root, shared.files())
+            crate::codebase::package_analysis::load_indexed_from_files(root, shared.files())
                 .unwrap_or_default(),
         )
     };

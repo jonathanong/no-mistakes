@@ -3,7 +3,7 @@ use super::config::{display_app_root, resolve_config_path, resolved_app_root};
 use super::options::Options;
 pub(super) use super::words::{contains_word, word_line};
 use super::RULE_ID;
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path};
 use crate::config::v2::{EffectiveRuleAnalysis, Effort};
 use std::path::{Path, PathBuf};

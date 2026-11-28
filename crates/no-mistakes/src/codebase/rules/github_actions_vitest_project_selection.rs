@@ -1,4 +1,4 @@
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::rules::file_diagnostics::{self, InputUncertainty};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;

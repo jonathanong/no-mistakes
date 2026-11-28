@@ -48,16 +48,7 @@ fn tracked_rels(root: &Path, all_files: &[PathBuf]) -> BTreeSet<String> {
         .collect()
 }
 
-pub(crate) fn config_rel(root: &Path, all_files: &[PathBuf]) -> String {
-    all_files
-        .iter()
-        .find_map(|path| {
-            let name = path.file_name()?.to_str()?;
-            (name == ".no-mistakes.yml" || name == ".no-mistakes.yaml")
-                .then(|| relative_slash_path(root, path))
-        })
-        .unwrap_or_else(|| ".no-mistakes.yml".to_string())
-}
+pub(crate) use super::configured_root::config_rel;
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod location_tests;

@@ -4,7 +4,7 @@ use super::runs::{check_workflow, Policy};
 use super::verify::command_verifies;
 use super::{gha_kind, words, SkipAnnotationScope};
 use no_mistakes_rule_kernel::finding::RuleFinding;
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::config::v2::Unanalyzable;
 
 pub(super) fn expand_uppercase(script: &str) -> String {

@@ -61,7 +61,7 @@ pub fn diagnostics_with_files_and_sources(
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
-) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     diagnostics::run(root, config, files, sources, defer_suppression)
 }
 

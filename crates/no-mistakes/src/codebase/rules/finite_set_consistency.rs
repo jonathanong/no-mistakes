@@ -97,7 +97,7 @@ pub fn diagnostics_with_files_sources_and_facts(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: Option<&crate::codebase::check_facts::CheckFactMap>,
     defer_suppression: bool,
-) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     diagnostics_with_lookup(
         root,
         config,

@@ -6,7 +6,7 @@ use crate::codebase::ts_resolver::{
     normalize_path, ImportResolution, ImportResolver, ScopedImportResolver, TsConfig,
     TsConfigCatalog, VisiblePathLookup,
 };
-use crate::codebase::workspaces::IndexedWorkspaceMap;
+use crate::codebase::workspace_resolution::IndexedWorkspaceMap;
 use crate::fx::{FxHashSet, PathSet};
 use std::cell::RefCell;
 use std::path::{Path, PathBuf};

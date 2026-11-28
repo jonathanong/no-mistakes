@@ -34,7 +34,7 @@ impl PreparedClientRelationships {
 fn client_source_paths(
     prepared: &PreparedServerAnalysis,
     filter: Option<&GlobSet>,
-    test_filter: Option<&crate::codebase::test_filter::TestFileFilter>,
+    test_filter: Option<&crate::codebase::testing_analysis::test_filter::TestFileFilter>,
 ) -> Vec<PathBuf> {
     prepared
         .source_files

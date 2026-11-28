@@ -34,7 +34,7 @@ pub(super) struct StorybookFindingsRequest<'a> {
 
 pub(super) fn storybook_findings(
     input: StorybookFindingsRequest<'_>,
-) -> Result<crate::codebase::rules::analysis_policy::AnalysisDiagnostics> {
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     let StorybookFindingsRequest {
         root,
         config,

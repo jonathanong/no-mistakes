@@ -5,7 +5,7 @@ use super::inputs::{verdict, Verdict};
 use super::permissions::{job_proof, Proof};
 use super::refs::{self, RefRisk};
 use super::uses::is_checkout_uses;
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::rules::github_actions_script_expressions::{step_uses_lines, StepUse};
 use crate::config::v2::Unanalyzable;
 use serde_yaml::{Mapping, Value};

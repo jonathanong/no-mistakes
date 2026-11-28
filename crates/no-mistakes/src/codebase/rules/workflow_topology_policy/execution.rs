@@ -3,7 +3,8 @@ use super::{
     Options, RULE_ID,
 };
 use crate::codebase::analysis_session::AnalysisSession;
-use crate::codebase::rules::{analysis_policy::AnalysisDiagnostics, file_diagnostics};
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
+use crate::codebase::rules::{file_diagnostics};
 use crate::codebase::workflow_topology::model::DiagnosticCode;
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
