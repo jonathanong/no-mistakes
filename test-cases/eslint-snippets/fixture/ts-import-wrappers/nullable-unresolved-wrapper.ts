@@ -34,3 +34,17 @@ export function appliedThis(): Promise<Widget | null> {
 export function forwardedArg(): Promise<Widget | null> {
   return wrapNullable.call(null, getWidget());
 }
+
+const rpc = require(moduleName);
+
+export function unresolvedReceiver(): Promise<Widget | null> {
+  return rpc.call(getWidget());
+}
+
+function relay(value: Promise<Widget | null>) {
+  return value;
+}
+
+export function resolvedReceiver(): Promise<Widget | null> {
+  return relay.call(getWidget());
+}

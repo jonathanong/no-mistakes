@@ -196,12 +196,12 @@ function createNullishState(context) {
     if (asserted) return reactTypeStatus(asserted, facts);
     const current = unwrapSequence(node);
     if (isIdentifier(current)) return variableStatus(current.name);
-    return current?.type === "MemberExpression"
-      ? memberExpressionStatus(current, facts, lookupMembers)
-      : "no";
+    if (current?.type !== "MemberExpression") return "no";
+    return memberExpressionStatus(current, facts, lookupMembers);
   }
 
   function enterFunction(node) {
+    if (node.type === "FunctionDeclaration") if (isIdentifier(node.id)) defineBinding(node.id.name);
     pushScope("function");
     if (node.type === "FunctionExpression") if (isIdentifier(node.id)) defineBinding(node.id.name);
     for (const param of node.params) defineParam(param);

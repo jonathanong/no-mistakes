@@ -24,3 +24,12 @@ export function caught(value: R.ReactNode) {
     return value ?? null;
   }
 }
+
+export function blockFunction(value: R.ReactNode) {
+  {
+    function value() {
+      return value ?? null;
+    }
+    return value;
+  }
+}

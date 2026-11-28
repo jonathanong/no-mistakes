@@ -57,7 +57,12 @@ function wrapperState(node, wrapper, context) {
           invoked.arguments.some((argument) => argumentContains(argument, node)));
       if (matched) return "inside";
       const heldArguments = invoked?.arguments ?? current.arguments;
-      const holds = (heldArguments ?? []).some((argument) => argumentContains(argument, node));
+      const holdsArgument = (argument) => argumentContains(argument, node);
+      const rawHeld =
+        invoked &&
+        !forwarded?.names.includes(wrapper) &&
+        (current.arguments ?? []).some(holdsArgument);
+      const holds = (heldArguments ?? []).some(holdsArgument) || rawHeld;
       if (holds && (info.unresolved || forwarded?.unresolved)) unresolved = true;
     }
     if (

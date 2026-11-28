@@ -45,7 +45,7 @@ module.exports = rule(
       BlockStatement(node) {
         state.pushScope(
           "block",
-          node.parent?.type === "CatchClause" ? node.parent.param : undefined,
+          node?.parent?.type === "CatchClause" ? node.parent.param : undefined,
         );
       },
       "BlockStatement:exit": state.popScope,

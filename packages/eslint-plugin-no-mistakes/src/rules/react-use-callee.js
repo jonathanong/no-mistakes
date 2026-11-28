@@ -1,10 +1,10 @@
 "use strict";
 
 const { unwrapSequence } = require("./async-ast");
+const { resolveVariable } = require("./async-target-bindings");
 const { importFact } = require("./import-resolution");
-const { literalString } = require("./module-mock-helpers");
+const { literalString } = require("./logical-call");
 const { isGlobalPromiseAlias } = require("./react-no-use-promise-resolve-alias");
-const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 function staticName(node, computed) {
   const current = unwrapSequence(node);
@@ -42,8 +42,8 @@ function namespaceStatus(node, context) {
   return "no";
 }
 
-function isReactNamespace(node, context, seen = new Set()) {
-  return namespaceStatus(node, context, seen) === "yes";
+function isReactNamespace(node, context) {
+  return namespaceStatus(node, context) === "yes";
 }
 
 function valueKind(node, context) {

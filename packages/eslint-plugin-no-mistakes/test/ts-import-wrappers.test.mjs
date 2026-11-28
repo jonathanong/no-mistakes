@@ -769,6 +769,9 @@ describe("typescript import wrappers", () => {
       [31, "wrapper"],
       [35, "unanalyzable"],
       [35, "unanalyzable"],
+      [41, "unanalyzable"],
+      [41, "unanalyzable"],
+      [49, "wrapper"],
     ]);
     expect(
       cases
@@ -777,6 +780,7 @@ describe("typescript import wrappers", () => {
     ).toEqual([
       [27, "wrapper"],
       [31, "wrapper"],
+      [49, "wrapper"],
     ]);
 
     const oxlint = {
@@ -873,6 +877,10 @@ describe("typescript import wrappers", () => {
             ],
             [
               31,
+              "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+            ],
+            [
+              49,
               "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
             ],
           ],
