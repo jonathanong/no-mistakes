@@ -16,7 +16,7 @@ SELECT
     (SELECT a.name FROM accounts a
      WHERE a.id = -CAST(o.account_id IS NULL AS integer) + 1 AND pg_catalog.abs(1) = 1
        AND a.archived_at IS NULL AND a.email IS NOT NULL
-       AND a.active IS TRUE AND a.locked IS FALSE
+       AND (a.active IS NOT NULL) IS TRUE AND (a.locked IS NULL) IS FALSE
        AND (a.rank IS NULL) IS DISTINCT FROM (o.rank IS NULL) AND (a.team_id IS NULL) IS NOT DISTINCT FROM (o.team_id IS NULL)
        AND CAST(a.tier IS NULL AS text) IN ('true', 'false') AND a.created_on IS NOT NULL
        AND a.name = 'unknown'::text
@@ -24,7 +24,7 @@ SELECT
     (SELECT b.tier FROM accounts b
      WHERE -CAST(o.account_id IS NULL AS integer) + 1 = b.id AND pg_catalog.abs(1) = 1
        AND b.archived_at IS NULL AND b.email IS NOT NULL
-       AND b.active IS TRUE AND b.locked IS FALSE
+       AND (b.active IS NOT NULL) IS TRUE AND (b.locked IS NULL) IS FALSE
        AND (b.rank IS NULL) IS DISTINCT FROM (o.rank IS NULL) AND (b.team_id IS NULL) IS NOT DISTINCT FROM (o.team_id IS NULL)
        AND CAST(b.tier IS NULL AS text) IN ('false', 'true') AND b.created_on IS NOT NULL
        AND b.name = CAST('unknown' AS text)
@@ -32,7 +32,7 @@ SELECT
     (SELECT c.tier FROM accounts c
      WHERE -CAST(o.account_id IS NULL AS integer) + 1 = c.id AND pg_catalog.abs(1) = 1
        AND c.archived_at IS NULL AND c.email IS NOT NULL
-       AND c.active IS TRUE AND c.locked IS FALSE
+       AND (c.active IS NOT NULL) IS TRUE AND (c.locked IS NULL) IS FALSE
        AND (c.rank IS NULL) IS DISTINCT FROM (o.rank IS NULL) AND (c.team_id IS NULL) IS NOT DISTINCT FROM (o.team_id IS NULL)
        AND CAST(c.tier IS NULL AS text) IN ('false', 'true') AND c.created_on IS NOT NULL
        AND c.name = 'unknown'::text

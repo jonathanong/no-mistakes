@@ -4,6 +4,7 @@ mod expr_norm;
 mod function_clauses;
 mod grouping;
 mod join;
+mod nested;
 mod normalize;
 mod query;
 mod scope;
@@ -13,13 +14,13 @@ mod table;
 mod windows;
 
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
+use nested::walk_nested_queries;
 use normalize::LookupKey;
 use query::walk_query;
 use scope::ScopeStack;
 use select_exprs::walk_select;
-use sqlparser::ast::{CopySource, Expr, Query, SelectItem, SetExpr, Statement, Visit, Visitor};
+use sqlparser::ast::{CopySource, Expr, SelectItem, SetExpr, Statement};
 use std::collections::BTreeMap;
-use std::ops::ControlFlow;
 
 type LookupHistory = BTreeMap<LookupKey, (usize, usize)>;
 
@@ -126,38 +127,6 @@ fn inspect_exprs<'a>(
         subquery::inspect_expr(expr, &outer, &targets, seen, out);
         walk_nested_queries(expr, scopes, out);
     }
-}
-
-fn walk_nested_queries(
-    node: &impl Visit,
-    scopes: &mut ScopeStack,
-    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
-) {
-    struct Nested<'a> {
-        depth: usize,
-        scopes: &'a mut ScopeStack,
-        out: &'a mut Vec<SqlDuplicateKeyedLookupFact>,
-    }
-    impl Visitor for Nested<'_> {
-        type Break = ();
-        fn pre_visit_query(&mut self, query: &Query) -> ControlFlow<()> {
-            if self.depth == 0 {
-                walk_query(query, self.scopes, self.out);
-            }
-            self.depth += 1;
-            ControlFlow::Continue(())
-        }
-        fn post_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
-            self.depth -= 1;
-            ControlFlow::Continue(())
-        }
-    }
-    let mut visitor = Nested {
-        depth: 0,
-        scopes,
-        out,
-    };
-    let _ = node.visit(&mut visitor);
 }
 
 #[cfg(test)]

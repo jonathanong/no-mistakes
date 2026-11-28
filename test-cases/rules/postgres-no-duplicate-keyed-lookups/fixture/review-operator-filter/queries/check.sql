@@ -238,3 +238,48 @@ SELECT
     (SELECT ARRAY[1, 2] FROM accounts a WHERE a.id = o.account_id),
     (SELECT ARRAY[3, 4] FROM accounts b WHERE b.id = o.account_id)
 FROM orders o;
+
+SELECT o.id
+FROM orders o
+LEFT JOIN accounts a ON a.id = o.account_id AND a.flag IS TRUE
+LEFT JOIN accounts b ON b.id = o.account_id AND b.flag IS TRUE;
+
+SELECT o.id
+FROM orders o
+LEFT JOIN accounts a ON a.id = o.account_id AND NULLIF(1, 2.2) IS NULL
+LEFT JOIN accounts b ON b.id = o.account_id AND NULLIF(1, 2.2) IS NULL;
+
+SELECT o.id
+FROM orders o
+LEFT JOIN accounts a ON a.id = o.account_id AND NULLIF(1, 2) IS NOT NULL
+LEFT JOIN accounts b ON b.id = o.account_id AND NULLIF(1, 2) IS NOT NULL;
+
+SELECT
+    (SELECT a.flag IS NOT TRUE FROM accounts a WHERE a.id = o.account_id),
+    (SELECT b.flag IS UNKNOWN FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT TRIM(BOTH FROM a.x) FROM accounts a WHERE a.id = o.account_id),
+    (SELECT TRIM(BOTH FROM b.x) FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT TRIM(BOTH 'x' FROM 'xyx') FROM accounts a WHERE a.id = o.account_id),
+    (SELECT TRIM(BOTH FROM ' y ', ' ') FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT TRUE IS NOT FALSE FROM accounts a WHERE a.id = o.account_id),
+    (SELECT (b.flag IS NULL) IS NOT UNKNOWN FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT NULLIF(1, 2.2) FROM accounts a WHERE a.id = o.account_id),
+    (SELECT NULLIF(1, 2.2) FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT TRIM(BOTH FROM 'ab', a.marker) FROM accounts a WHERE a.id = o.account_id),
+    (SELECT TRIM(BOTH b.marker FROM 'xy') FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;

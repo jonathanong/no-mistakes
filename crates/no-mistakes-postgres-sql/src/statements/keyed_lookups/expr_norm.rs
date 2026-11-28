@@ -141,7 +141,11 @@ impl<'a> ExprNormalizer<'a> {
             }
             _ => return None,
         };
-        Some(format!("{operator}({})", self.normalize(inner)?))
+        if operators::is_proven_boolean(inner) {
+            Some(format!("{operator}({})", self.normalize(inner)?))
+        } else {
+            None
+        }
     }
 
     fn in_list(&mut self, expr: &Expr, items: &[Expr], negated: bool) -> Option<String> {

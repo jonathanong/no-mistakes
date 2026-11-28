@@ -1,7 +1,8 @@
 use super::super::builtins::SAFE_PURE_FUNCTIONS;
 use super::argument_list;
+use super::operators::comparable;
 use super::types::has_builtin_type;
-use crate::idents::ident_key;
+use crate::idents::{function_arg_expr, ident_key};
 use sqlparser::ast::{Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments};
 
 pub(super) fn normalize(
@@ -9,7 +10,7 @@ pub(super) fn normalize(
     mut norm_arg: impl FnMut(&Expr) -> Option<String>,
 ) -> Option<String> {
     let base = pure_name(function)?;
-    let args = bare_arguments(function)?
+    let args = checked_arguments(function)?
         .iter()
         .map(|arg| norm_arg(proven_argument(arg)?))
         .collect::<Option<Vec<_>>>()?;
@@ -34,8 +35,31 @@ fn proven_argument(arg: &FunctionArg) -> Option<&Expr> {
 }
 
 pub(super) fn arguments_are_proven(function: &Function) -> bool {
-    bare_arguments(function)
+    checked_arguments(function)
         .is_some_and(|args| args.iter().all(|arg| proven_argument(arg).is_some()))
+}
+
+fn checked_arguments(function: &Function) -> Option<&[FunctionArg]> {
+    let args = bare_arguments(function)?;
+    if function
+        .name
+        .0
+        .last()
+        .and_then(|name| name.as_ident())
+        .is_some_and(|name| name.value.eq_ignore_ascii_case("nullif"))
+    {
+        let [left, right] = args else {
+            return None;
+        };
+        if !comparable(function_arg_expr(left)?, function_arg_expr(right)?) {
+            return None;
+        }
+    }
+    Some(args)
+}
+
+pub(in crate::statements::keyed_lookups) fn is_conditional_keyword(name: &str) -> bool {
+    matches!(name, "coalesce" | "nullif" | "greatest" | "least")
 }
 
 pub(in crate::statements::keyed_lookups) fn pure_name(function: &Function) -> Option<String> {
@@ -46,9 +70,7 @@ pub(in crate::statements::keyed_lookups) fn pure_name(function: &Function) -> Op
         [name] => {
             let ident = name.as_ident()?;
             let name = ident_key(ident);
-            return (ident.quote_style.is_none()
-                && matches!(name.as_str(), "coalesce" | "nullif" | "greatest" | "least"))
-            .then_some(name);
+            return (ident.quote_style.is_none() && is_conditional_keyword(&name)).then_some(name);
         }
         [schema, name] if ident_key(schema.as_ident()?) == "pg_catalog" => name,
         _ => return None,

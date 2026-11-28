@@ -74,8 +74,8 @@ The rule stays silent when the lookups are not proven to read the same row:
   The rule skips function arguments and casts of columns or parameters whose
   types it cannot establish. It also skips operators in compound expressions
   when their signatures are unknown, including the comparisons used by
-  `IS DISTINCT FROM`, `IN`, `BETWEEN`, and pattern matching. Signature matching
-  assumes the standard PostgreSQL operator definitions.
+  `IS DISTINCT FROM`, `IN`, `BETWEEN`, `NULLIF`, Boolean tests, and pattern
+  matching. Signature matching assumes the standard PostgreSQL operator definitions.
 - Scalar projections with `CASE` branches or array elements that require unproven conversions
   or an unqualified comma-style `SUBSTRING` call.
 - Sampled table scans, `ONLY` table scans, or scalar subqueries that lock rows.

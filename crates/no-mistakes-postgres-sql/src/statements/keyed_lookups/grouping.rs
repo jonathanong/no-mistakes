@@ -87,8 +87,12 @@ pub(super) struct GroupReuse {
 }
 
 impl GroupReuse {
-    pub(super) fn new(grouping: &[&Expr]) -> Self {
-        let keys: FxHashSet<_> = grouping.iter().map(|expr| target_identity(expr)).collect();
+    pub(super) fn new(grouping: &[&Expr], can_omit_keys: bool) -> Self {
+        let keys: FxHashSet<_> = grouping
+            .iter()
+            .filter(|expr| can_omit_keys || !matches!(unwrap_expr(expr), Expr::Value(_)))
+            .map(|expr| target_identity(expr))
+            .collect();
         let kinds = keys.iter().map(discriminant).collect();
         Self { keys, kinds }
     }

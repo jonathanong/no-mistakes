@@ -152,3 +152,51 @@ SELECT (SELECT a.n FROM accounts a WHERE a.id = o.account_id) AS account_id
 FROM orders o
 GROUP BY account_id
 HAVING (SELECT a.n FROM accounts a WHERE a.id = o.account_id) IS NOT NULL;
+
+SELECT
+    COALESCE(0, (SELECT a.n FROM accounts a WHERE a.id = o.id)),
+    0,
+    (SELECT b.n FROM accounts b WHERE b.id = o.id)
+FROM orders o
+GROUP BY o.id, 2;
+
+SELECT COALESCE(0, (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+))
+FROM orders o;
+
+SELECT COALESCE(0, pg_catalog.sum((
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+)))
+FROM orders o;
+
+SELECT COALESCE((SELECT a.n FROM accounts a WHERE a.id = o.id), 0)
+FROM orders o
+ORDER BY "coalesce"((SELECT a.n FROM accounts a WHERE a.id = o.id), 0);
+
+SELECT a.name, b.email
+FROM XMLTABLE('/r' PASSING '<r id="1"/>'::xml COLUMNS id integer PATH '@id')
+LEFT JOIN accounts a ON a.id = xmltable.id
+LEFT JOIN accounts b ON b.id = xmltable.id;
+
+SELECT a.name, b.email
+FROM JSON_TABLE('[1,2]'::jsonb, '$[*]' COLUMNS (id integer PATH '$'))
+LEFT JOIN accounts a ON a.id = json_table.id
+LEFT JOIN accounts b ON b.id = json_table.id;
+
+SELECT x.*
+FROM orders o
+CROSS JOIN XMLTABLE(
+    (SELECT a.path FROM documents a WHERE a.id = o.document_id)
+    PASSING (SELECT b.doc FROM documents b WHERE b.id = o.document_id)
+    COLUMNS id integer PATH '@id'
+) AS x;
+
+SELECT
+    COALESCE(0, (SELECT a.n FROM accounts a WHERE a.id = o.id)),
+    0,
+    (SELECT b.n FROM accounts b WHERE b.id = o.id)
+FROM orders o
+GROUP BY GROUPING SETS ((o.id, 2), (o.id));

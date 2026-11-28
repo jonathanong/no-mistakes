@@ -39,18 +39,37 @@ pub(super) fn register_factor(
             alias, array_exprs, ..
         } => {
             inspect_exprs(array_exprs, scopes, seen, out);
-            let qualifier = alias
-                .as_ref()
-                .map_or_else(|| "unnest".to_owned(), |alias| ident_key(&alias.name));
-            Some(scopes.add_named_alias(qualifier))
+            Some(register_table_function_alias(
+                scopes,
+                alias.as_ref(),
+                "unnest",
+            ))
         }
         TableFactor::JsonTable {
             json_expr, alias, ..
         } => {
             inspect_exprs(std::iter::once(json_expr), scopes, seen, out);
-            scopes.add_alias_only(alias.as_ref())
+            Some(register_table_function_alias(
+                scopes,
+                alias.as_ref(),
+                "json_table",
+            ))
         }
-        TableFactor::XmlTable { alias, .. } => scopes.add_alias_only(alias.as_ref()),
+        TableFactor::XmlTable {
+            row_expression,
+            passing,
+            alias,
+            ..
+        } => {
+            let inputs = std::iter::once(row_expression)
+                .chain(passing.arguments.iter().map(|argument| &argument.expr));
+            inspect_exprs(inputs, scopes, seen, out);
+            Some(register_table_function_alias(
+                scopes,
+                alias.as_ref(),
+                "xmltable",
+            ))
+        }
         TableFactor::Derived {
             subquery, alias, ..
         } => {
@@ -76,4 +95,13 @@ pub(super) fn register_factor(
         binding,
         lookup_table(factor).map(|(name, _)| object_name_identity(name)),
     )
+}
+
+fn register_table_function_alias(
+    scopes: &mut ScopeStack,
+    alias: Option<&sqlparser::ast::TableAlias>,
+    default: &str,
+) -> usize {
+    let qualifier = alias.map_or_else(|| default.to_owned(), |alias| ident_key(&alias.name));
+    scopes.add_named_alias(qualifier)
 }

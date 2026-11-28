@@ -293,7 +293,13 @@ fn separates_grouped_reuse_from_independent_expressions_and_case_arms() {
             (133, 130),
             (129, 131),
             (147, 149),
-            (151, 154)
+            (151, 154),
+            (170, 171),
+            (175, 177),
+            (181, 182),
+            (186, 187),
+            (192, 193),
+            (198, 200)
         ]
     );
 }
@@ -401,7 +407,10 @@ fn checks_operator_signatures_and_shares_only_compatible_lookup_history() {
             (195, 201),
             (216, 218),
             (228, 229),
-            (238, 239)
+            (238, 239),
+            (254, 255),
+            (268, 269),
+            (273, 274)
         ]
     );
 }

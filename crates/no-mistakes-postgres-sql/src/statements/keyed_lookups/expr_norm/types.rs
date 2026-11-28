@@ -1,7 +1,8 @@
 use super::function::{arguments_are_proven, pure_name};
 use super::operators::{
-    array_elements_are_proven, binary_is_proven, case_is_proven, comparable,
-    list_operands_are_proven, pattern_is_proven, substring_is_proven, unary_is_proven,
+    array_elements_are_proven, binary_is_proven, case_is_proven, comparable, is_proven_boolean,
+    is_proven_text, list_operands_are_proven, pattern_is_proven, substring_is_proven,
+    unary_is_proven,
 };
 use crate::idents::unwrap_expr;
 use sqlparser::ast::{ArrayElemTypeDef, DataType, Expr, InTarget, Value};
@@ -37,6 +38,12 @@ pub(in crate::statements::keyed_lookups) fn projection_expr_is_unproven(expr: &E
         }
         Expr::BinaryOp { left, op, right } => !binary_is_proven(op, left, right),
         Expr::UnaryOp { op, expr } => !unary_is_proven(*op, expr),
+        Expr::IsTrue(expr)
+        | Expr::IsNotTrue(expr)
+        | Expr::IsFalse(expr)
+        | Expr::IsNotFalse(expr)
+        | Expr::IsUnknown(expr)
+        | Expr::IsNotUnknown(expr) => !is_proven_boolean(expr),
         Expr::IsDistinctFrom(left, right) | Expr::IsNotDistinctFrom(left, right) => {
             !comparable(left, right)
         }
@@ -68,6 +75,21 @@ pub(in crate::statements::keyed_lookups) fn projection_expr_is_unproven(expr: &E
             escape_char,
             ..
         } => !pattern_is_proven(expr, pattern, escape_char.as_deref()),
+        Expr::Trim {
+            expr,
+            trim_what,
+            trim_characters,
+            ..
+        } => {
+            !is_proven_text(expr)
+                || trim_what
+                    .as_deref()
+                    .is_some_and(|expr| !is_proven_text(expr))
+                || trim_characters
+                    .iter()
+                    .flatten()
+                    .any(|expr| !is_proven_text(expr))
+        }
         Expr::Substring {
             expr,
             substring_from,

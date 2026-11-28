@@ -1,8 +1,9 @@
 use super::select_exprs::target_identity;
 use crate::fx::FxHashSet;
-use crate::idents::{function_arg_expr, ident_key, visit_shallow_exprs};
+use crate::idents::{function_arg_expr, ident_key, unwrap_expr, visit_shallow_exprs};
 use sqlparser::ast::{
     DuplicateTreatment, Expr, Function, FunctionArg, FunctionArgumentClause, FunctionArguments,
+    Value,
 };
 
 pub(super) fn coalesce_arguments(function: &Function) -> Option<&[FunctionArg]> {
@@ -31,6 +32,16 @@ pub(super) fn visit_function_inputs(function: &Function, visit: &mut impl FnMut(
     };
     visit_arguments(&function.args, argument_limit, visit);
     visit_shallow_exprs(&function.within_group, visit);
+}
+
+pub(super) fn split_coalesce_arguments(
+    arguments: &[FunctionArg],
+) -> (&[FunctionArg], &[FunctionArg]) {
+    let evaluated = arguments.iter().position(|argument| {
+        matches!(function_arg_expr(argument).map(unwrap_expr), Some(Expr::Value(value))
+            if !matches!(value.value, Value::Null | Value::Placeholder(_)))
+    });
+    arguments.split_at(evaluated.map_or(arguments.len(), |index| index + 1))
 }
 
 fn has_optional_window_default(function: &Function) -> bool {

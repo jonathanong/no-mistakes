@@ -55,7 +55,15 @@ pub(super) fn pattern_is_proven(expr: &Expr, pattern: &Expr, escape: Option<&Exp
     [Some(expr), Some(pattern), escape]
         .into_iter()
         .flatten()
-        .all(|expr| operand_type(expr) == Some(BuiltinType::Text))
+        .all(is_proven_text)
+}
+
+pub(super) fn is_proven_text(expr: &Expr) -> bool {
+    operand_type(expr) == Some(BuiltinType::Text)
+}
+
+pub(super) fn is_proven_boolean(expr: &Expr) -> bool {
+    operand_type(expr) == Some(BuiltinType::Bool)
 }
 
 pub(super) fn array_elements_are_proven(elements: &[Expr]) -> bool {

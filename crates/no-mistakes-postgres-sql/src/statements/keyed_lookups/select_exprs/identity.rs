@@ -1,3 +1,4 @@
+use super::super::expr_norm::function::is_conditional_keyword;
 use super::super::table::lookup_table;
 use crate::idents::{ident_key, object_name_identity, relation_suffix_name, unwrap_expr};
 use crate::order::canonical_order_options;
@@ -85,7 +86,9 @@ pub(in crate::statements::keyed_lookups) fn normalize_target(node: &mut impl Vis
 
         fn pre_visit_ident(&mut self, ident: &mut Ident) -> ControlFlow<()> {
             ident.value = ident_key(ident);
-            ident.quote_style = None;
+            if !is_conditional_keyword(&ident.value) {
+                ident.quote_style = None;
+            }
             ControlFlow::Continue(())
         }
     }

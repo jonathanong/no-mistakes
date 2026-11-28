@@ -1,6 +1,7 @@
 use super::expr_norm::ExprNormalizer;
 use super::function_clauses::{
-    coalesce_arguments, is_eager, visit_eager_functions, visit_function_inputs,
+    coalesce_arguments, is_eager, split_coalesce_arguments, visit_eager_functions,
+    visit_function_inputs,
 };
 use super::join::record_lookup;
 use super::normalize::LookupKey;
@@ -9,7 +10,7 @@ use super::select_exprs::{target_identity, SelectTargets};
 use super::windows::window_expressions;
 use crate::idents::{function_arg_expr, unwrap_expr, visit_child_exprs};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
-use sqlparser::ast::{Expr, FunctionArg, Value, WindowType};
+use sqlparser::ast::{Expr, FunctionArg, WindowType};
 use std::collections::BTreeMap;
 mod lookup;
 
@@ -124,12 +125,9 @@ fn inspect_coalesce(
             inspect(eager, outer, targets, seen, out, false);
         });
     }
-    for argument in arguments.iter().filter_map(function_arg_expr) {
+    let (evaluated, _) = split_coalesce_arguments(arguments);
+    for argument in evaluated.iter().filter_map(function_arg_expr) {
         inspect(argument, outer, targets, seen, out, true);
-        if matches!(unwrap_expr(argument), Expr::Value(value) if !matches!(value.value, Value::Null | Value::Placeholder(_)))
-        {
-            break;
-        }
     }
 }
 

@@ -90,7 +90,7 @@ pub(super) fn walk_select(
         scopes.snapshot()
     });
     let group_by = grouping::targets(select);
-    let reuse = grouping::GroupReuse::new(&group_by);
+    let reuse = grouping::GroupReuse::new(&group_by, after_grouping.is_some());
     let windows = WindowPlan::new(select, order_by);
     let targets = SelectTargets {
         projection: &select.projection,
