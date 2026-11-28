@@ -17,6 +17,7 @@ mod options;
 mod receivers;
 mod reexports;
 mod scoped;
+mod scoped_candidates;
 mod targets;
 mod transactions;
 use options::{Api, Options};

@@ -1,10 +1,10 @@
-use super::analyze::{any_candidate_matches, exact_target, is_ambiguous, site_key, CallKey};
+use super::analyze::{exact_target, site_key, CallKey};
 use super::analyze_callback::drain_callbacks;
 use super::builtins;
 use super::callbacks::CallbackWalk;
 use super::receivers::{classify_builtin_site, FileEnv};
 use super::reexports::{self, ResolvedApi};
-use super::{scoped_finding, unanalyzable};
+use super::scoped_candidates;
 use crate::codebase::dependencies::extract::{
     CallableId, InvocationKind, ValueCall, ValueExpression, ValueFlowFacts,
 };
@@ -158,37 +158,10 @@ pub(super) fn check(
                     }
                 }
                 candidates.entry(key).or_insert((site, None));
-            } else if is_ambiguous(site)
-                && (site.has_unknown_target()
-                    || any_candidate_matches(site, |api| {
-                        matches!(
-                            reexports::follow_export(
-                                env.ctx,
-                                &site.file,
-                                api.0,
-                                api.1,
-                                &|module, export| {
-                                    env.ctx.targets.publishers.contains(&(module, export))
-                                },
-                            ),
-                            ResolvedApi::Target(..) | ResolvedApi::Unanalyzable
-                        )
-                    }))
-            {
+            } else if scoped_candidates::ambiguous_publisher(env, site) {
                 candidates.entry(key).or_insert((site, None));
             }
         }
     }
-    for (site, api) in candidates.into_values() {
-        if let Some((module, export)) = api {
-            walk.diagnostics.findings.push(scoped_finding(
-                env.ctx,
-                site,
-                (module.as_str(), export.as_str()),
-            ));
-        } else {
-            walk.diagnostics.unanalyzable(env.ctx.policy, unanalyzable(env.ctx, site,
-                "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit"));
-        }
-    }
+    scoped_candidates::report(env, walk.diagnostics, candidates.into_values());
 }
