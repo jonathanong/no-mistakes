@@ -5,7 +5,7 @@ pub(in crate::codebase::rules) mod config;
 mod findings;
 mod selection;
 
-pub const RULE_ID: &str = "forbidden-calls";
+pub const RULE_ID: &str = super::call_policy::FORBIDDEN_CALLS_RULE_ID;
 
 pub(crate) use super::call_policy::argument_facts_covered;
 #[doc(hidden)]

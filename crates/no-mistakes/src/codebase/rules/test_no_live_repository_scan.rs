@@ -23,7 +23,7 @@ use enumerators::{scan_of, Scan};
 use provenance::{classify, Verdict};
 use std::path::{Path, PathBuf};
 
-pub const RULE_ID: &str = "test-no-live-repository-scan";
+pub const RULE_ID: &str = super::call_policy::TEST_NO_LIVE_REPOSITORY_SCAN_RULE_ID;
 
 pub(crate) use config::graph_plan;
 pub use config::vitest_roots_configured;

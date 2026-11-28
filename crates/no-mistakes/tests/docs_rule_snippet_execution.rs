@@ -60,6 +60,10 @@ fn rule_ids_from_source(root: &Path) -> BTreeSet<String> {
                     let line = line.trim();
                     let is_rule_constant = line.starts_with("pub const RULE_ID: &str = \"")
                         || line.starts_with("pub const REQUIRED_DOC_SECTION_RULE_ID: &str = \"")
+                        || line.starts_with("pub(crate) const FORBIDDEN_CALLS_RULE_ID: &str = \"")
+                        || line.starts_with(
+                            "pub(crate) const TEST_NO_LIVE_REPOSITORY_SCAN_RULE_ID: &str = \"",
+                        )
                         || line.starts_with("pub const PLAYWRIGHT_");
                     is_rule_constant
                         .then(|| line.split_once("= \"")?.1.split_once('"').map(|(id, _)| id))
