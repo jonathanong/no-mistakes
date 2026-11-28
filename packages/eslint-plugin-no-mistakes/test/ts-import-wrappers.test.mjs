@@ -226,6 +226,11 @@ describe("typescript import wrappers", () => {
         "react-no-use-promise-resolve",
       ),
       eslintCase(
+        "import binding edges stay on their own write",
+        "react-use-binding-edges.tsx",
+        "react-no-use-promise-resolve",
+      ),
+      eslintCase(
         "annotated string is not a ReactNode",
         "react-nullish-annotated.tsx",
         "react-no-nullish-react-node",
@@ -458,6 +463,11 @@ describe("typescript import wrappers", () => {
         "react-no-nullish-react-node",
       ),
       eslintCase(
+        "scope edges keep each ReactNode binding",
+        "react-nullish-scope-edges.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
         "unresolved qualified getter terminal",
         "nullable-qualified-member.ts",
         "server-require-nullable-fetch-wrapper",
@@ -662,6 +672,18 @@ describe("typescript import wrappers", () => {
         .find((item) => item.name === "inner type require does not hide an outer parameter")
         .findings.map((finding) => [finding.line, finding.messageId]),
     ).toEqual([[4, "resolve"]]);
+    expect(
+      cases
+        .find((item) => item.name === "import binding edges stay on their own write")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [7, "unanalyzable"],
+      [12, "unanalyzable"],
+      [17, "resolve"],
+      [24, "resolve"],
+      [32, "unanalyzable"],
+      [52, "resolve"],
+    ]);
     expect(
       cases.find((item) => item.name === "annotated string is not a ReactNode").findings,
     ).toEqual([]);
@@ -891,6 +913,18 @@ describe("typescript import wrappers", () => {
     ]);
     expect(
       cases
+        .find((item) => item.name === "scope edges keep each ReactNode binding")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [13, "nullish"],
+      [34, "unanalyzable"],
+      [53, "nullish"],
+      [79, "nullish"],
+      [95, "nullish"],
+      [99, "nullish"],
+    ]);
+    expect(
+      cases
         .find((item) => item.name === "erased require and a later assignment")
         .findings.map((finding) => [finding.line, finding.messageId]),
     ).toEqual([
@@ -926,7 +960,7 @@ describe("typescript import wrappers", () => {
         .findings.map((finding) => [finding.line, finding.messageId]),
     ).toEqual([
       [8, "wrapper"],
-      [15, "wrapper"],
+      [15, "unanalyzable"],
       [22, "unanalyzable"],
       [27, "wrapper"],
     ]);
@@ -992,6 +1026,7 @@ describe("typescript import wrappers", () => {
         "react-use-type-require.tsx",
         "react-use-value-require.tsx",
         "react-use-inner-type-require.tsx",
+        "react-use-binding-edges.tsx",
       ]),
       nullish: oxlintOn(".oxlintrc-nullish.json", [
         "react-nullish.tsx",
@@ -1010,6 +1045,7 @@ describe("typescript import wrappers", () => {
         "react-nullish-self-alias.tsx",
         "react-nullish-nested-heritage.tsx",
         "react-nullish-binding-shadows.tsx",
+        "react-nullish-scope-edges.tsx",
       ]),
       "nullish-ignore": oxlintOn(".oxlintrc-nullish-ignore.json", ["react-nullish-unresolved.tsx"]),
       fetch: oxlintOn(".oxlintrc-fetch.json", [

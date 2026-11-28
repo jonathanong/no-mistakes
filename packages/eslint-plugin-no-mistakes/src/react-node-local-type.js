@@ -12,6 +12,18 @@ function parameterShadows(declaration, name) {
 function localTypeStatus(node, name, facts, seen, reactTypeStatus) {
   let current = node?.parent;
   while (current) {
+    if (parameterShadows(current, name)) {
+      const param = current.typeParameters.params.find((item) => item.name?.name === name);
+      if (seen.has(param)) return "unresolved";
+      const next = new Set(seen);
+      next.add(param);
+      if (param?.constraint) return reactTypeStatus(param.constraint, facts, next);
+      const known =
+        facts.reactNodeNames.has(name) ||
+        facts.aliases.get(name) === true ||
+        Boolean(facts.unresolvedTypes?.has(name));
+      return known ? "unresolved" : "no";
+    }
     const statements = Array.isArray(current.body)
       ? current.body
       : Array.isArray(current.body?.body)

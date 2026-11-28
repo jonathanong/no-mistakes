@@ -49,4 +49,38 @@ function factAtPath(source, names, namespaceMember) {
   return fact;
 }
 
-module.exports = { factAtPath, patternPath };
+function patternDefault(pattern, name) {
+  if (pattern?.type === "AssignmentPattern") return patternDefault(pattern.left, name);
+  if (pattern?.type !== "ObjectPattern") return null;
+  for (const property of pattern.properties) {
+    if (property.type !== "Property") continue;
+    const value = property.value;
+    if (value?.type === "AssignmentPattern" && patternLocal(value)?.name === name)
+      return value.right ?? null;
+    if (value?.type !== "ObjectPattern" && value?.type !== "AssignmentPattern") continue;
+    const found = patternDefault(value, name);
+    if (found) return found;
+  }
+  return null;
+}
+
+function sameImportFact(left, right) {
+  return Boolean(
+    left &&
+    right &&
+    !left.unresolved &&
+    !right.unresolved &&
+    left.module === right.module &&
+    left.kind === right.kind &&
+    left.imported === right.imported &&
+    Boolean(left.typeOnly) === Boolean(right.typeOnly),
+  );
+}
+
+function withPatternDefault(fact, alternate) {
+  if (!alternate && !fact) return fact;
+  if (sameImportFact(fact, alternate)) return fact;
+  return alternate || fact ? { unresolved: true } : fact;
+}
+
+module.exports = { factAtPath, patternDefault, patternPath, withPatternDefault };

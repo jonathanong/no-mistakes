@@ -58,6 +58,15 @@ module.exports = rule(
       ClassDeclaration(node) {
         if (node.id) state.shadowName(node.id.name);
       },
+      ClassExpression(node) {
+        state.pushScope("class");
+        if (node.id) state.shadowName(node.id.name);
+      },
+      "ClassExpression:exit": state.popScope,
+      SwitchStatement() {
+        state.pushScope("switch");
+      },
+      "SwitchStatement:exit": state.popScope,
       VariableDeclarator: state.defineVariable,
       LogicalExpression(node) {
         if (node.operator !== "??" || suppressed(node)) return;

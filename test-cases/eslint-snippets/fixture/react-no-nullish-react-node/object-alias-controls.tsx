@@ -85,7 +85,7 @@ export function functionShadow(props: Props) {
 export function parameterInitializer(
   props: Props,
   value = (() => {
-    // Initializers can run before later parameters are initialized.
+    // props is already initialized when this later default runs.
     const p = props;
     return p.children ?? null;
   })(),

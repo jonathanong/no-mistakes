@@ -4,6 +4,19 @@ const { unwrapSequence } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { assertedObjectFacts } = require("./react-nullish-props");
 
+function contains(root, node) {
+  for (let current = node; current; current = current.parent) if (current === root) return true;
+  return false;
+}
+
+function parameterReady(def, use) {
+  const params = def.node.params ?? [];
+  const sourceIndex = params.findIndex((param) => contains(param, def.name));
+  const useIndex = params.findIndex((param) => contains(param, use));
+  if (useIndex < 0) return def.node.body.range[0] < use.range[0];
+  return sourceIndex >= 0 && sourceIndex < useIndex;
+}
+
 function notePair(primary, aliases, binding, value) {
   if (!value) return;
   primary.set(binding, value);
@@ -23,7 +36,7 @@ function objectAliasProps(node, facts, context, objectBindings, unresolvedBindin
   // Sequential name facts must not cross a TDZ shadow or a parameter initializer.
   const initialized =
     def.type === "Parameter"
-      ? def.node.body.range[0] < init.range[0]
+      ? parameterReady(def, init)
       : def.type === "Variable" && def.parent.kind === "const" && def.node.range[1] < init.range[0];
   return initialized
     ? { props: objectBindings.get(source), unresolved: unresolvedBindings.get(source) }

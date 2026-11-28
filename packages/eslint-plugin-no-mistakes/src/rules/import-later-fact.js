@@ -7,12 +7,21 @@ function assignmentValue(reference) {
     : null;
 }
 
-function laterFact(def, variable, context, seen, memo, importFact) {
+function hasImportWrite(variable, context, seen, memo, importFact) {
+  return (variable.references ?? []).some((reference) => {
+    if (!reference.isWrite() || reference.init) return false;
+    const value = assignmentValue(reference);
+    return Boolean(value && importFact(value, context, new Set(seen), memo));
+  });
+}
+
+function laterFact(def, variable, context, seen, memo, importFact, use) {
   if (def?.type !== "Variable" || def.node?.id?.type !== "Identifier") return null;
   let matched = null;
   let noise = 0;
   for (const reference of variable.references ?? []) {
     if (!reference.isWrite() || reference.init) continue;
+    if (use?.range && reference.identifier?.range?.[0] >= use.range[0]) continue;
     const value = assignmentValue(reference);
     const fact = value && importFact(value, context, new Set(seen), memo);
     if (!fact) {
@@ -26,4 +35,4 @@ function laterFact(def, variable, context, seen, memo, importFact) {
   return noise || matched.unresolved ? { unresolved: true } : matched;
 }
 
-module.exports = { laterFact };
+module.exports = { hasImportWrite, laterFact };

@@ -24,9 +24,10 @@ const suite = {
     aliasCase("object-alias-rewrite"),
     aliasCase("object-alias-suppressed"),
     aliasCase("object-alias-file-suppressed"),
-    aliasCase("object-alias-controls"),
   ],
   invalid: [
+    // 1 nullish. A const alias inside a later parameter default reads the earlier parameter.
+    aliasCase("object-alias-controls"),
     // 3 nullish, 2 unanalyzable.
     aliasCase("object-alias-computed-keys"),
     // 5 nullish.

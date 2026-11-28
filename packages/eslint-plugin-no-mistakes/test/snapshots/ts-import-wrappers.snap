@@ -1034,6 +1034,80 @@
       "rule": "react-no-nullish-react-node"
     },
     {
+      "file": "react-nullish-scope-edges.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 21,
+          "endLine": 13,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 13,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 19,
+          "endLine": 34,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 34,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 12,
+          "endColumn": 31,
+          "endLine": 53,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 53,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 25,
+          "endLine": 79,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 79,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 25,
+          "endLine": 95,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 95,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 25,
+          "endLine": 99,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 99,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "scope edges keep each ReactNode binding",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
       "file": "react-nullish-binding-shadows.tsx",
       "findings": [
         {
@@ -1237,6 +1311,80 @@
       "options": {
         "unanalyzable": "ignore"
       },
+      "rule": "react-no-use-promise-resolve"
+    },
+    {
+      "file": "react-use-binding-edges.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 38,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-binding-edges.tsx",
+          "line": 7,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 38,
+          "endLine": 12,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-binding-edges.tsx",
+          "line": 12,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 38,
+          "endLine": 17,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-binding-edges.tsx",
+          "line": 17,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 12,
+          "endColumn": 41,
+          "endLine": 24,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-binding-edges.tsx",
+          "line": 24,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 39,
+          "endLine": 32,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-binding-edges.tsx",
+          "line": 32,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 39,
+          "endLine": 52,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-binding-edges.tsx",
+          "line": 52,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        }
+      ],
+      "name": "import binding edges stay on their own write",
+      "options": null,
       "rule": "react-no-use-promise-resolve"
     },
     {
@@ -2293,8 +2441,8 @@
           "endLine": 15,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-nested-destructure.ts",
           "line": 15,
-          "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently.",
-          "messageId": "wrapper",
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
           "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
           "severity": 2
         },
@@ -3013,7 +3161,7 @@
             "column": 10,
             "file": "nullable-nested-destructure.ts",
             "line": 15,
-            "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently."
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
           },
           {
             "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
@@ -3884,6 +4032,55 @@
         "options": null
       },
       {
+        "file": "react-nullish-scope-edges.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 13,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 34,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 12,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 53,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 79,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 95,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 99,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          }
+        ],
+        "name": "react-nullish-scope-edges.tsx",
+        "options": null
+      },
+      {
         "file": "react-nullish-self-alias.tsx",
         "findings": [
           {
@@ -4030,6 +4227,55 @@
         "file": "react-use-alias-chain.tsx",
         "findings": [],
         "name": "react-use-alias-chain.tsx",
+        "options": null
+      },
+      {
+        "file": "react-use-binding-edges.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-binding-edges.tsx",
+            "line": 7,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-binding-edges.tsx",
+            "line": 12,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-binding-edges.tsx",
+            "line": 17,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 12,
+            "file": "react-use-binding-edges.tsx",
+            "line": 24,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-binding-edges.tsx",
+            "line": 32,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-binding-edges.tsx",
+            "line": 52,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          }
+        ],
+        "name": "react-use-binding-edges.tsx",
         "options": null
       },
       {

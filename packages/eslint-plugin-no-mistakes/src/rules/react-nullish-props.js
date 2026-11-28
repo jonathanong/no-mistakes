@@ -21,6 +21,20 @@ function bodyStatements(node) {
   return null;
 }
 
+function enclosingTypeParameter(type, name, local) {
+  let current = type?.parent;
+  while (current && current.type !== "Program") {
+    const param = current.typeParameters?.params?.find((item) => item.name?.name === name);
+    if (
+      param &&
+      !local?.some((item) => item.range[0] > current.range[0] && item.range[1] < current.range[1])
+    )
+      return param;
+    current = current.parent;
+  }
+  return null;
+}
+
 function nearestDeclarations(type, name) {
   let current = type?.parent;
   while (current && current.type !== "Program") {
@@ -52,6 +66,14 @@ function noteStatus(status, key, incoming) {
 function mergeInterfaces(declarations, facts, seen) {
   if (declarations.some((item) => seen.has(item))) return { props: null, unresolved: null };
   for (const item of declarations) seen.add(item);
+  try {
+    return mergeInterfaceBody(declarations, facts, seen);
+  } finally {
+    for (const item of declarations) seen.delete(item);
+  }
+}
+
+function mergeInterfaceBody(declarations, facts, seen) {
   const status = new Map();
   const inheritedProps = new Set();
   const inheritedUnresolved = new Set();
@@ -117,10 +139,26 @@ function classifiedProps(type, facts, seen = new Set()) {
   }
   const name = typeName(type);
   const local = name && !name.includes(".") ? nearestDeclarations(type, name) : null;
-  if (local?.some((item) => seen.has(item))) return { props: null, unresolved: null };
+  const parameter = name && !name.includes(".") ? enclosingTypeParameter(type, name, local) : null;
+  if (local?.some((item) => seen.has(item)) && !parameter) return { props: null, unresolved: null };
+  if (parameter) {
+    if (seen.has(parameter)) return { props: null, unresolved: null };
+    seen.add(parameter);
+    try {
+      return parameter.constraint
+        ? classifiedProps(parameter.constraint, facts, seen)
+        : { props: null, unresolved: null };
+    } finally {
+      seen.delete(parameter);
+    }
+  }
   if (local?.length === 1 && local[0].type === "TSTypeAliasDeclaration") {
     seen.add(local[0]);
-    return classifiedProps(local[0].typeAnnotation, facts, seen);
+    try {
+      return classifiedProps(local[0].typeAnnotation, facts, seen);
+    } finally {
+      seen.delete(local[0]);
+    }
   }
   if (local?.length && local.every((item) => item.type === "TSInterfaceDeclaration"))
     return mergeInterfaces(local, facts, seen);

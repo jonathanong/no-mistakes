@@ -20,8 +20,20 @@
     },
     {
       "file": "fixture.tsx",
-      "findings": [],
-      "kind": "valid",
+      "findings": [
+        {
+          "column": 12,
+          "endColumn": 30,
+          "endLine": 90,
+          "file": "fixture.tsx",
+          "line": 90,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
       "options": null
     },
     {

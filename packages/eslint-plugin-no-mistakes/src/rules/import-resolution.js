@@ -2,8 +2,13 @@
 
 const { unwrapSequence } = require("./async-ast");
 const { memberFact, rootIdentifier } = require("./import-member");
-const { laterFact } = require("./import-later-fact");
-const { factAtPath, patternPath } = require("./import-pattern-path");
+const { hasImportWrite, laterFact } = require("./import-later-fact");
+const {
+  factAtPath,
+  patternDefault,
+  patternPath,
+  withPatternDefault,
+} = require("./import-pattern-path");
 const { literalString } = require("./logical-call");
 const { resolveRuntimeVariable, resolveVariable } = require("./async-target-bindings");
 
@@ -90,19 +95,23 @@ function destructureFact(declarator, name, context, seen) {
   const imported = patternPath(declarator.id, name, literalString);
   if (imported === null) return null;
   const required = requireModule(declarator.init, context);
+  let fact;
   if (required === undefined) {
     const source = importFact(declarator.init, context, seen);
-    if (!source) return null;
-    if (imported === undefined || source.unresolved || source.typeOnly)
-      return source.typeOnly ? null : { unresolved: true };
-    return factAtPath(source, imported, namespaceMember);
-  }
-  if (imported === undefined || required === null) return { unresolved: true };
-  return factAtPath(
-    { module: required, kind: "namespace", typeOnly: false },
-    imported,
-    namespaceMember,
-  );
+    if (!source) fact = null;
+    else if (imported === undefined || source.unresolved || source.typeOnly)
+      fact = source.typeOnly ? null : { unresolved: true };
+    else fact = factAtPath(source, imported, namespaceMember);
+  } else if (imported === undefined || required === null) fact = { unresolved: true };
+  else
+    fact = factAtPath(
+      { module: required, kind: "namespace", typeOnly: false },
+      imported,
+      namespaceMember,
+    );
+  const fallback = patternDefault(declarator.id, name);
+  if (!fallback) return fact;
+  return withPatternDefault(fact, importFact(fallback, context, new Set(seen)));
 }
 
 function factFromDef(def, name, context, seen) {
@@ -149,7 +158,7 @@ function importFact(node, context, seen = new Set(), memo = new Map()) {
   const member = requiredMember(current, context, seen, memo);
   if (member) return member.unresolved ? { unresolved: true } : member;
   if (current.type !== "Identifier") return null;
-  const variable = resolveVariable(current, context);
+  const variable = resolveRuntimeVariable(current, context) ?? resolveVariable(current, context);
   if (!variable || variable.defs.length === 0) return null;
   if (memo.has(variable)) return memo.get(variable);
   if (seen.has(variable)) return { unresolved: true };
@@ -162,7 +171,8 @@ function importFact(node, context, seen = new Set(), memo = new Map()) {
 function readBinding(variable, current, context, seen, memo) {
   if (
     variable.defs.length !== 1 &&
-    !variable.defs.some((def) => defMayBeImport(def, context, new Set([current.name])))
+    !variable.defs.some((def) => defMayBeImport(def, context, new Set([current.name]))) &&
+    !hasImportWrite(variable, context, seen, memo, importFact)
   )
     return null;
   if (variable.defs.length !== 1) return { unresolved: true };
@@ -173,7 +183,7 @@ function readBinding(variable, current, context, seen, memo) {
   );
   if (direct) return written && !direct.unresolved ? { unresolved: true } : direct;
   const init = def.type === "Variable" && def.node?.id?.type === "Identifier" && def.node.init;
-  if (!init) return laterFact(def, variable, context, seen, memo, importFact);
+  if (!init) return laterFact(def, variable, context, seen, memo, importFact, current);
   if (def.parent?.kind !== "const" && written)
     return reassignedFact(def, variable, context, seen, memo);
   return importFact(init, context, seen, memo);
