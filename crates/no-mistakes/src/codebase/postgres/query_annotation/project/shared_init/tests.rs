@@ -189,6 +189,7 @@ fn try_install_shared_module_rejects_flag_mismatch_and_mutated_dep() {
             dep_refs: vec![(ids.id(&dep), 0)],
             dep_scopes: vec![dep_scope],
             own_scopes: vec![Scope::default()],
+            reads_untrusted: true,
         })),
     );
     let shared = Arc::new(SharedInit {
@@ -198,21 +199,18 @@ fn try_install_shared_module_rejects_flag_mismatch_and_mutated_dep() {
         entries,
     });
     let resolve = |_: &str, _: &std::path::Path| None;
-    let mut eval = evaluator::new(&files, resolve, true);
-    eval.modules.shared = Some(Arc::clone(&shared));
-    assert!(eval
-        .try_install_shared_module(&target, ids.id(&target))
-        .is_none());
-
-    let mut eval2 = evaluator::new(&files, resolve, false);
-    eval2.modules.shared = Some(shared);
-    let mut mutated = FxHashMap::default();
-    mutated.insert("x".into(), Value::Number(2));
-    let dep_env = eval2.environment_scope(Scope::from(mutated));
-    eval2.modules.insert(ids.id(&dep), dep_env);
-    assert!(eval2
-        .try_install_shared_module(&target, ids.id(&target))
-        .is_none());
+    let try_install = |untrusted: bool, dep_x: i64| {
+        let mut eval = evaluator::new(&files, resolve, untrusted);
+        eval.modules.shared = Some(Arc::clone(&shared));
+        let scope = Scope::from(FxHashMap::from_iter([("x".into(), Value::Number(dep_x))]));
+        let dep_env = eval.environment_scope(scope);
+        eval.modules.insert(ids.id(&dep), dep_env);
+        eval.try_install_shared_module(&target, ids.id(&target))
+            .is_some()
+    };
+    assert!(!try_install(true, 1));
+    assert!(try_install(false, 1));
+    assert!(!try_install(false, 2));
 }
 
 #[test]
@@ -433,6 +431,7 @@ fn shared_capture_rejects_impure_dep_mutated_dep_and_foreign_env() {
             dep_refs: Vec::new(),
             dep_scopes: Vec::new(),
             own_scopes: vec![Scope::from(expected_dep_vals)],
+            reads_untrusted: false,
         })),
     );
     let shared2 = Arc::new(SharedInit {

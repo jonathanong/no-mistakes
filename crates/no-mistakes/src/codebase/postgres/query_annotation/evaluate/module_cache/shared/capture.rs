@@ -43,13 +43,15 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         guard: SharedCaptureGuard,
     ) {
         let entries = &guard.shared.entries;
-        let read_other_mode = guard.before().untrusted != guard.shared.untrusted_array_intrinsics
-            && self.modules.untrusted_intrinsic_reads != guard.before().untrusted_reads;
+        let reads_untrusted =
+            self.modules.untrusted_intrinsic_reads != guard.before().untrusted_reads;
+        let read_other_mode =
+            guard.before().untrusted != guard.shared.untrusted_array_intrinsics && reads_untrusted;
         if read_other_mode || !self.is_clean_init(env, guard.before()) {
             entries.entry(module_id).or_insert(SharedEntry::Impure);
             return;
         }
-        match self.build_cached_module(&guard.shared, module_id, env) {
+        match self.build_cached_module(&guard.shared, module_id, env, reads_untrusted) {
             BuildOutcome::Ready(cached) => {
                 entries
                     .entry(module_id)
@@ -67,6 +69,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         shared: &SharedInit,
         module_id: ModuleId,
         env: Environment,
+        mut reads_untrusted: bool,
     ) -> BuildOutcome {
         let all_deps = shared
             .direct_deps
@@ -75,15 +78,21 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             .unwrap_or_default();
         for &dep in &all_deps {
             match shared.entries.get(&dep) {
-                Some(entry) if matches!(entry.value(), SharedEntry::Pure(_)) => {}
-                Some(_) => return BuildOutcome::Impure,
+                Some(entry) => {
+                    let SharedEntry::Pure(cached) = entry.value() else {
+                        return BuildOutcome::Impure;
+                    };
+                    reads_untrusted |= cached.reads_untrusted;
+                }
                 None => return BuildOutcome::Defer,
             }
         }
         let mut dep_refs = Vec::new();
         let mut seen = FxHashSet::default();
         let mut raw_dep_scopes = Vec::new();
+        let mut loaded_deps = Vec::new();
         for &dep in all_deps.iter().filter(|d| self.modules.contains_key(d)) {
+            loaded_deps.push(dep);
             if !collect_dep_refs(shared, dep, &mut seen, &mut dep_refs, &mut raw_dep_scopes) {
                 return BuildOutcome::Defer;
             }
@@ -116,10 +125,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             return BuildOutcome::Impure;
         };
         BuildOutcome::Ready(CachedModule {
-            deps: all_deps,
+            deps: loaded_deps,
             dep_refs,
             dep_scopes,
             own_scopes: vec![own_scope],
+            reads_untrusted,
         })
     }
 }

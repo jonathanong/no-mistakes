@@ -279,3 +279,18 @@ fn barrel_reexport_over_impure_leaf_preserves_effects_across_roots() {
     assert_eq!(work["postgres.annotation.shared_init.cache_hits"], 0);
     assert_eq!(work["postgres.annotation.module_initializations"], 8);
 }
+
+#[test]
+fn lazy_import_is_not_preinstalled_when_root_never_calls_lazy_export() {
+    let (report, diagnostics) =
+        observed_check(&fixture("helper-tracing-shared-init-lazy-scalar-mutation"));
+    assert_eq!(report["warnings"], serde_json::json!([]), "{report}");
+    assert_eq!(report["rules"], serde_json::json!([]), "{report}");
+    let work = diagnostics.work;
+    assert_eq!(work["postgres.annotation.shared_init.disabled"], 0);
+    assert_eq!(work["postgres.annotation.shared_init.builds"], 3);
+    assert_eq!(
+        work["postgres.annotation.shared_init.cache_hits"], 1,
+        "root-b only touches middle.version and must not preinstall lazy or state: {work:?}"
+    );
+}

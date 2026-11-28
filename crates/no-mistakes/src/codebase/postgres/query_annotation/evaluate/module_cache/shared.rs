@@ -15,6 +15,7 @@ pub(in crate::codebase::postgres::query_annotation) struct CachedModule {
     pub(in crate::codebase::postgres::query_annotation) dep_refs: Vec<(ModuleId, usize)>,
     pub(in crate::codebase::postgres::query_annotation) dep_scopes: Vec<Scope>,
     pub(in crate::codebase::postgres::query_annotation) own_scopes: Vec<Scope>,
+    pub(in crate::codebase::postgres::query_annotation) reads_untrusted: bool,
 }
 
 pub(in crate::codebase::postgres::query_annotation) enum SharedEntry {
@@ -47,9 +48,6 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         module_id: ModuleId,
     ) -> Option<Environment> {
         let shared = self.modules.shared.as_ref()?;
-        if shared.untrusted_array_intrinsics != self.untrusted_array_intrinsics {
-            return None;
-        }
         let cached = {
             let entry = shared.entries.get(&module_id)?;
             let SharedEntry::Pure(cached) = entry.value() else {
@@ -57,6 +55,11 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             };
             Arc::clone(cached)
         };
+        if cached.reads_untrusted
+            && shared.untrusted_array_intrinsics != self.untrusted_array_intrinsics
+        {
+            return None;
+        }
         if !self.deps_match_cached(&cached) {
             return None;
         }
@@ -83,7 +86,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             if current.same_bindings(expected) {
                 continue;
             }
-            if remap.contains(&usize::MAX) || *current != remap_scope(expected, &remap) {
+            if *current != remap_scope(expected, &remap) {
                 return false;
             }
         }

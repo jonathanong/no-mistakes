@@ -43,6 +43,8 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
         );
         self.remap_active_callbacks(0, &indices.indices);
         self.remap_compacted_binding_indexes(0, &indices.indices, indices.captured_changed);
+        self.modules.capture_on_init.clear();
+        self.modules.captured_inits.clear();
         // Callback remapping and derived indexes do not change live argument
         // or builder IDs. Reuse the module-root walk, including captured cycles.
         frames::prune_mutations(

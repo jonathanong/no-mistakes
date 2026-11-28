@@ -56,6 +56,7 @@ fn pure_entry(
         dep_refs,
         dep_scopes,
         own_scopes: vec![Scope::default()],
+        reads_untrusted: false,
     }))
 }
 
@@ -69,30 +70,64 @@ fn try_install_shared_module_rejects_untrusted_impure_and_mismatched_deps() {
 
     let d1_scope = Scope::from(FxHashMap::from_iter([("x".into(), Value::Number(1))]));
     let d2_scope = Scope::from(FxHashMap::from_iter([("f".into(), dummy_fn(0))]));
-    let shared = Arc::new(SharedInit {
-        untrusted_array_intrinsics: false,
-        eligible: [d1_id, d2_id, top_id].into_iter().collect(),
-        direct_deps: FxHashMap::default(),
-        entries: dashmap::DashMap::new(),
-    });
-    shared.entries.insert(d1_id, SharedEntry::Impure);
-    shared.entries.insert(
-        top_id,
-        pure_entry(
-            vec![d1_id, d2_id],
-            vec![(d1_id, 0), (d2_id, 0)],
-            vec![d1_scope, d2_scope],
-        ),
-    );
+    let make_shared = || {
+        let shared = Arc::new(SharedInit {
+            untrusted_array_intrinsics: false,
+            eligible: [d1_id, d2_id, top_id].into_iter().collect(),
+            direct_deps: FxHashMap::default(),
+            entries: dashmap::DashMap::new(),
+        });
+        shared.entries.insert(
+            d1_id,
+            SharedEntry::Pure(Arc::new(CachedModule {
+                deps: Vec::new(),
+                dep_refs: Vec::new(),
+                dep_scopes: Vec::new(),
+                own_scopes: vec![d1_scope.clone()],
+                reads_untrusted: false,
+            })),
+        );
+        shared.entries.insert(
+            d2_id,
+            SharedEntry::Pure(Arc::new(CachedModule {
+                deps: Vec::new(),
+                dep_refs: Vec::new(),
+                dep_scopes: Vec::new(),
+                own_scopes: vec![d2_scope.clone()],
+                reads_untrusted: false,
+            })),
+        );
+        shared.entries.insert(
+            top_id,
+            SharedEntry::Pure(Arc::new(CachedModule {
+                deps: vec![d1_id, d2_id],
+                dep_refs: vec![(d1_id, 0), (d2_id, 0)],
+                dep_scopes: vec![d1_scope.clone(), d2_scope.clone()],
+                own_scopes: vec![Scope::default()],
+                reads_untrusted: true,
+            })),
+        );
+        shared
+    };
 
-    let mut eval = evaluator::new(&files, resolve, false);
-    eval.modules.shared = Some(Arc::clone(&shared));
-
-    eval.untrusted_array_intrinsics = true;
+    // Untrusted mode mismatch rejects install.
+    let shared = make_shared();
+    let mut eval = evaluator::new(&files, resolve, true);
+    eval.modules.shared = Some(shared);
     assert!(eval.try_install_shared_module(&paths[2], top_id).is_none());
-    eval.untrusted_array_intrinsics = false;
-    assert!(eval.try_install_shared_module(&paths[0], d1_id).is_none());
 
+    // Impure target entry rejects install.
+    let shared = make_shared();
+    shared.entries.insert(d1_id, SharedEntry::Impure);
+    let mut eval = evaluator::new(&files, resolve, false);
+    eval.modules.shared = Some(shared);
+    assert!(eval.try_install_shared_module(&paths[0], d1_id).is_none());
+    assert!(eval.try_install_shared_module(&paths[2], top_id).is_none());
+
+    // Loaded d2 referencing an unloaded d1 slot fails remapped scope comparison.
+    let shared = make_shared();
+    let mut eval = evaluator::new(&files, resolve, false);
+    eval.modules.shared = Some(shared);
     let d2_env = eval.environment_scope(Scope::from(FxHashMap::from_iter([(
         "f".into(),
         dummy_fn(1),
@@ -100,19 +135,63 @@ fn try_install_shared_module_rejects_untrusted_impure_and_mismatched_deps() {
     eval.modules.insert(d2_id, d2_env);
     assert!(eval.try_install_shared_module(&paths[2], top_id).is_none());
 
-    // Out-of-bounds slot in deps_match_cached, missing/impure dep, and missing dep_ref fall back.
+    // Loaded d1 with a remapped self-closure still matches when sibling d2 is unloaded.
+    let shared = make_shared();
+    let d1_fn_scope = Scope::from(FxHashMap::from_iter([("g".into(), dummy_fn(0))]));
+    shared.entries.insert(
+        d1_id,
+        SharedEntry::Pure(Arc::new(CachedModule {
+            deps: Vec::new(),
+            dep_refs: Vec::new(),
+            dep_scopes: Vec::new(),
+            own_scopes: vec![d1_fn_scope.clone()],
+            reads_untrusted: false,
+        })),
+    );
+    shared.entries.insert(
+        top_id,
+        pure_entry(
+            vec![d1_id, d2_id],
+            vec![(d1_id, 0), (d2_id, 0)],
+            vec![d1_fn_scope, d2_scope.clone()],
+        ),
+    );
+    let mut eval = evaluator::new(&files, resolve, false);
+    eval.modules.shared = Some(shared);
+    let _pad = eval.environment_scope(Scope::default());
+    let d1_env = eval.environment_scope(Scope::from(FxHashMap::from_iter([(
+        "g".into(),
+        dummy_fn(1),
+    )])));
+    eval.modules.insert(d1_id, d1_env);
+    assert!(eval.try_install_shared_module(&paths[2], top_id).is_some());
+
+    // Out-of-bounds slot in deps_match_cached falls back cleanly.
+    let shared = make_shared();
+    let mut eval = evaluator::new(&files, resolve, false);
+    eval.modules.shared = Some(shared);
     eval.modules.insert(d2_id, 999);
     assert!(eval.try_install_shared_module(&paths[2], top_id).is_none());
-    eval.modules.remove(&d2_id);
-    assert!(eval.try_install_shared_module(&paths[2], top_id).is_none());
+
+    // Missing shared entry for dependency falls back cleanly.
+    let shared = make_shared();
     shared.entries.remove(&d1_id);
+    let mut eval = evaluator::new(&files, resolve, false);
+    eval.modules.shared = Some(shared);
     assert!(eval.try_install_shared_module(&paths[2], top_id).is_none());
+
+    // Missing loaded dep_ref during remap falls back cleanly.
+    let shared = make_shared();
     shared.entries.insert(
         top_id,
         pure_entry(Vec::new(), vec![(d1_id, 0)], vec![Scope::default()]),
     );
+    let mut eval = evaluator::new(&files, resolve, false);
+    eval.modules.shared = Some(shared);
     assert!(eval.try_install_shared_module(&paths[2], top_id).is_none());
-    eval.modules.insert(d2_id, d2_env);
+
+    // Pre-installing a dependency whose own deps_match_cached fails falls back cleanly.
+    let shared = make_shared();
     shared.entries.insert(
         d1_id,
         pure_entry(Vec::new(), vec![(d2_id, 0)], vec![Scope::default()]),
@@ -120,6 +199,13 @@ fn try_install_shared_module_rejects_untrusted_impure_and_mismatched_deps() {
     shared
         .entries
         .insert(top_id, pure_entry(vec![d1_id], Vec::new(), Vec::new()));
+    let mut eval = evaluator::new(&files, resolve, false);
+    eval.modules.shared = Some(shared);
+    let d2_env = eval.environment_scope(Scope::from(FxHashMap::from_iter([(
+        "f".into(),
+        dummy_fn(1),
+    )])));
+    eval.modules.insert(d2_id, d2_env);
     assert!(eval.try_install_shared_module(&paths[2], top_id).is_none());
 }
 
@@ -131,18 +217,22 @@ fn capture_defers_without_panicking_when_transitive_dep_is_unloaded_or_invalid()
     let [leaf_id, mid_id, top_id] = [ids.id(&paths[0]), ids.id(&paths[1]), ids.id(&paths[2])];
     let resolve = |_: &str, _: &std::path::Path| None;
 
-    let shared = Arc::new(SharedInit {
-        untrusted_array_intrinsics: false,
-        eligible: [leaf_id, mid_id, top_id].into_iter().collect(),
-        direct_deps: FxHashMap::from_iter([(mid_id, vec![leaf_id]), (top_id, vec![mid_id])]),
-        entries: dashmap::DashMap::new(),
-    });
-    shared
-        .entries
-        .insert(leaf_id, pure_entry(Vec::new(), Vec::new(), Vec::new()));
+    let make_shared = || {
+        let shared = Arc::new(SharedInit {
+            untrusted_array_intrinsics: false,
+            eligible: [leaf_id, mid_id, top_id].into_iter().collect(),
+            direct_deps: FxHashMap::from_iter([(mid_id, vec![leaf_id]), (top_id, vec![mid_id])]),
+            entries: dashmap::DashMap::new(),
+        });
+        shared
+            .entries
+            .insert(leaf_id, pure_entry(Vec::new(), Vec::new(), Vec::new()));
+        shared
+    };
 
-    // Unloaded lazy dep stays in CachedModule.deps for preinstall, but is absent from dep_refs
-    // so dependent top captures cleanly without leaf loaded in self.modules.
+    // Unloaded lazy dep stays absent from both CachedModule.deps and dep_refs
+    // so installing mid or top never pre-initializes leaf before first access.
+    let shared = make_shared();
     let mut eval = evaluator::new(&files, resolve, false);
     eval.modules.shared = Some(Arc::clone(&shared));
     let mid_env = eval.environment_scope(Scope::default());
@@ -151,7 +241,7 @@ fn capture_defers_without_panicking_when_transitive_dep_is_unloaded_or_invalid()
     eval.finish_shared_capture(mid_id, mid_env, guard);
     assert!(matches!(
         shared.entries.get(&mid_id).as_deref(),
-        Some(SharedEntry::Pure(cached)) if cached.deps == vec![leaf_id] && cached.dep_refs.is_empty()
+        Some(SharedEntry::Pure(cached)) if cached.deps.is_empty() && cached.dep_refs.is_empty()
     ));
     let top_env = eval.environment_scope(Scope::default());
     eval.modules.insert(top_id, top_env);
@@ -159,31 +249,58 @@ fn capture_defers_without_panicking_when_transitive_dep_is_unloaded_or_invalid()
     eval.finish_shared_capture(top_id, top_env, guard);
     assert!(matches!(
         shared.entries.get(&top_id).as_deref(),
-        Some(SharedEntry::Pure(cached)) if cached.dep_refs == vec![(mid_id, 0)]
+        Some(SharedEntry::Pure(cached)) if cached.deps == vec![mid_id] && cached.dep_refs == vec![(mid_id, 0)]
     ));
-    shared.entries.remove(&top_id);
-
-    // When mid cached leaf in dep_refs under another root but this evaluator lacks leaf, top defers.
+    let mut eval_install = evaluator::new(&files, resolve, false);
+    eval_install.modules.shared = Some(Arc::clone(&shared));
+    assert!(eval_install
+        .try_install_shared_module(&paths[2], top_id)
+        .is_some());
+    assert!(eval_install.modules.contains_key(&mid_id));
+    assert!(!eval_install.modules.contains_key(&leaf_id));
+    // Deferred lazy dependency only installs on first access and still checks its own deps.
+    let mut scalar_scope = Scope::from(FxHashMap::from_iter([("v".into(), Value::Number(1))]));
     shared.entries.insert(
-        mid_id,
-        pure_entry(vec![leaf_id], vec![(leaf_id, 0)], vec![Scope::default()]),
+        leaf_id,
+        pure_entry(Vec::new(), vec![(mid_id, 0)], vec![scalar_scope.clone()]),
     );
+    scalar_scope.insert("v".into(), Value::Number(2));
+    eval_install.scopes[eval_install.modules[&mid_id]] = scalar_scope;
+    assert!(eval_install
+        .try_install_shared_module(&paths[0], leaf_id)
+        .is_none());
+
+    // Isolate each invalid transitive-dependency case so earlier leaf state cannot mask it.
     for step in 0..5 {
+        let shared = make_shared();
+        shared.entries.insert(
+            mid_id,
+            pure_entry(vec![leaf_id], vec![(leaf_id, 0)], vec![Scope::default()]),
+        );
+        let mut eval = evaluator::new(&files, resolve, false);
+        eval.modules.shared = Some(Arc::clone(&shared));
+        let mid_env = eval.environment_scope(Scope::default());
+        eval.modules.insert(mid_id, mid_env);
+        let top_env = eval.environment_scope(Scope::default());
+        eval.modules.insert(top_id, top_env);
         match step {
             0 => {}
             1 => {
                 eval.modules.insert(leaf_id, 999);
             }
             2 => {
+                let leaf_env = eval.environment_scope(Scope::default());
+                eval.modules.insert(leaf_id, leaf_env);
                 shared.entries.remove(&leaf_id);
             }
             3 => {
+                let leaf_env = eval.environment_scope(Scope::default());
+                eval.modules.insert(leaf_id, leaf_env);
                 shared.entries.insert(leaf_id, SharedEntry::Impure);
             }
             _ => {
-                shared
-                    .entries
-                    .insert(leaf_id, pure_entry(Vec::new(), Vec::new(), Vec::new()));
+                let leaf_env = eval.environment_scope(Scope::default());
+                eval.modules.insert(leaf_id, leaf_env);
                 shared.entries.insert(
                     mid_id,
                     pure_entry(vec![leaf_id], vec![(leaf_id, 1)], vec![Scope::default()]),

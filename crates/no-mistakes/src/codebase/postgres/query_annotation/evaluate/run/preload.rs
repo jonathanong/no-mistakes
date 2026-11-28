@@ -6,7 +6,15 @@ pub(in crate::codebase::postgres::query_annotation) fn collect_steps_names<'a>(
     imports: &FxHashMap<String, usize>,
     names: &mut FxHashSet<&'a str>,
 ) {
-    collect_steps_with_shadowed(steps, imports, &FxHashSet::default(), names);
+    collect_steps_with_shadowed(steps, imports, &FxHashSet::default(), true, names);
+}
+
+pub(in crate::codebase::postgres::query_annotation) fn collect_top_level_steps_names<'a>(
+    steps: &'a [Step],
+    imports: &FxHashMap<String, usize>,
+    names: &mut FxHashSet<&'a str>,
+) {
+    collect_steps_with_shadowed(steps, imports, &FxHashSet::default(), false, names);
 }
 
 pub(in crate::codebase::postgres::query_annotation) fn collect_expr_names<'a>(
@@ -14,13 +22,14 @@ pub(in crate::codebase::postgres::query_annotation) fn collect_expr_names<'a>(
     imports: &FxHashMap<String, usize>,
     names: &mut FxHashSet<&'a str>,
 ) {
-    collect_expr_with_shadowed(expr, imports, &FxHashSet::default(), names);
+    collect_expr_with_shadowed(expr, imports, &FxHashSet::default(), true, names);
 }
 
 fn collect_steps_with_shadowed<'a>(
     steps: &'a [Step],
     imports: &FxHashMap<String, usize>,
     shadowed: &FxHashSet<&'a str>,
+    descend_functions: bool,
     names: &mut FxHashSet<&'a str>,
 ) {
     if names.len() == imports.len() {
@@ -32,11 +41,13 @@ fn collect_steps_with_shadowed<'a>(
             | Step::Bind(_, expr)
             | Step::Append(_, expr)
             | Step::Effect(expr)
-            | Step::Return(expr) => collect_expr_with_shadowed(expr, imports, shadowed, names),
+            | Step::Return(expr) => {
+                collect_expr_with_shadowed(expr, imports, shadowed, descend_functions, names)
+            }
             Step::Branch(test, left, right) => {
-                collect_expr_with_shadowed(test, imports, shadowed, names);
-                collect_steps_with_shadowed(left, imports, shadowed, names);
-                collect_steps_with_shadowed(right, imports, shadowed, names);
+                collect_expr_with_shadowed(test, imports, shadowed, descend_functions, names);
+                collect_steps_with_shadowed(left, imports, shadowed, descend_functions, names);
+                collect_steps_with_shadowed(right, imports, shadowed, descend_functions, names);
             }
             Step::Reserve(_) | Step::Var(_) | Step::Unsupported | Step::PotentialCalls(_) => {}
         }
@@ -71,6 +82,7 @@ fn collect_expr_with_shadowed<'a>(
     expr: &'a Expr,
     imports: &FxHashMap<String, usize>,
     shadowed: &FxHashSet<&'a str>,
+    descend_functions: bool,
     names: &mut FxHashSet<&'a str>,
 ) {
     if names.len() == imports.len() {
@@ -87,15 +99,17 @@ fn collect_expr_with_shadowed<'a>(
         | Expr::Index(inner, _)
         | Expr::Member(inner, _)
         | Expr::OpaqueCallback(inner)
-        | Expr::Discard(inner) => collect_expr_with_shadowed(inner, imports, shadowed, names),
+        | Expr::Discard(inner) => {
+            collect_expr_with_shadowed(inner, imports, shadowed, descend_functions, names)
+        }
         Expr::ComputedMember(a, b) | Expr::Append(a, b) | Expr::Binary(_, a, b) => {
-            collect_expr_with_shadowed(a, imports, shadowed, names);
-            collect_expr_with_shadowed(b, imports, shadowed, names);
+            collect_expr_with_shadowed(a, imports, shadowed, descend_functions, names);
+            collect_expr_with_shadowed(b, imports, shadowed, descend_functions, names);
         }
         Expr::Call { callee, args, .. } => {
-            collect_expr_with_shadowed(callee, imports, shadowed, names);
+            collect_expr_with_shadowed(callee, imports, shadowed, descend_functions, names);
             for arg in args {
-                collect_expr_with_shadowed(arg, imports, shadowed, names);
+                collect_expr_with_shadowed(arg, imports, shadowed, descend_functions, names);
             }
         }
         Expr::Tagged(tag, parts, effects) => {
@@ -103,10 +117,10 @@ fn collect_expr_with_shadowed<'a>(
                 names.insert(tag.as_str());
             }
             for part in parts {
-                collect_expr_with_shadowed(part, imports, shadowed, names);
+                collect_expr_with_shadowed(part, imports, shadowed, descend_functions, names);
             }
             for effect in effects {
-                collect_expr_with_shadowed(effect, imports, shadowed, names);
+                collect_expr_with_shadowed(effect, imports, shadowed, descend_functions, names);
             }
         }
         Expr::Template(items)
@@ -123,23 +137,25 @@ fn collect_expr_with_shadowed<'a>(
         }
         | Expr::Delete(items, _) => {
             for item in items {
-                collect_expr_with_shadowed(item, imports, shadowed, names);
+                collect_expr_with_shadowed(item, imports, shadowed, descend_functions, names);
             }
         }
         Expr::OptionalCall { call, children } => {
-            collect_expr_with_shadowed(call, imports, shadowed, names);
+            collect_expr_with_shadowed(call, imports, shadowed, descend_functions, names);
             for child in children {
-                collect_expr_with_shadowed(child, imports, shadowed, names);
+                collect_expr_with_shadowed(child, imports, shadowed, descend_functions, names);
             }
         }
         Expr::SlotWrite {
             receiver, value, ..
         } => {
-            collect_expr_with_shadowed(receiver, imports, shadowed, names);
-            collect_expr_with_shadowed(value, imports, shadowed, names);
+            collect_expr_with_shadowed(receiver, imports, shadowed, descend_functions, names);
+            collect_expr_with_shadowed(value, imports, shadowed, descend_functions, names);
         }
-        Expr::Flow(steps) => collect_steps_with_shadowed(steps, imports, shadowed, names),
-        Expr::Function(function) => {
+        Expr::Flow(steps) => {
+            collect_steps_with_shadowed(steps, imports, shadowed, descend_functions, names)
+        }
+        Expr::Function(function) if descend_functions => {
             let mut inner = shadowed.clone();
             for param in &function.params {
                 inner.insert(param.as_str());
@@ -148,9 +164,10 @@ fn collect_expr_with_shadowed<'a>(
                 inner.insert(self_name.as_str());
             }
             collect_declared_names(&function.body, &mut inner);
-            collect_steps_with_shadowed(&function.body, imports, &inner, names);
+            collect_steps_with_shadowed(&function.body, imports, &inner, true, names);
         }
-        Expr::Number(_)
+        Expr::Function(_)
+        | Expr::Number(_)
         | Expr::Boolean(_)
         | Expr::Primitive
         | Expr::Unknown

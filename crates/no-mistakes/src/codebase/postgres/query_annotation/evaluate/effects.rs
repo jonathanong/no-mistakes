@@ -144,6 +144,7 @@ impl<F: Fn(&str, &std::path::Path) -> Option<PathBuf>> Evaluator<'_, F> {
             return;
         };
         self.builder_updates.insert(id, replacement.clone());
+        self.modules.builder_update_writes = self.modules.builder_update_writes.wrapping_add(1);
         fn replace(value: &mut Value, id: u64, replacement: &Value) {
             if matches!(value, Value::Prefix(_, _, Some(other)) if *other == id) {
                 *value = replacement.clone();

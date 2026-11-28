@@ -15,7 +15,7 @@ fn is_clean_shared_init_rejects_every_mutated_state_condition() {
     let target_id = ids.id(&target);
     let resolve = |_: &str, _: &std::path::Path| None;
 
-    for case in 0..7 {
+    for case in 0..8 {
         let started_untrusted = case == 6;
         let shared = Arc::new(SharedInit {
             untrusted_array_intrinsics: started_untrusted,
@@ -26,6 +26,10 @@ fn is_clean_shared_init_rejects_every_mutated_state_condition() {
         let mut eval = evaluator::new(&files, resolve, started_untrusted);
         eval.modules.shared = Some(Arc::clone(&shared));
         let env = eval.environment_scope(Scope::default());
+        if case == 7 {
+            eval.builder_updates
+                .insert(1, Value::Prefix("a".into(), false, Some(1)));
+        }
         let guard = eval.begin_shared_capture(target_id, env).unwrap();
         match case {
             0 => eval.untrusted_array_intrinsics = true,
@@ -43,7 +47,8 @@ fn is_clean_shared_init_rejects_every_mutated_state_condition() {
             5 => {
                 eval.scopes[env].insert("arr".into(), Value::Array(1));
             }
-            _ => eval.mark_untrusted_array_intrinsics(),
+            6 => eval.mark_untrusted_array_intrinsics(),
+            _ => eval.replace_builder(&Value::Prefix("ab".into(), false, Some(1))),
         }
         eval.finish_shared_capture(target_id, env, guard);
         assert!(

@@ -9,6 +9,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 mod candidates;
+mod eager_deps;
 pub(in crate::codebase::postgres::query_annotation) mod executor_scan;
 
 pub(super) enum SharedInitStatus {
@@ -112,10 +113,17 @@ pub(super) fn build(
                 .max_by(|(i1, c1), (i2, c2)| c1.cmp(c2).then_with(|| i2.cmp(i1)))
                 .map(|(index, _)| index)
         };
+        let direct_deps = eligible
+            .iter()
+            .map(|&id| {
+                let direct = graph.direct_deps.get(&id).map_or(&[][..], Vec::as_slice);
+                (id, eager_deps::for_module(files, &ids, id, direct, resolve))
+            })
+            .collect();
         let shared = Arc::new(SharedInit {
             untrusted_array_intrinsics,
             eligible,
-            direct_deps: graph.direct_deps,
+            direct_deps,
             entries: DashMap::new(),
         });
         (shared, seed_root)

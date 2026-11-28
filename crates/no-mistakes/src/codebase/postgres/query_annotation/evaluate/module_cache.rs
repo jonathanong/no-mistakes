@@ -19,6 +19,7 @@ pub(in crate::codebase::postgres::query_annotation) struct ModuleCache {
         FxHashMap<ModuleId, Option<(Environment, Scope)>>,
     pub(in crate::codebase::postgres::query_annotation) untrusted_intrinsic_writes: u64,
     pub(in crate::codebase::postgres::query_annotation) untrusted_intrinsic_reads: u64,
+    pub(in crate::codebase::postgres::query_annotation) builder_update_writes: u64,
 }
 
 pub(in crate::codebase::postgres::query_annotation) mod shared;
@@ -42,6 +43,7 @@ impl ModuleCache {
             captured_inits: FxHashMap::default(),
             untrusted_intrinsic_writes: 0,
             untrusted_intrinsic_reads: 0,
+            builder_update_writes: 0,
         }
     }
 }
@@ -66,6 +68,7 @@ pub(in crate::codebase::postgres::query_annotation) struct InitPuritySnapshot {
     events: usize,
     invalidated: usize,
     builder_updates: usize,
+    builder_update_writes: u64,
     captured_prefix: usize,
 }
 
@@ -85,6 +88,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             events: self.event_log.len(),
             invalidated: self.invalidated_builders.len(),
             builder_updates: self.builder_updates.len(),
+            builder_update_writes: self.modules.builder_update_writes,
             captured_prefix: self.captured_prefix_count(env),
         }
     }
@@ -99,6 +103,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
             && self.event_log.len() == before.events
             && self.invalidated_builders.len() == before.invalidated
             && self.builder_updates.len() == before.builder_updates
+            && self.modules.builder_update_writes == before.builder_update_writes
             && self.captured_prefix_count(env) == before.captured_prefix
             && !self.scopes[env].contains_reference()
     }

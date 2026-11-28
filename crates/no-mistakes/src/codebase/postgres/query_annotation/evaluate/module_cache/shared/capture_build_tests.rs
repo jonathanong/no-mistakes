@@ -72,6 +72,7 @@ fn build_cached_module_handles_defer_impure_dep_mutation_foreign_env_and_diamond
                 "k".into(),
                 Value::Number(1),
             )]))],
+            reads_untrusted: false,
         })),
     );
     let mut eval = evaluator::new(&files, resolve, false);
