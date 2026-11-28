@@ -92,3 +92,7 @@ fn collect_export_targets<'a>(
         }
     }
 }
+
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+#[path = "eager_deps_tests.rs"]
+mod tests;
