@@ -148,6 +148,11 @@ page.locator(`[data-testid="${id}"]`).click();
 Use `rg` for dynamic call-site discovery and prefer static literals when the
 relationship should be visible to agents.
 
+Swift, .NET, Java, Kotlin, Elixir, Dart, and Rust frontends record no
+language-specific queue jobs. The shared Kafka scanner checks configured
+globs for supported literal shapes regardless of the file extension.
+The language-specific status cells are declined.
+
 Text-based Playwright selector edges are approximate. Prefer exact configured
 test ID attributes and literal locator values for strong route/component
 coverage.

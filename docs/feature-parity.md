@@ -377,18 +377,18 @@ not started.
 | Domain                  | Module graph                                   | Test plan                                                                | HTTP routes                                                                            | Queues                                                    | Status                           |
 | ----------------------- | ---------------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------- |
 | TypeScript / JavaScript | yes                                            | Vitest, Playwright, Jest                                                 | Express, Hono, Koa, Fastify, NestJS, Next.js, Remix file routes                        | BullMQ, glide-mq                                          | shipped (tRPC procedures opt-in) |
-| Swift                   | `swift-import`, `swift-ref`, `swift-package`   | `tests plan swift`, semantic `Package.swift` / `Package.resolved` impact | no (client `http` edges only)                                                          | no                                                        | shipped, narrower                |
-| .NET / C#               | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet`, semantic project / central NuGet / lock impact      | ASP.NET `MapGet` / `[HttpGet]` literals                                                | no                                                        | shipped (v1 extractors + plan)   |
+| Swift                   | `swift-import`, `swift-ref`, `swift-package`   | `tests plan swift`, semantic `Package.swift` / `Package.resolved` impact | no (client `http` edges only)                                                          | declined: no documented language-specific producer or worker         | shipped, narrower                |
+| .NET / C#               | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet`, semantic project / central NuGet / lock impact      | ASP.NET `MapGet` / `[HttpGet]` literals                                                | declined: no documented language-specific producer or worker         | shipped (v1 extractors + plan)   |
 | Python, Django, Celery  | `python-import`, `python-ref`                  | `tests plan python`                                                      | Django `path(`, Flask, FastAPI                                                         | Celery `.delay(` / `@shared_task`                         | shipped (v1 extractors + plan)   |
 | Go, Asynq               | `go-import`, `go-ref`                          | `tests plan go`                                                          | net/http, Chi, Gin, Echo, Fiber literals                                               | Asynq `NewTask` / `HandleFunc`                            | shipped (v1 extractors + plan)   |
 | Kafka                   | n/a                                            | n/a                                                                      | n/a                                                                                    | static topic produce/consume                              | shipped (v1 extractors)          |
-| Rust                    | `rust-use`, `rust-mod`                         | `tests plan cargo`                                                       | Axum, Actix, Rocket literals                                                           | no                                                        | shipped (v1 extractors + plan)   |
+| Rust                    | `rust-use`, `rust-mod`                         | `tests plan cargo`                                                       | Axum, Actix, Rocket literals                                                           | declined: no Rust job facts                               | shipped (v1 extractors + plan)   |
 | Ruby on Rails           | `ruby-require`, `ruby-ref`                     | `tests plan rails`                                                       | `routes.rb` `to:` / `resources`                                                        | Active Job `perform_later`, Sidekiq `perform_async`       | shipped (v1 extractors + plan)   |
 | PHP                     | `php-use`, `php-package`                       | `tests plan php`                                                         | Laravel `Route::` / static resource and `apiResources` forms, or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan)   |
-| Java, Spring            | `java-import`, `java-ref`                      | `tests plan java`                                                        | Spring `@RequestMapping` / `@GetMapping` literals                                      | no                                                        | shipped (v1 extractors + plan)   |
-| Kotlin, Spring          | `kotlin-import`, `kotlin-ref`                  | `tests plan kotlin`                                                      | Spring `@RequestMapping` / `@GetMapping` literals on `.kt`                             | no                                                        | shipped (v1 extractors + plan)   |
-| Elixir, Phoenix         | `elixir-import`, `elixir-ref`                  | `tests plan elixir`                                                      | Phoenix verb literals, literal `scope` prefixes, and static `resources`                | no                                                        | shipped (v1 extractors + plan)   |
-| Dart / Flutter          | `dart-import`, `dart-ref`                      | `tests plan dart`                                                        | no Dart server graph; client `http` edges to TS routes                                 | no                                                        | shipped (v1 extractors + plan)   |
+| Java, Spring            | `java-import`, `java-ref`                      | `tests plan java`                                                        | Spring `@RequestMapping` / `@GetMapping` literals                                      | declined: no documented language-specific producer or worker         | shipped (v1 extractors + plan)   |
+| Kotlin, Spring          | `kotlin-import`, `kotlin-ref`                  | `tests plan kotlin`                                                      | Spring `@RequestMapping` / `@GetMapping` literals on `.kt`                             | declined: no documented language-specific producer or worker         | shipped (v1 extractors + plan)   |
+| Elixir, Phoenix         | `elixir-import`, `elixir-ref`                  | `tests plan elixir`                                                      | Phoenix verb literals, literal `scope` prefixes, and static `resources`                | declined: no documented language-specific producer or worker         | shipped (v1 extractors + plan)   |
+| Dart / Flutter          | `dart-import`, `dart-ref`                      | `tests plan dart`                                                        | no Dart server graph; client `http` edges to TS routes                                 | declined: no documented language-specific producer or worker         | shipped (v1 extractors + plan)   |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.
@@ -519,7 +519,9 @@ Job, Sidekiq, Laravel, and Symfony Messenger emit the same `queue-enqueue` /
 `queue-worker` edges into `DepGraph`; query those with
 `dependents --relationship queue`. The dedicated `queues` commands project
 those language edges into the existing report. They do not get private graph
-shapes.
+shapes. Swift, .NET, Java, Kotlin, Elixir, Dart, and Rust frontends
+record no language-specific queue jobs. The shared Kafka scanner still
+checks files under configured globs for the literal shapes below.
 
 Configured TypeScript queue enqueue wrappers support object-argument property
 selectors, immutable returned-callable aliases with per-call options, and
@@ -615,7 +617,9 @@ public object GetOrders() => new object();
 
 Configure projects through `tests.dotnet.projects` the same way `tests plan
 dotnet` already does. Empty project lists disable the extractor; there is no
-hardcoded `Controllers/` glob.
+hardcoded `Controllers/` glob. Queues are declined: no documented static
+producer or worker. ASP.NET route literals stay the HTTP surface. A method-name
+pattern would invent a framework these docs do not name.
 
 ## Python, Django, Flask, FastAPI, Celery
 
@@ -702,8 +706,11 @@ string literal produce no edge. `go/ast` in-process is acceptable; invoking the
 
 ## Kafka
 
-Kafka is a queue backend, not a language. Producers and consumers in any
-supported language emit the existing `queue-enqueue` and `queue-worker` edges.
+The Kafka scanner looks for the supported literal shapes in files selected
+by the configured producer and consumer globs. It emits the existing
+`queue-enqueue` and `queue-worker` edges. For example, a Java producer calling
+`kafkaTemplate.send("mail.welcome", payload)` under an enqueue glob has a
+queue edge.
 The virtual job identity is `<cluster>:<topic>` when a configured logical
 cluster or broker namespace is present and non-empty, and the bare topic
 otherwise. The queue name falls back to `default` when no cluster is set; that
@@ -743,9 +750,12 @@ registrations emit `route` edges. Language `symbols` / `call-sites`,
 | Tests            | `tests plan vitest` | `tests plan cargo` → `cargo test -p <pkg>` for sibling `tests.rs`; `cargo test -p <pkg> --test <name>` only for `tests/` integration targets |
 | HTTP routes      | `server routes`     | configured Axum, Actix, or Rocket registrations                                                                                              |
 | HTTP clients     | `fetch` `http` edge | `reqwest::get` / `reqwest::Client::new().get` static literals; computed URLs are non-edges                                                   |
-| Queues           | BullMQ              | configured enqueue/worker globs; Kafka when present                                                                                          |
+| Queues           | BullMQ              | declined: no Rust job facts                                                                                                                  |
 | Lockfile         | npm-family          | later (`lockfile diff` is npm-family; `Cargo.lock` diffs are not started)                                                                    |
 | Checks           | `unique-exports`    | keep the existing `rust-*` filesystem rules                                                                                                  |
+
+The Rust fact pass records no language-specific queue jobs. Rust files
+selected by a queue glob are still eligible for the shared Kafka scanner.
 
 `ci` remains the narrow workflow-file → Rust-binary Cargo edge. Do not overload
 it with `use`/`mod` edges. `workflow` already resolves supported Cargo
@@ -859,7 +869,7 @@ wildcard translation are non-edges. Same-file controller methods do not emit
 | Tests            | `tests plan vitest` | `tests plan java` over `*Test.java` / `*Tests.java` / `*IT.java`; `mvn test [-f <package>/pom.xml] -Dtest=` |
 | HTTP routes      | `server routes`     | Spring `@RequestMapping` + `@GetMapping` literals                                                           |
 | HTTP clients     | `fetch` `http` edge | `getForObject` / `.uri` static literals; computed URLs are non-edges                         |
-| Queues           | BullMQ              | no                                                                                                          |
+| Queues           | BullMQ              | declined: no documented language-specific producer or worker                                                                           |
 | Lockfile         | npm-family          | later (`pom.xml` native fallback only)                                                                      |
 
 ```java
@@ -876,7 +886,10 @@ public class Users {
 `@GetMapping(PREFIX)`, `@GetMapping`, extra mapping attributes after the path,
 intervening non-annotation noise that breaks the method matcher, class-only
 `@RequestMapping` without a method mapping, same-package type refs without an
-explicit `import`, and `import com.example.*` are non-edges.
+explicit `import`, and `import com.example.*` are non-edges. The Java queue cell is
+declined because no language-specific producer or worker is documented.
+The shared Kafka scanner still recognizes supported calls under configured
+globs.
 
 ## Kotlin, Spring
 
@@ -897,7 +910,7 @@ Spring HTTP v1 reuses the Java mapping literals on `.kt` files, matching
 | Tests            | `tests plan vitest` | `tests plan kotlin` over `*Test.kt` / `*Tests.kt` / `*IT.kt`; `gradle [-p <package>] test --tests` |
 | HTTP routes      | `server routes`     | Spring `@RequestMapping` + `@GetMapping` literals on `.kt`                                         |
 | HTTP clients     | `fetch` `http` edge | `getForObject` / `.uri` static literals; computed URLs are non-edges                |
-| Queues           | BullMQ              | no                                                                                                 |
+| Queues           | BullMQ              | declined: no documented language-specific producer or worker                                                                  |
 | Lockfile         | npm-family          | later (`build.gradle.kts` native fallback only)                                                    |
 
 ```kotlin
@@ -915,7 +928,8 @@ class Users {
 same-package type refs without an explicit `import`, `import com.example.*`,
 top-level functions/properties, extra types in the same file, multi-class
 `@RequestMapping` prefixes, and annotation examples inside raw strings are
-non-edges. Native fallback is `build.gradle` / `build.gradle.kts` plus
+non-edges. The Kotlin queue cell is declined because no language-specific producer or
+worker is documented. Native fallback is `build.gradle` / `build.gradle.kts` plus
 non-test `.kt` files; `settings.gradle*` is not a trigger. `--tests` uses the
 file stem, matching Java `-Dtest`.
 
@@ -945,7 +959,7 @@ non-edge.
 | Tests            | `tests plan vitest` | `tests plan elixir` over `*_test.exs`; `mix test <path>` from the Mix project root (umbrella child paths stay repo-relative) |
 | HTTP routes      | `server routes`     | Phoenix verb literals, literal `scope` prefixes, and static `resources` macros                                                |
 | HTTP clients     | `fetch` `http` edge | `HTTPoison` / `Req` / `Tesla` static literals; computed URLs are non-edges                                                       |
-| Queues           | BullMQ              | no                                                                                                                           |
+| Queues           | BullMQ              | declined: no documented language-specific producer or worker                                                                            |
 | Lockfile         | npm-family          | later (`mix.exs` native fallback only)                                                                                       |
 
 ```elixir
@@ -965,8 +979,9 @@ end
 
 Nested brace aliases, wildcard imports, same-package refs without
 `alias`/`import`/`use`, computed `scope path` blocks (including a nested
-`resources` macro), `resources` calls with options, `mix.lock` /
-`config.exs` native fallback, and queues are non-edges / later work. Native fallback is
+`resources` macro), `resources` calls with options, and `mix.lock` /
+`config.exs` native fallback are non-edges. The Elixir queue cell is declined because no
+language-specific producer or worker is documented. Native fallback is
 `mix.exs` plus non-test `.ex` files under configured apps. Any `.ex`/`.exs`
 under `/test/` is non-production. `*_test.exs` is the test suffix.
 
@@ -993,7 +1008,7 @@ non-edges.
 | Package identity | workspace packages              | configured `tests.dart.packages` + `pubspec.yaml` `name:`                                                        |
 | Tests            | `tests plan vitest`             | `tests plan dart` over `*_test.dart`; `dart test <path>` or `dart pub --directory <package> run test <rel-path>` |
 | HTTP routes      | Next.js / Express client `http` | client `Uri.parse` / `http.*` literals to TS backend routes                                                      |
-| Queues           | BullMQ                          | no                                                                                                               |
+| Queues           | BullMQ                          | declined: no documented language-specific producer or worker                                                            |
 | Lockfile         | npm-family                      | later (`pubspec.yaml` native fallback only)                                                                      |
 
 ```dart
@@ -1007,7 +1022,9 @@ Future<void> loadUsers() async {
 ```
 
 `dart:async`, `import 'package:app/*'`, computed `Uri.parse(prefix + "/users")`,
-and files outside configured packages are non-edges. Native fallback is
+and files outside configured packages are non-edges. Queues are declined: no
+documented static producer or worker. There is no Dart server graph to attach
+one to. Native fallback is
 `pubspec.yaml` plus non-test `.dart` files; any `.dart` under `/test/` is
 non-production. v1 emits `dart test`, not `flutter test`.
 
@@ -1018,9 +1035,9 @@ The CLI and async Node check APIs share the opt-in
 [`swift-no-unguarded-darwin-import`](rules/swift-no-unguarded-darwin-import.md)
 rule for portable Swift files.
 
-Route, queue, and Kafka extractors are language-specific visitors. Route
-visitors emit `route` edges. HTTP callers emit `http`. Queue and Kafka
-visitors emit `queue-enqueue` and `queue-worker`. `server-route` and
+Language route visitors emit `route` edges. HTTP callers emit `http`.
+Language queue visitors and the shared Kafka scanner emit
+`queue-enqueue` and `queue-worker`. `server-route` and
 `client-call` are server-report kinds, not language graph edges. A Celery
 producer in Python and an Asynq producer in Go must be traversable with
 `--relationship queue`.
@@ -1100,20 +1117,28 @@ opt-in.
 
 ## Agent Fallback
 
-v1 module graphs, `tests plan <lang>`, and named route/queue extractors are
-shipped for configured Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and Dart packages. One invocation covers every configured language; there are no per-language CLIs. Use
-`dependents --relationship <lang|route|queue|http>` and
-`tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart` for those questions instead of `rg`.
+v1 module graphs and `tests plan <lang>` are shipped for configured Python,
+Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and Dart packages. Named route
+extractors are shipped where the status table names them. Named queue
+extractors are shipped for TypeScript, Python, Go, Kafka, Rails, and PHP.
+Swift, .NET, Java, Kotlin, Elixir, Dart, and Rust have declined
+language-specific queue cells. Those files remain eligible for shared Kafka
+literal scanning under configured globs.
+One invocation covers every configured language. Use `dependents --relationship <lang|route|queue|http>` and
+`tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart` for the shipped
+questions instead of `rg`.
 
 Configured language clients can match static root-relative paths and literal
 HTTP(S) URLs on loopback hosts. Use `rg` for client calls with other hosts or
 call shapes outside the documented matchers.
 
+Queue cells that say `declined` are closed. Do not invent a framework for them.
+
 Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
 `Cargo.lock`, `Gemfile.lock`, `composer.lock`), Laravel resource routes with
 computed options or arguments, Phoenix resource routes with options,
-Kafka outside TS/Python literal shapes, language
+Kafka calls outside the documented literal shapes, language
 `symbols`/`call-sites`, and rule families that apply only to TS/JS or `.sql`
 ([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)).
 

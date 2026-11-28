@@ -87,6 +87,10 @@ fn dart_collects_package_imports() {
         .iter()
         .any(|import| import == "package:app/user.dart"));
     assert_eq!(api.module.as_deref(), Some("package:app/api.dart"));
+    assert!(facts
+        .files
+        .values()
+        .all(|file| { file.queue_enqueues.is_empty() && file.queue_workers.is_empty() }));
 }
 
 #[test]

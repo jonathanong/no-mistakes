@@ -9,6 +9,10 @@ conventions.
 
 Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel, and Symfony Messenger
 sites emit the same canonical `queue-enqueue` / `queue-worker` graph edges.
+Swift, .NET, Java, Kotlin, Elixir, Dart, and Rust frontends record no
+language-specific queue jobs. The shared Kafka scanner checks configured
+globs for supported literal shapes regardless of the file extension. See
+[feature parity](../feature-parity.md).
 `queues edges|related|check` projects those language edges from the same
 facts as the dependency graph. TypeScript baseline fields stay identical
 when language packages are configured on a TypeScript-only tree.
