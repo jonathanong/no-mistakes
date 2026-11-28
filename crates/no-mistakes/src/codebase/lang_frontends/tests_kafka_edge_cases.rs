@@ -164,3 +164,23 @@ fn rust_arrays_lifetimes_and_php_multiline_quotes_keep_expected_topics() {
         welcome()
     );
 }
+
+#[test]
+fn elixir_and_php_concatenated_topics_produce_no_edge() {
+    for (source, path) in [
+        (
+            ":brod.produce_sync(client, \"mail.\" <> tenant, 0, \"\", \"v\")",
+            "p.ex",
+        ),
+        (
+            ":brod.subscribe(client, self(), \"mail.\" <> tenant, [])",
+            "c.ex",
+        ),
+        ("$producer->newTopic(\"mail.\" . $tenant);", "p.php"),
+        ("$producer->newTopic(\"mail.\".$tenant);", "p.php"),
+    ] {
+        let (produces, consumes) =
+            extract_kafka_topics_for(source, KafkaFile::from_path(Path::new(path)));
+        assert!(produces.is_empty() && consumes.is_empty(), "{source}");
+    }
+}

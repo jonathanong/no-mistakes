@@ -95,7 +95,17 @@ fn dollar_template(text: &str) -> bool {
 
 fn concatenated(source: &str, end: usize) -> bool {
     let rest = source[end..].trim_start();
-    rest.chars()
-        .next()
-        .is_some_and(|quote| rest[quote.len_utf8()..].trim_start().starts_with('+'))
+    let Some(quote) = rest.chars().next() else {
+        return false;
+    };
+    let after = &rest[quote.len_utf8()..];
+    let trimmed = after.trim_start();
+    if trimmed.starts_with('+') || trimmed.starts_with("<>") {
+        return true;
+    }
+    let Some(tail) = trimmed.strip_prefix('.') else {
+        return false;
+    };
+    let spaced = trimmed.len() != after.len() || tail.starts_with(char::is_whitespace);
+    spaced || tail.starts_with('$') || tail.starts_with(['"', '\''])
 }
