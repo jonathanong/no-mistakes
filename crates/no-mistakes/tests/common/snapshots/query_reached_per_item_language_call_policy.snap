@@ -1,0 +1,316 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "languages": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "causes": [
+            {
+              "callee": "$item->fetch",
+              "detail": "the target is not a configured sink or a local function whose calls are proven",
+              "file": "php/worker.php",
+              "kind": "unresolved-dispatch",
+              "line": 9,
+              "sourceLine": "$item->fetch();"
+            }
+          ],
+          "file": "php/worker.php",
+          "import": "$item->fetch",
+          "line": 9,
+          "message": "per-item call is unanalyzable: foreach `$item->fetch` has no proven target",
+          "rule": "query-reached-per-item",
+          "sourceLine": "$item->fetch();"
+        },
+        {
+          "causes": [
+            {
+              "callee": "item.fetch",
+              "detail": "the target is not a configured sink or a local function whose calls are proven",
+              "file": "csharp/Worker.cs",
+              "kind": "unresolved-dispatch",
+              "line": 9,
+              "sourceLine": "item.fetch();"
+            }
+          ],
+          "file": "csharp/Worker.cs",
+          "import": "item.fetch",
+          "line": 9,
+          "message": "per-item call is unanalyzable: foreach `item.fetch` has no proven target",
+          "rule": "query-reached-per-item",
+          "sourceLine": "item.fetch();"
+        },
+        {
+          "causes": [
+            {
+              "callee": "item.fetch",
+              "detail": "the target is not a configured sink or a local function whose calls are proven",
+              "file": "dart/worker.dart",
+              "kind": "unresolved-dispatch",
+              "line": 8,
+              "sourceLine": "item.fetch();"
+            }
+          ],
+          "file": "dart/worker.dart",
+          "import": "item.fetch",
+          "line": 8,
+          "message": "per-item call is unanalyzable: for `item.fetch` has no proven target",
+          "rule": "query-reached-per-item",
+          "sourceLine": "item.fetch();"
+        },
+        {
+          "causes": [
+            {
+              "callee": "item.fetch",
+              "detail": "the target is not a configured sink or a local function whose calls are proven",
+              "file": "elixir/worker.ex",
+              "kind": "unresolved-dispatch",
+              "line": 9,
+              "sourceLine": "item.fetch()"
+            }
+          ],
+          "file": "elixir/worker.ex",
+          "import": "item.fetch",
+          "line": 9,
+          "message": "per-item call is unanalyzable: for `item.fetch` has no proven target",
+          "rule": "query-reached-per-item",
+          "sourceLine": "item.fetch()"
+        },
+        {
+          "causes": [
+            {
+              "callee": "item.fetch",
+              "detail": "the target is not a configured sink or a local function whose calls are proven",
+              "file": "go/worker.go",
+              "kind": "unresolved-dispatch",
+              "line": 10,
+              "sourceLine": "item.fetch()"
+            }
+          ],
+          "file": "go/worker.go",
+          "import": "item.fetch",
+          "line": 10,
+          "message": "per-item call is unanalyzable: for `item.fetch` has no proven target",
+          "rule": "query-reached-per-item",
+          "sourceLine": "item.fetch()"
+        },
+        {
+          "causes": [
+            {
+              "callee": "item.fetch",
+              "detail": "the target is not a configured sink or a local function whose calls are proven",
+              "file": "java/Worker.java",
+              "kind": "unresolved-dispatch",
+              "line": 9,
+              "sourceLine": "item.fetch();"
+            }
+          ],
+          "file": "java/Worker.java",
+          "import": "item.fetch",
+          "line": 9,
+          "message": "per-item call is unanalyzable: for `item.fetch` has no proven target",
+          "rule": "query-reached-per-item",
+          "sourceLine": "item.fetch();"
+        },
+        {
+          "causes": [
+            {
+              "callee": "item.fetch",
+              "detail": "the target is not a configured sink or a local function whose calls are proven",
+              "file": "kotlin/Worker.kt",
+              "kind": "unresolved-dispatch",
+              "line": 8,
+              "sourceLine": "item.fetch()"
+            }
+          ],
+          "file": "kotlin/Worker.kt",
+          "import": "item.fetch",
+          "line": 8,
+          "message": "per-item call is unanalyzable: for `item.fetch` has no proven target",
+          "rule": "query-reached-per-item",
+          "sourceLine": "item.fetch()"
+        },
+        {
+          "causes": [
+            {
+              "callee": "item.fetch",
+              "detail": "the target is not a configured sink or a local function whose calls are proven",
+              "file": "python/worker.py",
+              "kind": "unresolved-dispatch",
+              "line": 7,
+              "sourceLine": "item.fetch()"
+            }
+          ],
+          "file": "python/worker.py",
+          "import": "item.fetch",
+          "line": 7,
+          "message": "per-item call is unanalyzable: for `item.fetch` has no proven target",
+          "rule": "query-reached-per-item",
+          "sourceLine": "item.fetch()"
+        },
+        {
+          "causes": [
+            {
+              "callee": "item.fetch",
+              "detail": "the target is not a configured sink or a local function whose calls are proven",
+              "file": "ruby/worker.rb",
+              "kind": "unresolved-dispatch",
+              "line": 8,
+              "sourceLine": "item.fetch()"
+            }
+          ],
+          "file": "ruby/worker.rb",
+          "import": "item.fetch",
+          "line": 8,
+          "message": "per-item call is unanalyzable: for `item.fetch` has no proven target",
+          "rule": "query-reached-per-item",
+          "sourceLine": "item.fetch()"
+        },
+        {
+          "causes": [
+            {
+              "callee": "item.fetch",
+              "detail": "the target is not a configured sink or a local function whose calls are proven",
+              "file": "rust/worker.rs",
+              "kind": "unresolved-dispatch",
+              "line": 8,
+              "sourceLine": "item.fetch();"
+            }
+          ],
+          "file": "rust/worker.rs",
+          "import": "item.fetch",
+          "line": 8,
+          "message": "per-item call is unanalyzable: for `item.fetch` has no proven target",
+          "rule": "query-reached-per-item",
+          "sourceLine": "item.fetch();"
+        },
+        {
+          "causes": [
+            {
+              "callee": "item.fetch",
+              "detail": "the target is not a configured sink or a local function whose calls are proven",
+              "file": "swift/Worker.swift",
+              "kind": "unresolved-dispatch",
+              "line": 8,
+              "sourceLine": "item.fetch()"
+            }
+          ],
+          "file": "swift/Worker.swift",
+          "import": "item.fetch",
+          "line": 8,
+          "message": "per-item call is unanalyzable: for `item.fetch` has no proven target",
+          "rule": "query-reached-per-item",
+          "sourceLine": "item.fetch()"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "csharp/Worker.cs",
+          "import": "fetch",
+          "line": 8,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: foreach `fetch` reaches `store` via load → fetch → read_row",
+          "rule": "query-reached-per-item",
+          "sourceLine": "fetch(item);",
+          "target": "store: load → fetch → read_row"
+        },
+        {
+          "file": "dart/worker.dart",
+          "import": "fetch",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `fetch` reaches `store` via load → fetch → read_row",
+          "rule": "query-reached-per-item",
+          "sourceLine": "fetch(item);",
+          "target": "store: load → fetch → read_row"
+        },
+        {
+          "file": "elixir/worker.ex",
+          "import": "fetch",
+          "line": 8,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `fetch` reaches `store` via load → fetch → read_row",
+          "rule": "query-reached-per-item",
+          "sourceLine": "fetch(item)",
+          "target": "store: load → fetch → read_row"
+        },
+        {
+          "file": "go/worker.go",
+          "import": "fetch",
+          "line": 9,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `fetch` reaches `store` via load → fetch → read_row",
+          "rule": "query-reached-per-item",
+          "sourceLine": "fetch(item)",
+          "target": "store: load → fetch → read_row"
+        },
+        {
+          "file": "java/Worker.java",
+          "import": "fetch",
+          "line": 8,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `fetch` reaches `store` via load → fetch → read_row",
+          "rule": "query-reached-per-item",
+          "sourceLine": "fetch(item);",
+          "target": "store: load → fetch → read_row"
+        },
+        {
+          "file": "kotlin/Worker.kt",
+          "import": "fetch",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `fetch` reaches `store` via load → fetch → read_row",
+          "rule": "query-reached-per-item",
+          "sourceLine": "fetch(item)",
+          "target": "store: load → fetch → read_row"
+        },
+        {
+          "file": "php/worker.php",
+          "import": "fetch",
+          "line": 8,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: foreach `fetch` reaches `store` via load → fetch → read_row",
+          "rule": "query-reached-per-item",
+          "sourceLine": "fetch($item);",
+          "target": "store: load → fetch → read_row"
+        },
+        {
+          "file": "python/worker.py",
+          "import": "fetch",
+          "line": 6,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `fetch` reaches `store` via load → fetch → read_row",
+          "rule": "query-reached-per-item",
+          "sourceLine": "fetch(item)",
+          "target": "store: load → fetch → read_row"
+        },
+        {
+          "file": "ruby/worker.rb",
+          "import": "fetch",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `fetch` reaches `store` via load → fetch → read_row",
+          "rule": "query-reached-per-item",
+          "sourceLine": "fetch(item)",
+          "target": "store: load → fetch → read_row"
+        },
+        {
+          "file": "rust/worker.rs",
+          "import": "fetch",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `fetch` reaches `store` via load → fetch → read_row",
+          "rule": "query-reached-per-item",
+          "sourceLine": "fetch(item);",
+          "target": "store: load → fetch → read_row"
+        },
+        {
+          "file": "swift/Worker.swift",
+          "import": "fetch",
+          "line": 7,
+          "message": "per-item call reaches a configured effect sink; batch the helper, merge the lookup, or add a justified suppression: for `fetch` reaches `store` via load → fetch → read_row",
+          "rule": "query-reached-per-item",
+          "sourceLine": "fetch(item)",
+          "target": "store: load → fetch → read_row"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

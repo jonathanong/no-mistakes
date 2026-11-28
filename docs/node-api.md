@@ -126,11 +126,15 @@ reports using the same `RuleFinding` as CLI `check`.
 `QueueNoEnqueueInTransactionPublisher` describe the YAML rule options, including
 optional `unanalyzable` (`report`, `advise`, or `ignore`).
 
-`query-reached-per-item` accepts `exemptCappedCursorPageReads` in the rule's
-YAML `options`, selected by `check({ root, config })` or an `analyzeProject()`
-check report. It defaults to `false` and shares CLI behavior. The exported
-`QueryReachedPerItemOptions` and `QueryReachedPerItemAllowEntry` describe that
-configuration; the async runtime entrypoints and report fields are unchanged.
+`query-reached-per-item` accepts `exemptCappedCursorPageReads` and `languages`
+in the rule's YAML `options`, selected by `check({ root, config })` or an
+`analyzeProject()` check report. `exemptCappedCursorPageReads` defaults to
+`false`. `languages` lists shipped frontends (`python`, `go`, `rust`, `rails`,
+`php`, `java`, `kotlin`, `elixir`, `dart`, `swift`, `dotnet`) that share that
+check report; it defaults to empty, so TypeScript behavior is unchanged. There
+is no new binding. The exported `QueryReachedPerItemOptions` and
+`QueryReachedPerItemAllowEntry` describe that configuration; the async runtime
+entrypoints and report fields are unchanged.
 Allow entries accept an optional `function` string to match the exact enclosing
 caller name, combined with any `callee` and `line` selectors. File-only entries
 retain their behavior, including unused-entry reporting.

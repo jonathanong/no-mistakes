@@ -4,7 +4,7 @@ pub(super) fn collect(
     request: &GraphRuleRequest<'_>,
     session: Option<&crate::codebase::analysis_session::AnalysisSession>,
     findings: &mut Vec<RuleFinding>,
-    _advisories: &mut Vec<RuleFinding>,
+    advisories: &mut Vec<RuleFinding>,
 ) -> Result<()> {
     let root = request.root;
     let config = request.config;
@@ -16,9 +16,8 @@ pub(super) fn collect(
             || session.is_none_or(|session| session.check_consumer_ready(consumer))
         {
             let result = (|| -> Result<()> {
-                findings.extend(crate::perf_trace::rule(
-                    "analysis.rules.query-reached-per-item",
-                    || {
+                let produced =
+                    crate::perf_trace::rule("analysis.rules.query-reached-per-item", || {
                         query_reached_per_item::check_with_graph_and_session(
                             root,
                             config,
@@ -28,9 +27,14 @@ pub(super) fn collect(
                             request.sources,
                             session,
                         )
-                    },
-                )?);
-
+                    })?;
+                for finding in produced {
+                    if finding.causes.is_empty() {
+                        findings.push(finding);
+                    } else {
+                        advisories.push(finding);
+                    }
+                }
                 Ok(())
             })();
             if let Some(session) = session {

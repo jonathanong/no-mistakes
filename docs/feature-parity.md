@@ -1340,11 +1340,17 @@ Node CJS/ESM parity. Supported inline and table constraints retain exact source
 ranges; unavailable boundaries are null rather than inferred from formatted SQL.
 See [constraint source spans](postgres-source-api.md#constraint-source-spans).
 
-TypeScript/JavaScript support the opt-in
+TypeScript/JavaScript and the shipped language frontends support the opt-in
 [`query-reached-per-item`](rules/query-reached-per-item.md) rule through CLI and
-asynchronous Node checks. It combines per-item AST positions with canonical
-call paths and configured effect sinks, including transaction markers and batch
-exemptions. Other languages do not yet expose equivalent call-policy facts.
+asynchronous Node checks. TypeScript combines per-item AST positions with
+canonical call paths and configured effect sinks, including transaction markers
+and batch exemptions. Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir, Dart,
+Swift, and C# run a best-effort line-oriented source scan when
+`options.languages` names that language and its `tests` root is configured: a
+proven call names the callsite, a local-hop path, and the configured effect
+target, and an unproven call follows `options.unanalyzable` instead of passing
+silently. No shipped language is declined. The `call-sites` query stays
+TypeScript-only. Dedicated language CLIs remain later work.
 
 Structured PostgreSQL source facts expose trigger event kinds and quoted UPDATE
 OF identifiers, cast type components, literal EXECUTE concatenations, USING

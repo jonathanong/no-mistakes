@@ -1,5 +1,5 @@
 use super::check_json_case::case;
-use super::check_json_snapshot::assert_saved_fixture;
+use super::check_json_snapshot::{assert_saved_fixture, assert_saved_fixture_report};
 
 type Case = (&'static str, std::path::PathBuf, std::path::PathBuf);
 
@@ -418,6 +418,53 @@ fn query_reached_per_item_dependent_chain_check_json_snapshot() {
             rule("disabled", dir, "off.yml"),
         ],
     );
+}
+
+#[test]
+fn query_reached_per_item_language_call_policy() {
+    let value = assert_saved_fixture_report(
+        "query_reached_per_item_language_call_policy",
+        &[rule(
+            "languages",
+            "query-reached-per-item/language-call-policy",
+            "policy.yml",
+        )],
+        &[],
+        &[],
+    );
+    let report = &value["languages"]["report"];
+    let files = [
+        "python/worker.py",
+        "go/worker.go",
+        "rust/worker.rs",
+        "ruby/worker.rb",
+        "php/worker.php",
+        "java/Worker.java",
+        "kotlin/Worker.kt",
+        "elixir/worker.ex",
+        "dart/worker.dart",
+        "swift/Worker.swift",
+        "csharp/Worker.cs",
+    ];
+    for file in files {
+        assert!(
+            report["rules"].as_array().is_some_and(|findings| {
+                findings.iter().any(|finding| {
+                    finding["file"] == file
+                        && finding["message"].as_str().unwrap().contains("read_row")
+                })
+            }),
+            "{file} proven finding missing: {report}"
+        );
+        assert!(
+            report["advisories"].as_array().is_some_and(|findings| {
+                findings.iter().any(|finding| {
+                    finding["file"] == file && finding["causes"][0]["kind"] == "unresolved-dispatch"
+                })
+            }),
+            "{file} unproven advisory missing: {report}"
+        );
+    }
 }
 
 #[test]

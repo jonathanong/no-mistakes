@@ -12,6 +12,7 @@ mod allow;
 mod candidate_policy;
 mod candidates;
 pub(in crate::codebase::rules) mod config;
+mod languages;
 mod traces;
 pub(crate) use config::graph_plan;
 use config::{exempt, Options, Sinks};
@@ -165,6 +166,11 @@ pub(crate) fn check_with_graph_and_session(
         }
         findings.extend(
             allow::finish(root, facts, sources, &filter, &options, &audit)
+                .into_iter()
+                .map(|finding| (0, finding)),
+        );
+        findings.extend(
+            languages::collect(root, config, application, &options, &audit, session)?
                 .into_iter()
                 .map(|finding| (0, finding)),
         );

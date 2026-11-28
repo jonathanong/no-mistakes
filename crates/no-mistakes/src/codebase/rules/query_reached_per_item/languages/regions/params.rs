@@ -1,0 +1,36 @@
+use super::lex::close_paren;
+
+pub(super) fn parameter_names(line: &str) -> Vec<String> {
+    if super::syntax::header_paren(line).is_some() && parameter_text(line).is_none() {
+        return vec!["*".to_string()];
+    }
+    let Some(text) = parameter_text(line) else {
+        return Vec::new();
+    };
+    let mut names = Vec::new();
+    let mut current = String::new();
+    for ch in text.chars() {
+        if ch.is_ascii_alphanumeric() || ch == '_' || ch == '$' {
+            current.push(ch);
+        } else if !current.is_empty() {
+            names.push(std::mem::take(&mut current));
+        }
+    }
+    if !current.is_empty() {
+        names.push(current);
+    }
+    names
+}
+
+pub(super) fn signature_body(line: &str) -> &str {
+    super::syntax::header_paren(line)
+        .and_then(|open| close_paren(line, open))
+        .map(|close| &line[close..])
+        .unwrap_or("")
+}
+
+fn parameter_text(line: &str) -> Option<&str> {
+    let open = super::syntax::header_paren(line)?;
+    let close = close_paren(line, open)?;
+    (close > open).then_some(&line[open + 1..close - 1])
+}

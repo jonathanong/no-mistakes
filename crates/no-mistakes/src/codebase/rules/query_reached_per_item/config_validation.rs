@@ -17,6 +17,16 @@ pub(in crate::codebase::rules) fn validate(options: &Options, config: &NoMistake
     }) {
         bail!("{RULE_ID}: allow entries require a non-empty function when supplied");
     }
+    for language in &options.languages {
+        if !super::languages::known(language) {
+            bail!("{RULE_ID}: unknown options.languages value `{language}`");
+        }
+        if super::languages::root_entries(config, language).is_empty() {
+            bail!(
+                "{RULE_ID}: options.languages `{language}` requires a configured tests root"
+            );
+        }
+    }
     for kind in &options.effects {
         let Some(effect) = config.effects.get(kind) else {
             bail!("{RULE_ID}: unknown effects kind `{kind}`");
