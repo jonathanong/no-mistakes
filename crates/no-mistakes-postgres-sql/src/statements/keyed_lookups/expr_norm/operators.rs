@@ -5,11 +5,14 @@ use sqlparser::ast::{
     UnaryOperator, Value,
 };
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum BuiltinType {
+    SmallInt,
     Integer,
+    BigInt,
     Numeric,
-    Float,
+    Real,
+    DoublePrecision,
     Text,
     Bool,
     Date,
@@ -17,7 +20,19 @@ enum BuiltinType {
 
 impl BuiltinType {
     fn numeric(self) -> bool {
-        matches!(self, Self::Integer | Self::Numeric | Self::Float)
+        self.integer() || self.float() || self == Self::Numeric
+    }
+
+    fn integer(self) -> bool {
+        matches!(self, Self::SmallInt | Self::Integer | Self::BigInt)
+    }
+
+    fn float(self) -> bool {
+        matches!(self, Self::Real | Self::DoublePrecision)
+    }
+
+    fn comparable_to(self, other: Self) -> bool {
+        self == other || self.integer() && other.integer() || self.float() && other.float()
     }
 }
 
@@ -30,7 +45,8 @@ pub(super) fn unary_is_proven(op: UnaryOperator, expr: &Expr) -> bool {
 }
 
 pub(super) fn comparable(left: &Expr, right: &Expr) -> bool {
-    operand_type(left).is_some_and(|left| operand_type(right) == Some(left))
+    operand_type(left)
+        .is_some_and(|left| operand_type(right).is_some_and(|right| left.comparable_to(right)))
 }
 
 pub(super) fn list_operands_are_proven(expr: &Expr, items: &[Expr]) -> bool {
@@ -76,10 +92,9 @@ pub(super) fn case_is_proven(
 fn operand_type(expr: &Expr) -> Option<BuiltinType> {
     match unwrap_expr(expr) {
         Expr::Value(value) => match &value.value {
-            Value::Number(number, _) if number.contains(['.', 'e', 'E']) => {
-                Some(BuiltinType::Numeric)
-            }
-            Value::Number(..) => Some(BuiltinType::Integer),
+            Value::Number(number, _) if number.parse::<i32>().is_ok() => Some(BuiltinType::Integer),
+            Value::Number(number, _) if number.parse::<i64>().is_ok() => Some(BuiltinType::BigInt),
+            Value::Number(..) => Some(BuiltinType::Numeric),
             Value::Boolean(_) => Some(BuiltinType::Bool),
             Value::SingleQuotedString(_) | Value::EscapedStringLiteral(_) => {
                 Some(BuiltinType::Text)
@@ -98,16 +113,13 @@ fn operand_type(expr: &Expr) -> Option<BuiltinType> {
 
 fn type_name(data_type: &DataType) -> Option<BuiltinType> {
     match data_type {
-        DataType::SmallInt(_)
-        | DataType::Integer(_)
-        | DataType::Int(_)
-        | DataType::BigInt(_)
-        | DataType::Int2(_)
-        | DataType::Int4(_)
-        | DataType::Int8(_) => Some(BuiltinType::Integer),
+        DataType::SmallInt(_) | DataType::Int2(_) => Some(BuiltinType::SmallInt),
+        DataType::Integer(_) | DataType::Int(_) | DataType::Int4(_) => Some(BuiltinType::Integer),
+        DataType::BigInt(_) | DataType::Int8(_) => Some(BuiltinType::BigInt),
         DataType::Numeric(_) | DataType::Decimal(_) => Some(BuiltinType::Numeric),
-        DataType::Real | DataType::DoublePrecision => Some(BuiltinType::Float),
-        DataType::Text | DataType::Varchar(_) => Some(BuiltinType::Text),
+        DataType::Real => Some(BuiltinType::Real),
+        DataType::DoublePrecision => Some(BuiltinType::DoublePrecision),
+        DataType::Text => Some(BuiltinType::Text),
         DataType::Boolean | DataType::Bool => Some(BuiltinType::Bool),
         DataType::Date => Some(BuiltinType::Date),
         _ => None,
@@ -118,12 +130,12 @@ fn binary_result(op: &BinaryOperator, left: &Expr, right: &Expr) -> Option<Built
     use BinaryOperator::*;
     let left = operand_type(left)?;
     let right = operand_type(right)?;
-    if left != right {
+    if !left.comparable_to(right) {
         return None;
     }
     match op {
-        Plus | Minus | Multiply | Divide if left.numeric() => Some(left),
-        Modulo if matches!(left, BuiltinType::Integer | BuiltinType::Numeric) => Some(left),
+        Plus | Minus | Multiply | Divide if left.numeric() => Some(left.max(right)),
+        Modulo if left == right && (left.integer() || left == BuiltinType::Numeric) => Some(left),
         Eq | NotEq | Gt | GtEq | Lt | LtEq => Some(BuiltinType::Bool),
         And | Or if left == BuiltinType::Bool => Some(BuiltinType::Bool),
         StringConcat if left == BuiltinType::Text => Some(BuiltinType::Text),
@@ -136,7 +148,7 @@ fn unary_result(op: UnaryOperator, expr: &Expr) -> Option<BuiltinType> {
     match op {
         UnaryOperator::Plus | UnaryOperator::Minus if kind.numeric() => Some(kind),
         UnaryOperator::Not if kind == BuiltinType::Bool => Some(kind),
-        UnaryOperator::BitwiseNot if kind == BuiltinType::Integer => Some(kind),
+        UnaryOperator::BitwiseNot if kind.integer() => Some(kind),
         _ => None,
     }
 }

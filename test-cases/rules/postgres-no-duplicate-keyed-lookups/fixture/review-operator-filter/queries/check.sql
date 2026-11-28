@@ -179,3 +179,28 @@ JOIN accounts b ON b.id = o.account_id
          + 1) + 1) + 1) + 1) + 1)
          + 1) + 1) + 1) + 1) + 1)
          + 1) + 1) + 1) + 1) + 1) > 0;
+
+SELECT o.id
+FROM orders o
+JOIN accounts a ON a.id = o.account_id AND 'x'::varchar = 'x'::text
+JOIN accounts b ON b.id = o.account_id AND 'x'::varchar = 'x'::text;
+
+SELECT o.id
+FROM orders o
+JOIN accounts a ON a.id = o.account_id AND (5::smallint % 2::bigint) = 1::bigint
+JOIN accounts b ON b.id = o.account_id AND (5::smallint % 2::bigint) = 1::bigint;
+
+SELECT o.id
+FROM orders o
+JOIN accounts a ON a.id = o.account_id
+    AND (5::smallint + 2::bigint) = 7::bigint
+    AND (5::smallint % 2::smallint) = 1::smallint
+    AND (1::real + 2::double precision) = 3::double precision
+    AND 2147483648 + 2147483648 = 4294967296
+    AND 9223372036854775808 % 2.0 = 0.0
+JOIN accounts b ON b.id = o.account_id
+    AND (5::smallint + 2::bigint) = 7::bigint
+    AND (5::smallint % 2::smallint) = 1::smallint
+    AND (1::real + 2::double precision) = 3::double precision
+    AND 2147483648 + 2147483648 = 4294967296
+    AND 9223372036854775808 % 2.0 = 0.0;

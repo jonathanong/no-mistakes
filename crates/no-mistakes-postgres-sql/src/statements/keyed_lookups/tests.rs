@@ -379,7 +379,8 @@ fn checks_operator_signatures_and_shares_only_compatible_lookup_history() {
             (116, 117),
             (127, 128),
             (144, 146),
-            (158, 170)
+            (158, 170),
+            (195, 201)
         ]
     );
 }
