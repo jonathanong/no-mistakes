@@ -28,6 +28,7 @@ const PATH_METHODS = new Set([
   "unlink",
   "writeFile",
 ]);
+const PROCESS_METHODS = new Set(["exec", "execFile", "spawn"]);
 const FRAMEWORK_GLOBALS = new Map([
   ["vi", "vitest.vi"],
   ["jest", "@jest/globals.jest"],
@@ -48,7 +49,9 @@ function memberBinding(object, member) {
 function unresolvedMember(member) {
   if (member === null || member === "promises") return UNRESOLVED;
   const bare = member.replace(/Sync$/, "");
-  return PATH_METHODS.has(bare) || filesystemPathCount("fs", member) > 0 ? UNRESOLVED : null;
+  const candidate =
+    PATH_METHODS.has(bare) || PROCESS_METHODS.has(bare) || filesystemPathCount("fs", member) > 0;
+  return candidate ? UNRESOLVED : null;
 }
 
 function importedBinding(definition) {

@@ -30,7 +30,9 @@ call whose filesystem binding is not static, because Jest replaces `require()`.
 reports `unanalyzable` beside `vi.mock("node:fs")`, and
 `require("node:fs").writeFileSync("/tmp/b.txt", "b")` still reports the fixed
 path. That advisory includes `access`,
-`chmod`, `readdir`, and `createWriteStream` on an unresolved `fs` binding.
+`chmod`, `readdir`, and `createWriteStream` on an unresolved `fs` binding,
+and `execFile`, `spawn`, and `exec`, including their `Sync` forms, on an
+unresolved binding. An unrelated member stays quiet.
 
 ## Disallowed
 

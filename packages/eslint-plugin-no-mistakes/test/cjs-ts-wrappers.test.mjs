@@ -176,6 +176,7 @@ const groups = [
       "let-namespace.test.ts",
       "nested-call.test.ts",
       "named-default.test.ts",
+      "cast-called.test.ts",
     ],
     valid: [
       "computed-modifier.test.ts",
@@ -290,6 +291,7 @@ const groups = [
       "namespace-require.test.ts",
       "inline-require.test.ts",
       "let-binding.test.ts",
+      "named-default.test.ts",
     ],
     valid: [
       "tuple.test.ts",
@@ -304,6 +306,7 @@ const groups = [
       "computed-method.test.ts",
       "callback-type.test.ts",
       "nested-qualified.test.ts",
+      "named-import.test.ts",
     ],
   },
   {
@@ -380,7 +383,13 @@ const groups = [
   {
     rule: "test-no-fixed-temp-paths",
     dir: "temp",
-    invalid: ["paths.test.ts", "dynamic.test.ts", "promises.test.ts", "mock-after.test.ts"],
+    invalid: [
+      "paths.test.ts",
+      "dynamic.test.ts",
+      "promises.test.ts",
+      "mock-after.test.ts",
+      "process.test.ts",
+    ],
     valid: [
       "other-member.test.ts",
       "computed-member.test.ts",

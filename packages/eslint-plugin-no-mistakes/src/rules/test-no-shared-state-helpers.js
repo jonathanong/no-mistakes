@@ -1,6 +1,6 @@
 "use strict";
 
-const { unwrapExpression } = require("./async-ast");
+const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { collectPatternNames } = require("./ast-pattern-names");
 const { createCleanupTracker } = require("./test-no-shared-state-cleanup");
@@ -81,15 +81,17 @@ function isInlineSetupCallback(node) {
 }
 
 function isCalledFunction(node, context) {
-  if (node.parent?.type === "CallExpression" && node.parent.callee === node) return true;
-  const declarator = node.parent?.type === "VariableDeclarator" ? node.parent : null;
+  const placed = unwrapTransparentParent(node);
+  if (placed.parent?.type === "CallExpression" && placed.parent.callee === placed) return true;
+  const declarator = placed.parent?.type === "VariableDeclarator" ? placed.parent : null;
   const id =
     node.type === "FunctionDeclaration"
       ? node.id
       : declarator?.id?.type === "Identifier"
         ? declarator.id
         : null;
-  const container = node.type === "FunctionDeclaration" ? node.parent : node.parent?.parent?.parent;
+  const container =
+    node.type === "FunctionDeclaration" ? node.parent : placed.parent?.parent?.parent;
   if (!id?.name || !container) return false;
   return containsIdentifierCall(container, id.name, resolveVariable(id, context), context);
 }

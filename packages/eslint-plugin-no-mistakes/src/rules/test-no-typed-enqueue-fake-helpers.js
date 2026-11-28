@@ -57,7 +57,8 @@ function namespaceModule(identifier, sourceCode, allowTypeOnly = false) {
     def &&
     (def.node.type === "ImportNamespaceSpecifier" ||
       def.node.type === "TSImportEqualsDeclaration" ||
-      def.node.type === "ImportDefaultSpecifier") &&
+      def.node.type === "ImportDefaultSpecifier" ||
+      importSpecifierName(def.node) === "default") &&
     (allowTypeOnly || runtimeImport(def))
   ) {
     return namespaceSource(def, allowTypeOnly);
@@ -78,8 +79,7 @@ function patternExportName(pattern, name) {
     if (property.type !== "Property") continue;
     let value = property.value;
     while (value?.type === "AssignmentPattern") value = value.left;
-    if (value?.type !== "Identifier" || value.name !== name) continue;
-    if (property.computed) continue;
+    if (value?.type !== "Identifier" || value.name !== name || property.computed) continue;
     if (property.key?.type === "Identifier") return property.key.name;
     return literalString(property.key);
   }
