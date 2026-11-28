@@ -109,13 +109,98 @@ fn loop_headers_boundaries_and_call_shapes_keep_per_item_calls() {
     ];
     for (source, extension, len, needles) in cases {
         let findings = project_ext(source, extension);
-        assert_eq!(findings.len(), *len, "{extension} {needles:?}\n{findings:#?}");
+        assert_eq!(
+            findings.len(),
+            *len,
+            "{extension} {needles:?}\n{findings:#?}"
+        );
         for needle in *needles {
             assert!(
-                findings.iter().any(|finding| finding.message.contains(needle)),
+                findings
+                    .iter()
+                    .any(|finding| finding.message.contains(needle)),
                 "{needle}\n{findings:#?}"
             );
         }
-        assert!(findings.iter().all(|finding| !finding.message.contains("ready →")));
+        assert!(findings
+            .iter()
+            .all(|finding| !finding.message.contains("ready →")));
     }
+}
+
+#[test]
+fn split_lines_inline_bodies_unbraced_loops_and_false_proofs() {
+    let split = project_ext(
+        "fn load(items: &[&str]) {\n    for item in items {\n        example.store.read_row\n            (item);\n    }\n}\n",
+        "rs",
+    );
+    assert!(split
+        .iter()
+        .any(|finding| finding.line == 3 && finding.message.contains("read_row")));
+    let java = project_ext(
+        "void load(List<Row> items) {\n    for (Row row : example.store.read_row(items)) {\n        row.fetch();\n    }\n}\n",
+        "java",
+    );
+    assert!(java
+        .iter()
+        .all(|finding| !finding.message.contains("read_row")));
+    assert!(java
+        .iter()
+        .any(|finding| finding.message.contains("row.fetch")));
+    let inline = project_ext(
+        "def fetch(item): example.store.read_row(item)\ndef load(items):\n    for item in items:\n        fetch(item)\n",
+        "py",
+    );
+    assert!(inline
+        .iter()
+        .any(|finding| finding.message.contains("load → fetch → read_row")));
+    let unbraced = project_ext(
+        "void load(string[] items)\n{\n    foreach (var item in items)\n        example.store.read_row(item);\n}\n",
+        "cs",
+    );
+    assert!(unbraced
+        .iter()
+        .any(|finding| finding.message.contains("load → read_row")));
+    let shadow = project_ext(
+        "def fetch(item):\n    example.store.read_row(item)\ndef load(items, fetch):\n    for item in items:\n        fetch(item)\n",
+        "py",
+    );
+    assert!(shadow.iter().any(|finding| {
+        finding
+            .causes
+            .first()
+            .is_some_and(|cause| cause.kind == "unresolved-dispatch")
+            && finding.message.contains("`fetch`")
+    }));
+    assert!(shadow
+        .iter()
+        .all(|finding| !finding.message.contains("→ fetch →")));
+    let lifetime = project_ext(
+        "fn load(items: &[&str]) {\n    let value: &'static str = \"x\";\n    for row in items {\n        example.store.read_row(row);\n    }\n}\n",
+        "rs",
+    );
+    assert!(lifetime
+        .iter()
+        .any(|finding| finding.message.contains("load → read_row")));
+    let character = project_ext(
+        "fn load(items: &[&str]) {\n    let ch = 'x';\n    for item in items {\n        example.store.read_row(item);\n    }\n}\n",
+        "rs",
+    );
+    assert!(character
+        .iter()
+        .any(|finding| finding.message.contains("load → read_row")));
+    let generic = project_ext(
+        "void load(string[] items) {\n    foreach (var item in items) {\n        example.store.read_row<Row>(item);\n    }\n}\n",
+        "cs",
+    );
+    assert!(generic
+        .iter()
+        .any(|finding| finding.message.contains("load → read_row")));
+    let ruby = project_ext(
+        "def load(items)\n  for item in items do\n    example.store.read_row item\n  end\nend\n",
+        "rb",
+    );
+    assert!(ruby
+        .iter()
+        .any(|finding| finding.message.contains("load → read_row")));
 }

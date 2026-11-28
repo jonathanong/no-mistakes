@@ -15,18 +15,23 @@ pub(super) fn project(
     let Some(source) = text else {
         return unreadable(file, ctx);
     };
-    let Some(style) = style_for(extension) else {
+    if style_for(extension).is_none() {
         return Vec::new();
-    };
-    project_scan(file, &super::regions::scan(source, style), ctx)
+    }
+    project_scan(file, &super::regions::scan(source, extension), ctx)
 }
 
 fn project_scan(file: &str, scan: &Scan, ctx: &Ctx<'_>) -> Vec<RuleFinding> {
     let functions = index_functions(scan);
     let mut findings = Vec::new();
     for call in &scan.loops {
-        let Some(outcome) = classify_loop(&call.callee, &call.function, &functions, ctx.sinks)
-        else {
+        let Some(outcome) = classify_loop(
+            &call.callee,
+            &call.function,
+            &functions,
+            &scan.shadows,
+            ctx.sinks,
+        ) else {
             continue;
         };
         if suppressed(ctx, file, &call.callee, call.line, &call.function) {
@@ -66,6 +71,7 @@ fn classify_loop(
     callee: &str,
     function: &str,
     functions: &HashMap<String, Result<Vec<String>, ()>>,
+    shadows: &[(String, Vec<String>)],
     sinks: &[Sink],
 ) -> Option<Outcome> {
     match kind_of(callee, sinks) {
@@ -75,6 +81,7 @@ fn classify_loop(
         }),
         Kind::Clean => None,
         Kind::Receiver => Some(Outcome::Unproven),
+        Kind::Bare if shadowed(shadows, function, callee) => Some(Outcome::Unproven),
         Kind::Bare => match functions.get(callee) {
             Some(Ok(calls)) => match function_reach(calls, sinks) {
                 Reach::Sink { kind, export } => Some(Outcome::Proven {
@@ -86,6 +93,15 @@ fn classify_loop(
             },
             Some(Err(())) | None => Some(Outcome::Unproven),
         },
+    }
+}
+
+fn shadowed(shadows: &[(String, Vec<String>)], function: &str, callee: &str) -> bool {
+    let mut rows = shadows.iter().filter(|(name, _)| name == function);
+    match (rows.next(), rows.next()) {
+        (Some((_, names)), None) => names.iter().any(|name| name == callee),
+        (Some(_), Some(_)) => true,
+        (None, _) => false,
     }
 }
 
@@ -150,7 +166,10 @@ fn index_functions(scan: &Scan) -> HashMap<String, Result<Vec<String>, ()>> {
     }
     let mut grouped: HashMap<&str, Vec<String>> = HashMap::new();
     for (name, callee) in &scan.body_calls {
-        grouped.entry(name.as_str()).or_default().push(callee.clone());
+        grouped
+            .entry(name.as_str())
+            .or_default()
+            .push(callee.clone());
     }
     counts
         .into_iter()
@@ -168,5 +187,3 @@ fn index_functions(scan: &Scan) -> HashMap<String, Result<Vec<String>, ()>> {
 fn normalize(head: &str) -> String {
     head.replace("::", ".").replace(['\\', '/'], ".")
 }
-
-

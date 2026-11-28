@@ -1,12 +1,52 @@
 use crate::codebase::lang_frontends::{mask_strings, strip_comments_keep_strings};
 
-pub(super) fn prepare(source: &str, python: bool) -> String {
-    let comments = if python {
-        strip_comments_keep_strings(&keep_floor_div(source))
-    } else {
-        strip_comments_keep_strings(source)
+pub(super) fn prepare(source: &str, extension: &str) -> String {
+    let normalized = match extension {
+        "py" => keep_floor_div(source),
+        "rs" => neutralize_rust_quotes(source),
+        _ => source.to_string(),
     };
-    mask_strings(&comments)
+    mask_strings(&strip_comments_keep_strings(&normalized))
+}
+
+/// Lifetimes and labels (`'static`, `'outer:`) are not character literals.
+fn neutralize_rust_quotes(source: &str) -> String {
+    let chars: Vec<char> = source.chars().collect();
+    let mut out = String::with_capacity(source.len());
+    let mut index = 0;
+    while index < chars.len() {
+        if chars[index] == '\'' && is_lifetime_or_label(&chars, index) {
+            out.push(' ');
+            index += 1;
+            continue;
+        }
+        out.push(chars[index]);
+        index += 1;
+    }
+    out
+}
+
+fn is_lifetime_or_label(chars: &[char], index: usize) -> bool {
+    if index > 0 {
+        let prev = chars[index - 1];
+        if prev.is_ascii_alphanumeric() || prev == '_' {
+            return false;
+        }
+    }
+    let Some(next) = chars.get(index + 1).copied() else {
+        return false;
+    };
+    if next == '\\' || !(next.is_ascii_alphabetic() || next == '_') {
+        return false;
+    }
+    let mut end = index + 2;
+    while chars
+        .get(end)
+        .is_some_and(|ch| ch.is_ascii_alphanumeric() || *ch == '_')
+    {
+        end += 1;
+    }
+    chars.get(end) != Some(&'\'')
 }
 
 /// Python `//` is floor division. The shared comment strip treats `//` as a line comment.

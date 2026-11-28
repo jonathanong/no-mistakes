@@ -1,7 +1,12 @@
+use super::lex::{first_word, last_ident, leading_ident, words};
 use super::Header;
 
 pub(super) fn brace_header(line: &str) -> Option<Header> {
-    if line.contains('{') { bare_header(line) } else { None }
+    if line.contains('{') {
+        bare_header(line)
+    } else {
+        None
+    }
 }
 
 pub(super) fn bare_header(line: &str) -> Option<Header> {
@@ -27,7 +32,10 @@ pub(super) fn bare_header(line: &str) -> Option<Header> {
 
 fn function_declarator(line: &str, paren: usize, name: &str) -> bool {
     let before = &line[..paren];
-    if words(before).iter().any(|word| matches!(*word, "fn" | "func" | "function" | "fun" | "def")) {
+    if words(before)
+        .iter()
+        .any(|word| matches!(*word, "fn" | "func" | "function" | "fun" | "def"))
+    {
         return true;
     }
     let Some(name_at) = before.rfind(name) else {
@@ -40,7 +48,9 @@ fn function_declarator(line: &str, paren: usize, name: &str) -> bool {
 
 pub(super) fn indent_header(line: &str) -> Option<Header> {
     let trimmed = line.trim();
-    if let Some(rest) = trimmed.strip_prefix("async def ").or_else(|| trimmed.strip_prefix("def "))
+    if let Some(rest) = trimmed
+        .strip_prefix("async def ")
+        .or_else(|| trimmed.strip_prefix("def "))
     {
         let name = leading_ident(rest);
         return (!name.is_empty()).then(|| Header::Function(name.to_string()));
@@ -84,14 +94,20 @@ pub(super) fn opener_count(line: &str) -> usize {
             _ => {}
         }
     }
-    if primary > 0 { primary } else { dos }
+    if primary > 0 {
+        primary
+    } else {
+        dos
+    }
 }
 
 fn conditional_openers(line: &str) -> usize {
     let head = |text: &str| {
         ["if", "unless"].iter().any(|word| {
             text.trim_start().strip_prefix(*word).is_some_and(|rest| {
-                rest.chars().next().is_none_or(|ch| !ch.is_ascii_alphanumeric() && ch != '_')
+                rest.chars()
+                    .next()
+                    .is_none_or(|ch| !ch.is_ascii_alphanumeric() && ch != '_')
             })
         })
     };
@@ -116,8 +132,17 @@ fn opens_control(trimmed: &str) -> bool {
     let word = first_word(trimmed.trim_start_matches(['}', '{']).trim_start());
     matches!(
         word,
-        "if" | "else" | "elif" | "elsif" | "elseif" | "switch" | "catch" | "for" | "while"
-            | "foreach" | "return" | "do"
+        "if" | "else"
+            | "elif"
+            | "elsif"
+            | "elseif"
+            | "switch"
+            | "catch"
+            | "for"
+            | "while"
+            | "foreach"
+            | "return"
+            | "do"
     )
 }
 
@@ -131,47 +156,17 @@ fn construct_label(trimmed: &str) -> &'static str {
 }
 
 fn each_line(trimmed: &str) -> bool {
-    words(trimmed).iter().any(|word| *word == "each" || word.eq_ignore_ascii_case("foreach"))
+    words(trimmed)
+        .iter()
+        .any(|word| *word == "each" || word.eq_ignore_ascii_case("foreach"))
         && (trimmed.contains(" do") || trimmed.contains('{'))
 }
 
-fn header_paren(line: &str) -> Option<usize> {
+pub(super) fn header_paren(line: &str) -> Option<usize> {
     let paren = line.find('(')?;
     if last_ident(&line[..paren]) != "func" {
         return Some(paren);
     }
     let close = paren + line[paren..].find(')')?;
     Some(close + 1 + line[close + 1..].find('(')?)
-}
-
-fn words(line: &str) -> Vec<&str> {
-    line.split(|ch: char| !ch.is_ascii_alphanumeric() && ch != '_')
-        .filter(|word| !word.is_empty())
-        .collect()
-}
-
-fn first_word(trimmed: &str) -> &str {
-    trimmed.split(|ch: char| ch.is_whitespace() || ch == '(' || ch == '{').next().unwrap_or("")
-}
-
-fn leading_ident(rest: &str) -> &str {
-    let end = rest
-        .char_indices()
-        .find(|(_, ch)| !ch.is_ascii_alphanumeric() && *ch != '_')
-        .map(|(index, _)| index)
-        .unwrap_or(rest.len());
-    &rest[..end]
-}
-
-fn last_ident(before: &str) -> String {
-    let mut last = String::new();
-    let mut current = String::new();
-    for ch in before.chars() {
-        if ch.is_ascii_alphanumeric() || ch == '_' {
-            current.push(ch);
-        } else if !current.is_empty() {
-            last = std::mem::take(&mut current);
-        }
-    }
-    if current.is_empty() { last } else { current }
 }

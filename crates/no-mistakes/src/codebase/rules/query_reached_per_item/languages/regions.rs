@@ -1,16 +1,22 @@
 mod calls;
+mod carry;
+mod lex;
+mod notes;
+mod params;
 mod prepare;
+mod statement;
 mod syntax;
 mod walk;
 
 pub(super) use calls::split_separator;
-use calls::{calls, per_item_callees, trailing_callee};
 
 #[derive(Default)]
 pub(super) struct Scan {
     pub(super) loops: Vec<LoopCall>,
     pub(super) functions: Vec<String>,
     pub(super) body_calls: Vec<(String, String)>,
+    /// Parameter and enclosing-parameter names for each function, in source order.
+    pub(super) shadows: Vec<(String, Vec<String>)>,
 }
 
 pub(super) struct LoopCall {
@@ -32,8 +38,15 @@ enum Header {
 }
 
 enum Frame {
-    Function { name: String, open: usize },
-    Loop { construct: &'static str, open: usize, brace: bool },
+    Function {
+        name: String,
+        open: usize,
+    },
+    Loop {
+        construct: &'static str,
+        open: usize,
+        brace: bool,
+    },
 }
 
 impl Frame {
@@ -53,8 +66,11 @@ pub(super) fn style_for(extension: &str) -> Option<Style> {
     }
 }
 
-pub(super) fn scan(source: &str, style: Style) -> Scan {
-    let prepared = prepare::prepare(source, matches!(style, Style::Indent));
+pub(super) fn scan(source: &str, extension: &str) -> Scan {
+    let Some(style) = style_for(extension) else {
+        return Scan::default();
+    };
+    let prepared = prepare::prepare(source, extension);
     match style {
         Style::Brace => walk::scan_brace(&prepared),
         Style::Indent => walk::scan_indent(&prepared),
@@ -62,47 +78,40 @@ pub(super) fn scan(source: &str, style: Style) -> Scan {
     }
 }
 
-#[derive(Default)]
-struct Carry {
-    name: String,
-}
-
-impl Carry {
-    fn clear(&mut self) {
-        self.name.clear();
-    }
-
-    fn note(&mut self, line: &str) {
-        self.name = if line.trim().is_empty() || line.contains('(') {
-            String::new()
-        } else {
-            trailing_callee(line).unwrap_or("").to_string()
-        };
-    }
-
-    fn calls_on(&mut self, line: &str) -> Vec<String> {
-        if line.trim().is_empty() {
-            self.clear();
-            return Vec::new();
-        }
-        let found = if line.trim_start().starts_with('(') && !self.name.is_empty() {
-            calls(&format!("{}{}", self.name, line))
-        } else {
-            calls(line)
-        };
-        self.note(line);
-        found
-    }
-}
-
-fn push(stack: &mut Vec<Frame>, scan: &mut Scan, header: Header, open: usize, brace: bool) {
+fn push(
+    stack: &mut Vec<Frame>,
+    scan: &mut Scan,
+    header: Header,
+    open: usize,
+    brace: bool,
+    params: Vec<String>,
+) {
     match header {
         Header::Function(name) => {
+            let names = with_ancestors(scan, stack, params);
             scan.functions.push(name.clone());
+            scan.shadows.push((name.clone(), names));
             stack.push(Frame::Function { name, open });
         }
-        Header::Loop(construct) => stack.push(Frame::Loop { construct, open, brace }),
+        Header::Loop(construct) => stack.push(Frame::Loop {
+            construct,
+            open,
+            brace,
+        }),
     }
+}
+
+fn with_ancestors(scan: &Scan, stack: &[Frame], mut params: Vec<String>) -> Vec<String> {
+    let Some(outer) = stack.iter().rev().find_map(|frame| match frame {
+        Frame::Function { name, .. } => Some(name.as_str()),
+        Frame::Loop { .. } => None,
+    }) else {
+        return params;
+    };
+    if let Some((_, bound)) = scan.shadows.iter().rev().find(|(name, _)| name == outer) {
+        params.extend(bound.iter().cloned());
+    }
+    params
 }
 
 fn pop_to(stack: &mut Vec<Frame>, depth: usize) {
@@ -112,68 +121,22 @@ fn pop_to(stack: &mut Vec<Frame>, depth: usize) {
 }
 
 fn close_brace_loops(stack: &mut Vec<Frame>, depth: &mut usize, line: &str, opened_brace: bool) {
-    let mut closers = line.matches('}').count().saturating_sub(line.matches('{').count());
+    let mut closers = line
+        .matches('}')
+        .count()
+        .saturating_sub(line.matches('{').count());
     if opened_brace && line.contains('}') && closers == 0 {
         closers = 1;
     }
     while closers > 0 {
         let open = match stack.last() {
-            Some(Frame::Loop { brace: true, open, .. }) => *open,
+            Some(Frame::Loop {
+                brace: true, open, ..
+            }) => *open,
             _ => break,
         };
         *depth = open;
         stack.pop();
         closers -= 1;
     }
-}
-
-fn record(scan: &mut Scan, stack: &[Frame], line: &str, line_no: u32, carry: &mut Carry) {
-    let callees = carry.calls_on(line);
-    record_callees(scan, stack, line_no, &callees);
-}
-
-fn record_loop_line(scan: &mut Scan, stack: &[Frame], line: &str, line_no: u32, carry: &mut Carry) {
-    let construct = match stack.last() {
-        Some(Frame::Loop { construct, .. }) => *construct,
-        _ => return,
-    };
-    let callees = per_item_callees(line, construct);
-    carry.note(line);
-    record_callees(scan, stack, line_no, &callees);
-}
-
-fn record_callees(scan: &mut Scan, stack: &[Frame], line_no: u32, callees: &[String]) {
-    let (function, construct) = enclosing(stack);
-    for callee in callees {
-        if let Some(function) = &function {
-            scan.body_calls.push((function.clone(), callee.clone()));
-        }
-        if let Some(construct) = construct {
-            scan.loops.push(LoopCall {
-                line: line_no,
-                callee: callee.clone(),
-                construct,
-                function: function.clone().unwrap_or_else(|| "<module>".to_string()),
-            });
-        }
-    }
-}
-
-fn enclosing(stack: &[Frame]) -> (Option<String>, Option<&'static str>) {
-    let mut function = None;
-    let mut construct = None;
-    for frame in stack.iter().rev() {
-        match frame {
-            Frame::Function { name, .. } => {
-                function = Some(name.clone());
-                break;
-            }
-            Frame::Loop { construct: label, .. } => {
-                if construct.is_none() {
-                    construct = Some(*label);
-                }
-            }
-        }
-    }
-    (function, construct)
 }
