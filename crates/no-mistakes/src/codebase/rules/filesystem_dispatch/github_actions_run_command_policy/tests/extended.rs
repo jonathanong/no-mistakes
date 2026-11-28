@@ -1,7 +1,7 @@
 use super::super::judge::{scan_script, HitKind};
 use super::super::options::{self, Options};
 use super::super::runs::check_shell_source;
-use super::super::{collect_config_errors, diagnostics_with_files_and_sources, RULE_ID};
+use super::super::{diagnostics_with_files_and_sources, RULE_ID};
 use crate::codebase::ts_source::discover_files;
 use crate::config::v2::{load_v2_config, NoMistakesConfig, Unanalyzable};
 use std::path::PathBuf;
@@ -175,21 +175,21 @@ fn validates_shell_files_and_collects_config_errors_early() {
     );
     let root = base.join("fixture/shell-scripts");
     let cfg_path = base.join("configs/invalid-shell-glob.yml");
-    let mut config = load_v2_config(&root, Some(&cfg_path)).unwrap();
-    let mut errors = Vec::new();
-    collect_config_errors(&root, Some(&cfg_path), &config, &mut errors);
-    assert_eq!(errors.len(), 1, "{errors:?}");
-    assert!(errors[0].contains("options.shellFiles"), "{errors:?}");
-
-    config.rules[0].include = vec!["[bad-filter".into()];
-    config.rules[0].options["unanalyzable"] = serde_yaml::Value::String("bogus".into());
-    config.rules[0].options["unknownField"] = serde_yaml::Value::Bool(true);
-    let mut multi_errors = Vec::new();
-    collect_config_errors(&root, Some(&cfg_path), &config, &mut multi_errors);
-    assert!(multi_errors.len() >= 3, "{multi_errors:?}");
+    let err = load_v2_config(&root, Some(&cfg_path)).unwrap_err();
+    assert!(format!("{err:#}").contains("options.shellFiles"), "{err:#}");
 
     let policy_cfg = base.join("configs/policy-shell.yml");
     let mut valid_config = load_v2_config(&root, Some(&policy_cfg)).unwrap();
+    let mut unknown_config = valid_config.clone();
+    unknown_config.rules[0].options["unknownField"] = serde_yaml::Value::Bool(true);
+    let err = crate::codebase::rules::validate_options::validate_rule_options(
+        &root,
+        &policy_cfg,
+        &unknown_config,
+        &|_| None,
+    )
+    .unwrap_err();
+    assert!(format!("{err:#}").contains("unknownField"), "{err:#}");
     let mut files = discover_files(&root, &valid_config.filesystem.skip_directories);
     files.push(root.join("scripts/missing.sh"));
     let sources = crate::codebase::rules::source_store_for_files(&files);
@@ -284,7 +284,11 @@ git push origin HEAD foo baz
 
     let mut cfg = NoMistakesConfig::default();
     cfg.rules.clear();
-    let mut no_errors = Vec::new();
-    collect_config_errors(std::path::Path::new("."), None, &cfg, &mut no_errors);
-    assert!(no_errors.is_empty());
+    crate::codebase::rules::validate_options::validate_rule_options(
+        std::path::Path::new("."),
+        std::path::Path::new(".no-mistakes.yml"),
+        &cfg,
+        &|_| None,
+    )
+    .unwrap();
 }
