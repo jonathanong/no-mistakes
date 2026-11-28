@@ -15,7 +15,10 @@ pub(in crate::statements::keyed_lookups) fn target_identity(expr: &Expr) -> Expr
 }
 
 pub(in crate::statements::keyed_lookups) fn normalize_target(node: &mut impl VisitMut) {
-    struct Identifiers;
+    #[derive(Default)]
+    struct Identifiers {
+        quoted_keyword_function: Option<*const Ident>,
+    }
     impl VisitorMut for Identifiers {
         type Break = ();
 
@@ -37,6 +40,16 @@ pub(in crate::statements::keyed_lookups) fn normalize_target(node: &mut impl Vis
         fn pre_visit_expr(&mut self, expr: &mut Expr) -> ControlFlow<()> {
             if matches!(expr, Expr::Nested(_)) {
                 *expr = unwrap_expr(expr).clone();
+            }
+            if let Expr::Function(function) = expr {
+                if let [name] = function.name.0.as_slice() {
+                    self.quoted_keyword_function = name
+                        .as_ident()
+                        .filter(|name| {
+                            name.quote_style.is_some() && is_conditional_keyword(&name.value)
+                        })
+                        .map(std::ptr::from_ref);
+                }
             }
             if let Expr::Cast {
                 kind, data_type, ..
@@ -86,14 +99,16 @@ pub(in crate::statements::keyed_lookups) fn normalize_target(node: &mut impl Vis
 
         fn pre_visit_ident(&mut self, ident: &mut Ident) -> ControlFlow<()> {
             ident.value = ident_key(ident);
-            if !is_conditional_keyword(&ident.value) {
+            if self.quoted_keyword_function == Some(std::ptr::from_ref(ident)) {
+                self.quoted_keyword_function = None;
+            } else {
                 ident.quote_style = None;
             }
             ControlFlow::Continue(())
         }
     }
 
-    let _ = node.visit(&mut Identifiers);
+    let _ = node.visit(&mut Identifiers::default());
 }
 
 fn normalize_sort_options(order: &mut [OrderByExpr]) {

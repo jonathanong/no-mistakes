@@ -236,3 +236,7 @@ SELECT CASE
     ELSE 0
 END
 FROM orders o;
+
+SELECT (SELECT a.n FROM accounts a WHERE a.id = o.coalesce)
+FROM orders o
+ORDER BY (SELECT a.n FROM accounts a WHERE a.id = o."coalesce");
