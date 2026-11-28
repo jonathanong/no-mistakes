@@ -115,6 +115,29 @@ rules:
       moduleGlobs: ['./queue/**']
 ```
 
+[`queue-rate-limit-error-delay`](../rules/queue-rate-limit-error-delay.md#options-and-defaults)
+requires a positive delay duration when constructing or calling configured
+rate-limit error exports (`options.targets` with `module`, `export`, and either
+`instanceDelayProperty` for no-arg constructors such as `glide-mq`'s
+`Worker.RateLimitError` or optional zero-based `delayArgument` / `delayProperty`
+for argument-bearing constructors such as `GroupRateLimitError`). Invalid or
+empty `targets` fail at configuration load (exit `2`). Spreads, non-closed
+objects, opaque escapes, and unresolved matching callees route through
+`options.unanalyzable` (`report` by default; `advise` emits advisories).
+
+```yaml
+rules:
+  - rule: queue-rate-limit-error-delay
+    scope: repository
+    options:
+      targets:
+        - module: glide-mq
+          export: Worker.RateLimitError
+          instanceDelayProperty: delayMs
+        - module: glide-mq
+          export: GroupRateLimitError
+```
+
 [`forbidden-dependencies`](../rules/forbidden-dependencies.md#glob-semantics)
 accepts file/directory/glob `options.roots` and `options.excludeRoots`, plus
 glob `options.forbiddenFiles`. Its `options.exceptions` entries contain `roots`

@@ -1,0 +1,11 @@
+version: 2
+rules:
+  - rule: queue-rate-limit-error-delay
+    scope: repository
+    options:
+      targets:
+        - module: glide-mq
+          export: Worker.RateLimitError
+          instanceDelayProperty: delayMs
+        - module: glide-mq
+          export: GroupRateLimitError

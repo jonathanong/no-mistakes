@@ -1,5 +1,8 @@
 use super::selection::{closed_property, local_value, Selected};
-use crate::queue::extract_factory::{debounce_object, dedup_id_token};
+use crate::queue::extract_debounce::{
+    check_dedup_value, DebounceTtlVerdict, DEBOUNCE_TTL_KIND, DEBOUNCE_TTL_MESSAGE,
+};
+use crate::queue::extract_factory::dedup_id_token;
 use crate::queue::extract_model::{EnqueuePriority, JobOptionEvidence, LocalCheck};
 use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::Expression;
@@ -45,46 +48,76 @@ pub(super) fn priority<'a>(visitor: &QueueVisitor<'a>, layers: &[Selected<'a>]) 
     priority
 }
 
+pub(super) enum ResolvedProperty<'a> {
+    Missing,
+    Unknown,
+    Value(&'a Expression<'a>),
+}
+
+impl<'a> ResolvedProperty<'a> {
+    pub(super) fn expr(self) -> Option<&'a Expression<'a>> {
+        match self {
+            Self::Value(expr) => Some(expr),
+            Self::Missing | Self::Unknown => None,
+        }
+    }
+}
+
 pub(super) fn effective_property<'a>(
     visitor: &QueueVisitor<'a>,
     layers: &[Selected<'a>],
     key: &str,
-) -> Option<&'a Expression<'a>> {
+) -> ResolvedProperty<'a> {
     for layer in layers.iter().rev() {
         let expr = match layer {
             Selected::Missing => continue,
-            Selected::Unknown => return None,
+            Selected::Unknown => return ResolvedProperty::Unknown,
             Selected::Value(expr) => *expr,
         };
-        let Expression::ObjectExpression(object) = local_value(visitor, expr)? else {
-            return None;
+        let Some(expr) = local_value(visitor, expr) else {
+            return ResolvedProperty::Unknown;
         };
-        if let Some(value) = closed_property(object, key)? {
-            return Some(crate::codebase::ts_source::unwrap_ts_wrappers(value));
+        let Expression::ObjectExpression(object) = expr else {
+            return ResolvedProperty::Unknown;
+        };
+        match closed_property(object, key) {
+            None => return ResolvedProperty::Unknown,
+            Some(Some(value)) => {
+                return ResolvedProperty::Value(crate::codebase::ts_source::unwrap_ts_wrappers(
+                    value,
+                ));
+            }
+            Some(None) => {}
         }
     }
-    None
+    ResolvedProperty::Missing
 }
 
 pub(super) fn dedup<'a>(
     visitor: &QueueVisitor<'a>,
     layers: &[Selected<'a>],
     line: usize,
-) -> (bool, Vec<LocalCheck>) {
-    let Some(value) = effective_property(visitor, layers, "deduplication") else {
-        return (false, Vec::new());
+) -> (bool, Vec<LocalCheck>, bool) {
+    let value = match effective_property(visitor, layers, "deduplication") {
+        ResolvedProperty::Missing => return (false, Vec::new(), false),
+        ResolvedProperty::Unknown => return (false, Vec::new(), true),
+        ResolvedProperty::Value(value) => value,
     };
     let closed = closed_dedup(value);
-    let checks = (closed && debounce_object(value))
-        .then(|| LocalCheck {
-            line,
-            kind: "debounce-ttl".to_string(),
-            job: None,
-            message: "deduplication ttl is ignored when mode is debounce".to_string(),
-        })
-        .into_iter()
-        .collect();
-    (closed && dedup_id_token(visitor, value), checks)
+    let (checks, abstained) = match check_dedup_value(visitor, value) {
+        DebounceTtlVerdict::Clean => (Vec::new(), false),
+        DebounceTtlVerdict::Finding => (
+            vec![LocalCheck {
+                line,
+                kind: DEBOUNCE_TTL_KIND.to_string(),
+                job: None,
+                message: DEBOUNCE_TTL_MESSAGE.to_string(),
+            }],
+            false,
+        ),
+        DebounceTtlVerdict::Abstain => (Vec::new(), true),
+    };
+    (closed && dedup_id_token(visitor, value), checks, abstained)
 }
 
 fn closed_dedup<'a>(value: &'a Expression<'a>) -> bool {

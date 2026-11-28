@@ -59,9 +59,12 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "warnings": [
         "queues-check: enqueue.ts:11 unbounded-job-retention was not judged for call options because a required retention value is not statically known",
+        "queues-check: enqueue.ts:12 debounce-ttl was not judged because deduplication options are not statically known",
         "queues-check: enqueue.ts:12 unbounded-job-retention was not judged for call options because a required retention value is not statically known",
+        "queues-check: enqueue.ts:13 debounce-ttl was not judged because deduplication options are not statically known",
         "queues-check: enqueue.ts:13 unbounded-job-retention was not judged for call options because a required retention value is not statically known",
         "queues-check: enqueue.ts:14 unbounded-job-retention was not judged for call options because a required retention value is not statically known",
+        "queues-check: enqueue.ts:16 debounce-ttl was not judged because deduplication options are not statically known",
         "queues-check: enqueue.ts:23 unbounded-job-retention was not judged for call options because a required retention value is not statically known",
         "queues-check: enqueue.ts:26 unbounded-job-retention was not judged for missing options because defaultJobOptions is not statically known"
       ]

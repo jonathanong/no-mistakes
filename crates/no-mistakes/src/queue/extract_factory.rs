@@ -38,10 +38,10 @@ pub(super) fn note_named_import(
             .insert(local.to_string(), (spec.name, spec.processor));
     }
 }
-pub(super) fn note_queue_binding(
-    visitor: &mut QueueVisitor<'_>,
+pub(super) fn note_queue_binding<'a>(
+    visitor: &mut QueueVisitor<'a>,
     name: &str,
-    call: &CallExpression<'_>,
+    call: &CallExpression<'a>,
     declaration: u32,
 ) -> bool {
     let Expression::Identifier(id) = &call.callee else {
@@ -175,9 +175,7 @@ mod job_scope;
 mod scope;
 
 pub(super) use calls::{note_factory_call, note_wait, scheduler_factories};
-pub(super) use dedup::{
-    debounce_object, dedup_id_token, note_self_dedup, visit_variable_declaration,
-};
+pub(super) use dedup::{dedup_id_token, note_self_dedup, visit_variable_declaration};
 pub(super) use index::queue_index;
 pub(super) use job_scope::{visit_arrow, visit_function, visit_switch};
 pub(super) use scope::{visit_block, visit_body, visit_catch, visit_class};

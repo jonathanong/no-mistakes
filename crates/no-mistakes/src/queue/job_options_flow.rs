@@ -3,10 +3,7 @@ use super::super::extract_visitor::QueueVisitor;
 use super::site::{member_string, push_site};
 use super::walk::{read, read_member};
 use crate::fx::FxHashSet;
-use oxc_ast::ast::{
-    Argument, ArrayExpressionElement, CallExpression, Expression, ObjectExpression,
-    ObjectPropertyKind,
-};
+use oxc_ast::ast::{Argument, CallExpression, Expression, ObjectExpression, ObjectPropertyKind};
 use oxc_span::GetSpan;
 
 #[path = "job_options_flow_members.rs"]
@@ -90,36 +87,26 @@ fn note_flow_node<'a>(
     active: &mut FxHashSet<u32>,
 ) {
     let start = object.span().start;
-    let new_node = active.insert(start);
+    if !active.insert(start) {
+        return;
+    }
     let members = members::read(object, &visitor.object_bindings);
     let queue_name = members.queue_name();
-    let evidence = new_node
-        .then(|| flow_opts(object, &visitor.object_bindings))
-        .flatten();
-    let known_spreads = evidence.as_ref().is_some_and(|evidence| {
-        evidence.spreads.iter().all(|spread| {
-            visitor
-                .object_bindings
-                .lookup(&spread.name, spread.at)
-                .is_some_and(|binding| binding.value().is_some())
-        })
-    });
+    let evidence = flow_opts(object, &visitor.object_bindings);
+    let job = members.job();
+    crate::queue::extract_debounce::check_flow_node(visitor, object, job.clone());
     push_site(
         visitor,
         start,
         None,
         queue_name.clone(),
-        members.job(),
+        job,
         evidence.unwrap_or_else(JobOptionEvidence::open),
     );
-    if known_spreads {
-        if let Some(children) = members.children() {
-            note_children(visitor, children, queue_name, active);
-        }
+    if let Some(children) = members.children() {
+        note_children(visitor, children, queue_name, active);
     }
-    if new_node {
-        active.remove(&start);
-    }
+    active.remove(&start);
 }
 
 fn flow_opts(
@@ -180,18 +167,31 @@ fn note_children<'a>(
         return;
     };
     for element in &array.elements {
-        match element {
-            ArrayExpressionElement::ObjectExpression(object) => {
-                note_flow_node(visitor, object, active)
-            }
-            _ => push_site(
+        if let Some(Expression::ObjectExpression(object)) = element
+            .as_expression()
+            .map(Expression::get_inner_expression)
+        {
+            note_flow_node(visitor, object, active);
+        } else if let Some(object) = element.as_expression().and_then(|expr| {
+            let Expression::Identifier(id) = expr.get_inner_expression() else {
+                return None;
+            };
+            let value = visitor
+                .object_bindings
+                .lookup(id.name.as_str(), id.span.start)?
+                .value()?;
+            members::bound_object(value, &visitor.object_bindings, 0)
+        }) {
+            note_flow_node(visitor, object, active);
+        } else {
+            push_site(
                 visitor,
                 element.span().start,
                 None,
                 queue_name.clone(),
                 None,
                 JobOptionEvidence::open(),
-            ),
+            );
         }
     }
 }

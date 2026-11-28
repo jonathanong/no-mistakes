@@ -1,0 +1,132 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "debounce-ttl": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [
+        {
+          "file": "producers.ts",
+          "job": "as-const",
+          "kind": "debounce-ttl",
+          "line": 15,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "await eventsQueue.add(\"as-const\", {}, { deduplication: { id: \"b\", mode: \"debounce\" as const, ttl: 1000 } });"
+        },
+        {
+          "file": "producers.ts",
+          "job": "bulk-bad",
+          "kind": "debounce-ttl",
+          "line": 23,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "{ name: \"bulk-bad\", data: {}, opts: { deduplication: { id: \"f\", mode: \"debounce\", ttl: 2000 } } },"
+        },
+        {
+          "file": "producers.ts",
+          "job": "const-dedup",
+          "kind": "debounce-ttl",
+          "line": 18,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "await eventsQueue.add(\"const-dedup\", {}, { deduplication: DEBOUNCE_DEDUP });"
+        },
+        {
+          "file": "producers.ts",
+          "job": "const-mode",
+          "kind": "debounce-ttl",
+          "line": 17,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "await eventsQueue.add(\"const-mode\", {}, { deduplication: { id: \"d\", mode: DEBOUNCE_MODE, ttl: 1000 } });"
+        },
+        {
+          "file": "producers.ts",
+          "job": "const-opts",
+          "kind": "debounce-ttl",
+          "line": 19,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "await eventsQueue.add(\"const-opts\", {}, DEBOUNCE_OPTS);"
+        },
+        {
+          "file": "producers.ts",
+          "job": "direct",
+          "kind": "debounce-ttl",
+          "line": 14,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "await eventsQueue.add(\"direct\", {}, { deduplication: { id: \"a\", mode: \"debounce\", ttl: 1000 } });"
+        },
+        {
+          "file": "producers.ts",
+          "job": "flow-child",
+          "kind": "debounce-ttl",
+          "line": 34,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "{"
+        },
+        {
+          "file": "producers.ts",
+          "job": "flow-root",
+          "kind": "debounce-ttl",
+          "line": 28,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "await flow.add({"
+        },
+        {
+          "file": "producers.ts",
+          "job": "spread-const",
+          "kind": "debounce-ttl",
+          "line": 20,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "await eventsQueue.add(\"spread-const\", {}, { deduplication: { id: \"e\", ...BASE_DEBOUNCE, ttl: 1000 } });"
+        },
+        {
+          "file": "producers.ts",
+          "job": "template",
+          "kind": "debounce-ttl",
+          "line": 16,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "await eventsQueue.add(\"template\", {}, { deduplication: { id: \"c\", mode: `debounce`, ttl: 1000 } });"
+        },
+        {
+          "file": "queues.ts",
+          "job": null,
+          "kind": "debounce-ttl",
+          "line": 3,
+          "message": "deduplication ttl is ignored when mode is debounce",
+          "queueFile": null,
+          "queueName": null,
+          "sourceLine": "export const alertsQueue = new Queue(\"alerts\", {"
+        }
+      ],
+      "react": [],
+      "rules": [],
+      "warnings": [
+        "queues-check: producers.ts:52 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: producers.ts:53 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: producers.ts:54 debounce-ttl was not judged because deduplication options are not statically known"
+      ]
+    }
+  }
+}

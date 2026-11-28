@@ -74,7 +74,9 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [],
-      "warnings": []
+      "warnings": [
+        "queues-check: tests/queues.test.ts:12 debounce-ttl was not judged because deduplication options are not statically known"
+      ]
     }
   }
 }

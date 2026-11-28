@@ -2,6 +2,7 @@ pub(crate) mod analysis_hooks;
 mod cycles;
 mod enqueue_wrapper;
 pub(crate) mod extract;
+mod extract_debounce;
 mod extract_factory;
 mod extract_helpers;
 mod extract_job_id;

@@ -9,6 +9,29 @@ struct Read {
     facts: TypeScriptModuleFacts,
 }
 
+fn imported_call_under_dynamic_scope(name: &str, needle: &str) -> (bool, Option<PathOrigin>) {
+    let path =
+        crate::test_support::rule_fixture_root("test-no-live-repository-scan/facts").join(name);
+    let source = std::fs::read_to_string(&path).unwrap();
+    let allocator = Allocator::default();
+    let source_type = SourceType::from_path(&path).unwrap();
+    let parsed = Parser::new(&allocator, &source, source_type).parse();
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let built = oxc_semantic::SemanticBuilder::new()
+        .with_build_nodes(true)
+        .with_check_syntax_error(true)
+        .build(&parsed.program);
+    let facts = super::extract_from_semantic(&built.semantic, &built.diagnostics, true);
+    let (calls, provenance) = super::arguments::collect(&built.semantic, &facts);
+    let offset = source
+        .find(needle)
+        .unwrap_or_else(|| panic!("missing {needle}")) as u32;
+    (
+        provenance.dynamic_scope,
+        calls.get(&offset).and_then(|call| call.path.clone()),
+    )
+}
+
 fn read(name: &str) -> Read {
     let path =
         crate::test_support::rule_fixture_root("test-no-live-repository-scan/facts").join(name);
@@ -182,6 +205,7 @@ mod getter_import_kinds;
 mod callback_roots;
 mod env_diagnostic;
 
+mod dynamic_scope_paths;
 mod rest_and_guards;
 
 mod local_env_boundaries;

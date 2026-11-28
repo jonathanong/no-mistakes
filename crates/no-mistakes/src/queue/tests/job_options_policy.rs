@@ -1,7 +1,8 @@
 use super::{analyze_project, fixture};
 use crate::config::v2::NoMistakesConfig;
 use crate::queue::extract_model::{
-    FileFacts, JobOptionEvidence, JobOptionSite, RequiredJobOptions,
+    FileFacts, JobOptionEvidence, JobOptionSite, LocalQueue, QueueDefaultOptions,
+    RequiredJobOptions,
 };
 use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
@@ -105,6 +106,49 @@ fn unresolved_queue_uses_the_global_list_when_no_queue_overrides_exist() {
         .unwrap()
         .job_option_findings
         .is_empty());
+}
+
+#[test]
+fn declaration_miss_and_imported_queue_default_still_report_the_global_key() {
+    let path = PathBuf::from("/tmp/queues.ts");
+    let file = FileFacts {
+        required_job_options: Some(RequiredJobOptions {
+            global: vec!["attempts".to_string()],
+            by_queue: BTreeMap::new(),
+        }),
+        queue_declarations: HashMap::from([(2, LocalQueue::ImportedName("q".to_string()))]),
+        queue_defaults: vec![QueueDefaultOptions {
+            declaration: 2,
+            line: 1,
+            queue_name: None,
+            evidence: JobOptionEvidence::default(),
+        }],
+        job_option_sites: vec![JobOptionSite {
+            line: 9,
+            binding: None,
+            queue_name: None,
+            queue_file: Some(path.clone()),
+            declaration: Some(99),
+            ambiguous_defaults: false,
+            job: Some("paint".to_string()),
+            evidence: JobOptionEvidence::default(),
+        }],
+        ..FileFacts::default()
+    };
+    let mut facts = HashMap::new();
+    facts.insert(path.clone(), file);
+    crate::queue::job_options::judge_into_facts(
+        Path::new("/tmp"),
+        &mut facts,
+        &crate::queue::test_scope::ConfiguredTestScope::empty(),
+    );
+    let judged = facts.get(&path).unwrap();
+    assert!(judged.diagnostics.is_empty(), "{:?}", judged.diagnostics);
+    assert_eq!(judged.job_option_findings.len(), 1);
+    assert_eq!(
+        judged.job_option_findings[0].message,
+        "job options missing attempts"
+    );
 }
 
 #[test]

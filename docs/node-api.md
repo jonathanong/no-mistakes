@@ -112,6 +112,13 @@ and pattern selection. The exported `NoSingleEnqueueInLoopOptions` and
 the runtime entrypoints and report fields are unchanged. See the
 [target selection contract](rules/no-single-enqueue-in-loop.md#options-and-defaults).
 
+`queue-rate-limit-error-delay` runs through async `check({ root, config })` and
+`analyzeProject()` check reports with the same findings, advisories,
+`unanalyzable` routing, and suppression behavior as CLI `check`. Exported
+`QueueRateLimitErrorDelayOptions` and `QueueRateLimitErrorDelayTarget` describe
+its YAML rule options; the runtime entrypoints and report fields are unchanged.
+See the [rule contract](rules/queue-rate-limit-error-delay.md#options-and-defaults).
+
 `query-reached-per-item` accepts `exemptCappedCursorPageReads` in the rule's
 YAML `options`, selected by `check({ root, config })` or an `analyzeProject()`
 check report. It defaults to `false` and shares CLI behavior. The exported

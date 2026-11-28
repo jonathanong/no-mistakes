@@ -1,4 +1,3 @@
-use crate::queue::extract_model::LocalCheck;
 use crate::queue::extract_visitor::QueueVisitor;
 use crate::queue::source::line_number;
 use oxc_ast::ast::{
@@ -10,9 +9,9 @@ use oxc_ast::ast::{
 mod ids;
 use oxc_ast_visit::Visit;
 
-pub(crate) fn note_self_dedup(
-    visitor: &mut QueueVisitor<'_>,
-    call: &CallExpression<'_>,
+pub(crate) fn note_self_dedup<'a>(
+    visitor: &mut QueueVisitor<'a>,
+    call: &CallExpression<'a>,
     recorded: usize,
 ) {
     let job = call
@@ -25,21 +24,19 @@ pub(crate) fn note_self_dedup(
     note_dedup_argument(visitor, call, expr, job, recorded);
 }
 
-pub(super) fn note_dedup_argument(
-    visitor: &mut QueueVisitor<'_>,
-    call: &CallExpression<'_>,
-    expr: &Expression<'_>,
+pub(super) fn note_dedup_argument<'a>(
+    visitor: &mut QueueVisitor<'a>,
+    call: &CallExpression<'a>,
+    expr: &Expression<'a>,
     job: Option<String>,
     recorded: usize,
 ) {
-    if debounce_with_ttl(expr) {
-        visitor.facts.checks.push(LocalCheck {
-            line: line_number(visitor.source, call.span.start),
-            kind: "debounce-ttl".to_string(),
-            job: job.clone(),
-            message: "deduplication ttl is ignored when mode is debounce".to_string(),
-        });
-    }
+    crate::queue::extract_debounce::check_options_expr(
+        visitor,
+        expr,
+        line_number(visitor.source, call.span.start),
+        job.clone(),
+    );
     if visitor.job_frames.is_empty() {
         return;
     }
@@ -59,43 +56,6 @@ pub(super) fn note_dedup_argument(
     for producer in &mut visitor.facts.producers[recorded..] {
         producer.self_dedup = true;
     }
-}
-
-fn debounce_with_ttl(expr: &Expression<'_>) -> bool {
-    let Expression::ObjectExpression(object) = expr else {
-        return false;
-    };
-    object.properties.iter().any(|property| {
-        let ObjectPropertyKind::ObjectProperty(property) = property else {
-            return false;
-        };
-        crate::ast::property_key_name(&property.key).as_deref() == Some("deduplication")
-            && debounce_object(&property.value)
-    })
-}
-
-pub(in crate::queue) fn debounce_object(expr: &Expression<'_>) -> bool {
-    let Expression::ObjectExpression(object) = expr else {
-        return false;
-    };
-    let mut debounce = false;
-    let mut ttl = false;
-    for property in &object.properties {
-        let ObjectPropertyKind::ObjectProperty(property) = property else {
-            continue;
-        };
-        match crate::ast::property_key_name(&property.key).as_deref() {
-            Some("mode") => {
-                debounce = matches!(
-                    &property.value,
-                    Expression::StringLiteral(value) if value.value == "debounce"
-                );
-            }
-            Some("ttl") => ttl = true,
-            _ => {}
-        }
-    }
-    debounce && ttl
 }
 
 fn dedup_uses_active_job(visitor: &QueueVisitor<'_>, expr: &Expression<'_>) -> bool {

@@ -195,7 +195,9 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "react": [],
       "rules": [],
-      "warnings": []
+      "warnings": [
+        "queues-check: enqueues/deep-write.ts:71 debounce-ttl was not judged because deduplication options are not statically known"
+      ]
     }
   },
   "controls": {
@@ -398,7 +400,19 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "react": [],
       "rules": [],
-      "warnings": []
+      "warnings": [
+        "queues-check: controls.ts:11 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: controls.ts:12 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: controls.ts:13 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: controls.ts:14 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: controls.ts:16 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: controls.ts:66 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: controls.ts:75 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: enqueues.ts:24 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: mutations.ts:29 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: mutations.ts:35 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: mutations.ts:40 debounce-ttl was not judged because deduplication options are not statically known"
+      ]
     }
   }
 }

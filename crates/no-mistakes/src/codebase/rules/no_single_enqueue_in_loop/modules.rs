@@ -27,8 +27,8 @@ pub(crate) fn module_catalog<'a>(
     })
 }
 
-pub(super) struct ResolvedModules {
-    files: BTreeMap<String, BTreeSet<PathBuf>>,
+pub(in crate::codebase::rules) struct ResolvedModules {
+    pub(in crate::codebase::rules) files: BTreeMap<String, BTreeSet<PathBuf>>,
 }
 
 impl ResolvedModules {
@@ -38,12 +38,12 @@ impl ResolvedModules {
         }
     }
 
-    pub(super) fn files(&self, module: &str) -> Option<&BTreeSet<PathBuf>> {
+    pub(in crate::codebase::rules) fn files(&self, module: &str) -> Option<&BTreeSet<PathBuf>> {
         self.files.get(module)
     }
 }
 
-pub(super) fn resolve_modules(
+pub(in crate::codebase::rules) fn resolve_modules(
     root: &Path,
     modules: impl IntoIterator<Item = String>,
     facts: &CheckFactMap,
@@ -111,7 +111,7 @@ fn resolved_files(
     files
 }
 
-pub(super) fn matches_resolved(
+pub(in crate::codebase::rules) fn matches_resolved(
     files: &BTreeSet<PathBuf>,
     export: &str,
     site: &ResolvedCallSite,
@@ -123,7 +123,7 @@ pub(super) fn matches_resolved(
         .all(|candidate| matches_resolved_candidate(files, export, candidate.target))
 }
 
-pub(super) fn matches_resolved_candidate(
+pub(in crate::codebase::rules) fn matches_resolved_candidate(
     files: &BTreeSet<PathBuf>,
     export: &str,
     target: KnownCallTargetRef<'_>,

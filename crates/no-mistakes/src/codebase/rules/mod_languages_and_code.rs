@@ -17,6 +17,7 @@ pub mod no_single_enqueue_in_loop;
 pub mod no_sparse_checkout;
 pub mod production_exports_test_only;
 pub mod query_reached_per_item;
+pub mod queue_rate_limit_error_delay;
 pub mod require_files_in_subdirs;
 pub mod require_storybook_stories;
 pub mod require_test_per_subdir;

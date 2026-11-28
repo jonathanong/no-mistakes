@@ -131,3 +131,21 @@ impl<'ast> Reader<'_, 'ast> {
         members
     }
 }
+
+pub(super) fn bound_object<'a>(
+    expr: &'a Expression<'a>,
+    bindings: &ObjectBindings<'a>,
+    depth: u8,
+) -> Option<&'a ObjectExpression<'a>> {
+    if depth > 8 {
+        return None;
+    }
+    match expr.get_inner_expression() {
+        Expression::ObjectExpression(object) => Some(object),
+        Expression::Identifier(id) => {
+            let value = bindings.lookup(id.name.as_str(), id.span.start)?.value()?;
+            bound_object(value, bindings, depth + 1)
+        }
+        _ => None,
+    }
+}

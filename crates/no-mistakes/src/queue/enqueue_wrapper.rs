@@ -59,9 +59,15 @@ pub(in crate::queue) fn note_call<'a>(
     let line = line_number(visitor.source, call.span.start);
     let options = options::evidence(visitor, &layers);
     let priority = options::priority(visitor, &layers);
-    let (dedup, checks) = options::dedup(visitor, &layers, line);
+    let (dedup, checks, dedup_abstained) = options::dedup(visitor, &layers, line);
+    if dedup_abstained {
+        visitor
+            .facts
+            .check_abstentions
+            .push((line, super::extract_debounce::DEBOUNCE_TTL_ABSTENTION));
+    }
     let wrapper = visitor.facts.enqueue_wrappers.len();
-    let job_id = options::effective_property(visitor, &layers, "jobId");
+    let job_id = options::effective_property(visitor, &layers, "jobId").expr();
     visitor.facts.enqueue_wrappers.push(WrapperSite {
         target,
         options: JobOptionSite {

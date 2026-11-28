@@ -1,5 +1,5 @@
 //! Direct single-enqueue calls inside open per-item loops and array callbacks.
-mod modules;
+pub(in crate::codebase::rules) mod modules;
 pub(in crate::codebase::rules) mod options;
 mod scan;
 mod targets;
