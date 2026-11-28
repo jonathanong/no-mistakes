@@ -254,3 +254,63 @@ export namespace LocalProps {
     return props.child ?? "";
   }
 }
+
+export function classShadow() {
+  class Slot {}
+  const read = (value: Slot) => value ?? null;
+  return read;
+}
+
+export function enumShadow() {
+  enum Slot {
+    One = 1,
+  }
+  const read = (value: Slot) => value ?? null;
+  return read;
+}
+
+export function caseAlias(flag: boolean, value: Props) {
+  switch (flag) {
+    case true:
+      type Props = { child: string };
+      return (item: Props) => item.child ?? "";
+  }
+  return value.child ?? null;
+}
+
+export function caseDiscriminant(flag: boolean) {
+  switch ((null as Props).child ?? null) {
+    case true:
+      type Props = { child: string };
+      return flag;
+  }
+  return flag;
+}
+
+export function forwardAnnotated() {
+  const read = () => child ?? null;
+  const { child }: { child: ReactNode } = { child: null };
+  return read();
+}
+
+export function forwardAnnotatedWrite() {
+  const read = () => child ?? null;
+  let { child }: { child: ReactNode } = { child: null };
+  child = "text";
+  return read();
+}
+
+export function suppliedArgument() {
+  type Box<T extends { child: ReactNode }> = T;
+  return (item: Box<{ child: string }>) => item.child ?? "";
+}
+
+export function suppliedNode() {
+  type Box<T extends { child: string }> = T;
+  return (item: Box<{ child: ReactNode }>) => item.child ?? "";
+}
+
+export function missingArgument() {
+  type Box<T extends { child: ReactNode }> = T;
+  return (item: Box) => item.child ?? "";
+}

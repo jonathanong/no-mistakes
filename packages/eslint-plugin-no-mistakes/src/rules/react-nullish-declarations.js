@@ -5,17 +5,25 @@ function containsNode(root, node) {
   return false;
 }
 
-function bodyStatements(node) {
+function bodyStatements(node, type) {
   if (Array.isArray(node?.body)) return node.body;
   if (Array.isArray(node?.body?.body)) return node.body.body;
-  return null;
+  if (node?.type !== "SwitchStatement" || containsNode(node.discriminant, type)) return null;
+  const cases = node.cases ?? [];
+  const inside = cases.some((item) =>
+    item.consequent?.some((statement) => containsNode(statement, type)),
+  );
+  if (!inside) return null;
+  const statements = [];
+  for (const item of cases) statements.push(...(item.consequent ?? []));
+  return statements;
 }
 
 function nearestDeclarations(type, name) {
   let current = type?.parent;
   while (current && current.type !== "Program") {
     const found = [];
-    for (const statement of bodyStatements(current) ?? []) {
+    for (const statement of bodyStatements(current, type) ?? []) {
       const declaration = statement.declaration ?? statement;
       const typed =
         declaration.type === "TSTypeAliasDeclaration" ||

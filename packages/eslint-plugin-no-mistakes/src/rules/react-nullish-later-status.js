@@ -36,10 +36,10 @@ function initObjectType(init, context) {
   return def ? annotatedType(def.name) || annotatedType(def.node) : null;
 }
 
-function forwardPatternStatus(pattern, name, init, context, facts) {
+function forwardPatternStatus(pattern, name, init, context, facts, annotation) {
   const key = patternPropertyKey(pattern, name, context);
   if (key === null) return "no";
-  const type = initObjectType(init, context);
+  const type = annotation || initObjectType(init, context);
   const classified = type ? classifiedProps(type, facts) : null;
   if (key === undefined) {
     if (!classified) return "unresolved";
@@ -60,7 +60,24 @@ function laterBindingStatus(identifier, context, reactTypeStatus, expressionStat
     let annotated = false;
     let unresolved = false;
     for (const def of defs) {
-      if (def.type !== "Variable" || def.node?.id?.type !== "Identifier") continue;
+      if (def.type !== "Variable") continue;
+      if (def.node?.id?.type === "ObjectPattern") {
+        const patternType = typeAnnotation(def.node.id);
+        if (!patternType) continue;
+        annotated = true;
+        const status = forwardPatternStatus(
+          def.node.id,
+          identifier.name,
+          null,
+          context,
+          facts,
+          patternType,
+        );
+        if (status === "yes") return "yes";
+        if (status === "unresolved") unresolved = true;
+        continue;
+      }
+      if (def.node?.id?.type !== "Identifier") continue;
       const type = typeAnnotation(def.node.id);
       if (!type) continue;
       annotated = true;

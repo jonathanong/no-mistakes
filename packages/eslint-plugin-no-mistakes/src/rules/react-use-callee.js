@@ -191,6 +191,8 @@ function forwardedArgument(node, context) {
       ? selectorName(forwarded.property, forwarded.computed, context)
       : null;
   if (name !== "call" && name !== "apply") return node.arguments[0];
+  if (node.arguments.some((argument, index) => index < 1 && argument.type === "SpreadElement"))
+    return undefined;
   if (name !== "apply") return node.arguments[1];
   const list = unwrapSequence(node.arguments[1]);
   return list?.type === "ArrayExpression" ? list.elements?.[0] : undefined;

@@ -31,6 +31,16 @@ function localTypeStatus(node, name, facts, seen, reactTypeStatus) {
         : null;
     for (const statement of statements ?? []) {
       const declaration = statement.declaration ?? statement;
+      const scope =
+        declaration.parent?.type === "ExportNamedDeclaration"
+          ? declaration.parent.parent
+          : declaration.parent;
+      if (
+        (declaration.type === "ClassDeclaration" || declaration.type === "TSEnumDeclaration") &&
+        declaration.id?.name === name &&
+        containsNode(scope, node)
+      )
+        return "no";
       const typed =
         declaration.type === "TSTypeAliasDeclaration" ||
         declaration.type === "TSInterfaceDeclaration";
@@ -44,10 +54,6 @@ function localTypeStatus(node, name, facts, seen, reactTypeStatus) {
           declaration.type !== "TSInterfaceDeclaration")
       )
         continue;
-      const scope =
-        declaration.parent?.type === "ExportNamedDeclaration"
-          ? declaration.parent.parent
-          : declaration.parent;
       if (!containsNode(scope, node)) continue;
       if (declaration.type === "TSInterfaceDeclaration") return "no";
       if (seen.has(declaration)) return "unresolved";

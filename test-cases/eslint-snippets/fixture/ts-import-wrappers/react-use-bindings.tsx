@@ -196,3 +196,12 @@ export function applyDynamic(xs: [Promise<number>]) {
   const { use } = require("react");
   return use.apply(null, xs);
 }
+export function spreadBeforeCall(head: [null]) {
+  const { use } = require("react");
+  return use.call(...head, Promise.resolve(1));
+}
+export function spreadBeforeApply(head: [null]) {
+  const { use } = require("react");
+  const P = Promise;
+  return use.apply(...head, [P.resolve(1)]);
+}

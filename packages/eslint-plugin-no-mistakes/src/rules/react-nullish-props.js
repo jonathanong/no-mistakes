@@ -25,6 +25,23 @@ function enclosingTypeParameter(type, name, local) {
   return null;
 }
 
+const UNSUBSTITUTED = {};
+
+function typeArgumentsOf(type) {
+  return type?.typeArguments?.params || type?.typeParameters?.params || [];
+}
+
+function withAliasSubstitutions(alias, type, outer) {
+  const params = alias.typeParameters?.params ?? [];
+  if (!params.length) return outer;
+  const args = typeArgumentsOf(type);
+  const next = new Map(outer || []);
+  const matched = args.length === params.length;
+  for (let index = 0; index < params.length; index += 1)
+    next.set(params[index], matched ? args[index] : UNSUBSTITUTED);
+  return next;
+}
+
 function noteStatus(status, key, incoming) {
   const previous = status.get(key);
   status.set(key, previous && previous !== incoming ? "unresolved" : incoming);
@@ -88,7 +105,7 @@ function inheritedFacts(heritage, facts, seen) {
   return { props: null, unresolved: null };
 }
 
-function classifiedProps(type, facts, seen = new Set()) {
+function classifiedProps(type, facts, seen = new Set(), substitutions = null) {
   if (type && type.type === "TSTypeLiteral") {
     const props = new Set();
     const unresolved = new Set();
@@ -109,11 +126,20 @@ function classifiedProps(type, facts, seen = new Set()) {
   const parameter = name && !name.includes(".") ? enclosingTypeParameter(type, name, local) : null;
   if (local?.some((item) => seen.has(item)) && !parameter) return { props: null, unresolved: null };
   if (parameter) {
-    if (seen.has(parameter)) return { props: null, unresolved: null };
+    const supplied = substitutions?.get(parameter);
+    if (supplied === UNSUBSTITUTED || seen.has(parameter)) return { props: null, unresolved: null };
+    if (supplied) {
+      seen.add(parameter);
+      try {
+        return classifiedProps(supplied, facts, seen, substitutions);
+      } finally {
+        seen.delete(parameter);
+      }
+    }
     seen.add(parameter);
     try {
       return parameter.constraint
-        ? classifiedProps(parameter.constraint, facts, seen)
+        ? classifiedProps(parameter.constraint, facts, seen, substitutions)
         : { props: null, unresolved: null };
     } finally {
       seen.delete(parameter);
@@ -122,7 +148,12 @@ function classifiedProps(type, facts, seen = new Set()) {
   if (local?.length === 1 && local[0].type === "TSTypeAliasDeclaration") {
     seen.add(local[0]);
     try {
-      return classifiedProps(local[0].typeAnnotation, facts, seen);
+      return classifiedProps(
+        local[0].typeAnnotation,
+        facts,
+        seen,
+        withAliasSubstitutions(local[0], type, substitutions),
+      );
     } finally {
       seen.delete(local[0]);
     }

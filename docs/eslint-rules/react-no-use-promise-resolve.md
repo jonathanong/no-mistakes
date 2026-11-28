@@ -66,7 +66,8 @@ the same file. A static readonly global property read does not block analysis.
 This path handles an ordinary `React.use(P.resolve(value))` call and the same
 alias passed through `use.call` or a one-element `use.apply`. Optional calls,
 spreads, extra arguments, and a non-literal `.apply` list do not gain new
-findings. `require("react").Children.use` is not `use`. The original
+findings. A spread before the forwarded argument of `call` or `apply` does not
+select a later argument. `require("react").Children.use` is not `use`. The original
 direct-`Promise` syntax remains on its released path.
 
 `use` brought in through another file is not visible here.
