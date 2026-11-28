@@ -297,45 +297,51 @@ fn shared_expand_roots_supports_exclude_roots_and_rejects_invalid_roots() {
     let files = vec![root.join("src/entry.mts")];
     let exclude_all = crate::config::v2::schema::StringOrList::One("src/entry.mts".to_string());
     let valid_roots: serde_yaml::Value = serde_yaml::from_str("[{ file: src/entry.mts }]").unwrap();
-    let excluded_err = super::shared::expand_roots(super::shared::SharedRoots {
-        rule: RULE_ID,
-        root: &root,
-        roots: Some(&valid_roots),
-        exclude_roots: Some(&exclude_all),
-        graph: &graph,
-        vitest: None,
-        graph_files: &files,
-        target_roots: &[],
-    })
+    let excluded_err = crate::codebase::rules::call_policy::expand_roots(
+        crate::codebase::rules::call_policy::SharedRoots {
+            rule: RULE_ID,
+            root: &root,
+            roots: Some(&valid_roots),
+            exclude_roots: Some(&exclude_all),
+            graph: &graph,
+            vitest: None,
+            graph_files: &files,
+            target_roots: &[],
+        },
+    )
     .unwrap_err();
     assert!(format!("{excluded_err:#}").contains("excludeRoots excluded all configured roots"));
 
     let exclude_other = crate::config::v2::schema::StringOrList::One("src/other.mts".to_string());
-    let (nodes, selected) = super::shared::expand_roots(super::shared::SharedRoots {
-        rule: RULE_ID,
-        root: &root,
-        roots: Some(&valid_roots),
-        exclude_roots: Some(&exclude_other),
-        graph: &graph,
-        vitest: None,
-        graph_files: &files,
-        target_roots: &[],
-    })
+    let (nodes, selected) = crate::codebase::rules::call_policy::expand_roots(
+        crate::codebase::rules::call_policy::SharedRoots {
+            rule: RULE_ID,
+            root: &root,
+            roots: Some(&valid_roots),
+            exclude_roots: Some(&exclude_other),
+            graph: &graph,
+            vitest: None,
+            graph_files: &files,
+            target_roots: &[],
+        },
+    )
     .unwrap();
     assert!(!nodes.is_empty());
     assert!(!selected.is_empty());
 
     let bad_roots: serde_yaml::Value = serde_yaml::from_str("42").unwrap();
-    let err = super::shared::expand_roots(super::shared::SharedRoots {
-        rule: RULE_ID,
-        root: &root,
-        roots: Some(&bad_roots),
-        exclude_roots: None,
-        graph: &graph,
-        vitest: None,
-        graph_files: &files,
-        target_roots: &[],
-    })
+    let err = crate::codebase::rules::call_policy::expand_roots(
+        crate::codebase::rules::call_policy::SharedRoots {
+            rule: RULE_ID,
+            root: &root,
+            roots: Some(&bad_roots),
+            exclude_roots: None,
+            graph: &graph,
+            vitest: None,
+            graph_files: &files,
+            target_roots: &[],
+        },
+    )
     .unwrap_err();
     assert!(format!("{err:#}").contains("invalid roots"));
 }

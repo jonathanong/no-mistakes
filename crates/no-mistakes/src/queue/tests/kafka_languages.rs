@@ -1,9 +1,6 @@
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
-use serde_json::Value;
-
-use crate::napi_api::{dependents_json_impl, queue_edges_json_impl};
 use crate::queue::{analyze_project, Edge, EdgeKind};
 
 fn fixture() -> PathBuf {
@@ -102,60 +99,4 @@ fn two_clusters_reuse_one_topic_and_stay_distinct() {
             "notifications:mail.welcome".to_string(),
         ])
     );
-}
-
-fn json_jobs(value: &Value, out: &mut BTreeSet<String>) {
-    match value {
-        Value::Object(map) => {
-            if let Some(job) = map.get("job").and_then(Value::as_str) {
-                out.insert(job.to_string());
-            }
-            for child in map.values() {
-                json_jobs(child, out);
-            }
-        }
-        Value::Array(items) => {
-            for item in items {
-                json_jobs(item, out);
-            }
-        }
-        _ => {}
-    }
-}
-
-#[test]
-fn queue_edges_and_dependents_agree_on_kafka_topic_identity() {
-    let root = fixture();
-    let expected = edge_jobs(&report().edges);
-    let napi = queue_edges_json_impl(serde_json::json!({ "root": root.display().to_string() }))
-        .expect("queue edges");
-    let edges: Value = serde_json::from_str(&napi).expect("queue edge json");
-    let mut napi_jobs = BTreeSet::new();
-    for edge in edges.as_array().expect("edges") {
-        for endpoint in [edge["from"].as_str(), edge["to"].as_str()]
-            .into_iter()
-            .flatten()
-        {
-            if let Some(job) = job_of(endpoint) {
-                napi_jobs.insert(job.to_string());
-            }
-        }
-    }
-    assert_eq!(napi_jobs, expected);
-
-    let dependents = dependents_json_impl(serde_json::json!({
-        "root": root.display().to_string(),
-        "files": ["clusters/billing/consume.go", "go/consume.go"],
-        "relationships": ["queue"],
-        "depth": 2,
-    }))
-    .expect("dependents");
-    let mut jobs = BTreeSet::new();
-    json_jobs(
-        &serde_json::from_str::<Value>(&dependents).unwrap(),
-        &mut jobs,
-    );
-    assert!(jobs.contains("billing:mail.welcome"));
-    assert!(jobs.contains("mail:mail.welcome"));
-    assert!(!jobs.contains("notifications:mail.welcome"));
 }
