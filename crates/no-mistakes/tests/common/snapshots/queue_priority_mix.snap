@@ -202,7 +202,13 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       ],
       "react": [],
       "rules": [],
-      "warnings": []
+      "warnings": [
+        "queues-check: abstain.ts:36 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: bundles-far.ts:4 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: loops.ts:64 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: mixed.ts:12 debounce-ttl was not judged because deduplication options are not statically known",
+        "queues-check: opaque.ts:4 debounce-ttl was not judged because deduplication options are not statically known"
+      ]
     }
   }
 }

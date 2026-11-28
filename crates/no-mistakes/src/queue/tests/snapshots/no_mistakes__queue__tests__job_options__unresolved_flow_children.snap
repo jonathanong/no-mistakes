@@ -5,6 +5,13 @@ expression: "serde_json::to_string_pretty(&rows).unwrap()"
 [
   {
     "file": "flow.ts",
+    "line": 11,
+    "job": "opaque-child",
+    "message": "job options missing priority",
+    "sourceLine": "children: [{ queueName: \"items\", name: \"opaque-child\", opts: {} }],"
+  },
+  {
+    "file": "flow.ts",
     "line": 18,
     "job": "known-child",
     "message": "job options missing priority",

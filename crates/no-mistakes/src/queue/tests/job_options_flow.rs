@@ -17,12 +17,9 @@ fn hoisted_flow_cycle_stops_at_the_repeated_child() {
         })
         .map(|diagnostic| (diagnostic.line, diagnostic.message.as_str()))
         .collect::<Vec<_>>();
-    assert_eq!(
-        diagnostics,
-        [(
-            11,
-            "job options were not judged because the options object is not statically known"
-        )]
+    assert!(
+        diagnostics.is_empty(),
+        "explicit opts after a cyclic spread are judged: {diagnostics:?}"
     );
 }
 

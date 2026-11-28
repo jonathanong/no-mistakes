@@ -25,7 +25,23 @@ fn queue_priority_mix_check_json_snapshot() {
         1
     );
     assert_eq!(findings.len(), 19, "{findings:?}");
-    assert!(report["warnings"].as_array().unwrap().is_empty());
+    let warnings = report["warnings"].as_array().unwrap();
+    assert_eq!(warnings.len(), 5, "{warnings:?}");
+    for location in [
+        "abstain.ts:36",
+        "bundles-far.ts:4",
+        "loops.ts:64",
+        "mixed.ts:12",
+        "opaque.ts:4",
+    ] {
+        assert!(
+            warnings.iter().any(|warning| {
+                let warning = warning.as_str().unwrap();
+                warning.contains(location) && warning.contains("debounce-ttl was not judged")
+            }),
+            "{location}: {warnings:?}"
+        );
+    }
     for key in ["rules", "codebase", "integration", "react", "advisories"] {
         assert!(
             report[key].as_array().unwrap().is_empty(),

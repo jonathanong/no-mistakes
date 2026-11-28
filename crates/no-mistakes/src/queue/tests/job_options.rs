@@ -272,7 +272,7 @@ fn flow_queue_members_follow_spread_order() {
 }
 
 #[test]
-fn unresolved_flow_spread_abstains_from_children() {
+fn unresolved_flow_spread_still_judges_later_children() {
     let root = fixture("job-options-unresolved-flow");
     let report = analyze_project(&root, None, &[]).unwrap();
     let jobs = report
@@ -281,7 +281,7 @@ fn unresolved_flow_spread_abstains_from_children() {
         .filter(|finding| finding.kind == "missing-job-option")
         .map(|finding| finding.job.as_deref().unwrap())
         .collect::<Vec<_>>();
-    assert_eq!(jobs, ["known-child"]);
+    assert_eq!(jobs, ["opaque-child", "known-child"]);
     let rows = report
         .check
         .iter()
@@ -306,26 +306,17 @@ fn unresolved_flow_spread_abstains_from_children() {
 }
 
 #[test]
-fn recursive_flow_children_abstain() {
+fn recursive_flow_child_with_explicit_opts_is_judged() {
     let root = fixture("job-options");
     let report = analyze_project(&root, None, &[]).unwrap();
     assert!(required_option_rows("flow-cyclic-child.ts").is_empty());
-    let diagnostics = report
-        .diagnostics
-        .iter()
-        .filter(|diagnostic| diagnostic.file == "flow-cyclic-child.ts")
-        .filter(|diagnostic| diagnostic.message.starts_with("job options"))
-        .collect::<Vec<_>>();
-    assert_eq!(diagnostics.len(), 1);
-    let diagnostic = diagnostics[0];
-    assert!(diagnostic
-        .message
-        .ends_with("the options object is not statically known"));
-    assert!(source_line(&root, &diagnostic.file, diagnostic.line).contains("cyclic-child"));
+    assert!(report.diagnostics.iter().all(|diagnostic| {
+        diagnostic.file != "flow-cyclic-child.ts" || !diagnostic.message.starts_with("job options")
+    }));
 }
 
 #[test]
-fn mutually_recursive_flow_children_abstain() {
+fn mutually_recursive_flow_children_with_explicit_opts_are_judged() {
     let root = fixture("job-options");
     let report = analyze_project(&root, None, &[]).unwrap();
     let file = "flow-mutual-child-cycle.ts";
@@ -333,18 +324,9 @@ fn mutually_recursive_flow_children_abstain() {
         .check
         .iter()
         .all(|finding| finding.file != file || finding.kind != "missing-job-option"));
-    let diagnostics = report
-        .diagnostics
-        .iter()
-        .filter(|diagnostic| {
-            diagnostic.file == file && diagnostic.message.starts_with("job options")
-        })
-        .collect::<Vec<_>>();
-    assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
-    assert!(diagnostics[0]
-        .message
-        .ends_with("the options object is not statically known"));
-    assert!(source_line(&root, file, diagnostics[0].line).contains("draw-child"));
+    assert!(report.diagnostics.iter().all(|diagnostic| {
+        diagnostic.file != file || !diagnostic.message.starts_with("job options")
+    }));
 }
 
 fn required_option_rows(file: &str) -> Vec<(String, String, String)> {
