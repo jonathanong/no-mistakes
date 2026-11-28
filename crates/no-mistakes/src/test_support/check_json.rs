@@ -26,36 +26,15 @@ impl CheckJsonArg for Value {
     }
 }
 
-impl CheckJsonArg for &Value {
-    fn into_json_value(self) -> Value {
-        self.clone()
-    }
-}
-
 impl CheckJsonArg for String {
     fn into_json_value(self) -> Value {
-        serde_json::from_str(&self).unwrap_or_else(|error| panic!("{error}: {self}"))
-    }
-}
-
-impl CheckJsonArg for &String {
-    fn into_json_value(self) -> Value {
-        serde_json::from_str(self).unwrap_or_else(|error| panic!("{error}: {self}"))
-    }
-}
-
-impl CheckJsonArg for &str {
-    fn into_json_value(self) -> Value {
-        serde_json::from_str(self).unwrap_or_else(|error| panic!("{error}: {self}"))
+        serde_json::from_str(&self).expect("valid test check options JSON")
     }
 }
 
 pub fn check_json(options: impl CheckJsonArg) -> Result<String> {
     let options = serde_json::from_value::<TestCheckOptions>(options.into_json_value())?;
-    let root = match options.root.as_deref() {
-        Some(root) => PathBuf::from(root),
-        None => std::env::current_dir()?,
-    };
+    let root = PathBuf::from(options.root.expect("test check_json requires root"));
     let results = crate::check_runner::run_all_with_options(
         root,
         options.config.map(PathBuf::from),

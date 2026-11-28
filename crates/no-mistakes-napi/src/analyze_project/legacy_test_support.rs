@@ -1,7 +1,7 @@
 use super::options::resolve_root;
 use super::types::{AnalyzeProjectOptions, AnalyzeReportRequest};
 use crate::codebase::{build_import_usages_args, build_traverse_args};
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use no_mistakes::codebase::dependencies::{Direction, SharedTraversalContext, TraverseArgs};
 use serde_json::Value;
 
@@ -14,14 +14,14 @@ pub(super) fn graph_report(
     let Some(shared) = shared else {
         bail!("internal error: graph report requested without traversal context");
     };
-    let args = traverse_args(request, options)?;
-    let cwd = std::env::current_dir().context("reading current directory")?;
+    let args = traverse_args(request, options);
+    let cwd = std::env::current_dir().unwrap();
     let result = no_mistakes::codebase::dependencies::collect_and_filter_entries_shared(
         &args, direction, &cwd, shared,
-    );
-    let result = result?;
-    let json = no_mistakes::codebase::dependencies::result_json(&args, &result)?;
-    Ok(serde_json::from_str(&json)?)
+    )
+    .unwrap();
+    let json = no_mistakes::codebase::dependencies::result_json(&args, &result).unwrap();
+    Ok(serde_json::from_str(&json).unwrap())
 }
 
 pub(super) fn import_usages_report(
@@ -32,16 +32,18 @@ pub(super) fn import_usages_report(
     let Some(shared) = shared else {
         bail!("internal error: importUsages report requested without traversal context");
     };
-    let value = super::options::import_usages_options(request, options)?;
-    let options = serde_json::from_str(value.as_str())?;
+    let value = super::options::import_usages_options(request, options).unwrap();
+    let options = serde_json::from_str(value.as_str()).unwrap();
     let args = build_import_usages_args(options);
-    let cwd = std::env::current_dir().context("reading current directory")?;
+    let cwd = std::env::current_dir().unwrap();
     let root = shared.root().to_path_buf();
     let session = shared.session_arc();
     let prepared =
-        no_mistakes::codebase::import_usages::prepare_file_universe(&args, &root, &cwd, &session)?;
+        no_mistakes::codebase::import_usages::prepare_file_universe(&args, &root, &cwd, &session)
+            .unwrap();
     let report =
-        no_mistakes::codebase::import_usages::collect_with_facts(&root, &prepared, shared.facts())?;
+        no_mistakes::codebase::import_usages::collect_with_facts(&root, &prepared, shared.facts())
+            .unwrap();
     Ok(no_mistakes::cli::json_value(&report))
 }
 
@@ -57,7 +59,7 @@ pub(super) fn prepare_shared_traversal(
         return Ok(None);
     }
 
-    let root = resolve_root(options.root.as_deref())?;
+    let root = resolve_root(options.root.as_deref()).unwrap();
     let mut build_plan = no_mistakes::codebase::dependencies::graph::GraphBuildPlan::default();
     let mut requested_frameworks = Vec::new();
     for request in &options.reports {
@@ -65,7 +67,7 @@ pub(super) fn prepare_shared_traversal(
             request.report_type.as_str(),
             "dependencies" | "dependents" | "related"
         ) {
-            let args = traverse_args(request, options)?;
+            let args = traverse_args(request, options);
             requested_frameworks.extend(args.tests.iter().cloned());
             let allowed =
                 no_mistakes::codebase::dependencies::relationship_filter(&args.relationships);
@@ -94,13 +96,11 @@ pub(super) fn prepare_shared_traversal(
         options.config.as_deref().map(std::path::Path::new),
         build_plan,
         framework_plan,
-    );
-    Ok(Some(prepared?))
+    )
+    .unwrap();
+    Ok(Some(prepared))
 }
 
-fn traverse_args(
-    request: &AnalyzeReportRequest,
-    options: &AnalyzeProjectOptions,
-) -> Result<TraverseArgs> {
-    build_traverse_args(super::options::traverse_options(request, options)?)
+fn traverse_args(request: &AnalyzeReportRequest, options: &AnalyzeProjectOptions) -> TraverseArgs {
+    build_traverse_args(super::options::traverse_options(request, options).unwrap()).unwrap()
 }

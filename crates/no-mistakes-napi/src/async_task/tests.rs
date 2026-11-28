@@ -103,7 +103,7 @@ fn first_invocation_jobs_override_environment_and_preserve_defaults() {
             command
                 .args([
                     "--exact",
-                    "napi_api::async_task::tests::first_invocation_jobs_subprocess",
+                    "async_task::tests::first_invocation_jobs_subprocess",
                     "--nocapture",
                 ])
                 .env("RAYON_NUM_THREADS", environment)
@@ -137,7 +137,7 @@ fn rejected_command_options_still_select_the_global_pool() {
         let output = std::process::Command::new(std::env::current_exe().unwrap())
             .args([
                 "--exact",
-                "napi_api::async_task::tests::first_invocation_jobs_subprocess",
+                "async_task::tests::first_invocation_jobs_subprocess",
                 "--nocapture",
             ])
             .env("RAYON_NUM_THREADS", "3")
@@ -168,7 +168,7 @@ fn sql_source_batch_does_not_pin_repository_analysis_worker_count() {
             let output = std::process::Command::new(std::env::current_exe().unwrap())
                 .args([
                     "--exact",
-                    "napi_api::async_task::tests::first_invocation_jobs_subprocess",
+                    "async_task::tests::first_invocation_jobs_subprocess",
                     "--nocapture",
                 ])
                 .env("RAYON_NUM_THREADS", environment)

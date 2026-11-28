@@ -76,17 +76,26 @@ fn analyze_project_prewarms_shared_playwright_analysis_before_parallel_reports()
     child
         .args([
             "--exact",
-            "napi_api::analyze_project::playwright_prewarm_tests::analyze_project_prewarms_shared_playwright_analysis_before_parallel_reports",
+            "analyze_project::playwright_prewarm_tests::analyze_project_prewarms_shared_playwright_analysis_before_parallel_reports",
         ])
-        .env("NO_MISTAKES_PLAYWRIGHT_PREWARM_SUBPROCESS", "1");
+        .env("NO_MISTAKES_PLAYWRIGHT_PREWARM_SUBPROCESS", "1")
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped());
     let mut child = child.spawn().unwrap();
     let Some(status) = child.wait_timeout(Duration::from_secs(60)).unwrap() else {
         let _ = child.kill();
         let _ = child.wait();
         panic!("Playwright prewarm dispatch subprocess did not complete within 60 seconds");
     };
+    let output = child.wait_with_output().unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         status.success(),
-        "Playwright prewarm subprocess failed: {status}"
+        "Playwright prewarm subprocess failed: {status}\n{stdout}{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(
+        stdout.contains("1 passed"),
+        "Playwright prewarm child did not run the test: {stdout}"
     );
 }

@@ -5,7 +5,7 @@ use serde_json::Value;
 
 pub(super) const DIAGNOSTICS_JSON_MARKER: &str = "\nno-mistakes-diagnostics-json: ";
 
-pub(super) fn execute_json(
+pub(crate) fn execute_json(
     input: &Buffer,
     run: impl FnOnce(Value) -> napi::Result<String>,
     text: bool,
@@ -49,7 +49,7 @@ pub(super) fn execute_json(
     output
 }
 
-pub(super) fn execute_pure(
+pub(crate) fn execute_pure(
     input: Value,
     run: impl FnOnce(Value) -> napi::Result<String>,
 ) -> napi::Result<Buffer> {

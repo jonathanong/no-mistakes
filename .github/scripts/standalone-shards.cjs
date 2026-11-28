@@ -37,7 +37,21 @@ function commands(mode, bundle, index, total, workspace = process.cwd()) {
 }
 
 function testTargets(shard) {
-  return ["--locked", ...(shard === 0 ? ["--workspace"] : ["-p", "no-mistakes"]), "--lib"];
+  if (shard === 0) {
+    return [
+      "--locked",
+      "--workspace",
+      "--exclude",
+      "no-mistakes-napi",
+      "--exclude",
+      "no-mistakes-ts-facts",
+      "--lib",
+    ];
+  }
+  if (shard === 1) {
+    return ["--locked", "-p", "no-mistakes", "-p", "no-mistakes-ts-facts", "--lib"];
+  }
+  return ["--locked", "-p", "no-mistakes", "-p", "no-mistakes-napi", "--lib"];
 }
 
 function buildCommand(bundle, shard) {

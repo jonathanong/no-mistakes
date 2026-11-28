@@ -177,3 +177,5 @@ mod postgres_catalog_parity_tests;
 mod rule_parity_tests;
 #[cfg(test)]
 mod tests_queue_factory_wrappers;
+#[cfg(test)]
+mod validation_coverage_tests;

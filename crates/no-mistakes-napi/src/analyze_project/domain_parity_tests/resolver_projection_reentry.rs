@@ -2,7 +2,7 @@
 fn controlled_symbol_index_reentry_completes_with_known_dependencies() {
     const CHILD: &str = "NO_MISTAKES_SYMBOL_REENTRY_CHILD";
     const TEST: &str = concat!(
-        "napi_api::analyze_project::domain_parity_tests::",
+        "analyze_project::domain_parity_tests::",
         "controlled_symbol_index_reentry_completes_with_known_dependencies"
     );
     if std::env::var_os(CHILD).is_none() {
@@ -10,16 +10,24 @@ fn controlled_symbol_index_reentry_completes_with_known_dependencies() {
         let mut child = std::process::Command::new(std::env::current_exe().unwrap())
             .args(["--exact", TEST, "--nocapture"])
             .env(CHILD, "1")
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
             .spawn()
             .unwrap();
         eprintln!("controlled reentry child pid: {}", child.id());
         let outcome = child.wait_timeout(std::time::Duration::from_secs(5));
         // Always reap before asserting, including timeout/errors; exited children are harmless.
         let _ = child.kill();
-        let _ = child.wait();
+        let output = child.wait_with_output().unwrap();
+        let stdout = String::from_utf8_lossy(&output.stdout);
         assert!(
             matches!(outcome, Ok(Some(status)) if status.success()),
-            "controlled reentry child did not complete successfully: {outcome:?}"
+            "controlled reentry child did not complete successfully: {outcome:?}\n{stdout}{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(
+            stdout.contains("1 passed"),
+            "controlled reentry child did not run the test: {stdout}"
         );
         return;
     }
