@@ -126,14 +126,20 @@ const groups = [
       "member-alias.test.ts",
       "alias.mock.test.ts",
       "mutable-alias.mock.test.ts",
+      "pattern-alias.test.ts",
     ],
-    valid: ["foo.mock.test.ts", "expect-only.test.ts", "default-alias.test.ts"],
+    valid: [
+      "foo.mock.test.ts",
+      "expect-only.test.ts",
+      "default-alias.test.ts",
+      "pattern-quiet.test.ts",
+    ],
   },
   {
     rule: "vitest-mock-test-file-naming",
     dir: "naming-ignore",
     options: [{ unanalyzable: "ignore" }],
-    valid: ["dynamic.test.ts"],
+    valid: ["dynamic.test.ts", "pattern-alias.test.ts"],
   },
   {
     rule: "test-no-shared-state",
@@ -163,6 +169,7 @@ const groups = [
       "reassigned-dynamic.test.ts",
       "member-receiver.test.ts",
       "playwright-default.test.ts",
+      "alias-let.test.ts",
     ],
   },
   {

@@ -34,8 +34,10 @@ test("user", () => {
   `require` reports `unanalyzable`. `.skip` and `.each` on that call, such as
   `vt.test.skip(...)` and `vt.test.each(rows)(...)`, report `unanalyzable` too. A destructured `test`, `it`, or `describe`
   from that require, such as `const { test: check } = require(specifier)`, reports
-  `unanalyzable`, including `check.skip(...)`. `const check = require(specifier).test`
-  followed by `check.skip(...)` does too. A computed modifier such as
+  `unanalyzable`, including `check.skip(...)`. A `const` alias of that binding, such as
+  `const run = check` and `const again = mid` after `const mid = check`, reports
+  `unanalyzable` too. A `let` alias does not. `const check = require(specifier).test`
+  followed by `check.skip(...)` does too, and so does `const run = check`. A computed modifier such as
   `check[modifier](...)` stays silent. `const { ["runner"]: runner } = require(moduleName); runner.test(...)` stays silent, while `const { runner } = require(moduleName)` does not. A later write of that destructure, such as
   `let { test: check } = require(specifier); check = localHelper`, does not.
   A destructured `expect` does not. A computed key such as

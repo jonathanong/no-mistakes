@@ -7,3 +7,12 @@ check("case", () => {
 check.skip("skipped", () => {
   items.push(1);
 });
+const run = check;
+run("aliased", () => {
+  items.push(1);
+});
+const mid = check;
+const again = mid;
+again.skip("chained", () => {
+  items.push(1);
+});

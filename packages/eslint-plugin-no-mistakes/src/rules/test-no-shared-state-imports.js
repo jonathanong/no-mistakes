@@ -77,9 +77,8 @@ function recordRequireDeclarator(declaration, testCalleeNames, namespaces, testA
 }
 
 function recordImportEquals(node, testCalleeNames, namespaces, testAliases) {
-  if (node?.importKind === "type" || node.moduleReference?.type !== "TSExternalModuleReference") {
+  if (node?.importKind === "type" || node.moduleReference?.type !== "TSExternalModuleReference")
     return;
-  }
   recordModuleBinding(
     literalString(node.moduleReference.expression),
     node.id,
@@ -95,29 +94,31 @@ function recordTopLevelRequires(node, testCalleeNames, namespaces, testAliases, 
   }
 }
 
-function dynamicDestructuredTest(callee, context) {
-  if (callee?.type !== "Identifier") return false;
+function dynamicBinding(callee, context, seen = new Set()) {
+  if (callee?.type !== "Identifier" || seen.has(callee.name)) return null;
+  seen.add(callee.name);
   const variable = resolveVariable(callee, context);
   const def = variable?.defs.length === 1 ? variable.defs[0] : null;
-  if (def?.type !== "Variable" || def.node?.id?.type !== "ObjectPattern") return false;
-  if (isReassigned(callee, context)) return false;
-  const resolution = requireResolution(def.node.init, context);
-  if (!resolution || resolution.source !== null) return false;
-  return patternNames(def.node.id).some((entry) => entry.local.name === callee.name);
+  if (def?.type !== "Variable" || isReassigned(callee, context)) return null;
+  const init = unwrapExpression(def.node.init);
+  const alias =
+    def.parent?.kind === "const" &&
+    def.node.id?.type === "Identifier" &&
+    init?.type === "Identifier";
+  return alias ? dynamicBinding(init, context, seen) : { def, name: callee.name };
+}
+
+function dynamicDestructuredTest(callee, context) {
+  const found = dynamicBinding(callee, context);
+  const resolution = requireResolution(found?.def.node?.init, context);
+  if (found?.def.node?.id?.type !== "ObjectPattern" || resolution?.source !== null) return false;
+  return patternNames(found.def.node.id).some((entry) => entry.local.name === found.name);
 }
 
 function dynamicMemberTest(callee, context) {
-  if (callee?.type !== "Identifier") return false;
-  const variable = resolveVariable(callee, context);
-  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
-  if (
-    def?.type !== "Variable" ||
-    def.node?.id?.type !== "Identifier" ||
-    isReassigned(def.node.id, context)
-  ) {
-    return false;
-  }
-  const init = unwrapExpression(def.node.init);
+  const declaration = dynamicBinding(callee, context)?.def.node;
+  const init = unwrapExpression(declaration?.init);
+  if (declaration?.id?.type !== "Identifier") return false;
   if (init?.type !== "MemberExpression" || init.computed) return false;
   const key = init.property?.type === "Identifier" ? init.property.name : null;
   return TEST_NAMES.has(key) && requireResolution(init.object, context)?.source === null;

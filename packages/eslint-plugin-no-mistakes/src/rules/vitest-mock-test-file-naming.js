@@ -52,6 +52,35 @@ function propertyName(node, computed) {
   return literalString(node) || (node.type === "Literal" ? String(node.value) : null);
 }
 
+function patternMock(pattern, name) {
+  return pattern.properties.some((property) => {
+    if (property.type !== "Property") return false;
+    let value = property.value;
+    while (value?.type === "AssignmentPattern") value = value.left;
+    const key = property.computed ? literalString(property.key) : propertyName(property.key, false);
+    return value?.type === "Identifier" && value.name === name && MOCK_METHODS.has(key);
+  });
+}
+
+function destructuredOpaqueMock(node, context) {
+  const callee = unwrapSequence(node.callee);
+  if (callee?.type !== "Identifier") return false;
+  const variable = resolveVariable(callee, context);
+  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  const init = unwrapSequence(def?.node?.init);
+  if (
+    def?.type !== "Variable" ||
+    def.node?.parent?.kind !== "const" ||
+    def.node?.id?.type !== "ObjectPattern" ||
+    init?.type !== "Identifier" ||
+    isFrameworkBinding(init, context) ||
+    !frameworkBindingOpaque(init, context)
+  ) {
+    return false;
+  }
+  return patternMock(def.node.id, callee.name);
+}
+
 function mockMember(node, context, seen = new Set()) {
   const callee = unwrapSequence(node);
   if (callee?.type === "Identifier") {
@@ -64,20 +93,7 @@ function mockMember(node, context, seen = new Set()) {
       return mockMember(def.node.init, context, seen);
     }
     if (def.node.id?.type !== "ObjectPattern" || !def.node.init) return false;
-    return def.node.id.properties.some((property) => {
-      if (property.type !== "Property") return false;
-      let value = property.value;
-      while (value?.type === "AssignmentPattern") value = value.left;
-      const key = property.computed
-        ? literalString(property.key)
-        : propertyName(property.key, false);
-      return (
-        value?.type === "Identifier" &&
-        value.name === callee.name &&
-        MOCK_METHODS.has(key) &&
-        isFrameworkBinding(def.node.init, context)
-      );
-    });
+    return patternMock(def.node.id, callee.name) && isFrameworkBinding(def.node.init, context);
   }
   if (callee?.type !== "MemberExpression") return false;
   const method = propertyName(callee.property, callee.computed);
@@ -176,7 +192,8 @@ module.exports = Object.assign(
         CallExpression(node) {
           if (suppressed(node)) return;
           if (isMockingCall(node, context)) usesMocking = true;
-          else if (opaqueMock(node, context)) opaque = true;
+          else if (opaqueMock(node, context) || destructuredOpaqueMock(node, context))
+            opaque = true;
         },
         "Program:exit"(node) {
           if (!isTestFile(context.filename)) return;

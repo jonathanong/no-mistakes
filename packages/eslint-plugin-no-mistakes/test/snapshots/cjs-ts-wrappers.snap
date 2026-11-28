@@ -1137,6 +1137,17 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/no-vitest-sequential",
           "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 6,
+          "file": "alias-reassigned.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
         }
       ],
       "kind": "invalid",
@@ -1987,6 +1998,12 @@
       "options": null
     },
     {
+      "file": "alias-let.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "cjs.test.ts",
       "findings": [
         {
@@ -2323,6 +2340,28 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/test-no-shared-state",
           "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 20,
+          "file": "destructured-dynamic.test.ts",
+          "line": 18,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 25,
+          "file": "destructured-dynamic.test.ts",
+          "line": 23,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
         }
       ],
       "kind": "invalid",
@@ -2348,6 +2387,28 @@
           "endLine": 9,
           "file": "member-dynamic.test.ts",
           "line": 7,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 13,
+          "file": "member-dynamic.test.ts",
+          "line": 11,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 18,
+          "file": "member-dynamic.test.ts",
+          "line": 16,
           "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/test-no-shared-state",
@@ -3481,6 +3542,12 @@
       "options": null
     },
     {
+      "file": "pattern-quiet.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "foo.test.ts",
       "findings": [
         {
@@ -3677,11 +3744,39 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "pattern-alias.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 5,
+          "file": "pattern-alias.test.ts",
+          "line": 1,
+          "message": "Cannot tell whether a module mock mocks a module. Use a static vi.mock or jest.mock call.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "vitest-mock-test-file-naming:naming-ignore": [
     {
       "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "pattern-alias.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [

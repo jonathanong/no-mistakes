@@ -33,16 +33,17 @@ function reassignedDestructuredRunner(root, context) {
   if (root?.type !== "Identifier") return false;
   const variable = resolveVariable(root, context);
   const def = variable?.defs.length === 1 ? variable.defs[0] : null;
-  if (
-    def?.type !== "Variable" ||
-    def.node?.id?.type !== "ObjectPattern" ||
-    !hasLaterWrite(variable) ||
-    requireSource(def.node.init, context) !== "vitest"
-  ) {
-    return false;
-  }
-  return patternTests(def.node.id).some(
+  if (def?.type !== "Variable" || def.node?.id?.type !== "ObjectPattern") return false;
+  const selected = patternTests(def.node.id).some(
     (entry) => !entry.dynamic && entry.local.name === root.name,
+  );
+  if (!selected) return false;
+  if (hasLaterWrite(variable) && requireSource(def.node.init, context) === "vitest") return true;
+  const init = unwrapExpression(def.node.init);
+  return (
+    def.node?.parent?.kind === "const" &&
+    init?.type === "Identifier" &&
+    reassignedVitestRequire(init, context)
   );
 }
 
