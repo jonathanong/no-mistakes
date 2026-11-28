@@ -78,6 +78,8 @@ fn classifies_transaction_control_kinds_and_skips_procedural_delimiters() {
         (47, "ROLLBACK"),
         (52, "COMMIT"),
         (53, "ROLLBACK"),
+        (57, "COMMIT"),
+        (59, "COMMIT"),
     ];
     for (label, kinds) in [
         ("schema", &schema.statement_kinds),

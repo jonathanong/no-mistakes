@@ -107,7 +107,25 @@ fn utility_start(tokens: &[Token], index: usize) -> bool {
     recognized && guarded_prefix(&tokens[..index], false)
 }
 
+fn strip_label(prefix: &[Token]) -> &[Token] {
+    let code: Vec<_> = prefix
+        .iter()
+        .enumerate()
+        .filter(|(_, token)| !matches!(token, Token::Whitespace(_)))
+        .take(3)
+        .collect();
+    match code.as_slice() {
+        [(_, Token::ShiftLeft), (_, Token::Word(_)), (end, Token::ShiftRight)] => &prefix[end + 1..],
+        _ => prefix,
+    }
+}
+
 fn guarded_prefix(prefix: &[Token], allow_case_when: bool) -> bool {
+    let prefix = if allow_case_when {
+        strip_label(prefix)
+    } else {
+        prefix
+    };
     let Some(first) = prefix
         .iter()
         .find(|token| !matches!(token, Token::Whitespace(_)))

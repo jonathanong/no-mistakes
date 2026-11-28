@@ -54,3 +54,6 @@ BEGIN
   END CASE;
 END;
 $$;
+DO $$ <<b>> BEGIN COMMIT; END b; $$;
+CREATE FUNCTION arg_atomic(begin atomic) RETURNS integer LANGUAGE sql AS 'select 1';
+COMMIT;

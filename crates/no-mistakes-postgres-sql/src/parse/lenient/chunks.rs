@@ -46,6 +46,7 @@ pub(super) struct StatementBoundary {
     atomic_cases: usize,
     after_as_or_dot: bool,
     depth: usize,
+    routine_depth: usize,
 }
 
 impl StatementBoundary {
@@ -91,7 +92,12 @@ impl StatementBoundary {
             _ => 4,
         };
         if self.routine {
-            if self.saw_begin && word("ATOMIC") {
+            match token {
+                Token::LParen => self.routine_depth += 1,
+                Token::RParen => self.routine_depth = self.routine_depth.saturating_sub(1),
+                _ => {}
+            }
+            if self.saw_begin && self.routine_depth == 0 && word("ATOMIC") {
                 self.atomic = true;
                 self.saw_begin = false;
                 return false;
