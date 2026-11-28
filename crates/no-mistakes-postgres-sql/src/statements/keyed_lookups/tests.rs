@@ -301,3 +301,18 @@ fn respects_null_extended_bindings_and_reuses_aliased_targets_and_window_specs()
         ]
     );
 }
+
+#[test]
+fn checks_proven_operator_inputs_and_query_binding_and_evaluation_order() {
+    let facts = fixture_facts("review-binding-evaluation");
+    assert!(!facts.parse_failed);
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+    assert_eq!(
+        sites,
+        [(8, 9), (23, 24), (28, 29), (40, 42), (45, 46), (51, 52)]
+    );
+}

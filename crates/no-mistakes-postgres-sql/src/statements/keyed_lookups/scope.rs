@@ -5,6 +5,7 @@ use sqlparser::ast::{Ident, ObjectName, TableAlias};
 struct Binding {
     id: usize,
     qualifier: String,
+    columns: Option<Vec<String>>,
 }
 
 #[derive(Default)]
@@ -39,12 +40,24 @@ impl ScopeStack {
     }
 
     pub(super) fn add_named_alias(&mut self, qualifier: String) -> usize {
+        self.add_binding(qualifier, None)
+    }
+
+    pub(super) fn add_using_alias(&mut self, qualifier: String, columns: Vec<String>) {
+        self.add_binding(qualifier, Some(columns));
+    }
+
+    fn add_binding(&mut self, qualifier: String, columns: Option<Vec<String>>) -> usize {
         let id = self.next_id;
         self.next_id += 1;
         self.frames
             .last_mut()
             .expect("bindings require a query scope")
-            .push(Binding { id, qualifier });
+            .push(Binding {
+                id,
+                qualifier,
+                columns,
+            });
         id
     }
 
@@ -79,11 +92,16 @@ pub(super) struct ScopeSnapshot {
 }
 
 impl ScopeSnapshot {
-    pub(super) fn resolve_qualifier(&self, qualifier: &str) -> Option<usize> {
+    pub(super) fn resolve_column(&self, qualifier: &str, column: &str) -> Option<usize> {
         for frame in self.frames.iter().rev() {
             let mut matches = frame.iter().filter(|b| b.qualifier == qualifier);
             if let Some(first) = matches.next() {
-                return matches.next().is_none().then_some(first.id);
+                return (matches.next().is_none()
+                    && first
+                        .columns
+                        .as_ref()
+                        .is_none_or(|columns| columns.iter().any(|name| name == column)))
+                .then_some(first.id);
             }
         }
         None

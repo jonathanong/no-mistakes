@@ -78,15 +78,17 @@ impl<'a> ExprNormalizer<'a> {
             }
             Expr::IsNull(inner) => Some(format!("is_null({})", self.normalize(inner)?)),
             Expr::IsNotNull(inner) => Some(format!("is_not_null({})", self.normalize(inner)?)),
-            Expr::UnaryOp { op, expr } => {
+            Expr::UnaryOp { op, expr } if types::unary_is_proven(*op, expr) => {
                 let inner = self.normalize(expr)?;
                 Some(format!("unary({op},{})", atom(&inner)))
             }
-            Expr::BinaryOp { left, op, right } if !types::is_custom_operator(op) => Some(format!(
-                "bin({op},{},{})",
-                atom(&self.normalize(left)?),
-                atom(&self.normalize(right)?)
-            )),
+            Expr::BinaryOp { left, op, right } if types::binary_is_proven(op, left, right) => {
+                Some(format!(
+                    "bin({op},{},{})",
+                    atom(&self.normalize(left)?),
+                    atom(&self.normalize(right)?)
+                ))
+            }
             Expr::Function(function) => function::normalize(function, |arg| self.normalize(arg)),
             predicate if self.key_anchor.is_none() => self.predicate(predicate),
             _ => None,
@@ -99,7 +101,7 @@ impl<'a> ExprNormalizer<'a> {
         if self.self_qualifier == Some(qualifier.as_str()) {
             return self.key_anchor.is_none().then(|| format!("self.{column}"));
         }
-        let binding = self.outer.resolve_qualifier(&qualifier)?;
+        let binding = self.outer.resolve_column(&qualifier, &column)?;
         self.mark_anchor();
         Some(format!("b{binding}.{column}"))
     }

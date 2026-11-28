@@ -92,6 +92,12 @@ fn inspect_join(
         }
         _ => {}
     }
+    if let Some(JoinConstraint::UsingAlias(columns, alias)) = constraint {
+        scopes.add_using_alias(
+            ident_key(alias),
+            columns.iter().filter_map(column_name).collect(),
+        );
+    }
 }
 
 fn join_constraint(op: &JoinOperator) -> Option<&JoinConstraint> {

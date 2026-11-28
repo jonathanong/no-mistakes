@@ -1,6 +1,6 @@
 use super::function::{arguments_are_proven, pure_name};
 use crate::idents::unwrap_expr;
-use sqlparser::ast::{ArrayElemTypeDef, BinaryOperator, DataType, Expr, Value};
+use sqlparser::ast::{ArrayElemTypeDef, BinaryOperator, DataType, Expr, UnaryOperator, Value};
 
 pub(super) fn cast_type(data_type: &DataType) -> Option<String> {
     match data_type {
@@ -19,16 +19,26 @@ pub(super) fn has_builtin_type(expr: &Expr) -> bool {
     match unwrap_expr(expr) {
         Expr::Value(value) => !matches!(value.value, Value::Placeholder(_)),
         Expr::Cast { .. } | Expr::TypedString(_) | Expr::IsNull(_) | Expr::IsNotNull(_) => true,
-        Expr::Function(function) => pure_name(function).as_deref() == Some("md5"),
+        Expr::Function(function) => pure_name(function).is_some() && arguments_are_proven(function),
+        Expr::BinaryOp { left, op, right } => binary_is_proven(op, left, right),
+        Expr::UnaryOp { op, expr } => unary_is_proven(*op, expr),
         _ => false,
     }
 }
 
-pub(super) fn is_custom_operator(op: &BinaryOperator) -> bool {
-    matches!(
+pub(super) fn binary_is_proven(op: &BinaryOperator, left: &Expr, right: &Expr) -> bool {
+    !matches!(
         op,
         BinaryOperator::Custom(_) | BinaryOperator::PGCustomBinaryOperator(_)
-    )
+    ) && has_builtin_type(left)
+        && has_builtin_type(right)
+}
+
+pub(super) fn unary_is_proven(op: UnaryOperator, expr: &Expr) -> bool {
+    matches!(
+        op,
+        UnaryOperator::Plus | UnaryOperator::Minus | UnaryOperator::Not | UnaryOperator::BitwiseNot
+    ) && has_builtin_type(expr)
 }
 
 pub(in crate::statements::keyed_lookups) fn projection_expr_is_unproven(expr: &Expr) -> bool {
@@ -36,7 +46,8 @@ pub(in crate::statements::keyed_lookups) fn projection_expr_is_unproven(expr: &E
         Expr::Function(function) => {
             pure_name(function).is_none() || !arguments_are_proven(function)
         }
-        Expr::BinaryOp { op, .. } => is_custom_operator(op),
+        Expr::BinaryOp { left, op, right } => !binary_is_proven(op, left, right),
+        Expr::UnaryOp { op, expr } => !unary_is_proven(*op, expr),
         Expr::Cast {
             expr, data_type, ..
         } => !has_builtin_type(expr) || cast_type(data_type).is_none(),

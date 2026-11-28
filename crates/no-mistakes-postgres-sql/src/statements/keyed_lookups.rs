@@ -13,13 +13,11 @@ mod table;
 mod windows;
 
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
-use join::register_table_with_joins;
 use normalize::LookupKey;
 use query::walk_query;
 use scope::ScopeStack;
-use sqlparser::ast::{
-    CopySource, Expr, Query, Select, SelectItem, SetExpr, Statement, Visit, Visitor,
-};
+use select_exprs::walk_select;
+use sqlparser::ast::{CopySource, Expr, Query, SelectItem, SetExpr, Statement, Visit, Visitor};
 use std::collections::BTreeMap;
 use std::ops::ControlFlow;
 
@@ -103,34 +101,6 @@ fn walk_set_expr(
         }
         _ => LookupHistory::new(),
     }
-}
-
-fn walk_select(
-    select: &Select,
-    order_exprs: &[&Expr],
-    scopes: &mut ScopeStack,
-    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
-) -> LookupHistory {
-    scopes.push_frame();
-    let mut seen = BTreeMap::new();
-    for table in &select.from {
-        register_table_with_joins(table, scopes, &mut seen, out);
-    }
-    let outer = scopes.snapshot();
-    let targets = select_exprs::SelectTargets::new(&select.projection);
-    let group_by = grouping::targets(&select.group_by);
-    let having = select
-        .having
-        .as_ref()
-        .map(|expr| grouping::filter_having(expr, &group_by));
-    for expr in
-        select_exprs::inspectable(select, order_exprs, &targets, &group_by, having.as_deref())
-    {
-        subquery::inspect_expr(expr, &outer, &targets, &mut seen, out);
-        walk_nested_queries(expr, scopes, out);
-    }
-    scopes.pop_frame();
-    seen
 }
 
 fn returning_exprs(items: Option<&[SelectItem]>) -> impl Iterator<Item = &Expr> {

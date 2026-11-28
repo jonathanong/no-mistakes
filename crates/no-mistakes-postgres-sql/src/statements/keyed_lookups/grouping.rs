@@ -32,28 +32,37 @@ fn collect_targets<'a>(expr: &'a Expr, targets: &mut Vec<&'a Expr>) {
     }
 }
 
-pub(super) fn filter_having<'a>(expr: &'a Expr, grouping: &[&Expr]) -> Cow<'a, Expr> {
-    if grouping.is_empty() {
-        return Cow::Borrowed(expr);
-    }
-    let keys: FxHashSet<_> = grouping.iter().map(|expr| target_identity(expr)).collect();
-    let kinds = keys.iter().map(discriminant).collect();
-    let mut filtered = expr.clone();
-    let _ = filtered.visit(&mut GroupedExpressions {
-        keys,
-        kinds,
-        depth: 0,
-    });
-    Cow::Owned(filtered)
-}
-
-struct GroupedExpressions {
+pub(super) struct GroupReuse {
     keys: FxHashSet<Expr>,
     kinds: FxHashSet<Discriminant<Expr>>,
+}
+
+impl GroupReuse {
+    pub(super) fn new(grouping: &[&Expr]) -> Self {
+        let keys: FxHashSet<_> = grouping.iter().map(|expr| target_identity(expr)).collect();
+        let kinds = keys.iter().map(discriminant).collect();
+        Self { keys, kinds }
+    }
+
+    pub(super) fn filter<'a>(&self, expr: &'a Expr) -> Cow<'a, Expr> {
+        if self.keys.is_empty() {
+            return Cow::Borrowed(expr);
+        }
+        let mut filtered = expr.clone();
+        let _ = filtered.visit(&mut GroupedExpressions {
+            reuse: self,
+            depth: 0,
+        });
+        Cow::Owned(filtered)
+    }
+}
+
+struct GroupedExpressions<'a> {
+    reuse: &'a GroupReuse,
     depth: usize,
 }
 
-impl VisitorMut for GroupedExpressions {
+impl VisitorMut for GroupedExpressions<'_> {
     type Break = ();
 
     fn pre_visit_query(&mut self, _: &mut Query) -> ControlFlow<()> {
@@ -68,8 +77,8 @@ impl VisitorMut for GroupedExpressions {
 
     fn pre_visit_expr(&mut self, expr: &mut Expr) -> ControlFlow<()> {
         if self.depth == 0
-            && self.kinds.contains(&discriminant(unwrap_expr(expr)))
-            && self.keys.contains(&target_identity(expr))
+            && self.reuse.kinds.contains(&discriminant(unwrap_expr(expr)))
+            && self.reuse.keys.contains(&target_identity(expr))
         {
             *expr = Expr::Value(Value::Null.with_empty_span());
         }

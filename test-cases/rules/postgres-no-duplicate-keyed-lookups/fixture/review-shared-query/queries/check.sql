@@ -48,8 +48,8 @@ SELECT
 FROM orders o;
 
 SELECT
-    (SELECT a.id + 1 FROM accounts a WHERE a.id = o.account_id),
-    (SELECT b.id + 2 FROM accounts b WHERE b.id = o.account_id)
+    (SELECT CAST(a.id IS NULL AS integer) + 1 FROM accounts a WHERE a.id = o.account_id),
+    (SELECT CAST(b.id IS NULL AS integer) + 2 FROM accounts b WHERE b.id = o.account_id)
 FROM orders o;
 
 SELECT

@@ -103,12 +103,8 @@ fn try_oriented(
     single_table_subquery: bool,
     outer: &ScopeSnapshot,
 ) -> Option<(String, String, bool, String)> {
-    let (self_col, was_unqualified) =
-        self_column(self_side, self_qualifier, single_table_subquery)?;
+    let self_col = self_column(self_side, self_qualifier, single_table_subquery)?;
     let (norm_rhs, anchor) = ExprNormalizer::outer_key(outer_side, self_qualifier, outer)?;
-    if was_unqualified && !anchor {
-        return None;
-    }
     Some((
         self_col,
         norm_rhs,
@@ -117,16 +113,12 @@ fn try_oriented(
     ))
 }
 
-fn self_column(
-    expr: &Expr,
-    self_qualifier: &str,
-    single_table_subquery: bool,
-) -> Option<(String, bool)> {
+fn self_column(expr: &Expr, self_qualifier: &str, single_table_subquery: bool) -> Option<String> {
     match unwrap_expr(expr) {
         Expr::CompoundIdentifier(parts) if parts.len() == 2 => {
-            (ident_key(&parts[0]) == self_qualifier).then(|| (ident_key(&parts[1]), false))
+            (ident_key(&parts[0]) == self_qualifier).then(|| ident_key(&parts[1]))
         }
-        Expr::Identifier(ident) if single_table_subquery => Some((ident_key(ident), true)),
+        Expr::Identifier(ident) if single_table_subquery => Some(ident_key(ident)),
         _ => None,
     }
 }
