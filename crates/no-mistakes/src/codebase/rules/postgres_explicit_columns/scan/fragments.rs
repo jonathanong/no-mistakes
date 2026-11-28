@@ -10,6 +10,8 @@ use crate::fx::FxHashSet;
 use std::path::Path;
 
 mod advisory;
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod tests;
 pub(super) use advisory::{check_executed_unresolved_star, ExecutedStarContext};
 use advisory::{is_placeholder_relation, record_advisory, resolved_relations};
 

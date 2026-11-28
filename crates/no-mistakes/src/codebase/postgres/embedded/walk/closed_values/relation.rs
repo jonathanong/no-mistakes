@@ -121,6 +121,7 @@ fn tuple_string_literals(mut ty: &TSType<'_>) -> Option<Vec<String>> {
 
 fn tuple_element_string(element: &TSTupleElement<'_>) -> Option<String> {
     let item = match element {
+        TSTupleElement::TSNamedTupleMember(named) if named.optional => return None,
         TSTupleElement::TSNamedTupleMember(named) => &named.element_type,
         other => other,
     };

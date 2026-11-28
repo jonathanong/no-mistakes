@@ -4,71 +4,11 @@ use super::partial;
 use crate::codebase::postgres::embedded::{
     first_call_argument, tags, CallSqlFragment, EmbeddedSqlCall,
 };
-use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
+use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashSet;
-use oxc_ast::ast::{
-    AssignmentExpression, AssignmentOperator, AssignmentTarget, CallExpression, Expression,
-};
+use oxc_ast::ast::{CallExpression, Expression};
 
 impl ScopeVisitor<'_> {
-    pub(in crate::codebase::postgres::embedded::walk) fn note_assignment_fragment(
-        &mut self,
-        assign: &AssignmentExpression<'_>,
-    ) {
-        if self.head_calls_only {
-            return;
-        }
-        let AssignmentTarget::AssignmentTargetIdentifier(id) = &assign.left else {
-            return;
-        };
-        let Some(scope_index) = self.lookup_scope(id.name.as_str()) else {
-            return;
-        };
-        let key = (scope_index, id.name.to_string());
-        match assign.operator {
-            AssignmentOperator::Addition => {
-                self.append_assignment_expr(key, &assign.right, assign.span.start);
-            }
-            AssignmentOperator::Assign => {
-                if let Some(parts) = partial::self_addition_parts(&assign.right, id.name.as_str()) {
-                    for part in parts {
-                        self.append_assignment_expr(key.clone(), part, assign.span.start);
-                    }
-                } else {
-                    self.clear_builder_fragment(scope_index, id.name.as_str());
-                    let line = byte_offset_to_line(self.source, assign.span.start as usize);
-                    self.note_builder_init(
-                        scope_index,
-                        id.name.as_str(),
-                        &assign.right,
-                        None,
-                        line,
-                    );
-                }
-            }
-            _ => self.clear_builder_fragment(scope_index, id.name.as_str()),
-        }
-    }
-
-    fn append_assignment_expr(&mut self, key: (usize, String), rhs: &Expression<'_>, site: u32) {
-        let context = self
-            .call_fragment_state
-            .builders
-            .get(&key)
-            .and_then(|trace| trace.prefix.clone());
-        let added = partial::expr_fragments(self, rhs, context.as_deref(), Some(site));
-        if added.is_empty() {
-            return;
-        }
-        let trace = self.call_fragment_state.builders.entry(key).or_default();
-        partial::extend_prefix(
-            trace,
-            &added,
-            self.control_depth == 0 && self.loop_depth == 0,
-        );
-        trace.fragments.extend(added);
-    }
-
     pub(in crate::codebase::postgres::embedded::walk) fn pop_builder_fragments(
         &mut self,
         scope_index: usize,
@@ -168,21 +108,34 @@ impl ScopeVisitor<'_> {
                 Vec::new()
             }
             Expression::CallExpression(inner) => {
-                let Expression::Identifier(callee) = unwrap_ts_wrappers(&inner.callee) else {
-                    return Vec::new();
-                };
-                self.call_fragment_state
-                    .function_returns
-                    .get(&self.plain_key(callee.name.as_str()))
-                    .cloned()
-                    .unwrap_or_default()
+                if let Expression::Identifier(callee) = unwrap_ts_wrappers(&inner.callee) {
+                    return self
+                        .call_fragment_state
+                        .function_returns
+                        .get(&self.plain_key(callee.name.as_str()))
+                        .cloned()
+                        .unwrap_or_default();
+                }
+                if let Some(frags) = super::inline::inline_append_fragments(
+                    self,
+                    inner,
+                    &covered_sites,
+                    !recovered.variants.is_empty(),
+                ) {
+                    return frags;
+                }
+                if recovered.variants.is_empty() {
+                    partial::expr_fragments(self, arg, None, None)
+                } else {
+                    Vec::new()
+                }
             }
             _ if recovered.variants.is_empty() => partial::expr_fragments(self, arg, None, None),
             _ => Vec::new(),
         }
     }
 
-    fn lookup_scope(&self, name: &str) -> Option<usize> {
+    pub(super) fn lookup_scope(&self, name: &str) -> Option<usize> {
         self.scopes
             .iter()
             .rposition(|scope| scope.contains_key(name))

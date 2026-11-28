@@ -1,10 +1,10 @@
-use super::exprs::walk_subqueries;
+use super::exprs::{arg_expr, walk_subqueries};
 use super::items::collect_returning;
 use super::{collect_query, collect_rels, push_factor, FragmentStar, Rel};
 use no_mistakes_postgres_sql::idents::{ident_key, object_name_key};
 use sqlparser::ast::{
-    Delete, FromTable, Insert, JoinConstraint, JoinOperator, OnConflictAction, OnInsert, Table,
-    TableFactor, TableObject, Update, UpdateTableFromKind,
+    Delete, FromTable, FunctionArgExpr, Insert, JoinConstraint, JoinOperator, OnConflictAction,
+    OnInsert, Table, TableFactor, TableFunctionArgs, TableObject, Update, UpdateTableFromKind,
 };
 
 pub(super) fn collect_insert(insert: &Insert, ctes: &[String], out: &mut Vec<FragmentStar>) {
@@ -119,14 +119,21 @@ pub(super) fn visit_join_constraint(
     | JoinOperator::LeftOuter(JoinConstraint::On(expr))
     | JoinOperator::Right(JoinConstraint::On(expr))
     | JoinOperator::RightOuter(JoinConstraint::On(expr))
-    | JoinOperator::FullOuter(JoinConstraint::On(expr))
-    | JoinOperator::LeftSemi(JoinConstraint::On(expr))
-    | JoinOperator::RightSemi(JoinConstraint::On(expr))
-    | JoinOperator::LeftAnti(JoinConstraint::On(expr))
-    | JoinOperator::RightAnti(JoinConstraint::On(expr))
-    | JoinOperator::StraightJoin(JoinConstraint::On(expr))) = op
+    | JoinOperator::FullOuter(JoinConstraint::On(expr))) = op
     else {
         return;
     };
     walk_subqueries(expr, ctes, out);
+}
+
+pub(super) fn visit_table_args(
+    args: &TableFunctionArgs,
+    ctes: &[String],
+    out: &mut Vec<FragmentStar>,
+) {
+    for arg in &args.args {
+        if let FunctionArgExpr::Expr(e) = arg_expr(arg) {
+            walk_subqueries(e, ctes, out);
+        }
+    }
 }

@@ -6,6 +6,7 @@ mod exprs;
 mod items;
 use dml::{
     collect_delete, collect_insert, collect_table_expr, collect_update, visit_join_constraint,
+    visit_table_args,
 };
 use exprs::walk_subqueries;
 use items::collect_items;
@@ -29,19 +30,28 @@ pub(super) struct Rel {
     pub(super) is_local_derived: bool,
 }
 
-pub(super) fn collect_statements(statements: &[Statement], out: &mut Vec<FragmentStar>) {
+pub(super) fn collect_statements(
+    statements: &[Statement],
+    in_exists: bool,
+    out: &mut Vec<FragmentStar>,
+) {
     for statement in statements {
-        collect_statement(statement, &[], out);
+        collect_statement(statement, &[], in_exists, out);
     }
 }
 
-fn collect_statement(statement: &Statement, ctes: &[String], out: &mut Vec<FragmentStar>) {
+fn collect_statement(
+    statement: &Statement,
+    ctes: &[String],
+    in_exists: bool,
+    out: &mut Vec<FragmentStar>,
+) {
     match statement {
-        Statement::Query(query) => collect_query(query, ctes, false, out),
+        Statement::Query(query) => collect_query(query, ctes, in_exists, out),
         Statement::Insert(insert) => collect_insert(insert, ctes, out),
         Statement::Update(update) => collect_update(update, ctes, out),
         Statement::Delete(delete) => collect_delete(delete, ctes, out),
-        Statement::Explain { statement, .. } => collect_statement(statement, ctes, out),
+        Statement::Explain { statement, .. } => collect_statement(statement, ctes, false, out),
         _ => {}
     }
 }
@@ -81,7 +91,7 @@ fn collect_set(expr: &SetExpr, ctes: &[String], in_exists: bool, out: &mut Vec<F
         SetExpr::Select(select) => collect_select(select, ctes, in_exists, out),
         SetExpr::Query(query) => collect_query(query, ctes, in_exists, out),
         SetExpr::Insert(stmt) | SetExpr::Update(stmt) | SetExpr::Delete(stmt) => {
-            collect_statement(stmt, ctes, out);
+            collect_statement(stmt, ctes, false, out);
         }
         SetExpr::SetOperation {
             op, left, right, ..
@@ -146,11 +156,12 @@ pub(super) fn push_factor(
 ) {
     match factor {
         TableFactor::Table {
-            name,
-            alias,
-            args: None,
-            ..
+            name, alias, args, ..
         } => {
+            if let Some(table_args) = args {
+                visit_table_args(table_args, ctes, out);
+                return;
+            }
             let table = object_name_key(name);
             let is_cte = !table.contains('.') && ctes.iter().any(|cte| cte == &table);
             rels.push(Rel {

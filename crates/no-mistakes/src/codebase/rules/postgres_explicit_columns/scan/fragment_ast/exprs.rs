@@ -115,7 +115,7 @@ fn is_count_fn(name: &str) -> bool {
     name.eq_ignore_ascii_case("count") || name.eq_ignore_ascii_case("pg_catalog.count")
 }
 
-fn arg_expr(arg: &FunctionArg) -> &FunctionArgExpr {
+pub(super) fn arg_expr(arg: &FunctionArg) -> &FunctionArgExpr {
     match arg {
         FunctionArg::Unnamed(a)
         | FunctionArg::Named { arg: a, .. }

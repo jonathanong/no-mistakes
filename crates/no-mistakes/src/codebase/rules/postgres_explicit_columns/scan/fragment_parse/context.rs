@@ -84,9 +84,15 @@ fn consume_clause_relation(
     if is_kw(token, Keyword::UPDATE) {
         *in_with = false;
         *in_from = false;
-        if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
-            ctx.mutation_target = Some(rel);
-            return next_i;
+        let is_do = (0..i)
+            .rev()
+            .find(|&j| !matches!(tokens[j].token, Token::Whitespace(_)))
+            .is_some_and(|j| is_kw(&tokens[j], Keyword::DO));
+        if !is_do {
+            if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
+                ctx.mutation_target = Some(rel);
+                return next_i;
+            }
         }
     } else if is_kw(token, Keyword::INTO) || is_kw(token, Keyword::FROM) || is_kw(token, Keyword::USING) {
         let is_into = is_kw(token, Keyword::INTO);

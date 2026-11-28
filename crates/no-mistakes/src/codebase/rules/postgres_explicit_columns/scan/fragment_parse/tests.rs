@@ -94,6 +94,63 @@ fn ast_covers_dml_set_ops_table_and_nested_subqueries() {
             "SELECT pg_catalog.count(*), pg_catalog.count(w.*) FROM wide w",
             vec![(false, Some("wide"))],
         ),
+        (
+            "SELECT g.n FROM generate_series(1, (SELECT count(*) FROM (SELECT * FROM wide) w)) AS g(n)",
+            vec![(false, Some("wide"))],
+        ),
+        (
+            "SELECT * FROM narrow LEFT JOIN wide w ON w.id = (SELECT * FROM extra LIMIT 1) RIGHT JOIN a ON a.id = narrow.id FULL OUTER JOIN b ON b.id = a.id INNER JOIN c ON c.id = b.id CROSS JOIN d JOIN e USING (id)",
+            vec![
+                (false, Some("extra")),
+                (false, Some("narrow")),
+                (false, Some("wide")),
+                (false, Some("a")),
+                (false, Some("b")),
+                (false, Some("c")),
+                (false, Some("d")),
+                (false, Some("e")),
+            ],
+        ),
+        (
+            "SELECT wide.*, u.* FROM public.wide",
+            vec![(false, Some("public.wide")), (false, None)],
+        ),
+        (
+            "SELECT j.* FROM ((SELECT 1 AS id) d JOIN wide w ON true) AS j",
+            vec![(false, Some("wide"))],
+        ),
+        (
+            "WITH t AS (SELECT 1) TABLE t",
+            vec![],
+        ),
+        (
+            "TABLE wide",
+            vec![(false, Some("wide"))],
+        ),
+        (
+            "SELECT CASE id WHEN 1 THEN (SELECT * FROM a) ELSE (SELECT * FROM b) END, CAST((SELECT * FROM c) AS int), -(SELECT * FROM d), (SELECT * FROM e) IS NULL, (SELECT * FROM f) IS NOT NULL, (SELECT * FROM g) IS TRUE, (SELECT * FROM h) IS NOT TRUE, (SELECT * FROM i) IS FALSE, (SELECT * FROM j) IS NOT FALSE, (SELECT * FROM k) IS UNKNOWN, (SELECT * FROM l) IS NOT UNKNOWN, EXTRACT(YEAR FROM (SELECT * FROM m)), CEIL((SELECT * FROM n)), FLOOR((SELECT * FROM o)), id = ANY((SELECT * FROM p)), id = ALL((SELECT * FROM q)), name ILIKE (SELECT * FROM r), id IN UNNEST((SELECT * FROM s)), CURRENT_TIMESTAMP FROM narrow",
+            vec![
+                (false, Some("a")),
+                (false, Some("b")),
+                (false, Some("c")),
+                (false, Some("d")),
+                (false, Some("e")),
+                (false, Some("f")),
+                (false, Some("g")),
+                (false, Some("h")),
+                (false, Some("i")),
+                (false, Some("j")),
+                (false, Some("k")),
+                (false, Some("l")),
+                (false, Some("m")),
+                (false, Some("n")),
+                (false, Some("o")),
+                (false, Some("p")),
+                (false, Some("q")),
+                (false, Some("r")),
+                (false, Some("s")),
+            ],
+        ),
     ];
     for (sql, expected) in cases {
         let stars = extract_fragment_stars(sql, None);
@@ -225,4 +282,65 @@ fn context_and_token_fallback_handle_prefixes_ctes_commas_and_subqueries() {
     );
     assert_eq!(quoted_cte.len(), 1);
     assert_eq!(quoted_cte[0].relation.as_deref(), Some("wide"));
+
+    assert!(extract_fragment_stars("SELECT id FROM wide", None).is_empty());
+    assert!(extract_fragment_stars("* FROM wide", Some("SELECT EXISTS (SELECT ")).is_empty());
+    assert_eq!(
+        extract_fragment_stars(
+            "* FROM wide INTERSECT SELECT * FROM peer",
+            Some("SELECT EXISTS (SELECT "),
+        )
+        .len(),
+        2
+    );
+
+    let comma_sel = extract_fragment_stars(", w.* FROM wide w", Some("SELECT id"));
+    assert_eq!(comma_sel.len(), 1);
+    assert_eq!(comma_sel[0].relation.as_deref(), Some("wide"));
+
+    let upsert_ctx = parse_context(
+        "INSERT INTO wide (id) VALUES (1) ON CONFLICT (id) DO UPDATE SET id = 1",
+    );
+    assert_eq!(upsert_ctx.mutation_target, Some(("wide".to_string(), None)));
+
+    let ancestor_cte = extract_fragment_stars(
+        "SELECT (WITH c AS (SELECT 1 AS id) SELECT (SELECT * FROM c LIMIT 1)) WHERE",
+        None,
+    );
+    assert!(ancestor_cte.is_empty());
+
+    let select_all = extract_fragment_stars("SELECT ALL * FROM wide WHERE", None);
+    assert_eq!(select_all.len(), 1);
+    assert_eq!(select_all[0].relation.as_deref(), Some("wide"));
+
+    let distinct_on = extract_fragment_stars("SELECT DISTINCT ON (id) * FROM wide WHERE", None);
+    assert_eq!(distinct_on.len(), 1);
+    assert_eq!(distinct_on[0].relation.as_deref(), Some("wide"));
+
+    assert!(extract_fragment_stars("SELECT (a + b) * c FROM wide WHERE", None).is_empty());
+
+    let token_edges = extract_fragment_stars(
+        "WITH c AS (SELECT 1) SELECT *, c.*, wide.*, u.* FROM public.wide, c WHERE",
+        None,
+    );
+    let token_rels: Vec<_> = token_edges.iter().map(|s| s.relation.as_deref()).collect();
+    assert_eq!(token_rels, vec![Some("public.wide"), Some("public.wide"), None]);
+
+    let bare_no_from = extract_fragment_stars("SELECT * WHERE", None);
+    assert_eq!(bare_no_from.len(), 1);
+    assert_eq!(bare_no_from[0].relation, None);
+
+    let ret_token = extract_fragment_stars("DELETE FROM wide RETURNING * WHERE", None);
+    assert_eq!(ret_token.len(), 1);
+    assert!(ret_token[0].returning);
+    assert_eq!(ret_token[0].relation.as_deref(), Some("wide"));
+
+    assert!(extract_fragment_stars(", w.*", Some("SELECT id FROM wide GROUP BY id")).is_empty());
+    assert!(extract_fragment_stars(", w.*", Some("SELECT id FROM wide HAVING 1 = 1")).is_empty());
+    assert!(extract_fragment_stars(", w.*", Some("SELECT id FROM wide LIMIT 1")).is_empty());
+    assert!(extract_fragment_stars(", w.*", Some("SELECT id FROM wide UNION")).is_empty());
+    assert!(extract_fragment_stars(", w.*", Some("SELECT id FROM wide INTERSECT")).is_empty());
+    assert!(extract_fragment_stars(", w.*", Some("SELECT id FROM wide EXCEPT")).is_empty());
+    assert!(extract_fragment_stars(", w.*", Some("UPDATE wide SET a = 1")).is_empty());
+    assert!(extract_fragment_stars(", w.*", Some("INSERT INTO wide VALUES (1)")).is_empty());
 }

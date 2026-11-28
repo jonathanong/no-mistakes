@@ -7,6 +7,7 @@ fn closed_relation_tuple_and_widened_array_types() {
 import { query } from "@example/db";
 const TUPLE: readonly ["entries", "audit_view"] = ["entries", "audit_view"];
 const NAMED_TUPLE: [first: "records", second: "audit_view"] = ["records", "audit_view"];
+const OPT_TUPLE: [first?: "entries"] = [];
 const WIDENED: string[] = ["entries", "audit_view"];
 const BAD_TUPLE: readonly ["entries", 1] = ["entries", 1];
 
@@ -14,6 +15,9 @@ export function fromTuple(table: (typeof TUPLE)[number], id: string) {
   return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
 }
 export function fromNamedTuple(table: (typeof NAMED_TUPLE)[number], id: string) {
+  return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
+}
+export function fromOptTuple(table: (typeof OPT_TUPLE)[number], id: string) {
   return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
 }
 export function fromWidened(table: (typeof WIDENED)[number], id: string) {
@@ -25,7 +29,7 @@ export function fromBadTuple(table: (typeof BAD_TUPLE)[number], id: string) {
 "#;
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
     let facts = extract_embedded_sql_from_source(Path::new("src/tuples.ts"), source, &options);
-    assert_eq!(facts.calls.len(), 4);
+    assert_eq!(facts.calls.len(), 5);
     let frags = |idx: usize| -> Vec<String> {
         facts
             .call_fragments
@@ -56,6 +60,10 @@ export function fromBadTuple(table: (typeof BAD_TUPLE)[number], id: string) {
     );
     assert_eq!(
         frags(3),
+        vec!["SELECT * FROM sql_placeholder_1 WHERE id = $1"]
+    );
+    assert_eq!(
+        frags(4),
         vec!["SELECT * FROM sql_placeholder_1 WHERE id = $1"]
     );
 }
@@ -168,10 +176,41 @@ export function multiRelationReturning(table: Pair) {
   q.append(" SET active = true RETURNING *");
   return query(q);
 }
+
+export function plusEqualsRelationReturning(table: Pair) {
+  let q = "UPDATE ";
+  q += table;
+  q += " SET active = true RETURNING *";
+  return query(q);
+}
+
+export function inlineAppendToExecutor(suffix: string) {
+  const q = sql`UPDATE entries SET a = 1`;
+  return query(q.append(" RETURNING * " + suffix));
+}
+
+export function destructuringDefaultAfterTarget() {
+  let q = "SELECT * FROM entries";
+  let result;
+  [q, result = query(q)] = ["SELECT id FROM narrow", undefined];
+  return result;
+}
+
+type Single = "entries";
+export function singleAndBranchedRelationAppends(one: Single, pair: Pair, cond: boolean) {
+  const a = sql`UPDATE `;
+  a.append(one);
+  a.append(" SET x = 1 RETURNING *");
+  query(a);
+  const b = sql`UPDATE `;
+  if (cond) b.append(pair);
+  b.append(" SET x = 1 RETURNING *");
+  return query(b);
+}
 "#;
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
     let facts = extract_embedded_sql_from_source(Path::new("src/multi.ts"), source, &options);
-    assert_eq!(facts.calls.len(), 2);
+    assert_eq!(facts.calls.len(), 7);
     let first: Vec<String> = facts
         .call_fragments
         .get(&facts.call_spans[0])
@@ -188,17 +227,43 @@ export function multiRelationReturning(table: Pair) {
             "SELECT * FROM audit_viewsql_placeholder_1".to_string(),
         ]
     );
-    let second_ctxs: Vec<Option<String>> = facts
+    let returning_ctxs = |idx: usize| -> Vec<Option<String>> {
+        facts
+            .call_fragments
+            .get(&facts.call_spans[idx])
+            .cloned()
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|f| f.sql.contains("RETURNING"))
+            .map(|f| f.context_sql)
+            .collect()
+    };
+    assert_eq!(
+        returning_ctxs(1),
+        vec![
+            Some("UPDATE entries".to_string()),
+            Some("UPDATE records".to_string()),
+        ]
+    );
+    assert_eq!(
+        returning_ctxs(2),
+        vec![
+            Some("UPDATE entries".to_string()),
+            Some("UPDATE records".to_string()),
+        ]
+    );
+    assert!(returning_ctxs(3)
+        .iter()
+        .any(|c| c.as_deref() == Some("UPDATE entries SET a = 1")));
+    assert!(facts
         .call_fragments
-        .get(&facts.call_spans[1])
+        .get(&facts.call_spans[4])
         .cloned()
         .unwrap_or_default()
-        .into_iter()
-        .filter(|f| f.sql.contains("RETURNING"))
-        .map(|f| f.context_sql)
-        .collect();
+        .is_empty());
+    assert_eq!(returning_ctxs(5), vec![Some("UPDATE entries".to_string())]);
     assert_eq!(
-        second_ctxs,
+        returning_ctxs(6),
         vec![
             Some("UPDATE entries".to_string()),
             Some("UPDATE records".to_string()),

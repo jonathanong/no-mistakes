@@ -7,6 +7,7 @@ use oxc_ast::ast::{CallExpression, Expression};
 use oxc_span::GetSpan;
 
 mod collect;
+mod inline;
 mod partial;
 pub(crate) use partial::publish_call_fragments;
 
@@ -34,6 +35,12 @@ impl ScopeVisitor<'_> {
             .remove(&(scope_index, name.to_string()));
         let key = self.plain_key(name);
         self.call_fragment_state.function_returns.remove(&key);
+    }
+
+    pub(super) fn clear_builder_fragment_by_name(&mut self, name: &str) {
+        if let Some(index) = self.lookup_scope(name) {
+            self.clear_builder_fragment(index, name);
+        }
     }
 
     pub(super) fn note_builder_init(

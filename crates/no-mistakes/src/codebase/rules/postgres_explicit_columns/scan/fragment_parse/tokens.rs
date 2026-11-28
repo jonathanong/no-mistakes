@@ -1,6 +1,6 @@
 use super::super::fragment_ast::FragmentStar;
 use super::context::extract_context_from_tokens;
-use super::token_scopes::{enclosing_function, scope_context};
+use super::token_scopes::{enclosing_function, is_distinct_on_rparen, scope_context};
 use super::{is_kw, word_value, FragmentContext};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
@@ -9,15 +9,16 @@ pub(super) fn extract_stars(
     tokens: &[TokenWithSpan],
     initial_select: bool,
     initial_returning: bool,
+    initial_exists: bool,
     out: &mut Vec<FragmentStar>,
 ) {
     let mut ctx = FragmentContext::default();
     extract_context_from_tokens(tokens, &mut ctx);
     let mut clause_returning = initial_returning;
     let mut clause_select = initial_select;
-    let mut in_exists = false;
+    let mut in_exists = initial_exists;
     let mut clause_stack: Vec<(bool, bool, bool)> = Vec::new();
-    let mut prev_code: Option<&TokenWithSpan> = None;
+    let mut prev_code: Option<(usize, &TokenWithSpan)> = None;
     let mut prev_prev: Option<&TokenWithSpan> = None;
     for (i, token) in tokens.iter().enumerate() {
         if matches!(token.token, Token::Whitespace(_)) {
@@ -26,7 +27,7 @@ pub(super) fn extract_stars(
         match &token.token {
             Token::LParen => {
                 clause_stack.push((clause_select, clause_returning, in_exists));
-                in_exists = prev_code.is_some_and(|t| is_kw(t, Keyword::EXISTS));
+                in_exists = prev_code.is_some_and(|(_, t)| is_kw(t, Keyword::EXISTS));
             }
             Token::RParen => {
                 if let Some((prev_select, prev_returning, prev_exists)) = clause_stack.pop() {
@@ -39,14 +40,17 @@ pub(super) fn extract_stars(
                 let line = (token.span.start.line as usize).max(1);
                 let scoped = scope_context(tokens, i, &ctx);
                 let active = scoped.as_ref().unwrap_or(&ctx);
-                if prev_code.is_some_and(|t| matches!(t.token, Token::Period)) {
+                if prev_code.is_some_and(|(_, t)| matches!(t.token, Token::Period)) {
                     push_qualified(tokens, i, prev_prev, active, clause_returning, line, out);
                 } else if prev_code.is_none()
-                    || prev_code.is_some_and(|t| {
+                    || prev_code.is_some_and(|(pi, t)| {
                         matches!(t.token, Token::Comma | Token::LParen)
                             || is_kw(t, Keyword::SELECT)
                             || is_kw(t, Keyword::DISTINCT)
+                            || is_kw(t, Keyword::ALL)
                             || is_kw(t, Keyword::RETURNING)
+                            || (matches!(t.token, Token::RParen)
+                                && is_distinct_on_rparen(tokens, pi))
                     })
                 {
                     push_bare(tokens, i, active, clause_returning, line, out);
@@ -68,8 +72,8 @@ pub(super) fn extract_stars(
                 }
             }
         }
-        prev_prev = prev_code;
-        prev_code = Some(token);
+        prev_prev = prev_code.map(|(_, t)| t);
+        prev_code = Some((i, token));
     }
 }
 

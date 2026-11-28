@@ -102,7 +102,7 @@ pub(super) fn resolved_relations(star: &FragmentStar, ctx: &FragmentContext) -> 
         if let Some(table) = find_qualified(&ctx.from_relations, q) {
             return vec![table];
         }
-        if ctx.ctes.iter().any(|cte| cte.eq_ignore_ascii_case(q)) {
+        if ctx.ctes.iter().any(|cte| cte == q) {
             return vec![q.clone()];
         }
         return Vec::new();

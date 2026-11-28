@@ -37,19 +37,19 @@ pub(super) fn extract_fragment_stars(sql: &str, context_sql: Option<&str>) -> Ve
     let mut out = Vec::new();
     if let Ok(statements) = parse_postgres_sql(sql) {
         if !statements.is_empty() {
-            fragment_ast::collect_statements(&statements, &mut out);
+            fragment_ast::collect_statements(&statements, false, &mut out);
             return out;
         }
     }
-    let (ctx_select, ctx_returning) = context_sql
-        .map(|prefix| open_clause_at_end(&tokenize(prefix)))
-        .unwrap_or((false, false));
+    let (ctx_select, ctx_returning, ctx_exists) = context_sql
+        .map(|prefix| token_scopes::open_clause_at_end(&tokenize(prefix)))
+        .unwrap_or((false, false, false));
     let toks = tokenize(sql);
     if let Some((_, token)) = next_code(&toks, 0) {
         if is_kw(token, Keyword::RETURNING) {
             let wrapped = format!("DELETE FROM {SYNTHETIC_TARGET} {sql}");
             if let Ok(statements) = parse_postgres_sql(&wrapped) {
-                fragment_ast::collect_statements(&statements, &mut out);
+                fragment_ast::collect_statements(&statements, false, &mut out);
                 return out;
             }
         } else if matches!(token.token, Token::Comma) && (ctx_select || ctx_returning) {
@@ -59,24 +59,24 @@ pub(super) fn extract_fragment_stars(sql: &str, context_sql: Option<&str>) -> Ve
                 format!("SELECT 1 {sql}")
             };
             if let Ok(statements) = parse_postgres_sql(&wrapped) {
-                fragment_ast::collect_statements(&statements, &mut out);
+                fragment_ast::collect_statements(&statements, !ctx_returning && ctx_exists, &mut out);
                 return out;
             }
         } else if ctx_select {
             let wrapped = format!("SELECT {sql}");
             if let Ok(statements) = parse_postgres_sql(&wrapped) {
-                fragment_ast::collect_statements(&statements, &mut out);
+                fragment_ast::collect_statements(&statements, ctx_exists, &mut out);
                 return out;
             }
         } else if ctx_returning {
             let wrapped = format!("DELETE FROM {SYNTHETIC_TARGET} RETURNING {sql}");
             if let Ok(statements) = parse_postgres_sql(&wrapped) {
-                fragment_ast::collect_statements(&statements, &mut out);
+                fragment_ast::collect_statements(&statements, false, &mut out);
                 return out;
             }
         }
     }
-    tokens::extract_stars(&toks, ctx_select, ctx_returning, &mut out);
+    tokens::extract_stars(&toks, ctx_select, ctx_returning, ctx_exists, &mut out);
     out
 }
 
@@ -109,56 +109,6 @@ pub(super) fn word_value(token: &TokenWithSpan) -> Option<String> {
         }),
         _ => None,
     }
-}
-
-fn open_clause_at_end(tokens: &[TokenWithSpan]) -> (bool, bool) {
-    let mut stack: Vec<(bool, bool)> = Vec::new();
-    let mut select = false;
-    let mut returning = false;
-    for token in tokens {
-        if matches!(token.token, Token::Whitespace(_)) {
-            continue;
-        }
-        match &token.token {
-            Token::LParen => {
-                stack.push((select, returning));
-                select = false;
-                returning = false;
-            }
-            Token::RParen => {
-                if let Some((prev_select, prev_returning)) = stack.pop() {
-                    select = prev_select;
-                    returning = prev_returning;
-                }
-            }
-            _ if is_kw(token, Keyword::SELECT) => {
-                select = true;
-                returning = false;
-            }
-            _ if is_kw(token, Keyword::RETURNING) => {
-                returning = true;
-                select = false;
-            }
-            _ if is_kw(token, Keyword::FROM)
-                || is_kw(token, Keyword::WHERE)
-                || is_kw(token, Keyword::INTO)
-                || is_kw(token, Keyword::SET)
-                || is_kw(token, Keyword::VALUES)
-                || is_kw(token, Keyword::GROUP)
-                || is_kw(token, Keyword::ORDER)
-                || is_kw(token, Keyword::LIMIT)
-                || is_kw(token, Keyword::HAVING)
-                || is_kw(token, Keyword::UNION)
-                || is_kw(token, Keyword::INTERSECT)
-                || is_kw(token, Keyword::EXCEPT) =>
-            {
-                select = false;
-                returning = false;
-            }
-            _ => {}
-        }
-    }
-    (select, returning)
 }
 
 pub(super) fn read_cte_name(tokens: &[TokenWithSpan], index: usize) -> Option<(usize, String)> {

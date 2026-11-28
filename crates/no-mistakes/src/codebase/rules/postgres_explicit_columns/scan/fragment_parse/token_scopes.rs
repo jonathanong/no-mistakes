@@ -21,11 +21,95 @@ pub(super) fn scope_context(
             || inner.mutation_target.is_some()
             || starts_with_query(slice)
         {
+            collect_ancestor_ctes(tokens, open, &mut inner.ctes);
             return Some(inner);
         }
         cursor = open;
     }
     None
+}
+
+fn collect_ancestor_ctes(tokens: &[TokenWithSpan], mut cursor: usize, ctes: &mut Vec<String>) {
+    while let Some(open) = enclosing_open_paren(tokens, cursor) {
+        let mut parent = FragmentContext::default();
+        extract_context_from_tokens(&tokens[open + 1..cursor], &mut parent);
+        ctes.extend(parent.ctes);
+        cursor = open;
+    }
+}
+
+pub(super) fn is_distinct_on_rparen(tokens: &[TokenWithSpan], rparen_index: usize) -> bool {
+    let Some(open) = enclosing_open_paren(tokens, rparen_index) else {
+        return false;
+    };
+    let Some(on_idx) = prev_code_index(tokens, open) else {
+        return false;
+    };
+    if !is_kw(&tokens[on_idx], Keyword::ON) {
+        return false;
+    }
+    prev_code_index(tokens, on_idx).is_some_and(|idx| is_kw(&tokens[idx], Keyword::DISTINCT))
+}
+
+fn prev_code_index(tokens: &[TokenWithSpan], before: usize) -> Option<usize> {
+    (0..before)
+        .rev()
+        .find(|&j| !matches!(tokens[j].token, Token::Whitespace(_)))
+}
+
+pub(super) fn open_clause_at_end(tokens: &[TokenWithSpan]) -> (bool, bool, bool) {
+    let mut stack: Vec<(bool, bool, bool)> = Vec::new();
+    let mut select = false;
+    let mut returning = false;
+    let mut in_exists = false;
+    let mut prev_exists = false;
+    for token in tokens {
+        if matches!(token.token, Token::Whitespace(_)) {
+            continue;
+        }
+        match &token.token {
+            Token::LParen => {
+                stack.push((select, returning, in_exists));
+                select = false;
+                returning = false;
+                in_exists = prev_exists;
+            }
+            Token::RParen => {
+                if let Some((ps, pr, pe)) = stack.pop() {
+                    select = ps;
+                    returning = pr;
+                    in_exists = pe;
+                }
+            }
+            _ if is_kw(token, Keyword::SELECT) => {
+                select = true;
+                returning = false;
+            }
+            _ if is_kw(token, Keyword::RETURNING) => {
+                returning = true;
+                select = false;
+            }
+            _ if is_kw(token, Keyword::FROM)
+                || is_kw(token, Keyword::WHERE)
+                || is_kw(token, Keyword::INTO)
+                || is_kw(token, Keyword::SET)
+                || is_kw(token, Keyword::VALUES)
+                || is_kw(token, Keyword::GROUP)
+                || is_kw(token, Keyword::ORDER)
+                || is_kw(token, Keyword::LIMIT)
+                || is_kw(token, Keyword::HAVING)
+                || is_kw(token, Keyword::UNION)
+                || is_kw(token, Keyword::INTERSECT)
+                || is_kw(token, Keyword::EXCEPT) =>
+            {
+                select = false;
+                returning = false;
+            }
+            _ => {}
+        }
+        prev_exists = is_kw(token, Keyword::EXISTS);
+    }
+    (select, returning, in_exists)
 }
 
 fn starts_with_query(tokens: &[TokenWithSpan]) -> bool {
