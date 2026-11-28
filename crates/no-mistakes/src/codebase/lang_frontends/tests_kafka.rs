@@ -1,7 +1,10 @@
-use crate::codebase::lang_frontends::kafka::{
-    extract_kafka_topics, extract_kafka_topics_for, KafkaFile,
-};
+use crate::codebase::lang_frontends::kafka::{extract_kafka_topics_for, KafkaFile};
 use std::path::{Path, PathBuf};
+
+pub(super) fn extract_kafka_topics(source: &str) -> (Vec<String>, Vec<String>) {
+    // Callers without a path keep the historical Ruby-subscribe scan.
+    extract_kafka_topics_for(source, KafkaFile::new(true, false))
+}
 
 fn source(root: &str, rel: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

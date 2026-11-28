@@ -1,6 +1,6 @@
 use super::*;
-use crate::codebase::lang_frontends::kafka::extract_kafka_topics;
 use crate::codebase::lang_frontends::strip::mask_strings;
+use crate::codebase::lang_frontends::tests_kafka::extract_kafka_topics;
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {

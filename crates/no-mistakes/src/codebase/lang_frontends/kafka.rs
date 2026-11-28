@@ -9,35 +9,20 @@ pub(crate) struct KafkaFile {
 }
 
 impl KafkaFile {
-    #[cfg(test)]
-    fn unknown() -> Self {
+    pub(crate) fn new(ruby_subscribe: bool, dollar_templates: bool) -> Self {
         Self {
-            ruby_subscribe: true,
-            dollar_templates: false,
+            ruby_subscribe,
+            dollar_templates,
         }
     }
 
     pub(crate) fn from_path(path: &Path) -> Self {
         match path.extension().and_then(|ext| ext.to_str()) {
-            Some("rb") => Self {
-                ruby_subscribe: true,
-                dollar_templates: false,
-            },
-            Some("kt" | "kts" | "php") => Self {
-                ruby_subscribe: false,
-                dollar_templates: true,
-            },
-            _ => Self {
-                ruby_subscribe: false,
-                dollar_templates: false,
-            },
+            Some("rb") => Self::new(true, false),
+            Some("kt" | "kts" | "php") => Self::new(false, true),
+            _ => Self::new(false, false),
         }
     }
-}
-
-#[cfg(test)]
-pub(crate) fn extract_kafka_topics(source: &str) -> (Vec<String>, Vec<String>) {
-    extract_kafka_topics_for(source, KafkaFile::unknown())
 }
 
 pub(crate) fn extract_kafka_topics_for(
