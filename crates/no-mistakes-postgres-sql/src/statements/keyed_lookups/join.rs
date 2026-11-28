@@ -86,18 +86,27 @@ fn inspect_join(
     if let (true, Some(JoinConstraint::On(expr))) = (evaluate, constraint) {
         scopes.with_local_bindings(left_start, |scopes| {
             inspect_exprs(std::iter::once(expr), scopes, seen, out);
+            if matches!(
+                join.join_operator,
+                JoinOperator::Join(_) | JoinOperator::Inner(_)
+            ) {
+                seen.restrict(expr, &scopes.snapshot(), true);
+            }
         });
     }
     let end = scopes.binding_count();
     match &join.join_operator {
         JoinOperator::Left(_) | JoinOperator::LeftOuter(_) => {
+            seen.drop_bindings(&scopes.binding_ids(right_start..end));
             scopes.refresh_bindings(right_start..end);
         }
         JoinOperator::Right(_) | JoinOperator::RightOuter(_) => {
+            seen.drop_bindings(&scopes.binding_ids(left_start..right_start));
             scopes.refresh_bindings(left_start..right_start);
             using.invalidate_left();
         }
         JoinOperator::FullOuter(_) => {
+            seen.drop_bindings(&scopes.binding_ids(left_start..end));
             scopes.refresh_bindings(left_start..end);
             using.invalidate_left();
         }

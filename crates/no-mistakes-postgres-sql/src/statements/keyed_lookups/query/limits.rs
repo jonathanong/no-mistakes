@@ -36,9 +36,7 @@ pub(in crate::statements::keyed_lookups) fn has_zero_limit(limit: Option<&LimitC
 
 pub(super) fn literal_limit_value(count: &Expr) -> Option<i64> {
     match limit_literal(count)? {
-        Value::Number(number, _) => {
-            decimal_integer(number).or_else(|| decimal_rounds_to_zero(number).then_some(0))
-        }
+        Value::Number(number, _) => decimal_integer(number).or_else(|| decimal_to_i64(number)),
         Value::SingleQuotedString(number) | Value::EscapedStringLiteral(number) => {
             number.trim_ascii().parse().ok()
         }
@@ -60,36 +58,53 @@ fn limit_literal(count: &Expr) -> Option<&Value> {
     literal(count)
 }
 
-fn decimal_rounds_to_zero(number: &str) -> bool {
+fn decimal_to_i64(number: &str) -> Option<i64> {
     let (mantissa, exponent) = match number.split_once(['e', 'E']) {
-        Some((mantissa, exponent)) => {
-            let Some(exponent) = decimal_integer(exponent) else {
-                return false;
-            };
-            (mantissa, exponent)
-        }
+        Some((mantissa, exponent)) => (mantissa, decimal_integer(exponent)?),
         None => (number, 0),
     };
-    let mantissa = mantissa.trim_start_matches(['+', '-']);
-    if !mantissa
+    let (whole, fraction) = match mantissa.split_once('.') {
+        Some((whole, fraction)) if !fraction.contains('.') => (whole, fraction),
+        Some(_) => return None,
+        None => (mantissa, ""),
+    };
+    if !whole
         .bytes()
-        .all(|byte| byte.is_ascii_digit() || matches!(byte, b'.' | b'_'))
+        .chain(fraction.bytes())
+        .all(|byte| byte.is_ascii_digit() || byte == b'_')
     {
-        return false;
+        return None;
     }
-    let (whole, fraction) = mantissa.split_once('.').unwrap_or((mantissa, ""));
     let whole_digits = whole.bytes().filter(u8::is_ascii_digit).count();
-    let significant = whole
+    let digits: Vec<u8> = whole
         .bytes()
         .chain(fraction.bytes())
         .filter(u8::is_ascii_digit)
-        .enumerate()
-        .find(|(_, digit)| *digit != b'0');
-    let Some((leading_zeroes, digit)) = significant else {
-        return true;
+        .collect();
+    if digits.is_empty() {
+        return None;
+    }
+    let Some(first_nonzero) = digits.iter().position(|&digit| digit != b'0') else {
+        return Some(0);
     };
+    let significant = &digits[first_nonzero..];
     let decimal_position = exponent
         .saturating_add(whole_digits as i64)
-        .saturating_sub(leading_zeroes as i64);
-    decimal_position < 0 || decimal_position == 0 && digit < b'5'
+        .saturating_sub(first_nonzero as i64);
+    if decimal_position < 0 {
+        return Some(0);
+    }
+    if decimal_position > 19 {
+        return None;
+    }
+    let integer_digits = decimal_position as usize;
+    let mut value: u128 = 0;
+    for index in 0..integer_digits {
+        let digit = significant.get(index).copied().unwrap_or(b'0') - b'0';
+        value = value * 10 + u128::from(digit);
+    }
+    if significant.get(integer_digits).copied().unwrap_or(b'0') >= b'5' {
+        value += 1;
+    }
+    i64::try_from(value).ok()
 }

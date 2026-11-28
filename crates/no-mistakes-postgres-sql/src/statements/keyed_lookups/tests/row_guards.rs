@@ -99,3 +99,36 @@ fn respects_output_stages_and_row_demand() {
         ]
     );
 }
+
+#[test]
+fn preserves_returning_join_coalesce_cte_and_decimal_limit_guards() {
+    let facts = fixture_facts("review-guard-propagation");
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+
+    assert_eq!(
+        sites,
+        [
+            (9, 10),
+            (15, 16),
+            (21, 22),
+            (35, 36),
+            (42, 43),
+            (54, 55),
+            (61, 62),
+            (68, 69),
+            (75, 76),
+            (82, 83),
+            (102, 103),
+            (112, 113),
+            (130, 131),
+            (139, 140),
+            (178, 179),
+            (186, 187),
+            (194, 195),
+        ]
+    );
+}

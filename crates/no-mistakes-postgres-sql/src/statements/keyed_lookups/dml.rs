@@ -50,7 +50,7 @@ pub(super) fn walk_insert(
         scopes.pop_frame();
     }
     if let Some(returning) = returning {
-        scopes.add_returning_aliases(Some("new"));
+        scopes.add_returning_aliases(None, scopes.first_binding_id());
         inspect_exprs(
             returning_exprs(Some(returning)),
             scopes,
@@ -89,8 +89,9 @@ pub(super) fn walk_update(
         .map(|assignment| &assignment.value);
     inspect_exprs(exprs, scopes, &mut seen, out);
     if let Some(returning) = update.returning.as_deref() {
+        let old_target = scopes.first_binding_id();
         scopes.refresh_bindings(0..target_bindings);
-        scopes.add_returning_aliases(Some("new"));
+        scopes.add_returning_aliases(old_target, scopes.first_binding_id());
         let mut returning_seen = seen.guard_only();
         inspect_exprs(
             returning_exprs(Some(returning)),
@@ -120,7 +121,7 @@ pub(super) fn walk_delete(
     }
     inspect_row_filter(delete.selection.as_ref(), scopes, &mut seen, out);
     if let Some(returning) = delete.returning.as_deref() {
-        scopes.add_returning_aliases(Some("old"));
+        scopes.add_returning_aliases(scopes.first_binding_id(), None);
         inspect_exprs(returning_exprs(Some(returning)), scopes, &mut seen, out);
     }
     scopes.pop_frame();

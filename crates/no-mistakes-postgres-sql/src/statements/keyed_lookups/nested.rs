@@ -87,11 +87,16 @@ impl Nested<'_> {
             }
             Expr::Function(function) => {
                 if let Some(arguments) = coalesce_arguments(function) {
-                    let (evaluated, skipped) = split_coalesce_arguments(arguments);
-                    if !skipped.is_empty() {
-                        self.blocked_expression_depth = 1;
-                        for argument in evaluated.iter().filter_map(function_arg_expr) {
-                            self.walk_child(argument);
+                    self.blocked_expression_depth = 1;
+                    let (evaluated, _) = split_coalesce_arguments(arguments);
+                    let outer = self.scopes.snapshot();
+                    let mut guards = self.guards.guard_only();
+                    for argument in evaluated.iter().filter_map(function_arg_expr) {
+                        if guards.is_reachable() {
+                            self.walk_child_with_guards(argument, guards.guard_only());
+                            guards.restrict_to_null(argument, &outer);
+                        } else {
+                            self.walk_eager_children(argument);
                         }
                     }
                 }

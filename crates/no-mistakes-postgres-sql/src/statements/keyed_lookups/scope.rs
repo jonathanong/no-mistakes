@@ -44,10 +44,8 @@ impl ScopeStack {
         self.add_binding(qualifier, None)
     }
 
-    pub(super) fn add_returning_aliases(&mut self, current_row: Option<&str>) {
-        let frame = self.frames.last().expect("RETURNING requires a scope");
-        let target_id = frame.first().map(|binding| binding.id);
-        for qualifier in ["old", "new"] {
+    pub(super) fn add_returning_aliases(&mut self, old: Option<usize>, new: Option<usize>) {
+        for (qualifier, id) in [("old", old), ("new", new)] {
             if self
                 .frames
                 .iter()
@@ -56,19 +54,28 @@ impl ScopeStack {
             {
                 continue;
             }
-            if let Some(id) = target_id.filter(|_| current_row == Some(qualifier)) {
-                self.frames
-                    .last_mut()
-                    .expect("RETURNING requires a scope")
-                    .push(Binding {
-                        id,
-                        qualifier: qualifier.to_owned(),
-                        columns: None,
-                    });
+            if let Some(id) = id {
+                let frame = self.frames.last_mut().expect("RETURNING requires a scope");
+                frame.push(Binding {
+                    id,
+                    qualifier: qualifier.to_owned(),
+                    columns: None,
+                });
             } else {
                 self.add_named_alias(qualifier.to_owned());
             }
         }
+    }
+
+    pub(super) fn first_binding_id(&self) -> Option<usize> {
+        self.frames.last()?.first().map(|binding| binding.id)
+    }
+
+    pub(super) fn binding_ids(&self, bindings: std::ops::Range<usize>) -> Vec<usize> {
+        self.frames.last().expect("bindings require a query scope")[bindings]
+            .iter()
+            .map(|binding| binding.id)
+            .collect()
     }
 
     pub(super) fn add_using_alias(

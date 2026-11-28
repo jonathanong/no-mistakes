@@ -74,18 +74,20 @@ The rule stays silent when the lookups are not proven to read the same row:
   Value inputs of row-selecting windows such as `pg_catalog.first_value` and
   `pg_catalog.last_value` can run on different rows. The rule checks each for
   repeated work within that input.
-- `COALESCE` arguments after a known non-null literal, including calls that
-  the planner removes with those arguments. For resolved columns, later
-  scalar arguments retain the null requirement from earlier arguments.
+- `COALESCE` arguments after a known non-null literal, including calls and
+  read-only CTE references that the planner removes with those arguments. For
+  resolved columns, later scalar and nested arguments retain the null
+  requirement from earlier arguments.
 - Unreachable `CASE` results, including simple cases with comparable integer
   or Boolean literals. For searched cases, the rule can keep opposing tests
   of the same qualified Boolean column separate across expressions. The rule
-  also carries row guards from `WHERE` and aggregate `FILTER` into the
-  expressions they control, including retained grouping keys. Lookup histories
-  for a window's selected row retain guards shared by all rows in the window.
-  `MERGE RETURNING` keeps separate old-row guards for each delete action
-  when all reachable modifying actions delete rows.
-  `UPDATE RETURNING` retains guards on its unchanged `FROM` inputs.
+  also carries row guards from `INNER JOIN ... ON`, `WHERE`, and aggregate
+  `FILTER` into the expressions they control, including retained grouping keys.
+  Lookup histories for a window's selected row retain guards shared by all rows
+  in the window. `MERGE RETURNING` keeps separate old-row guards for each delete
+  action when all reachable modifying actions delete rows and retains unchanged
+  source guards across modifying actions. `UPDATE RETURNING` retains guards on
+  its unchanged `FROM` inputs and binds `OLD` to the pre-update target row.
 - Arguments to `pg_catalog.replace(text, text, text)` eliminated by the
   PostgreSQL planner when a text argument is known null.
 - XML table namespaces, paths, and defaults when the document is a known XML

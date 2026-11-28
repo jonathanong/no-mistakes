@@ -17,6 +17,7 @@ pub(in crate::statements::keyed_lookups) fn walk_merge(
     scopes.push_frame();
     let mut base_seen = LookupHistory::new();
     register_table_factor(&merge.table, scopes, &mut base_seen, out);
+    let target_ids = scopes.binding_ids(0..scopes.binding_count());
     register_table_factor(&merge.source, scopes, &mut base_seen, out);
     inspect_exprs(std::iter::once(&*merge.on), scopes, &mut base_seen, out);
     let outer = scopes.snapshot();
@@ -59,6 +60,7 @@ pub(in crate::statements::keyed_lookups) fn walk_merge(
                 record_returning_context(
                     &clause.action,
                     &action_seen,
+                    &target_ids,
                     &mut returning,
                     &mut deletes_only,
                 );
@@ -73,7 +75,8 @@ pub(in crate::statements::keyed_lookups) fn walk_merge(
     }
     if let Some(OutputClause::Returning { select_items, .. }) = &merge.output {
         if !returning.is_empty() {
-            scopes.add_returning_aliases(deletes_only.then_some("old"));
+            let old_target = deletes_only.then(|| scopes.first_binding_id()).flatten();
+            scopes.add_returning_aliases(old_target, None);
             inspect_returning(select_items, returning, scopes, out);
         }
     }
@@ -83,19 +86,15 @@ pub(in crate::statements::keyed_lookups) fn walk_merge(
 fn record_returning_context(
     action: &MergeAction,
     action_seen: &LookupHistory,
+    target_ids: &[usize],
     returning: &mut Vec<LookupHistory>,
     deletes_only: &mut bool,
 ) {
     match action {
         MergeAction::DoNothing { .. } => {}
-        MergeAction::Delete { .. } => {
-            if *deletes_only {
-                returning.push(action_seen.guard_only());
-            }
-        }
+        MergeAction::Delete { .. } => returning.push(action_seen.guard_only()),
         _ => {
-            returning.clear();
-            returning.push(LookupHistory::new());
+            returning.push(action_seen.without_bindings(target_ids));
             *deletes_only = false;
         }
     }

@@ -55,6 +55,24 @@ impl LookupHistory {
         self.active = previous;
     }
 
+    pub(in crate::statements::keyed_lookups) fn drop_bindings(&mut self, excluded: &[usize]) {
+        if excluded.is_empty() {
+            return;
+        }
+        self.active
+            .columns
+            .retain(|column, _| !matches!(column, Column::Bound(id, _) if excluded.contains(id)));
+    }
+
+    pub(in crate::statements::keyed_lookups) fn without_bindings(
+        &self,
+        excluded: &[usize],
+    ) -> Self {
+        let mut copy = self.guard_only();
+        copy.drop_bindings(excluded);
+        copy
+    }
+
     pub(in crate::statements::keyed_lookups) fn preserve_grouped_column(
         &mut self,
         position: usize,
