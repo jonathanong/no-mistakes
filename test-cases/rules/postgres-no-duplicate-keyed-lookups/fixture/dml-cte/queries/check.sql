@@ -257,3 +257,44 @@ WHEN MATCHED AND o.enabled THEN UPDATE SET
     account_tier = (SELECT b.tier FROM accounts b WHERE b.id = o.account_id)
 RETURNING (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
           (SELECT b.tier FROM accounts b WHERE b.id = o.account_id);
+
+UPDATE orders AS o
+SET account_name = CASE WHEN o.enabled THEN '' ELSE
+    (SELECT a.name FROM accounts a WHERE a.id = o.account_id)
+    || (SELECT b.name FROM accounts b WHERE b.id = o.account_id)
+END
+WHERE o.enabled;
+
+UPDATE orders AS o
+SET account_name = CASE WHEN o.enabled THEN
+    (SELECT a.name FROM accounts a WHERE a.id = o.account_id)
+    || (SELECT b.name FROM accounts b WHERE b.id = o.account_id)
+END
+WHERE o.enabled
+RETURNING CASE WHEN NOT o.enabled THEN
+    (SELECT c.name FROM accounts c WHERE c.id = o.account_id)
+    || (SELECT d.name FROM accounts d WHERE d.id = o.account_id)
+END;
+
+INSERT INTO orders AS o (id) VALUES (42)
+ON CONFLICT (id) DO UPDATE SET account_name = CASE WHEN o.enabled THEN '' ELSE
+    (SELECT a.name FROM accounts a WHERE a.id = o.account_id)
+    || (SELECT b.name FROM accounts b WHERE b.id = o.account_id)
+END WHERE o.enabled;
+
+DELETE FROM orders AS o WHERE o.enabled
+RETURNING CASE WHEN NOT o.enabled THEN
+    (SELECT a.name FROM accounts a WHERE a.id = o.account_id)
+    || (SELECT b.name FROM accounts b WHERE b.id = o.account_id)
+END;
+
+MERGE INTO orders AS o USING (VALUES (1)) AS s(id)
+ON o.enabled
+WHEN MATCHED THEN UPDATE SET account_name = CASE WHEN o.enabled THEN '' ELSE
+    (SELECT a.name FROM accounts a WHERE a.id = o.account_id)
+    || (SELECT b.name FROM accounts b WHERE b.id = o.account_id)
+END
+WHEN NOT MATCHED BY SOURCE THEN UPDATE SET account_name = CASE WHEN NOT o.enabled THEN
+    (SELECT a.name FROM accounts a WHERE a.id = o.account_id)
+    || (SELECT b.name FROM accounts b WHERE b.id = o.account_id)
+END;

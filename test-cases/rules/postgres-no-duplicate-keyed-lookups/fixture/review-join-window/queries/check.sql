@@ -108,3 +108,55 @@ CROSS JOIN LATERAL (
         JOIN accounts b ON b.id = t.id
     ) s
 ) q;
+
+SELECT s.name, s.email
+FROM orders o
+LEFT JOIN LATERAL (
+    SELECT (SELECT a.name FROM accounts a WHERE a.id = o.account_id) AS name,
+           (SELECT b.email FROM accounts b WHERE b.id = o.account_id) AS email
+    OFFSET 0
+) s ON FALSE;
+
+SELECT s.name, s.email
+FROM orders o
+LEFT JOIN LATERAL (
+    SELECT (SELECT a.name FROM accounts a WHERE a.id = o.account_id) AS name,
+           (SELECT b.email FROM accounts b WHERE b.id = o.account_id) AS email
+    OFFSET 0
+) s ON o.enabled;
+
+SELECT x.*
+FROM orders o
+CROSS JOIN XMLTABLE(
+    '/r' PASSING '<r><v>1</v></r>'::xml
+    COLUMNS ordinal FOR ORDINALITY,
+            p text PATH (SELECT a.path FROM paths a WHERE a.id = o.path_id),
+            q text PATH (SELECT b.path FROM paths b WHERE b.id = o.path_id)
+) AS x;
+
+SELECT pg_catalog.row_number() OVER (
+    PARTITION BY o.id
+    ROWS BETWEEN (SELECT a.n FROM accounts a WHERE a.id = $1) PRECEDING
+         AND (SELECT b.n FROM accounts b WHERE b.id = $1) FOLLOWING
+)
+FROM orders o
+GROUP BY o.id;
+
+SELECT pg_catalog.row_number() OVER (
+    PARTITION BY o.id
+    ROWS BETWEEN (SELECT a.n FROM accounts a WHERE a.id = $1) PRECEDING
+         AND (SELECT b.n FROM accounts b WHERE b.id = $1) FOLLOWING
+), pg_catalog.sum(o.id) OVER (
+    PARTITION BY o.id
+    ROWS BETWEEN (SELECT a.n FROM accounts a WHERE a.id = $1) PRECEDING
+         AND (SELECT b.n FROM accounts b WHERE b.id = $1) FOLLOWING
+)
+FROM orders o
+GROUP BY o.id;
+
+SELECT nested.id
+FROM orders o
+LEFT JOIN (
+    accounts a JOIN accounts b ON b.id = a.id
+    JOIN accounts c ON c.id = a.id
+) AS nested ON FALSE;

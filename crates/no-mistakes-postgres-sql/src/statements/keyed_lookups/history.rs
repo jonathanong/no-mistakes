@@ -2,6 +2,7 @@ use super::grouping::grouped_position;
 use super::normalize::LookupKey;
 use super::scope::ScopeSnapshot;
 use crate::idents::{ident_key, unwrap_expr};
+use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{Expr, UnaryOperator};
 use std::collections::BTreeMap;
 use std::rc::Rc;
@@ -74,8 +75,16 @@ impl LookupHistory {
 
     pub(super) fn restrict(&mut self, condition: &Expr, outer: &ScopeSnapshot, taken: bool) {
         let (operand, test) = boolean_test(condition);
+        let allowed = if taken { test } else { ANY ^ test };
+        self.restrict_operand(operand, outer, allowed);
+    }
+
+    pub(super) fn restrict_to_null(&mut self, operand: &Expr, outer: &ScopeSnapshot) {
+        self.restrict_operand(operand, outer, NULL);
+    }
+
+    fn restrict_operand(&mut self, operand: &Expr, outer: &ScopeSnapshot, allowed: u8) {
         if let Some(column) = guard_column(operand, outer) {
-            let allowed = if taken { test } else { ANY ^ test };
             *self.active.columns.entry(column).or_insert(ANY) &= allowed;
         }
     }
@@ -151,4 +160,24 @@ fn guard_column(operand: &Expr, outer: &ScopeSnapshot) -> Option<Column> {
     let column = ident_key(column);
     let binding = outer.resolve_column(&ident_key(qualifier), &column)?;
     Some(Column::Bound(binding, column))
+}
+
+pub(super) fn record_lookup(
+    key: LookupKey,
+    key_display: String,
+    line: usize,
+    column: usize,
+    seen: &mut LookupHistory,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
+) {
+    if let Some((first_line, first_column)) = seen.observe(&key, (line, column)) {
+        out.push(SqlDuplicateKeyedLookupFact {
+            relation: key.relation,
+            key_display,
+            first_line,
+            first_column,
+            line,
+            column,
+        });
+    }
 }

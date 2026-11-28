@@ -1,4 +1,4 @@
-use super::super::conditions::visit_case_children;
+use super::super::conditions::{boolean_result_is_fixed, visit_case_children};
 use super::is_eager;
 use crate::fx::FxHashSet;
 use sqlparser::ast::Expr;
@@ -36,23 +36,31 @@ pub(in crate::statements::keyed_lookups) fn visit_eager_functions(
                 return ControlFlow::Continue(());
             }
             if self.depth == 0 {
-                if let Expr::Case {
-                    operand,
-                    conditions,
-                    else_result,
-                    ..
-                } = expr
-                {
-                    visit_case_children(
-                        operand.as_deref(),
+                match expr {
+                    Expr::BinaryOp { left, op, right }
+                        if boolean_result_is_fixed(left, op, right) =>
+                    {
+                        self.blocked_roots
+                            .extend([left.as_ref(), right.as_ref()].map(std::ptr::from_ref));
+                    }
+                    Expr::Case {
+                        operand,
                         conditions,
-                        else_result.as_deref(),
-                        |child, reachable| {
-                            if !reachable {
-                                self.blocked_roots.insert(std::ptr::from_ref(child));
-                            }
-                        },
-                    );
+                        else_result,
+                        ..
+                    } => {
+                        visit_case_children(
+                            operand.as_deref(),
+                            conditions,
+                            else_result.as_deref(),
+                            |child, reachable| {
+                                if !reachable {
+                                    self.blocked_roots.insert(std::ptr::from_ref(child));
+                                }
+                            },
+                        );
+                    }
+                    _ => {}
                 }
             }
             if matches!(expr, Expr::Function(function) if is_eager(function)) {

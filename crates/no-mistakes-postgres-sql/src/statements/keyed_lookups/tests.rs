@@ -100,7 +100,7 @@ fn detects_executed_clause_lookups_without_colliding_quoted_arguments() {
             (9, 10),
             (15, 16),
             (21, 22),
-            (27, 28),
+            (28, 27),
             (33, 34),
             (40, 41),
             (47, 49),
@@ -340,7 +340,10 @@ fn respects_null_extended_bindings_and_reuses_aliased_targets_and_window_specs()
             (51, 53),
             (57, 58),
             (81, 82),
-            (107, 108)
+            (107, 108),
+            (123, 124),
+            (133, 134),
+            (147, 148)
         ]
     );
 }
@@ -478,7 +481,9 @@ fn checks_operator_signatures_and_shares_only_compatible_lookup_history() {
             (860, 862),
             (870, 872),
             (876, 878),
-            (888, 889)
+            (888, 889),
+            (907, 908),
+            (915, 916)
         ]
     );
 }

@@ -893,3 +893,32 @@ SELECT
     (SELECT a.n FROM accounts a WHERE a.id = o.id AND (NULL OR FALSE)),
     (SELECT b.n FROM accounts b WHERE b.id = o.id AND (NULL OR FALSE))
 FROM orders o;
+
+SELECT FALSE AND pg_catalog.bool_or((SELECT a.enabled FROM accounts a WHERE a.id = o.id)),
+       pg_catalog.bool_or((SELECT b.enabled FROM accounts b WHERE b.id = o.id))
+FROM orders o;
+
+SELECT CASE WHEN o.enabled THEN TRUE OR pg_catalog.bool_or(
+    (SELECT a.enabled FROM accounts a WHERE a.id = o.id)
+) ELSE FALSE END,
+    pg_catalog.bool_or((SELECT b.enabled FROM accounts b WHERE b.id = o.id))
+FROM orders o GROUP BY o.enabled;
+
+SELECT o.enabled AND pg_catalog.bool_or((SELECT a.enabled FROM accounts a WHERE a.id = o.id)),
+       pg_catalog.bool_or((SELECT b.enabled FROM accounts b WHERE b.id = o.id))
+FROM orders o GROUP BY o.enabled;
+
+SELECT COALESCE(o.enabled, (SELECT a.enabled FROM accounts a WHERE a.id = o.id)),
+       CASE WHEN o.enabled IS NOT NULL THEN (SELECT b.enabled FROM accounts b WHERE b.id = o.id) END
+FROM orders o;
+
+SELECT COALESCE(o.enabled, (SELECT a.enabled FROM accounts a WHERE a.id = o.id)),
+       (SELECT b.enabled FROM accounts b WHERE b.id = o.id)
+FROM orders o;
+
+SELECT CASE WHEN o.enabled IS NOT NULL THEN COALESCE(
+    o.enabled,
+    (SELECT a.enabled FROM accounts a WHERE a.id = o.id),
+    (SELECT b.enabled FROM accounts b WHERE b.id = o.id)
+) ELSE FALSE END
+FROM orders o;

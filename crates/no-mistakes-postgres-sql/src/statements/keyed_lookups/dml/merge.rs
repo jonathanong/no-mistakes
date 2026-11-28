@@ -19,6 +19,7 @@ pub(in crate::statements::keyed_lookups) fn walk_merge(
     register_table_factor(&merge.table, scopes, &mut base_seen, out);
     register_table_factor(&merge.source, scopes, &mut base_seen, out);
     inspect_exprs(std::iter::once(&*merge.on), scopes, &mut base_seen, out);
+    let outer = scopes.snapshot();
     let mut category_seen = BTreeMap::new();
     let mut closed_categories = BTreeSet::new();
     if !can_affect_rows(Some(&merge.on)) {
@@ -34,9 +35,13 @@ pub(in crate::statements::keyed_lookups) fn walk_merge(
         if closed_categories.contains(&category) || !can_affect_rows(predicate) {
             continue;
         }
-        let pred_seen = category_seen
-            .entry(category)
-            .or_insert_with(|| base_seen.clone());
+        let pred_seen = category_seen.entry(category).or_insert_with(|| {
+            let mut seen = base_seen.clone();
+            if category == MergeClauseKind::Matched {
+                seen.restrict(&merge.on, &outer, true);
+            }
+            seen
+        });
         if !pred_seen.is_reachable() {
             continue;
         }
@@ -45,7 +50,6 @@ pub(in crate::statements::keyed_lookups) fn walk_merge(
         }
         let mut action_seen = pred_seen.clone();
         if let Some(predicate) = predicate {
-            let outer = scopes.snapshot();
             action_seen.restrict(predicate, &outer, true);
             pred_seen.restrict(predicate, &outer, false);
         }

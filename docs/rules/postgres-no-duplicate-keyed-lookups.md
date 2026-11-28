@@ -22,8 +22,8 @@ data-modifying CTE query, this rule flags a second or subsequent keyed lookup of
 the same target relation when the normalized lookup key matches an earlier
 lookup in the same scope. It also checks queries in views, `CREATE TABLE AS`,
 `DECLARE CURSOR`, and `COPY (query) TO`. It covers `ON CONFLICT DO UPDATE`
-expressions, referenced window definitions, and subqueries in ordering and
-row-limit clauses.
+expressions, referenced window definitions, XML table column paths, and subqueries
+in ordering and row-limit clauses.
 
 - Repeated correlated scalar subqueries on the same relation and key, including
   unqualified inner key columns (`WHERE id = o.account_id`) and differing table
@@ -74,7 +74,8 @@ The rule stays silent when the lookups are not proven to read the same row:
   `last_value` can run on different rows. The rule checks each for
   repeated work within that input.
 - `COALESCE` arguments after a known non-null literal. Aggregate and window
-  inputs still follow their separate evaluation rules.
+  inputs still follow their separate evaluation rules. For resolved columns,
+  later arguments retain the null requirement from earlier arguments.
 - Unreachable `CASE` results, including simple cases with comparable integer
   or Boolean literals. For searched cases, the rule can keep opposing tests
   of the same qualified Boolean column separate across expressions.

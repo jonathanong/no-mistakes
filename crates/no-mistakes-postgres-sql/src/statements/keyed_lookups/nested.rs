@@ -35,7 +35,6 @@ impl Nested<'_> {
         match expr {
             Expr::BinaryOp { left, op, right } if boolean_result_is_fixed(left, op, right) => {
                 self.blocked_expression_depth = 1;
-                self.walk_eager_children(expr);
             }
             Expr::Exists { subquery, .. } => {
                 self.blocked_expression_depth = 1;

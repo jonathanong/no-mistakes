@@ -89,7 +89,13 @@ impl VisitorMut for GroupedExpressions<'_> {
             }
         }
         if let Expr::Function(function) = expr {
-            if function.over.is_none() && is_eager(function) {
+            if function.over.is_some() {
+                if self.depth == 0 {
+                    let _ = function.args.visit(self);
+                    let _ = function.filter.visit(self);
+                }
+                self.depth += 1;
+            } else if is_eager(function) {
                 if self.depth == 0 && !function.within_group.is_empty() {
                     let _ = function.args.visit(self);
                 }
@@ -100,7 +106,7 @@ impl VisitorMut for GroupedExpressions<'_> {
     }
 
     fn post_visit_expr(&mut self, expr: &mut Expr) -> ControlFlow<()> {
-        if matches!(expr, Expr::Function(function) if function.over.is_none() && is_eager(function))
+        if matches!(expr, Expr::Function(function) if function.over.is_some() || is_eager(function))
         {
             self.depth -= 1;
         }

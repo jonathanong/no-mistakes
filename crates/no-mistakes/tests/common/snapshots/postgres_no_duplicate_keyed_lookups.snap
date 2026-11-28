@@ -182,6 +182,30 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "queries/check.sql",
+          "line": 271,
+          "message": "queries/check.sql:271: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 270). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "|| (SELECT b.name FROM accounts b WHERE b.id = o.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 276,
+          "message": "queries/check.sql:276: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 275). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "|| (SELECT d.name FROM accounts d WHERE d.id = o.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 299,
+          "message": "queries/check.sql:299: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 298). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "|| (SELECT b.name FROM accounts b WHERE b.id = o.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
           "line": 30,
           "message": "queries/check.sql:30: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 29). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
@@ -478,10 +502,10 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "queries/check.sql",
-          "line": 28,
-          "message": "queries/check.sql:28: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 27). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "line": 27,
+          "message": "queries/check.sql:27: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 28). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
-          "sourceLine": "WHERE (SELECT b.active FROM accounts b WHERE b.id = o.account_id)",
+          "sourceLine": "account_name = (SELECT a.name FROM accounts a WHERE a.id = o.account_id)",
           "target": "accounts"
         },
         {
@@ -1212,11 +1236,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "queries/check.sql",
+          "line": 124,
+          "message": "queries/check.sql:124: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 123). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT b.email FROM accounts b WHERE b.id = o.account_id) AS email",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
           "line": 13,
           "message": "queries/check.sql:13: duplicate keyed lookup of `flags` on `flag = o.id IS NULL` (already looked up at line 12). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "LEFT JOIN flags c ON c.flag = (o.id IS NULL);",
           "target": "flags"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 134,
+          "message": "queries/check.sql:134: duplicate keyed lookup of `paths` on `id = o.path_id` (already looked up at line 133). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "q text PATH (SELECT b.path FROM paths b WHERE b.id = o.path_id)",
+          "target": "paths"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 148,
+          "message": "queries/check.sql:148: duplicate keyed lookup of `accounts` on `id = $1` (already looked up at line 147). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "AND (SELECT b.n FROM accounts b WHERE b.id = $1) FOLLOWING",
+          "target": "accounts"
         },
         {
           "file": "queries/check.sql",
@@ -1821,6 +1869,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "queries/check.sql:89: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 88). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "(SELECT 'abc' ILIKE 'A%' ESCAPE '#' FROM accounts b WHERE b.id = o.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 908,
+          "message": "queries/check.sql:908: duplicate keyed lookup of `accounts` on `id = o.id` (already looked up at line 907). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "pg_catalog.bool_or((SELECT b.enabled FROM accounts b WHERE b.id = o.id))",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 916,
+          "message": "queries/check.sql:916: duplicate keyed lookup of `accounts` on `id = o.id` (already looked up at line 915). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT b.enabled FROM accounts b WHERE b.id = o.id)",
           "target": "accounts"
         },
         {

@@ -1,6 +1,6 @@
 mod merge;
 
-use super::conditions::literal_condition;
+use super::conditions::cannot_match;
 use super::join::register_table_with_joins;
 use super::query::has_zero_limit;
 use super::scope::ScopeStack;
@@ -40,12 +40,13 @@ pub(super) fn walk_insert(
     if let Some(update) = update {
         scopes.push_frame();
         scopes.add_named_alias("excluded".to_owned());
+        let mut seen = LookupHistory::new();
+        inspect_row_filter(update.selection.as_ref(), scopes, &mut seen, out);
         let exprs = update
             .assignments
             .iter()
-            .map(|assignment| &assignment.value)
-            .chain(update.selection.iter());
-        inspect_exprs(exprs, scopes, &mut LookupHistory::new(), out);
+            .map(|assignment| &assignment.value);
+        inspect_exprs(exprs, scopes, &mut seen, out);
         scopes.pop_frame();
     }
     if let Some(returning) = returning {
@@ -80,11 +81,11 @@ pub(super) fn walk_update(
             register_table_with_joins(table, scopes, &mut seen, out);
         }
     }
+    inspect_row_filter(update.selection.as_ref(), scopes, &mut seen, out);
     let exprs = update
         .assignments
         .iter()
-        .map(|assignment| &assignment.value)
-        .chain(update.selection.iter());
+        .map(|assignment| &assignment.value);
     inspect_exprs(exprs, scopes, &mut seen, out);
     if let Some(returning) = update.returning.as_deref() {
         scopes.add_returning_aliases(Some("new"));
@@ -115,7 +116,7 @@ pub(super) fn walk_delete(
     for table in from_tables.iter().chain(delete.using.iter().flatten()) {
         register_table_with_joins(table, scopes, &mut seen, out);
     }
-    inspect_exprs(delete.selection.iter(), scopes, &mut seen, out);
+    inspect_row_filter(delete.selection.as_ref(), scopes, &mut seen, out);
     if let Some(returning) = delete.returning.as_deref() {
         scopes.add_returning_aliases(Some("old"));
         inspect_exprs(returning_exprs(Some(returning)), scopes, &mut seen, out);
@@ -124,5 +125,17 @@ pub(super) fn walk_delete(
 }
 
 fn can_affect_rows(predicate: Option<&Expr>) -> bool {
-    predicate.and_then(literal_condition) != Some(false)
+    !predicate.is_some_and(cannot_match)
+}
+
+fn inspect_row_filter(
+    predicate: Option<&Expr>,
+    scopes: &mut ScopeStack,
+    seen: &mut LookupHistory,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
+) {
+    if let Some(predicate) = predicate {
+        inspect_exprs(std::iter::once(predicate), scopes, seen, out);
+        seen.restrict(predicate, &scopes.snapshot(), true);
+    }
 }
