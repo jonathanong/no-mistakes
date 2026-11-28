@@ -92,6 +92,11 @@ describe(rule, () => {
         typed: true,
         options: { report: "advisory" },
       },
+      {
+        name: "noUncheckedIndexedAccess reports in-bounds tuple and allows array/record",
+        file: "unchecked-indexed-enabled/indexed.test.ts",
+        typed: true,
+      },
     ].map(({ name, file, typed, options, sourceType }) => ({
       name,
       file,
@@ -123,7 +128,7 @@ describe(rule, () => {
       byName["severities promotes throwing-query to error"][0].message.startsWith("[advisory] "),
     ).toBe(false);
     expect(byName["discarded-locator (typed)"].map((f) => f.messageId)).toEqual(
-      Array(8).fill("discarded-locator"),
+      Array(9).fill("discarded-locator"),
     );
     expect(byName["discarded-locator (untyped)"]).toEqual([]);
     expect(byName["defined-then-deref (typed)"]).toEqual(byName["defined-then-deref (untyped)"]);
@@ -133,6 +138,11 @@ describe(rule, () => {
     expect(byName["suppressions (typed)"].map((f) => f.line)).toEqual([12, 15]);
     expect(byName["suppressed-file (typed)"]).toEqual([]);
     expect(byName["report advisory omits error-severity codes"]).toEqual([]);
+    expect(
+      byName["noUncheckedIndexedAccess reports in-bounds tuple and allows array/record"].map(
+        (f) => [f.line, f.messageId],
+      ),
+    ).toEqual([[9, "defined-by-type"]]);
 
     await expect(snapshotDocument(snapshotCases(cases))).toMatchFileSnapshot(
       "snapshots/test-no-unfailable-assertion.snap",
@@ -144,8 +154,19 @@ describe(rule, () => {
     const directImport = fixFixture("autofix-jest-dom-import.test.ts");
     const cjsRequire = fixFixture("autofix-jest-dom-require.test.cjs", { sourceType: "commonjs" });
     const setupFile = fixFixture("jest-dom-setup/setup-fixture.test.ts");
+    const commentedSetup = fixFixture("jest-dom-commented/commented-setup.test.ts");
     const pkgSetup = fixFixture("jest-dom-pkg/pkg-setup.test.ts");
     const typedSetup = fixFixture("jest-dom-typed/typed-jest-dom.test.ts", { typed: true });
+    const inlineInput = getLinter(process.cwd()).verifyAndFix(
+      fixture(`${rule}/jest-dom-commented/commented-setup.test.ts`),
+      {
+        files: ["**"],
+        languageOptions: languageOptionsFor("input.ts", { typed: false }),
+        plugins: { "no-mistakes": plugin },
+        rules: { [`no-mistakes/${rule}`]: "error" },
+      },
+      "<input>",
+    );
 
     expect(drop.fixed).toBe(true);
     expect(drop.messages.map((m) => [m.line, m.messageId])).toEqual([
@@ -158,14 +179,19 @@ describe(rule, () => {
 
     expect(directImport.fixed).toBe(true);
     expect(directImport.messages.map((m) => [m.line, m.messageId])).toEqual([
-      [27, "throwing-query"],
-      [28, "throwing-query"],
+      [30, "throwing-query"],
+      [31, "throwing-query"],
     ]);
 
     expect(cjsRequire.fixed).toBe(true);
     expect(cjsRequire.messages).toEqual([]);
     expect(setupFile.fixed).toBe(true);
     expect(setupFile.messages).toEqual([]);
+    expect(commentedSetup.fixed).toBe(true);
+    expect(commentedSetup.messages).toEqual([]);
+    expect(commentedSetup.output).not.toContain("toBeInTheDocument");
+    expect(inlineInput.fixed).toBe(true);
+    expect(inlineInput.output).not.toContain("toBeInTheDocument");
     expect(pkgSetup.fixed).toBe(true);
     expect(pkgSetup.messages).toEqual([]);
     expect(typedSetup.fixed).toBe(true);
@@ -180,6 +206,7 @@ describe(rule, () => {
         },
         jestDomRequire: { output: cjsRequire.output },
         jestDomSetupFile: { output: setupFile.output },
+        jestDomCommentedSetup: { output: commentedSetup.output },
         jestDomPackageJson: { output: pkgSetup.output },
         jestDomTypeSetup: { output: typedSetup.output },
       }),

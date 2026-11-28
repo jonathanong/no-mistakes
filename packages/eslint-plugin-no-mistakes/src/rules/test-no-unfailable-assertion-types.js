@@ -1,5 +1,7 @@
 "use strict";
 
+const { unwrap } = require("./test-message-expect");
+
 const PLAYWRIGHT_PATH = /(?:^|[\\/])(?:@playwright|playwright(?:-core)?)(?:[\\/]|$)/;
 const PLAYWRIGHT_MODULES = new Set(["@playwright/test", "playwright", "playwright-core"]);
 const PLAYWRIGHT_RECEIVERS = new Set(["Page", "Frame", "FrameLocator", "Locator"]);
@@ -17,6 +19,7 @@ function getTypeContext(context) {
     tsNodeMap: services.esTreeNodeToTSNodeMap,
     ts: require("typescript"),
     strictNullChecks: compilerOptions.strictNullChecks ?? Boolean(compilerOptions.strict),
+    noUncheckedIndexedAccess: Boolean(compilerOptions.noUncheckedIndexedAccess),
   };
 }
 
@@ -24,7 +27,24 @@ function getExpressionType(node, typeCtx, awaited) {
   const tsNode = typeCtx.tsNodeMap.get(node);
   if (!tsNode) return null;
   const type = typeCtx.checker.getTypeAtLocation(tsNode);
-  return awaited ? (typeCtx.checker.getAwaitedType(type) ?? null) : type;
+  return awaited ? typeCtx.checker.getAwaitedType(type) : type;
+}
+
+function hasIndexableType(type, checker) {
+  if (type.isUnion()) return type.types.some((part) => hasIndexableType(part, checker));
+  return (
+    checker.isArrayType(type) ||
+    checker.isTupleType(type) ||
+    checker.getIndexInfosOfType(type).length > 0
+  );
+}
+
+function isUncheckedIndexedAccess(node, typeCtx) {
+  if (typeCtx.noUncheckedIndexedAccess) return false;
+  const current = unwrap(node);
+  if (current.type !== "MemberExpression" || !current.computed) return false;
+  const objectType = getExpressionType(current.object, typeCtx, false);
+  return Boolean(objectType && hasIndexableType(objectType, typeCtx.checker));
 }
 
 function resolveConstrainedType(type, checker, ts) {
@@ -164,4 +184,5 @@ module.exports = {
   getTypeContext,
   isAlwaysTruthy,
   isDiscardedPlaywrightLocator,
+  isUncheckedIndexedAccess,
 };

@@ -9,11 +9,14 @@
       30
     ]
   },
+  "jestDomCommentedSetup": {
+    "output": "import { expect } from \"vitest\";\nimport { screen } from \"@testing-library/react\";\n\nscreen.getByText(\"Save\");\n"
+  },
   "jestDomImport": {
-    "output": "import \"@testing-library/jest-dom/vitest\";\nimport { expect } from \"vitest\";\nimport { screen } from \"@testing-library/react\";\n\nexport async function asyncWithJestDom() {\n  expect(screen.getByText(\"Save\")).toBeInTheDocument();\n  expect(screen.getByText(\"Save\")).toBeInTheDocument();\n  expect(screen.getByText(\"Save\")).toBeInTheDocument();\n\n  const btn = screen.getByRole(\"button\");\n  expect(btn).toBeInTheDocument();\n\n  const awaited = await screen.findByText(\"Ready\");\n  expect(awaited).toBeInTheDocument();\n\n  expect(await screen.findByText(\"Loaded\")).toBeInTheDocument();\n  await expect(screen.findByText(\"Loaded\")).resolves.toBeInTheDocument();\n  expect(await screen.findByText(\"Loaded\")).toBeInTheDocument();\n  await expect(screen.findByText(\"Loaded\")).resolves.toBeInTheDocument();\n\n  screen.getAllByRole(\"button\");\n  await screen.findAllByRole(\"listitem\");\n  await screen.findAllByRole(\"listitem\");\n}\n\nexport function syncWithJestDom() {\n  expect(screen.findByText(\"Loaded\")).toBeDefined();\n  expect(screen.findByText(\"Loaded\")).resolves.toBeDefined();\n}\n",
+    "output": "import \"@testing-library/jest-dom/vitest\";\nimport { expect } from \"vitest\";\nimport { screen } from \"@testing-library/react\";\n\nexport async function asyncWithJestDom() {\n  expect(screen.getByText(\"Save\")).toBeInTheDocument();\n  expect(screen.getByText(\"Save\")).toBeInTheDocument();\n  expect(screen.getByText(\"Save\")).toBeInTheDocument();\n\n  const btn = screen.getByRole(\"button\");\n  expect(btn).toBeInTheDocument();\n\n  const awaited = await screen.findByText(\"Ready\");\n  expect(awaited).toBeInTheDocument();\n\n  const pending = screen.findByText(\"Pending\");\n  expect(await pending).toBeInTheDocument();\n\n  expect(await screen.findByText(\"Loaded\")).toBeInTheDocument();\n  await expect(screen.findByText(\"Loaded\")).resolves.toBeInTheDocument();\n  expect(await screen.findByText(\"Loaded\")).toBeInTheDocument();\n  await expect(screen.findByText(\"Loaded\")).resolves.toBeInTheDocument();\n\n  screen.getAllByRole(\"button\");\n  await screen.findAllByRole(\"listitem\");\n  await screen.findAllByRole(\"listitem\");\n}\n\nexport function syncWithJestDom() {\n  expect(screen.findByText(\"Loaded\")).toBeDefined();\n  expect(screen.findByText(\"Loaded\")).resolves.toBeDefined();\n}\n",
     "remainingLines": [
-      27,
-      28
+      30,
+      31
     ]
   },
   "jestDomPackageJson": {

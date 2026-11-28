@@ -12,6 +12,12 @@ declare function getAnyIntersection(): { id: string } & any;
 declare function getAsyncName(): Promise<string>;
 declare function getAsyncMaybe(): Promise<string | undefined>;
 declare const rootEl: HTMLElement;
+declare const record: Record<string, string>;
+declare const items: string[];
+declare const pair: [string, number];
+declare const unionItems: string[] | Record<string, string>;
+declare const key: string;
+declare const idx: number;
 
 // Positive cases (defined-by-type)
 expect(getName()).toBeDefined();
@@ -36,6 +42,11 @@ expect(getAnyIntersection()).toBeDefined();
 expect(getAsyncMaybe()).resolves.toBeDefined();
 expect(getAsyncName()).rejects.toBeDefined();
 expect.poll(() => getName()).toBeDefined();
+expect(record[key]).toBeDefined();
+expect(items[0]).toBeDefined();
+expect(items[idx]).not.toBeUndefined();
+expect(pair[0]).toBeDefined();
+expect(unionItems[0]).toBeDefined();
 
 export function unconstrained<T>(value: T) {
   expect(value).toBeDefined();

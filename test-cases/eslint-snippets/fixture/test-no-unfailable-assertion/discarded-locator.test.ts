@@ -27,6 +27,7 @@ export async function discardedLocators(
   const btn: PwLocator = page.getByTestId("ok");
   btn.filter({ hasText: "OK" });
   realPage.getByTestId("real");
+  page.locator(".non-null")!;
 
   // Counterexamples (allowed)
   await expect(page.getByTestId("submit")).toBeVisible();

@@ -8,6 +8,7 @@ const {
   getTypeContext,
   isAlwaysTruthy,
   isDiscardedPlaywrightLocator,
+  isUncheckedIndexedAccess,
 } = require("./test-no-unfailable-assertion-types");
 const {
   isSameValueAssertion,
@@ -152,6 +153,12 @@ module.exports = rule(
         const definedCheck = isDefinedCheck(assertion);
         const truthyCheck = isTruthyCheck(assertion);
         if ((!definedCheck && !truthyCheck) || !typeCtx || !typeCtx.strictNullChecks) return;
+        if (
+          assertion.asyncModifier !== "resolves" &&
+          isUncheckedIndexedAccess(assertion.actual, typeCtx)
+        ) {
+          return;
+        }
 
         const type = getExpressionType(
           assertion.actual,

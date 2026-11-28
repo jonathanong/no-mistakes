@@ -1,44 +1,15 @@
 "use strict";
 
 const { memberName, propertyName, unwrap } = require("./test-message-expect");
-const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { moduleMember } = require("./test-no-wall-time-assertions-bindings");
-const { requireSource } = require("./async-target-sources");
 const { literalString } = require("./module-mock-helpers");
 const { immutableConstDef } = require("./test-no-unfailable-assertion-assertions");
 
 const THROWING_QUERY_PATTERN = /^(?:get|find)(?:All)?By[A-Z]/;
 
-function isTestingLibraryModule(source) {
-  return typeof source === "string" && source.startsWith("@testing-library/");
-}
-
-function testingLibraryNamespace(node, context) {
-  const current = unwrap(node);
-  if (isTestingLibraryModule(requireSource(current, context))) return true;
-  if (current.type !== "Identifier") return false;
-  const variable = resolveVariable(current, context);
-  if (variable?.defs.length !== 1) return false;
-  const [def] = variable.defs;
-  if (
-    def.type === "ImportBinding" &&
-    def.node.type === "ImportNamespaceSpecifier" &&
-    isTestingLibraryModule(def.parent?.source?.value)
-  ) {
-    return true;
-  }
-  const decl = immutableConstDef(current, context);
-  return decl?.id.type === "Identifier" && testingLibraryNamespace(decl.init, context);
-}
-
 function testingLibraryExport(node, context) {
-  const current = unwrap(node);
-  const member = moduleMember(current, context);
-  if (member && isTestingLibraryModule(member.source)) return member.name;
-  if (current.type === "MemberExpression" && testingLibraryNamespace(current.object, context)) {
-    return memberName(current);
-  }
-  return null;
+  const member = moduleMember(unwrap(node), context);
+  return member && member.source.startsWith("@testing-library/") ? member.name : null;
 }
 
 function isQueryContainer(node, context) {

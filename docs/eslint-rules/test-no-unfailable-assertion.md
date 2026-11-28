@@ -33,7 +33,14 @@ are unavailable, or `strictNullChecks` is disabled, the type-based codes are
 skipped rather than guessed. Shapes that do not need types (`same-value`,
 `throwing-query`, and `defined-then-deref`) still run in untyped ESLint and
 Oxlint configurations. Types containing `any` or `unknown` are never reported by
-`defined-by-type` or `truthy-by-type`.
+`defined-by-type` or `truthy-by-type`. Without `noUncheckedIndexedAccess`,
+computed element lookups on arrays, tuples, or index-signature objects (such as
+`items[i]` or `record[key]`) are skipped by `defined-by-type` and
+`truthy-by-type` because they can evaluate to `undefined` at runtime. Single-file
+import matching resolves `expect` from `vitest`, `@jest/globals`,
+`@playwright/test`, or the global, and Testing Library queries from
+`@testing-library/*` (custom local `test-utils` re-exports are outside current
+single-file scope).
 
 ### Per-code examples, fixes, and suppressions
 

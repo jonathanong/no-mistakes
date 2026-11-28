@@ -78,6 +78,17 @@
         "messageId": "defined-then-deref",
         "ruleId": "no-mistakes/test-no-unfailable-assertion",
         "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 85,
+        "endLine": 30,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/commonjs.test.cjs",
+        "line": 30,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
       }
     ],
     "name": "commonjs and switch cases (untyped)",
@@ -91,9 +102,9 @@
       {
         "column": 1,
         "endColumn": 32,
-        "endLine": 17,
+        "endLine": 23,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
-        "line": 17,
+        "line": 23,
         "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
         "messageId": "defined-by-type",
         "ruleId": "no-mistakes/test-no-unfailable-assertion",
@@ -102,9 +113,9 @@
       {
         "column": 1,
         "endColumn": 38,
-        "endLine": 18,
+        "endLine": 24,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
-        "line": 18,
+        "line": 24,
         "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
         "messageId": "defined-by-type",
         "ruleId": "no-mistakes/test-no-unfailable-assertion",
@@ -113,9 +124,9 @@
       {
         "column": 1,
         "endColumn": 49,
-        "endLine": 19,
+        "endLine": 25,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
-        "line": 19,
+        "line": 25,
         "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
         "messageId": "defined-by-type",
         "ruleId": "no-mistakes/test-no-unfailable-assertion",
@@ -124,9 +135,9 @@
       {
         "column": 1,
         "endColumn": 58,
-        "endLine": 20,
+        "endLine": 26,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
-        "line": 20,
+        "line": 26,
         "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
         "messageId": "defined-by-type",
         "ruleId": "no-mistakes/test-no-unfailable-assertion",
@@ -135,9 +146,9 @@
       {
         "column": 1,
         "endColumn": 40,
-        "endLine": 21,
+        "endLine": 27,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
-        "line": 21,
+        "line": 27,
         "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
         "messageId": "defined-by-type",
         "ruleId": "no-mistakes/test-no-unfailable-assertion",
@@ -146,9 +157,9 @@
       {
         "column": 1,
         "endColumn": 46,
-        "endLine": 22,
+        "endLine": 28,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
-        "line": 22,
+        "line": 28,
         "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
         "messageId": "defined-by-type",
         "ruleId": "no-mistakes/test-no-unfailable-assertion",
@@ -157,9 +168,9 @@
       {
         "column": 3,
         "endColumn": 30,
-        "endLine": 25,
+        "endLine": 31,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
-        "line": 25,
+        "line": 31,
         "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
         "messageId": "defined-by-type",
         "ruleId": "no-mistakes/test-no-unfailable-assertion",
@@ -459,6 +470,17 @@
         "messageId": "discarded-locator",
         "ruleId": "no-mistakes/test-no-unfailable-assertion",
         "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 30,
+        "endLine": 30,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/discarded-locator.test.ts",
+        "line": 30,
+        "message": "[advisory] Playwright locator is created and discarded without asserting or acting on it. Await an assertion or action on the locator.",
+        "messageId": "discarded-locator",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
       }
     ],
     "name": "discarded-locator (typed)",
@@ -469,6 +491,25 @@
     "file": "discarded-locator.test.ts",
     "findings": [],
     "name": "discarded-locator (untyped)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "unchecked-indexed-enabled/indexed.test.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 30,
+        "endLine": 9,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/unchecked-indexed-enabled/indexed.test.ts",
+        "line": 9,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      }
+    ],
+    "name": "noUncheckedIndexedAccess reports in-bounds tuple and allows array/record",
     "options": null,
     "rule": "test-no-unfailable-assertion"
   },
@@ -2011,39 +2052,6 @@
       {
         "column": 1,
         "endColumn": 31,
-        "endLine": 39,
-        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
-        "line": 39,
-        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
-        "messageId": "truthy-by-type",
-        "ruleId": "no-mistakes/test-no-unfailable-assertion",
-        "severity": 2
-      },
-      {
-        "column": 1,
-        "endColumn": 34,
-        "endLine": 40,
-        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
-        "line": 40,
-        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
-        "messageId": "truthy-by-type",
-        "ruleId": "no-mistakes/test-no-unfailable-assertion",
-        "severity": 2
-      },
-      {
-        "column": 1,
-        "endColumn": 34,
-        "endLine": 41,
-        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
-        "line": 41,
-        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
-        "messageId": "truthy-by-type",
-        "ruleId": "no-mistakes/test-no-unfailable-assertion",
-        "severity": 2
-      },
-      {
-        "column": 1,
-        "endColumn": 31,
         "endLine": 42,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
         "line": 42,
@@ -2054,7 +2062,7 @@
       },
       {
         "column": 1,
-        "endColumn": 28,
+        "endColumn": 34,
         "endLine": 43,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
         "line": 43,
@@ -2065,7 +2073,7 @@
       },
       {
         "column": 1,
-        "endColumn": 39,
+        "endColumn": 34,
         "endLine": 44,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
         "line": 44,
@@ -2076,7 +2084,7 @@
       },
       {
         "column": 1,
-        "endColumn": 33,
+        "endColumn": 31,
         "endLine": 45,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
         "line": 45,
@@ -2087,7 +2095,7 @@
       },
       {
         "column": 1,
-        "endColumn": 30,
+        "endColumn": 28,
         "endLine": 46,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
         "line": 46,
@@ -2098,7 +2106,7 @@
       },
       {
         "column": 1,
-        "endColumn": 33,
+        "endColumn": 39,
         "endLine": 47,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
         "line": 47,
@@ -2120,7 +2128,7 @@
       },
       {
         "column": 1,
-        "endColumn": 33,
+        "endColumn": 30,
         "endLine": 49,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
         "line": 49,
@@ -2131,7 +2139,7 @@
       },
       {
         "column": 1,
-        "endColumn": 38,
+        "endColumn": 33,
         "endLine": 50,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
         "line": 50,
@@ -2142,7 +2150,7 @@
       },
       {
         "column": 1,
-        "endColumn": 45,
+        "endColumn": 33,
         "endLine": 51,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
         "line": 51,
@@ -2153,7 +2161,7 @@
       },
       {
         "column": 1,
-        "endColumn": 30,
+        "endColumn": 33,
         "endLine": 52,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
         "line": 52,
@@ -2164,7 +2172,7 @@
       },
       {
         "column": 1,
-        "endColumn": 33,
+        "endColumn": 38,
         "endLine": 53,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
         "line": 53,
@@ -2175,7 +2183,7 @@
       },
       {
         "column": 1,
-        "endColumn": 31,
+        "endColumn": 45,
         "endLine": 54,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
         "line": 54,
@@ -2186,7 +2194,7 @@
       },
       {
         "column": 1,
-        "endColumn": 42,
+        "endColumn": 30,
         "endLine": 55,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
         "line": 55,
@@ -2196,11 +2204,44 @@
         "severity": 2
       },
       {
-        "column": 3,
-        "endColumn": 29,
+        "column": 1,
+        "endColumn": 33,
+        "endLine": 56,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 56,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 31,
+        "endLine": 57,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 57,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 42,
         "endLine": 58,
         "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
         "line": 58,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 29,
+        "endLine": 61,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 61,
         "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
         "messageId": "truthy-by-type",
         "ruleId": "no-mistakes/test-no-unfailable-assertion",

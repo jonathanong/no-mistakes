@@ -27,6 +27,9 @@ function checkSwitch(kind, user) {
   expect(user)[kind]();
   expect(globalUser).toBeDefined();
   expect(globalUser?.name).toBe("G");
+  expect(require("@testing-library/react").screen.getByText("Direct")).toBeDefined();
+  expect(unknownNs.screen.getByText("U")).toBeDefined();
+  expect(getOther().screen.getByText("O")).toBeDefined();
 }
 
 module.exports = { checkSwitch };

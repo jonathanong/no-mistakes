@@ -34,6 +34,9 @@ declare function getMaybeEmptyString(): "" | "ok";
 declare function getMaybeZero(): 0 | 1;
 declare function getMaybeZeroBigInt(): 0n | 1n;
 declare function getFalse(): false;
+declare const users: User[];
+declare const userMap: Record<string, User>;
+declare const mapKey: string;
 
 // Positive cases (truthy-by-type)
 expect(getUser()).toBeTruthy();
@@ -75,6 +78,8 @@ expect(getMaybeEmptyString()).toBeTruthy();
 expect(getMaybeZero()).toBeTruthy();
 expect(getMaybeZeroBigInt()).toBeTruthy();
 expect(getFalse()).toBeTruthy();
+expect(users[0]).toBeTruthy();
+expect(userMap[mapKey]).toBeTruthy();
 
 export function unconstrainedTruthy<T>(value: T) {
   expect(value).toBeTruthy();

@@ -6,6 +6,8 @@ const { unwrap } = require("./test-message-expect");
 const { immutableConstDef } = require("./test-no-unfailable-assertion-assertions");
 const { getExpressionType } = require("./test-no-unfailable-assertion-types");
 
+const COMMENT_OR_STRING_RE =
+  /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\/\/[^\r\n]*|\/\*[\s\S]*?\*\//g;
 const JEST_DOM_MODULE = /^@testing-library\/jest-dom(?:\/|$)/;
 const JEST_DOM_IMPORT_RE =
   /(?:from\s+|import\s+|require\s*\(\s*)["']@testing-library\/jest-dom(?:\/[^"']*)?["']/;
@@ -55,9 +57,13 @@ function hasJestDomInFile(sourceCode) {
   );
 }
 
+function stripJsComments(source) {
+  return source.replace(COMMENT_OR_STRING_RE, (match) => (match.startsWith("/") ? "" : match));
+}
+
 function extractSetupEntries(content) {
   const entries = [];
-  for (const match of content.matchAll(SETUP_FIELD_RE)) {
+  for (const match of stripJsComments(content).matchAll(SETUP_FIELD_RE)) {
     for (const item of match[1].matchAll(QUOTED_STRING_RE)) entries.push(item[1]);
   }
   return entries;
@@ -84,7 +90,12 @@ function hasJestDomInSetupFiles(filename) {
       for (const entry of extractSetupEntries(readFileSync(configPath, "utf8"))) {
         if (JEST_DOM_MODULE.test(entry)) return true;
         const setupPath = resolveSetupFile(dir, entry);
-        if (setupPath && JEST_DOM_IMPORT_RE.test(readFileSync(setupPath, "utf8"))) return true;
+        if (
+          setupPath &&
+          JEST_DOM_IMPORT_RE.test(stripJsComments(readFileSync(setupPath, "utf8")))
+        ) {
+          return true;
+        }
       }
     }
     const parent = dirname(dir);

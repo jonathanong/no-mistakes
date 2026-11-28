@@ -13,6 +13,9 @@ export async function asyncWithJestDom() {
   const awaited = await screen.findByText("Ready");
   expect(awaited).toBeTruthy();
 
+  const pending = screen.findByText("Pending");
+  expect(pending).toBeDefined();
+
   expect(await screen.findByText("Loaded")).toBeTruthy();
   await expect(screen.findByText("Loaded")).resolves.not.toBeNull();
   expect(screen.findByText("Loaded")).toBeDefined();
