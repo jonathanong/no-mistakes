@@ -124,6 +124,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "@sample/jobs#enqueue"
         },
         {
+          "file": "src/long-chain.ts",
+          "import": "<unknown>.i",
+          "line": 5,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await tx.a().b().c().d().e().f().g().h().i();",
+          "target": "unanalyzable"
+        },
+        {
           "file": "src/reexported-handle.ts",
           "import": "publish",
           "line": 5,
@@ -282,6 +291,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
           "rule": "queue-no-enqueue-in-transaction",
           "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/long-chain.ts",
+          "import": "<unknown>.i",
+          "line": 5,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await tx.a().b().c().d().e().f().g().h().i();",
           "target": "unanalyzable"
         },
         {
