@@ -122,8 +122,7 @@ function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
       memberNode = node.parent;
       node = unwrapTransparentParent(node.parent);
     }
-    // `member as number` is still that member. The wrapper stays `node` so a
-    // write through the assertion is judged on the assertion, as before.
+    // `member as number` is still that member; a write through it is judged on the wrapper.
     const memberRead = Boolean(memberNode) && primitiveMemberRead(memberNode);
     let parent = node.parent;
     if (

@@ -150,12 +150,7 @@ function testBinding(node, context, visited = new Set()) {
   if (requiredMember) return requiredMember;
   if (NAMES.has(name) && object?.type === "Identifier") {
     const framework = imported(object, context, true);
-    // Computed vitest exports stay quiet; a configured namespace still uses ["test"].
-    if (
-      framework &&
-      !(node.computed && framework === "vitest") &&
-      (framework !== CONFIGURED_NAMESPACE || name === "test")
-    )
+    if (framework && (framework !== CONFIGURED_NAMESPACE || name === "test"))
       return {
         framework: framework === CONFIGURED_NAMESPACE ? "@playwright/test" : framework,
         name,
