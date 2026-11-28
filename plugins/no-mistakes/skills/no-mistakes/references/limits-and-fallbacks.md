@@ -232,7 +232,7 @@ the literal repository-relative script directories to require inside each
 path-filtered workflow's `paths` / `paths-ignore` filters. Unprovable triggers,
 dynamic commands or script paths, and unreadable local composite actions abstain
 with an advisory diagnostic unless `options.unanalyzable: report` is set. See
-the [rule reference](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/github-actions-workflow-script-paths.md).
+the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-workflow-script-paths.md).
 
 For `dependabot-cooldown-policy`, set `options.minimumDays` and run
 `check --root <root> --format json`. Add `cooldown.default-days` and raise
