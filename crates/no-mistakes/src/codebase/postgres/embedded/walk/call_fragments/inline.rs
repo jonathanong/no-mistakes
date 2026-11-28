@@ -1,11 +1,9 @@
-use super::super::calls::chain;
 use super::super::ScopeVisitor;
 use super::{partial, BuilderTrace, MAX_PREFIX_BYTES};
-use crate::codebase::postgres::embedded::{first_call_argument, CallSqlFragment};
+use crate::codebase::postgres::embedded::{CallSqlFragment, MAX_EMBEDDED_SQL_VARIANTS};
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
-use crate::fx::FxHashSet;
 use oxc_ast::ast::{
-    AssignmentExpression, AssignmentOperator, AssignmentTarget, CallExpression, Expression,
+    AssignmentExpression, AssignmentOperator, AssignmentTarget, BinaryOperator, Expression,
 };
 
 impl BuilderTrace {
@@ -48,10 +46,17 @@ impl ScopeVisitor<'_> {
             AssignmentOperator::Addition => {
                 self.append_assignment_expr(key, &assign.right, assign.span.start);
             }
+            AssignmentOperator::LogicalOr
+            | AssignmentOperator::LogicalAnd
+            | AssignmentOperator::LogicalNullish => {
+                let alt = partial::expr_fragments(self, &assign.right, None, None);
+                if !alt.is_empty() {
+                    let trace = self.call_fragment_state.builders.entry(key).or_default();
+                    trace.fragments.extend(alt);
+                }
+            }
             AssignmentOperator::Assign => {
-                if let Some(parts) =
-                    super::collect::self_addition_parts(&assign.right, id.name.as_str())
-                {
+                if let Some(parts) = self_addition_parts(&assign.right, id.name.as_str()) {
                     for part in parts {
                         self.append_assignment_expr(key.clone(), part, assign.span.start);
                     }
@@ -96,8 +101,42 @@ impl ScopeVisitor<'_> {
             return;
         }
         let trace = self.call_fragment_state.builders.entry(key).or_default();
-        partial::extend_prefix(trace, &added, straight_line);
+        extend_prefix(trace, &added, straight_line);
         trace.fragments.extend(added);
+    }
+}
+
+pub(super) fn extend_prefix(
+    trace: &mut BuilderTrace,
+    added: &[CallSqlFragment],
+    straight_line: bool,
+) {
+    if !straight_line || added.is_empty() {
+        return;
+    }
+    if added.len() == 1 {
+        if let Some(p) = trace
+            .prefix
+            .as_mut()
+            .filter(|p| p.len() + added[0].sql.len() <= MAX_PREFIX_BYTES)
+        {
+            p.push_str(&added[0].sql);
+        }
+    } else if trace.alt_prefixes.is_empty() && added.len() <= MAX_EMBEDDED_SQL_VARIANTS {
+        let base = trace.prefix.take().unwrap_or_default();
+        trace.alt_prefixes = added
+            .iter()
+            .filter(|f| base.len() + f.sql.len() <= MAX_PREFIX_BYTES)
+            .map(|f| format!("{base}{}", f.sql))
+            .collect();
+        return;
+    }
+    if added.len() == trace.alt_prefixes.len() {
+        for (p, frag) in trace.alt_prefixes.iter_mut().zip(added) {
+            if p.len() + frag.sql.len() <= MAX_PREFIX_BYTES {
+                p.push_str(&frag.sql);
+            }
+        }
     }
 }
 
@@ -118,77 +157,21 @@ pub(super) fn expand_with_context(
     }
 }
 
-pub(super) fn inline_append_fragments(
-    visitor: &ScopeVisitor<'_>,
-    call: &CallExpression<'_>,
-    covered_sites: &FxHashSet<u32>,
-    has_variants: bool,
-) -> Option<Vec<CallSqlFragment>> {
-    let (root, links) = append_root_and_links(call)?;
-    let scope_index = visitor.lookup_scope(&root)?;
-    let key = (scope_index, root);
-    let trace = visitor.call_fragment_state.builders.get(&key);
-    let mut out: Vec<CallSqlFragment> = trace
-        .map(|t| {
-            t.fragments
-                .iter()
-                .filter(|fragment| {
-                    let covered = fragment
-                        .append_site
-                        .is_some_and(|site| covered_sites.contains(&site));
-                    let duplicate_init = fragment.append_site.is_none() && has_variants;
-                    !covered && !duplicate_init
-                })
-                .cloned()
-                .collect()
-        })
-        .unwrap_or_default();
-    let mut context = trace.and_then(|t| t.prefix.clone()).or_else(|| {
-        visitor
-            .scopes
-            .get(scope_index)
-            .and_then(|s| s.get(&key.1))
-            .and_then(|b| b.sql.clone())
-    });
-    let alt_prefixes = trace.map(|t| t.alt_prefixes.clone()).unwrap_or_default();
-    for link in links {
-        if covered_sites.contains(&link.span.start) {
-            continue;
+fn self_addition_parts<'a>(
+    expr: &'a Expression<'a>,
+    target: &str,
+) -> Option<Vec<&'a Expression<'a>>> {
+    let mut parts = Vec::new();
+    let mut cur = expr;
+    while let Expression::BinaryExpression(bin) = unwrap_ts_wrappers(cur) {
+        if bin.operator != BinaryOperator::Addition {
+            return None;
         }
-        let Some(arg) = first_call_argument(link) else {
-            continue;
-        };
-        let added = expand_with_context(
-            visitor,
-            arg,
-            context.as_deref(),
-            &alt_prefixes,
-            link.span.start,
-        );
-        if added.len() == 1 {
-            if let Some(prefix) = &mut context {
-                prefix.push_str(&added[0].sql);
-            }
-        }
-        out.extend(added);
+        parts.push(&bin.right);
+        cur = &bin.left;
     }
-    Some(out)
-}
-
-fn append_root_and_links<'a>(
-    call: &'a CallExpression<'a>,
-) -> Option<(String, Vec<&'a CallExpression<'a>>)> {
-    if let Some(fluent) = chain(call) {
-        return Some((fluent.root, fluent.links));
-    }
-    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
-        return None;
-    };
-    if member.property.name != "append" || member.optional || call.optional {
-        return None;
-    }
-    let Expression::Identifier(id) = unwrap_ts_wrappers(&member.object) else {
-        return None;
-    };
-    Some((id.name.to_string(), vec![call]))
+    matches!(unwrap_ts_wrappers(cur), Expression::Identifier(id) if id.name == target).then(|| {
+        parts.reverse();
+        parts
+    })
 }

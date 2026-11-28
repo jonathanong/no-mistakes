@@ -157,6 +157,7 @@ impl<'a> ScopeVisitor<'a> {
         if let (ast::BindingPattern::BindingIdentifier(name), Some(init)) =
             (&declaration.id, &declaration.init)
         {
+            self.refresh_builder_alias(name.name.as_str(), init);
             if declaration.type_annotation.is_none() {
                 self.bind_undeclared_alias(name.name.as_str(), init);
             }

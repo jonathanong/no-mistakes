@@ -36,7 +36,7 @@ pub(super) fn walk_expr_stars(
             let func = enclosing_fn.map(str::to_string);
             super::items::emit_qualified(rels, scope.outer_rels, q, returning, func, line, out);
         }
-        Expr::Nested(inner) => {
+        Expr::Nested(inner) | Expr::Cast { expr: inner, .. } => {
             walk_expr_stars(inner, rels, scope, returning, enclosing_fn, line, out);
         }
         Expr::Function(func) => walk_function_stars(func, rels, scope, returning, line, out),

@@ -84,3 +84,87 @@ export function concatAndAssignEdges(f1: Five, f2: Five, p: Pair, dyn: string, o
         .any(|f| f.sql.contains("SELECT * FROM entries"));
     assert!(has_entries);
 }
+
+#[test]
+fn logical_assign_inline_relation_append_copy_and_composed_return() {
+    let source = r#"
+import { query } from "@example/db";
+import sql from "sql-template-strings";
+
+type Pair = "entries" | "records";
+type One = "entries";
+
+function buildComposed(dyn: string) {
+  let q = "SELECT id FROM narrow";
+  q += dyn;
+  q += " UNION ALL SELECT entries.* FROM entries";
+  return q + " ORDER BY id";
+}
+
+export function reviewEdgeCases(p: Pair, one: One, dyn: string) {
+  let logical = "SELECT * FROM entries";
+  logical ||= "SELECT * FROM records";
+  logical += dyn;
+  query(logical);
+
+  const inlinePair = sql`UPDATE `;
+  query(
+    inlinePair
+      .append(p)
+      .append(" AS t")
+      .append(" SET active = true RETURNING t.*")
+      .append(dyn),
+  );
+
+  const inlineSingle = sql`UPDATE `;
+  query(inlineSingle.append(one).append(" SET active = true RETURNING *").append(dyn));
+
+  const prefixed = sql`/* prefix */ `;
+  prefixed.append(`UPDATE ${p}`);
+  prefixed.append(" SET active = true RETURNING *");
+  prefixed.append(dyn);
+  query(prefixed);
+
+  const copy = prefixed;
+  query(copy);
+
+  query(buildComposed(dyn));
+}
+"#;
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let facts =
+        extract_embedded_sql_from_source(Path::new("src/review_edges.ts"), source, &options);
+    let frags: Vec<_> = facts.call_fragments.values().flatten().collect();
+    assert!(frags
+        .iter()
+        .any(|f| f.sql.contains("SELECT * FROM entries")));
+    assert!(frags
+        .iter()
+        .any(|f| f.sql.contains("SELECT * FROM records")));
+    assert!(frags.iter().any(|f| {
+        f.sql.contains("RETURNING t.*")
+            && f.context_sql
+                .as_deref()
+                .is_some_and(|c| c.contains("UPDATE entries AS t"))
+    }));
+    assert!(frags.iter().any(|f| {
+        f.sql.contains("RETURNING t.*")
+            && f.context_sql
+                .as_deref()
+                .is_some_and(|c| c.contains("UPDATE records AS t"))
+    }));
+    let returning_records_count = frags
+        .iter()
+        .filter(|f| {
+            f.sql.contains("RETURNING *")
+                && f.context_sql
+                    .as_deref()
+                    .is_some_and(|c| c.contains("/* prefix */ UPDATE records"))
+        })
+        .count();
+    assert_eq!(returning_records_count, 2);
+    assert!(frags
+        .iter()
+        .any(|f| f.sql.contains("UNION ALL SELECT entries.* FROM entries")));
+    assert_eq!(facts.call_fragments.len(), 6);
+}

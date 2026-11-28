@@ -9,7 +9,7 @@ mod concat;
 mod relations;
 use concat::{collect_addition, partial_atom, partial_parameterized_template, push_clean};
 use relations::partial_templates;
-pub(super) use relations::{extend_prefix, try_relation_append};
+pub(super) use relations::{closed_relation_names, try_relation_append};
 
 pub(super) fn expr_fragments(
     visitor: &ScopeVisitor<'_>,

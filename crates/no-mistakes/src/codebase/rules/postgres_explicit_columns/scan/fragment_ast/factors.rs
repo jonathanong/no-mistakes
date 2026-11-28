@@ -38,6 +38,14 @@ pub(super) fn push_factor(
         } => {
             if let Some(table_args) = args {
                 visit_table_args(table_args, scope, out);
+                if let Some(alias) = alias {
+                    rels.push(Rel {
+                        table: String::new(),
+                        alias: Some(ident_key(&alias.name)),
+                        join_aliases: Vec::new(),
+                        is_local_derived: true,
+                    });
+                }
                 return;
             }
             let table = object_name_key(name);

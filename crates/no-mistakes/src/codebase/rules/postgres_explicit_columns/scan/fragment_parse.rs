@@ -85,9 +85,9 @@ pub(super) fn extract_fragment_stars(sql: &str, context_sql: Option<&str>) -> Ve
 }
 
 fn tokenize(sql: &str) -> Vec<TokenWithSpan> {
-    Tokenizer::new(&PostgreSqlDialect {}, sql)
-        .tokenize_with_location()
-        .unwrap_or_default()
+    let mut tokens = Vec::new();
+    let _ = Tokenizer::new(&PostgreSqlDialect {}, sql).tokenize_with_location_into_buf(&mut tokens);
+    tokens
 }
 
 pub(super) fn next_code(tokens: &[TokenWithSpan], mut index: usize) -> Option<(usize, &TokenWithSpan)> {

@@ -34,20 +34,28 @@ impl ScopeVisitor<'_> {
         let Some(owner) = self.current_plain_function_key() else {
             return;
         };
-        let fragments = if let Expression::Identifier(id) = unwrap_ts_wrappers(expr) {
-            let Some(scope_index) = self.lookup_scope(id.name.as_str()) else {
-                return;
-            };
-            self.call_fragment_state
-                .builders
-                .get(&(scope_index, id.name.to_string()))
-                .map(|trace| trace.fragments.clone())
-                .unwrap_or_default()
-        } else if partial::is_sql_like_init(self, expr) {
-            partial::expr_fragments(self, expr, None, None)
-        } else {
-            Vec::new()
-        };
+        let mut fragments = Vec::new();
+        match unwrap_ts_wrappers(expr) {
+            Expression::Identifier(id) => {
+                if let Some(scope_index) = self.lookup_scope(id.name.as_str()) {
+                    if let Some(trace) = self
+                        .call_fragment_state
+                        .builders
+                        .get(&(scope_index, id.name.to_string()))
+                    {
+                        fragments.extend(trace.fragments.iter().cloned());
+                    }
+                }
+            }
+            Expression::BinaryExpression(bin) if bin.operator == BinaryOperator::Addition => {
+                collect_return_operand_traces(self, expr, &mut fragments);
+                fragments.extend(partial::expr_fragments(self, expr, None, None));
+            }
+            _ if partial::is_sql_like_init(self, expr) => {
+                fragments.extend(partial::expr_fragments(self, expr, None, None));
+            }
+            _ => {}
+        }
         if !fragments.is_empty() {
             self.call_fragment_state
                 .function_returns
@@ -62,7 +70,9 @@ impl ScopeVisitor<'_> {
         call: &CallExpression<'_>,
         recovered: &EmbeddedSqlCall,
     ) -> Vec<CallSqlFragment> {
-        if self.head_calls_only || !recovered.is_unanalyzable() {
+        if self.head_calls_only
+            || (!recovered.is_unanalyzable() && !super::inline_append::call_has_sentinel(recovered))
+        {
             return Vec::new();
         }
         let covered_sites: FxHashSet<u32> = recovered
@@ -118,7 +128,7 @@ impl ScopeVisitor<'_> {
                         .cloned()
                         .unwrap_or_default();
                 }
-                if let Some(frags) = super::inline::inline_append_fragments(
+                if let Some(frags) = super::inline_append::inline_append_fragments(
                     self,
                     inner,
                     &covered_sites,
@@ -161,21 +171,27 @@ pub(crate) fn publish_call_fragments(fragments: &mut [CallSqlFragment]) {
     }
 }
 
-pub(super) fn self_addition_parts<'a>(
-    expr: &'a Expression<'a>,
-    target: &str,
-) -> Option<Vec<&'a Expression<'a>>> {
-    let mut parts = Vec::new();
-    let mut cur = expr;
-    while let Expression::BinaryExpression(bin) = unwrap_ts_wrappers(cur) {
-        if bin.operator != BinaryOperator::Addition {
-            return None;
+fn collect_return_operand_traces(
+    visitor: &ScopeVisitor<'_>,
+    expr: &Expression<'_>,
+    out: &mut Vec<CallSqlFragment>,
+) {
+    match unwrap_ts_wrappers(expr) {
+        Expression::BinaryExpression(bin) if bin.operator == BinaryOperator::Addition => {
+            collect_return_operand_traces(visitor, &bin.left, out);
+            collect_return_operand_traces(visitor, &bin.right, out);
         }
-        parts.push(&bin.right);
-        cur = &bin.left;
+        Expression::Identifier(id) => {
+            if let Some(scope_index) = visitor.lookup_scope(id.name.as_str()) {
+                if let Some(trace) = visitor
+                    .call_fragment_state
+                    .builders
+                    .get(&(scope_index, id.name.to_string()))
+                {
+                    out.extend(trace.fragments.iter().cloned());
+                }
+            }
+        }
+        _ => {}
     }
-    matches!(unwrap_ts_wrappers(cur), Expression::Identifier(id) if id.name == target).then(|| {
-        parts.reverse();
-        parts
-    })
 }

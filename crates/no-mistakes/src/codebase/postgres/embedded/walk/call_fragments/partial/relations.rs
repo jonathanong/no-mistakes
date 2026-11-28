@@ -169,30 +169,3 @@ fn apply_relation_append(
         });
     }
 }
-
-pub(in super::super) fn extend_prefix(
-    trace: &mut super::super::BuilderTrace,
-    added: &[CallSqlFragment],
-    straight_line: bool,
-) {
-    if !straight_line || added.is_empty() {
-        return;
-    }
-    let cap = super::super::MAX_PREFIX_BYTES;
-    if added.len() == 1 {
-        if let Some(p) = trace
-            .prefix
-            .as_mut()
-            .filter(|p| p.len() + added[0].sql.len() <= cap)
-        {
-            p.push_str(&added[0].sql);
-        }
-    }
-    if added.len() == trace.alt_prefixes.len() {
-        for (p, frag) in trace.alt_prefixes.iter_mut().zip(added) {
-            if p.len() + frag.sql.len() <= cap {
-                p.push_str(&frag.sql);
-            }
-        }
-    }
-}

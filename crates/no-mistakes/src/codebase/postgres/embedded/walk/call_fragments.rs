@@ -1,4 +1,3 @@
-use super::calls::chain;
 use super::ScopeVisitor;
 use crate::codebase::postgres::embedded::{first_call_argument, CallSqlFragment};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
@@ -8,6 +7,7 @@ use oxc_span::GetSpan;
 
 mod collect;
 mod inline;
+mod inline_append;
 mod partial;
 pub(crate) use collect::publish_call_fragments;
 
@@ -55,18 +55,8 @@ impl ScopeVisitor<'_> {
             return;
         }
         let init = unwrap_ts_wrappers(init);
-        if let Expression::CallExpression(call) = init {
-            if let Expression::Identifier(callee) = unwrap_ts_wrappers(&call.callee) {
-                let key = self.plain_key(callee.name.as_str());
-                if let Some(returned) = self.call_fragment_state.function_returns.get(&key).cloned()
-                {
-                    self.call_fragment_state.builders.insert(
-                        (scope_index, name.to_string()),
-                        BuilderTrace::from_fragments(returned),
-                    );
-                    return;
-                }
-            }
+        if inline_append::try_copy_builder_init(self, scope_index, name, init) {
+            return;
         }
         if sql.is_none() && !partial::is_sql_like_init(self, init) {
             return;
@@ -102,22 +92,12 @@ impl ScopeVisitor<'_> {
         if self.head_calls_only || self.consumed_links.contains(&call.span.start) {
             return;
         }
-        if let Some(fluent) = chain(call) {
-            for link in &fluent.links {
-                self.record_append_link(&fluent.root, link);
-            }
-            return;
-        }
-        let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
+        let Some((root, links)) = inline_append::append_root_and_links(call) else {
             return;
         };
-        if member.property.name != "append" || member.optional || call.optional {
-            return;
+        for link in links {
+            self.record_append_link(&root, link);
         }
-        let Expression::Identifier(id) = unwrap_ts_wrappers(&member.object) else {
-            return;
-        };
-        self.record_append_link(id.name.as_str(), call);
     }
 
     fn record_append_link(&mut self, receiver: &str, call: &CallExpression<'_>) {
@@ -165,16 +145,13 @@ impl ScopeVisitor<'_> {
         {
             return;
         }
-        let added = if alt_prefixes.is_empty() {
-            partial::expr_fragments(self, arg, context.as_deref(), Some(call.span.start))
-        } else {
-            alt_prefixes
-                .iter()
-                .flat_map(|ctx| {
-                    partial::expr_fragments(self, arg, Some(ctx), Some(call.span.start))
-                })
-                .collect()
-        };
+        let added = inline::expand_with_context(
+            self,
+            arg,
+            context.as_deref(),
+            &alt_prefixes,
+            call.span.start,
+        );
         if added.is_empty() {
             return;
         }
@@ -186,7 +163,7 @@ impl ScopeVisitor<'_> {
         if trace.prefix.is_none() {
             trace.prefix = context;
         }
-        partial::extend_prefix(trace, &added, straight_line);
+        inline::extend_prefix(trace, &added, straight_line);
         trace.fragments.extend(added);
     }
 }

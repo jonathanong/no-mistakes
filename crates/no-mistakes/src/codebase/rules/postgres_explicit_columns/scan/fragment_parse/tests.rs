@@ -198,7 +198,7 @@ fn ast_covers_dml_set_ops_table_and_nested_subqueries() {
     }
 
     let grouped = extract_fragment_stars(
-        "SELECT count((w.*)), count((*)), row_to_json((w.*)), row_to_json((*)) FROM wide w",
+        "SELECT count((w.*)), count((*)), row_to_json((w.*)), row_to_json((*)), row_to_json(CAST(w.* AS wide)) FROM wide w",
         None,
     );
     let grouped_actual: Vec<_> = grouped
@@ -211,8 +211,15 @@ fn ast_covers_dml_set_ops_table_and_nested_subqueries() {
             (Some("wide"), Some("count")),
             (Some("wide"), Some("row_to_json")),
             (Some("wide"), Some("row_to_json")),
+            (Some("wide"), Some("row_to_json")),
         ]
     );
+
+    assert!(extract_fragment_stars(
+        "SELECT (SELECT row_to_json(w.*) FROM generate_series(1, 3) AS w(n)) FROM wide AS w",
+        None,
+    )
+    .is_empty());
 }
 
 #[test]
@@ -423,6 +430,10 @@ fn context_and_token_fallback_handle_prefixes_ctes_commas_and_subqueries() {
     assert_eq!(corr_tok[0].relation.as_deref(), Some("wide"));
 
     assert!(extract_fragment_stars("SELECT pg_catalog.count(*) FROM wide WHERE", None).is_empty());
+
+    let truncated_lit = extract_fragment_stars("SELECT * FROM wide WHERE note = '", None);
+    assert_eq!(truncated_lit.len(), 1);
+    assert_eq!(truncated_lit[0].relation.as_deref(), Some("wide"));
 
     let edge_ctxs = [
         "WITH a(x, (y)) AS (SELECT 1), 1 SELECT 1",
