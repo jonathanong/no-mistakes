@@ -497,6 +497,12 @@
       "options": null
     },
     {
+      "file": "builtin-pattern.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "redeclare.js",
       "findings": [],
       "kind": "valid",

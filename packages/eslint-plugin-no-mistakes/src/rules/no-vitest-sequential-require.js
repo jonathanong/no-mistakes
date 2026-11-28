@@ -52,10 +52,7 @@ function exportKey(pattern, name) {
     if (property.type !== "Property") continue;
     let value = property.value;
     while (value?.type === "AssignmentPattern") value = value.left;
-    if (value?.type === "ObjectPattern") {
-      const nested = exportKey(value, name);
-      if (nested !== undefined) return nested;
-    }
+    if (value?.type === "ObjectPattern") continue;
     if (value?.type !== "Identifier" || value.name !== name) continue;
     if (!property.computed && property.key?.type === "Identifier") return property.key.name;
     return literalString(property.key);
@@ -141,7 +138,7 @@ function renamedNonRunner(root, context) {
   const loaded = moduleLoad(def.node.init, context);
   if (loaded?.source !== "vitest" || loaded.exportName !== "*") return false;
   const exported = exportKey(def.node.id, root.name);
-  return typeof exported === "string" && !TEST_NAMES.has(exported);
+  return exported !== null && !TEST_NAMES.has(exported);
 }
 
 module.exports = {

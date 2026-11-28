@@ -44,6 +44,7 @@ const groups = [
     ],
     valid: [
       "not-a-runner.test.ts",
+      "builtin-pattern.test.ts",
       "redeclare.js",
       "two-defs.test.js",
       "option-call.test.ts",
