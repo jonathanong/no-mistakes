@@ -160,7 +160,6 @@ fn multiline_ts_calls_and_sql_suffix_after_semicolon_find_reasons() {
     let no_paren = "takeLock; other(/* lock-reason: prevents: dup; writer: w */);\n";
     let idx_np = CommentIndex::for_ts(no_paren);
     assert_eq!(idx_np.status_for_ts_offset(1, 0), ReasonStatus::Absent);
-    assert_eq!(idx_np.status_for_ts_position(1, 1), ReasonStatus::Absent);
 
     let sql = concat!(
         "SELECT 1; SELECT /* lock-reason: prevents: duplicates; writer: worker */\n",
@@ -168,4 +167,17 @@ fn multiline_ts_calls_and_sql_suffix_after_semicolon_find_reasons() {
     );
     let sql_idx = CommentIndex::for_sql(sql);
     assert_eq!(sql_idx.status_for_sql_line(2, 3), ReasonStatus::Valid);
+}
+
+#[test]
+fn regex_literal_parens_do_not_end_the_call_extent() {
+    let ts = concat!(
+        "takeLock(\n",
+        "  /[)]/,\n",
+        "  /* lock-reason: prevents: duplicates; writer: worker */\n",
+        "  id,\n",
+        ");\n",
+    );
+    let index = CommentIndex::for_ts(ts);
+    assert_eq!(index.status_for_ts_offset(1, 0), ReasonStatus::Valid);
 }

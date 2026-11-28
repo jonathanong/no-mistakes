@@ -1,6 +1,30 @@
 use super::lexers::{is_utf8_cont, scan_escaped};
 use super::CommentIndex;
 
+/// End of a regex literal at `start` when the previous token makes `/` a regex opener.
+pub(super) fn regex_literal_end(bytes: &[u8], start: usize) -> Option<usize> {
+    let prev = bytes[..start]
+        .iter()
+        .rev()
+        .find(|byte| !byte.is_ascii_whitespace());
+    if prev.is_some_and(|byte| !b"(,=:[!&|?{};+-*%<>~".contains(byte)) {
+        return None;
+    }
+    let (mut i, mut in_class) = (start + 1, false);
+    while i < bytes.len() {
+        match bytes[i] {
+            b'\\' => i += 1,
+            b'\n' => return None,
+            b'[' => in_class = true,
+            b']' => in_class = false,
+            b'/' if !in_class => return Some(i + 1),
+            _ => {}
+        }
+        i += 1;
+    }
+    None
+}
+
 pub(super) fn scan_js_quoted(
     bytes: &[u8],
     start: usize,

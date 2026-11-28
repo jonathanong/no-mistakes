@@ -22,10 +22,6 @@ impl CommentIndex {
         self.status_for_ts_span(line, col, end_line)
     }
 
-    pub(in super::super) fn status_for_ts_position(&self, line: usize, col: usize) -> ReasonStatus {
-        self.status_for_ts_span(line, col.max(1), line)
-    }
-
     fn status_for_ts_span(&self, line: usize, col: usize, end_line: usize) -> ReasonStatus {
         let split = self.semicolons.partition_point(|&pos| pos < (line, col));
         let prev_semi = split

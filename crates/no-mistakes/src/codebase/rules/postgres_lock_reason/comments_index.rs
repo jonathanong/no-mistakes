@@ -112,6 +112,9 @@ impl CommentIndex {
                 b'\'' | b'"' | b'`' => {
                     (i, line, col) = js_lexers::scan_js_quoted(bytes, i, line, col);
                 }
+                b'/' if js_lexers::regex_literal_end(bytes, i).is_some() => {
+                    i = js_lexers::regex_literal_end(bytes, i).unwrap_or(i + 1);
+                }
                 b'(' => {
                     depth += 1;
                     i += 1;
