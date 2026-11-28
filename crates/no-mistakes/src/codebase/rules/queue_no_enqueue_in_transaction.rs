@@ -13,6 +13,7 @@ mod analyze;
 mod analyze_callback;
 mod builtins;
 mod callbacks;
+mod callbacks_deferred;
 mod options;
 mod receivers;
 mod reexports;

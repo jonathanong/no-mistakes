@@ -63,3 +63,22 @@ export async function asyncCallbackDeferred(gate: Promise<void>) {
   });
   await tx.commit();
 }
+
+export async function asyncCallbackBeforeAwait(gate: Promise<void>) {
+  const tx = await beginTransaction();
+  [0].forEach(async () => {
+    enqueue({ receiptId: "before-await" });
+    await gate;
+  });
+  await tx.commit();
+}
+
+export async function asyncCallbackNested(gate: Promise<void>, items: number[]) {
+  const tx = await beginTransaction();
+  [0].forEach(async () => {
+    await gate;
+    Array.from(items, () => enqueue({ receiptId: "nested" }));
+    items.forEach(enqueue);
+  });
+  await tx.commit();
+}

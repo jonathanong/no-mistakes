@@ -214,6 +214,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 70,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "enqueue({ receiptId: \"before-await\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 80,
+          "message": "publish inside an async built-in callback may run after the transaction closes; move the publish after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "Array.from(items, () => enqueue({ receiptId: \"nested\" }));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "items.forEach",
+          "line": 81,
+          "message": "publish inside an async built-in callback may run after the transaction closes; move the publish after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "items.forEach(enqueue);",
+          "target": "unanalyzable"
+        },
+        {
           "file": "src/unresolved.ts",
           "import": "beginTransaction",
           "line": 10,
@@ -411,6 +438,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 80,
+          "message": "publish inside an async built-in callback may run after the transaction closes; move the publish after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "Array.from(items, () => enqueue({ receiptId: \"nested\" }));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "items.forEach",
+          "line": 81,
+          "message": "publish inside an async built-in callback may run after the transaction closes; move the publish after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "items.forEach(enqueue);",
+          "target": "unanalyzable"
+        },
+        {
           "file": "src/unresolved.ts",
           "import": "beginTransaction",
           "line": 10,
@@ -516,6 +561,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "@sample/jobs#enqueue"
         },
         {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 70,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "enqueue({ receiptId: \"before-await\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
           "file": "src/using.ts",
           "import": "enqueue",
           "line": 8,
@@ -523,6 +577,37 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "queue-no-enqueue-in-transaction",
           "sourceLine": "await enqueue({ receiptId });",
           "target": "@sample/jobs#enqueue"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scoped_barrel_begin": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/consumer.ts",
+          "import": "enqueue",
+          "line": 6,
+          "message": "Move this enqueue after the transaction commits. Await the handle's commit before publishing.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId: \"inside\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/consumer.ts",
+          "import": "tx.commit",
+          "line": 7,
+          "message": "unresolved call target may invoke a configured transaction (dynamic member, factory return, or wildcard re-export); import and call the transaction directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await tx.commit();",
+          "target": "unanalyzable"
         }
       ],
       "warnings": []

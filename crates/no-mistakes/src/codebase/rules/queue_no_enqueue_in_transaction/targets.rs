@@ -55,22 +55,19 @@ pub(super) enum Boundary {
 }
 
 pub(super) fn resolve_boundary(ctx: &Context<'_>, file: &Path, api: Api<'_>) -> Boundary {
-    match follow(ctx, file, api, |module, export| {
+    let callback = follow(ctx, file, api, |module, export| {
         ctx.targets.transactions.contains_key(&(module, export))
-    }) {
-        ResolvedApi::Target(module, export) => {
-            Boundary::Callback(ctx.targets.transactions[&(module.as_str(), export.as_str())])
-        }
-        ResolvedApi::Unanalyzable => Boundary::Unanalyzable,
-        ResolvedApi::Other => {
-            match follow(ctx, file, api, |module, export| {
-                ctx.targets.begins.contains(&(module, export))
-            }) {
-                ResolvedApi::Target(_, _) => Boundary::Begin,
-                ResolvedApi::Unanalyzable => Boundary::Unanalyzable,
-                ResolvedApi::Other => Boundary::Other,
-            }
-        }
+    });
+    if let ResolvedApi::Target(module, export) = &callback {
+        return Boundary::Callback(ctx.targets.transactions[&(module.as_str(), export.as_str())]);
+    }
+    let begin = follow(ctx, file, api, |module, export| {
+        ctx.targets.begins.contains(&(module, export))
+    });
+    match (callback, begin) {
+        (_, ResolvedApi::Target(_, _)) => Boundary::Begin,
+        (ResolvedApi::Unanalyzable, _) | (_, ResolvedApi::Unanalyzable) => Boundary::Unanalyzable,
+        _ => Boundary::Other,
     }
 }
 

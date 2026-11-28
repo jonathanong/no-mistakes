@@ -189,6 +189,7 @@ pub struct ValueFlowFacts {
     pub type_shapes: FxHashMap<String, ValueType>,
     pub contextual_callbacks: FxHashMap<u32, ValueType>,
     pub async_callables: FxHashSet<CallableId>,
+    pub first_await_ends: FxHashMap<CallableId, u32>,
     pub generator_callables: FxHashSet<CallableId>,
     pub closed_string_registries: Vec<closed_identifiers::ClosedStringRegistry>,
     pub registry_mutations: Vec<closed_identifiers::RegistryMutation>,

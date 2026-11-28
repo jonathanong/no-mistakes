@@ -309,6 +309,7 @@ fn queue_no_enqueue_in_transaction_json_matches_snapshot() {
 fn queue_no_enqueue_in_transaction_scoped_handles_json_matches_snapshot() {
     let root = rules_path(RULE, "fixture", "scoped-handles");
     let opaque = rules_path(RULE, "fixture", "scoped-opaque");
+    let barrel_begin = rules_path(RULE, "fixture", "scoped-barrel-begin");
     let reports = assert_saved_fixture_report(
         "queue_no_enqueue_in_transaction_scoped_handles",
         &[
@@ -319,6 +320,11 @@ fn queue_no_enqueue_in_transaction_scoped_handles_json_matches_snapshot() {
                 "scoped_opaque",
                 opaque.clone(),
                 opaque.join(".no-mistakes.yml"),
+            ),
+            (
+                "scoped_barrel_begin",
+                barrel_begin.clone(),
+                barrel_begin.join(".no-mistakes.yml"),
             ),
         ],
         &[],
@@ -349,6 +355,7 @@ fn queue_no_enqueue_in_transaction_scoped_handles_json_matches_snapshot() {
             ("src/shadowed.ts", 10),
             ("src/statements.ts", 44),
             ("src/statements.ts", 45),
+            ("src/statements.ts", 70),
             ("src/using.ts", 8)
         ]
     );

@@ -4,6 +4,7 @@ fn visit_await_expression_with_capture<'a>(
 ) {
     collector.invalidate_replacement_expression();
     collector.record_unknown_fresh_call(expression.span.end);
+    collector.record_await_end(expression.span.end);
     walk::walk_await_expression(collector, expression);
     // Operand evaluation can create the first capture; completion must
     // invalidate it even when the pre-operand path was still cold.

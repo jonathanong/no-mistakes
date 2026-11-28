@@ -13,6 +13,7 @@ pub(super) struct CallbackWalk<'a> {
     pub(super) worklist: Vec<(CallableId, CallableId)>,
     pub(super) visited: FxHashSet<(CallableId, CallableId)>,
     pub(super) reported: FxHashSet<(u32, String)>,
+    pub(super) deferred: FxHashSet<CallableId>,
     pub(super) diagnostics: &'a mut AnalysisDiagnostics,
 }
 
@@ -82,6 +83,9 @@ impl CallbackWalk<'_> {
                     self.report_unanalyzable(env, site,
                         "built-in callback inside transaction is a generator function, whose execution timing cannot be proved; use a regular or async inline callback");
                 } else if self.visited.insert((*cb, tx_owner)) {
+                    if self.site_is_deferred(env, site, tx_owner) {
+                        self.deferred.insert(*cb);
+                    }
                     self.worklist.push((*cb, tx_owner));
                 }
             }
@@ -118,6 +122,9 @@ impl CallbackWalk<'_> {
         }
         if let Some(imported) = resolve_imported_expr(env, arg) {
             match imported {
+                ResolvedApi::Target(..) if self.site_is_deferred(env, site, tx_owner) => {
+                    self.report_deferred(env, site);
+                }
                 ResolvedApi::Target(spec, export) => {
                     self.report_publish(env, site, (spec.as_str(), export.as_str()));
                 }

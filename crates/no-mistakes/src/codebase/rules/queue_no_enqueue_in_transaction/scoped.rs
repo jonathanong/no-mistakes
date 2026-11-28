@@ -84,6 +84,7 @@ pub(super) fn check(
         visited: FxHashSet::default(),
         worklist: Vec::new(),
         reported: FxHashSet::default(),
+        deferred: FxHashSet::default(),
         diagnostics,
     };
     let mut cursors: FxHashMap<(CallableId, CallableId, u32, &str), usize> = FxHashMap::default();
