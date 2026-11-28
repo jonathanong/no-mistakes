@@ -1,4 +1,4 @@
-use super::check_json_snapshot::{assert_saved_fixture, rules_path};
+use super::check_json_snapshot::{assert_saved_fixture, assert_saved_fixture_report, rules_path};
 use std::process::Command;
 
 #[test]
@@ -111,6 +111,84 @@ fn test_reliability_rejects_invalid_scope_globs() {
 }
 
 #[test]
+fn test_reliability_fixture_provenance_failures_check_json_snapshot() {
+    let root = rules_path(
+        "test-no-retries",
+        "fixture",
+        "playwright-provenance-failures",
+    );
+    let reports = assert_saved_fixture_report(
+        "test_reliability_fixture_provenance",
+        &[("provenance", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let result = &reports["provenance"];
+    assert_eq!(result["exitCode"], 1);
+    let report = &result["report"];
+    assert_eq!(report["rules"], serde_json::json!([]));
+    let failures = report["incomplete"].as_array().unwrap();
+    assert_eq!(failures.len(), 22, "{failures:?}");
+    for (spec, reason) in [
+        (
+            "broken",
+            "fixture module `fixtures/broken.ts` could not be parsed",
+        ),
+        (
+            "broken-alias",
+            "fixture module `fixtures/broken.ts` could not be parsed",
+        ),
+        (
+            "relay",
+            "fixture module `fixtures/broken.ts` could not be parsed",
+        ),
+        (
+            "destructured",
+            "expression in fixture chain could not be traced statically",
+        ),
+        (
+            "mutable",
+            "expression in fixture chain could not be traced statically",
+        ),
+        (
+            "mutable-broken",
+            "fixture module `fixtures/broken.ts` could not be parsed",
+        ),
+        (
+            "mixed",
+            "fixture module `fixtures/broken.ts` could not be parsed",
+        ),
+        (
+            "unresolved-factory-argument",
+            "expression in fixture chain could not be traced statically",
+        ),
+        (
+            "uncertain-wrapped-fixture",
+            "fixture module `fixtures/broken-wrapper.ts` could not be parsed",
+        ),
+        (
+            "wrapped",
+            "fixture module `fixtures/broken-wrapper.ts` could not be parsed",
+        ),
+        (
+            "wrapped-export",
+            "fixture module `fixtures/broken-wrapper.ts` could not be parsed",
+        ),
+    ] {
+        for rule in ["playwright-no-serial", "test-no-retries"] {
+            assert!(
+                failures.iter().any(|failure| {
+                    failure["file"] == format!("tests/{spec}.spec.ts")
+                        && failure["consumer"] == rule
+                        && failure["message"].as_str().unwrap().contains(reason)
+                }),
+                "{spec} {rule}: {failures:?}"
+            );
+        }
+    }
+}
+
+#[test]
 fn uncertain_playwright_factory_check_json_snapshot() {
     let root = rules_path("test-no-retries", "fixture", "uncertain-factory");
     let reports = super::check_json_snapshot::assert_saved_fixture_report(
@@ -176,4 +254,42 @@ fn uncertain_playwright_receiver_check_json_snapshot() {
     }));
     let incomplete = report["incomplete"].as_array().unwrap();
     assert_eq!(incomplete.len(), 5);
+}
+
+#[test]
+fn playwright_provenance_edge_coverage_check_json_snapshot() {
+    let root = rules_path("test-no-retries", "fixture", "playwright-provenance-edges");
+    let reports = assert_saved_fixture_report(
+        "playwright_provenance_edge_coverage",
+        &[("edges", root.clone(), root.join(".no-mistakes.yml"))],
+        &[],
+        &[],
+    );
+    let result = &reports["edges"];
+    assert_eq!(result["exitCode"], 1);
+    let report = &result["report"];
+    assert!(report["rules"].as_array().unwrap().is_empty());
+    let failures = report["incomplete"].as_array().unwrap();
+    assert_eq!(failures.len(), 4, "{failures:?}");
+    for (spec, reason) in [
+        (
+            "star-cycle",
+            "fixture module `fixtures/broken-wrapper.ts` could not be parsed",
+        ),
+        (
+            "unresolved-wrapper",
+            "fixture wrapper return could not be traced statically",
+        ),
+    ] {
+        for rule in ["playwright-no-serial", "test-no-retries"] {
+            assert!(
+                failures.iter().any(|failure| {
+                    failure["file"] == format!("tests/{spec}.spec.ts")
+                        && failure["consumer"] == rule
+                        && failure["message"].as_str().unwrap().contains(reason)
+                }),
+                "{spec} {rule}: {failures:?}"
+            );
+        }
+    }
 }

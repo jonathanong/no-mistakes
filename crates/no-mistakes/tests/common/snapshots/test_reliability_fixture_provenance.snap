@@ -1,0 +1,129 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "provenance": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/broken-alias.spec.ts",
+          "message": "tests/broken-alias.spec.ts:4: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/broken.spec.ts",
+          "message": "tests/broken.spec.ts:3: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/destructured.spec.ts",
+          "message": "tests/destructured.spec.ts:4: cannot verify whether `test` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/mixed.spec.ts",
+          "message": "tests/mixed.spec.ts:3: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/mutable-broken.spec.ts",
+          "message": "tests/mutable-broken.spec.ts:4: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/mutable.spec.ts",
+          "message": "tests/mutable.spec.ts:4: cannot verify whether `test` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/relay.spec.ts",
+          "message": "tests/relay.spec.ts:3: cannot verify whether `browserTest` is Playwright's `test` because fixture module `fixtures/broken.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/uncertain-wrapped-fixture.spec.ts",
+          "message": "tests/uncertain-wrapped-fixture.spec.ts:4: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken-wrapper.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/unresolved-factory-argument.spec.ts",
+          "message": "tests/unresolved-factory-argument.spec.ts:5: cannot verify whether `test` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/wrapped-export.spec.ts",
+          "message": "tests/wrapped-export.spec.ts:3: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken-wrapper.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/wrapped.spec.ts",
+          "message": "tests/wrapped.spec.ts:5: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken-wrapper.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/broken-alias.spec.ts",
+          "message": "tests/broken-alias.spec.ts:4: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/broken.spec.ts",
+          "message": "tests/broken.spec.ts:3: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/destructured.spec.ts",
+          "message": "tests/destructured.spec.ts:4: cannot verify whether `test` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/mixed.spec.ts",
+          "message": "tests/mixed.spec.ts:3: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/mutable-broken.spec.ts",
+          "message": "tests/mutable-broken.spec.ts:4: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/mutable.spec.ts",
+          "message": "tests/mutable.spec.ts:4: cannot verify whether `test` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/relay.spec.ts",
+          "message": "tests/relay.spec.ts:3: cannot verify whether `browserTest` is Playwright's `test` because fixture module `fixtures/broken.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/uncertain-wrapped-fixture.spec.ts",
+          "message": "tests/uncertain-wrapped-fixture.spec.ts:4: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken-wrapper.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/unresolved-factory-argument.spec.ts",
+          "message": "tests/unresolved-factory-argument.spec.ts:5: cannot verify whether `test` is Playwright's `test` (expression in fixture chain could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/wrapped-export.spec.ts",
+          "message": "tests/wrapped-export.spec.ts:3: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken-wrapper.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/wrapped.spec.ts",
+          "message": "tests/wrapped.spec.ts:5: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken-wrapper.ts` could not be parsed; repair the fixture module"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

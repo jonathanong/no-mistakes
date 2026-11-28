@@ -1,0 +1,39 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "edges": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/star-cycle.spec.ts",
+          "message": "tests/star-cycle.spec.ts:5: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken-wrapper.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "playwright-no-serial",
+          "file": "tests/unresolved-wrapper.spec.ts",
+          "message": "tests/unresolved-wrapper.spec.ts:5: cannot verify whether `test` is Playwright's `test` (fixture wrapper return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line playwright-no-serial`"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/star-cycle.spec.ts",
+          "message": "tests/star-cycle.spec.ts:5: cannot verify whether `test` is Playwright's `test` because fixture module `fixtures/broken-wrapper.ts` could not be parsed; repair the fixture module"
+        },
+        {
+          "consumer": "test-no-retries",
+          "file": "tests/unresolved-wrapper.spec.ts",
+          "message": "tests/unresolved-wrapper.spec.ts:5: cannot verify whether `test` is Playwright's `test` (fixture wrapper return could not be traced statically); bind it with a direct `const` chain from Playwright or suppress with `no-mistakes-disable-next-line test-no-retries`"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}

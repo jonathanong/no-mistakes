@@ -4,13 +4,12 @@ pub(super) use messages::unreadable;
 use messages::unresolved_binding_message;
 
 use super::{
-    Allowlist, Inputs, Location, Shape, SourceDemand, PLAYWRIGHT_NO_SERIAL,
-    TEST_NO_RETRIES,
+    Allowlist, Inputs, Location, Shape, SourceDemand, PLAYWRIGHT_NO_SERIAL, TEST_NO_RETRIES,
 };
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_outcome::{CheckFailure, CheckInputFailure};
 use crate::fx::FxHashSet;
 use anyhow::Result;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::path::{Path, PathBuf};
 
 pub(super) struct RuleContext<'a> {
@@ -50,7 +49,8 @@ pub(super) fn source_findings(
             continue;
         }
         let detail = finding_details(location, id, ctx.max_retries);
-        let uncertain_retry = location.unresolved_reason.is_some()
+        let malformed = location.malformed_playwright_fixture.is_some();
+        let uncertain_retry = (malformed || location.unresolved_reason.is_some())
             && id == TEST_NO_RETRIES
             && matches!(location.shape, Shape::Retry(..));
         if detail.is_none() && !uncertain_retry {
@@ -60,13 +60,17 @@ pub(super) fn source_findings(
             .resolved_playwright_exports
             .iter()
             .any(|(m, e)| ctx.fixtures.contains(&(m.clone(), e.to_string())));
-        if location.unresolved_reason.is_some() && location.playwright_candidates.is_empty() && !configured
+        if !malformed
+            && location.unresolved_reason.is_some()
+            && location.playwright_candidates.is_empty()
+            && !configured
             && location.playwright_import.is_none()
         {
             continue;
         }
-        if (location.unresolved_reason.is_none() && location.playwright_import.is_none())
-            || (configured && location.playwright_import.is_some())
+        if !malformed
+            && ((location.unresolved_reason.is_none() && location.playwright_import.is_none())
+                || (configured && location.playwright_import.is_some()))
         {
             if let Some((target, message)) = detail {
                 findings.push(RuleFinding {
@@ -149,7 +153,11 @@ pub(super) fn findings_for<'a>(
         .collect()
 }
 
-fn finding_details(location: &Location, id: &str, max_retries: u64) -> Option<(&'static str, String)> {
+fn finding_details(
+    location: &Location,
+    id: &str,
+    max_retries: u64,
+) -> Option<(&'static str, String)> {
     match location.shape {
         Shape::Retry(target, count)
             if id == TEST_NO_RETRIES && count.is_none_or(|count| count > max_retries) =>

@@ -1,14 +1,14 @@
 use super::super::bindings::Bindings;
 use super::super::playwright_bindings::ValueTrace;
 use super::extend_unique;
+use super::returns::collect_returns;
 use crate::codebase::rules::test_reliability::playwright_provenance::{
     FixtureInitializer, WrapperCall,
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{CallExpression, Expression, FormalParameters, FunctionBody, Statement};
+use oxc_ast::ast::{CallExpression, Expression, FormalParameters, FunctionBody};
 use oxc_ast::AstKind;
 use oxc_semantic::SymbolId;
-
 pub(super) enum WrapperBody<'ast> {
     Expr(&'ast Expression<'ast>),
     Block(&'ast FunctionBody<'ast>),
@@ -95,7 +95,11 @@ impl<'ast> Bindings<'_, 'ast> {
         }
         match candidates.pop() {
             Some(import) if reason.is_none() && candidates.is_empty() => {
-                ValueTrace::Resolved(FixtureInitializer { import, wrappers, derived_at })
+                ValueTrace::Resolved(FixtureInitializer {
+                    import,
+                    wrappers,
+                    derived_at,
+                })
             }
             Some(import) => {
                 candidates.push(import);
@@ -149,7 +153,10 @@ impl<'ast> Bindings<'_, 'ast> {
                     inner.derived_at = derived_at.or(inner.derived_at);
                     return ValueTrace::Resolved(inner);
                 }
-                trace @ ValueTrace::Unresolved(..) => return trace,
+                ValueTrace::Unresolved(reason, mut candidates) => {
+                    candidates.push(import);
+                    return ValueTrace::Unresolved(reason, candidates);
+                }
                 ValueTrace::None => {}
             }
         }
@@ -159,40 +166,4 @@ impl<'ast> Bindings<'_, 'ast> {
             derived_at,
         })
     }
-}
-
-pub(super) fn collect_returns<'ast>(
-    stmts: &'ast [Statement<'ast>],
-    out: &mut Vec<&'ast Expression<'ast>>,
-) -> bool {
-    for stmt in stmts {
-        match stmt {
-            Statement::ReturnStatement(ret) => {
-                let Some(arg) = ret.argument.as_ref() else {
-                    return false;
-                };
-                out.push(arg);
-            }
-            Statement::BlockStatement(block) if !collect_returns(&block.body, out) => return false,
-            Statement::IfStatement(if_stmt)
-                if !collect_returns(std::slice::from_ref(&if_stmt.consequent), out)
-                    || if_stmt
-                        .alternate
-                        .as_ref()
-                        .is_some_and(|alt| !collect_returns(std::slice::from_ref(alt), out)) =>
-            {
-                return false;
-            }
-            Statement::SwitchStatement(_)
-            | Statement::TryStatement(_)
-            | Statement::ForStatement(_)
-            | Statement::ForInStatement(_)
-            | Statement::ForOfStatement(_)
-            | Statement::WhileStatement(_)
-            | Statement::DoWhileStatement(_)
-            | Statement::LabeledStatement(_) => return false,
-            _ => {}
-        }
-    }
-    true
 }

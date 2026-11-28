@@ -11,6 +11,7 @@ pub(crate) struct Location {
     pub(crate) playwright_import: Option<playwright_provenance::ImportRef>,
     pub(crate) playwright_binding: Option<Arc<str>>,
     pub(crate) playwright_wrappers: Vec<playwright_provenance::WrapperCall>,
+    pub(crate) malformed_playwright_fixture: Option<String>,
     pub(crate) resolved_playwright_exports: Vec<(String, Arc<str>)>,
     pub(crate) unresolved_reason: Option<&'static str>,
 }

@@ -4,7 +4,7 @@ use crate::codebase::testing_analysis::reliability::playwright_provenance::Impor
 use crate::codebase::ts_resolver::{
     ScopedImportResolver, TsConfigCatalog, WorkspaceFallbackResolver,
 };
-use crate::codebase::ts_source::{relative_slash_path, FileIdMap, SourceStore};
+use crate::codebase::ts_source::{FileIdMap, SourceStore};
 use crate::fx::{FxHashMap, FxHashSet, PathSet};
 use std::path::{Path, PathBuf};
 
@@ -129,60 +129,5 @@ pub(super) fn project(
         wave = next;
     }
     let relationships = lookup.finalize();
-    let mut proofs = FxHashMap::default();
-    let mut verified = FxHashSet::default();
-    let mut resolved_map = FxHashMap::default();
-    let mut uncertainties = FxHashMap::default();
-    for item in pending {
-        let (path, import, wrappers) = &item;
-        let key = (!import.is_playwright_test())
-            .then(|| lookup.local(path, import))
-            .flatten();
-        let base_ok = import.is_playwright_test()
-            || key.as_ref().is_some_and(|key| {
-                *proofs
-                    .entry(key.clone())
-                    .or_insert_with(|| lookup.proves_playwright(&relationships, key))
-            });
-        let wrappers_ok = wrappers.iter().all(|wrapper| {
-            lookup
-                .local(path, &wrapper.callee)
-                .is_some_and(|key| lookup.proves_wrapper(&key, wrapper.arg_index))
-        });
-        if base_ok && wrappers_ok {
-            verified.insert(item);
-            continue;
-        }
-        let mut reason_for = |key: &exports::ExportKey| {
-            *uncertainties
-                .entry(key.clone())
-                .or_insert_with(|| lookup.uncertainty_reason(&relationships, key))
-        };
-        let reason = key
-            .as_ref()
-            .and_then(&mut reason_for)
-            .filter(|reason| *reason != exports::UNRESOLVED_EXPORT)
-            .or_else(|| {
-                wrappers.iter().find_map(|wrapper| {
-                    let key = lookup.local(path, &wrapper.callee)?;
-                    reason_for(&key).filter(|reason| *reason != exports::UNRESOLVED_EXPORT)
-                })
-            })
-            .or((!wrappers_ok).then_some("fixture wrapper return could not be traced statically"));
-        let exports: Vec<_> = key
-            .iter()
-            .filter(|_| wrappers_ok)
-            .flat_map(|key| lookup.reachable_exports(&relationships, key))
-            .map(|target| (relative_slash_path(root, &target.file), target.name))
-            .collect();
-        resolved_map.insert(item, (reason, exports));
-    }
-    projection::apply(
-        &lookup,
-        spec_files(),
-        facts,
-        &verified,
-        &resolved_map,
-        &uncertainties,
-    );
+    projection::apply(root, facts, spec_files(), pending, &lookup, &relationships);
 }

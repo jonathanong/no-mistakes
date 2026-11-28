@@ -1,18 +1,23 @@
 use super::super::{Inputs, Location};
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::check_outcome::CheckInputFailure;
 use crate::codebase::ts_source::has_disable_file_comment;
 use anyhow::Result;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::path::{Path, PathBuf};
 
 pub(super) fn unresolved_binding_message(relative: &str, id: &str, location: &Location) -> String {
-    let binding = location
-        .playwright_binding
-        .as_deref()
-        .unwrap_or("test");
-    if let Some((module, export)) = location.resolved_playwright_exports.first().filter(|_| {
-        location.playwright_import.is_some() || location.unresolved_reason.is_none()
-    }) {
+    let binding = location.playwright_binding.as_deref().unwrap_or("test");
+    if let Some(module) = &location.malformed_playwright_fixture {
+        return format!(
+            "{relative}:{}: cannot verify whether `{binding}` is Playwright's `test` because fixture module `{module}` could not be parsed; repair the fixture module",
+            location.line
+        );
+    }
+    if let Some((module, export)) = location
+        .resolved_playwright_exports
+        .first()
+        .filter(|_| location.playwright_import.is_some() || location.unresolved_reason.is_none())
+    {
         let reason = location
             .unresolved_reason
             .map_or_else(String::new, |reason| format!(" ({reason})"));
