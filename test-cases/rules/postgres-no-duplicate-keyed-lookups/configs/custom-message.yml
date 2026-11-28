@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-no-duplicate-keyed-lookups
+    scope: repository
+    message: "Merge duplicate table lookups"
+    options:
+      executorNames: []
+      sqlInclude: ["queries/**/*.sql"]

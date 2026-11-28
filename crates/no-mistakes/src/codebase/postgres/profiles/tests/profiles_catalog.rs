@@ -51,6 +51,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-no-generated-column-writes",
             "postgres-require-query-annotation",
             "postgres-json-relation-ids",
+            "postgres-no-duplicate-keyed-lookups",
             "postgres-grouping-not-aggregation",
         ]
     );

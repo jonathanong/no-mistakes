@@ -1,0 +1,187 @@
+use super::super::conditions::decimal_integer;
+use super::super::expr_norm::function::is_conditional_keyword;
+use super::super::expr_norm::types::integer_type_alias;
+use crate::idents::{ident_key, unwrap_expr};
+use crate::order::canonical_order_options;
+use sqlparser::ast::{
+    CastKind, Distinct, DuplicateTreatment, Expr, FunctionArguments, Ident, OrderByExpr,
+    OrderByKind, OrderBySort, Query, SetExpr, TableFactor, TableInheritance, Value, VisitMut,
+    VisitorMut, WindowSpec,
+};
+use std::ops::ControlFlow;
+mod local_columns;
+use local_columns::normalize_local_columns;
+
+pub(in crate::statements::keyed_lookups) fn target_identity(expr: &Expr) -> Expr {
+    let mut key = expr.clone();
+    normalize(&mut key, true);
+    key
+}
+
+pub(in crate::statements::keyed_lookups) fn written_window_identity(
+    spec: &WindowSpec,
+) -> WindowSpec {
+    let mut key = spec.clone();
+    normalize(&mut key, false);
+    key
+}
+
+fn normalize(node: &mut impl VisitMut, normalize_targets: bool) {
+    struct Identifiers {
+        normalize_targets: bool,
+        quoted_keyword_function: Option<*const Ident>,
+    }
+    impl VisitorMut for Identifiers {
+        type Break = ();
+
+        fn pre_visit_query(&mut self, query: &mut Query) -> ControlFlow<()> {
+            normalize_query_body(&mut query.body, self.normalize_targets);
+            if !self.normalize_targets {
+                return ControlFlow::Continue(());
+            }
+            if let Some(order) = &mut query.order_by {
+                if let OrderByKind::Expressions(items) = &mut order.kind {
+                    normalize_sort_options(items);
+                }
+            }
+            ControlFlow::Continue(())
+        }
+
+        fn pre_visit_expr(&mut self, expr: &mut Expr) -> ControlFlow<()> {
+            if matches!(expr, Expr::Nested(_)) {
+                *expr = unwrap_expr(expr).clone();
+            }
+            if let Expr::Value(value) = expr {
+                if let Value::Number(number, _) = &mut value.value {
+                    if number.len() > 1 && (number.starts_with('0') || number.contains('_')) {
+                        if let Some(value) = decimal_integer(number) {
+                            *number = value.to_string();
+                        }
+                    }
+                }
+            }
+            if !self.normalize_targets {
+                if let Expr::TypedString(typed) = expr {
+                    if !typed.uses_odbc_syntax {
+                        *expr = Expr::Cast {
+                            kind: CastKind::Cast,
+                            expr: Box::new(Expr::Value(typed.value.clone())),
+                            data_type: typed.data_type.clone(),
+                            format: None,
+                        };
+                    }
+                }
+                if let Expr::Value(value) = expr {
+                    if let Value::EscapedStringLiteral(decoded) = &value.value {
+                        value.value = Value::SingleQuotedString(decoded.clone());
+                    }
+                }
+            }
+            if let Expr::Function(function) = expr {
+                if let FunctionArguments::List(arguments) = &mut function.args {
+                    if arguments.duplicate_treatment == Some(DuplicateTreatment::All) {
+                        arguments.duplicate_treatment = None;
+                    }
+                }
+                if let [name] = function.name.0.as_slice() {
+                    self.quoted_keyword_function = name
+                        .as_ident()
+                        .filter(|name| {
+                            name.quote_style.is_some() && is_conditional_keyword(&name.value)
+                        })
+                        .map(std::ptr::from_ref);
+                }
+            }
+            if let Expr::Cast {
+                kind, data_type, ..
+            } = expr
+            {
+                if *kind == CastKind::DoubleColon {
+                    *kind = CastKind::Cast;
+                }
+                if let Some(canonical) = integer_type_alias(data_type) {
+                    *data_type = canonical.clone();
+                }
+            }
+            ControlFlow::Continue(())
+        }
+
+        fn pre_visit_table_factor(&mut self, factor: &mut TableFactor) -> ControlFlow<()> {
+            match factor {
+                TableFactor::Table {
+                    alias, inheritance, ..
+                } => {
+                    if matches!(inheritance, Some(TableInheritance::IncludeDescendants)) {
+                        *inheritance = None;
+                    }
+                    if let Some(alias) = alias {
+                        alias.explicit = false;
+                    }
+                }
+                TableFactor::Derived {
+                    alias: Some(alias), ..
+                }
+                | TableFactor::Function {
+                    alias: Some(alias), ..
+                }
+                | TableFactor::UNNEST {
+                    alias: Some(alias), ..
+                }
+                | TableFactor::NestedJoin {
+                    alias: Some(alias), ..
+                }
+                | TableFactor::JsonTable {
+                    alias: Some(alias), ..
+                } => alias.explicit = false,
+                _ => {}
+            }
+            ControlFlow::Continue(())
+        }
+
+        fn pre_visit_ident(&mut self, ident: &mut Ident) -> ControlFlow<()> {
+            ident.value = ident_key(ident);
+            if self.quoted_keyword_function == Some(std::ptr::from_ref(ident)) {
+                self.quoted_keyword_function = None;
+            } else {
+                ident.quote_style = None;
+            }
+            ControlFlow::Continue(())
+        }
+    }
+
+    let _ = node.visit(&mut Identifiers {
+        normalize_targets,
+        quoted_keyword_function: None,
+    });
+}
+
+fn normalize_query_body(body: &mut SetExpr, normalize_targets: bool) {
+    match body {
+        SetExpr::Select(select) => {
+            if matches!(select.distinct, Some(Distinct::All)) {
+                select.distinct = None;
+            }
+            if normalize_targets {
+                normalize_local_columns(select);
+            }
+        }
+        SetExpr::SetOperation { left, right, .. } => {
+            normalize_query_body(left, normalize_targets);
+            normalize_query_body(right, normalize_targets);
+        }
+        _ => {}
+    }
+}
+
+fn normalize_sort_options(order: &mut [OrderByExpr]) {
+    for item in order {
+        if let Some((ascending, nulls_first)) = canonical_order_options(&item.options) {
+            item.options.sort = Some(if ascending {
+                OrderBySort::Asc
+            } else {
+                OrderBySort::Desc
+            });
+            item.options.nulls_first = Some(nulls_first);
+        }
+    }
+}

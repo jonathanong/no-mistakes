@@ -1,0 +1,214 @@
+SELECT a.name, b.tier
+FROM orders o
+LEFT JOIN accounts a ON a.id = pg_catalog.concat(o.external_key)
+LEFT JOIN accounts b ON b.id = pg_catalog.concat(o.external_key);
+
+SELECT a.name, b.tier
+FROM orders o
+LEFT JOIN accounts a ON a.id = pg_catalog.concat_ws('-', o.external_key)
+LEFT JOIN accounts b ON b.id = pg_catalog.concat_ws('-', o.external_key);
+
+SELECT a.name, b.tier
+FROM orders o
+JOIN accounts a USING (id)
+JOIN extras x USING (id)
+JOIN accounts b USING (id);
+
+SELECT a.name, b.tier
+FROM accounts o
+LEFT JOIN accounts a USING (id)
+LEFT JOIN accounts b USING (id);
+
+SELECT (SELECT a.id FROM accounts a WHERE a.id = o.account_id) + 1
+FROM orders o
+ORDER BY (SELECT a.id FROM accounts a WHERE a.id = o.account_id) + ((1));
+
+SELECT
+    (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+    row_number() OVER (PARTITION BY (SELECT a.name FROM accounts a WHERE a.id = o.account_id))
+FROM orders o;
+
+SELECT
+    (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+    row_number() OVER (ORDER BY (SELECT b.tier FROM accounts b WHERE b.id = o.account_id))
+FROM orders o;
+
+SELECT (
+    SELECT sum(d.amount) OVER w
+    FROM details d
+    WINDOW w AS (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT
+    (SELECT a.id FROM accounts a WHERE a.id = o.account_id),
+    row_number() OVER (ORDER BY (SELECT a.id FROM accounts a WHERE a.id = o.account_id))
+FROM orders o;
+
+SELECT a.name, b.tier
+FROM accounts o
+JOIN accounts a USING (id)
+JOIN extras x USING (id)
+JOIN accounts b USING (id);
+
+SELECT (
+    SELECT sum(d.amount) OVER w
+    FROM details d
+    WINDOW w AS (ROWS BETWEEN CURRENT ROW
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING),
+    unused AS (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT (
+    SELECT sum(d.amount) OVER (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    FROM details d
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT (
+    SELECT sum(d.amount) OVER w1 + sum(d.amount) OVER w2
+    FROM details d
+    WINDOW w1 AS (ROWS (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING),
+           w2 AS (ROWS (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING)
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT (
+    SELECT pg_catalog.row_number() OVER w
+    FROM details d
+    WINDOW w AS (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT (
+    SELECT pg_catalog.row_number() OVER w + sum(d.amount) OVER w
+    FROM details d
+    WINDOW w AS (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT (
+    SELECT pg_catalog.row_number() OVER (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    FROM details d
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT (
+    SELECT pg_catalog.row_number() OVER w + sum(d.amount) OVER (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    FROM details d
+    WINDOW w AS (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT (
+    SELECT pg_catalog.row_number() OVER (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    + sum(d.amount) OVER (ROWS BETWEEN
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) FOLLOWING)
+    FROM details d
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT (
+    SELECT pg_catalog.sum(d.amount) OVER (
+        ORDER BY d.id
+        ROWS (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+    ) + pg_catalog.avg(d.amount) OVER (
+        ORDER BY d.id ASC
+        ROWS (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+    )
+    FROM details d
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT (
+    SELECT pg_catalog.sum(d.amount) OVER (
+        ROWS (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+    ) + pg_catalog.avg(d.amount) OVER (
+        ROWS (SELECT n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+    )
+    FROM details d
+    LIMIT 1
+)
+FROM orders o;
+
+SELECT pg_catalog.lag(o.n, 0, (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+)) OVER (ORDER BY o.id)
+FROM orders o;
+
+SELECT pg_catalog.lag((
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+), 0, 0) OVER (ORDER BY o.id)
+FROM orders o;
+
+SELECT CASE WHEN FALSE THEN pg_catalog.row_number() OVER w ELSE 0 END
+FROM orders o
+WINDOW w AS (
+    PARTITION BY
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id),
+        (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+);
+
+SELECT CASE WHEN TRUE THEN 0 ELSE pg_catalog.row_number() OVER (
+    PARTITION BY
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id),
+        (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+) END
+FROM orders o;
+
+SELECT CASE WHEN o.enabled THEN pg_catalog.row_number() OVER w ELSE 0 END
+FROM orders o
+WINDOW w AS (
+    PARTITION BY
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id),
+        (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+);
+
+SELECT COALESCE(0, pg_catalog.row_number() OVER w)
+FROM orders o
+WINDOW w AS (
+    PARTITION BY
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id),
+        (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+);
+
+SELECT
+    pg_catalog.sum(o.amount) OVER (
+        ROWS ((SELECT a.n FROM accounts a WHERE a.id = $1)::INT) PRECEDING
+    ),
+    pg_catalog.avg(o.amount) OVER (
+        ROWS ((SELECT a.n FROM accounts a WHERE a.id = $1)::INTEGER) PRECEDING
+    )
+FROM orders o;

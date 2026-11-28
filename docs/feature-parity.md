@@ -1383,6 +1383,12 @@ TS/JS SQL, including recovered template and `.append` fragments. All five shape
 codes are always advisory and require a catalog; unsupported or unproven shapes
 stay silent. CLI `check` and async Node `check` / `analyzeProject` share output.
 
+The opt-in [`postgres-no-duplicate-keyed-lookups`](rules/postgres-no-duplicate-keyed-lookups.md)
+rule shares prepared SQL statement facts across Rust, CLI `check`, async Node
+`check()`, and `analyzeProject()` check reports for both embedded TS/JS SQL and
+`sqlInclude` `.sql` files. It is off by default and uses the shared
+`unanalyzable` policy and suppression directives.
+
 The configured coverage assertion-owner analysis supports a narrow TS/JS scenario
 table: unconditional no-argument member calls in a simple `const` `for...of` over a
 closed local or module-private literal array of plain object rows with statically imported callbacks.

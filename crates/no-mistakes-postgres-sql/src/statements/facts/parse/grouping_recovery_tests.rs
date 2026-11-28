@@ -56,7 +56,7 @@ fn borrowed_completeness_gates_query_roots_without_changing_other_facts() {
     let prepared = crate::parse::PreparedSql::new(sql);
     let statements = prepared.parse_policy().unwrap();
     assert_eq!(statements.len(), complete.len());
-    let project = |grouping_complete: Option<&[bool]>| {
+    let project = |statement_complete: Option<&[bool]>| {
         extract_from_parsed_with_recovered_placeholders(
             sql,
             &prepared,
@@ -66,7 +66,7 @@ fn borrowed_completeness_gates_query_roots_without_changing_other_facts() {
             None,
             StatementPolicySources {
                 collect_grouping: true,
-                grouping_complete,
+                statement_complete,
                 ..Default::default()
             },
         )

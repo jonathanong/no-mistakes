@@ -1,0 +1,12 @@
+projects:
+  database:
+    root: .
+    include: ["queries/**"]
+    postgres:
+      executors:
+        importSpecifier: "@example/db"
+      sqlInclude: ["queries/**/*.sql"]
+      schemaCatalogPath: schema/catalog.json
+rules:
+  - rule: postgres-no-duplicate-keyed-lookups
+    projects: [database]

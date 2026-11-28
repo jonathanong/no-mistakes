@@ -14,30 +14,30 @@ pub fn order_by_ascending(options: &sqlparser::ast::OrderByOptions) -> Option<bo
     }
 }
 
+pub(crate) fn canonical_order_options(
+    options: &sqlparser::ast::OrderByOptions,
+) -> Option<(bool, bool)> {
+    if matches!(options.sort, Some(sqlparser::ast::OrderBySort::Using(_))) {
+        return None;
+    }
+    let ascending = order_by_ascending(options).unwrap_or(true);
+    Some((ascending, options.nulls_first.unwrap_or(!ascending)))
+}
+
 /// Canonical `ORDER BY` keys. `USING` operators make the whole list unanalyzable.
 pub fn canonical_order_keys(order: &sqlparser::ast::OrderBy) -> Option<Vec<CanonicalOrderKey>> {
     let sqlparser::ast::OrderByKind::Expressions(expressions) = &order.kind else {
         return None;
     };
-    if expressions.iter().any(|expression| {
-        matches!(
-            expression.options.sort,
-            Some(sqlparser::ast::OrderBySort::Using(_))
-        )
-    }) {
-        return None;
-    }
-    Some(
-        expressions
-            .iter()
-            .map(|expression| {
-                let ascending = order_by_ascending(&expression.options).unwrap_or(true);
-                CanonicalOrderKey {
-                    expression: expression.expr.to_string(),
-                    ascending,
-                    nulls_first: expression.options.nulls_first.unwrap_or(!ascending),
-                }
+    expressions
+        .iter()
+        .map(|expression| {
+            let (ascending, nulls_first) = canonical_order_options(&expression.options)?;
+            Some(CanonicalOrderKey {
+                expression: expression.expr.to_string(),
+                ascending,
+                nulls_first,
             })
-            .collect(),
-    )
+        })
+        .collect()
 }

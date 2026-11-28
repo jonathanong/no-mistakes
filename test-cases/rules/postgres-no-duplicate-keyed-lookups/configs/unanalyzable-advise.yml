@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-no-duplicate-keyed-lookups
+    scope: repository
+    options:
+      importSpecifier: "./db"
+      executorNames: [query]
+      unanalyzable: advise

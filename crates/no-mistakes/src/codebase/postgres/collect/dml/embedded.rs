@@ -70,6 +70,7 @@ pub(super) fn embedded_call_facts_with_policy(
                 extract_sql_conflict_policy_facts(sql, &call.recovered_placeholder_positions)
             } else if call.lock_scope_analysis
                 && !policy.collect_grouping
+                && !policy.collect_duplicate_keyed_lookups
                 && !call.track_share_lock_writes
                 && !call.track_redundant_prelocks
             {
@@ -82,6 +83,7 @@ pub(super) fn embedded_call_facts_with_policy(
                 )
             } else if call.lock_scope_analysis
                 || policy.collect_json_writes
+                || policy.collect_duplicate_keyed_lookups
                 || policy.collect_index_probes
                 || policy.collect_body_bounds
                 || policy.collect_grouping

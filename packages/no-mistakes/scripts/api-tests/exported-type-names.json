@@ -291,6 +291,8 @@
   "PostgresMaterializedViewBaseTableAllowance",
   "PostgresMaterializedViewShapeAllowEntry",
   "PostgresMaterializedViewShapeOptions",
+  "PostgresNoDuplicateKeyedLookupsOptions",
+  "PostgresNoDuplicateKeyedLookupsUnanalyzableSql",
   "PostgresNoMutableSqlRegistryOptions",
   "PostgresNoTestStateMutationOptions",
   "PostgresNoTransformedUuidPredicatesOptions",

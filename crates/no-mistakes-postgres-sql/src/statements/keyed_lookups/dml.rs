@@ -1,0 +1,144 @@
+mod merge;
+
+use super::conditions::cannot_match;
+use super::join::register_table_with_joins;
+use super::query::query_produces_no_rows;
+use super::scope::ScopeStack;
+use super::{inspect_exprs, returning_exprs, LookupHistory};
+use crate::statement_facts::SqlDuplicateKeyedLookupFact;
+pub(super) use merge::walk_merge;
+use sqlparser::ast::{
+    Delete, Expr, FromTable, Insert, OnConflict, OnConflictAction, OnInsert, TableObject, Update,
+};
+
+pub(super) fn walk_insert(
+    insert: &Insert,
+    scopes: &mut ScopeStack,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
+) {
+    if let Some(source) = insert.source.as_deref() {
+        super::walk_query(source, scopes, out);
+        if query_produces_no_rows(source) {
+            return;
+        }
+    }
+    let update = match &insert.on {
+        Some(OnInsert::OnConflict(OnConflict {
+            action: OnConflictAction::DoUpdate(update),
+            ..
+        })) if can_affect_rows(update.selection.as_ref()) => Some(update),
+        _ => None,
+    };
+    let returning = insert.returning.as_deref();
+    if update.is_none() && returning.is_none() {
+        return;
+    }
+    scopes.push_frame();
+    if let TableObject::TableName(name) = &insert.table {
+        scopes.add_table_alias(name, insert.table_alias.as_ref().map(|a| &a.alias));
+    }
+    if let Some(update) = update {
+        scopes.push_frame();
+        scopes.add_named_alias("excluded".to_owned());
+        let mut seen = LookupHistory::new();
+        inspect_row_filter(update.selection.as_ref(), scopes, &mut seen, out);
+        let exprs = update
+            .assignments
+            .iter()
+            .map(|assignment| &assignment.value);
+        inspect_exprs(exprs, scopes, &mut seen, out);
+        scopes.pop_frame();
+    }
+    if let Some(returning) = returning {
+        scopes.add_returning_aliases(None, scopes.first_binding_id());
+        inspect_exprs(
+            returning_exprs(Some(returning)),
+            scopes,
+            &mut LookupHistory::new(),
+            out,
+        );
+    }
+    scopes.pop_frame();
+}
+
+pub(super) fn walk_update(
+    update: &Update,
+    scopes: &mut ScopeStack,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
+) {
+    if !can_affect_rows(update.selection.as_ref()) {
+        return;
+    }
+    scopes.push_frame();
+    let mut seen = LookupHistory::new();
+    register_table_with_joins(&update.table, scopes, &mut seen, out);
+    let target_bindings = scopes.binding_count();
+    if let Some(from) = &update.from {
+        let tables = match from {
+            sqlparser::ast::UpdateTableFromKind::BeforeSet(t)
+            | sqlparser::ast::UpdateTableFromKind::AfterSet(t) => t,
+        };
+        for table in tables {
+            register_table_with_joins(table, scopes, &mut seen, out);
+        }
+    }
+    inspect_row_filter(update.selection.as_ref(), scopes, &mut seen, out);
+    let exprs = update
+        .assignments
+        .iter()
+        .map(|assignment| &assignment.value);
+    inspect_exprs(exprs, scopes, &mut seen, out);
+    if let Some(returning) = update.returning.as_deref() {
+        let old_target = scopes.first_binding_id();
+        scopes.refresh_bindings(0..target_bindings);
+        scopes.add_returning_aliases(old_target, scopes.first_binding_id());
+        let mut returning_seen = seen.guard_only();
+        inspect_exprs(
+            returning_exprs(Some(returning)),
+            scopes,
+            &mut returning_seen,
+            out,
+        );
+    }
+    scopes.pop_frame();
+}
+
+pub(super) fn walk_delete(
+    delete: &Delete,
+    scopes: &mut ScopeStack,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
+) {
+    if !can_affect_rows(delete.selection.as_ref()) {
+        return;
+    }
+    scopes.push_frame();
+    let mut seen = LookupHistory::new();
+    let from_tables = match &delete.from {
+        FromTable::WithFromKeyword(tables) | FromTable::WithoutKeyword(tables) => tables,
+    };
+    for table in from_tables.iter().chain(delete.using.iter().flatten()) {
+        register_table_with_joins(table, scopes, &mut seen, out);
+    }
+    inspect_row_filter(delete.selection.as_ref(), scopes, &mut seen, out);
+    if let Some(returning) = delete.returning.as_deref() {
+        scopes.add_returning_aliases(scopes.first_binding_id(), None);
+        inspect_exprs(returning_exprs(Some(returning)), scopes, &mut seen, out);
+    }
+    scopes.pop_frame();
+}
+
+fn can_affect_rows(predicate: Option<&Expr>) -> bool {
+    !predicate.is_some_and(cannot_match)
+}
+
+fn inspect_row_filter(
+    predicate: Option<&Expr>,
+    scopes: &mut ScopeStack,
+    seen: &mut LookupHistory,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
+) {
+    if let Some(predicate) = predicate {
+        inspect_exprs(std::iter::once(predicate), scopes, seen, out);
+        seen.restrict(predicate, &scopes.snapshot(), true);
+    }
+}

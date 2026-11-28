@@ -17,6 +17,9 @@ pub(super) fn configure(
         .rule_applications("postgres-json-relation-ids")
         .iter()
         .any(|rule| rule.options.get("idKeyPattern").is_some());
+    plan.postgres_duplicate_keyed_lookups |= !config
+        .rule_applications("postgres-no-duplicate-keyed-lookups")
+        .is_empty();
     plan.postgres_fragments |= !config
         .rule_applications("postgres-sql-shape-policy")
         .is_empty();

@@ -53,7 +53,7 @@ pub(super) fn collect(
             let parsed = prepared.map(|(source, prepared)| {
                 let parsed = prepared.parse_policy_with_locations(write_plan_locations.as_mut());
                 let failed = parsed.is_err();
-                let (statements, functions, failures, statement_sources, grouping_complete) = match parsed {
+                let (statements, functions, failures, statement_sources, statement_complete) = match parsed {
                     Ok(statements) => (statements, Vec::new(), Vec::new(), Vec::new(), None),
                     Err(_) if !schema_selected && !dml_selected => {
                         (Vec::new(), Vec::new(), Vec::new(), Vec::new(), None)
@@ -66,14 +66,14 @@ pub(super) fn collect(
                         let failures = crate::codebase::postgres::migration::recovery_failures(&recovered);
                         let (mut located, functions) = crate::codebase::postgres::parse::partition_function_sources(recovered);
                         prepared.adopt_recovered_arbiters(&mut located);
-                        let grouping_complete = plan.postgres_grouping.then(|| located.iter().map(|statement| statement.complete).collect::<Vec<_>>());
+                        let statement_complete = (plan.postgres_grouping || plan.postgres_duplicate_keyed_lookups).then(|| located.iter().map(|statement| statement.complete).collect::<Vec<_>>());
                         {
                             let sources: Vec<_> = located.iter().map(|located| located.source.clone().or_else(|| located.chunk_tokens.clone())).collect();
-                            (located.into_iter().map(|located| located.statement).collect(), functions, failures, sources, grouping_complete)
+                            (located.into_iter().map(|located| located.statement).collect(), functions, failures, sources, statement_complete)
                         }
                     }
                 };
-                (statements, functions, failures, failed, prepared, statement_sources, grouping_complete)
+                (statements, functions, failures, failed, prepared, statement_sources, statement_complete)
             });
             let write_plans = write_plan_locations.map(|locations| {
                 parsed
@@ -112,7 +112,7 @@ pub(super) fn collect(
             let statements = dml_selected.then(|| {
                 parsed
                     .as_ref()
-                    .map(|(statements, functions, failures, failed, prepared, statement_sources, grouping_complete)| {
+                    .map(|(statements, functions, failures, failed, prepared, statement_sources, statement_complete)| {
                         let mut value = crate::codebase::postgres::statements::extract_from_parsed_with_recovered_placeholders(
                             source.as_ref().unwrap(),
                             prepared,
@@ -127,8 +127,9 @@ pub(super) fn collect(
                                 functions,
                                 collect_lock_inventory: plan.postgres_lock_inventory,
                                 collect_json_writes: plan.postgres_json_writes,
+                                collect_duplicate_keyed_lookups: plan.postgres_duplicate_keyed_lookups,
                                 collect_grouping: plan.postgres_grouping,
-                                grouping_complete: grouping_complete.as_deref(),
+                                statement_complete: statement_complete.as_deref(),
                                 collect_index_probes: plan.postgres_index_probes,
                                 collect_body_bounds: plan.postgres_body_bounds,
                                 share_lock_writes: false,

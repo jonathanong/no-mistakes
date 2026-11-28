@@ -1,0 +1,273 @@
+# `postgres-no-duplicate-keyed-lookups`
+
+Opt-in and off by default. Reports PostgreSQL statements that look up the same
+target relation more than once on the same normalized key expression within a
+single query — whether through repeated joins, repeated correlated scalar
+subqueries, or a mix of both.
+
+## Why and when
+
+Repeated joins and independently evaluated correlated scalar subqueries can
+probe the same table on the same key. Those probes can duplicate I/O and CPU
+work.
+
+Enable this rule on query-heavy services and reporting SQL where queries evolve
+over time by tacking on extra `LEFT JOIN` clauses or inline scalar subqueries
+for additional columns from an already-fetched relation.
+
+## What it catches
+
+Within a single `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `MERGE`, or `WITH` /
+data-modifying CTE query, this rule flags a second or subsequent keyed lookup of
+the same target relation when the normalized lookup key matches an earlier
+lookup in the same scope. It also checks queries in views, `CREATE TABLE AS`,
+`DECLARE CURSOR`, and `COPY (query) TO`. It covers `ON CONFLICT DO UPDATE`
+expressions, referenced window definitions, XML table column paths and defaults,
+and subqueries in ordering and row-limit clauses.
+
+- Repeated correlated scalar subqueries on the same relation and key, including
+  unqualified inner key columns (`WHERE id = o.account_id`) and differing table
+  aliases (`accounts a1` vs `accounts a2`).
+- Repeated `JOIN` clauses (`INNER`, `LEFT`, `RIGHT`, `FULL`, `USING`) against
+  the same relation on the same key, regardless of equality operand order
+  (`a.id = o.account_id` vs `o.account_id = a.id`). A join key may use a
+  column, a parameter, or a supported literal. This comparison
+  assumes the join key uses commutative `=` semantics. For a chained
+  `USING` join, both inputs of the preceding merge must have a provably
+  identical column type, such as two aliases of the same relation. A join
+  that can extend a binding with NULL starts a new lookup history for that
+  binding.
+- A `JOIN` combined with a correlated scalar subquery against the same relation
+  and key.
+- Equivalent PostgreSQL cast spellings for proven built-in values
+  (`'active'::text` and `CAST('active' AS text)`, or `int` and `integer`).
+
+The rule stays silent when the lookups are not proven to read the same row:
+
+- Different outer key expressions (`o.buyer_id` vs `o.seller_id`) or different
+  casts (`'active'::text` vs `'active'::varchar`).
+- Different additional filter predicates (such as `addr.kind = 'billing'` vs
+  `addr.kind = 'shipping'`).
+- Scalar subqueries ordered by a bare name or ordinal position. Use a
+  qualified column reference such as `ORDER BY accounts.priority` to identify
+  the input column explicitly. Omitted sort direction and null placement
+  use PostgreSQL defaults. Sort operators in `ORDER BY ... USING` are
+  excluded.
+- A lookup paired with a correlated aggregate (`COUNT(*)`, `SUM(...)`, etc.) or
+  an `EXISTS (...)` test.
+- Mutually exclusive `CASE WHEN ... THEN (SELECT ...) ELSE (SELECT ...) END`
+  branches. A lookup in an arm can still repeat one in an independent
+  expression. Inputs to recognized aggregates can repeat across arms because
+  PostgreSQL evaluates aggregates before choosing an arm at runtime.
+  Constant arms removed during planning contribute no inputs. Aggregate
+  arguments share lookup history only when their filter expressions match and
+  the rule can prove the filter is repeatable. An unfiltered input can
+  repeat a filtered input in either order. Transition inputs are skipped
+  when the filter is a literal false or null. Scalar inputs to a known
+  aggregate are also skipped when its inline `ROWS` frame has constant bounds
+  in reverse order. Earlier ordinary aggregates remain eligible in both cases.
+- Optional default expressions in `pg_catalog.lag` and `pg_catalog.lead` window calls. PostgreSQL
+  evaluates them only when the requested row falls outside the partition.
+  The rule also skips value arguments of `pg_catalog.lag`, `pg_catalog.lead`,
+  and `pg_catalog.nth_value` when their offset or position is a literal
+  null. Earlier aggregate inputs remain eligible.
+  Value inputs of row-selecting windows such as `pg_catalog.first_value` and
+  `pg_catalog.last_value` can run on different rows. The rule checks each for
+  repeated work within that input.
+- `COALESCE` arguments after a known non-null literal, including calls and
+  read-only CTE references that the planner removes with those arguments. For
+  resolved columns, later scalar and nested arguments retain the null
+  requirement from earlier arguments.
+- Unreachable `CASE` results, including simple cases with comparable integer
+  or Boolean literals. For searched cases, the rule can keep opposing tests
+  of the same qualified Boolean column separate across expressions. The rule
+  also carries row guards from `INNER JOIN ... ON`, `WHERE`, and aggregate
+  `FILTER` into the expressions they control, including retained grouping keys.
+  Lookup histories for a window's selected row retain guards shared by all rows
+  in the window. `MERGE RETURNING` keeps separate old-row guards for each delete
+  action when all reachable modifying actions delete rows and retains unchanged
+  source guards across modifying actions. `UPDATE RETURNING` retains guards on
+  its unchanged `FROM` inputs and binds `OLD` to the pre-update target row.
+- Arguments to `pg_catalog.replace(text, text, text)` eliminated by the
+  PostgreSQL planner when a text argument is known null.
+- XML table namespaces, paths, and defaults when the document is a known XML
+  null. PostgreSQL checks the document before evaluating those expressions.
+- Window calls eliminated by literal `CASE`, `COALESCE`, or Boolean
+  expressions, unreachable DML actions, and query bodies with a literal
+  `LIMIT 0` or numeric limits that PostgreSQL rounds to zero. Read-only CTEs
+  skipped by zero row demand are also ignored. Data-modifying CTEs and CTEs
+  referenced by limit expressions remain eligible. Simple per-row outputs
+  are also skipped under literal `WHERE FALSE` or `WHERE NULL`. Grouping
+  sets with no key can still produce a row on empty input. A proven false
+  or null `HAVING` suppresses post-grouping projections while preserving
+  inspection of ordinary aggregate inputs. An unsorted `VALUES` query with
+  an explicit row limit contributes only the demanded rows.
+- Unreferenced read-only CTEs when their lack of references can be proven,
+  and discarded projections in simple `EXISTS` queries, including those
+  with plain ordering or a positive or null literal limit. Data-modifying
+  CTEs and `EXISTS` conditions still receive analysis.
+- Volatile key expressions (UUID generators such as `gen_random_uuid()`,
+  `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined
+  or unrecognized functions in keys or scalar projections, unresolved table
+  column alias lists, distinct `LIMIT` clauses, or ambiguous expressions.
+- Function calls require a vetted built-in qualified with `pg_catalog` or
+  PostgreSQL syntax such as `COALESCE`. Function arguments need known
+  built-in types, and casts need a recognized PostgreSQL conversion.
+  The rule skips function arguments and casts of columns or parameters whose
+  types it cannot establish. It also skips operators in compound expressions
+  when their signatures are unknown, including the comparisons used by
+  `IS DISTINCT FROM`, `IN`, `BETWEEN`, `NULLIF`, Boolean tests, and pattern
+  matching. Signature matching assumes the standard PostgreSQL cast and operator definitions.
+- Scalar projections with expression forms whose repeatability is unproven.
+  Examples include arrays with unknown element conversions and unqualified
+  comma-style `SUBSTRING` calls.
+- Sampled table scans, `ONLY` table scans, or scalar subqueries that lock rows.
+
+PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
+(including positions and grouping sets), `ORDER BY`, and window partition and ordering
+clauses. Identical named and inline window specifications can share their
+frame bounds when their written specifications match. Each explicitly
+referenced named declaration keeps its own identity. The rule skips frame
+bounds when all calls sharing the window are built-in ranking functions
+that replace the frame, such as `pg_catalog.row_number()` and
+`pg_catalog.rank()`. An aggregate can
+also reuse an argument in its ordering clause. The
+rule counts an identical reused expression once. A matching grouping
+expression is also reused in projections, `HAVING`, `ORDER BY`, and window
+function arguments and ordered-set direct arguments. Ordinary aggregate inputs
+and the ordered inputs in `WITHIN GROUP` are evaluated before grouping.
+Grouping sets can replace omitted keys with nulls, so the rule distinguishes
+lookups that use a source row from those that use grouped values.
+
+The rule recognizes PostgreSQL 18's default `OLD` and `NEW` qualifiers in
+`RETURNING`. It distinguishes pre-change and post-change rows and respects
+table aliases that mask the default qualifiers.
+
+The rule reads SQL without a PostgreSQL catalog. It assumes dotted references
+such as `a.name` resolve to columns. PostgreSQL can also interpret that syntax
+as a whole-row function call when the column is absent. Verify the binding
+when reviewing a finding on such a projection. In a scalar subquery
+with a single simple scan, a bare key column is assumed to belong to that scan.
+Qualify the column to make its binding explicit when a containing query could
+also supply that name.
+
+Findings point at the duplicate join or scalar subquery and name the line of the
+first lookup.
+
+## Options and defaults
+
+A project can configure `postgres.schemaCatalogPath` for other rules. This
+rule uses the project executor and SQL scope settings.
+
+This rule is off by default and runs only when explicitly configured in
+`.no-mistakes.yml`. Unknown option keys fail early during configuration
+validation (exit 2).
+
+```yaml
+rules:
+  - rule: postgres-no-duplicate-keyed-lookups
+    scope: repository
+    options:
+      include: ["src/**/*.ts"]
+      exclude: ["src/generated/**"]
+      sqlInclude: ["queries/**/*.sql"]
+      importSpecifier: "@example/db"
+      executorNames: [query, read, write]
+      unanalyzable: report
+```
+
+- `include` / `exclude`: glob filters for embedded TS/JS source files.
+- `sqlInclude`: defaults to `[]`, so standalone `.sql` files are not scanned
+  unless explicitly matched.
+- `importSpecifier` / `executorNames` / `extraExecutorNames` /
+  `excludeExecutorNames` / `executorFactoryNames` / `executorTypeNames` /
+  `executorOptionProperties` / `trustedSqlTags`: standard PostgreSQL executor
+  selection. Set `importSpecifier` (or `executorNames`) for embedded TS/JS
+  queries. To scan only standalone `.sql` files selected by `sqlInclude`, set
+  `executorNames: []` with `importSpecifier` unset (or another executor scope
+  that selects no embedded calls); a nonempty `importSpecifier` with
+  `executorNames: []` retains default executor selection. Setting both
+  `executorNames` and `extraExecutorNames` is a configuration error. See
+  [executor selection](../configuration/rules.md#postgresql-executor-selection).
+- `unanalyzable`: shared uncertainty policy (`report`, `advise`, or `ignore`;
+  default `report`). `report` fails on dynamically constructed or unparseable
+  SQL, `advise` emits a non-failing advisory, and `ignore` omits residual
+  diagnostics. Complete statements can still produce findings when another
+  statement in the file cannot be parsed. Legacy `unanalyzableSql` (`fail`, `advise`, `ignore`) is accepted
+  as an alias when `unanalyzable` is not set.
+
+A `projects: [<name>]` entry inherits
+[`projects.<name>.postgres`](../configuration/projects.md#postgresql-scope) when
+that block is configured. The rule rejects `reportUnmatchedExecutorNames`.
+
+## Valid example
+
+Combine the lookups into a single join and project every needed column from it:
+
+```sql
+-- queries/orders.sql
+SELECT
+  o.id,
+  a.display_name AS account_name,
+  a.tier AS account_tier
+FROM orders o
+LEFT JOIN accounts a ON a.id = o.account_id;
+```
+
+## Counterexample
+
+Two scalar subqueries looking up the same `accounts` row on `o.account_id`:
+
+```sql
+-- queries/orders.sql
+SELECT
+  o.id,
+  (SELECT display_name FROM accounts WHERE id = o.account_id) AS account_name,
+  (SELECT tier FROM accounts WHERE id = o.account_id) AS account_tier
+FROM orders o;
+```
+
+Two joins against the same `accounts` row on `o.account_id`:
+
+```sql
+-- queries/orders.sql
+SELECT
+  o.id,
+  a1.display_name,
+  a2.tier
+FROM orders o
+LEFT JOIN accounts a1 ON a1.id = o.account_id
+LEFT JOIN accounts a2 ON o.account_id = a2.id;
+```
+
+## Fix
+
+Verify that the lookup key identifies at most one row (or otherwise preserves
+query cardinality and behavior) before consolidating repeated joins or
+correlated scalar subqueries into a single join projecting every needed column.
+Preserve the original filtering semantics: use `INNER JOIN` when the original
+query excluded rows without a match, and `LEFT JOIN` when unmatched rows should
+remain in the result. For `RIGHT JOIN` and `FULL JOIN`, also verify which
+unmatched target rows survive and how many copies the original query returns.
+
+## Suppression
+
+Use the standard rule suppression directives in both `.sql` (`--`) and TS/JS
+(`//`) files:
+
+- `-- no-mistakes-disable-next-line postgres-no-duplicate-keyed-lookups`
+- `-- no-mistakes-disable-line postgres-no-duplicate-keyed-lookups`
+- `-- no-mistakes-disable-file postgres-no-duplicate-keyed-lookups`
+
+For embedded SQL in TS/JS, use `-- no-mistakes-disable-next-line` on a line
+inside the SQL template, or JS/TS `// no-mistakes-disable-line`,
+`// no-mistakes-disable-next-line`, or `// no-mistakes-disable-file` comments.
+
+## Related rules
+
+- [`postgres-no-offset`](postgres-no-offset.md) flags `OFFSET` pagination in
+  executed PostgreSQL SQL.
+- [`postgres-grouping-not-aggregation`](postgres-grouping-not-aggregation.md)
+  advises on grouping used for deduplication or existence.
+- [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) flags configured
+  anti-pattern SQL shapes.

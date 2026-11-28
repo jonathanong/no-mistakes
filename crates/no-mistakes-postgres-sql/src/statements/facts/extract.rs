@@ -11,8 +11,8 @@ pub(super) fn extract_from_parsed_and_sources(
 ) -> SqlStatementFileFacts {
     locations::work::general_fact_collection();
     let masked = fallback::mask_quoted_sql(sql);
-    let (mut writes, mut json_writes) = (Vec::new(), Vec::new());
-    let mut groups = Vec::new();
+    let (mut writes, mut json_writes, mut groups) = (Vec::new(), Vec::new(), Vec::new());
+    let mut duplicate_keyed_lookups = Vec::new();
     let parameters: Option<Arc<[(u32, u32)]>> = sources.policy.collect_grouping.then(|| {
         locations::work::grouping_parameter_copy();
         Arc::from(placeholder_positions.unwrap_or_default())
@@ -82,15 +82,17 @@ pub(super) fn extract_from_parsed_and_sources(
                 locations.collect(statement);
             }
             writes::collect(statement, &mut writes);
-            grouping::collect(
-                statement,
-                &mut groups,
-                parameters
-                    .as_ref()
-                    .filter(|_| sources.grouping_requested(index)),
-            );
+            let params = parameters
+                .as_ref()
+                .filter(|_| sources.grouping_requested(index));
+            grouping::collect(statement, &mut groups, params);
             if sources.policy.collect_json_writes {
                 super::super::json_writes::collect(statement, &mut json_writes);
+            }
+            if sources.policy.collect_duplicate_keyed_lookups
+                && sources.statement_is_complete(index)
+            {
+                super::super::keyed_lookups::collect(statement, &mut duplicate_keyed_lookups);
             }
             super::super::transformed_predicates::collect(
                 statement,
@@ -160,6 +162,7 @@ pub(super) fn extract_from_parsed_and_sources(
         function_calls,
         writes,
         json_writes,
+        duplicate_keyed_lookups,
         grouping_queries: groups,
         inserts,
         selects,

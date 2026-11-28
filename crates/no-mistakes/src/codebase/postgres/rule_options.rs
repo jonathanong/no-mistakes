@@ -56,6 +56,7 @@ pub fn has_sql_advice(config: &crate::config::v2::NoMistakesConfig) -> bool {
         "postgres-grouping-not-aggregation",
         "postgres-idempotent-insert",
         "postgres-lock-ordering",
+        "postgres-no-duplicate-keyed-lookups",
         "postgres-no-generated-column-writes",
         "postgres-no-offset",
         "postgres-no-transformed-uuid-predicates",

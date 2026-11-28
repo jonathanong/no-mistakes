@@ -162,7 +162,6 @@ mod sql_include;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 use sql_include::sql_patterns;
-
 mod prepare;
 pub(crate) mod scans;
 #[doc(hidden)]

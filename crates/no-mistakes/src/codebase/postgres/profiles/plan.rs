@@ -141,6 +141,7 @@ pub fn configure_prepared_postgres_plan(
         "postgres-sql-shape-policy",
         "postgres-no-generated-column-writes",
         "postgres-json-relation-ids",
+        "postgres-no-duplicate-keyed-lookups",
         "postgres-grouping-not-aggregation",
     ];
     plan.postgres_dml |= dml_rules

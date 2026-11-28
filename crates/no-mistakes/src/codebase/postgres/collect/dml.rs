@@ -49,13 +49,14 @@ pub(super) fn collect(
         facts.extend(
             if policy.collect_grouping
                 || policy.collect_json_writes
+                || policy.collect_duplicate_keyed_lookups
                 || policy.collect_lock_inventory
             {
                 embedded_call_facts_with_policy(
                     file,
                     collect_bounds,
                     false,
-                    if policy.collect_grouping {
+                    if policy.collect_grouping || policy.collect_duplicate_keyed_lookups {
                         SqlLocationDemand::Full
                     } else {
                         SqlLocationDemand::None

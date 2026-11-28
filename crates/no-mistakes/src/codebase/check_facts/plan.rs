@@ -125,6 +125,7 @@ pub struct CheckFactPlan {
     pub postgres_lock_inventory: bool,
     /// Literal JSON relation keys, collected only for their configured consumer.
     pub postgres_json_writes: bool,
+    pub postgres_duplicate_keyed_lookups: bool,
     pub postgres_grouping: bool,
     pub postgres_index_probes: bool,
     pub postgres_body_bounds: bool,

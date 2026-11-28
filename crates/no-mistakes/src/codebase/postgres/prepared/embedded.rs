@@ -68,6 +68,7 @@ pub(super) fn collect(
                         crate::codebase::postgres::statements::StatementPolicySources {
                             collect_lock_inventory: plan.postgres_lock_inventory,
                             collect_json_writes: plan.postgres_json_writes,
+                            collect_duplicate_keyed_lookups: plan.postgres_duplicate_keyed_lookups,
                             collect_index_probes: plan.postgres_index_probes,
                             collect_body_bounds: plan.postgres_body_bounds,
                             collect_grouping: plan.postgres_grouping,

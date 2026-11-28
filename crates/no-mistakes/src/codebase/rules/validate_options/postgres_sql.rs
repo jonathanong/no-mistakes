@@ -3,6 +3,15 @@ use crate::codebase::rules;
 
 pub(super) const VALIDATORS: &[RuleValidator] = &[
     (
+        rules::postgres_no_duplicate_keyed_lookups::RULE_ID,
+        |rule, _| {
+            rules::postgres_no_duplicate_keyed_lookups::compile_options(
+                &rule.strict_rule_options()?,
+            )
+            .map(drop)
+        },
+    ),
+    (
         rules::postgres_no_generated_column_writes::RULE_ID,
         |rule, _| {
             rules::postgres_no_generated_column_writes::compile_options(

@@ -7,8 +7,9 @@ pub struct StatementPolicySources<'a> {
     pub bind_values: super::super::bounds::BindValues,
     pub collect_lock_inventory: bool,
     pub collect_json_writes: bool,
+    pub collect_duplicate_keyed_lookups: bool,
     pub collect_grouping: bool,
-    pub grouping_complete: Option<&'a [bool]>,
+    pub statement_complete: Option<&'a [bool]>,
     pub collect_index_probes: bool,
     pub collect_body_bounds: bool,
     pub share_lock_writes: bool,
@@ -73,12 +74,14 @@ impl StatementSources<'_> {
 
 impl<'a> StatementSources<'a> {
     pub(super) fn grouping_requested(&self, index: usize) -> bool {
-        self.policy.collect_grouping
-            && self
-                .recovery
-                .map(|recovery| recovery.complete)
-                .or(self.policy.grouping_complete)
-                .is_none_or(|complete| complete.get(index) == Some(&true))
+        self.policy.collect_grouping && self.statement_is_complete(index)
+    }
+
+    pub(super) fn statement_is_complete(&self, index: usize) -> bool {
+        self.recovery
+            .map(|recovery| recovery.complete)
+            .or(self.policy.statement_complete)
+            .is_none_or(|complete| complete.get(index) == Some(&true))
     }
 
     pub(super) fn location_tokens(

@@ -1001,6 +1001,13 @@ must be `advisory`; `error`, `fail`, and `options.fail` are rejected. Set
 stays silent. Its advisory `target` identifies the shape. Use ordinary disable
 comments for source exceptions supported by a plan and benchmark.
 
+[`postgres-no-duplicate-keyed-lookups`](../rules/postgres-no-duplicate-keyed-lookups.md)
+is opt-in and off by default. It flags repeated joins and correlated scalar
+subqueries that look up the same relation on the same normalized key within one
+SQL statement. Use standard PostgreSQL executor selection for embedded TS/JS
+queries and `sqlInclude` for standalone `.sql` files; unanalyzable SQL follows
+the shared `unanalyzable` policy (default `report`).
+
 [`test-fixture-size-cap`](../rules/test-fixture-size-cap.md) caps literal
 `Array.from({ length })`, single-argument `Array(n)` and `new Array(n)`, and
 numeric literals in configured `eachCalls` lists in `scopes.tests` and

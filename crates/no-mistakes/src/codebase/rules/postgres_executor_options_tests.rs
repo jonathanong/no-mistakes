@@ -26,6 +26,7 @@ fn every_executor_rule_decodes_extensions_with_its_actual_option_type() {
     check!(postgres_required_predicates);
     check!(postgres_sql_shape_policy);
     check!(postgres_no_offset);
+    check!(postgres_no_duplicate_keyed_lookups);
     check!(postgres_no_transformed_uuid_predicates);
     check!(postgres_conflict_ordering);
     check!(postgres_lock_ordering);
