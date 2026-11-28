@@ -79,6 +79,10 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
     (rules::no_test_git_sha::RULE_ID, |rule, _| {
         rules::no_test_git_sha::compile_options(rule.strict_rule_options()?).map(drop)
     }),
+    (
+        rules::queue_no_enqueue_in_transaction::RULE_ID,
+        |rule, _| rules::queue_no_enqueue_in_transaction::validate_options(rule),
+    ),
     (rules::swift_no_raw_print::RULE_ID, |rule, _| {
         rules::swift_no_raw_print::compile_options(rule.strict_rule_options()?).map(drop)
     }),

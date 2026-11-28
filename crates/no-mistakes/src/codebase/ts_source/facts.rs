@@ -43,6 +43,7 @@ pub struct TsFactPlan {
     pub call_arguments: bool,
     /// Opt-in lexical call-execution exclusions for assertion ownership.
     pub call_eligibility: bool,
+    pub builtin_receivers: bool,
     pub imports: bool,
     pub function_calls: bool,
     /// Value provenance needed by canonical call and effect consumers.

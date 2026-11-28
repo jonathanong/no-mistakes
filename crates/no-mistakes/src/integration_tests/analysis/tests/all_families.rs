@@ -29,6 +29,7 @@ fn all_ts_and_primary_check_families_keep_full_integration_findings() {
             module_bindings: true,
             call_arguments: true,
             call_eligibility: true,
+            builtin_receivers: true,
             imports: true,
             function_calls: true,
             value_flow: true,

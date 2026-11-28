@@ -8,6 +8,7 @@ pub fn unwrap_ts_wrappers<'a>(expr: &'a Expression<'a>) -> &'a Expression<'a> {
         Expression::TSNonNullExpression(e) => unwrap_ts_wrappers(&e.expression),
         Expression::TSTypeAssertion(e) => unwrap_ts_wrappers(&e.expression),
         Expression::TSSatisfiesExpression(e) => unwrap_ts_wrappers(&e.expression),
+        Expression::TSInstantiationExpression(e) => unwrap_ts_wrappers(&e.expression),
         Expression::ParenthesizedExpression(e) => unwrap_ts_wrappers(&e.expression),
         other => other,
     }

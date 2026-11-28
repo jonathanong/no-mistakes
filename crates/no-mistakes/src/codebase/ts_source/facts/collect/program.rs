@@ -114,7 +114,8 @@ pub(crate) fn collect_file_facts_from_program_with_semantic(
     } else {
         Default::default()
     };
-    let builtin_calls = if plan.function_calls && plan.call_eligibility {
+    let builtin_calls = if plan.function_calls && (plan.call_eligibility || plan.builtin_receivers)
+    {
         crate::codebase::ts_source::builtin_receivers::collect(program)
     } else {
         Default::default()

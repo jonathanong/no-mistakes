@@ -7,33 +7,23 @@ pub(super) fn collect(
     findings: &mut Vec<RuleFinding>,
     advisories: &mut Vec<RuleFinding>,
 ) -> Result<()> {
-    if !request.config.rule_configured(RULE_ID)
-        || (request.dependency_graph.is_none()
-            && session.is_some_and(|session| !session.check_consumer_ready(RULE_ID)))
-    {
-        return Ok(());
-    }
-    let result =
-        crate::perf_trace::rule("analysis.rules.coverage-producer-assertion-owner", || {
+    super::collect_diagnostics_rule(
+        request,
+        session,
+        RULE_ID,
+        "analysis.rules.coverage-producer-assertion-owner",
+        |graph| {
             check(
                 request.root,
                 request.config,
-                request
-                    .dependency_graph
-                    .expect("coverage ownership requires canonical graph"),
+                graph,
                 request.shared,
                 request
                     .sources
                     .expect("coverage ownership requires prepared sources"),
             )
-        });
-    let output = match session {
-        Some(session) => session.capture_check_result(RULE_ID, result)?,
-        None => Some(result?),
-    };
-    if let Some(output) = output {
-        findings.extend(output.findings);
-        advisories.extend(output.advisories);
-    }
-    Ok(())
+        },
+        findings,
+        advisories,
+    )
 }

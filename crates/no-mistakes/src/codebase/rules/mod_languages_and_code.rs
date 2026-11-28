@@ -16,6 +16,7 @@ pub mod no_raw_ephemeral_port;
 pub mod no_single_enqueue_in_loop;
 pub mod no_sparse_checkout;
 pub mod production_exports_test_only;
+pub mod queue_no_enqueue_in_transaction;
 pub mod query_reached_per_item;
 pub mod queue_rate_limit_error_delay;
 pub mod require_files_in_subdirs;

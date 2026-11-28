@@ -1,0 +1,12 @@
+rules:
+  - rule: queue-no-enqueue-in-transaction
+    scope: repository
+    include: ["src/**/*.ts"]
+    options:
+      transactions:
+        - module: "./tx"
+          export: withTx
+          callbackArgument: 0
+      publishers:
+        - module: "@sample/jobs"
+          export: enqueue

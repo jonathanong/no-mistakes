@@ -1,0 +1,6 @@
+reportUnusedDisableDirectives: report
+rules:
+  - rule: queue-no-enqueue-in-transaction
+    enabled: false
+    scope: repository
+    include: ["src/**/*.ts"]

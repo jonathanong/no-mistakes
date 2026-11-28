@@ -164,6 +164,7 @@ pub(crate) fn prepared_tsconfig_catalog(
 
 fn any_codebase_rule_enabled(config: &crate::config::v2::NoMistakesConfig) -> bool {
     rule_enabled(config, super::coverage_producer_assertion_owner::RULE_ID)
+        || config.rule_configured(super::queue_no_enqueue_in_transaction::RULE_ID)
         || rule_enabled(config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS)
         || rule_enabled(config, SERVER_ROUTE_CLIENT_BOUNDARY)
         || rule_enabled(config, NEXTJS_NO_API_ROUTES)

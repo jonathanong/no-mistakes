@@ -1,0 +1,11 @@
+import { enqueue as importedEnqueue } from "@sample/jobs";
+import * as importedJobsNs from "@sample/jobs";
+export { enqueue, enqueue as send } from "@sample/jobs";
+export { importedEnqueue as localSend };
+export { importedJobsNs as localJobsNs };
+export * as jobsNs from "@sample/jobs";
+export { enqueueLocal as sendLocal } from "./local-jobs";
+export { formatId as fmt, default as utilsDefault } from "@sample/utils";
+export const constAliasSend = importedEnqueue;
+export const constNsAliasSend = importedJobsNs.enqueue;
+export const constObjSend = { send: importedEnqueue };

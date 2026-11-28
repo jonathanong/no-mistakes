@@ -1,10 +1,10 @@
-/// Syntactic value flow retained by the import collector. Resolution uses the
-/// prepared catalog and never reparses a factory or helper body.
+/// Syntactic value flow retained by the import collector without reparsing.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ValueFlowFacts {
     pub catalogs: literal_catalogs::LiteralCatalogFacts,
     pub tagged_templates: TaggedTemplates,
     pub identifier_text_origins: Option<std::sync::Arc<TextOrigins>>,
+    pub builtin_const_bindings: FxHashMap<(usize, String), Option<String>>,
     pub sql_placeholder_lists: Vec<(usize, String, u32)>,
     /// Failed analysis must not supply definitive value-flow or graph answers.
     pub incomplete_reason: Option<String>,
@@ -158,7 +158,6 @@ pub struct ValueFlowFacts {
     pub reference_affected_scope_buffers: usize,
     #[cfg(feature = "test-instrumentation")]
     pub reference_affected_name_buffers: usize,
-    /// Actual stores to earliest binding/parameter/callable invalidation offsets.
     #[cfg(feature = "test-instrumentation")]
     pub reference_invalidation_stores: usize,
     /// Sum of each mutation traversal's peak pending heap capacity, in entries.
@@ -185,6 +184,7 @@ pub struct ValueFlowFacts {
     pub widened_string_assertions: FxHashMap<u32, Vec<ValueType>>,
     pub returns: Vec<(CallableId, ValueExpression)>,
     pub calls: Vec<ValueCall>,
+    pub deferred_calls: FxHashSet<u32>,
     pub type_exports: Vec<ExportedBinding>,
     pub type_shapes: FxHashMap<String, ValueType>,
     pub contextual_callbacks: FxHashMap<u32, ValueType>,

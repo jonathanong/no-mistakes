@@ -41,6 +41,15 @@ function assertPublicNodeNextFixtureCompiles(...fixtureParts) {
   }));
 }
 
+test("transaction enqueue option types compile from the public package root", () => {
+  assertPublicNodeNextFixtureCompiles(
+    "fixtures",
+    "node-api",
+    "queue-no-enqueue-in-transaction-types",
+    "public.mts",
+  );
+});
+
 test("queue wait kinds compile when imported from the package root", { timeout: 20_000 }, () => {
   assertPublicNodeNextFixtureCompiles("fixtures", "node-api", "queue-wait-kinds", "public.mts");
   assert.match(

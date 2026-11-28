@@ -1,0 +1,14 @@
+missing:
+  publishers:
+    - { module: "@sample/jobs", export: enqueue }
+duplicate:
+  transactions:
+    - { module: "@sample/database", export: transaction, callbackArgument: 0 }
+    - { module: "@sample/database", export: transaction, callbackArgument: 1 }
+  publishers:
+    - { module: "@sample/jobs", export: enqueue }
+blank:
+  transactions:
+    - { module: "@sample/database", export: transaction, callbackArgument: 1 }
+  publishers:
+    - { module: "@sample/jobs", export: " " }

@@ -412,6 +412,8 @@ mod cli_check_queue_shared_rate_limit;
 #[path = "cli_check_rules_no_single_enqueue_in_loop.rs"]
 mod cli_check_rules_no_single_enqueue_in_loop;
 
+#[path = "cli_check_rules_queue_no_enqueue_in_transaction.rs"]
+mod cli_check_rules_queue_no_enqueue_in_transaction;
 #[path = "cli_check_rules_queue_rate_limit_error_delay.rs"]
 mod cli_check_rules_queue_rate_limit_error_delay;
 

@@ -7,6 +7,7 @@ mod fragment_escape;
 mod part0;
 mod part1;
 mod part2;
+mod queue_transaction;
 mod rate_limit_delay;
 mod relative_imports;
 mod request;
@@ -116,8 +117,39 @@ fn collect_application(
     part1::collect(request, session, findings, advisories)?;
     part2::collect(request, session, findings, advisories)?;
     rate_limit_delay::collect(request, session, findings, advisories)?;
+    queue_transaction::collect(request, session, findings, advisories)?;
     relative_imports::collect(request, session, findings, advisories)?;
     coverage::collect(request, session, findings, advisories)
+}
+
+pub(super) fn collect_diagnostics_rule(
+    request: &GraphRuleRequest<'_>,
+    session: Option<&crate::codebase::analysis_session::AnalysisSession>,
+    rule_id: &str,
+    trace_name: &'static str,
+    run: impl FnOnce(&DepGraph) -> Result<crate::codebase::rules::analysis_policy::AnalysisDiagnostics>,
+    findings: &mut Vec<RuleFinding>,
+    advisories: &mut Vec<RuleFinding>,
+) -> Result<()> {
+    if !request.config.rule_configured(rule_id)
+        || (request.dependency_graph.is_none()
+            && session.is_some_and(|session| !session.check_consumer_ready(rule_id)))
+    {
+        return Ok(());
+    }
+    let graph = request
+        .dependency_graph
+        .expect("graph rule requires canonical graph");
+    let result = crate::perf_trace::rule(trace_name, || run(graph));
+    let output = match session {
+        Some(session) => session.capture_check_result(rule_id, result)?,
+        None => Some(result?),
+    };
+    if let Some(output) = output {
+        findings.extend(output.findings);
+        advisories.extend(output.advisories);
+    }
+    Ok(())
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]

@@ -1,0 +1,17 @@
+rules:
+  - rule: queue-no-enqueue-in-transaction
+    scope: repository
+    include: ["src/flows/**/*.ts"]
+    options:
+      transactions:
+        - module: "@sample/database"
+          export: transaction
+          callbackArgument: 1
+        - module: "./local-tx"
+          export: beginLocalTx
+          callbackArgument: 0
+      publishers:
+        - module: "@sample/jobs"
+          export: enqueue
+        - module: "./local-jobs"
+          export: enqueueLocal
