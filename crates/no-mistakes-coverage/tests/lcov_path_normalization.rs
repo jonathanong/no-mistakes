@@ -81,12 +81,23 @@ fn rejects_unsafe_and_outside_root_paths_scoped_to_their_record() {
     let parsed = parse_lcov_bytes(&read_fixture_bytes("path_security.lcov"), &options);
     assert_eq!(parsed.report.len(), 1);
     assert_eq!(parsed.report.files["src/safe.ts"].lines[&10], 2);
-    assert_eq!(parsed.diagnostics.len(), 9);
+    assert_eq!(parsed.diagnostics.len(), 8);
     assert!(parsed
         .diagnostics
         .iter()
         .all(|d| d.kind == ParseDiagnosticKind::InvalidPath));
     insta::assert_snapshot!("path_security", pretty_json(&parsed));
+
+    let raw_nul = parse_lcov_bytes(
+        b"SF:src/nul\0byte.ts\nDA:1,1\nend_of_record\nSF:/repo/src/after_nul.ts\nDA:2,3\nend_of_record\n",
+        &options,
+    );
+    assert_eq!(raw_nul.diagnostics.len(), 1);
+    assert_eq!(
+        raw_nul.diagnostics[0].kind,
+        ParseDiagnosticKind::InvalidPath
+    );
+    assert_eq!(raw_nul.report.files["src/after_nul.ts"].lines[&2], 3);
 }
 
 #[test]
