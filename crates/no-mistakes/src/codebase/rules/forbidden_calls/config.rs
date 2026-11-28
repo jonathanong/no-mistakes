@@ -4,9 +4,10 @@ use anyhow::{bail, Result};
 use serde::Deserialize;
 
 mod arguments;
+pub(super) use super::super::call_policy::root::{
+    validate_exclude_roots, validate_roots, validate_roots_non_empty, FunctionSelector, Root,
+};
 pub(super) use arguments::{ArgumentConditions, ArgumentPredicate, Literal, UnknownArguments};
-mod root;
-pub(super) use root::{catalog_names, PlaywrightRoot, Root};
 
 #[derive(Debug, Deserialize, Default)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
@@ -91,30 +92,16 @@ pub(super) struct ModuleExportSelector {
     pub(super) module: String,
     pub(super) export: String,
 }
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(super) struct FunctionSelector {
-    pub(super) file: String,
-    pub(super) symbol: String,
-}
-
 pub(in crate::codebase::rules) fn validate(options: &Options) -> Result<()> {
-    if options.roots.is_empty() {
-        bail!("{RULE_ID}: each application requires at least one options.roots selector");
-    }
+    validate_roots_non_empty(&options.roots)?;
     if options.targets.is_empty() && options.unknown_calls != UnknownCalls::Finding {
         bail!("{RULE_ID}: each application requires targets or unknownCalls: finding");
     }
     if options.max_depth == Some(0) {
         bail!("{RULE_ID}: maxDepth must be greater than zero");
     }
-    root::validate_roots(&options.roots)?;
-    if let Some(exclude_roots) = &options.exclude_roots {
-        let patterns = exclude_roots.values();
-        if patterns.is_empty() || patterns.iter().any(|pattern| pattern.trim().is_empty()) {
-            bail!("{RULE_ID}: excludeRoots must contain non-empty glob patterns");
-        }
-    }
+    validate_roots(&options.roots)?;
+    validate_exclude_roots(options.exclude_roots.as_ref())?;
     for target in &options.targets {
         if let Some(conditions) = target.arguments() {
             arguments::validate(conditions)?;

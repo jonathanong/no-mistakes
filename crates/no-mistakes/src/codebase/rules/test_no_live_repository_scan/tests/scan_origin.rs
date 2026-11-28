@@ -96,7 +96,7 @@ fn missing_prepared_path_provenance_keeps_recorded_argument_facts_unresolved() {
     assert_eq!(scan_origin(&facts, &site), Some(&fixture));
     Arc::make_mut(facts.module_bindings.as_mut().unwrap()).path_provenance = None;
     assert!(
-        super::super::super::forbidden_calls::call_argument_values(&facts, site.offset).is_some()
+        super::super::super::call_policy::call_argument_values(&facts, site.offset).is_some()
     );
     assert_eq!(scan_origin(&facts, &site), None);
     assert_eq!(

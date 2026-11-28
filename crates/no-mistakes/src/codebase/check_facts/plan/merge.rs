@@ -4,7 +4,7 @@ use std::sync::Arc;
 impl CheckFactPlan {
     pub(crate) fn include(&mut self, other: Self) {
         self.forbidden_call_arguments =
-            crate::codebase::rules::forbidden_calls::ArgumentFactScope::merge(
+            crate::codebase::rules::call_policy::ArgumentFactScope::merge(
                 self.forbidden_call_arguments.as_ref(),
                 other.forbidden_call_arguments.as_ref(),
             );

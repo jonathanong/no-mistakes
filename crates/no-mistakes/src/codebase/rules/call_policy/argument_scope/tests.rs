@@ -92,7 +92,7 @@ fn scoped_arguments_reduce_actual_collection_and_preserve_findings() {
         .unwrap();
         graph_sites.push(graph.resolved_call_sites().to_vec());
         reports.push(
-            super::super::selection::check_with_graph(
+            crate::codebase::rules::forbidden_calls::check_with_graph(
                 root,
                 &config,
                 &graph,

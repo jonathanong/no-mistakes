@@ -5,7 +5,7 @@ pub(super) fn scan_origin<'a>(
     facts: &'a crate::codebase::ts_source::facts::TsFileFacts,
     site: &crate::codebase::dependencies::graph::ResolvedCallSite,
 ) -> Option<&'a PathOrigin> {
-    let arguments = super::super::forbidden_calls::call_argument_values(facts, site.offset)?;
+    let arguments = super::super::call_policy::call_argument_values(facts, site.offset)?;
     let origin = arguments.path.as_ref()?;
     // Dynamic scope poisoning also marks a spread at argument zero.
     if super::enumerators::is_import_meta_glob(site)

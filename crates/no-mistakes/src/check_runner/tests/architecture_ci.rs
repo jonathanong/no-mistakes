@@ -14,7 +14,7 @@ fn aggregate_vitest_ci_coverage_reuses_the_request_snapshot() {
         include_str!("../../codebase/rules/filesystem_dispatch/execute/special.rs"),
     );
     let catalog = include_str!("../../codebase/rules/vitest_project_catalog.rs");
-    let forbidden_calls = include_str!("../../codebase/rules/forbidden_calls.rs");
+    let call_policy = include_str!("../../codebase/rules/call_policy.rs");
     let mapping = include_str!("../../codebase/rules/vitest_project_mapping/project_sources.rs");
     let coverage = include_str!("../../codebase/rules/vitest_ci_path_coverage/projects.rs");
     let workflows =
@@ -38,13 +38,13 @@ fn aggregate_vitest_ci_coverage_reuses_the_request_snapshot() {
         "Playwright catalogs are prepared only through forbidden-calls root demand"
     );
     assert_eq!(
-        forbidden_calls
+        call_policy
             .matches("prepare_vitest_project_catalog(")
             .count(),
         1
     );
     assert_eq!(
-        forbidden_calls
+        call_policy
             .matches("prepare_playwright_project_catalog(")
             .count(),
         1

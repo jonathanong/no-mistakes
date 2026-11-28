@@ -6,7 +6,7 @@ use entries::diagnostic_paths;
 mod text;
 use super::Owners;
 use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite, TsFactLookup};
-use crate::codebase::rules::forbidden_calls::site_source_node;
+use crate::codebase::rules::call_policy::site_source_node;
 use crate::codebase::ts_source::module_facts::arguments::{EnvDiagnostic, PathOrigin};
 use std::path::PathBuf;
 

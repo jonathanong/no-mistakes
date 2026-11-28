@@ -34,7 +34,7 @@ pub(super) use env_cause::EnvCause;
 
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{DepGraph, NodeId, ResolvedCallSite, TsFactLookup};
-use crate::codebase::rules::forbidden_calls::site_source_node;
+use crate::codebase::rules::call_policy::site_source_node;
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_source::module_facts::arguments::PathProvenance;
 use crate::fx::{FxHashMap, FxHashSet};

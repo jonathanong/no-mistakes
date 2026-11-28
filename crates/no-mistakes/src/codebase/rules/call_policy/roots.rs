@@ -1,7 +1,8 @@
 use super::super::path_filter::GlobMatcher;
-use super::config::{catalog_names, Options, PlaywrightRoot, Root};
+use super::root::{catalog_names, PlaywrightRoot, Root};
 use super::root_files::{excludes_root, reject_parse_error, require_file};
 use crate::codebase::dependencies::graph::{CallRoot, DepGraph, NodeId};
+use crate::config::v2::schema::StringOrList;
 use anyhow::{bail, Context, Result};
 use std::path::{Path, PathBuf};
 
@@ -10,7 +11,8 @@ pub(crate) struct ExpandRequest<'a> {
     /// Accept a root file that has no call site, such as an import-only test.
     pub allow_sourceless: bool,
     pub root: &'a Path,
-    pub options: &'a Options,
+    pub roots: &'a [Root],
+    pub exclude_roots: Option<&'a StringOrList>,
     pub graph: &'a DepGraph,
     pub vitest: Option<&'a super::super::PreparedVitestProjectCatalog>,
     pub playwright: Option<&'a super::super::PreparedPlaywrightProjectCatalog>,
@@ -26,15 +28,13 @@ pub(crate) fn expand(input: ExpandRequest<'_>) -> Result<Vec<NodeId>> {
 /// files that have no call site and so contribute no call node.
 pub(crate) fn expand_with_files(input: ExpandRequest<'_>) -> Result<(Vec<NodeId>, Vec<PathBuf>)> {
     let exclude_roots = input
-        .options
         .exclude_roots
-        .as_ref()
         .map(|patterns| patterns.values())
         .unwrap_or_default();
     let exclude_roots = GlobMatcher::new(&exclude_roots, &format!("{} excludeRoots", input.rule))?;
     let mut call_roots = Vec::new();
     let mut skipped_unknown = false;
-    for selector in &input.options.roots {
+    for selector in input.roots {
         if let Some(call_root) =
             expand_selector(&input, selector, &exclude_roots, &mut skipped_unknown)?
         {

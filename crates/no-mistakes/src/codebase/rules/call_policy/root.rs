@@ -1,8 +1,14 @@
-use super::super::RULE_ID;
-use super::FunctionSelector;
+use super::FORBIDDEN_CALLS_RULE_ID as RULE_ID;
 use crate::config::v2::schema::StringOrList;
 use anyhow::{bail, Result};
 use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct FunctionSelector {
+    pub(crate) file: String,
+    pub(crate) symbol: String,
+}
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
@@ -66,7 +72,33 @@ pub(crate) fn catalog_names(selector: &CatalogSelector) -> Vec<String> {
     }
 }
 
-pub(super) fn validate_roots(roots: &[Root]) -> Result<()> {
+pub(crate) fn validate_root_options(
+    roots: &[Root],
+    exclude_roots: Option<&StringOrList>,
+) -> Result<()> {
+    validate_roots_non_empty(roots)?;
+    validate_roots(roots)?;
+    validate_exclude_roots(exclude_roots)
+}
+
+pub(crate) fn validate_roots_non_empty(roots: &[Root]) -> Result<()> {
+    if roots.is_empty() {
+        bail!("{RULE_ID}: each application requires at least one options.roots selector");
+    }
+    Ok(())
+}
+
+pub(crate) fn validate_exclude_roots(exclude_roots: Option<&StringOrList>) -> Result<()> {
+    if let Some(exclude_roots) = exclude_roots {
+        let patterns = exclude_roots.values();
+        if patterns.is_empty() || patterns.iter().any(|pattern| pattern.trim().is_empty()) {
+            bail!("{RULE_ID}: excludeRoots must contain non-empty glob patterns");
+        }
+    }
+    Ok(())
+}
+
+pub(crate) fn validate_roots(roots: &[Root]) -> Result<()> {
     for root in roots {
         match root {
             Root::Vitest(CatalogRoot {

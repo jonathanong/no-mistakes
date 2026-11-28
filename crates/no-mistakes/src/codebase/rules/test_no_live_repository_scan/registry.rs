@@ -6,7 +6,7 @@ mod home;
 #[path = "registry_resolve.rs"]
 mod resolve;
 
-use super::super::forbidden_calls::site_source_node;
+use super::super::call_policy::site_source_node;
 use super::super::path_filter::RulePathFilter;
 use super::config::Enumerator;
 use super::owned::path_provenance;

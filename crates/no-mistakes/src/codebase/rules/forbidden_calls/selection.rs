@@ -1,7 +1,6 @@
-use no_mistakes_rule_kernel::finding::RuleFinding;
+use super::super::call_policy::{roots, site_source_node};
 use super::config::{self, Options, Traversal};
 use super::findings::finding_for_site_with_arguments;
-use super::roots;
 use super::RULE_ID;
 use crate::codebase::dependencies::graph::{
     mock_reach_keeps, DepGraph, GraphBuildPlan, NodeId, ResolvedCallSite,
@@ -10,11 +9,11 @@ use crate::config::v2::schema::RuleDef;
 use crate::config::v2::NoMistakesConfig;
 use crate::fx::FxHashMap;
 use anyhow::Result;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::path::{Path, PathBuf};
 
 mod invocations;
 use invocations::allowed_invocations;
-pub(crate) use invocations::site_source_node;
 
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     let mock_boundaries = config.rule_applications(RULE_ID).iter().any(|application| {
@@ -90,7 +89,8 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
         rule: RULE_ID,
         allow_sourceless: false,
         root,
-        options,
+        roots: &options.roots,
+        exclude_roots: options.exclude_roots.as_ref(),
         graph,
         vitest,
         playwright,

@@ -1,21 +1,20 @@
 //! Binding-aware call policy projected from the prepared canonical graph.
 
-mod argument_scope;
 mod arguments;
-pub(crate) use argument_scope::argument_facts_covered;
-pub use argument_scope::{configure_argument_facts, ArgumentFactScope};
 pub(in crate::codebase::rules) mod config;
 mod findings;
-mod root_files;
-mod roots;
 mod selection;
 
 pub const RULE_ID: &str = "forbidden-calls";
 
-pub(crate) use selection::{check_with_graph, graph_plan, site_source_node};
-mod shared;
-pub(crate) use arguments::for_call as call_argument_values;
-pub(crate) use shared::{expand_roots, SharedRoots};
+pub(crate) use super::call_policy::argument_facts_covered;
+#[doc(hidden)]
+pub use super::call_policy::prepare_root_catalogs;
+pub use super::call_policy::{
+    configure_argument_facts, playwright_roots_configured, vitest_roots_configured,
+    ArgumentFactScope,
+};
+pub(crate) use selection::{check_with_graph, graph_plan};
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
@@ -28,56 +27,7 @@ pub fn argument_facts_required(config: &crate::config::v2::NoMistakesConfig) -> 
     config
         .rule_applications(RULE_ID)
         .iter()
-        .any(|application| argument_scope::requires_arguments(application))
-}
-
-/// True when a forbidden-calls application names a `vitest:` collection root.
-pub fn vitest_roots_configured(config: &crate::config::v2::NoMistakesConfig) -> bool {
-    catalog_root_configured(config, "vitest")
-        || super::test_no_live_repository_scan::vitest_roots_configured(config)
-}
-
-/// True when a forbidden-calls application names a `playwright:` collection root.
-pub fn playwright_roots_configured(config: &crate::config::v2::NoMistakesConfig) -> bool {
-    catalog_root_configured(config, "playwright")
-}
-
-fn catalog_root_configured(config: &crate::config::v2::NoMistakesConfig, key: &str) -> bool {
-    config.rule_applications(RULE_ID).iter().any(|application| {
-        application
-            .options
-            .get("roots")
-            .and_then(serde_yaml::Value::as_sequence)
-            .is_some_and(|roots| roots.iter().any(|root| root.get(key).is_some()))
-    })
-}
-
-/// Prepare runner catalogs for declared call roots and integration-suite ownership.
-#[doc(hidden)]
-pub fn prepare_root_catalogs(
-    root: &std::path::Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
-    tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
-) -> (
-    Option<super::PreparedVitestProjectCatalog>,
-    Option<super::PreparedPlaywrightProjectCatalog>,
-) {
-    (
-        vitest_roots_configured(config).then(|| {
-            super::prepare_vitest_project_catalog(root, config, snapshot, tsconfig_catalog)
-        }),
-        (playwright_roots_configured(config)
-            || config
-                .tests
-                .playwright
-                .projects
-                .values()
-                .any(|policy| !policy.integration_suites.is_empty() && policy.include.is_empty()))
-        .then(|| {
-            super::prepare_playwright_project_catalog(root, config, snapshot, tsconfig_catalog)
-        }),
-    )
+        .any(|application| super::call_policy::requires_arguments(application))
 }
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
