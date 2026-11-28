@@ -21,18 +21,31 @@ pub trait AnalysisHooks: Send + Sync {
 
 static REGISTERED_HOOKS: OnceLock<&'static dyn AnalysisHooks> = OnceLock::new();
 
+/// Register process-wide analysis hooks (first registration wins).
+///
+/// The `no-mistakes` crate registers hooks at load time. Standalone consumers
+/// of `no-mistakes-ts-analysis` that call hook-backed discovery or workspace
+/// helpers must register hooks before calling them.
 pub fn register_hooks(hooks: &'static dyn AnalysisHooks) {
     let _ = REGISTERED_HOOKS.set(hooks);
 }
 
+/// Return the active invocation metrics observer from registered hooks, if any.
 pub fn current_observer() -> Option<Arc<dyn MetricsObserver>> {
     current_observer_with(REGISTERED_HOOKS.get().copied())
 }
 
+/// Discover visible paths under `root` via registered [`AnalysisHooks`].
+///
+/// Returns an empty `Vec` when no hooks have been registered via
+/// [`register_hooks`].
 pub fn discover_visible_paths(root: &Path) -> Vec<PathBuf> {
     discover_visible_paths_with(REGISTERED_HOOKS.get().copied(), root)
 }
 
+/// Load workspace package metadata for `root` via registered [`AnalysisHooks`].
+///
+/// Returns `None` when no hooks have been registered via [`register_hooks`].
 pub fn load_workspace_from_files(root: &Path, visible_paths: &[PathBuf]) -> Option<WorkspaceMap> {
     load_workspace_from_files_with(REGISTERED_HOOKS.get().copied(), root, visible_paths)
 }
