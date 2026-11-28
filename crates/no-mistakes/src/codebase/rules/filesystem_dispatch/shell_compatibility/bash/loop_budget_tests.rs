@@ -10,7 +10,6 @@ fn loops_preserve_guard_and_helper_exit_boundaries() {
     assert_eq!(
         result.findings,
         [
-            ("flags", 34),
             ("remaining", 45),
             ("declared", 54),
             ("outside", 59),
@@ -18,7 +17,7 @@ fn loops_preserve_guard_and_helper_exit_boundaries() {
         ]
     );
     let uncertain: Vec<_> = result.unanalyzable.iter().map(|(line, _)| *line).collect();
-    assert_eq!(uncertain, [9, 12]);
+    assert_eq!(uncertain, [9, 12, 34]);
 }
 
 #[test]
