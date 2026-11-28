@@ -131,4 +131,67 @@ fn codebase_project_and_query_json_impls_reject_invalid_options() {
         "reports": [{ "type": "testsGraph", "planJson": "{" }]
     }))
     .is_err());
+    assert!(crate::analyze_project::analyze_project_value_impl(json!({
+        "reports": [{ "type": "testsGraphMermaid", "planJson": "{" }]
+    }))
+    .is_err());
+    assert!(crate::analyze_project::analyze_project_value_impl(json!({
+        "reports": [{ "type": "testsAudit", "unknownField": true }]
+    }))
+    .is_err());
+    assert!(crate::analyze_project::analyze_project_value_impl(json!({
+        "reports": [{ "type": "validateMermaidMarkdown", "unknownField": true }]
+    }))
+    .is_err());
+}
+
+#[test]
+fn analyze_project_forwards_absolute_and_relative_paths_and_rejects_bad_reports() {
+    let abs = std::env::current_dir().unwrap();
+    let abs_tsconfig = abs.join("tsconfig.json").display().to_string();
+    let abs_config = abs.join(".no-mistakes.yml").display().to_string();
+
+    for payload in [
+        json!({
+            "tsconfig": "tsconfig.json",
+            "config": ".no-mistakes.yml",
+            "filters": ["src/**"],
+            "reports": [{ "type": "symbols", "unknownField": true }]
+        }),
+        json!({
+            "root": ".",
+            "tsconfig": abs_tsconfig,
+            "config": abs_config,
+            "filters": ["src/**"],
+            "reports": [{ "type": "importUsages", "unknownField": true }]
+        }),
+        json!({
+            "root": ".",
+            "tsconfig": "tsconfig.json",
+            "config": ".no-mistakes.yml",
+            "reports": [{ "type": "flow", "unknownField": true }]
+        }),
+        json!({
+            "root": ".",
+            "reports": [{ "type": "playwrightCheck", "unknownField": true }]
+        }),
+        json!({
+            "root": ".",
+            "reports": [{ "type": "effects", "unknownField": true }]
+        }),
+        json!({
+            "root": ".",
+            "reports": [{ "type": "rscCallers", "unknownField": true }]
+        }),
+        json!({
+            "root": ".",
+            "reports": [{ "type": "serverRoutes", "unknownField": true }]
+        }),
+        json!({
+            "root": ".",
+            "reports": [{ "type": "dependencies", "unknownField": true }]
+        }),
+    ] {
+        assert!(crate::analyze_project::analyze_project_value_impl(payload).is_err());
+    }
 }
