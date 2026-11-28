@@ -8,7 +8,7 @@ use std::ops::Deref;
 
 #[derive(Default, Deserialize)]
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
-struct Options {
+pub(super) struct Options {
     include: Vec<String>,
     exclude: Vec<String>,
     sql_include: Vec<String>,
@@ -42,7 +42,10 @@ impl Deref for CompiledOptions {
 
 impl CompiledOptions {
     pub(super) fn from_rule(rule: &RuleDef) -> Result<Self> {
-        let opts: Options = rule.try_rule_options()?;
+        Self::from_options(rule.strict_rule_options()?)
+    }
+
+    pub(super) fn from_options(opts: Options) -> Result<Self> {
         let _ = (
             &opts.schema_catalog_path,
             opts.report_unmatched_executor_names,

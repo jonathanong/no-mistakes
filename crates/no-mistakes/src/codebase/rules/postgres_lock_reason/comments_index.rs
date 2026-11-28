@@ -92,4 +92,41 @@ impl CommentIndex {
             is_line,
         });
     }
+
+    fn call_end_line(&self, start_line: usize, offset: usize) -> usize {
+        let bytes = &self.source_bytes;
+        let (mut i, mut line, mut col, mut depth) = (offset, start_line, 1usize, 0usize);
+        while i < bytes.len() {
+            match bytes[i] {
+                b'\n' => {
+                    line += 1;
+                    col = 1;
+                    i += 1;
+                }
+                b'/' if bytes.get(i + 1) == Some(&b'/') => {
+                    i = lexers::find_eol(bytes, i + 2).0;
+                }
+                b'/' if bytes.get(i + 1) == Some(&b'*') => {
+                    (_, i, line, col) = lexers::scan_block_comment(bytes, i, line, col, false);
+                }
+                b'\'' | b'"' | b'`' => {
+                    (i, line, col) = js_lexers::scan_js_quoted(bytes, i, line, col);
+                }
+                b'(' => {
+                    depth += 1;
+                    i += 1;
+                }
+                b')' if depth > 0 => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return line;
+                    }
+                    i += 1;
+                }
+                b';' if depth == 0 => return start_line,
+                _ => i += 1,
+            }
+        }
+        start_line
+    }
 }

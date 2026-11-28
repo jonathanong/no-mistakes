@@ -24,8 +24,9 @@ pub(crate) fn collect_application_errors(
     config: &NoMistakesConfig,
     rule: &crate::config::v2::schema::RuleDef,
 ) -> Result<BTreeSet<String>> {
+    let opts = rule.strict_rule_options()?;
     let mut app_errors = BTreeSet::new();
-    if let Err(error) = CompiledOptions::from_rule(rule) {
+    if let Err(error) = CompiledOptions::from_options(opts) {
         app_errors.insert(format!("{error:#}"));
     }
     if let Err(error) = resolve_unanalyzable(config, rule) {

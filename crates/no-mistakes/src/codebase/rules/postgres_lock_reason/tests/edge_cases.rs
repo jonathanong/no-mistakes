@@ -106,3 +106,64 @@ fn rule_def_round_trip_preserves_explicit_error_severity_for_lock_reason() {
     let round_tripped: RuleDef = serde_yaml::from_str(&serialized).unwrap();
     assert_eq!(round_tripped.severity, RuleSeverity::Error);
 }
+
+#[test]
+fn repeated_labels_and_multiple_tags_cannot_satisfy_empty_fields() {
+    use super::super::comment::parse_reason_text;
+    assert_eq!(
+        parse_reason_text(
+            "lock-reason: prevents: duplicates; writer:\nlock-reason: prevents: ; writer: worker"
+        ),
+        ReasonStatus::MissingPrevents
+    );
+    assert_eq!(
+        parse_reason_text("lock-reason: prevents: ; prevents: ; writer: worker"),
+        ReasonStatus::MissingPrevents
+    );
+    assert_eq!(
+        parse_reason_text(
+            "lock-reason: prevents: ;\nlock-reason: prevents: dup; writer: worker"
+        ),
+        ReasonStatus::Valid
+    );
+}
+
+#[test]
+fn multiline_ts_calls_and_sql_suffix_after_semicolon_find_reasons() {
+    let multiline = concat!(
+        "takeLock(\n",
+        "  // note\n",
+        "  /* lock-reason: prevents: duplicates; writer: worker */\n",
+        "  wrap(\"a)b\"),\n",
+        ");\n",
+    );
+    let idx = CommentIndex::for_ts(multiline);
+    assert_eq!(idx.status_for_ts_offset(1, 0), ReasonStatus::Valid);
+
+    let unclosed = "takeLock(\n  id\n";
+    assert_eq!(
+        CommentIndex::for_ts(unclosed).status_for_ts_offset(1, 0),
+        ReasonStatus::Absent
+    );
+
+    let separate = concat!(
+        "takeLock(\n",
+        "  id,\n",
+        ");\n",
+        "other(/* lock-reason: prevents: duplicates; writer: worker */);\n",
+    );
+    let idx_sep = CommentIndex::for_ts(separate);
+    assert_eq!(idx_sep.status_for_ts_offset(1, 0), ReasonStatus::Absent);
+
+    let no_paren = "takeLock; other(/* lock-reason: prevents: dup; writer: w */);\n";
+    let idx_np = CommentIndex::for_ts(no_paren);
+    assert_eq!(idx_np.status_for_ts_offset(1, 0), ReasonStatus::Absent);
+    assert_eq!(idx_np.status_for_ts_position(1, 1), ReasonStatus::Absent);
+
+    let sql = concat!(
+        "SELECT 1; SELECT /* lock-reason: prevents: duplicates; writer: worker */\n",
+        "  take_lock();\n",
+    );
+    let sql_idx = CommentIndex::for_sql(sql);
+    assert_eq!(sql_idx.status_for_sql_line(2, 3), ReasonStatus::Valid);
+}

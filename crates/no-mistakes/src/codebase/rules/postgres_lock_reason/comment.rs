@@ -30,11 +30,12 @@ pub(super) fn parse_reason_text(body: &str) -> ReasonStatus {
     let mut offset = 0;
     while let Some(rel) = find_label(&lower[offset..], TAG) {
         let start = offset + rel + TAG.len();
-        best = best.merge(parse_after_tag(&cleaned[start..], &lower[start..]));
+        let end = find_label(&lower[start..], TAG).map_or(cleaned.len(), |next| start + next);
+        best = best.merge(parse_after_tag(&cleaned[start..end], &lower[start..end]));
         if best == ReasonStatus::Valid {
             return best;
         }
-        offset = start;
+        offset = end;
     }
     best
 }
@@ -44,12 +45,12 @@ fn parse_after_tag(text: &str, lower: &str) -> ReasonStatus {
     let writer = find_label(lower, WRITER);
     let has_prevents = prevents.is_some_and(|start| {
         let val_start = start + PREVENTS.len();
-        let val_end = next_boundary(text.len(), val_start, writer);
+        let val_end = next_label_boundary(lower, val_start);
         has_content(&text[val_start..val_end])
     });
     let has_writer = writer.is_some_and(|start| {
         let val_start = start + WRITER.len();
-        let val_end = next_boundary(text.len(), val_start, prevents);
+        let val_end = next_label_boundary(lower, val_start);
         has_content(&text[val_start..val_end])
     });
     match (has_prevents, has_writer) {
@@ -60,8 +61,13 @@ fn parse_after_tag(text: &str, lower: &str) -> ReasonStatus {
     }
 }
 
-fn next_boundary(len: usize, after: usize, other: Option<usize>) -> usize {
-    other.filter(|&position| position >= after).unwrap_or(len)
+fn next_label_boundary(lower: &str, after: usize) -> usize {
+    let rest = &lower[after..];
+    match (find_label(rest, PREVENTS), find_label(rest, WRITER)) {
+        (Some(a), Some(b)) => after + a.min(b),
+        (Some(a), None) | (None, Some(a)) => after + a,
+        (None, None) => lower.len(),
+    }
 }
 
 fn has_content(slice: &str) -> bool {

@@ -18,6 +18,15 @@ impl CommentIndex {
         let Some(col) = self.col_for_offset(line, offset as usize) else {
             return self.status_for_ts_line(line);
         };
+        let end_line = self.call_end_line(line, offset as usize);
+        self.status_for_ts_span(line, col, end_line)
+    }
+
+    pub(in super::super) fn status_for_ts_position(&self, line: usize, col: usize) -> ReasonStatus {
+        self.status_for_ts_span(line, col.max(1), line)
+    }
+
+    fn status_for_ts_span(&self, line: usize, col: usize, end_line: usize) -> ReasonStatus {
         let split = self.semicolons.partition_point(|&pos| pos < (line, col));
         let prev_semi = split
             .checked_sub(1)
@@ -27,17 +36,18 @@ impl CommentIndex {
             .semicolons
             .get(split)
             .copied()
-            .filter(|&(l, _)| l == line);
+            .filter(|&(l, _)| l <= end_line);
         let after_prev = prev_semi.map_or((1, 1), |(l, c)| (l, c + 1));
         let trailing_limit = match next_semi {
             Some((l, c)) if self.last_code_col(l) > c => (l, c),
-            _ => (line, usize::MAX),
+            Some((l, _)) => (l, usize::MAX),
+            None => (end_line, usize::MAX),
         };
         let in_stmt: Vec<_> = self
             .comments
             .iter()
             .filter(|c| {
-                c.start_line <= line
+                c.start_line <= end_line
                     && c.end_line >= line
                     && (c.end_line, c.end_col) >= after_prev
                     && (c.start_line, c.start_col) <= trailing_limit
@@ -116,7 +126,9 @@ impl CommentIndex {
         let next = self.semicolons.get(split).copied();
         let start_line = (1..=line)
             .rev()
-            .take_while(|&l| prev.is_none_or(|(pl, _)| l > pl))
+            .take_while(|&l| {
+                prev.is_none_or(|(pl, pc)| l > pl || (l == pl && self.last_code_col(pl) > pc))
+            })
             .filter(|&l| self.is_code_line(l))
             .last()
             .unwrap_or(line);

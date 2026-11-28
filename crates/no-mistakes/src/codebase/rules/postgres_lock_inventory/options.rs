@@ -12,8 +12,7 @@ use std::collections::BTreeSet;
 use std::ops::Deref;
 use std::path::Path;
 
-#[derive(Default, Deserialize)]
-#[serde(default, rename_all = "camelCase")]
+#[derive(Default)]
 pub(crate) struct LockScanInput {
     pub(crate) include: Vec<String>,
     pub(crate) exclude: Vec<String>,
@@ -117,11 +116,23 @@ impl LockScanOptions {
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub(in crate::codebase::rules) struct Options {
-    #[serde(flatten)]
-    scan: LockScanInput,
+    include: Vec<String>,
+    exclude: Vec<String>,
+    sql_include: Vec<String>,
+    sql_include_locked: bool,
+    import_specifier: String,
+    executor_names: Vec<String>,
+    extra_executor_names: Option<Vec<String>>,
+    exclude_executor_names: Vec<String>,
+    executor_factory_names: Vec<String>,
+    executor_type_names: Vec<String>,
+    executor_option_properties: Vec<String>,
+    executor_options: Vec<ExecutorOption>,
+    trusted_sql_tags: Vec<TrustedSqlTag>,
     #[serde(alias = "baseline")]
     baseline_file: Option<String>,
     baseline_unanalyzed: bool,
+    helpers: Vec<String>,
 }
 
 pub(in crate::codebase::rules) struct CompiledOptions {
@@ -149,8 +160,27 @@ impl CompiledOptions {
                 .as_deref()
                 .unwrap_or(DEFAULT_BASELINE_FILE),
         )?;
+        let scan = LockScanOptions::compile(
+            RULE_ID,
+            LockScanInput {
+                include: opts.include,
+                exclude: opts.exclude,
+                sql_include: opts.sql_include,
+                sql_include_locked: opts.sql_include_locked,
+                import_specifier: opts.import_specifier,
+                executor_names: opts.executor_names,
+                extra_executor_names: opts.extra_executor_names,
+                exclude_executor_names: opts.exclude_executor_names,
+                executor_factory_names: opts.executor_factory_names,
+                executor_type_names: opts.executor_type_names,
+                executor_option_properties: opts.executor_option_properties,
+                executor_options: opts.executor_options,
+                trusted_sql_tags: opts.trusted_sql_tags,
+                helpers: opts.helpers,
+            },
+        )?;
         Ok(Self {
-            scan: LockScanOptions::compile(RULE_ID, opts.scan)?,
+            scan,
             baseline_file: baseline_file.to_string_lossy().replace('\\', "/"),
             baseline_unanalyzed: opts.baseline_unanalyzed,
         })

@@ -110,7 +110,7 @@ fn check_embedded_locks(
         .filter(|lock| is_lock_category(&lock.category))
     {
         let (source_file, report_line, _) = positions.source(lock.line, lock.column);
-        let (_, stmt_source_line, _) =
+        let (_, stmt_source_line, stmt_source_col) =
             positions.source(lock.statement_start_line, lock.statement_start_column);
         let base = check
             .sql_comments
@@ -120,7 +120,12 @@ fn check_embedded_locks(
                 lock.statement_end_line,
             )
             .merge(check.call_status);
-        let status = merge_local_ts_reason(base, source_file.is_none(), stmt_source_line, check);
+        let status = merge_local_ts_reason(
+            base,
+            source_file.is_none(),
+            (stmt_source_line, stmt_source_col),
+            check,
+        );
         push_reason_finding(check.rel, report_line, &lock.category, status, findings);
     }
 }
@@ -137,16 +142,17 @@ fn check_embedded_helpers(
             continue;
         }
         let imported = site_is_imported(statement, SqlFactSite::Function(index));
-        let report_line = if imported {
-            check.call_line
+        let (report_line, report_col) = if imported {
+            (check.call_line, 1)
         } else {
-            positions.source(function.line, function.column).1
+            let (_, line, col) = positions.source(function.line, function.column);
+            (line, col)
         };
         let base = check
             .sql_comments
             .status_for_sql_line(function.line, function.column)
             .merge(check.call_status);
-        let status = merge_local_ts_reason(base, !imported, report_line, check);
+        let status = merge_local_ts_reason(base, !imported, (report_line, report_col), check);
         push_reason_finding(check.rel, report_line, "helper", status, findings);
     }
 }
@@ -162,12 +168,12 @@ fn site_is_imported(statement: &SqlStatementFileFacts, site: SqlFactSite) -> boo
 fn merge_local_ts_reason(
     status: ReasonStatus,
     is_local: bool,
-    source_line: usize,
+    source_pos: (usize, usize),
     check: &VariantContext<'_>,
 ) -> ReasonStatus {
-    if is_local && source_line != check.call_line {
+    if is_local && source_pos.0 != check.call_line {
         if let Some(comments) = check.ts_index {
-            return status.merge(comments.status_for_ts_line(source_line));
+            return status.merge(comments.status_for_ts_position(source_pos.0, source_pos.1));
         }
     }
     status
