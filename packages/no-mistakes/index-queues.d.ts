@@ -13,6 +13,7 @@ import type {
 export function queues(
   options?: WithInvocationOptions<ProjectOptions>,
 ): Promise<WithInvocationResult<QueueReport>>;
+/** Async queue edges, including Kafka static topic literals. `QueueEdge` names the row. */
 export function queueEdges(options?: WithInvocationOptions<ProjectOptions>): Promise<QueueEdge[]>;
 export function queueRelated(
   options: WithInvocationOptions<QueueRelatedOptions>,

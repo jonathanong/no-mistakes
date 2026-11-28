@@ -4,7 +4,7 @@ Queue analysis is explicit so agents can reason about producer/worker
 relationships without guessing project conventions.
 Swift, .NET, Java, Kotlin, Elixir, Dart, and Rust frontends record no
 language-specific queue jobs. The shared Kafka scanner checks configured
-globs for supported literal shapes regardless of the file extension. See
+globs for supported literal shapes; language-specific shapes apply only to files with that language's extension. See
 [feature parity](../feature-parity.md). Use the top-level
 `queues.factories` entry for custom TypeScript queue wrappers, and put
 project-specific file scopes under `projects.<name>.queues`.
@@ -305,5 +305,7 @@ See [Job state as record](../rules/job-state-as-record.md) and
 
 Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel, and Symfony
 Messenger sites emit the canonical `queue-enqueue` and `queue-worker` edges.
+Kafka reads static topic literals from the enqueue and worker globs in
+TypeScript, Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir, and Dart.
 Use [`queues edges`](../cli/queues-edges.md), [`queues related`](../cli/queues-related.md),
 and [`queues check`](../cli/queues-check.md) to inspect or validate them.

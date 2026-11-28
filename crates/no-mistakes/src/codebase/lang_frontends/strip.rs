@@ -1,5 +1,15 @@
 /// Strip comments while keeping string literals so route/queue names survive.
 pub(crate) fn strip_comments_keep_strings(source: &str) -> String {
+    strip_comments(source, false, false)
+}
+pub(crate) fn strip_comments_keep_strings_rust(source: &str) -> String {
+    strip_comments(source, true, false)
+}
+pub(crate) fn strip_comments_keep_strings_go(source: &str) -> String {
+    strip_comments(source, false, true)
+}
+
+fn strip_comments(source: &str, rust_apostrophe: bool, go_backticks: bool) -> String {
     let mut out = String::with_capacity(source.len());
     let mut chars = source.chars().peekable();
     while let Some(ch) = chars.next() {
@@ -19,7 +29,18 @@ pub(crate) fn strip_comments_keep_strings(source: &str) -> String {
             skip_block(&mut chars, &mut out);
             continue;
         }
-        if ch == '"' || ch == '\'' {
+        if go_backticks && ch == '`' {
+            out.push(ch);
+            for inner in chars.by_ref() {
+                out.push(inner);
+                if inner == '`' {
+                    break;
+                }
+            }
+            continue;
+        }
+        let apostrophe = ch == '\'' && (!rust_apostrophe || single_quote_closes_on_line(&chars));
+        if ch == '"' || apostrophe {
             out.push(ch);
             copy_quoted(&mut chars, &mut out, ch);
             continue;
@@ -27,6 +48,28 @@ pub(crate) fn strip_comments_keep_strings(source: &str) -> String {
         out.push(ch);
     }
     out
+}
+
+// A lifetime or other unclosed apostrophe is not a string.
+fn single_quote_closes_on_line(chars: &std::iter::Peekable<std::str::Chars<'_>>) -> bool {
+    let mut escaped = false;
+    for ch in chars.clone() {
+        if ch == '\n' {
+            return false;
+        }
+        if escaped {
+            escaped = false;
+            continue;
+        }
+        if ch == '\\' {
+            escaped = true;
+            continue;
+        }
+        if ch == '\'' {
+            return true;
+        }
+    }
+    false
 }
 
 fn skip_line(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) {

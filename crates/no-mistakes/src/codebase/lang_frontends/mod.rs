@@ -7,6 +7,9 @@ mod http_clients;
 pub(super) mod http_routes;
 mod java;
 mod kafka;
+mod kafka_go_record;
+mod kafka_literals;
+mod kafka_topic_text;
 mod kotlin;
 mod partition;
 mod php;
@@ -22,6 +25,12 @@ mod tests;
 mod tests_collect;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests_extra;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod tests_kafka;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod tests_kafka_boundaries;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod tests_kafka_edge_cases;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests_more;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]

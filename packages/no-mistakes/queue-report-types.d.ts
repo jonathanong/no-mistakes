@@ -38,6 +38,7 @@ export interface QueueWorker {
 
 export type QueueEdgeKind = "queue-enqueue" | "queue-worker";
 
+/** `queue-enqueue` ends at `queueFile#job`; `queue-worker` starts there. A Kafka job is `<cluster>:<topic>` when the project cluster is set, and the bare topic otherwise. */
 export interface QueueEdge {
   from: string;
   to: string;

@@ -2,7 +2,7 @@ use super::facts::{
     configured_roots, files_under, owning_package, rust_module_from_path, LangFactMap,
     LangFileFacts,
 };
-use super::strip::strip_comments_keep_strings;
+use super::strip::strip_comments_keep_strings_rust;
 #[path = "rust_http.rs"]
 mod http;
 #[path = "rust_path.rs"]
@@ -43,7 +43,7 @@ fn parse_rust_file(
     sources: &SourceStore,
 ) -> Option<LangFileFacts> {
     let source = sources.read_path(path).ok()?;
-    let text = strip_comments_keep_strings(&source);
+    let text = strip_comments_keep_strings_rust(&source);
     let package = owning_package(path, roots, packages);
     let package_root = package
         .as_ref()

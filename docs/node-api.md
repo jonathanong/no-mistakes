@@ -522,7 +522,7 @@ and `importers` stay TypeScript.
 | `tests audit` | `testsAudit(options)` compares versioned plan/observation artifacts; see [artifact contract and producer recipe](cli/tests-audit.md) |
 | `tests graph`                              | `testsGraph(options)` or `testsGraphMermaid(options)`                                                                                                                                                                                                                      |
 | `playwright check\|edges\|related\|tests`  | `playwrightCheck`, `playwrightEdges`, `playwrightRelated`, `playwrightTests`                                                                                                                                                                                               |
-| `queues edges\|related\|check`             | `queueEdges`, `queueRelated`, `queueCheck`                                                                                                                                                                                                                                 |
+| `queues edges\|related\|check`             | `queueEdges`, `queueRelated`, `queueCheck`. `queueEdges` and `queueRelated` return Kafka static topic literals in TypeScript, Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir, and Dart as `QueueEdge` rows; import `QueueEdge` from the package entry. `queueCheck` returns `QueueCheckFinding[]`, or `QueueCheckReport` with `includeDiagnostics: true`. The job identity is `<cluster>:<topic>` when a project cluster is set, and the bare topic otherwise. |
 | `server routes\|edges\|related\|contracts` | `serverRouteList`, `serverRouteEdges`, `serverRouteRelated`, `serverContracts`                                                                                                                                                                                             |
 | `react analyze\|check\|usages`             | `reactAnalyze`, `reactCheck`, `reactUsages`                                                                                                                                                                                                                                |
 | `infra resource-refs\|outputs\|test-for`   | `infraResourceRefs`, `infraOutputs`, `infraTestFor`                                                                                                                                                                                                                        |
@@ -538,7 +538,7 @@ and `importers` stay TypeScript.
 
 Swift, .NET, Java, Kotlin, Elixir, Dart, and Rust frontends record no
 language-specific queue jobs. The shared Kafka scanner checks configured
-globs for supported literal shapes regardless of the file extension.
+globs for supported literal shapes; language-specific shapes apply only to files with that language's extension.
 Async `queueEdges()`, `queueRelated()`, and `queueCheck()` use the same
 queue facts as the CLI. See [feature parity](feature-parity.md).
 

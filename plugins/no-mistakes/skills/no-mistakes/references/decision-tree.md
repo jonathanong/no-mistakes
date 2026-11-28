@@ -31,6 +31,7 @@ What are you trying to find?
 │   └─ no-mistakes queues edges [file] [--depth N]
 │   └─ no-mistakes queues related <file> [--direction deps|dependents|both]
 │   └─ no-mistakes queues check
+│   └─ Kafka static topics in TS, Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir, and Dart use those edges
 │
 ├─ tRPC procedure hops
 │   └─ no-mistakes dependents <file> --relationship trpc
