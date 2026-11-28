@@ -2,3 +2,10 @@ tests:
   python:
     packages:
       - python
+  swift:
+    packages:
+      - swift
+  dotnet:
+    projects:
+      app:
+        project: dotnet/App.csproj

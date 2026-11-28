@@ -83,16 +83,24 @@ pub(crate) fn collect_dotnet_facts_with_sources(
         .cloned()
         .collect();
 
-    let mut file_facts: Vec<DotnetFileFacts> = cs_files
+    let mut parsed: Vec<(PathBuf, Option<DotnetFileFacts>)> = cs_files
         .par_iter()
-        .filter_map(|path| {
-            parse_csharp_file_with_sources(path, project_by_file.get(path).cloned(), sources)
+        .map(|path| {
+            (
+                path.clone(),
+                parse_csharp_file_with_sources(path, project_by_file.get(path).cloned(), sources),
+            )
         })
         .collect();
-    file_facts.sort_by(|a, b| a.path.cmp(&b.path));
+    parsed.sort_by(|a, b| a.0.cmp(&b.0));
 
-    for file in file_facts {
-        index_file(&mut facts, file);
+    for (path, file) in parsed {
+        match file {
+            Some(file) => index_file(&mut facts, file),
+            None => {
+                facts.unread_files.insert(path);
+            }
+        }
     }
 
     facts

@@ -1,5 +1,5 @@
 mod greeter;
 
 fn mention() {
-    let _value = Greeter;
+    let _value = greeter::Greeter;
 }

@@ -58,6 +58,49 @@ fn unreadable_configured_caller_makes_language_queries_partial() {
     assert_eq!(dead, napi_dead);
 }
 
+#[test]
+fn unreadable_swift_and_dotnet_callers_make_queries_partial() {
+    let root = root();
+    for (file, bad) in [
+        (
+            "swift/Sources/App/Greeter.swift",
+            "swift/Sources/App/Bad.swift",
+        ),
+        ("dotnet/Greeter.cs", "dotnet/Bad.cs"),
+    ] {
+        let dead = parse(
+            &dead_json(DeadExportsArgs {
+                file: PathBuf::from(file),
+                names: vec!["Greeter".to_string()],
+                root: Some(root.clone()),
+                tsconfig: None,
+                format: Some(Format::Json),
+                json: true,
+            })
+            .unwrap(),
+        );
+        let calls = parse(
+            &call_json(CallSitesArgs {
+                file: PathBuf::from(file),
+                export_name: "Greeter".to_string(),
+                root: Some(root.clone()),
+                tsconfig: None,
+                format: Some(Format::Json),
+                json: true,
+            })
+            .unwrap(),
+        );
+        assert_eq!(dead["partial"], true, "{file}");
+        assert_eq!(calls["partial"], true, "{file}");
+        assert_eq!(dead["incompleteFiles"][0]["file"], bad, "{file}");
+        assert_eq!(
+            dead["incompleteFiles"][0]["reason"], "operational-error",
+            "{file}"
+        );
+        assert_eq!(calls["incompleteFiles"], dead["incompleteFiles"], "{file}");
+    }
+}
+
 fn result<'a>(report: &'a Value, name: &str) -> &'a Value {
     report["results"]
         .as_array()

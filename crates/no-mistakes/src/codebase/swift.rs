@@ -3,6 +3,7 @@ mod resolved;
 mod scanner;
 mod source;
 
+use crate::invocation::check_timeout;
 use rayon::prelude::*;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -51,6 +52,7 @@ pub(crate) struct SwiftFactMap {
     pub files: BTreeMap<PathBuf, SwiftFileFacts>,
     pub declarations: HashMap<String, BTreeSet<PathBuf>>,
     pub files_by_target: HashMap<String, BTreeSet<PathBuf>>,
+    pub unread_files: BTreeSet<PathBuf>,
 }
 
 pub(crate) fn collect_swift_facts(
@@ -83,37 +85,40 @@ pub(crate) fn collect_swift_facts_with_sources(
     let swift_files: Vec<PathBuf> = all_files
         .iter()
         .take_while(|_| crate::invocation::check_timeout().is_ok())
-        .filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("swift"))
-        .filter(|path| path.file_name().and_then(|name| name.to_str()) != Some("Package.swift"))
         .filter(|path| {
-            package_facts
-                .iter()
-                .any(|package| path.starts_with(&package.package_root))
+            path.extension().and_then(|ext| ext.to_str()) == Some("swift")
+                && path.file_name().and_then(|name| name.to_str()) != Some("Package.swift")
+                && package_facts
+                    .iter()
+                    .any(|pkg| path.starts_with(&pkg.package_root))
         })
         .cloned()
         .collect();
 
     let target_by_file = target_index(&package_facts, &swift_files);
-    let mut file_facts: Vec<SwiftFileFacts> = swift_files
+    let mut parsed: Vec<(PathBuf, Option<SwiftFileFacts>)> = swift_files
         .par_iter()
         .map(|path| {
-            crate::invocation::check_timeout().ok().map(|()| {
-                parse_swift_file_with_sources(path, target_by_file.get(path).cloned(), sources)
+            check_timeout().ok().map(|()| {
+                (
+                    path.clone(),
+                    parse_swift_file_with_sources(path, target_by_file.get(path).cloned(), sources),
+                )
             })
         })
         .while_some()
-        .flatten()
         .collect();
-    file_facts.sort_by(|a, b| a.path.cmp(&b.path));
+    parsed.sort_by(|a, b| a.0.cmp(&b.0));
 
     let mut facts = SwiftFactMap {
         packages: package_facts,
-        ..SwiftFactMap::default()
+        ..Default::default()
     };
-    for file in file_facts
-        .into_iter()
-        .take_while(|_| crate::invocation::check_timeout().is_ok())
-    {
+    for (path, file) in parsed.into_iter().take_while(|_| check_timeout().is_ok()) {
+        let Some(file) = file else {
+            facts.unread_files.insert(path);
+            continue;
+        };
         if let Some(target) = &file.target {
             facts
                 .files_by_target
@@ -138,8 +143,7 @@ fn parse_package(
     package: &str,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Option<SwiftPackageFacts> {
-    let package_rel = package.trim_end_matches('/').to_string();
-    let package_root = root.join(&package_rel);
+    let package_root = root.join(package.trim_end_matches('/'));
     let manifest = package_root.join("Package.swift");
     let source = crate::codebase::ts_source::SourceStore::read_optional(sources, &manifest)?;
     let mut targets = BTreeMap::new();
@@ -165,10 +169,7 @@ fn target_index(
     swift_files: &[PathBuf],
 ) -> HashMap<PathBuf, String> {
     let mut index = HashMap::new();
-    for file in swift_files
-        .iter()
-        .take_while(|_| crate::invocation::check_timeout().is_ok())
-    {
+    for file in swift_files.iter().take_while(|_| check_timeout().is_ok()) {
         let mut best: Option<(&String, usize)> = None;
         for package in packages {
             for (name, target) in &package.targets {

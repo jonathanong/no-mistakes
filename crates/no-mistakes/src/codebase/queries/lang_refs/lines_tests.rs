@@ -49,8 +49,12 @@ fn quoted_import_lines_keep_string_specifiers_and_unicode_bounds_names() {
     let unicode = root.join("unicode_name.py");
     let sources = store(&quoted);
     assert_eq!(
+        first_import_line(&sources, &quoted, "example.com/foo/bar"),
+        Some(4)
+    );
+    assert_eq!(
         first_import_line(&sources, &quoted, "example.com/foo"),
-        Some(3)
+        Some(5)
     );
     assert_eq!(
         first_import_line(&sources, &quoted, "example.com/missing"),

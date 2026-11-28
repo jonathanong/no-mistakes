@@ -89,7 +89,8 @@ no-mistakes call-sites src/api.mts handler --format json
 ```
 
 Configured Swift, .NET, Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and
-Dart files use the same three commands. Rows come from language reference facts
+Dart files use `symbols`, `dead-exports`, and `call-sites` (`exports-of` stays
+TypeScript-only). Rows come from language reference facts
 in the canonical graph. Call sites set `referenceOnly` and leave argument
 fields empty; that is not a proven zero-argument call. PHP rows are `use`
 sites. Unproven calls stay absent. For a language file, `referenced: false` on a

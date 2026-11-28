@@ -34,12 +34,20 @@ fn literal_line(sources: &SourceStore, path: &Path, specifier: &str) -> Option<u
     }
     let source = sources.read_path(path).ok()?;
     let text = strip_comments_keep_strings(&source);
-    for (index, line) in text.lines().enumerate() {
-        if contains_word(line, specifier) {
+    let masked = mask_strings(&text);
+    for (index, (line, masked_line)) in text.lines().zip(masked.lines()).enumerate() {
+        if has_exact_quoted(line, specifier) || contains_word(masked_line, specifier) {
             return Some((index as u32) + 1);
         }
     }
     None
+}
+
+fn has_exact_quoted(line: &str, specifier: &str) -> bool {
+    ['"', '\'', '`'].iter().any(|quote| {
+        let wrapped = format!("{quote}{specifier}{quote}");
+        line.contains(&wrapped)
+    })
 }
 
 fn needles(name: &str) -> Vec<String> {

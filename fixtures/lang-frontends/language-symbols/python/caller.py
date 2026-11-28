@@ -1,4 +1,4 @@
-from .greeter import Greeter
+from .greeter import Greeter, greet
 
 
 def run():

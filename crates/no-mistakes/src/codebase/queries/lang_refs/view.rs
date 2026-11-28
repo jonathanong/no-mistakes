@@ -27,7 +27,8 @@ impl View {
     pub(super) fn unread_files(&self) -> Vec<PathBuf> {
         match &self.facts {
             Facts::Lang(facts, _, _) => facts.unread_files.iter().cloned().collect(),
-            Facts::Swift(_) | Facts::Dotnet(_) => Vec::new(),
+            Facts::Swift(facts) => facts.unread_files.iter().cloned().collect(),
+            Facts::Dotnet(facts) => facts.unread_files.iter().cloned().collect(),
         }
     }
 
