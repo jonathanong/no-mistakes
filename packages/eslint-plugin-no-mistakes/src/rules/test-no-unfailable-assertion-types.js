@@ -45,6 +45,16 @@ function hasIndexableType(type, checker) {
   );
 }
 
+function hasOptionalUncheckedBase(node, context, typeCtx) {
+  let current = unwrap(node);
+  while (current.type === "MemberExpression" || current.type === "CallExpression") {
+    const base = current.type === "MemberExpression" ? current.object : current.callee;
+    if (current.optional && isUncheckedIndexedAccess(base, context, typeCtx)) return true;
+    current = unwrap(base);
+  }
+  return false;
+}
+
 function isUncheckedIndexedAccess(node, context, typeCtx) {
   if (typeCtx.noUncheckedIndexedAccess) return false;
   let current = unwrap(node);
@@ -53,6 +63,7 @@ function isUncheckedIndexedAccess(node, context, typeCtx) {
     if (decl?.id.type !== "Identifier") return false;
     current = unwrap(decl.init);
   }
+  if (hasOptionalUncheckedBase(current, context, typeCtx)) return true;
   if (current.type !== "MemberExpression") return false;
   const objectType = getExpressionType(current.object, typeCtx, false);
   if (!objectType) return false;

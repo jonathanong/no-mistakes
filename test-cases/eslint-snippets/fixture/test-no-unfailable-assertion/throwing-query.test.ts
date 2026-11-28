@@ -1,6 +1,7 @@
 import { expect } from "vitest";
 import * as rtl from "@testing-library/react";
 import { render, screen, within } from "@testing-library/react";
+import * as dom from "@testing-library/dom";
 import { getByText as domGetByText } from "@testing-library/dom";
 
 declare const ui: unknown;
@@ -37,6 +38,7 @@ export async function throwingQueries() {
 
   expect(rtl.screen.getByText("NS")).toBeDefined();
   expect(domGetByText(dialog, "Raw")).toBeDefined();
+  expect(dom.getByText(dialog, "NSRaw")).not.toBeNull();
 
   const button = screen.getByRole("button");
   expect(button).toBeDefined();

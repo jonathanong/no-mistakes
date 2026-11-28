@@ -121,7 +121,7 @@ describe(rule, () => {
     expect(byName["truthy-by-type (untyped)"]).toEqual([]);
     expect(byName["throwing-query (typed)"]).toEqual(byName["throwing-query (untyped)"]);
     expect(byName["throwing-query (typed)"].map((f) => f.messageId)).toEqual(
-      Array(27).fill("throwing-query"),
+      Array(28).fill("throwing-query"),
     );
     expect(byName["throwing-query (typed)"][0].message.startsWith("[advisory] ")).toBe(true);
     expect(
@@ -133,7 +133,7 @@ describe(rule, () => {
     expect(byName["discarded-locator (untyped)"]).toEqual([]);
     expect(byName["defined-then-deref (typed)"]).toEqual(byName["defined-then-deref (untyped)"]);
     expect(byName["defined-then-deref (typed)"].map((f) => f.messageId)).toEqual(
-      Array(9).fill("defined-then-deref"),
+      Array(11).fill("defined-then-deref"),
     );
     expect(byName["suppressions (typed)"].map((f) => f.line)).toEqual([12, 15]);
     expect(byName["suppressed-file (typed)"]).toEqual([]);
@@ -293,8 +293,8 @@ describe(rule, () => {
     );
     const countFor = (name) => diagnostics.filter((item) => item.file.endsWith(name)).length;
     expect(countFor("same-value.test.ts")).toBe(13);
-    expect(countFor("throwing-query.test.ts")).toBe(27);
-    expect(countFor("defined-then-deref.test.ts")).toBe(9);
+    expect(countFor("throwing-query.test.ts")).toBe(28);
+    expect(countFor("defined-then-deref.test.ts")).toBe(11);
     expect(countFor("suppressed-file.test.ts")).toBe(0);
   });
 

@@ -1,5 +1,6 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
 const { EXPECT_MODULES, isExpectCallee, memberName, unwrap } = require("./test-message-expect");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { moduleMember } = require("./test-no-wall-time-assertions-bindings");
@@ -91,33 +92,41 @@ function immutableConstDef(identifier, context) {
   return def.node;
 }
 
-function isConstPrimitiveLiteral(node, context) {
-  const current = unwrap(node);
+function isConstPrimitiveLiteral(node, context, allowUndefined = true) {
+  const current = unwrapExpression(node);
   if (current.type === "Literal") return !current.regex;
   if (current.type === "TemplateLiteral") return current.expressions.length === 0;
   if (
     current.type === "UnaryExpression" &&
     (current.operator === "-" || current.operator === "+")
   ) {
-    const arg = unwrap(current.argument);
+    const arg = unwrapExpression(current.argument);
     return (
       arg.type === "Literal" && (typeof arg.value === "number" || typeof arg.value === "bigint")
     );
   }
   if (current.type !== "Identifier") return false;
   const variable = resolveVariable(current, context);
-  if (!variable?.defs.length) return current.name === "undefined";
+  if (!variable?.defs.length) return allowUndefined && current.name === "undefined";
   const decl = immutableConstDef(current, context);
-  return decl?.id.type === "Identifier" && isConstPrimitiveLiteral(decl.init, context);
+  return Boolean(
+    decl?.id.type === "Identifier" && isConstPrimitiveLiteral(decl.init, context, allowUndefined),
+  );
 }
 
 function canonicalPath(node, context) {
-  const current = unwrap(node);
+  const current = unwrapExpression(node);
   if (current.type === "Identifier") {
     return { rootVar: resolveVariable(current, context), rootName: current.name, segments: [] };
   }
   if (current.type === "ThisExpression") {
     return { rootVar: null, rootName: "this", segments: [] };
+  }
+  if (
+    current.type !== "MemberExpression" ||
+    unwrapExpression(current.property)?.type === "SequenceExpression"
+  ) {
+    return null;
   }
   const segment = memberName(current);
   if (segment === null) return null;
@@ -162,6 +171,7 @@ function isSameValueAssertion(assertion, context) {
 module.exports = {
   canonicalPath,
   immutableConstDef,
+  isConstPrimitiveLiteral,
   isSameValueAssertion,
   parseAssertion,
   samePath,

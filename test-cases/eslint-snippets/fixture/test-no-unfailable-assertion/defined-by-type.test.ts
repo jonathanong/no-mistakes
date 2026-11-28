@@ -18,6 +18,8 @@ declare const pair: [string, number];
 declare const unionItems: string[] | Record<string, string>;
 declare const unionRecords: Record<string, string> | Record<string, number>;
 declare const declaredObj: { name: string };
+declare const users: Array<{ name: string; profile: { email: string } }>;
+declare const handlers: Array<() => string>;
 declare const key: string;
 declare const idx: number;
 
@@ -54,6 +56,9 @@ expect(record.missing).toBeDefined();
 expect(unionRecords.missing).toBeDefined();
 const firstItem = items[0];
 expect(firstItem).toBeDefined();
+expect(users[0]?.name).toBeDefined();
+expect(users[0]?.profile.email).toBeDefined();
+expect(handlers[0]?.()).toBeDefined();
 
 export function unconstrained<T>(value: T) {
   expect(value).toBeDefined();

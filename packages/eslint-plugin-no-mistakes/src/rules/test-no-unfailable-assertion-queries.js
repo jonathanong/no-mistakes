@@ -39,6 +39,8 @@ function destructuredPropertyName(pattern, localName) {
 
 function throwingQueryCallee(callee, context) {
   const current = unwrap(callee);
+  const direct = testingLibraryExport(current, context);
+  if (direct && THROWING_QUERY_PATTERN.test(direct)) return direct;
   if (current.type === "MemberExpression") {
     const name = memberName(current);
     return name && THROWING_QUERY_PATTERN.test(name) && isQueryContainer(current.object, context)
@@ -46,8 +48,6 @@ function throwingQueryCallee(callee, context) {
       : null;
   }
   if (current.type !== "Identifier") return null;
-  const direct = testingLibraryExport(current, context);
-  if (direct && THROWING_QUERY_PATTERN.test(direct)) return direct;
   const decl = immutableConstDef(current, context);
   if (!decl) return null;
   if (decl.id.type === "Identifier") return throwingQueryCallee(decl.init, context);

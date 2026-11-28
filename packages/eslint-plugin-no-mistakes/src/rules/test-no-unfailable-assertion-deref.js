@@ -1,10 +1,11 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
 const { unwrap } = require("./test-message-expect");
-const { resolveVariable } = require("./test-no-shared-state-aliases");
 const {
   canonicalPath,
   immutableConstDef,
+  isConstPrimitiveLiteral,
   parseAssertion,
   samePath,
 } = require("./test-no-unfailable-assertion-assertions");
@@ -55,20 +56,16 @@ function isDefinedMatcher(assertion) {
   );
 }
 
-function isUndefinedLiteral(node, context) {
-  const current = unwrap(node);
-  if (current.type !== "Identifier") return false;
-  const variable = resolveVariable(current, context);
-  if (!variable?.defs.length) return current.name === "undefined";
-  const decl = immutableConstDef(current, context);
-  return decl?.id.type === "Identifier" && isUndefinedLiteral(decl.init, context);
-}
-
 function optionalAssertionFailsOnUndefined(assertion, context) {
   if (assertion.negated) return assertion.matcher === "toBeUndefined";
   if (OPTIONAL_REJECTS_UNDEFINED.has(assertion.matcher)) return true;
   if (EQUALITY_MATCHERS.has(assertion.matcher) && assertion.matcherArgs.length === 1) {
-    return !isUndefinedLiteral(assertion.matcherArgs[0], context);
+    const expected = unwrapExpression(assertion.matcherArgs[0]);
+    return (
+      expected.type === "ArrayExpression" ||
+      expected.type === "ObjectExpression" ||
+      isConstPrimitiveLiteral(expected, context, false)
+    );
   }
   return false;
 }
@@ -84,13 +81,14 @@ function derefKind(node, target, context, afterPos) {
   }
   if (node.type === "MemberExpression" || node.type === "CallExpression") {
     const base = node.type === "MemberExpression" ? node.object : node.callee;
+    if (node.optional && samePath(canonicalPath(base, context), target)) return "optional";
     if (
+      !node.optional &&
       base.type === "TSNonNullExpression" &&
       samePath(canonicalPath(base.expression, context), target)
     ) {
       return "non-null";
     }
-    if (node.optional && samePath(canonicalPath(base, context), target)) return "optional";
     return derefKind(base, target, context, afterPos);
   }
   return null;
@@ -146,6 +144,7 @@ function findDefinedThenDeref(statements, context, reportedAssertions) {
       }
       const nextCall = unwrapStatementCall(sibling);
       const nextAssertion = nextCall && parseAssertion(nextCall, context);
+      if (nextCall && !nextAssertion) break;
       if (!nextAssertion || isDefinedMatcher(nextAssertion)) continue;
       const kind = derefKind(nextAssertion.actual, target, context, call.range[1]);
       if (

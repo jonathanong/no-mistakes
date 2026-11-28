@@ -81,6 +81,14 @@ function resolveSetupFile(configDir, entry) {
   return null;
 }
 
+function hasJestDomImportInSource(source) {
+  const sanitized = source.replace(COMMENT_OR_STRING_RE, (match) => {
+    if (match.startsWith("/")) return "";
+    return JEST_DOM_REGISTER_MODULE.test(match.slice(1, -1)) ? match : '""';
+  });
+  return JEST_DOM_IMPORT_RE.test(sanitized);
+}
+
 function hasJestDomInSetupFiles(filename) {
   if (!filename || filename === "<input>") return false;
   let dir = dirname(filename);
@@ -93,10 +101,7 @@ function hasJestDomInSetupFiles(filename) {
       for (const entry of extractSetupEntries(readFileSync(configPath, "utf8"))) {
         if (JEST_DOM_REGISTER_MODULE.test(entry)) return true;
         const setupPath = resolveSetupFile(dir, entry);
-        if (
-          setupPath &&
-          JEST_DOM_IMPORT_RE.test(stripJsComments(readFileSync(setupPath, "utf8")))
-        ) {
+        if (setupPath && hasJestDomImportInSource(readFileSync(setupPath, "utf8"))) {
           return true;
         }
       }

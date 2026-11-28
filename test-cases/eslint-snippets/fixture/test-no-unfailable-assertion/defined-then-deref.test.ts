@@ -4,6 +4,7 @@ interface User {
   name: string;
   nickname?: string;
   profile: { email: string };
+  tags?: string[];
 }
 declare function loadUser(): User | undefined;
 declare function loadResult(): { item?: { status: string } };
@@ -48,6 +49,14 @@ export async function definedThenDeref() {
   const containUser = loadUser();
   expect(containUser).toBeDefined();
   expect(containUser?.name).toContain("A");
+
+  const objMatch = loadUser();
+  expect(objMatch).toBeDefined();
+  expect(objMatch?.profile).toEqual({ email: "a@example.com" });
+
+  const arrMatch = loadUser();
+  expect(arrMatch).toBeDefined();
+  expect(arrMatch?.tags).toEqual(["admin"]);
 
   // Counterexamples (allowed)
   const withOther = loadUser();
@@ -111,4 +120,22 @@ export async function definedThenDeref() {
   const typeCheck = loadUser();
   expect(typeCheck).toBeDefined();
   expect(typeCheck?.nickname).toBeTypeOf("undefined");
+
+  const nonNullOpt = loadUser();
+  expect(nonNullOpt).toBeDefined();
+  expect(nonNullOpt!?.nickname).toBeUndefined();
+
+  let deferredUser: User | undefined;
+  function initialize() {
+    deferredUser = loadUser();
+  }
+  expect(deferredUser).toBeDefined();
+  initialize();
+  expect(deferredUser!.name).toBe("Ada");
+}
+
+export function definedThenDerefWithParam(expected: string | undefined) {
+  const maybe = loadUser();
+  expect(maybe).toBeDefined();
+  expect(maybe?.name).toBe(expected);
 }

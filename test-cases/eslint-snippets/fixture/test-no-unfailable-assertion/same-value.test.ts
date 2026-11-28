@@ -60,6 +60,10 @@ const pattern = /foo/g;
 expect(pattern).toBe(other);
 expect("hello").toMatchFileSnapshot("./expected.txt");
 
+let seq = 0;
+expect(seq).toBe((seq += 1, seq));
+expect(user[(seq += 1, "id")]).toBe(user.id);
+
 function shadowedExpect() {
   const expect = (v: unknown) => ({ toBe: (_: unknown) => v });
   expect(1).toBe(1);
