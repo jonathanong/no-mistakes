@@ -42,8 +42,11 @@ module.exports = rule(
       "FunctionExpression:exit": state.popScope,
       ArrowFunctionExpression: state.enterFunction,
       "ArrowFunctionExpression:exit": state.popScope,
-      BlockStatement() {
-        state.pushScope("block");
+      BlockStatement(node) {
+        state.pushScope(
+          "block",
+          node.parent?.type === "CatchClause" ? node.parent.param : undefined,
+        );
       },
       "BlockStatement:exit": state.popScope,
       VariableDeclarator: state.defineVariable,

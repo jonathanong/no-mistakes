@@ -10,7 +10,39 @@ const {
   typeName,
 } = require("../react-node-types");
 
-function classifiedProps(type, facts) {
+function containsNode(root, node) {
+  for (let current = node; current; current = current.parent) if (current === root) return true;
+  return false;
+}
+
+function nearestNestedType(type, name) {
+  let current = type?.parent;
+  while (current && current.type !== "Program") {
+    const statements = Array.isArray(current.body)
+      ? current.body
+      : Array.isArray(current.body?.body)
+        ? current.body.body
+        : null;
+    for (const statement of statements ?? []) {
+      const declaration = statement.declaration ?? statement;
+      const typed =
+        declaration.type === "TSTypeAliasDeclaration" ||
+        declaration.type === "TSInterfaceDeclaration";
+      if (
+        typed &&
+        declaration.id?.name === name &&
+        !containsNode(declaration, type) &&
+        containsNode(declaration.parent, type)
+      ) {
+        return declaration;
+      }
+    }
+    current = current.parent;
+  }
+  return null;
+}
+
+function classifiedProps(type, facts, seen = new Set()) {
   if (type && type.type === "TSTypeLiteral") {
     const props = new Set();
     const unresolved = new Set();
@@ -25,6 +57,16 @@ function classifiedProps(type, facts) {
     return { props, unresolved };
   }
   const name = typeName(type);
+  const local = name && !name.includes(".") ? nearestNestedType(type, name) : null;
+  if (local && seen.has(local)) return { props: null, unresolved: null };
+  if (local?.type === "TSTypeAliasDeclaration") {
+    seen.add(local);
+    return classifiedProps(local.typeAnnotation, facts, seen);
+  }
+  if (local?.type === "TSInterfaceDeclaration") {
+    seen.add(local);
+    return classifiedProps({ type: "TSTypeLiteral", members: local.body?.body ?? [] }, facts, seen);
+  }
   return {
     props: name ? facts.objectProps.get(name) || null : null,
     unresolved: name ? facts.unresolvedObjectProps?.get(name) || null : null,

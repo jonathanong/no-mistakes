@@ -198,7 +198,8 @@ function memberCouldBeQualifiedGetter(patterns, member, unresolved) {
   if (!unresolved || !member) return false;
   return (patterns ?? []).some((pattern) => {
     const match = /(?:^|\\.)([A-Za-z_$][\w$]*)\$$/.exec(pattern);
-    return match?.[1] === member;
+    if (match) return match[1] === member;
+    return !/^\^?[A-Za-z_$][\w$]*\$$/.test(pattern);
   });
 }
 

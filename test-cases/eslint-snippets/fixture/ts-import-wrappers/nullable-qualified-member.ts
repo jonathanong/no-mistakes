@@ -23,3 +23,16 @@ const getWidget = require("./data").api.getWidget;
 export async function sameName(): Promise<Widget | null> {
   return getWidget("1");
 }
+
+const group = require("./data").api;
+
+export async function splitGroup(): Promise<Widget | null> {
+  const read = group.getWidget;
+  return read("1");
+}
+
+const svc = require("./data").services.api;
+
+export async function servicePrefix(): Promise<Widget | null> {
+  return svc.getWidget("1");
+}

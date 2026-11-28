@@ -38,7 +38,7 @@ function createNullishState(context) {
   const currentScope = () => scopes[scopes.length - 1];
   const defineBinding = (name, scope = currentScope()) => scope.bindings.add(name);
 
-  function pushScope(kind) {
+  function pushScope(kind, pattern) {
     scopes.push({
       bindings: new Set(),
       kind,
@@ -47,6 +47,7 @@ function createNullishState(context) {
       unresolved: new Set(),
       unresolvedMembers: new Map(),
     });
+    if (pattern) bindPatternNames(pattern, defineBinding);
   }
 
   function defineNamed(field, name, scope = currentScope()) {
@@ -54,7 +55,6 @@ function createNullishState(context) {
     scope[field].add(name);
   }
 
-  const defineReactNode = (name, scope) => defineNamed("reactNodes", name, scope);
   const defineUnresolved = (name, scope) => defineNamed("unresolved", name, scope);
 
   function defineObjectType(identifier, type, scope = currentScope()) {
@@ -87,7 +87,7 @@ function createNullishState(context) {
 
   function noteType(name, type, scope = currentScope()) {
     const status = reactTypeStatus(type, facts);
-    if (status === "yes") defineReactNode(name, scope);
+    if (status === "yes") defineNamed("reactNodes", name, scope);
     else if (status === "unresolved") defineUnresolved(name, scope);
   }
 
@@ -142,7 +142,7 @@ function createNullishState(context) {
         target,
         members.props,
         defineBinding,
-        defineReactNode,
+        (name) => defineNamed("reactNodes", name),
         members.unresolved,
         defineUnresolved,
         context,
@@ -158,7 +158,7 @@ function createNullishState(context) {
       scope.bindings.add(node.id.name);
       noteType(node.id.name, type, scope);
       const initStatus = expressionStatus(node.init);
-      if (!type && initStatus === "yes") defineReactNode(node.id.name, scope);
+      if (!type && initStatus === "yes") defineNamed("reactNodes", node.id.name, scope);
       else if (!type && initStatus === "unresolved") defineUnresolved(node.id.name, scope);
       defineObjectType(node.id, type, scope);
       if (!type) {
@@ -183,7 +183,7 @@ function createNullishState(context) {
       node.id,
       members.props,
       (name) => defineBinding(name, scope),
-      (name) => defineReactNode(name, scope),
+      (name) => defineNamed("reactNodes", name, scope),
       members.unresolved,
       (name) => defineUnresolved(name, scope),
       context,

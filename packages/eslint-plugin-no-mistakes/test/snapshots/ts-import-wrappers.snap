@@ -762,6 +762,36 @@
       "rule": "react-no-nullish-react-node"
     },
     {
+      "file": "react-nullish-nested-shadow.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 27,
+          "endLine": 9,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-nested-shadow.tsx",
+          "line": 9,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 12,
+          "endColumn": 25,
+          "endLine": 22,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-nested-shadow.tsx",
+          "line": 22,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "nested type and catch parameter shadow outer ReactNode",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
       "file": "react-nullish-pattern-shadows.tsx",
       "findings": [
         {
@@ -1244,6 +1274,44 @@
       "name": "wrapped use(Promise.resolve)",
       "options": null,
       "rule": "react-no-use-promise-resolve"
+    },
+    {
+      "file": "nullable-alternation.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 32,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-alternation.ts",
+          "line": 5,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-alternation.ts",
+          "line": 10,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "alternation does not prove a non-getter",
+      "options": {
+        "getterCalleePatterns": [
+          "^api\\.(getWidget|getGadget)$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
     },
     {
       "file": "nullable-cjs.ts",
@@ -1795,12 +1863,35 @@
           "messageId": "wrapper",
           "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 19,
+          "endLine": 31,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-qualified-member.ts",
+          "line": 31,
+          "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 37,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-qualified-member.ts",
+          "line": 37,
+          "message": "Wrap nullable entity fetch 'services.api.getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
         }
       ],
       "name": "unresolved qualified getter terminal",
       "options": {
         "getterCalleePatterns": [
-          "^api\\.getWidget$"
+          "^api\\.getWidget$",
+          "^services\\.api\\.getWidget$"
         ],
         "nullableReturnTypeNames": [
           "Widget"
@@ -2226,6 +2317,20 @@
             "file": "nullable-qualified-member.ts",
             "line": 24,
             "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-qualified-member.ts",
+            "line": 31,
+            "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-qualified-member.ts",
+            "line": 37,
+            "message": "Wrap nullable entity fetch 'services.api.getWidget' in wrapNullable so missing entities map to null consistently."
           }
         ],
         "name": "nullable-qualified-member.ts",

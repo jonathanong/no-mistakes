@@ -10,7 +10,7 @@
     "no-mistakes/server-require-nullable-fetch-wrapper": [
       "error",
       {
-        "getterCalleePatterns": ["^api\\.getWidget$"],
+        "getterCalleePatterns": ["^api\\.getWidget$", "^services\\.api\\.getWidget$"],
         "requiredWrapperCallee": "wrapNullable",
         "nullableReturnTypeNames": ["Widget"]
       }

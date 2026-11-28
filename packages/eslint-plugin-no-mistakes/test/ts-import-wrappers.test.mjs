@@ -388,11 +388,26 @@ describe("typescript import wrappers", () => {
         },
       ),
       eslintCase(
+        "alternation does not prove a non-getter",
+        "nullable-alternation.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^api\\.(getWidget|getGadget)$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "nested type and catch parameter shadow outer ReactNode",
+        "react-nullish-nested-shadow.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
         "unresolved qualified getter terminal",
         "nullable-qualified-member.ts",
         "server-require-nullable-fetch-wrapper",
         {
-          getterCalleePatterns: ["^api\\.getWidget$"],
+          getterCalleePatterns: ["^api\\.getWidget$", "^services\\.api\\.getWidget$"],
           requiredWrapperCallee: "wrapNullable",
           nullableReturnTypeNames: ["Widget"],
         },
@@ -703,6 +718,22 @@ describe("typescript import wrappers", () => {
     ]);
     expect(
       cases
+        .find((item) => item.name === "alternation does not prove a non-getter")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [5, "unanalyzable"],
+      [10, "unanalyzable"],
+    ]);
+    expect(
+      cases
+        .find((item) => item.name === "nested type and catch parameter shadow outer ReactNode")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [9, "unanalyzable"],
+      [22, "unanalyzable"],
+    ]);
+    expect(
+      cases
         .find((item) => item.name === "unresolved qualified getter terminal")
         .findings.map((finding) => [finding.line, finding.messageId]),
     ).toEqual([
@@ -710,6 +741,8 @@ describe("typescript import wrappers", () => {
       [14, "wrapper"],
       [18, "unanalyzable"],
       [24, "wrapper"],
+      [31, "wrapper"],
+      [37, "wrapper"],
     ]);
     expect(
       cases

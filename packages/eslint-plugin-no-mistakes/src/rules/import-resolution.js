@@ -196,7 +196,10 @@ function importSpellings(root, localPath, context) {
   if (fact.kind === "named" && fact.imported && (fact.name ?? fact.imported) !== root.name) {
     if (localPath === root.name) return { names: [fact.name || fact.imported], unresolved: false };
     if (localPath.startsWith(`${root.name}.`))
-      return { names: [`${fact.imported}${localPath.slice(root.name.length)}`], unresolved: false };
+      return {
+        names: [`${fact.name || fact.imported}${localPath.slice(root.name.length)}`],
+        unresolved: false,
+      };
   }
   if (fact.kind === "namespace" && localPath.startsWith(`${root.name}.`))
     return { names: [localPath.slice(root.name.length + 1)], unresolved: false };

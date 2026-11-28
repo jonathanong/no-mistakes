@@ -38,7 +38,11 @@ function memberFact(node, context, importFact, requireModule, namespaceMember, s
   for (const name of names) {
     const next = namespaceMember(fact, name);
     if (next?.unresolved || (projected && !next)) return { unresolved: true };
-    if (!next) return null;
+    if (!next) {
+      if (fact.kind !== "named" || !(fact.name || fact.imported)) return null;
+      fact = { ...fact, name: `${fact.name || fact.imported}.${name}`, imported: name };
+      continue;
+    }
     fact = next;
     projected = true;
   }
