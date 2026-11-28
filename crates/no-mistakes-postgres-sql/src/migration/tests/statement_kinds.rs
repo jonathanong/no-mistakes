@@ -70,6 +70,14 @@ fn classifies_transaction_control_kinds_and_skips_procedural_delimiters() {
         (17, "ROLLBACK"),
         (31, "COMMIT"),
         (32, "ROLLBACK"),
+        (37, "COMMIT"),
+        (38, "SAVEPOINT"),
+        (40, "RELEASE SAVEPOINT"),
+        (42, "ROLLBACK TO SAVEPOINT"),
+        (46, "COMMIT"),
+        (47, "ROLLBACK"),
+        (52, "COMMIT"),
+        (53, "ROLLBACK"),
     ];
     for (label, kinds) in [
         ("schema", &schema.statement_kinds),

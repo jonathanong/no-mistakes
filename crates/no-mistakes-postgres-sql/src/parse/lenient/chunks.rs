@@ -44,6 +44,7 @@ pub(super) struct StatementBoundary {
     saw_begin: bool,
     atomic: bool,
     atomic_cases: usize,
+    after_as_or_dot: bool,
     depth: usize,
 }
 
@@ -61,15 +62,18 @@ impl StatementBoundary {
             if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(expected))
         };
         if self.atomic {
-            if word("CASE") {
-                self.atomic_cases += 1;
-            } else if word("END") {
-                if self.atomic_cases > 0 {
-                    self.atomic_cases -= 1;
-                } else {
-                    self.atomic = false;
+            if !self.after_as_or_dot {
+                if word("CASE") {
+                    self.atomic_cases += 1;
+                } else if word("END") {
+                    if self.atomic_cases > 0 {
+                        self.atomic_cases -= 1;
+                    } else {
+                        self.atomic = false;
+                    }
                 }
             }
+            self.after_as_or_dot = word("AS") || matches!(token, Token::Period);
             return false;
         }
         self.prefix = match self.prefix {
