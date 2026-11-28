@@ -16,8 +16,6 @@ const PATH_METHODS = new Set([
   "existsSync",
   "lstat",
   "mkdir",
-  "mkdtemp",
-  "mkdtempSync",
   "open",
   "readFile",
   "realpath",

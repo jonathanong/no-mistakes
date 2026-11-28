@@ -181,6 +181,7 @@ const groups = [
       "named-default.test.ts",
       "cast-called.test.ts",
       "computed-runner.test.ts",
+      "wrapped-describe.test.ts",
     ],
     valid: [
       "computed-modifier.test.ts",
@@ -423,6 +424,7 @@ const groups = [
       "computed-member.test.ts",
       "computed-pattern.test.ts",
       "computed-unresolved.test.ts",
+      "mkdtemp-dynamic.test.ts",
     ],
   },
   {
