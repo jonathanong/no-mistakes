@@ -1,7 +1,5 @@
 use super::PnpmLocator;
-use crate::codebase::lockfile::pnpm::{
-    split_name_version, yaml_key_to_string, PnpmImporterDependency,
-};
+use crate::lockfile::pnpm::{split_name_version, yaml_key_to_string, PnpmImporterDependency};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 pub(super) fn affected_locators(old: &str, new: &str) -> BTreeSet<PnpmLocator> {

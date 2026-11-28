@@ -1,5 +1,5 @@
 use super::{split_name_version, yaml_key_to_string};
-use crate::codebase::lockfile::pnpm_alias::valid_package_name;
+use crate::lockfile::pnpm_alias::valid_package_name;
 use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -11,7 +11,8 @@ pub struct PnpmImporter {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub(crate) struct PnpmImpactImporter {
+#[doc(hidden)]
+pub struct PnpmImpactImporter {
     pub(super) path: String,
     pub(super) dependencies: Vec<PnpmImporterDependency>,
     pub(super) dev_dependencies: Vec<PnpmImporterDependency>,
@@ -51,7 +52,8 @@ pub(super) fn parse_importers_from_documents(
         .collect()
 }
 
-pub(crate) fn parse_importers_for_impact(content: &str) -> Vec<PnpmImpactImporter> {
+#[doc(hidden)]
+pub fn parse_importers_for_impact(content: &str) -> Vec<PnpmImpactImporter> {
     // Importers come from the project document. The env document reuses `.`
     // for config and package-manager dependencies and is not a workspace root.
     let Ok(docs) = super::documents::load_documents(content) else {

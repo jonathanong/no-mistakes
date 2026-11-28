@@ -2,8 +2,8 @@ use super::super::{
     changed_unmodeled_installation_sections, impact_importer_paths, impact_names, parse,
     parse_importers, prepare_documents, PnpmValidationError,
 };
-use crate::codebase::lockfile::{diff, ResolutionKind};
-use crate::codebase::pnpm_lock::parse_pnpm_lock;
+use crate::lockfile::{diff, ResolutionKind};
+use crate::pnpm_lock::parse_pnpm_lock;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 

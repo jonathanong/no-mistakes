@@ -28,6 +28,7 @@ test-instrumentation = [
 [dependencies]
 no-mistakes-rule-kernel.workspace = true
 no-mistakes-invocation.workspace = true
+no-mistakes-lockfile.workspace = true
 no-mistakes-postgres-sql.workspace = true
 htmlize = { version = "1.1", features = ["unescape"] }
 anyhow = "1"

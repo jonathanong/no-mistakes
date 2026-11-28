@@ -1,4 +1,4 @@
-use crate::codebase::lockfile::pnpm::parse_importers_for_impact;
+use crate::lockfile::pnpm::parse_importers_for_impact;
 use std::collections::{BTreeMap, BTreeSet};
 
 mod graph;
@@ -16,7 +16,8 @@ struct PnpmLocator {
 /// Direct package names whose importers can be affected by changed resolved
 /// packages. This keeps lockfile planning on the shared pnpm parser rather
 /// than trying to infer ownership from a second YAML reader.
-pub(crate) fn impact_names(
+#[doc(hidden)]
+pub fn impact_names(
     old: &str,
     new: &str,
     _changed: impl IntoIterator<Item = String>,
@@ -31,7 +32,8 @@ pub(crate) fn impact_names(
 
 /// Importer paths which directly resolve each affected package name. This is
 /// internal planning metadata; the public parser keeps its original shape.
-pub(crate) fn impact_importer_paths(
+#[doc(hidden)]
+pub fn impact_importer_paths(
     old: &str,
     new: &str,
     _names: &[String],

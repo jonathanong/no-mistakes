@@ -3,12 +3,15 @@ mod documents;
 mod impact;
 mod importers;
 mod resolution;
-pub(crate) use documents::{
+#[doc(hidden)]
+pub use documents::{
     load_documents, package_key_strings, package_maps, validate_env_prefix, PnpmDocuments,
 };
-pub(crate) use impact::{impact_importer_paths, impact_names};
+#[doc(hidden)]
+pub use impact::{impact_importer_paths, impact_names};
 pub use importers::{parse_importers, PnpmImporter, PnpmImporterDependency};
-pub(crate) use importers::{parse_importers_for_impact, PnpmImpactImporter};
+#[doc(hidden)]
+pub use importers::{parse_importers_for_impact, PnpmImpactImporter};
 pub fn parse(content: &str) -> Vec<ResolvedPackage> {
     // Malformed input stays an empty inventory. Schema rejection is separate
     // and belongs to `validate_for_planning`.
@@ -51,14 +54,16 @@ fn parse_documents(docs: &PnpmDocuments) -> Vec<ResolvedPackage> {
 /// Planning needs to distinguish unsafe input from an intentionally empty
 /// parse result. Keep the public parser's historical empty-result behavior.
 #[derive(Clone, Copy, Debug)]
-pub(crate) enum PnpmValidationError {
+#[doc(hidden)]
+pub enum PnpmValidationError {
     Malformed,
     UnsupportedSchema,
     /// A document before the last one is not an env lockfile.
     NotEnvPrefix,
 }
 
-pub(crate) fn prepare_documents(content: &str) -> Result<PnpmDocuments, PnpmValidationError> {
+#[doc(hidden)]
+pub fn prepare_documents(content: &str) -> Result<PnpmDocuments, PnpmValidationError> {
     let docs = documents::load_documents(content)?;
     documents::validate_supported(&docs)?;
     documents::validate_env_prefix(&docs)?;
@@ -67,7 +72,8 @@ pub(crate) fn prepare_documents(content: &str) -> Result<PnpmDocuments, PnpmVali
 
 /// Returns changed top-level fields that alter installation behavior but are
 /// not represented by the importer/package/snapshot dependency graph.
-pub(crate) fn changed_unmodeled_installation_sections(old: &str, new: &str) -> Vec<String> {
+#[doc(hidden)]
+pub fn changed_unmodeled_installation_sections(old: &str, new: &str) -> Vec<String> {
     let Ok(old) = documents::load_documents(old) else {
         return Vec::new();
     };

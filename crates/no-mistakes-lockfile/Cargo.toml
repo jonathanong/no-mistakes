@@ -1,0 +1,26 @@
+[package]
+name = "no-mistakes-lockfile"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Lockfile parsers, validation, and keyed diff primitives for no-mistakes"
+repository.workspace = true
+documentation = "https://github.com/jongleberry/no-mistakes"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+anyhow = "1"
+no-mistakes-invocation.workspace = true
+regex = "1"
+roxmltree = "0.21"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+toml = { version = "1.1", default-features = false, features = ["std", "parse", "serde"] }
+url = "2.5"

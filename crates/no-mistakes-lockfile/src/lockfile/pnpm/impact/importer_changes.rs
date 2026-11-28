@@ -1,4 +1,4 @@
-use crate::codebase::lockfile::pnpm::{
+use crate::lockfile::pnpm::{
     parse_importers_for_impact, PnpmImpactImporter, PnpmImporterDependency,
 };
 use std::collections::{BTreeMap, BTreeSet};

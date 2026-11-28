@@ -1,6 +1,6 @@
 use super::resolution::resolution_info;
 use super::*;
-use crate::codebase::lockfile::ResolutionKind;
+use crate::lockfile::ResolutionKind;
 use std::path::PathBuf;
 
 mod v12;

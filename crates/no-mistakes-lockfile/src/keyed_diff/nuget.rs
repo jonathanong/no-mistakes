@@ -2,9 +2,11 @@ use serde_json::Value;
 use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) struct NugetLockError;
+#[doc(hidden)]
+pub struct NugetLockError;
 
-pub(crate) fn nuget_entries(root: &Value) -> Result<BTreeMap<String, Value>, NugetLockError> {
+#[doc(hidden)]
+pub fn nuget_entries(root: &Value) -> Result<BTreeMap<String, Value>, NugetLockError> {
     if !matches!(root.get("version").and_then(Value::as_u64), Some(1 | 2)) {
         return Err(NugetLockError);
     }

@@ -2,6 +2,7 @@
 ## Workspace crates
 - `crates/no-mistakes` — CLI, N-API, graph, and rules (`invocation`, `codebase::postgres`, `ts_resolver`, etc. re-export the extracted crates).
 - `crates/no-mistakes-invocation` — invocation locking, deadlines, watchdogs, process trees, and `macos_invocation` (`hooks.rs`).
+- `crates/no-mistakes-lockfile` — lockfile parsers (npm/pnpm/yarn/bun/ecosystems), `pnpm_lock`, `swift_resolved`, validation, and `keyed_diff` (only `no-mistakes-invocation` dep).
 - `crates/no-mistakes-postgres-sql` — pure PostgreSQL SQL parsing, statement/DML/lock/bound facts, and identifiers (no `no-mistakes` dep).
 - `crates/no-mistakes-rule-kernel` — shared rule findings, contexts, suppression, source access, diagnostics, path matching, and validator types.
 - `crates/no-mistakes-ts-facts` — pure OXC TS parsing, module facts, and value-flow extraction (no `no-mistakes` dep; `hooks`).
@@ -11,10 +12,8 @@ Core check/evaluator optimizations must also follow [the crate rules](no-mistake
 ### Core architecture invariants
 - Keep Rust repository Markdown inputs in the [CI input folders](../docs/development/ci-builds.md#rust-markdown-inputs).
 - Discover files once per invocation, parse TS/JS once for the requested `TsFactPlan`, and share `TsFactMap`.
-- In-memory only: use invocation-scoped fact maps, resolver/traversal caches,
-  and dependency maps. No disk caches, daemons, databases, or cross-run state.
-- Canonical graph: project-level relationships belong in `DepGraph` as typed
-  `EdgeKind` edges unless they are purely file-local lint rules.
+- In-memory only: use invocation-scoped fact maps, resolver/traversal caches, and dependency maps; no disk caches, daemons, databases, or cross-run state.
+- Canonical graph: project-level relationships belong in `DepGraph` as typed `EdgeKind` edges unless purely file-local lint rules.
 - Fully parallel: per-file extraction and independent checks run through
   rayon or concurrent maps, with deterministic sorting before output.
 - No hardcoded domain defaults: route roots, HTTP prefixes, queue factories, and

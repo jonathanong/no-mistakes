@@ -1,4 +1,4 @@
-use crate::codebase::lockfile::ResolutionKind;
+use crate::lockfile::ResolutionKind;
 
 pub(super) fn resolution_info(value: &serde_yaml::Value) -> (String, ResolutionKind) {
     let Some(resolution) = value.get("resolution") else {

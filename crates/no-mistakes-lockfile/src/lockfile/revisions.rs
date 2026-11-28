@@ -34,7 +34,7 @@ pub fn git_show_file(root: &Path, reference: &str, rel: &str) -> io::Result<Opti
     command
         .args(["cat-file", "blob", &format!("{reference}:{rel}")])
         .current_dir(root);
-    let output = crate::invocation::command_output(&mut command)?;
+    let output = no_mistakes_invocation::command_output(&mut command)?;
     if output.status.success() {
         String::from_utf8(output.stdout).map(Some).map_err(|error| {
             io::Error::new(
@@ -65,7 +65,7 @@ fn git_path_exists(root: &Path, reference: &str, rel: &str) -> io::Result<bool> 
             rel,
         ])
         .current_dir(root);
-    let output = crate::invocation::command_output(&mut command)?;
+    let output = no_mistakes_invocation::command_output(&mut command)?;
     if output.status.success() {
         return Ok(!output.stdout.is_empty());
     }
@@ -86,7 +86,7 @@ pub fn git_ref_exists(root: &Path, reference: &str) -> io::Result<bool> {
     command
         .args(["rev-parse", "--verify", "--end-of-options", reference])
         .current_dir(root);
-    Ok(crate::invocation::command_output(&mut command)?
+    Ok(no_mistakes_invocation::command_output(&mut command)?
         .status
         .success())
 }

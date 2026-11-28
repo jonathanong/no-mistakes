@@ -1,5 +1,4 @@
 use crate::codebase::{
-    lockfile,
     package_analysis::{self, Hooks},
     rules, workspaces,
 };
@@ -16,7 +15,5 @@ static PACKAGE_HOOKS: Hooks = Hooks {
     load_workspace_from_files: workspaces::load_indexed_from_files,
     load_workspace_with_sources: workspaces::load_indexed_with_sources,
     manifest_edges: workspaces::edge_package_manifest::collect_workspace_manifest_edges,
-    diff_npm_keys: lockfile::keyed_diff::diff_npm_keys,
-    diff_pnpm_keys: lockfile::keyed_diff::diff_pnpm_keys,
     production_import_files: rules::production_dependency_declarations::required_import_fact_files,
 };

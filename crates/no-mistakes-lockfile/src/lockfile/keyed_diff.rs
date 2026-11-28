@@ -1,19 +1,21 @@
 use super::{npm, pnpm, ResolutionKind, ResolvedPackage};
-use crate::codebase::keyed_diff::{diff_entries, diff_parsed, KeyChanges, KeyFormat};
+use crate::keyed_diff::{diff_entries, diff_parsed, KeyChanges, KeyFormat};
 use anyhow::Result;
 use std::collections::{BTreeMap, HashSet};
 use std::hash::Hash;
 
 type Packages = BTreeMap<String, HashSet<(String, String, ResolutionKind)>>;
 
-pub(crate) fn diff_pnpm_keys(
+#[doc(hidden)]
+pub fn diff_pnpm_keys(
     old: Option<&[u8]>,
     new: Option<&[u8]>,
 ) -> Result<(KeyChanges, [Vec<String>; 2])> {
     diff_parsed(KeyFormat::Pnpm, old, new, pnpm_entries)
 }
 
-pub(crate) fn diff_npm_keys(
+#[doc(hidden)]
+pub fn diff_npm_keys(
     old: Option<&[u8]>,
     new: Option<&[u8]>,
 ) -> Result<(KeyChanges, [Vec<String>; 2])> {

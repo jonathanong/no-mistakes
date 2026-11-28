@@ -7,18 +7,21 @@ use serde::Deserialize;
 /// last. A later document that fails to parse fails the whole file: returning
 /// the env document alone would describe a project with no dependencies.
 #[derive(Debug)]
-pub(crate) struct PnpmDocuments {
+#[doc(hidden)]
+pub struct PnpmDocuments {
     documents: Vec<serde_yaml::Value>,
 }
 
 impl PnpmDocuments {
-    pub(crate) fn project(&self) -> Option<&serde_yaml::Value> {
+    #[doc(hidden)]
+    pub fn project(&self) -> Option<&serde_yaml::Value> {
         self.documents.last()
     }
 
     /// Workspace importers from the project document, without reparsing the
     /// lockfile content that produced these documents.
-    pub(crate) fn importers(&self) -> Vec<super::PnpmImporter> {
+    #[doc(hidden)]
+    pub fn importers(&self) -> Vec<super::PnpmImporter> {
         super::importers::parse_importers_from_documents(self)
     }
 
@@ -30,7 +33,8 @@ impl PnpmDocuments {
     }
 }
 
-pub(crate) fn load_documents(content: &str) -> Result<PnpmDocuments, PnpmValidationError> {
+#[doc(hidden)]
+pub fn load_documents(content: &str) -> Result<PnpmDocuments, PnpmValidationError> {
     let mut documents = Vec::new();
     let mut saw_document = false;
     for document in serde_yaml::Deserializer::from_str(content) {
@@ -64,9 +68,8 @@ pub(super) fn validate_supported(docs: &PnpmDocuments) -> Result<(), PnpmValidat
     Ok(())
 }
 
-pub(crate) fn package_maps(
-    docs: &PnpmDocuments,
-) -> impl Iterator<Item = &serde_yaml::Mapping> + '_ {
+#[doc(hidden)]
+pub fn package_maps(docs: &PnpmDocuments) -> impl Iterator<Item = &serde_yaml::Mapping> + '_ {
     docs.documents.iter().filter_map(|document| {
         document
             .get("packages")
@@ -74,7 +77,8 @@ pub(crate) fn package_maps(
     })
 }
 
-pub(crate) fn package_key_strings(docs: &PnpmDocuments) -> Option<Vec<String>> {
+#[doc(hidden)]
+pub fn package_key_strings(docs: &PnpmDocuments) -> Option<Vec<String>> {
     let mut keys = Vec::new();
     let mut saw_packages = false;
     for packages in package_maps(docs) {
@@ -126,7 +130,8 @@ fn validate_document(document: &serde_yaml::Value) -> Result<(), PnpmValidationE
 /// importer holds only config and package-manager dependencies, so a future
 /// format that puts a second project graph first fails instead of being read
 /// as the workspace.
-pub(crate) fn validate_env_prefix(docs: &PnpmDocuments) -> Result<(), PnpmValidationError> {
+#[doc(hidden)]
+pub fn validate_env_prefix(docs: &PnpmDocuments) -> Result<(), PnpmValidationError> {
     let Some((_, prefix)) = docs.documents.split_last() else {
         return Ok(());
     };

@@ -1,9 +1,11 @@
 pub mod bun;
 mod ecosystem;
-pub(crate) mod keyed_diff;
+#[doc(hidden)]
+pub mod keyed_diff;
 pub mod npm;
 pub mod pnpm;
-pub(crate) mod pnpm_alias;
+#[doc(hidden)]
+pub mod pnpm_alias;
 mod revisions;
 pub mod validate;
 pub mod yarn;

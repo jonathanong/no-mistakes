@@ -1,6 +1,5 @@
 use super::analysis_session::{AnalysisSession, PathInterner};
 use super::dependencies::graph::{Edge, GraphFiles};
-use super::keyed_diff::KeyChanges;
 use super::ts_source::SourceStore;
 use super::workspace_resolution::{IndexedWorkspaceMap, WorkspaceMap};
 use crate::config::v2::NoMistakesConfig;
@@ -12,7 +11,6 @@ use std::sync::{Arc, OnceLock};
 type LoadWorkspace = fn(&Path, &[PathBuf]) -> Result<IndexedWorkspaceMap>;
 type LoadWorkspaceWithSources = fn(&Path, &[PathBuf], &SourceStore) -> Result<IndexedWorkspaceMap>;
 type ManifestEdges = fn(&[PathBuf], &IndexedWorkspaceMap, &GraphFiles, &PathInterner) -> Vec<Edge>;
-type LockfileKeys = fn(Option<&[u8]>, Option<&[u8]>) -> Result<(KeyChanges, [Vec<String>; 2])>;
 type ProductionImportFiles =
     fn(&Path, &NoMistakesConfig, &[PathBuf]) -> Result<Arc<BTreeSet<PathBuf>>>;
 
@@ -20,8 +18,6 @@ pub(crate) struct Hooks {
     pub(crate) load_workspace_from_files: LoadWorkspace,
     pub(crate) load_workspace_with_sources: LoadWorkspaceWithSources,
     pub(crate) manifest_edges: ManifestEdges,
-    pub(crate) diff_npm_keys: LockfileKeys,
-    pub(crate) diff_pnpm_keys: LockfileKeys,
     pub(crate) production_import_files: ProductionImportFiles,
 }
 
