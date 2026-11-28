@@ -844,7 +844,7 @@ are preserved as syntax and never substituted or interpreted at runtime.
 Variables, unknown concatenation operands, format calls, and unsupported modifiers
 remain incomplete occurrences. An unquoted `INTO` target ends the command expression
 the same way `USING` does, and the occurrence is classified from the literal.
-In statement position that leftover modifier keeps the block incomplete. Inside a
+In a parsed block, in statement position that leftover modifier keeps the block incomplete. Inside a
 loop or `CASE` arm, `INTO` adds no diagnostic of its own, so a decoded
 `controlFlow` command can still leave the block complete. Source facts imply no execution or replay policy.
 Supported IF/ELSIF/ELSE branches, including nested branches, share this literal
@@ -862,7 +862,7 @@ kind produces a diagnostic and keeps the block incomplete.
 In statement position:
 
 - A literal command with no unsupported modifier is statement kind `literalExecute` with a `PostgresSqlLiteralExecute` payload.
-- An unsupported modifier, including unquoted `INTO` and a modifier after a decoded literal, is statement kind `other` and keeps the block incomplete. `INTO` ends the command operand the same way `USING` does and adds no diagnostic of its own.
+- In a parsed block, an unsupported modifier, including unquoted `INTO` and a modifier after a decoded literal, is statement kind `other` and keeps the block incomplete. `INTO` ends the command operand the same way `USING` does and adds no diagnostic of its own.
 - A Unicode `U&` body and a national `N'` body are statement kind `other`, with no `bodyEncoding`.
 - A non-literal command (`format` or an identifier) is occurrence kind `dynamicExecute` and statement kind `other`.
 

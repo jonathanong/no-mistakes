@@ -77,8 +77,11 @@ Any other decoded kind produces a diagnostic and keeps the block incomplete.
 See [literal EXECUTE placement](https://github.com/jongleberry/no-mistakes/blob/main/docs/postgres-source-api.md#literal-execute-placement).
 In statement position, a literal command with no unsupported modifier exposes
 statement `kind: "literalExecute"` and a `PostgresSqlLiteralExecute` payload.
-An unsupported modifier, including unquoted `INTO` and a modifier after a
-decoded literal, is statement kind `other` and keeps the block incomplete.
+In a parsed block, an unsupported modifier, including unquoted `INTO` and a
+modifier after a decoded literal, is statement kind `other` and keeps the
+block incomplete. When a walker-only block includes no `utility` or `dml`,
+no statement is projected. `INTO` adds no diagnostic, and completeness
+follows occurrence recognition and diagnostics.
 A Unicode `U&` body and a national `N'` body are statement kind `other`, with
 no `bodyEncoding`. A non-literal command (`format` or an identifier) is
 occurrence kind `dynamicExecute`; in statement position it is also statement
