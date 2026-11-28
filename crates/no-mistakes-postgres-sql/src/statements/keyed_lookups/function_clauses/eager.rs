@@ -1,6 +1,7 @@
 use super::super::conditions::{boolean_result_is_fixed, visit_case_children};
-use super::is_eager;
+use super::{coalesce_arguments, is_eager, split_coalesce_arguments};
 use crate::fx::FxHashSet;
+use crate::idents::function_arg_expr;
 use sqlparser::ast::Expr;
 
 pub(in crate::statements::keyed_lookups) fn visit_eager_functions(
@@ -59,6 +60,17 @@ pub(in crate::statements::keyed_lookups) fn visit_eager_functions(
                                 }
                             },
                         );
+                    }
+                    Expr::Function(function) => {
+                        if let Some(arguments) = coalesce_arguments(function) {
+                            let (_, skipped) = split_coalesce_arguments(arguments);
+                            self.blocked_roots.extend(
+                                skipped
+                                    .iter()
+                                    .filter_map(function_arg_expr)
+                                    .map(std::ptr::from_ref),
+                            );
+                        }
                     }
                     _ => {}
                 }

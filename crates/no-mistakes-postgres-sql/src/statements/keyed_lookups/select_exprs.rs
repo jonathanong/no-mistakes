@@ -1,3 +1,4 @@
+mod expressions;
 pub(super) mod identity;
 
 use super::conditions::cannot_match;
@@ -12,8 +13,9 @@ use super::windows::WindowPlan;
 use super::{inspect_exprs, select_item_expr, LookupHistory};
 use crate::fx::FxHashSet;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
+use expressions::expressions;
 pub(super) use identity::target_identity;
-use sqlparser::ast::{Distinct, Expr, Function, Select, SelectItem, WindowSpec};
+use sqlparser::ast::{Expr, Function, Select, SelectItem, WindowSpec};
 use std::borrow::Cow;
 use std::cell::{OnceCell, RefCell};
 
@@ -53,7 +55,7 @@ impl SelectTargets<'_> {
 
     pub(super) fn take_inline_frame(&self, spec: &WindowSpec) -> Option<bool> {
         self.windows
-            .map_or(Some(true), |windows| windows.take_inline_frame(spec))
+            .map_or(Some(true), |windows| windows.take_inline_frame(spec, false))
     }
 
     pub(super) fn reuses(&self, expr: &Expr) -> bool {
@@ -121,79 +123,15 @@ pub(super) fn walk_select(
             .filter(|_| !runs_before_grouping)
             .unwrap_or(&before_grouping);
         inspect_expr(&expr, outer, &targets, &mut seen, out);
-        walk_nested_with_context(expr.as_ref(), scopes, out, seen.guard_only(), empty_input);
+        walk_nested_with_context(
+            expr.as_ref(),
+            scopes,
+            out,
+            seen.guard_only(),
+            empty_input,
+            Some(&windows),
+        );
     }
     scopes.pop_frame();
     seen
-}
-
-enum Inspection {
-    BeforeGrouping,
-    Independent,
-    Projection,
-    Grouping,
-    Reusable,
-}
-
-fn expressions<'a>(
-    select: &'a Select,
-    order_by: &'a [&'a Expr],
-    select_targets: &'a SelectTargets<'a>,
-    grouping_targets: &'a [&'a Expr],
-    windows: &'a WindowPlan,
-) -> impl Iterator<Item = (Cow<'a, Expr>, bool)> {
-    let distinct_on = match &select.distinct {
-        Some(Distinct::On(expressions)) => expressions.as_slice(),
-        _ => &[],
-    };
-    let mut seen_grouping = FxHashSet::default();
-    let projection = select.projection.iter().filter_map(select_item_expr);
-    let reusable = |expr| (expr, Inspection::Reusable);
-    distinct_on
-        .iter()
-        .map(reusable)
-        .chain(projection.map(|expr| (expr, Inspection::Projection)))
-        .chain(
-            select
-                .selection
-                .iter()
-                .map(|expr| (expr, Inspection::BeforeGrouping)),
-        )
-        .chain(
-            grouping_targets
-                .iter()
-                .map(|&expr| (expr, Inspection::Grouping)),
-        )
-        .chain(
-            select
-                .having
-                .iter()
-                .map(|expr| (expr, Inspection::Projection)),
-        )
-        .chain(windows.named_expressions(select).map(|(expr, can_reuse)| {
-            (
-                expr,
-                if can_reuse {
-                    Inspection::Reusable
-                } else {
-                    Inspection::Independent
-                },
-            )
-        }))
-        .chain(order_by.iter().copied().map(reusable))
-        .filter_map(move |(expr, inspection)| match inspection {
-            Inspection::BeforeGrouping => Some((Cow::Borrowed(expr), true)),
-            Inspection::Independent => Some((Cow::Borrowed(expr), false)),
-            Inspection::Projection => Some((select_targets.filter_grouped(expr), false)),
-            Inspection::Reusable => {
-                (!select_targets.reuses(expr)).then(|| (select_targets.filter_grouped(expr), false))
-            }
-            Inspection::Grouping => {
-                if !seen_grouping.insert(target_identity(expr)) {
-                    return None;
-                }
-                select_targets.reuses(expr);
-                Some((Cow::Borrowed(expr), true))
-            }
-        })
 }

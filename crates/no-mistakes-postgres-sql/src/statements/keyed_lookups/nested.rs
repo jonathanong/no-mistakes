@@ -1,13 +1,14 @@
-use super::conditions::{boolean_result_is_fixed, case_condition};
+use super::conditions::boolean_result_is_fixed;
 use super::function_clauses::{
-    coalesce_arguments, filter_skips_inputs, has_optional_window_default, is_eager,
-    null_position_inputs, split_coalesce_arguments, visit_eager_functions, visit_function_inputs,
-    visit_ordered_set_arguments,
+    coalesce_arguments, filter_skips_inputs, is_eager, split_coalesce_arguments,
+    visit_eager_functions, visit_function_inputs, visit_ordered_set_arguments,
 };
+use super::windows::{window_expressions, WindowPlan};
 use super::{query::walk_exists, walk_query, LookupHistory, ScopeStack};
 use crate::idents::function_arg_expr;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
-use sqlparser::ast::{CaseWhen, Expr, Query, Visit, Visitor};
+use sqlparser::ast::{Expr, Function, Query, Visit, Visitor, WindowType};
+mod case;
 use std::ops::ControlFlow;
 
 pub(super) fn walk_nested_queries(
@@ -15,7 +16,7 @@ pub(super) fn walk_nested_queries(
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
-    walk_nested_with_context(node, scopes, out, LookupHistory::new(), false);
+    walk_nested_with_context(node, scopes, out, LookupHistory::new(), false, None);
 }
 
 pub(super) fn walk_nested_with_context(
@@ -24,6 +25,7 @@ pub(super) fn walk_nested_with_context(
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
     guards: LookupHistory,
     empty_input: bool,
+    windows: Option<&WindowPlan>,
 ) {
     if guards.is_reachable() {
         let _ = node.visit(&mut Nested {
@@ -33,6 +35,7 @@ pub(super) fn walk_nested_with_context(
             out,
             guards,
             empty_input,
+            windows,
         });
     }
 }
@@ -44,6 +47,7 @@ struct Nested<'a> {
     out: &'a mut Vec<SqlDuplicateKeyedLookupFact>,
     guards: LookupHistory,
     empty_input: bool,
+    windows: Option<&'a WindowPlan>,
 }
 
 impl Nested<'_> {
@@ -63,15 +67,10 @@ impl Nested<'_> {
                 visit_ordered_set_arguments(function, &mut |arg| self.walk_child(arg));
             }
             Expr::Function(function)
-                if filter_skips_inputs(function)
-                    || has_optional_window_default(function)
-                    || null_position_inputs(function).is_some() =>
+                if function.over.is_some() || filter_skips_inputs(function) =>
             {
                 self.blocked_expression_depth = 1;
-                self.walk_child(&function.filter);
-                visit_ordered_set_arguments(function, &mut |arg| self.walk_child(arg));
-                visit_function_inputs(function, &mut |arg| self.walk_child(arg));
-                self.walk_child(&function.over);
+                self.walk_function(expr, function);
             }
             Expr::Function(function) => {
                 if let Some(arguments) = coalesce_arguments(function) {
@@ -80,9 +79,6 @@ impl Nested<'_> {
                         self.blocked_expression_depth = 1;
                         for argument in evaluated.iter().filter_map(function_arg_expr) {
                             self.walk_child(argument);
-                        }
-                        for argument in skipped.iter().filter_map(function_arg_expr) {
-                            self.walk_eager_children(argument);
                         }
                     }
                 }
@@ -107,52 +103,26 @@ impl Nested<'_> {
             self.out,
             self.guards.guard_only(),
             self.empty_input,
+            self.windows,
         );
     }
 
-    fn walk_case(
-        &mut self,
-        operand: Option<&Expr>,
-        conditions: &[CaseWhen],
-        fallback: Option<&Expr>,
-    ) {
-        if let Some(operand) = operand {
-            self.walk_child(operand);
+    fn walk_function(&mut self, expr: &Expr, function: &Function) {
+        if self.windows.is_some_and(|windows| windows.skips_call(expr)) {
+            return;
         }
-        let outer = self.scopes.snapshot();
-        let mut remaining = self.guards.guard_only();
-        for branch in conditions {
-            let test = case_condition(operand, &branch.condition);
-            if test == Some(false) {
-                continue;
+        self.walk_child(&function.filter);
+        visit_ordered_set_arguments(function, &mut |arg| self.walk_child(arg));
+        visit_function_inputs(function, &mut |arg| self.walk_child(arg));
+        if let Some(WindowType::WindowSpec(spec)) = &function.over {
+            if let Some(needs_frame) = self
+                .windows
+                .map_or(Some(true), |windows| windows.take_inline_frame(spec, true))
+            {
+                for (expr, _) in window_expressions(spec, needs_frame) {
+                    self.walk_child(expr);
+                }
             }
-            walk_nested_with_context(
-                &branch.condition,
-                self.scopes,
-                self.out,
-                remaining.guard_only(),
-                self.empty_input,
-            );
-            let mut chosen = remaining.guard_only();
-            if operand.is_none() && test.is_none() {
-                chosen.restrict(&branch.condition, &outer, true);
-                remaining.restrict(&branch.condition, &outer, false);
-            }
-            self.walk_case_arm(&branch.result, chosen);
-            if test == Some(true) {
-                return;
-            }
-        }
-        if let Some(fallback) = fallback {
-            self.walk_case_arm(fallback, remaining);
-        }
-    }
-
-    fn walk_case_arm(&mut self, expr: &Expr, guards: LookupHistory) {
-        if guards.is_reachable() {
-            walk_nested_with_context(expr, self.scopes, self.out, guards, self.empty_input);
-        } else {
-            self.walk_eager_children(expr);
         }
     }
 

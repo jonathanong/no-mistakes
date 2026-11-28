@@ -985,3 +985,24 @@ SELECT pg_catalog.sum(
 SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id LIMIT 0.0),
        (SELECT b.n FROM accounts b WHERE b.id = o.id LIMIT 0.0)
 FROM orders o;
+
+SELECT CASE WHEN o.enabled
+            THEN pg_catalog.bit_and((SELECT a.n FROM accounts a WHERE a.id = o.id))
+            ELSE pg_catalog.bit_or((SELECT b.n FROM accounts b WHERE b.id = o.id))
+       END,
+       pg_catalog.bit_xor((SELECT c.n FROM accounts c WHERE c.id = o.id))
+FROM orders o GROUP BY o.enabled;
+
+SELECT COALESCE(0, pg_catalog.min((SELECT a.n FROM accounts a WHERE a.id = o.id))),
+       pg_catalog.max((SELECT b.n FROM accounts b WHERE b.id = o.id))
+FROM orders o;
+
+SELECT CASE WHEN o.enabled THEN
+           COALESCE(0, pg_catalog.min((SELECT a.n FROM accounts a WHERE a.id = o.id)))
+       ELSE 0 END,
+       pg_catalog.max((SELECT b.n FROM accounts b WHERE b.id = o.id))
+FROM orders o GROUP BY o.enabled;
+
+SELECT COALESCE(NULL, pg_catalog.min((SELECT a.n FROM accounts a WHERE a.id = o.id))),
+       pg_catalog.max((SELECT b.n FROM accounts b WHERE b.id = o.id))
+FROM orders o;

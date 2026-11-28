@@ -124,7 +124,7 @@ fn inspect_exprs<'a>(
     let targets = select_exprs::SelectTargets::default();
     for expr in exprs {
         subquery::inspect_expr(expr, &outer, &targets, seen, out);
-        walk_nested_with_context(expr, scopes, out, seen.guard_only(), false);
+        walk_nested_with_context(expr, scopes, out, seen.guard_only(), false, None);
     }
 }
 

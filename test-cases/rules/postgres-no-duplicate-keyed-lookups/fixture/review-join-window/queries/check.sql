@@ -178,3 +178,22 @@ CROSS JOIN XMLTABLE(
     COLUMNS n integer PATH 'missing' DEFAULT (SELECT a.n FROM accounts a WHERE a.id = o.id),
             m integer PATH 'other' DEFAULT (SELECT b.n FROM accounts b WHERE b.id = o.id)
 ) AS x;
+
+SELECT pg_catalog.row_number() OVER (
+    ROWS BETWEEN (
+        SELECT (SELECT a.n FROM accounts a WHERE a.id = $1)
+             + (SELECT b.n FROM accounts b WHERE b.id = $1)
+    ) PRECEDING AND CURRENT ROW
+);
+
+SELECT pg_catalog.row_number() OVER (
+    ROWS BETWEEN (
+        SELECT (SELECT a.n FROM accounts a WHERE a.id = $1)
+             + (SELECT b.n FROM accounts b WHERE b.id = $1)
+    ) PRECEDING AND CURRENT ROW
+), pg_catalog.sum(1) OVER (
+    ROWS BETWEEN (
+        SELECT (SELECT a.n FROM accounts a WHERE a.id = $1)
+             + (SELECT b.n FROM accounts b WHERE b.id = $1)
+    ) PRECEDING AND CURRENT ROW
+);

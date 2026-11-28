@@ -14,7 +14,22 @@ use references::WindowReferences;
 pub(super) struct WindowPlan {
     named: FxHashMap<String, bool>,
     inactive: FxHashSet<Location>,
-    inline: RefCell<FxHashMap<WindowSpec, Option<bool>>>,
+    inline: RefCell<FxHashMap<WindowSpec, InlineFrame>>,
+}
+
+#[derive(Clone, Copy)]
+struct InlineFrame {
+    direct: Option<bool>,
+    nested: Option<bool>,
+}
+
+impl InlineFrame {
+    fn new(needs_frame: Option<bool>) -> Self {
+        Self {
+            direct: needs_frame,
+            nested: needs_frame,
+        }
+    }
 }
 
 impl WindowPlan {
@@ -65,7 +80,13 @@ impl WindowPlan {
         Self {
             named: references.named,
             inactive: references.inactive,
-            inline: RefCell::new(references.inline),
+            inline: RefCell::new(
+                references
+                    .inline
+                    .into_iter()
+                    .map(|(key, needs_frame)| (key, InlineFrame::new(needs_frame)))
+                    .collect(),
+            ),
         }
     }
 
@@ -90,15 +111,19 @@ impl WindowPlan {
         self.inactive.contains(&expr.span().start)
     }
 
-    pub(super) fn take_inline_frame(&self, spec: &WindowSpec) -> Option<bool> {
+    pub(super) fn take_inline_frame(&self, spec: &WindowSpec, nested: bool) -> Option<bool> {
         if spec.window_frame.is_none() {
             return Some(false);
         }
-        self.inline
-            .borrow_mut()
+        let mut inline = self.inline.borrow_mut();
+        let frame = inline
             .entry(written_window_identity(spec))
-            .or_insert(Some(true))
-            .take()
+            .or_insert_with(|| InlineFrame::new(Some(true)));
+        if nested {
+            frame.nested.take()
+        } else {
+            frame.direct.take()
+        }
     }
 }
 

@@ -326,3 +326,21 @@ SELECT 1 FROM (
     WITH used AS (SELECT * FROM candidate)
     SELECT 1 FROM used
 ) q;
+
+DELETE FROM orders o WHERE o.enabled
+RETURNING CASE WHEN o.enabled THEN NULL::text ELSE (
+    SELECT a.name FROM orders x
+    JOIN accounts a ON a.id = x.account_id
+    JOIN accounts b ON b.id = x.account_id
+    WHERE x.id = o.id
+    LIMIT 1
+) END;
+
+DELETE FROM orders o WHERE o.enabled
+RETURNING CASE WHEN o.enabled THEN (
+    SELECT a.name FROM orders x
+    JOIN accounts a ON a.id = x.account_id
+    JOIN accounts b ON b.id = x.account_id
+    WHERE x.id = o.id
+    LIMIT 1
+) END;

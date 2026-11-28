@@ -295,12 +295,10 @@ fn separates_grouped_reuse_from_independent_expressions_and_case_arms() {
             (67, 68),
             (72, 75),
             (88, 89),
-            (95, 96),
             (133, 130),
             (129, 131),
             (147, 149),
             (151, 154),
-            (170, 171),
             (175, 177),
             (181, 182),
             (186, 187),
@@ -344,7 +342,8 @@ fn respects_null_extended_bindings_and_reuses_aliased_targets_and_window_specs()
             (123, 124),
             (133, 134),
             (147, 148),
-            (169, 170)
+            (169, 170),
+            (191, 192)
         ]
     );
 }
@@ -489,7 +488,10 @@ fn checks_operator_signatures_and_shares_only_compatible_lookup_history() {
             (930, 931),
             (942, 943),
             (953, 954),
-            (981, 982)
+            (981, 982),
+            (990, 991),
+            (990, 993),
+            (1006, 1007)
         ]
     );
 }

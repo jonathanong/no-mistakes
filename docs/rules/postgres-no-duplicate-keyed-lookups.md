@@ -73,9 +73,9 @@ The rule stays silent when the lookups are not proven to read the same row:
   Value inputs of row-selecting windows such as `pg_catalog.first_value` and
   `pg_catalog.last_value` can run on different rows. The rule checks each for
   repeated work within that input.
-- `COALESCE` arguments after a known non-null literal. Aggregate and window
-  inputs still follow their separate evaluation rules. For resolved columns,
-  later arguments retain the null requirement from earlier arguments.
+- `COALESCE` arguments after a known non-null literal, including calls that
+  the planner removes with those arguments. For resolved columns, later
+  scalar arguments retain the null requirement from earlier arguments.
 - Unreachable `CASE` results, including simple cases with comparable integer
   or Boolean literals. For searched cases, the rule can keep opposing tests
   of the same qualified Boolean column separate across expressions.
