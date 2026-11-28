@@ -37,6 +37,8 @@ no unique resolved file target. A direct `vi.importActual()` or
 same graph. Calls through a local re-export, a helper return, or another
 unproved receiver follow the shared `unanalyzable` policy, which defaults to
 `advise` for this rule, when the specifier could cross the package boundary.
+Computed `vi.importActual()` and `vi.importMock()` specifiers are not skipped.
+They follow the `unanalyzable` policy, unless the receiver is imported from an external package.
 Import `vi` directly from `vitest` so the rule can resolve the crossing. Run
 `resolve-check` to diagnose resolution failures. Origin filters select the
 importing files. A reached file can still prove a crossing when it is outside
