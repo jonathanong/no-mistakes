@@ -178,6 +178,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "unanalyzable"
         },
         {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 44,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "Array.from(items, () => enqueue({ receiptId: \"from\" }));",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 45,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "items.map(() => enqueue({ receiptId: \"map\" }));",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
           "file": "src/unresolved.ts",
           "import": "beginTransaction",
           "line": 10,
@@ -441,6 +459,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "Move this enqueue after the transaction commits. Await the handle's commit before publishing.",
           "rule": "queue-no-enqueue-in-transaction",
           "sourceLine": "await enqueue({ receiptId: \"outer-transaction-is-open\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 44,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "Array.from(items, () => enqueue({ receiptId: \"from\" }));",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 45,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "items.map(() => enqueue({ receiptId: \"map\" }));",
           "target": "@sample/jobs#enqueue"
         },
         {

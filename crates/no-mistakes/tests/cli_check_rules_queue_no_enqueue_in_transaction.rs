@@ -347,6 +347,8 @@ fn queue_no_enqueue_in_transaction_scoped_handles_json_matches_snapshot() {
             ("src/explicit.ts", 7),
             ("src/reexported-handle.ts", 5),
             ("src/shadowed.ts", 10),
+            ("src/statements.ts", 44),
+            ("src/statements.ts", 45),
             ("src/using.ts", 8)
         ]
     );

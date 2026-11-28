@@ -36,3 +36,15 @@ export async function awaitedValue(value: Promise<number>) {
   await value;
   await tx.commit();
 }
+
+export async function builtinShapes(value: Promise<{ id: string }>, items: number[]) {
+  const tx = await beginTransaction();
+  Math.max(1, 2);
+  fetch("https://example.test");
+  Array.from(items, () => enqueue({ receiptId: "from" }));
+  items.map(() => enqueue({ receiptId: "map" }));
+  (await tx.insertReceipt()).toString();
+  (await value).id.trim();
+  tx.insertReceipt().then(enqueue);
+  await tx.commit();
+}
