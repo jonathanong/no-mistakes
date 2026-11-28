@@ -47,6 +47,15 @@ fn postgres_lock_reason_check_json_snapshot() {
             ),
         ),
         (
+            "local-origin",
+            rules_path("postgres-lock-reason", "fixture", "local-origin"),
+            rules_path(
+                "postgres-lock-reason",
+                "fixture",
+                "local-origin/.no-mistakes.yml",
+            ),
+        ),
+        (
             "co-demand",
             rules_path("postgres-lock-reason", "fixture", "co-demand"),
             rules_path(
@@ -125,6 +134,12 @@ fn postgres_lock_reason_check_json_snapshot() {
     );
     assert_eq!(
         reports["suppressed"]["report"]["advisories"],
+        serde_json::json!([])
+    );
+
+    assert_eq!(reports["local-origin"]["exitCode"], 0);
+    assert_eq!(
+        reports["local-origin"]["report"]["rules"],
         serde_json::json!([])
     );
 

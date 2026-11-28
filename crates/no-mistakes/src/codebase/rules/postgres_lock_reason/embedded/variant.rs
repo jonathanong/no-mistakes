@@ -63,7 +63,6 @@ pub(super) fn check_variant(
         ctx.options,
         &check,
         statement,
-        positions,
         &mut ctx.out.findings,
     );
 }
@@ -134,7 +133,6 @@ fn check_embedded_helpers(
     options: &CompiledOptions,
     check: &VariantContext<'_>,
     statement: &SqlStatementFileFacts,
-    positions: &mut Positions<'_>,
     findings: &mut Vec<RuleFinding>,
 ) {
     for (index, function) in statement.function_calls.iter().enumerate() {
@@ -142,17 +140,19 @@ fn check_embedded_helpers(
             continue;
         }
         let imported = site_is_imported(statement, SqlFactSite::Function(index));
-        let (report_line, report_col) = if imported {
-            (check.call_line, 1)
+        let report_line = if imported {
+            check.call_line
         } else {
-            let (_, line, col) = positions.source(function.line, function.column);
-            (line, col)
+            function.line
         };
         let base = check
             .sql_comments
             .status_for_sql_line(function.line, function.column)
             .merge(check.call_status);
-        let status = merge_local_ts_reason(base, !imported, (report_line, report_col), check);
+        let status = match check.ts_index {
+            Some(comments) if !imported => base.merge(comments.status_for_ts_line(report_line)),
+            _ => base,
+        };
         push_reason_finding(check.rel, report_line, "helper", status, findings);
     }
 }
@@ -173,7 +173,7 @@ fn merge_local_ts_reason(
 ) -> ReasonStatus {
     if is_local && source_pos.0 != check.call_line {
         if let Some(comments) = check.ts_index {
-            return status.merge(comments.status_for_ts_position(source_pos.0, source_pos.1));
+            return status.merge(comments.status_for_ts_offset(source_pos.0, source_pos.1 as u32));
         }
     }
     status
