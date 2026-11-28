@@ -215,7 +215,11 @@ describe("typescript import coverage", () => {
     assert.equal(
       has(
         "fromNamed",
-        (fact) => fact && fact.module === "./local" && fact.name === "read.child" && fact.imported === "child",
+        (fact) =>
+          fact &&
+          fact.module === "./local" &&
+          fact.name === "read.child" &&
+          fact.imported === "child",
       ),
       true,
     );

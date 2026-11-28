@@ -767,9 +767,9 @@ describe("typescript import wrappers", () => {
       [55, "nullish"],
       [75, "nullish"],
     ]);
-    expect(cases.find((item) => item.name === "reassigned alias chain stays bounded").findings).toEqual(
-      [],
-    );
+    expect(
+      cases.find((item) => item.name === "reassigned alias chain stays bounded").findings,
+    ).toEqual([]);
     expect(
       cases
         .find((item) => item.name === "named import member chain")
