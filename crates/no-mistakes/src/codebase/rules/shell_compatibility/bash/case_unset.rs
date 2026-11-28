@@ -139,7 +139,10 @@ impl CaseLiterals {
         if !self.in_arm {
             return None;
         }
-        let names = self.arm_literals.as_ref().filter(|names| !names.is_empty())?;
+        let names = self
+            .arm_literals
+            .as_ref()
+            .filter(|names| !names.is_empty())?;
         let &(_, exact) = self.arm_vars.iter().find(|(name, _)| name == var)?;
         Some(ResolvedUnset {
             names: names.clone(),
