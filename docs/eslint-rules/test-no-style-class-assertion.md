@@ -87,7 +87,7 @@ Assert observable behavior instead of styling classes:
 
 Enable this opt-in rule with `"no-mistakes/test-no-style-class-assertion": "error"`.
 It checks `.test` and `.spec` files with JS, TS, JSX, TSX, and their CommonJS
-and ESM extensions. This rule has no options and is disabled by default in both
+and ESM extensions. This rule has no options. It is disabled by default in both
 presets.
 
 ## Suppression
@@ -117,6 +117,11 @@ file-wide suppressions.
   `aria-*` attributes.
 - Files importing `expect` from `@playwright/test` or a shadowed local binding
   are outside the Vitest/Jest scope of this rule.
+- An `expect` imported from a local setup module or built by a call
+  (`const expect = createExpect()`) is not traced, so assertions through it are
+  not reported.
+- `expect(el.getAttribute(name))` with a non-literal attribute name is not
+  reported.
 
 ## Related rules
 
