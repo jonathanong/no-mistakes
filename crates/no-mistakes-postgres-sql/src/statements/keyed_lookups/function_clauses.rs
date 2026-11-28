@@ -1,14 +1,16 @@
 mod eager;
+mod window;
 
-use super::conditions::{literal, literal_condition};
+use super::conditions::literal_condition;
 use super::select_exprs::target_identity;
 use crate::fx::FxHashSet;
 use crate::idents::{function_arg_expr, ident_key, unwrap_expr, visit_shallow_exprs};
 pub(super) use eager::visit_eager_functions;
 use sqlparser::ast::{
-    DataType, DuplicateTreatment, Expr, Function, FunctionArg, FunctionArgumentClause,
-    FunctionArguments, Value,
+    DuplicateTreatment, Expr, Function, FunctionArg, FunctionArgumentClause, FunctionArguments,
+    Value,
 };
+pub(super) use window::{has_optional_window_default, nth_value_skipped_input, row_window_value};
 
 pub(super) fn coalesce_arguments(function: &Function) -> Option<&[FunctionArg]> {
     let [name] = function.name.0.as_slice() else {
@@ -74,50 +76,6 @@ pub(super) fn split_coalesce_arguments(
 
 pub(super) fn filter_skips_inputs(function: &Function) -> bool {
     function.filter.as_deref().and_then(literal_condition) == Some(false)
-}
-
-pub(super) fn has_optional_window_default(function: &Function) -> bool {
-    function.over.is_some()
-        && match function.name.0.as_slice() {
-            [name] => name.as_ident(),
-            [schema, name]
-                if schema
-                    .as_ident()
-                    .is_some_and(|s| ident_key(s) == "pg_catalog") =>
-            {
-                name.as_ident()
-            }
-            _ => None,
-        }
-        .is_some_and(|name| matches!(ident_key(name).as_str(), "lag" | "lead"))
-}
-
-pub(super) fn nth_value_skipped_input(function: &Function) -> Option<&Expr> {
-    let [schema, name] = function.name.0.as_slice() else {
-        return None;
-    };
-    if function.over.is_none()
-        || ident_key(schema.as_ident()?) != "pg_catalog"
-        || ident_key(name.as_ident()?) != "nth_value"
-    {
-        return None;
-    }
-    let FunctionArguments::List(list) = &function.args else {
-        return None;
-    };
-    let [value, position] = list.args.as_slice() else {
-        return None;
-    };
-    let position = unwrap_expr(function_arg_expr(position)?);
-    let position = match position {
-        Expr::Cast {
-            expr,
-            data_type: DataType::Int(None) | DataType::Int4(None) | DataType::Integer(None),
-            ..
-        } => expr.as_ref(),
-        other => other,
-    };
-    matches!(literal(position), Some(Value::Null)).then(|| function_arg_expr(value))?
 }
 
 fn visit_arguments(

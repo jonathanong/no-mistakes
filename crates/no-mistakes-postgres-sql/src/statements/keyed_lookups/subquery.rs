@@ -1,7 +1,7 @@
 use super::conditions::case_condition;
 use super::expr_norm::ExprNormalizer;
 use super::function_clauses::{
-    coalesce_arguments, filter_skips_inputs, is_eager, split_coalesce_arguments,
+    coalesce_arguments, filter_skips_inputs, is_eager, row_window_value, split_coalesce_arguments,
     visit_eager_functions, visit_function_inputs, visit_ordered_set_arguments,
 };
 use super::join::record_lookup;
@@ -102,19 +102,18 @@ fn inspect(
                     .normalize(filter)
                     .map(|_| target_identity(filter));
                 let mut filtered = seen.clone();
-                if let Some(key) = &key {
-                    filtered.merge(targets.take_filter_history(key));
-                }
-                visit_function_inputs(function, &mut |expr| {
-                    inspect(expr, input_scope, targets, &mut filtered, out, skip_eager);
-                });
-                if let Some(key) = key {
-                    targets.save_filter_history(key, filtered);
-                }
+                filtered.mark_filtered(key);
+                inspect_function_inputs(
+                    function,
+                    input_scope,
+                    targets,
+                    &mut filtered,
+                    out,
+                    skip_eager,
+                );
+                seen.merge(filtered);
             } else {
-                visit_function_inputs(function, &mut |expr| {
-                    inspect(expr, input_scope, targets, seen, out, skip_eager);
-                });
+                inspect_function_inputs(function, input_scope, targets, seen, out, skip_eager);
             }
             if let Some(WindowType::WindowSpec(spec)) = &function.over {
                 if let Some(needs_frame) = targets.take_inline_frame(spec) {
@@ -133,6 +132,27 @@ fn inspect(
             inspect(expr, outer, targets, seen, out, skip_eager);
         }),
     }
+}
+
+fn inspect_function_inputs(
+    function: &sqlparser::ast::Function,
+    scope: &ScopeSnapshot,
+    targets: &SelectTargets<'_>,
+    seen: &mut LookupHistory,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
+    skip_eager: bool,
+) {
+    let selected = row_window_value(function);
+    visit_function_inputs(function, &mut |expr| {
+        if selected.is_some_and(|value| std::ptr::eq(expr, value)) {
+            visit_eager_functions(expr, &mut |eager| {
+                inspect(eager, scope, targets, seen, out, false);
+            });
+            inspect(expr, scope, targets, &mut LookupHistory::new(), out, true);
+        } else {
+            inspect(expr, scope, targets, seen, out, skip_eager);
+        }
+    });
 }
 
 fn inspect_coalesce(

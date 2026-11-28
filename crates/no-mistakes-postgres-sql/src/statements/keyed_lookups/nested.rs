@@ -4,7 +4,7 @@ use super::function_clauses::{
     split_coalesce_arguments, visit_eager_functions, visit_function_inputs,
     visit_ordered_set_arguments,
 };
-use super::{walk_query, ScopeStack};
+use super::{query::walk_exists, walk_query, ScopeStack};
 use crate::idents::function_arg_expr;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{Expr, Query, Visit, Visitor};
@@ -33,6 +33,10 @@ struct Nested<'a> {
 impl Nested<'_> {
     fn walk_conditional_children(&mut self, expr: &Expr) {
         match expr {
+            Expr::Exists { subquery, .. } => {
+                self.blocked_expression_depth = 1;
+                walk_exists(subquery, self.scopes, self.out);
+            }
             Expr::Function(function)
                 if filter_skips_inputs(function)
                     || has_optional_window_default(function)

@@ -58,9 +58,10 @@ fn inspect_join(
     let target =
         lookup_table(&join.relation).map(|(name, alias)| (object_name_identity(name), alias));
     if let Some((relation, alias)) = &target {
-        if let Some((key, display)) =
+        let lookup = scopes.with_local_bindings(left_start, |scopes| {
             join_lookup(relation, *alias, constraint, &scopes.snapshot(), using)
-        {
+        });
+        if let Some((key, display)) = lookup {
             let start = join.relation.span().start;
             let line = start.line.max(1) as usize;
             let column = start.column.max(1) as usize;
@@ -75,7 +76,9 @@ fn inspect_join(
         target.as_ref().map(|(relation, _)| relation.as_str()),
     );
     if let Some(JoinConstraint::On(expr)) = constraint {
-        inspect_exprs(std::iter::once(expr), scopes, seen, out);
+        scopes.with_local_bindings(left_start, |scopes| {
+            inspect_exprs(std::iter::once(expr), scopes, seen, out);
+        });
     }
     let end = scopes.binding_count();
     match &join.join_operator {

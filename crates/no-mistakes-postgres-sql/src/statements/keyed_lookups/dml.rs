@@ -1,5 +1,6 @@
 use super::conditions::literal_condition;
 use super::join::{register_table_factor, register_table_with_joins};
+use super::query::has_zero_limit;
 use super::scope::ScopeStack;
 use super::{inspect_exprs, returning_exprs, LookupHistory};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
@@ -16,6 +17,9 @@ pub(super) fn walk_insert(
 ) {
     if let Some(source) = insert.source.as_deref() {
         super::walk_query(source, scopes, out);
+        if has_zero_limit(source.limit_clause.as_ref()) {
+            return;
+        }
     }
     let update = match &insert.on {
         Some(OnInsert::OnConflict(OnConflict {

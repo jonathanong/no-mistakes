@@ -59,12 +59,16 @@ The rule stays silent when the lookups are not proven to read the same row:
   expression. Inputs to recognized aggregates can repeat across arms because
   PostgreSQL evaluates the aggregates before choosing an arm. Aggregate
   arguments share lookup history only when their filter expressions match and
-  the rule can prove the filter is repeatable. Transition inputs are skipped
+  the rule can prove the filter is repeatable. An unfiltered input can
+  repeat a filtered input in either order. Transition inputs are skipped
   when the filter is a literal false or null.
 - Optional default expressions in `lag` and `lead` window calls. PostgreSQL
   evaluates them only when the requested row falls outside the partition.
   The value argument of `pg_catalog.nth_value` is also skipped when its
   position is a literal null. Earlier aggregate inputs remain eligible.
+  Value inputs of row-selecting windows such as `first_value` and
+  `last_value` can run on different rows. The rule checks each for
+  repeated work within that input.
 - `COALESCE` arguments after a known non-null literal. Aggregate and window
   inputs still follow their separate evaluation rules.
 - Unreachable `CASE` results, including simple cases with comparable integer
@@ -73,6 +77,9 @@ The rule stays silent when the lookups are not proven to read the same row:
 - Window calls eliminated by literal `CASE` or `COALESCE` short-circuiting,
   unreachable DML actions, and query bodies with a literal `LIMIT 0`.
   CTEs and limit expressions are still inspected.
+- Unreferenced `SELECT` CTEs when their lack of references can be proven,
+  and discarded projections in simple `EXISTS` queries. Data-modifying
+  CTEs and `EXISTS` conditions still receive analysis.
 - Volatile key expressions (UUID generators such as `gen_random_uuid()`,
   `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined
   or unrecognized functions in keys or scalar projections, unresolved table

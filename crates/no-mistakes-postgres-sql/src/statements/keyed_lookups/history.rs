@@ -3,6 +3,7 @@ use super::scope::ScopeSnapshot;
 use crate::idents::{ident_key, unwrap_expr};
 use sqlparser::ast::{Expr, UnaryOperator};
 use std::collections::BTreeMap;
+use std::rc::Rc;
 
 type Column = (usize, String);
 type Site = (usize, usize);
@@ -13,13 +14,44 @@ const NULL: u8 = 4;
 const ANY: u8 = TRUE | FALSE | NULL;
 
 #[derive(Clone, Default)]
-struct Guards(BTreeMap<Column, u8>);
+enum Filter {
+    #[default]
+    None,
+    Known(Rc<Expr>),
+    Opaque(Rc<()>),
+}
+
+impl PartialEq for Filter {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::None, Self::None) => true,
+            (Self::Known(left), Self::Known(right)) => left == right,
+            (Self::Opaque(left), Self::Opaque(right)) => Rc::ptr_eq(left, right),
+            _ => false,
+        }
+    }
+}
+
+impl Eq for Filter {}
+
+impl Filter {
+    fn overlaps(&self, other: &Self) -> bool {
+        matches!(self, Self::None) || matches!(other, Self::None) || self == other
+    }
+}
+
+#[derive(Clone, Default, PartialEq, Eq)]
+struct Guards {
+    columns: BTreeMap<Column, u8>,
+    filter: Filter,
+}
 
 impl Guards {
     fn matches(&self, other: &Self) -> bool {
-        self.0
-            .iter()
-            .all(|(column, allowed)| allowed & other.0.get(column).copied().unwrap_or(ANY) != 0)
+        self.filter.overlaps(&other.filter)
+            && self.columns.iter().all(|(column, allowed)| {
+                allowed & other.columns.get(column).copied().unwrap_or(ANY) != 0
+            })
     }
 }
 
@@ -51,12 +83,19 @@ impl LookupHistory {
         let column = ident_key(column);
         if let Some(binding) = outer.resolve_column(&ident_key(qualifier), &column) {
             let allowed = if taken { test } else { ANY ^ test };
-            *self.active.0.entry((binding, column)).or_insert(ANY) &= allowed;
+            *self.active.columns.entry((binding, column)).or_insert(ANY) &= allowed;
         }
     }
 
+    pub(super) fn mark_filtered(&mut self, filter: Option<Expr>) {
+        self.active.filter = filter.map_or_else(
+            || Filter::Opaque(Rc::new(())),
+            |key| Filter::Known(Rc::new(key)),
+        );
+    }
+
     pub(super) fn observe(&mut self, key: &LookupKey, site: Site) -> Option<Site> {
-        if self.active.0.values().any(|allowed| *allowed == 0) {
+        if self.active.columns.values().any(|allowed| *allowed == 0) {
             return None;
         }
         let sites = self.sites.entry(key.clone()).or_default();
@@ -83,5 +122,5 @@ impl LookupHistory {
 }
 
 fn site_is_new(sites: &[(Guards, Site)], guards: &Guards) -> bool {
-    sites.iter().all(|(existing, _)| existing.0 != guards.0)
+    sites.iter().all(|(existing, _)| existing != guards)
 }

@@ -104,6 +104,37 @@ impl ScopeStack {
             .len()
     }
 
+    pub(super) fn with_local_bindings<T>(
+        &mut self,
+        start: usize,
+        inspect: impl FnOnce(&mut Self) -> T,
+    ) -> T {
+        if start == 0 {
+            return inspect(self);
+        }
+        let frame = self
+            .frames
+            .last_mut()
+            .expect("bindings require a query scope");
+        let visible = frame.split_off(start);
+        let mut hidden = std::mem::replace(frame, visible);
+        let result = inspect(self);
+        let frame = self
+            .frames
+            .last_mut()
+            .expect("bindings require a query scope");
+        hidden.append(frame);
+        *frame = hidden;
+        result
+    }
+
+    pub(super) fn truncate_bindings(&mut self, count: usize) {
+        self.frames
+            .last_mut()
+            .expect("bindings require a query scope")
+            .truncate(count);
+    }
+
     pub(super) fn refresh_bindings(&mut self, bindings: std::ops::Range<usize>) {
         let frame = self
             .frames

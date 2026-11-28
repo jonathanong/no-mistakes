@@ -1,8 +1,12 @@
+mod ctes;
+
 use super::conditions::literal;
+use super::select_exprs::walk_select;
+use super::select_item_expr;
 use super::{scope::ScopeStack, subquery, walk_nested_queries, walk_set_expr, LookupHistory};
-use crate::idents::visit_shallow_exprs;
+use crate::idents::{unwrap_expr, visit_shallow_exprs};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
-use sqlparser::ast::{Expr, LimitClause, OrderByKind, Query, Value};
+use sqlparser::ast::{Distinct, Expr, GroupByExpr, LimitClause, OrderByKind, Query, Select, Value};
 
 pub(super) fn walk_query(
     query: &Query,
@@ -18,11 +22,7 @@ pub(super) fn walk_query_ordered(
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) -> LookupHistory {
-    if let Some(with) = &query.with {
-        for cte in &with.cte_tables {
-            walk_query(&cte.query, scopes, out);
-        }
-    }
+    ctes::walk_reachable(query, scopes, out);
     let local_order;
     let order = match query.order_by.as_ref().map(|order| &order.kind) {
         Some(OrderByKind::Expressions(exprs)) => {
@@ -42,6 +42,50 @@ pub(super) fn walk_query_ordered(
     };
     inspect_limits(query, scopes, &mut seen, out);
     seen
+}
+
+pub(super) fn walk_exists(
+    query: &Query,
+    scopes: &mut ScopeStack,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
+) {
+    if let Some(select) = query
+        .body
+        .as_select()
+        .filter(|select| discard_exists_projection(query, select))
+    {
+        walk_select(select, &[], true, scopes, out);
+    } else {
+        walk_query(query, scopes, out);
+    }
+}
+
+fn discard_exists_projection(query: &Query, select: &Select) -> bool {
+    query.with.is_none()
+        && query.order_by.is_none()
+        && query.limit_clause.is_none()
+        && query.fetch.is_none()
+        && query.locks.is_empty()
+        && select.having.is_none()
+        && matches!(
+            select.distinct,
+            None | Some(Distinct::All | Distinct::Distinct)
+        )
+        && matches!(&select.group_by, GroupByExpr::Expressions(exprs, modifiers)
+            if exprs.is_empty() && modifiers.is_empty())
+        && select
+            .projection
+            .iter()
+            .filter_map(select_item_expr)
+            .all(|expr| {
+                matches!(
+                    unwrap_expr(expr),
+                    Expr::Identifier(_)
+                        | Expr::CompoundIdentifier(_)
+                        | Expr::Value(_)
+                        | Expr::Subquery(_)
+                )
+            })
 }
 
 pub(super) fn has_zero_limit(limit: Option<&LimitClause>) -> bool {

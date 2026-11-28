@@ -74,9 +74,13 @@ pub(super) fn register_factor(
             ))
         }
         TableFactor::Derived {
-            subquery, alias, ..
+            lateral,
+            subquery,
+            alias,
+            ..
         } => {
-            walk_query(subquery, scopes, out);
+            let first_visible = if *lateral { 0 } else { scopes.binding_count() };
+            scopes.with_local_bindings(first_visible, |scopes| walk_query(subquery, scopes, out));
             scopes.add_alias_only(alias.as_ref())
         }
         TableFactor::NestedJoin {
@@ -87,9 +91,9 @@ pub(super) fn register_factor(
             if alias.is_none() {
                 return register_join_chain(table_with_joins, scopes, seen, out);
             }
-            scopes.push_frame();
+            let first = scopes.binding_count();
             register_join_chain(table_with_joins, scopes, &mut LookupHistory::new(), out);
-            scopes.pop_frame();
+            scopes.truncate_bindings(first);
             scopes.add_alias_only(alias.as_ref())
         }
         _ => None,

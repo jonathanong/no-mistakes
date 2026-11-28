@@ -335,7 +335,9 @@ fn respects_null_extended_bindings_and_reuses_aliased_targets_and_window_specs()
             (27, 28),
             (41, 42),
             (51, 53),
-            (57, 58)
+            (57, 58),
+            (81, 82),
+            (107, 108)
         ]
     );
 }
@@ -364,7 +366,7 @@ fn respects_scalar_grouping_nested_sort_defaults_and_eager_window_inputs() {
         .iter()
         .map(|fact| (fact.first_line, fact.line))
         .collect();
-    assert_eq!(sites, [(8, 9), (23, 24), (43, 44)]);
+    assert_eq!(sites, [(8, 9), (23, 24), (45, 46)]);
 }
 
 #[test]
@@ -440,7 +442,16 @@ fn checks_operator_signatures_and_shares_only_compatible_lookup_history() {
             (498, 499),
             (503, 504),
             (524, 525),
-            (531, 532)
+            (531, 532),
+            (567, 568),
+            (573, 575),
+            (587, 588),
+            (601, 602),
+            (606, 607),
+            (614, 615),
+            (620, 621),
+            (631, 632),
+            (636, 637)
         ]
     );
 }

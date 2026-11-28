@@ -135,3 +135,44 @@ RETURNING (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
 INSERT INTO orders AS o DEFAULT VALUES ON CONFLICT DO NOTHING
 RETURNING (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
           (SELECT b.tier FROM accounts b WHERE b.id = o.account_id);
+
+INSERT INTO orders AS o (id, account_id)
+SELECT 1, 42 LIMIT 0 OFFSET (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = $1)
+         + (SELECT b.n FROM accounts b WHERE b.id = $1)
+)
+ON CONFLICT (id) DO UPDATE SET
+    account_name = (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+    account_tier = (SELECT b.tier FROM accounts b WHERE b.id = o.account_id)
+RETURNING (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+          (SELECT b.tier FROM accounts b WHERE b.id = o.account_id);
+
+INSERT INTO orders AS o (id, account_id)
+SELECT 1, 42 LIMIT 1
+RETURNING (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+          (SELECT b.tier FROM accounts b WHERE b.id = o.account_id);
+
+WITH unused AS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.account_id),
+           (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+    FROM orders o
+)
+SELECT 1;
+
+WITH inner_keys AS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.account_id) AS first_number,
+           (SELECT b.n FROM accounts b WHERE b.id = o.account_id) AS second_number
+    FROM orders o
+), result_keys AS (
+    SELECT * FROM inner_keys
+)
+TABLE result_keys;
+
+WITH RECURSIVE sequence_numbers(n) AS (
+    VALUES (1)
+    UNION ALL
+    SELECT n + 1 FROM sequence_numbers WHERE n < 2
+)
+SELECT (TABLE sequence_numbers LIMIT 1);
+
+CREATE TABLE summary_orders (id bigint);

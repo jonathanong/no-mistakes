@@ -551,3 +551,98 @@ SELECT pg_catalog.nth_value(
     NULL::int4
 ) OVER ()
 FROM orders o;
+
+SELECT pg_catalog.first_value(
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+) OVER w, pg_catalog.last_value(
+    (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+) OVER w
+FROM orders o
+WINDOW w AS (
+    ORDER BY o.id ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+)
+LIMIT 1;
+
+SELECT pg_catalog.first_value(
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+    + (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+) OVER (ORDER BY o.id)
+FROM orders o;
+
+SELECT pg_catalog.min(
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+) FILTER (WHERE o.enabled), pg_catalog.max(
+    (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+)
+FROM orders o;
+
+SELECT pg_catalog.min(
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+) FILTER (WHERE o.enabled), pg_catalog.max(
+    (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+) FILTER (WHERE NOT o.enabled)
+FROM orders o;
+
+SELECT pg_catalog.min(
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+    + (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+) FILTER (WHERE custom_schema.is_enabled(o.id))
+FROM orders o;
+
+SELECT EXISTS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.account_id),
+           (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+    FROM orders o
+);
+
+SELECT EXISTS (
+    SELECT 1
+    FROM orders o
+    WHERE (SELECT a.n FROM accounts a WHERE a.id = o.account_id) > 0
+      AND (SELECT b.n FROM accounts b WHERE b.id = o.account_id) > 1
+);
+
+SELECT EXISTS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.account_id),
+           (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+    FROM orders o
+    INTERSECT
+    SELECT 1, 2
+);
+
+SELECT CASE 1_0 WHEN 10 THEN
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+    + (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+END
+FROM orders o;
+
+SELECT CASE 'A' WHEN 'a' THEN
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+    + (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+END
+FROM orders o;
+
+SELECT CASE WHEN enabled THEN
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+END
+FROM orders o;
+
+SELECT pg_catalog.last_value(
+    pg_catalog.sum((SELECT a.n FROM accounts a WHERE a.id = o.account_id))
+) OVER (), pg_catalog.sum((SELECT b.n FROM accounts b WHERE b.id = o.account_id))
+FROM orders o;
+
+SELECT EXISTS (
+    SELECT pg_catalog.sum((SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+                        + (SELECT b.n FROM accounts b WHERE b.id = o.account_id))
+    FROM orders o
+);
+
+SELECT EXISTS (SELECT 1 FROM orders ORDER BY id);
+SELECT EXISTS (SELECT 1 FROM orders LIMIT 1 OFFSET 1);
+SELECT EXISTS (SELECT 1 FROM orders FETCH FIRST 1 ROW ONLY);
+SELECT EXISTS (SELECT 1 FROM orders FOR UPDATE);
+SELECT EXISTS (SELECT 1 FROM orders GROUP BY id);
+SELECT EXISTS (SELECT 1 FROM orders HAVING COUNT(*) > 1);
+SELECT EXISTS (SELECT DISTINCT ON (id) id FROM orders);
+SELECT EXISTS (WITH keys AS (SELECT 1 AS id) SELECT id FROM keys);

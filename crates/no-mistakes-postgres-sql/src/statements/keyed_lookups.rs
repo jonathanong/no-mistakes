@@ -69,7 +69,7 @@ fn walk_set_expr(
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) -> LookupHistory {
     match body {
-        SetExpr::Select(select) => walk_select(select, order_exprs, scopes, out),
+        SetExpr::Select(select) => walk_select(select, order_exprs, false, scopes, out),
         SetExpr::Query(query) => query::walk_query_ordered(query, order_exprs, scopes, out),
         SetExpr::Values(values) => {
             scopes.push_frame();

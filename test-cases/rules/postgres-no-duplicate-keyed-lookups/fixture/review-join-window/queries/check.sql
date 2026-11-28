@@ -59,3 +59,52 @@ SELECT
 FROM orders o
 LEFT JOIN extras x ON
     (SELECT a.enabled FROM flags a WHERE a.flag = (x.id IS NULL));
+
+SELECT 1
+FROM orders o
+CROSS JOIN teams t
+CROSS JOIN LATERAL (
+    SELECT 1
+    FROM teams t JOIN teams u USING (id) AS o,
+         (VALUES (1)) v(n)
+         JOIN accounts a ON a.id = o.id
+         JOIN accounts b ON b.id = t.id
+) q;
+
+SELECT 1
+FROM orders o
+CROSS JOIN teams t
+CROSS JOIN LATERAL (
+    SELECT 1
+    FROM teams t JOIN teams u USING (id) AS o,
+         (VALUES (1)) v(n)
+         JOIN accounts a ON a.id = o.id
+         JOIN accounts b ON b.id = o.id
+) q;
+
+SELECT 1
+FROM orders o
+CROSS JOIN teams t
+CROSS JOIN LATERAL (
+    SELECT 1
+    FROM teams t JOIN teams u USING (id) AS o
+    CROSS JOIN (
+        SELECT 1
+        FROM (VALUES (1)) v(n)
+        JOIN accounts a ON a.id = o.id
+        JOIN accounts b ON b.id = t.id
+    ) s
+) q;
+
+SELECT 1
+FROM orders o
+CROSS JOIN LATERAL (
+    SELECT 1
+    FROM teams t JOIN teams u USING (id) AS o
+    CROSS JOIN LATERAL (
+        SELECT 1
+        FROM (VALUES (1)) v(n)
+        JOIN accounts a ON a.id = o.id
+        JOIN accounts b ON b.id = t.id
+    ) s
+) q;

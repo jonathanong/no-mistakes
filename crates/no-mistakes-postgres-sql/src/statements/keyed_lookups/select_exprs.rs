@@ -6,8 +6,8 @@ use super::join::register_table_with_joins;
 use super::scope::{ScopeSnapshot, ScopeStack};
 use super::subquery::inspect_expr;
 use super::windows::WindowPlan;
-use super::{select_item_expr, walk_nested_queries, LookupHistory};
-use crate::fx::{FxHashMap, FxHashSet};
+use super::{inspect_exprs, select_item_expr, walk_nested_queries, LookupHistory};
+use crate::fx::FxHashSet;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 pub(super) use identity::target_identity;
 use sqlparser::ast::{Distinct, Expr, Function, Select, SelectItem, WindowSpec};
@@ -21,7 +21,6 @@ pub(super) struct SelectTargets<'a> {
     before_grouping: Option<&'a ScopeSnapshot>,
     keys: OnceCell<RefCell<FxHashSet<Expr>>>,
     windows: Option<&'a WindowPlan>,
-    filtered: RefCell<FxHashMap<Expr, LookupHistory>>,
 }
 
 impl SelectTargets<'_> {
@@ -38,17 +37,6 @@ impl SelectTargets<'_> {
     pub(super) fn filter_grouped<'expr>(&self, expr: &'expr Expr) -> Cow<'expr, Expr> {
         self.grouping
             .map_or(Cow::Borrowed(expr), |grouping| grouping.filter(expr))
-    }
-
-    pub(super) fn take_filter_history(&self, filter: &Expr) -> LookupHistory {
-        self.filtered
-            .borrow_mut()
-            .remove(filter)
-            .unwrap_or_default()
-    }
-
-    pub(super) fn save_filter_history(&self, filter: Expr, history: LookupHistory) {
-        self.filtered.borrow_mut().insert(filter, history);
     }
 
     pub(super) fn skips_window_call(&self, expr: &Expr) -> bool {
@@ -80,6 +68,7 @@ impl SelectTargets<'_> {
 pub(super) fn walk_select(
     select: &Select,
     order_by: &[&Expr],
+    discard_projection: bool,
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) -> LookupHistory {
@@ -87,6 +76,11 @@ pub(super) fn walk_select(
     let mut seen = LookupHistory::new();
     for table in &select.from {
         register_table_with_joins(table, scopes, &mut seen, out);
+    }
+    if discard_projection {
+        inspect_exprs(select.selection.iter(), scopes, &mut seen, out);
+        scopes.pop_frame();
+        return seen;
     }
     let before_grouping = scopes.snapshot();
     let after_grouping = grouping::can_omit_keys(&select.group_by).then(|| {
