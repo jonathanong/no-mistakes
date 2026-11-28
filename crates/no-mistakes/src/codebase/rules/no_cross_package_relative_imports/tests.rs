@@ -182,25 +182,24 @@ fn vitest_helper_imports_follow_the_unanalyzable_policy() {
     assert!(rows("helper-vitest-default.yml").is_empty());
 
     let direct = rows("helper-vitest-direct.yml");
+    let fix = "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.";
     assert_eq!(
         direct,
         vec![
+            (2, crossing.to_owned(), fix.to_owned()),
             (
-                6,
+                7,
                 "<computed>".to_owned(),
                 "Unanalyzable import: the specifier is computed. Use a literal import specifier."
                     .to_owned(),
             ),
             (
-                8,
+                9,
                 "../../shared/src/missing-topic.mts".to_owned(),
                 "Unanalyzable import: the relative specifier has no unique file target. Run resolve-check and fix resolution.".to_owned(),
             ),
-            (
-                9,
-                crossing.to_owned(),
-                "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.".to_owned(),
-            ),
+            (10, crossing.to_owned(), fix.to_owned()),
+            (11, crossing.to_owned(), fix.to_owned()),
         ]
     );
 }

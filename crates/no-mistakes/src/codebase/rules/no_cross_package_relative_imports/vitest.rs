@@ -1,4 +1,5 @@
 use super::{is_relative, Inputs, RULE_ID};
+use crate::codebase::dependencies::extract::ImportKind;
 use crate::codebase::dependencies::graph::{vitest_import_calls, ImportTarget, VitestReceiver};
 use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::ts_resolver::normalize_path;
@@ -27,11 +28,11 @@ impl Inputs<'_> {
             if !(call.computed || is_relative(call.specifier)) {
                 continue;
             }
-            if facts
-                .imports
-                .iter()
-                .any(|import| import.line == call.line && import.specifier == call.specifier)
-            {
+            if facts.imports.iter().any(|import| {
+                import.kind != ImportKind::RequireResolve
+                    && import.line == call.line
+                    && import.specifier == call.specifier
+            }) {
                 continue;
             }
             match call.receiver {
