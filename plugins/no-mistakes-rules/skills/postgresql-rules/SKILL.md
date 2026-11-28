@@ -17,7 +17,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - SHOULD NOT let a paginated read scan unbounded work for one page (for example, an ever-wider time window until a row matches); bound the work per page and return the cursor, since unbounded scans time out before the client reaches results or the end.
 - MUST NOT query a protected relation without its required predicates (tenant, soft-delete, partition key).
 - SHOULD NOT issue one query per item for an input-sized batch when one query can do the same work.
-- MUST NOT make statement shape depend on row count (one `UNION ALL` arm or one bind list per item); pass an array.
+- SHOULD NOT make statement shape depend on row count (one `UNION ALL` arm or one bind list per item); each distinct text gets its own plan and `pg_stat_statements` entry, and a long list can hit the bind-parameter limit. Pass an array (`= ANY($1)`, `unnest`).
 - SHOULD NOT look up the same row more than once in one statement through separate joins or scalar subqueries keyed by the same expression; each extra lookup adds another probe per output row. Join it once and project every field from that row.
 - SHOULD NOT join or subquery a view that contains joins or subqueries only to read one or two base-table columns; the view's joins and subqueries still run for every output row. Join the base table with its required predicates.
 - MUST NOT use `NOT IN (SELECT …)`; NULLs silently drop rows. Use `NOT EXISTS`.
@@ -67,7 +67,7 @@ MUST NOT is a defect. SHOULD NOT needs a stated, measured reason.
 - MUST NOT update append-only history rows, or delete them outside a retention policy.
 - SHOULD NOT add a `NOT NULL`, unique, or check constraint to an existing table without checking whether existing rows satisfy it.
 - MUST NOT rename or renumber a migration after it has run in any shared environment.
-- MUST NOT edit a migration after it has run in any shared environment.
+- MUST NOT edit a versioned migration after it has run in any shared environment; add a new migration instead. Repeatable or run-on-change migrations (Flyway `R__`, Liquibase `runOnChange`) are meant to be edited.
 - SHOULD NOT create the same function or index in more than one migration while an earlier definition is still present. A repeated function leaves only the last body, and `CREATE INDEX` on an existing name fails or no-ops. A later migration may `CREATE OR REPLACE` a function to change it, or recreate an index after an earlier migration drops it.
 - MUST NOT run code that depends on a migration before that migration is applied; order the deploy so the migration runs first, or expand first.
 - SHOULD NOT build an index on a populated table without `CONCURRENTLY`, outside the migration's transaction; a failed build leaves an `INVALID` index to drop before retrying. A partitioned parent cannot build concurrently: build each partition's index concurrently, then create the parent index `ON ONLY` and attach them.
