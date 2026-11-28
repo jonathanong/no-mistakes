@@ -149,8 +149,10 @@ test("full native API and macOS Rust tests run on their builders and download on
     assert.match(phases[index(upload)], /steps\.build-artifact-source.outputs.reuse != 'true'/);
     assert.match(phases[index(download)], /steps\.build-artifact-source.outputs.reuse == 'true'/);
     assert.match(phases[index(download)], /steps\.build-artifact-source.outputs.run_id/);
-    if (download === "Download native-runtime")
+    if (download === "Download native-runtime") {
       assert.match(phases[index(download)], /NATIVE_RUNTIME_TARGET: \$\{\{ matrix\.target \}\}/);
+      assert.match(phases[index(download)], /GH_TOKEN: \$\{\{ github\.token \}\}/);
+    }
     assert.doesNotMatch(phases[index(run)], /if:|outputs\.reuse|continue-on-error/);
     for (const phase of phases.filter((step) =>
       /uses: actions\/cache\/restore@|uses: Swatinem\/rust-cache@/.test(step),

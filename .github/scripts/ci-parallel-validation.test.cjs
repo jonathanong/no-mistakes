@@ -23,7 +23,7 @@ test("native API timeout leaves startup and teardown room after the observed Win
   const seconds = stepBudgetSeconds(native, "Run real N-API API test", "Windows");
   assert.ok(seconds >= required, "native API step must include launcher/teardown reserve");
   assert.ok(seconds <= 600, "keep the correction bounded rather than removing its deadline");
-  assert.match(native, /\n    timeout-minutes: 65\n/);
+  assert.match(readWorkflowJob(workflow, "native-api-tests"), /\n    timeout-minutes: 65\n/);
   const entries = [
     ...native.matchAll(
       /- os: (windows-2025|macos-15)\n\s+target: [^\n]+\n\s+shard: (\d+)\n\s+total: (\d+)/g,
