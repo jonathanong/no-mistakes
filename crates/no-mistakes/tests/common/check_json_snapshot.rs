@@ -88,7 +88,7 @@ pub fn assert_saved_fixture_report(
     envs: &[(&str, &str)],
     args: &[&str],
 ) -> Value {
-    assert_saved_fixture_checked(name, cases, envs, false, args)
+    assert_saved_fixture_checked(name, cases, envs, false, args, &mut |_| {})
 }
 
 /// Like `assert_saved_fixture`, with extra environment for the child only
@@ -116,6 +116,7 @@ pub(super) fn assert_saved_fixture_checked(
     envs: &[(&str, &str)],
     clean: bool,
     args: &[&str],
+    prepare: &mut dyn FnMut(&mut Value),
 ) -> Value {
     let total_runs = cases.len() * 2;
     let next_task = AtomicUsize::new(0);
@@ -179,6 +180,8 @@ pub(super) fn assert_saved_fixture_checked(
         document.insert((*label).to_string(), jobs_one);
     }
     let mut value = Value::Object(document);
+    sort_value(&mut value);
+    prepare(&mut value);
     sort_value(&mut value);
     let pretty = format!("{}\n", serde_json::to_string_pretty(&value).unwrap());
     insta::with_settings!({

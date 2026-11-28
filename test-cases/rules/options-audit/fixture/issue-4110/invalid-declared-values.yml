@@ -1,0 +1,110 @@
+version: 2
+rules:
+  - rule: pnpm-release-age-policy
+    scope: repository
+    options:
+      permanentPackages: left-pad
+  - rule: playwright-no-serial
+    scope: repository
+    options:
+      fixtures:
+        - {module: "", export: Widget}
+  - rule: agents-md-max-size
+    scope: repository
+    options:
+      maxLines: -1
+  - rule: ast-grep-ignore-freshness
+    scope: repository
+    options:
+      files: sgconfig.yml
+  - rule: config-path-references
+    scope: repository
+    options:
+      presets: [not-a-preset]
+  - rule: coverage-producer-assertion-owner
+    scope: repository
+    options:
+      producers:
+        - {file: src/owner.ts, symbol: build}
+      assertions:
+        - {module: "./owner", export: build}
+      maxDepth: 0
+  - rule: csp-allowed-origins
+    scope: repository
+    options:
+      cspFiles: [headers.ts]
+      selfOrigins: [app.example.com]
+  - rule: dependabot-cooldown-policy
+    scope: repository
+    options:
+      minimumDays: 7
+      allowedCooldownExcludes:
+        - "["
+  - rule: doc-consistency
+    scope: repository
+    options:
+      bannedPatterns:
+        - files: ["docs/**"]
+          pattern: "("
+          message: unbalanced
+  - rule: file-extension-policy
+    scope: repository
+    options:
+      scopes:
+        - {path: src, bannedExtensions: ts}
+  - rule: integration-test-no-mocks
+    scope: repository
+    options:
+      forbiddenModules: msw
+  - rule: lockfile-allowlist
+    scope: repository
+    options:
+      allowed: pnpm-lock.yaml
+  - rule: production-dependency-declarations
+    scope: repository
+    options:
+      workspaceRoots: packages
+  - rule: production-exports-only-used-by-tests
+    scope: repository
+    options:
+      productionRoots: [src]
+      testGlobs: [""]
+  - rule: server-route-client-boundary
+    scope: repository
+    options:
+      excludes: app/api
+  - rule: shellcheck-runner
+    scope: repository
+    options:
+      shellFiles: scripts
+  - rule: strict-package-layout
+    scope: repository
+    options:
+      packages:
+        - {root: packages, testFilePatterns: "*.test.ts"}
+  - rule: structured-config-policy
+    scope: repository
+    options:
+      policies: strict
+  - rule: unique-exports
+    scope: repository
+    options:
+      uniqueAcrossTypesAndValues: "yes"
+  - rule: vite-optimize-deps-nested-imports
+    scope: repository
+    options:
+      packages: web
+  - rule: workspace-package-cycles
+    scope: repository
+    options:
+      dependencyTypes: dependencies
+  - rule: bash-empty-array-nounset
+    scope: repository
+    options:
+      files:
+        - "["
+  - rule: zsh-readonly-parameter
+    scope: repository
+    options:
+      files:
+        - "["

@@ -1,4 +1,6 @@
-use super::check_json_snapshot::{assert_saved_fixture_report, rules_path};
+use super::check_json_snapshot::{
+    assert_saved_fixture_checked, assert_saved_fixture_report, rules_path,
+};
 use no_mistakes::codebase::rules::rule_ids::configurable_rule_ids;
 use serde_yaml::Value;
 use std::collections::BTreeSet;
@@ -33,6 +35,11 @@ fn invalid_rule_configuration_aborts_before_analysis() {
             root.join("invalid-values.yml"),
         ),
         (
+            "invalid-declared-values",
+            root.clone(),
+            root.join("invalid-declared-values.yml"),
+        ),
+        (
             "semantic-errors",
             root.clone(),
             root.join("semantic-errors.yml"),
@@ -44,12 +51,63 @@ fn invalid_rule_configuration_aborts_before_analysis() {
         ),
         ("fragment", root.join("fragment"), PathBuf::new()),
     ];
-    let result = assert_saved_fixture_report("invalid_rule_configuration", &cases, &[], &[]);
+    let result = assert_saved_fixture_checked(
+        "invalid_rule_configuration",
+        &cases,
+        &[],
+        false,
+        &[],
+        &mut redact_invalid_declared_dependency_tails,
+    );
     for (label, _, _) in cases {
         assert_eq!(result[label]["exitCode"], 2, "{label}: {result}");
         assert!(result[label]["report"].is_null(), "{label}: {result}");
     }
-    let declared = result["swift-test-policy-declared"]["stderr"]
+    let declared = result["invalid-declared-values"]["stderr"]
+        .as_str()
+        .unwrap_or("");
+    for id in [
+        "agents-md-max-size",
+        "ast-grep-ignore-freshness",
+        "bash-empty-array-nounset",
+        "config-path-references",
+        "coverage-producer-assertion-owner",
+        "csp-allowed-origins",
+        "dependabot-cooldown-policy",
+        "doc-consistency",
+        "file-extension-policy",
+        "integration-test-no-mocks",
+        "lockfile-allowlist",
+        "playwright-no-serial",
+        "pnpm-release-age-policy",
+        "production-dependency-declarations",
+        "production-exports-only-used-by-tests",
+        "server-route-client-boundary",
+        "shellcheck-runner",
+        "strict-package-layout",
+        "structured-config-policy",
+        "unique-exports",
+        "vite-optimize-deps-nested-imports",
+        "workspace-package-cycles",
+        "zsh-readonly-parameter",
+    ] {
+        assert!(
+            declared.contains(id),
+            "missing invalid declared value for {id}: {declared}"
+        );
+    }
+    for owned in [
+        "error parsing glob",
+        "regex parse error",
+        "unclosed character class",
+        "unclosed group",
+    ] {
+        assert!(
+            !declared.contains(owned),
+            "dependency-owned text {owned} stayed in the snapshot: {declared}"
+        );
+    }
+    let swift_declared = result["swift-test-policy-declared"]["stderr"]
         .as_str()
         .expect("invalid declared values");
     for marker in [
@@ -58,7 +116,10 @@ fn invalid_rule_configuration_aborts_before_analysis() {
         "test-no-dependency-pins",
         "test-no-live-repository-scan: fixtureDirs",
     ] {
-        assert!(declared.contains(marker), "{marker} missing: {declared}");
+        assert!(
+            swift_declared.contains(marker),
+            "{marker} missing: {swift_declared}"
+        );
     }
 }
 
@@ -318,4 +379,53 @@ fn saved_declared_option_values_fail_closed_and_valid_values_run() {
             .is_some_and(Vec::is_empty),
         "{result}"
     );
+}
+
+// Glob and regex parsers own the text after these markers.
+const DEPENDENCY_TAIL_MARKERS: [&str; 3] = ["invalid regex:", "invalid glob", "invalid type:"];
+
+fn redact_invalid_declared_dependency_tails(document: &mut serde_json::Value) {
+    let Some(stderr) = document["invalid-declared-values"]["stderr"]
+        .as_str()
+        .map(str::to_owned)
+    else {
+        return;
+    };
+    document["invalid-declared-values"]["stderr"] =
+        serde_json::Value::String(strip_dependency_owned_tails(&stderr));
+}
+
+fn strip_dependency_owned_tails(stderr: &str) -> String {
+    let mut redacted = String::with_capacity(stderr.len());
+    let mut skip_continuation = false;
+    for line in stderr.split_inclusive('\n') {
+        let body = line.trim_end_matches(['\r', '\n']);
+        if skip_continuation && !config_diagnostic_line(body) {
+            continue;
+        }
+        let end = earliest_dependency_tail(body);
+        skip_continuation = end.is_some();
+        redacted.push_str(&body[..end.unwrap_or(body.len())]);
+        redacted.push_str(&line[body.len()..]);
+    }
+    redacted
+}
+
+fn earliest_dependency_tail(line: &str) -> Option<usize> {
+    DEPENDENCY_TAIL_MARKERS
+        .into_iter()
+        .filter_map(|marker| line.find(marker).map(|start| start + marker.len()))
+        .min()
+}
+
+fn config_diagnostic_line(line: &str) -> bool {
+    let rest = line.strip_prefix("error: ").unwrap_or(line);
+    let Some((path, after)) = rest.split_once(':') else {
+        return false;
+    };
+    let file_name = path.rsplit(['/', '\\']).next().unwrap_or(path);
+    let config_file = [".yml", ".yaml", ".json", ".jsonc"]
+        .iter()
+        .any(|suffix| file_name.ends_with(suffix));
+    config_file && after.starts_with(|character: char| character.is_ascii_digit())
 }
