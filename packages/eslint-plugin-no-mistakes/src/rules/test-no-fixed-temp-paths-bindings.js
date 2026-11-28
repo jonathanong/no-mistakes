@@ -127,13 +127,7 @@ function bindingResolver(context) {
       else if (id.type === "ObjectPattern") {
         const member = destructuredMember(id, node.name);
         if (value === UNRESOLVED) binding = unresolvedMember(member);
-        else if (value) {
-          binding = member
-            ? memberBinding(value, member)
-            : ["fs", "fs/promises"].includes(value)
-              ? UNRESOLVED
-              : null;
-        }
+        else if (value) binding = member ? memberBinding(value, member) : null;
       } else if (value === UNRESOLVED) binding = UNRESOLVED;
     }
     bindings.set(variable, binding);

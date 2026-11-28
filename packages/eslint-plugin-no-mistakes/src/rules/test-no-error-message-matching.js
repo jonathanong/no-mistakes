@@ -63,7 +63,7 @@ function isGeneratedTestPath(filename) {
   return filename.replace(/\\/g, "/").includes(".generated.");
 }
 
-function expandCallArguments(args) {
+function expandArguments(args) {
   const forwarded = [];
   for (const argument of args) {
     if (argument.type !== "SpreadElement") {
@@ -71,10 +71,15 @@ function expandCallArguments(args) {
       continue;
     }
     const list = unwrap(argument.argument);
-    if (list?.type !== "ArrayExpression") return null;
+    if (
+      list?.type !== "ArrayExpression" ||
+      list.elements.some((element) => !element || element.type === "SpreadElement")
+    ) {
+      return null;
+    }
     forwarded.push(...list.elements);
   }
-  return forwarded.slice(1);
+  return forwarded;
 }
 
 function forwardedArguments(node) {
@@ -84,9 +89,13 @@ function forwardedArguments(node) {
   const args = current.arguments;
   if (callee?.type !== "MemberExpression") return args;
   const name = memberName(callee);
-  if (name === "call") return expandCallArguments(args);
+  if (name === "call") {
+    const expanded = expandArguments(args);
+    return expanded ? expanded.slice(1) : null;
+  }
   if (name === "apply") {
-    const list = unwrap(args[1]);
+    const expanded = expandArguments(args);
+    const list = unwrap(expanded?.[1]);
     return list?.type === "ArrayExpression" ? list.elements : null;
   }
   return args;

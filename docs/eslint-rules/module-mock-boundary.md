@@ -42,8 +42,9 @@ The schema accepts an options object.
 `includePathPatterns` and `excludePathPatterns` scope files;
 `requireLiteralSpecifiers` defaults to `true`; and `baseline` records
 temporary `[file, specifier, count]` allowances. `integrationExports` permits
-tagged integration exports, with its `specifiers`, `sourcePathTemplates`,
-`reexportExtensions`, and `markerRegex` controls.
+tagged integration exports, with its `specifiers`, `specifierPrefix`,
+`extensions`, `sourcePathTemplates`, `reexportExtensions`, and `markerRegex`
+controls.
 `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
 mock whose `vitest` or `@jest/globals` binding comes from a non-static
 `require` reports `unanalyzable`. A type-only or non-external `import =` is

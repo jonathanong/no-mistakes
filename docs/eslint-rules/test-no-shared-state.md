@@ -9,7 +9,9 @@ into hidden input.
 
 ```ts
 let currentUser;
-test("first", () => { currentUser = makeUser(); });
+test("first", () => {
+  currentUser = makeUser();
+});
 test("second", () => expect(currentUser).toBeDefined());
 ```
 
@@ -32,7 +34,9 @@ test("user", () => {
   `require` reports `unanalyzable`. `.skip` and `.each` on that call, such as
   `vt.test.skip(...)` and `vt.test.each(rows)(...)`, report `unanalyzable` too. A destructured `test`, `it`, or `describe`
   from that require, such as `const { test: check } = require(specifier)`, reports
-  `unanalyzable`. A later write of that destructure, such as
+  `unanalyzable`, including `check.skip(...)`. `const check = require(specifier).test`
+  followed by `check.skip(...)` does too. A computed modifier such as
+  `check[modifier](...)` stays silent. A later write of that destructure, such as
   `let { test: check } = require(specifier); check = localHelper`, does not.
   A destructured `expect` does not. A computed key such as
   `const { ["test"]: check } = require("vitest")` is not a test registration.

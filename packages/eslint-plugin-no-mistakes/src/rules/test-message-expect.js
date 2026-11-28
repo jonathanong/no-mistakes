@@ -157,7 +157,9 @@ function expectArguments(node, context) {
       callee = callee.object;
       args = expanded.slice(1);
     } else if (name === "apply") {
-      const list = unwrap(args[1]);
+      const expanded = spreadArguments(args);
+      if (!expanded) return null;
+      const list = unwrap(expanded[1]);
       if (list?.type !== "ArrayExpression") return null;
       callee = callee.object;
       args = list.elements;

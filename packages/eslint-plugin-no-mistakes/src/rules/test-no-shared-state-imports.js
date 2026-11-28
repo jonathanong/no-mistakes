@@ -136,17 +136,21 @@ function dynamicLetReceiver(node, context) {
   );
 }
 
-function registrationMember(node) {
+function registrationParts(node) {
   let current = unwrapExpression(node);
   while (current?.type === "CallExpression") current = unwrapExpression(current.callee);
+  let member = null;
   while (current?.type === "MemberExpression" && !current.computed) {
     const name = current.property?.name;
-    if (TEST_NAMES.has(name)) return current;
-    if (!REGISTRATION_MODIFIERS.has(name)) return null;
+    if (TEST_NAMES.has(name)) {
+      member = current;
+      break;
+    }
+    if (!REGISTRATION_MODIFIERS.has(name)) break;
     current = unwrapExpression(current.object);
     while (current?.type === "CallExpression") current = unwrapExpression(current.callee);
   }
-  return null;
+  return { alias: current, member };
 }
 
 function reportOpaqueRegistration(call, context, suppressed, source) {
@@ -155,15 +159,15 @@ function reportOpaqueRegistration(call, context, suppressed, source) {
   if (callee?.type === "MemberExpression" && !callee.computed && callee.property?.name === "each") {
     return;
   }
-  const registration = registrationMember(callee);
+  const { alias, member: registration } = registrationParts(callee);
   const unresolvedMember =
     registration &&
     (isUnresolved(moduleLoad(registration.object, context)) ||
       dynamicLetReceiver(registration.object, context));
   if (
     !unresolvedMember &&
-    !dynamicDestructuredTest(callee, context) &&
-    !dynamicMemberTest(callee, context)
+    !dynamicDestructuredTest(alias, context) &&
+    !dynamicMemberTest(alias, context)
   ) {
     return;
   }

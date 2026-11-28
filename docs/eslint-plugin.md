@@ -109,7 +109,8 @@ The schema accepts an object: `internalSpecifiers?: string[]`,
 `includePathPatterns?: string[]`, `excludePathPatterns?: string[]`,
 `requireLiteralSpecifiers?: boolean` (default `true`),
 `baseline?: [string, string, number][]`, `integrationExports?: object`
-(including `sourcePathTemplates` and `reexportExtensions`), and
+(including `extensions`, `specifierPrefix`, `specifiers`, `markerRegex`,
+`sourcePathTemplates`, and `reexportExtensions`), and
 `unanalyzable?: "finding" | "ignore"` (default `"finding"`).
 
 ### `module-mock-preserve-exports`

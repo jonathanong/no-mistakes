@@ -37,6 +37,8 @@ const groups = [
       "reassigned-destructure.test.ts",
       "alias-reassigned.test.ts",
       "reassigned-test-name.test.ts",
+      "each-static.test.ts",
+      "each-dynamic.test.ts",
     ],
     valid: [
       "not-a-runner.test.ts",
@@ -59,6 +61,7 @@ const groups = [
       "reassigned-destructure.test.ts",
       "alias-reassigned.test.ts",
       "reassigned-test-name.test.ts",
+      "each-dynamic.test.ts",
     ],
   },
   {
@@ -142,6 +145,7 @@ const groups = [
       "nested-call.test.ts",
     ],
     valid: [
+      "computed-modifier.test.ts",
       "not-a-callee.test.ts",
       "suppressed.test.ts",
       "reassign.test.ts",
@@ -191,7 +195,7 @@ const groups = [
       "spread-apply.test.ts",
       "static-apply.test.ts",
     ],
-    valid: ["default-direct.test.ts", "spread-call.test.ts"],
+    valid: ["default-direct.test.ts", "spread-call.test.ts", "spread-apply-site.test.ts"],
   },
   {
     rule: "test-no-error-message-matching",
@@ -298,7 +302,12 @@ const groups = [
     rule: "test-no-fixed-temp-paths",
     dir: "temp",
     invalid: ["paths.test.ts", "dynamic.test.ts", "promises.test.ts"],
-    valid: ["mock-after.test.ts", "other-member.test.ts", "computed-member.test.ts"],
+    valid: [
+      "mock-after.test.ts",
+      "other-member.test.ts",
+      "computed-member.test.ts",
+      "computed-pattern.test.ts",
+    ],
   },
   {
     rule: "test-no-fixed-temp-paths",

@@ -106,10 +106,21 @@ function unknownComputedExport(root, context) {
 function forwardedCallee(node) {
   const { staticName } = loads();
   let current = unwrapSequence(node);
-  if (current?.type !== "MemberExpression") return current;
-  const name = staticName(current.property, current.computed);
-  if (name !== "call" && name !== "apply") return current;
-  return unwrapSequence(current.object);
+  while (current) {
+    if (current.type === "CallExpression") {
+      const callee = unwrapSequence(current.callee);
+      const built =
+        callee?.type === "MemberExpression" ? staticName(callee.property, callee.computed) : null;
+      if (built !== "each") return current;
+      current = callee;
+      continue;
+    }
+    if (current.type !== "MemberExpression") return current;
+    const name = staticName(current.property, current.computed);
+    if (name !== "call" && name !== "apply") return current;
+    current = unwrapSequence(current.object);
+  }
+  return current;
 }
 
 function rejectedRunner(root, context) {
