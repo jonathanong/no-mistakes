@@ -51,21 +51,39 @@ pub(super) fn report_local_uses_outside_repo(
     );
 }
 
-fn job_uses_line(source: &str, job_id: &str) -> usize {
+pub(super) fn job_uses_line(source: &str, job_id: &str) -> usize {
     let keys = [
         format!("{job_id}:"),
         format!("'{job_id}':"),
         format!("\"{job_id}\":"),
     ];
-    let mut in_job = false;
+    let indent = |line: &str| line.len() - line.trim_start().len();
+    let mut in_jobs = false;
+    let mut job_indent = None;
+    let mut key_indent = None;
     for (index, line) in source.lines().enumerate() {
         let trimmed = line.trim_start();
-        if in_job {
-            if trimmed.starts_with("uses:") {
-                return index + 1;
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        let depth = indent(line);
+        if depth == 0 {
+            in_jobs = trimmed.starts_with("jobs:");
+            job_indent = None;
+            key_indent = None;
+            continue;
+        }
+        if !in_jobs {
+            continue;
+        }
+        let first = *job_indent.get_or_insert(depth);
+        match key_indent {
+            None if depth == first && keys.iter().any(|key| trimmed.starts_with(key.as_str())) => {
+                key_indent = Some(depth);
             }
-        } else {
-            in_job = keys.iter().any(|key| trimmed.starts_with(key.as_str()));
+            Some(key) if depth <= key => key_indent = None,
+            Some(_) if trimmed.starts_with("uses:") => return index + 1,
+            _ => {}
         }
     }
     1

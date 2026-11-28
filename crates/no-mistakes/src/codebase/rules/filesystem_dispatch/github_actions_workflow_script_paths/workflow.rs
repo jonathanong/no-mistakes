@@ -4,6 +4,7 @@ use super::emit::{emit_hits, finding, EmitCtx, Origin};
 use super::reusable;
 use super::scripts::{self, WorkingDir};
 use super::triggers;
+pub(super) use super::working_dir::parse_working_dir;
 use crate::codebase::rules::{
     analysis_policy::AnalysisDiagnostics,
     github_actions_script_expressions::{step_run_lines, StepRun},
@@ -181,22 +182,6 @@ fn step_working_dir(step: &Mapping, inherited: WorkingDir) -> WorkingDir {
     match mapping_get(step, "working-directory") {
         None | Some(Value::Null) => inherited,
         Some(wd) => parse_working_dir(wd),
-    }
-}
-
-pub(super) fn parse_working_dir(value: &Value) -> WorkingDir {
-    match value {
-        Value::Null => WorkingDir::Known(String::new()),
-        Value::String(raw) => {
-            let trimmed = raw.trim();
-            if trimmed.contains("${{") || trimmed.contains('$') {
-                WorkingDir::Dynamic(trimmed.to_string())
-            } else {
-                scripts::resolve_rel_path("", trimmed)
-                    .map_or(WorkingDir::OutsideRepo, WorkingDir::Known)
-            }
-        }
-        _ => WorkingDir::Dynamic("non-string".to_string()),
     }
 }
 

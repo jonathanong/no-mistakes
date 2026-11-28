@@ -148,4 +148,12 @@ fn local_reusable_workflows_and_outside_repo_actions_are_unanalyzable() {
     assert_eq!(reusable.map(|f| f.line), Some(17), "{findings:?}");
     let outside = find("uses local action `./../outside-action`");
     assert_eq!(outside.map(|f| f.line), Some(36), "{findings:?}");
+    let python = find("runs with shell `python`, which this check cannot parse");
+    assert!(python.is_some(), "{findings:?}");
+}
+
+#[test]
+fn reusable_job_line_ignores_env_keys_and_other_jobs() {
+    let source = "env:\n  build: 1\njobs:\n  setup:\n    steps:\n      - uses: actions/checkout@v4\n  build:\n    uses: ./workflows/b.yml\n";
+    assert_eq!(super::super::reusable::job_uses_line(source, "build"), 8);
 }

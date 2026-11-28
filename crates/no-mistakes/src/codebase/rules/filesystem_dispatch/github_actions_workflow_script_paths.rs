@@ -8,6 +8,7 @@ mod scripts;
 mod shell_cmd;
 mod triggers;
 mod workflow;
+mod working_dir;
 
 pub const RULE_ID: &str = "github-actions-workflow-script-paths";
 

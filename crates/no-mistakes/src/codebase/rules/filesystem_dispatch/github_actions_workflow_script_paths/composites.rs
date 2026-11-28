@@ -99,7 +99,8 @@ fn walk_action(
         if let Some(run_val) = mapping_get(step, "run") {
             if let Some(script) = run_val.as_str() {
                 let dir = step_working_dir(step);
-                hits.extend(scripts::scan_script(script, dir, script_dirs));
+                let shell = mapping_get(step, "shell").and_then(Value::as_str);
+                hits.extend(scripts::scan_run(script, shell, dir, script_dirs));
             } else {
                 hits.push(unanalyzable_hit(
                     "run",

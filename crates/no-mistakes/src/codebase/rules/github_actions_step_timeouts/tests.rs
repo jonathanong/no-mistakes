@@ -76,7 +76,8 @@ allow:
     assert!(
         findings
             .iter()
-            .any(|finding| finding.message.contains("over the 5-minute cap")),
+            .any(|finding| finding.message.contains("over the 5-minute cap")
+                && finding.message.contains("dynamic-slow")),
         "{findings:?}"
     );
 }
