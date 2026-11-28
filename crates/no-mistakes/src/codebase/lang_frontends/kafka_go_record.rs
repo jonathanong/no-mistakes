@@ -98,10 +98,10 @@ fn topic_boundary(source: &str, i: usize) -> bool {
             return false;
         }
     }
-    match source[i + "Topic".len()..].chars().next() {
-        Some(ch) if ch.is_ascii_alphanumeric() || ch == '_' => false,
-        _ => true,
-    }
+    !matches!(
+        source[i + "Topic".len()..].chars().next(),
+        Some(ch) if ch.is_ascii_alphanumeric() || ch == '_'
+    )
 }
 
 fn skip_ws(source: &str, mut i: usize) -> usize {

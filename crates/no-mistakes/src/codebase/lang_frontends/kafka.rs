@@ -5,6 +5,10 @@ use std::sync::OnceLock;
 
 #[derive(Clone, Copy)]
 pub(crate) enum KafkaFile {
+    #[cfg_attr(
+        not(test),
+        expect(dead_code, reason = "path-free unit tests construct this variant")
+    )]
     Historical,
     Go,
     Rust,
@@ -18,6 +22,7 @@ pub(crate) enum KafkaFile {
 }
 
 impl KafkaFile {
+    #[cfg(test)]
     pub(crate) fn historical() -> Self {
         Self::Historical
     }
