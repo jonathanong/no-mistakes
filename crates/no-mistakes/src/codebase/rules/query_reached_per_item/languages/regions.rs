@@ -47,7 +47,7 @@ enum Frame {
     Loop {
         construct: &'static str,
         open: usize,
-        brace: bool,
+        brace_open: Option<usize>,
     },
 }
 
@@ -85,7 +85,7 @@ fn push(
     scan: &mut Scan,
     header: Header,
     open: usize,
-    brace: bool,
+    brace_open: Option<usize>,
     params: Vec<String>,
 ) {
     match header {
@@ -98,7 +98,7 @@ fn push(
         Header::Loop(construct) => stack.push(Frame::Loop {
             construct,
             open,
-            brace,
+            brace_open,
         }),
     }
 }
@@ -122,23 +122,31 @@ fn pop_to(stack: &mut Vec<Frame>, depth: usize) {
     }
 }
 
-fn close_brace_loops(stack: &mut Vec<Frame>, depth: &mut usize, line: &str, opened_brace: bool) {
-    let mut closers = line
-        .matches('}')
-        .count()
-        .saturating_sub(line.matches('{').count());
-    if opened_brace && line.contains('}') && closers == 0 {
-        closers = 1;
-    }
-    while closers > 0 {
-        let open = match stack.last() {
-            Some(Frame::Loop {
-                brace: true, open, ..
-            }) => *open,
-            _ => break,
-        };
-        *depth = open;
-        stack.pop();
-        closers -= 1;
+fn step_brace_loops(
+    stack: &mut Vec<Frame>,
+    depth: &mut usize,
+    brace_depth: &mut usize,
+    text: &str,
+) {
+    for ch in text.chars() {
+        match ch {
+            '{' => *brace_depth += 1,
+            '}' => {
+                *brace_depth = brace_depth.saturating_sub(1);
+                while let Some(Frame::Loop {
+                    brace_open: Some(open_brace),
+                    open,
+                    ..
+                }) = stack.last()
+                {
+                    if *open_brace < *brace_depth {
+                        break;
+                    }
+                    *depth = *open;
+                    stack.pop();
+                }
+            }
+            _ => {}
+        }
     }
 }

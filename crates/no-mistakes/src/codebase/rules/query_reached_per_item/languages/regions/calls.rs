@@ -1,4 +1,4 @@
-use super::lex::{matching_brace_close, top_level_colon};
+use super::lex::{body_offset, header_slice, matching_brace_close};
 
 pub(super) fn calls(line: &str) -> Vec<String> {
     call_spans(line)
@@ -8,7 +8,7 @@ pub(super) fn calls(line: &str) -> Vec<String> {
 }
 
 pub(super) fn per_item_callees(line: &str, construct: &str) -> Vec<String> {
-    let body_at = body_offset(line);
+    let body_at = body_offset(line, construct);
     let body_close = body_at.and_then(|at| matching_brace_close(line, at));
     let iterable = is_iterable_loop(line, construct);
     let init_end = c_style_init_end(line, construct);
@@ -22,7 +22,7 @@ pub(super) fn per_item_callees(line: &str, construct: &str) -> Vec<String> {
 }
 
 pub(super) fn enclosing_loop_line_callees(line: &str, construct: &str) -> Vec<String> {
-    let body_at = body_offset(line);
+    let body_at = body_offset(line, construct);
     let body_close = body_at.and_then(|at| matching_brace_close(line, at));
     let iterable = is_iterable_loop(line, construct);
     let init_end = c_style_init_end(line, construct);
@@ -38,10 +38,11 @@ pub(super) fn enclosing_loop_line_callees(line: &str, construct: &str) -> Vec<St
 }
 
 fn is_iterable_loop(line: &str, construct: &str) -> bool {
+    let header = header_slice(line, construct);
     construct == "foreach"
         || construct == "each"
-        || is_for_in(line)
-        || (construct == "for" && line.contains(" : ") && !line.contains(';'))
+        || is_for_in(header)
+        || (construct == "for" && header.contains(" : ") && !header.contains(';'))
 }
 
 pub(super) fn carried_calls(
@@ -68,16 +69,6 @@ pub(super) fn carried_calls(
         .collect()
 }
 
-fn body_offset(line: &str) -> Option<usize> {
-    if let Some(at) = line.find('{') {
-        return Some(at);
-    }
-    if let Some(at) = line.find(" do") {
-        return Some(at);
-    }
-    top_level_colon(line)
-}
-
 fn is_for_in(line: &str) -> bool {
     [" in ", " of ", " as ", " range ", " <- "]
         .iter()
@@ -85,10 +76,11 @@ fn is_for_in(line: &str) -> bool {
 }
 
 fn c_style_init_end(line: &str, construct: &str) -> Option<usize> {
-    if construct != "for" || is_for_in(line) {
+    let header = header_slice(line, construct);
+    if construct != "for" || is_for_in(header) {
         return None;
     }
-    line.find(';')
+    header.find(';')
 }
 
 fn call_spans(line: &str) -> Vec<(usize, String)> {
@@ -188,7 +180,7 @@ pub(super) fn is_callee_byte(ch: u8) -> bool {
 pub(super) fn is_keyword(callee: &str) -> bool {
     const KEYWORDS: &[&str] = &[
         "for", "foreach", "while", "if", "switch", "catch", "func", "fn", "function", "def", "fun",
-        "return", "elif", "else", "do", "end", "class", "new",
+        "return", "elif", "elseif", "else", "do", "end", "class", "new", "not", "using",
     ];
     split_separator(callee).is_none() && KEYWORDS.contains(&callee)
 }

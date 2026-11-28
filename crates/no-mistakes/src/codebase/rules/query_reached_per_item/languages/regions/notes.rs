@@ -162,7 +162,12 @@ fn paren_free_calls(line: &str) -> Vec<String> {
             continue;
         }
         let name = line[start..end].trim_start_matches(['.', ':', '\\', '>', '-']);
-        if !name.is_empty() && !is_keyword(name) && split_separator(name).is_some() {
+        if !name.is_empty()
+            && !is_keyword(name)
+            && split_separator(name).is_some_and(|(_, tail)| {
+                !tail.is_empty() && !tail.starts_with(|ch: char| ch.is_ascii_digit())
+            })
+        {
             found.push(name.to_string());
         }
         index = cursor;

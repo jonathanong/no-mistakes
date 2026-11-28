@@ -55,7 +55,11 @@ fn inline_loops_trailing_statements_and_nested_iterables_keep_scopes() {
         "void load(List<Row> batches) {\n    for (Row batch : batches) {\n        for (Row item : example.store.read_row(batch))\n        {\n        }\n    }\n}\n",
         "java",
     );
-    assert_eq!(pending_nested_iterable.len(), 1, "{pending_nested_iterable:#?}");
+    assert_eq!(
+        pending_nested_iterable.len(),
+        1,
+        "{pending_nested_iterable:#?}"
+    );
     assert!(
         pending_nested_iterable[0]
             .message
@@ -163,7 +167,9 @@ fn multiline_signatures_and_mixed_helper_bodies_prove_sinks() {
     assert_eq!(reversed_mixed.len(), 1, "{reversed_mixed:#?}");
     assert!(reversed_mixed[0].causes.is_empty(), "{reversed_mixed:#?}");
     assert!(
-        reversed_mixed[0].message.contains("load → fetch → read_row"),
+        reversed_mixed[0]
+            .message
+            .contains("load → fetch → read_row"),
         "{reversed_mixed:#?}"
     );
 
@@ -266,5 +272,8 @@ fn lexer_edges_inline_ruby_clean_helpers_and_duplicate_enclosing_scopes() {
         "rs",
     );
     assert_eq!(generic_fn.len(), 1, "{generic_fn:#?}");
-    assert!(generic_fn[0].message.contains("load → read_row"), "{generic_fn:#?}");
+    assert!(
+        generic_fn[0].message.contains("load → read_row"),
+        "{generic_fn:#?}"
+    );
 }

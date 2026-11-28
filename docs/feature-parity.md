@@ -1345,12 +1345,12 @@ TypeScript/JavaScript and the shipped language frontends support the opt-in
 asynchronous Node checks. TypeScript combines per-item AST positions with
 canonical call paths and configured effect sinks, including transaction markers
 and batch exemptions. Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir, Dart,
-Swift, and C# expose the same per-item facts when `options.languages` names
-that frontend and its `tests` root is configured: a proven call names the
-callsite, the canonical path, and the configured effect target, and an unproven
-call follows `options.unanalyzable` instead of passing silently. No shipped
-language frontend is declined. The `call-sites` query stays TypeScript-only.
-Dedicated language CLIs remain later work.
+Swift, and C# run a best-effort line-oriented source scan when
+`options.languages` names that language and its `tests` root is configured: a
+proven call names the callsite, a local-hop path, and the configured effect
+target, and an unproven call follows `options.unanalyzable` instead of passing
+silently. No shipped language is declined. The `call-sites` query stays
+TypeScript-only. Dedicated language CLIs remain later work.
 
 Structured PostgreSQL source facts expose trigger event kinds and quoted UPDATE
 OF identifiers, cast type components, literal EXECUTE concatenations, USING

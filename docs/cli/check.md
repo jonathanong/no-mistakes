@@ -182,9 +182,9 @@ implies timings and adds graph/Playwright sub-phases and work counts. See [Perfo
 
 The opt-in [query-reached-per-item](../rules/query-reached-per-item.md) rule
 uses configured effect families and canonical call paths to identify repeated
-single-item round trips through helpers. `options.languages` projects those
-same facts for configured Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir,
-Dart, Swift, and C# roots. The default stays TypeScript-only.
+single-item round trips through helpers. `options.languages` runs a best-effort
+line-oriented per-item scan for configured Python, Go, Rust, Ruby, PHP, Java,
+Kotlin, Elixir, Dart, Swift, and C# roots. The default stays TypeScript-only.
 
 `finite-set-consistency` supports `--effort low` for YAML sequences, YAML
 string selectors, and path-regex captures. Other extractor kinds follow the

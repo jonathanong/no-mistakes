@@ -57,7 +57,7 @@ fn indent_at_column(
         scan,
         header,
         indent,
-        false,
+        None,
         params_of_loop(loop_construct.is_some(), line),
     );
     if let Some(construct) = loop_construct {

@@ -100,3 +100,73 @@ pub(super) fn last_ident(before: &str) -> String {
         current
     }
 }
+
+pub(super) fn close_paren(line: &str, open: usize) -> Option<usize> {
+    let mut depth = 0i32;
+    for (offset, ch) in line[open..].char_indices() {
+        match ch {
+            '(' => depth += 1,
+            ')' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(open + offset + ch.len_utf8());
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+pub(super) fn loop_header_end(line: &str, construct: &str) -> Option<usize> {
+    if !matches!(construct, "for" | "foreach" | "while") {
+        return None;
+    }
+    let trimmed = line.trim_start();
+    let offset = line.len() - trimmed.len();
+    let rest = trimmed.strip_prefix(construct)?;
+    let after_kw = rest.trim_start();
+    if !after_kw.starts_with('(') {
+        return None;
+    }
+    let open = offset + construct.len() + (rest.len() - after_kw.len());
+    let end = close_paren(line, open)?;
+    if matches!(first_word(line[end..].trim_start()), "in" | "of") {
+        return None;
+    }
+    Some(end)
+}
+
+pub(super) fn same_line_loop_tail<'a>(line: &'a str, construct: &str) -> Option<&'a str> {
+    let end = loop_header_end(line, construct)?;
+    let tail = line[end..].trim();
+    (!tail.is_empty()).then_some(tail)
+}
+
+pub(super) fn header_slice<'a>(line: &'a str, construct: &str) -> &'a str {
+    if let Some(end) = loop_header_end(line, construct) {
+        &line[..end]
+    } else if let Some(at) = line.find('{') {
+        &line[..at]
+    } else {
+        line
+    }
+}
+
+pub(super) fn body_offset(line: &str, construct: &str) -> Option<usize> {
+    if let Some(end) = loop_header_end(line, construct) {
+        let rest = &line[end..];
+        let trimmed = rest.trim_start();
+        if trimmed.starts_with('{') {
+            return Some(end + (rest.len() - trimmed.len()));
+        }
+        return Some(end);
+    }
+    if let Some(at) = line.find('{') {
+        return Some(at);
+    }
+    if let Some(at) = line.find(" do") {
+        return Some(at);
+    }
+    top_level_colon(line)
+}

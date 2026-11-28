@@ -9,6 +9,7 @@ use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use std::path::{Path, PathBuf};
 
 mod regressions;
+mod review_regressions;
 mod shapes;
 
 fn sinks() -> Vec<Sink> {
@@ -31,7 +32,12 @@ fn ctx<'a>(sinks: &'a [Sink], policy: Unanalyzable) -> Ctx<'a> {
 
 fn project_ext(source: &str, extension: &str) -> Vec<crate::codebase::rules::RuleFinding> {
     let sinks = sinks();
-    project("worker", Some(source), extension, &ctx(&sinks, Unanalyzable::Advise))
+    project(
+        "worker",
+        Some(source),
+        extension,
+        &ctx(&sinks, Unanalyzable::Advise),
+    )
 }
 
 #[test]
@@ -47,7 +53,10 @@ fn brace_languages_prove_one_local_hop_and_report_a_receiver() {
         );
         assert!(
             findings.iter().any(|finding| {
-                finding.causes.first().is_some_and(|cause| cause.kind == "unresolved-dispatch")
+                finding
+                    .causes
+                    .first()
+                    .is_some_and(|cause| cause.kind == "unresolved-dispatch")
                     && finding.message.contains("item.fetch")
             }),
             "{extension}: {findings:#?}"
@@ -60,14 +69,23 @@ fn python_indent_and_block_languages_keep_the_loop_open() {
     let python = "def fetch(item):\n    return example.store.read_row(item)\n\ndef load(items):\n    for item in items:\n        fetch(item)\n        item.fetch()\n";
     let ruby = "def fetch(item)\n  example.store.read_row(item)\nend\n\ndef load(items)\n  for item in items do\n    if item\n      fetch(item)\n    end\n    item.fetch()\n  end\nend\n";
     let elixir = "defmodule Worker do\n  def fetch(item) do\n    example.store.read_row(item)\n  end\n  def load(items) do\n    for item <- items do\n      fetch(item)\n      item.fetch()\n    end\n  end\nend\n";
-    for (extension, source) in [("py", python), ("rb", ruby), ("ex", elixir), ("exs", elixir)] {
+    for (extension, source) in [
+        ("py", python),
+        ("rb", ruby),
+        ("ex", elixir),
+        ("exs", elixir),
+    ] {
         let findings = project_ext(source, extension);
         assert!(
-            findings.iter().any(|finding| finding.message.contains("read_row")),
+            findings
+                .iter()
+                .any(|finding| finding.message.contains("read_row")),
             "{extension}"
         );
         assert!(
-            findings.iter().any(|finding| finding.message.contains("item.fetch")),
+            findings
+                .iter()
+                .any(|finding| finding.message.contains("item.fetch")),
             "{extension}"
         );
     }
@@ -77,8 +95,12 @@ fn python_indent_and_block_languages_keep_the_loop_open() {
 fn php_qualified_call_and_member_call_stay_distinct() {
     let source = "function fetch($item) {\n    example\\store::read_row($item);\n}\nfunction load($items) {\n    foreach ($items as $item) {\n        fetch($item);\n        $item->fetch();\n    }\n}\n";
     let findings = project_ext(source, "php");
-    assert!(findings.iter().any(|finding| finding.message.contains("read_row")));
-    assert!(findings.iter().any(|finding| finding.import.as_deref() == Some("$item->fetch")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("read_row")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.import.as_deref() == Some("$item->fetch")));
 }
 
 #[test]
@@ -98,7 +120,10 @@ fn direct_sink_clean_call_unresolved_body_and_duplicate_name() {
         &ctx(&sinks, Unanalyzable::Advise),
     );
     assert!(foreign.iter().any(|finding| {
-        finding.causes.first().is_some_and(|cause| cause.kind == "unresolved-dispatch")
+        finding
+            .causes
+            .first()
+            .is_some_and(|cause| cause.kind == "unresolved-dispatch")
             && finding.message.contains("other.module.lookup")
     }));
     let same_module = project(
@@ -127,11 +152,27 @@ fn direct_sink_clean_call_unresolved_body_and_duplicate_name() {
 fn each_loop_report_and_ignore_policies_and_allowance() {
     let source = "def fetch(item)\n  example.store.read_row(item)\nend\ndef load(items)\n  items.each do\n    fetch(item)\n  end\nend\n";
     let findings = project_ext(source, "rb");
-    assert!(findings.iter().any(|finding| finding.message.contains("each `fetch`")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.message.contains("each `fetch`")));
     let sinks = sinks();
-    let reported = project("worker", Some("fn load(items: &[&str]) {\n    for item in items {\n        item.fetch();\n    }\n}\n"), "rs", &ctx(&sinks, Unanalyzable::Report));
+    let reported = project(
+        "worker",
+        Some(
+            "fn load(items: &[&str]) {\n    for item in items {\n        item.fetch();\n    }\n}\n",
+        ),
+        "rs",
+        &ctx(&sinks, Unanalyzable::Report),
+    );
     assert!(reported[0].causes.is_empty());
-    let ignored = project("worker", Some("fn load(items: &[&str]) {\n    for item in items {\n        item.fetch();\n    }\n}\n"), "rs", &ctx(&sinks, Unanalyzable::Ignore));
+    let ignored = project(
+        "worker",
+        Some(
+            "fn load(items: &[&str]) {\n    for item in items {\n        item.fetch();\n    }\n}\n",
+        ),
+        "rs",
+        &ctx(&sinks, Unanalyzable::Ignore),
+    );
     assert!(ignored.is_empty());
     let unread = project("worker.py", None, "py", &ctx(&sinks, Unanalyzable::Advise));
     assert_eq!(unread[0].causes[0].kind, "unresolved-dispatch");
@@ -149,13 +190,20 @@ fn each_loop_report_and_ignore_policies_and_allowance() {
         "rs",
         &allowed,
     );
-    assert!(suppressed.iter().all(|finding| !finding.message.contains("item.fetch")));
-    assert!(suppressed.iter().any(|finding| finding.message.contains("item.load")));
+    assert!(suppressed
+        .iter()
+        .all(|finding| !finding.message.contains("item.fetch")));
+    assert!(suppressed
+        .iter()
+        .any(|finding| finding.message.contains("item.load")));
 }
 
 #[test]
 fn language_ids_roots_and_session_requirement() {
-    for language in ["python", "go", "rust", "rails", "php", "java", "kotlin", "elixir", "dart", "swift", "dotnet"] {
+    for language in [
+        "python", "go", "rust", "rails", "php", "java", "kotlin", "elixir", "dart", "swift",
+        "dotnet",
+    ] {
         assert!(known(language), "{language}");
     }
     assert!(!known("typescript"));
@@ -179,7 +227,10 @@ fn language_ids_roots_and_session_requirement() {
             test: false,
         },
     );
-    for language in ["python", "go", "rust", "rails", "php", "java", "kotlin", "elixir", "dart", "swift", "dotnet"] {
+    for language in [
+        "python", "go", "rust", "rails", "php", "java", "kotlin", "elixir", "dart", "swift",
+        "dotnet",
+    ] {
         assert!(!root_entries(&config, language).is_empty(), "{language}");
     }
     let root = PathBuf::from("/repo");
@@ -191,11 +242,23 @@ fn language_ids_roots_and_session_requirement() {
     };
     let filter = RulePathFilter::new(&root, &config, &rule).unwrap();
     let visible = vec![root.join("python/worker.py"), root.join("go/worker.go")];
-    let excluded = selected_files(&root, &config, &["python".into(), "python".into()], &visible, &filter);
+    let excluded = selected_files(
+        &root,
+        &config,
+        &["python".into(), "python".into()],
+        &visible,
+        &filter,
+    );
     assert!(excluded.is_empty());
     rule.exclude.clear();
     let filter = RulePathFilter::new(&root, &config, &rule).unwrap();
-    let kept = selected_files(&root, &config, &["python".into(), "go".into()], &visible, &filter);
+    let kept = selected_files(
+        &root,
+        &config,
+        &["python".into(), "go".into()],
+        &visible,
+        &filter,
+    );
     assert_eq!(kept.len(), 2);
     let dotnet = selected_files(
         &root,
@@ -205,14 +268,17 @@ fn language_ids_roots_and_session_requirement() {
         &filter,
     );
     assert_eq!(dotnet.len(), 1);
-    config.effects.insert("store".into(), EffectKindConfig {
-        targets: vec![EffectTargetConfig {
-            module: "example.store".into(),
-            export: "read_row".into(),
-            category: Some("query".into()),
-        }],
-        ..EffectKindConfig::default()
-    });
+    config.effects.insert(
+        "store".into(),
+        EffectKindConfig {
+            targets: vec![EffectTargetConfig {
+                module: "example.store".into(),
+                export: "read_row".into(),
+                category: Some("query".into()),
+            }],
+            ..EffectKindConfig::default()
+        },
+    );
     let options = super::super::config::Options {
         effects: vec!["store".into()],
         languages: vec!["cobol".into()],
@@ -231,7 +297,9 @@ fn language_ids_roots_and_session_requirement() {
     config.tests.python.packages = vec!["python".into()];
     let audit = AllowAudit::new(Path::new("."), &config, &rule, None, "allow", 0);
     let options = super::super::config::Options::default();
-    assert!(collect(&root, &config, &rule, &options, &audit, None).unwrap().is_empty());
+    assert!(collect(&root, &config, &rule, &options, &audit, None)
+        .unwrap()
+        .is_empty());
     let options = super::super::config::Options {
         effects: vec!["store".into()],
         languages: vec!["python".into(), "python".into()],
@@ -269,13 +337,18 @@ fn module_loops_clean_helpers_and_bare_receivers_stay_distinct() {
         "fn load(items: &[&str]) {\n    for item in items {\n        item.();\n    }\n}\n",
         "rs",
     );
-    assert!(tail.iter().any(|finding| finding.message.contains("`item.`")));
+    assert!(tail
+        .iter()
+        .any(|finding| finding.message.contains("`item.`")));
     let foreign_helper = project_ext(
         "fn fetch(item: &str) {\n    other.module.lookup(item);\n}\nfn load(items: &[&str]) {\n    for item in items {\n        fetch(item);\n    }\n}\n",
         "rs",
     );
     assert!(foreign_helper.iter().any(|finding| {
-        finding.causes.first().is_some_and(|cause| cause.kind == "unresolved-dispatch")
+        finding
+            .causes
+            .first()
+            .is_some_and(|cause| cause.kind == "unresolved-dispatch")
             && finding.message.contains("fetch")
     }));
     let doubled = project_ext(
@@ -295,8 +368,12 @@ fn module_loops_clean_helpers_and_bare_receivers_stay_distinct() {
         "def load(items)\n  for item in items do\n    example.store.read_row(item)\n  end\n  def (\n  items.each {\n    item.fetch()\n  }\nend\n",
         "rb",
     );
-    assert!(ruby.iter().any(|finding| finding.message.contains("for `example.store.read_row`")));
-    assert!(ruby.iter().any(|finding| finding.message.contains("each `item.fetch`")));
+    assert!(ruby
+        .iter()
+        .any(|finding| finding.message.contains("for `example.store.read_row`")));
+    assert!(ruby
+        .iter()
+        .any(|finding| finding.message.contains("each `item.fetch`")));
 }
 
 #[test]
@@ -304,7 +381,9 @@ fn else_branches_method_names_and_foreach_keep_their_frames() {
     let ruby = "def load(items)\n  for item in items do\n    if item\n      example.store.read_row(item)\n    elsif item\n      example.store.read_row(item)\n    else\n      example.store.read_row(item)\n    end\n  end\n  example.store.read_row(item)\nend\n";
     let ruby_findings = project_ext(ruby, "rb");
     assert_eq!(ruby_findings.len(), 3);
-    assert!(ruby_findings.iter().all(|finding| finding.message.contains("for `example.store.read_row`")));
+    assert!(ruby_findings
+        .iter()
+        .all(|finding| finding.message.contains("for `example.store.read_row`")));
     let elixir = "defmodule Worker do\n  def load(items) do\n    for item <- items do\n      if item do\n        example.store.read_row(item)\n      else\n        example.store.read_row(item)\n      end\n    end\n    example.store.read_row(item)\n  end\nend\n";
     assert_eq!(project_ext(elixir, "ex").len(), 2);
     let begin = "def load(items)\n  for item in items do\n    begin\n      item.fetch()\n    end\n    value = if item\n      item.load()\n    end\n    example.store.read_row(item) if item\n  end\n  example.store.read_row(item)\nend\n";
@@ -313,10 +392,14 @@ fn else_branches_method_names_and_foreach_keep_their_frames() {
     assert!(begun.iter().all(|finding| finding.message.contains("for ")));
     let method = "func (s *Server) load(items []string) {\n    for _, item := range items {\n        example.store.read_row(item)\n    }\n}\n";
     let go = project_ext(method, "go");
-    assert!(go.iter().any(|finding| finding.message.contains("load → read_row")));
+    assert!(go
+        .iter()
+        .any(|finding| finding.message.contains("load → read_row")));
     assert!(go.iter().all(|finding| !finding.message.contains("func →")));
     let each = "func load(items []string) {\n    items.forEach(func(item string) {\n        example.store.read_row(item)\n    })\n}\n";
-    assert!(project_ext(each, "go").iter().any(|finding| finding.message.contains("each `example.store.read_row`")));
+    assert!(project_ext(each, "go")
+        .iter()
+        .any(|finding| finding.message.contains("each `example.store.read_row`")));
     let receiver = project_ext(
         "fn load(items: &[&str]) {\n    for item in items {\n        self.db.query(item);\n        crate::db::query(item);\n    }\n}\n",
         "rs",

@@ -4,7 +4,7 @@ use crate::codebase::rules::RuleFinding;
 use std::collections::HashMap;
 
 mod emit;
-use emit::{proven, suppressed, unproven};
+use emit::{proven, suppressed, suppressed_file, unproven};
 
 pub(super) fn project(
     file: &str,
@@ -56,6 +56,9 @@ fn project_scan(file: &str, scan: &Scan, ctx: &Ctx<'_>) -> Vec<RuleFinding> {
 }
 
 fn unreadable(file: &str, ctx: &Ctx<'_>) -> Vec<RuleFinding> {
+    if suppressed_file(ctx, file) {
+        return Vec::new();
+    }
     unproven(file, 1, file, "file", ctx).into_iter().collect()
 }
 

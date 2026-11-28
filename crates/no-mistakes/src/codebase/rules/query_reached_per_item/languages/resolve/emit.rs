@@ -78,6 +78,20 @@ pub(super) fn suppressed(
     }
 }
 
+pub(super) fn suppressed_file(ctx: &Ctx<'_>, file: &str) -> bool {
+    let matches = ctx.allow.iter().map(|entry| {
+        entry.file == file
+            && entry.callee.is_none()
+            && entry.function.is_none()
+            && entry.line.is_none()
+    });
+    if let Some(usage) = ctx.usage {
+        usage.suppress(matches)
+    } else {
+        matches.into_iter().any(|matched| matched)
+    }
+}
+
 pub(super) fn allowance_matches(
     entry: &super::super::super::config::Allowance,
     file: &str,

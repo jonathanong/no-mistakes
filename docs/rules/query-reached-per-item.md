@@ -410,59 +410,34 @@ configuration. Each name requires a non-empty tests root:
 `tests.rails.apps`, `tests.php.apps`, `tests.java.packages`,
 `tests.kotlin.packages`, `tests.elixir.apps`, `tests.dart.packages`,
 `tests.swift.packages`, or a non-empty `tests.dotnet.projects.*.project`.
-Selected files are visible sources under that root whose extension is `py`,
-`go`, `rs`, `rb`, `php`, `java`, `kt`, `ex`/`exs`, `dart`, `swift`, or `cs`,
-after the rule's include and exclude filters.
+Selected files are visible sources under that root matching the language's
+source extensions, after the rule's include and exclude filters.
 
-The language projection matches `effects.<family>.targets` only.
-`returnedExecutors`, `typedExecutors`, `returnedMembers`, transaction markers,
-and batch exemptions stay on the TypeScript path. A proven call is an explicit
-qualified call whose head, after normalizing `::`, `\`, and `/` to `.`, equals
-the target `module`, and whose tail after the last `.`, `::`, or `->` equals
-the target `export`. The finding names the callsite callee, the effect family,
-and the path `enclosing → export`. One bare local call is also proven when that
-function reaches a sink, even if its body also makes other unresolved calls;
-when it reaches no sink, any other unresolved call in its body makes it
-unproven. A call on the same line as its function header
-counts in that body. A bare name that appears in the enclosing function's
-parameter list is unproven. An unclosed parameter list makes every bare
-call in that function unproven. A qualified head that is not that module
-(`other.module.lookup`, `self.db.query`, `crate::db::query`) is unproven. The
-path is then `enclosing → local → export`.
-The enclosing name is the nearest function, or `<module>` at file scope. A Go
-method `func (s *Server) load` uses `load`. A brace header's `{` may be on that
-line or on the next non-empty line. An assignment such as
-`val row = fetch(item)` is a call, not a function declaration. An unbraced
-loop body is the next statement, including a nested unbraced `if` or `else`.
-Python uses indentation, including
-`async for`, and ignores indentation inside `()`, `[]`, and `{}`. `//` in
-Python is floor division, not a comment. A Go raw string delimited by
-backticks does not hide later calls. Ruby and Elixir use `def`/`fun`/`end`
-and `for`/`while`/`do`/`end`. `else`, `elsif`, `elseif`, `elif`, and a postfix
-`if` or `unless` do not open a block. `begin`/`end` and `value = if` do. A
-nested `if`/`else`/`end` stays inside the loop, and the loop closes on its own
-`end`. An `each` block written with `{` closes on `}`. `each` is a loop when
-the line also has ` do`, ends with `do`, or contains `{`. `forEach` and
-`ForEach` are loops when the header line contains `{`, or when that `{` is on
-the next non-empty line. A `while` condition is per-item. The iterable of `for`
-or `foreach`, including a Java enhanced `for` separated by `:`, is not. A
-C-style `for` initializer, before the first `;`, runs once in the enclosing
-scope. Text after that `;` is per-item. A multiline `for` iterable stays
-outside that loop while its `()`, `[]`, or `{}` is open; a `while` condition
-on the following lines stays per-item. A keyword that is only the tail of a
-qualified name (`store::new`) remains a call. A function nested in a loop
-is a boundary, so a call inside that function is
-not a call of the outer loop. A call inside a helper's
-own loop still counts as a call in that helper, including one bare hop from an
-outer loop. A space or line break before `(` is still that call, reported on
-the callee's line, and an earlier call on that line does not drop it. Rust lifetimes and loop labels are not quotes. Type
-arguments before `(` are not part of the callee. Ruby and Elixir may call a
-qualified name without parentheses, including a name with no arguments. A `+`
-after that name is not a call. A member call on a receiver
-that is not a configured module (`item.fetch`, `$item->fetch`), a second hop, a
-duplicate function name, or a file that cannot be read is unproven. A call on a
-configured module whose export does not match is silent. The `call-sites`
-query stays TypeScript-only. No shipped language frontend is declined.
+Non-TypeScript languages use a best-effort line-oriented source scan rather
+than per-language AST call graphs. The scan matches `effects.<family>.targets`
+only; `returnedExecutors`, `typedExecutors`, `returnedMembers`, transaction
+markers, and batch exemptions stay on the TypeScript path.
+
+- **Proven**: an explicit qualified call whose head (normalizing `::`, `\`,
+  and `/` to `.`) matches a configured target `module` and whose tail matches
+  `export` (`enclosing → export`), or one bare local function hop whose body
+  reaches such a sink (`enclosing → local → export`), with `<module>` at file
+  scope.
+- **Silent**: a qualified call on a configured target `module` whose export
+  does not match a configured sink, or a bare local helper proven clean.
+- **Unproven**: a member call on a receiver that is not a configured module (`item.fetch`,
+  `$item->fetch`), a bare call shadowed by a parameter, a second hop, a
+  duplicate local function name, or an unreadable file. Unproven calls route
+  through `options.unanalyzable` instead of passing silently. A file-only
+  `allow` entry suppresses unreadable-source findings as well as per-item
+  calls in that file; selector-narrowed entries (`callee`, `function`, `line`)
+  apply only to matching calls.
+
+See the saved fixtures in
+`test-cases/rules/query-reached-per-item/language-call-policy/` and the unit
+suite under `crates/no-mistakes/src/codebase/rules/query_reached_per_item/languages/tests/`
+for the covered language syntax shapes. The `call-sites` query stays
+TypeScript-only. No shipped language is declined.
 
 ### Unanalyzable inputs
 

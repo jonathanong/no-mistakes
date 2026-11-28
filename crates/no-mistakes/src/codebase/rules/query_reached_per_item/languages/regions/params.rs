@@ -1,3 +1,5 @@
+use super::lex::close_paren;
+
 pub(super) fn parameter_names(line: &str) -> Vec<String> {
     if super::syntax::header_paren(line).is_some() && parameter_text(line).is_none() {
         return vec!["*".to_string()];
@@ -31,21 +33,4 @@ fn parameter_text(line: &str) -> Option<&str> {
     let open = super::syntax::header_paren(line)?;
     let close = close_paren(line, open)?;
     (close > open).then_some(&line[open + 1..close - 1])
-}
-
-fn close_paren(line: &str, open: usize) -> Option<usize> {
-    let mut depth = 0i32;
-    for (offset, ch) in line[open..].char_indices() {
-        match ch {
-            '(' => depth += 1,
-            ')' => {
-                depth -= 1;
-                if depth == 0 {
-                    return Some(open + offset + ch.len_utf8());
-                }
-            }
-            _ => {}
-        }
-    }
-    None
 }
