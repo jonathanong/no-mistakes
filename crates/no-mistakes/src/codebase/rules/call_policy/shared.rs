@@ -1,9 +1,8 @@
 //! Root selection shared with sibling call-graph rules.
-use super::root::{validate_roots, Root};
-use super::FORBIDDEN_CALLS_RULE_ID as RULE_ID;
+use super::root::{validate_root_options, Root};
 use crate::codebase::dependencies::graph::{DepGraph, NodeId};
 use crate::config::v2::schema::StringOrList;
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -38,16 +37,7 @@ pub(crate) fn expand_roots(request: SharedRoots<'_>) -> Result<(Vec<NodeId>, Vec
     }
     let options: RootOptions = serde_yaml::from_value(mapping.into())
         .with_context(|| format!("{}: invalid roots", request.rule))?;
-    if options.roots.is_empty() {
-        bail!("{RULE_ID}: each application requires at least one options.roots selector");
-    }
-    validate_roots(&options.roots)?;
-    if let Some(exclude_roots) = &options.exclude_roots {
-        let patterns = exclude_roots.values();
-        if patterns.is_empty() || patterns.iter().any(|pattern| pattern.trim().is_empty()) {
-            bail!("{RULE_ID}: excludeRoots must contain non-empty glob patterns");
-        }
-    }
+    validate_root_options(&options.roots, options.exclude_roots.as_ref())?;
     super::roots::expand_with_files(super::roots::ExpandRequest {
         rule: request.rule,
         allow_sourceless: true,
