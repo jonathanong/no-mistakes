@@ -37,7 +37,7 @@ stays silent. A later write of `let run = require("vitest")[key]` stays silent. 
 `vt[key].test.sequential`, stays silent, while `vt["test"].sequential` is still
 sequential. A default import named `test` is not itself a runner:
 `import test from "vitest"; test.sequential(...)` stays silent, and
-`test.test.sequential(...)` still reports. A CommonJS binding of the module is the same: `const test = require("vitest"); test.sequential(...)` stays silent, and `test.test.sequential(...)` still reports. `import { default as named } from "vitest"` is that same namespace, so `named.test.sequential(...)` reports. A dynamic `test.sequential.each(rows)("case", fn)` reports one `unanalyzable` advisory. A call written above
+`test.test.sequential(...)` still reports. A CommonJS binding of the module is the same: `const test = require("vitest"); test.sequential(...)` stays silent, and `test.test.sequential(...)` still reports. `const test = require("vitest")[key]` stays silent too, while `const named = require("vitest")["test"]` still reports. `import { default as named } from "vitest"` is that same namespace, so `named.test.sequential(...)` reports. A dynamic `test.sequential.each(rows)("case", fn)` reports one `unanalyzable` advisory. A call written above
 `const vt = require("vitest")` is still classified. A nested
 `const { test: suite }` does not make a module-scope `suite` a runner.
 A nested `require("vitest")` does not make a different binding

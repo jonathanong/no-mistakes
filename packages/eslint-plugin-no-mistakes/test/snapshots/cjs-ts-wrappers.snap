@@ -624,6 +624,12 @@
       "options": null
     },
     {
+      "file": "computed-alias.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "helper.js",
       "findings": [
         {
@@ -985,6 +991,17 @@
           "endLine": 4,
           "file": "computed-chain.test.ts",
           "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 6,
+          "file": "computed-chain.test.ts",
+          "line": 6,
           "message": "Use parallel tests instead of .sequential.",
           "messageId": "sequential",
           "ruleId": "no-mistakes/no-vitest-sequential",
@@ -4299,12 +4316,6 @@
       "options": null
     },
     {
-      "file": "other-receiver.test.ts",
-      "findings": [],
-      "kind": "valid",
-      "options": null
-    },
-    {
       "file": "cjs.test.ts",
       "findings": [
         {
@@ -4389,6 +4400,24 @@
           "endLine": 2,
           "file": "call-receiver.test.ts",
           "line": 2,
+          "message": "Vitest testTimeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "other-receiver.test.ts",
+      "findings": [
+        {
+          "column": 58,
+          "endColumn": 80,
+          "endLine": 1,
+          "file": "other-receiver.test.ts",
+          "line": 1,
           "message": "Vitest testTimeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
           "messageId": "timeout",
           "ruleId": "no-mistakes/vitest-timeout-cap",

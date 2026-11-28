@@ -95,7 +95,7 @@ function opaqueNow(node, context) {
 
 function opaqueWallClock(node, context) {
   const callee = unwrap(node.callee);
-  if (!MATCHERS.has(memberName(callee))) return false;
+  if (callee?.computed || !MATCHERS.has(memberName(callee))) return false;
   let assertion = unwrap(callee.object);
   while (memberName(assertion) === "not") assertion = unwrap(assertion.object);
   if (assertion?.type !== "CallExpression" || !isFrameworkExpect(assertion.callee, context)) {
@@ -110,7 +110,7 @@ function opaqueWallClock(node, context) {
 }
 
 function isWallTimeAssertion(callee, context) {
-  if (!MATCHERS.has(memberName(callee))) return false;
+  if (callee?.computed || !MATCHERS.has(memberName(callee))) return false;
   let assertion = unwrap(callee.object);
   while (memberName(assertion) === "not") assertion = unwrap(assertion.object);
   return (

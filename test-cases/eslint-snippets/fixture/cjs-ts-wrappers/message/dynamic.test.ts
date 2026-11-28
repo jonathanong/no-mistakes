@@ -17,4 +17,6 @@ test("reads", () => {
   check(...extra).toBe("x");
   vt.expect(...[err.message]).toBe("x");
   check(err.message).toBe("x");
+  const other = (value) => value;
+  check.call.call(other, err.message, 42).toBe(42);
 });

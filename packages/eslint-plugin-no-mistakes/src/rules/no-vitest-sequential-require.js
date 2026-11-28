@@ -100,7 +100,17 @@ function unknownComputedExport(root, context) {
   if (root?.type !== "Identifier") return false;
   const variable = resolveVariable(root, context);
   const def = variable?.defs.length === 1 ? variable.defs[0] : null;
-  if (def?.type !== "Variable" || def.node?.id?.type !== "ObjectPattern") return false;
+  if (def?.type !== "Variable") return false;
+  const init = unwrapExpression(def.node?.init);
+  if (init?.type === "MemberExpression" && init.computed && def.node.id?.type === "Identifier") {
+    const loaded = moduleLoad(init.object, context);
+    return (
+      loaded?.source === "vitest" &&
+      loaded.exportName === "*" &&
+      loads().staticName(init.property, true) === null
+    );
+  }
+  if (def.node?.id?.type !== "ObjectPattern") return false;
   const loaded = moduleLoad(def.node.init, context);
   if (loaded?.source !== "vitest" || loaded.exportName !== "*") return false;
   return exportKey(def.node.id, root.name) === null;

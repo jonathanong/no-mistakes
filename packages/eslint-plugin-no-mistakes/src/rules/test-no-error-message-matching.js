@@ -105,8 +105,10 @@ function opaqueExpect(node, context) {
   const current = unwrap(node);
   if (current?.type !== "CallExpression") return false;
   const callee = unwrap(current.callee);
-  const target =
-    callee?.type === "MemberExpression" && memberName(callee) === "expect" ? callee.object : callee;
+  const name = memberName(callee);
+  const inner = name === "call" || name === "apply" ? memberName(unwrap(callee.object)) : null;
+  if (inner === "call" || inner === "apply") return false;
+  const target = name === "expect" ? callee.object : callee;
   return isUnresolved(moduleLoad(target, context));
 }
 

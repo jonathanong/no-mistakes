@@ -77,7 +77,7 @@ const suite = {
     capCase("copy-safe-consumers"),
     // 1 timeout, 5 unknown. Primitive property reads stay known.
     capCase("primitive-reads", finding),
-    // 2 timeout, 1 invalid, 4 unknown.
+    // 3 timeout, 1 invalid, 3 unknown. setConfig ignores its receiver.
     capCase("invocation-safety", finding),
     // 1 timeout, 2 unknown, 1 invalid. Partially bound parameters are not unchanged.
     capCase("bound-callbacks", finding),

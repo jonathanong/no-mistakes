@@ -55,7 +55,7 @@ The rule is disabled by default in both presets.
   `["benchmarks/**/*.test.ts"]`.
 - `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. An
   elapsed `now()` read whose clock binding comes from a non-static `require`
-  reports `unanalyzable`. A computed member such as `clock["now"]()` stays silent.
+  reports `unanalyzable`. A computed member such as `clock["now"]()` stays silent. A computed matcher such as `expect(elapsed)["toBeLessThan"](200)` stays silent too.
 
 `import * as ph from "node:perf_hooks"`, `import ph = require("node:perf_hooks")`,
 and `const { performance } = ph` are the same clock. A cast such as

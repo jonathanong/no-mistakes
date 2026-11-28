@@ -114,6 +114,7 @@ module.exports = rule(
     }
 
     function excludedExport(expr) {
+      if (expr?.type === "MemberExpression" && expr.computed) return true;
       const name = knownExportName(expr);
       return Boolean(exportMatcher && name && !exportMatcher.test(name));
     }

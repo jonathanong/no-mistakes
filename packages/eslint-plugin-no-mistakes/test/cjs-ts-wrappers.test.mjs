@@ -59,6 +59,7 @@ const groups = [
       "computed-registered.test.ts",
       "import-expect.test.ts",
       "inline-other.js",
+      "computed-alias.test.ts",
     ],
   },
   {
@@ -309,8 +310,14 @@ const groups = [
   {
     rule: "vitest-timeout-cap",
     dir: "timeout",
-    invalid: ["cjs.test.ts", "vitest.config.ts", "apply.test.ts", "call-receiver.test.ts"],
-    valid: ["dynamic.test.ts", "other-receiver.test.ts"],
+    invalid: [
+      "cjs.test.ts",
+      "vitest.config.ts",
+      "apply.test.ts",
+      "call-receiver.test.ts",
+      "other-receiver.test.ts",
+    ],
+    valid: ["dynamic.test.ts"],
   },
   {
     rule: "vitest-timeout-cap",
