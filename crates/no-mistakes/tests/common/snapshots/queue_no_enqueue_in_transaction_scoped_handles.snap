@@ -162,7 +162,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/statements.ts",
           "import": "<unknown>",
-          "line": 94,
+          "line": 103,
           "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
           "rule": "queue-no-enqueue-in-transaction",
           "sourceLine": "await (flag ? enqueue : enqueueFallback)({ receiptId: \"ambiguous\" });",
@@ -257,6 +257,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "queue-no-enqueue-in-transaction",
           "sourceLine": "JSON.stringify(items, () => enqueue({ receiptId: \"json\" }));",
           "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 97,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "invoke(items, () => enqueue({ receiptId: \"global-alternative\" }));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "invoke",
+          "line": 97,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "invoke(items, () => enqueue({ receiptId: \"global-alternative\" }));",
+          "target": "unanalyzable"
         },
         {
           "file": "src/statements.ts",
@@ -422,7 +440,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/statements.ts",
           "import": "<unknown>",
-          "line": 94,
+          "line": 103,
           "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
           "rule": "queue-no-enqueue-in-transaction",
           "sourceLine": "await (flag ? enqueue : enqueueFallback)({ receiptId: \"ambiguous\" });",
@@ -480,6 +498,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "publish inside an async built-in callback may run after the transaction closes; move the publish after commit",
           "rule": "queue-no-enqueue-in-transaction",
           "sourceLine": "Array.from(items, () => enqueue({ receiptId: \"nested\" }));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 97,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "invoke(items, () => enqueue({ receiptId: \"global-alternative\" }));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "invoke",
+          "line": 97,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "invoke(items, () => enqueue({ receiptId: \"global-alternative\" }));",
           "target": "unanalyzable"
         },
         {

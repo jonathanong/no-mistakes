@@ -89,6 +89,15 @@ export async function globalStatic(items: number[]) {
   await tx.commit();
 }
 
+function ignoreCallback(_items: number[], _callback: () => void) {}
+
+export async function ambiguousGlobalCallback(flag: boolean, items: number[]) {
+  const invoke = flag ? Array.from : ignoreCallback;
+  const tx = await beginTransaction();
+  invoke(items, () => enqueue({ receiptId: "global-alternative" }));
+  await tx.commit();
+}
+
 export async function ambiguousPublisher(flag: boolean) {
   const tx = await beginTransaction();
   await (flag ? enqueue : enqueueFallback)({ receiptId: "ambiguous" });

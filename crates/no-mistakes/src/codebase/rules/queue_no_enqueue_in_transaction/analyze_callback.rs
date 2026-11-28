@@ -92,7 +92,7 @@ pub(super) fn check_callback_site(
     }
 }
 
-fn any_global_callback(site: &ResolvedCallSite) -> bool {
+pub(super) fn any_global_callback(site: &ResolvedCallSite) -> bool {
     site.targets().any(|candidate| {
         matches!(
             candidate.target,
