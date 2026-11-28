@@ -99,7 +99,12 @@ pub(in crate::statements::keyed_lookups) fn projection_expr_is_unproven(expr: &E
         } => {
             *shorthand
                 || *special
-                || !substring_is_proven(expr, substring_from.as_deref(), substring_for.as_deref())
+                || !substring_is_proven(
+                    expr,
+                    substring_from.as_deref(),
+                    substring_for.as_deref(),
+                    true,
+                )
         }
         Expr::Case {
             operand,

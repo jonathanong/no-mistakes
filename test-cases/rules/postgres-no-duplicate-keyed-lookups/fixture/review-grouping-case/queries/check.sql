@@ -240,3 +240,25 @@ FROM orders o;
 SELECT (SELECT a.n FROM accounts a WHERE a.id = o.coalesce)
 FROM orders o
 ORDER BY (SELECT a.n FROM accounts a WHERE a.id = o."coalesce");
+
+SELECT CASE
+    WHEN FALSE THEN 0
+    WHEN TRUE THEN 0
+    ELSE (
+        SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+             + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    )
+END
+FROM orders o;
+
+SELECT CASE WHEN TRUE THEN 0
+    WHEN o.enabled THEN (SELECT a.n FROM accounts a WHERE a.id = o.id)
+    ELSE (SELECT b.n FROM accounts b WHERE b.id = o.id)
+END
+FROM orders o;
+
+SELECT CASE WHEN TRUE THEN 0 ELSE pg_catalog.sum((
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+)) END
+FROM orders o;

@@ -42,10 +42,8 @@ fn substring_result(function: &Function, name: &str) -> Option<BuiltinType> {
         [length] => Some(positional_expr(length)?),
         _ => return None,
     };
-    if name == "substr" && operand_type(start) != Some(BuiltinType::Integer) {
-        return None;
-    }
-    substring_is_proven(source, Some(start), length).then_some(BuiltinType::Text)
+    substring_is_proven(source, Some(start), length, name == "substring")
+        .then_some(BuiltinType::Text)
 }
 
 fn positional_expr(arg: &FunctionArg) -> Option<&Expr> {

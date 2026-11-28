@@ -197,7 +197,8 @@ fn proves_using_bindings_and_distinguishes_reused_window_targets_from_frame_boun
             (101, 102),
             (122, 123),
             (130, 131),
-            (143, 146)
+            (143, 146),
+            (155, 157)
         ]
     );
 }
@@ -303,7 +304,8 @@ fn separates_grouped_reuse_from_independent_expressions_and_case_arms() {
             (198, 200),
             (219, 221),
             (225, 226),
-            (233, 234)
+            (233, 234),
+            (261, 262)
         ]
     );
 }
@@ -414,7 +416,11 @@ fn checks_operator_signatures_and_shares_only_compatible_lookup_history() {
             (238, 239),
             (254, 255),
             (268, 269),
-            (273, 274)
+            (273, 274),
+            (294, 298),
+            (321, 320),
+            (325, 329),
+            (334, 358)
         ]
     );
 }

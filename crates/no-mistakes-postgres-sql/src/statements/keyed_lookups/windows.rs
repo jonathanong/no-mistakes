@@ -1,4 +1,4 @@
-use super::select_exprs::identity::normalize_target;
+use super::select_exprs::identity::written_window_identity;
 use super::select_item_expr;
 use crate::fx::FxHashMap;
 use crate::idents::ident_key;
@@ -35,7 +35,7 @@ impl WindowPlan {
                 if spec.window_frame.is_some() {
                     if let Some(needs_frame) = references
                         .inline
-                        .get_mut(&window_identity(spec))
+                        .get_mut(&written_window_identity(spec))
                         .and_then(Option::take)
                     {
                         *references
@@ -88,16 +88,10 @@ impl WindowPlan {
         }
         self.inline
             .borrow_mut()
-            .entry(window_identity(spec))
+            .entry(written_window_identity(spec))
             .or_insert(Some(true))
             .take()
     }
-}
-
-fn window_identity(spec: &WindowSpec) -> WindowSpec {
-    let mut key = spec.clone();
-    normalize_target(&mut key);
-    key
 }
 
 pub(super) fn window_expressions(
@@ -171,7 +165,10 @@ impl Visitor for WindowReferences {
                             self.named.entry(ident_key(name)).or_default();
                         }
                         if spec.window_frame.is_some() {
-                            let needs_frame = self.inline.entry(window_identity(spec)).or_default();
+                            let needs_frame = self
+                                .inline
+                                .entry(written_window_identity(spec))
+                                .or_default();
                             *needs_frame = Some(
                                 needs_frame.unwrap_or_default() || needs_original_frame(function),
                             );

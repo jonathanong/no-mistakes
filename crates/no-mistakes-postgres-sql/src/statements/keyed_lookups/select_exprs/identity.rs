@@ -1,28 +1,40 @@
 use super::super::expr_norm::function::is_conditional_keyword;
-use super::super::table::lookup_table;
-use crate::idents::{ident_key, object_name_identity, relation_suffix_name, unwrap_expr};
+use crate::idents::{ident_key, unwrap_expr};
 use crate::order::canonical_order_options;
 use sqlparser::ast::{
     CastKind, DataType, Distinct, Expr, Ident, OrderByExpr, OrderByKind, OrderBySort, Query,
-    Select, SelectItem, SetExpr, TableFactor, TableInheritance, VisitMut, VisitorMut,
+    SetExpr, TableFactor, TableInheritance, VisitMut, VisitorMut, WindowSpec,
 };
 use std::ops::ControlFlow;
+mod local_columns;
+use local_columns::normalize_local_columns;
 
 pub(in crate::statements::keyed_lookups) fn target_identity(expr: &Expr) -> Expr {
     let mut key = expr.clone();
-    normalize_target(&mut key);
+    normalize(&mut key, true);
     key
 }
 
-pub(in crate::statements::keyed_lookups) fn normalize_target(node: &mut impl VisitMut) {
-    #[derive(Default)]
+pub(in crate::statements::keyed_lookups) fn written_window_identity(
+    spec: &WindowSpec,
+) -> WindowSpec {
+    let mut key = spec.clone();
+    normalize(&mut key, false);
+    key
+}
+
+fn normalize(node: &mut impl VisitMut, normalize_targets: bool) {
     struct Identifiers {
+        normalize_targets: bool,
         quoted_keyword_function: Option<*const Ident>,
     }
     impl VisitorMut for Identifiers {
         type Break = ();
 
         fn pre_visit_query(&mut self, query: &mut Query) -> ControlFlow<()> {
+            if !self.normalize_targets {
+                return ControlFlow::Continue(());
+            }
             if let SetExpr::Select(select) = query.body.as_mut() {
                 if matches!(select.distinct, Some(Distinct::All)) {
                     select.distinct = None;
@@ -58,7 +70,9 @@ pub(in crate::statements::keyed_lookups) fn normalize_target(node: &mut impl Vis
                 if *kind == CastKind::DoubleColon {
                     *kind = CastKind::Cast;
                 }
-                if matches!(data_type, DataType::Int(None) | DataType::Int4(None)) {
+                if self.normalize_targets
+                    && matches!(data_type, DataType::Int(None) | DataType::Int4(None))
+                {
                     *data_type = DataType::Integer(None);
                 }
             }
@@ -108,7 +122,10 @@ pub(in crate::statements::keyed_lookups) fn normalize_target(node: &mut impl Vis
         }
     }
 
-    let _ = node.visit(&mut Identifiers::default());
+    let _ = node.visit(&mut Identifiers {
+        normalize_targets,
+        quoted_keyword_function: None,
+    });
 }
 
 fn normalize_sort_options(order: &mut [OrderByExpr]) {
@@ -121,69 +138,5 @@ fn normalize_sort_options(order: &mut [OrderByExpr]) {
             });
             item.options.nulls_first = Some(nulls_first);
         }
-    }
-}
-
-fn normalize_local_columns(select: &mut Select) {
-    let [table] = select.from.as_slice() else {
-        return;
-    };
-    if !table.joins.is_empty() {
-        return;
-    }
-    let Some((name, alias)) = lookup_table(&table.relation) else {
-        return;
-    };
-    let qualifier = alias.map_or_else(
-        || relation_suffix_name(&object_name_identity(name)),
-        |alias| ident_key(&alias.name),
-    );
-
-    struct LocalColumns<'a> {
-        qualifier: &'a str,
-        depth: usize,
-    }
-
-    impl VisitorMut for LocalColumns<'_> {
-        type Break = ();
-
-        fn pre_visit_query(&mut self, _: &mut Query) -> ControlFlow<()> {
-            self.depth += 1;
-            ControlFlow::Continue(())
-        }
-
-        fn post_visit_query(&mut self, _: &mut Query) -> ControlFlow<()> {
-            self.depth -= 1;
-            ControlFlow::Continue(())
-        }
-
-        fn pre_visit_expr(&mut self, expr: &mut Expr) -> ControlFlow<()> {
-            if self.depth == 0 {
-                if let Expr::CompoundIdentifier(parts) = expr {
-                    if let [qualifier, column] = parts.as_slice() {
-                        if ident_key(qualifier) == self.qualifier {
-                            *expr = Expr::Identifier(column.clone());
-                        }
-                    }
-                }
-            }
-            ControlFlow::Continue(())
-        }
-    }
-
-    let mut visitor = LocalColumns {
-        qualifier: &qualifier,
-        depth: 0,
-    };
-    for expr in select
-        .projection
-        .iter_mut()
-        .filter_map(|item| match item {
-            SelectItem::UnnamedExpr(expr) | SelectItem::ExprWithAlias { expr, .. } => Some(expr),
-            _ => None,
-        })
-        .chain(select.selection.iter_mut())
-    {
-        let _ = expr.visit(&mut visitor);
     }
 }

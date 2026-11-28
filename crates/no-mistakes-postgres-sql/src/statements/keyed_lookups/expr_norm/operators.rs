@@ -1,7 +1,9 @@
 use crate::idents::unwrap_expr;
 use sqlparser::ast::{BinaryOperator, CaseWhen, DataType, Expr, UnaryOperator, Value};
 mod calls;
+mod literals;
 use calls::function_result;
+use literals::{negated_literal_type, number_type};
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum BuiltinType {
@@ -74,13 +76,20 @@ pub(super) fn array_elements_are_proven(elements: &[Expr]) -> bool {
     }
 }
 
-pub(super) fn substring_is_proven(expr: &Expr, from: Option<&Expr>, length: Option<&Expr>) -> bool {
+pub(super) fn substring_is_proven(
+    expr: &Expr,
+    from: Option<&Expr>,
+    length: Option<&Expr>,
+    allows_pattern: bool,
+) -> bool {
     if operand_type(expr) != Some(BuiltinType::Text) {
         return false;
     }
     let length_type = length.and_then(operand_type);
     match from.and_then(operand_type) {
-        Some(kind @ (BuiltinType::Integer | BuiltinType::Text)) => {
+        Some(kind)
+            if kind == BuiltinType::Integer || allows_pattern && kind == BuiltinType::Text =>
+        {
             length.is_none() || length_type == Some(kind)
         }
         _ => from.is_none() && length_type == Some(BuiltinType::Integer),
@@ -106,9 +115,7 @@ pub(super) fn case_is_proven(
 fn operand_type(expr: &Expr) -> Option<BuiltinType> {
     match unwrap_expr(expr) {
         Expr::Value(value) => match &value.value {
-            Value::Number(number, _) if number.parse::<i32>().is_ok() => Some(BuiltinType::Integer),
-            Value::Number(number, _) if number.parse::<i64>().is_ok() => Some(BuiltinType::BigInt),
-            Value::Number(..) => Some(BuiltinType::Numeric),
+            Value::Number(number, _) => Some(number_type(number, false)),
             Value::Boolean(_) => Some(BuiltinType::Bool),
             Value::SingleQuotedString(_) | Value::EscapedStringLiteral(_) => {
                 Some(BuiltinType::Text)
@@ -158,6 +165,11 @@ fn binary_result(op: &BinaryOperator, left: &Expr, right: &Expr) -> Option<Built
 }
 
 fn unary_result(op: UnaryOperator, expr: &Expr) -> Option<BuiltinType> {
+    if op == UnaryOperator::Minus {
+        if let Some(kind) = negated_literal_type(expr) {
+            return Some(kind);
+        }
+    }
     let kind = operand_type(expr)?;
     match op {
         UnaryOperator::Plus | UnaryOperator::Minus if kind.numeric() => Some(kind),

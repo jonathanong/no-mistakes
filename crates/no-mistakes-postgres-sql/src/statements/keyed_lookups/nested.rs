@@ -1,5 +1,6 @@
 use super::function_clauses::{
-    coalesce_arguments, condition_is_never_true, split_coalesce_arguments, visit_eager_functions,
+    coalesce_arguments, filter_skips_inputs, literal_condition, split_coalesce_arguments,
+    visit_eager_functions, visit_function_inputs,
 };
 use super::{walk_query, ScopeStack};
 use crate::idents::function_arg_expr;
@@ -30,6 +31,14 @@ struct Nested<'a> {
 impl Nested<'_> {
     fn walk_conditional_children(&mut self, expr: &Expr) {
         match expr {
+            Expr::Function(function) if filter_skips_inputs(function) => {
+                self.blocked_expression_depth = 1;
+                walk_nested_queries(&function.filter, self.scopes, self.out);
+                visit_function_inputs(function, &mut |arg| {
+                    walk_nested_queries(arg, self.scopes, self.out)
+                });
+                walk_nested_queries(&function.over, self.scopes, self.out);
+            }
             Expr::Function(function) => {
                 if let Some(arguments) = coalesce_arguments(function) {
                     let (evaluated, skipped) = split_coalesce_arguments(arguments);
@@ -51,20 +60,32 @@ impl Nested<'_> {
                 ..
             } if conditions
                 .iter()
-                .any(|branch| condition_is_never_true(&branch.condition)) =>
+                .any(|branch| literal_condition(&branch.condition).is_some()) =>
             {
                 self.blocked_expression_depth = 1;
+                let mut reachable = true;
                 for branch in conditions {
-                    if condition_is_never_true(&branch.condition) {
-                        self.walk_eager_children(&branch.result);
-                    } else {
-                        walk_nested_queries(&branch.condition, self.scopes, self.out);
-                        walk_nested_queries(&branch.result, self.scopes, self.out);
-                    }
+                    let condition = literal_condition(&branch.condition);
+                    self.walk_conditional_child(&branch.condition, reachable);
+                    self.walk_conditional_child(
+                        &branch.result,
+                        reachable && condition != Some(false),
+                    );
+                    reachable &= condition != Some(true);
                 }
-                walk_nested_queries(else_result, self.scopes, self.out);
+                if let Some(else_result) = else_result {
+                    self.walk_conditional_child(else_result, reachable);
+                }
             }
             _ => {}
+        }
+    }
+
+    fn walk_conditional_child(&mut self, expr: &Expr, reachable: bool) {
+        if reachable {
+            walk_nested_queries(expr, self.scopes, self.out);
+        } else {
+            self.walk_eager_children(expr);
         }
     }
 

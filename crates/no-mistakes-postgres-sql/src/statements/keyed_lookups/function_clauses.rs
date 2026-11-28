@@ -30,8 +30,13 @@ pub(super) fn visit_function_inputs(function: &Function, visit: &mut impl FnMut(
     } else {
         usize::MAX
     };
-    visit_arguments(&function.args, argument_limit, visit);
-    visit_shallow_exprs(&function.within_group, visit);
+    let skips_inputs = filter_skips_inputs(function);
+    if !skips_inputs || !function.within_group.is_empty() {
+        visit_arguments(&function.args, argument_limit, visit);
+    }
+    if !skips_inputs {
+        visit_shallow_exprs(&function.within_group, visit);
+    }
 }
 
 pub(super) fn split_coalesce_arguments(
@@ -44,8 +49,19 @@ pub(super) fn split_coalesce_arguments(
     arguments.split_at(evaluated.map_or(arguments.len(), |index| index + 1))
 }
 
-pub(super) fn condition_is_never_true(expr: &Expr) -> bool {
-    matches!(unwrap_expr(expr), Expr::Value(value) if matches!(value.value, Value::Boolean(false) | Value::Null))
+pub(super) fn literal_condition(expr: &Expr) -> Option<bool> {
+    let Expr::Value(value) = unwrap_expr(expr) else {
+        return None;
+    };
+    match value.value {
+        Value::Boolean(value) => Some(value),
+        Value::Null => Some(false),
+        _ => None,
+    }
+}
+
+pub(super) fn filter_skips_inputs(function: &Function) -> bool {
+    function.filter.as_deref().and_then(literal_condition) == Some(false)
 }
 
 fn has_optional_window_default(function: &Function) -> bool {

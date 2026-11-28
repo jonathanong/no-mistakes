@@ -1,6 +1,6 @@
 use super::expr_norm::ExprNormalizer;
 use super::function_clauses::{
-    coalesce_arguments, condition_is_never_true, is_eager, split_coalesce_arguments,
+    coalesce_arguments, filter_skips_inputs, is_eager, literal_condition, split_coalesce_arguments,
     visit_eager_functions, visit_function_inputs,
 };
 use super::join::record_lookup;
@@ -56,13 +56,20 @@ fn inspect(
             }
             let mut cond_seen = seen.clone();
             for branch in conditions {
-                if operand.is_none() && condition_is_never_true(&branch.condition) {
+                let condition = operand
+                    .is_none()
+                    .then(|| literal_condition(&branch.condition))
+                    .flatten();
+                if condition == Some(false) {
                     continue;
                 }
                 inspect(&branch.condition, outer, targets, &mut cond_seen, out, true);
                 let mut arm_seen = cond_seen.clone();
                 inspect(&branch.result, outer, targets, &mut arm_seen, out, true);
                 merge_history(seen, arm_seen);
+                if condition == Some(true) {
+                    return;
+                }
             }
             if let Some(else_expr) = else_result {
                 inspect(else_expr, outer, targets, &mut cond_seen, out, true);
@@ -78,12 +85,19 @@ fn inspect(
             let input_scope = targets.function_input_scope(function, outer);
             if let Some(filter) = &function.filter {
                 inspect(filter, input_scope, targets, seen, out, skip_eager);
+            }
+            if let Some(filter) = function
+                .filter
+                .as_ref()
+                .filter(|_| !filter_skips_inputs(function))
+            {
                 let key = ExprNormalizer::new(None, true, input_scope)
                     .normalize(filter)
                     .map(|_| target_identity(filter));
-                let mut filtered = key
-                    .as_ref()
-                    .map_or_else(BTreeMap::new, |key| targets.take_filter_history(key));
+                let mut filtered = seen.clone();
+                if let Some(key) = &key {
+                    merge_history(&mut filtered, targets.take_filter_history(key));
+                }
                 visit_function_inputs(function, &mut |expr| {
                     inspect(expr, input_scope, targets, &mut filtered, out, skip_eager);
                 });

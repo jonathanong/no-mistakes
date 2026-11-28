@@ -288,3 +288,94 @@ SELECT
     (SELECT a.x = ANY(ARRAY['a', 'b']) FROM accounts a WHERE a.id = o.account_id),
     (SELECT b.x = ALL(ARRAY['a', 'b']) FROM accounts b WHERE b.id = o.account_id)
 FROM orders o;
+
+SELECT o.id
+FROM orders o
+JOIN accounts a ON a.id = o.account_id
+    AND (-2147483648 % 7) = -2
+    AND (-9223372036854775808 % 7::bigint) = -1::bigint
+    AND (-(-2147483648) % 7::bigint) = 2::bigint
+JOIN accounts b ON b.id = o.account_id
+    AND (-2147483648 % 7) = -2
+    AND (-9223372036854775808 % 7::bigint) = -1::bigint
+    AND (-(-2147483648) % 7::bigint) = 2::bigint;
+
+SELECT o.id
+FROM orders o
+JOIN accounts a ON a.id = o.account_id AND (-2147483648 % 7::bigint) = -2::bigint
+JOIN accounts b ON b.id = o.account_id AND (-2147483648 % 7::bigint) = -2::bigint;
+
+SELECT pg_catalog.sum(
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+    + (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+) FILTER (WHERE FALSE)
+FROM orders o;
+
+SELECT pg_catalog.sum((
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+)) FILTER (WHERE NULL)
+FROM orders o;
+
+SELECT sum((SELECT a.n FROM accounts a WHERE a.id = o.account_id))
+    FILTER (WHERE (SELECT b.enabled FROM accounts b WHERE b.id = o.account_id))
+FROM orders o;
+
+SELECT pg_catalog.percentile_cont(
+    (SELECT a.percentile FROM accounts a WHERE a.id = $1)
+) WITHIN GROUP (ORDER BY
+    (SELECT b.n FROM accounts b WHERE b.id = $1)
+) FILTER (WHERE FALSE),
+    (SELECT c.n FROM accounts c WHERE c.id = $1)
+FROM orders o;
+
+SELECT o.id
+FROM orders o
+JOIN accounts a ON a.id = o.account_id
+    AND pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        1
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+    ) = 'x'::text
+JOIN accounts b ON b.id = o.account_id
+    AND pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        pg_catalog.length(pg_catalog.substr('x'::text,
+        1
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+        ) || 'x'::text)
+    ) = 'x'::text;

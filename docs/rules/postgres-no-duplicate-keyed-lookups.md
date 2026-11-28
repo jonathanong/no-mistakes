@@ -59,12 +59,14 @@ The rule stays silent when the lookups are not proven to read the same row:
   expression. Inputs to recognized aggregates can repeat across arms because
   PostgreSQL evaluates the aggregates before choosing an arm. Aggregate
   arguments share lookup history only when their filter expressions match and
-  the rule can prove the filter is repeatable.
+  the rule can prove the filter is repeatable. Transition inputs are skipped
+  when the filter is a literal false or null.
 - Optional default expressions in `lag` and `lead` window calls. PostgreSQL
   evaluates them only when the requested row falls outside the partition.
 - `COALESCE` arguments after a known non-null literal. Aggregate and window
   inputs still follow their separate evaluation rules.
-- Results of searched `CASE` branches with literal false or null conditions.
+- Results of searched `CASE` branches with literal false or null conditions,
+  and branches after a literal true condition.
 - Volatile key expressions (UUID generators such as `gen_random_uuid()`,
   `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined
   or unrecognized functions in keys or scalar projections, unresolved table
@@ -85,7 +87,7 @@ The rule stays silent when the lookups are not proven to read the same row:
 PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
 (including positions and grouping sets), `ORDER BY`, and window partition and ordering
 clauses. Identical named and inline window specifications can share their
-frame bounds when their written ordering options match. Each explicitly
+frame bounds when their written specifications match. Each explicitly
 referenced named declaration keeps its own identity. The rule skips frame
 bounds when all calls sharing the window are
 `pg_catalog.row_number()` and PostgreSQL replaces the frame. An aggregate can

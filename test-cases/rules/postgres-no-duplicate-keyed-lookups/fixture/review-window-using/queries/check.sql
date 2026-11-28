@@ -149,3 +149,14 @@ SELECT (
     LIMIT 1
 )
 FROM orders o;
+
+SELECT (
+    SELECT pg_catalog.sum(d.amount) OVER (
+        ROWS (SELECT a.n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+    ) + pg_catalog.avg(d.amount) OVER (
+        ROWS (SELECT n FROM accounts a WHERE a.id = o.account_id) PRECEDING
+    )
+    FROM details d
+    LIMIT 1
+)
+FROM orders o;
