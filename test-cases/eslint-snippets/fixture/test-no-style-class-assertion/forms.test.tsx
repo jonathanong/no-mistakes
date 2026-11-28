@@ -1,0 +1,16 @@
+expect(el.className).toContain("bg-primary");
+expect(el.className).toBe("btn btn-primary");
+expect(el.className).toMatch(/bg-/);
+expect(el.className).toEqual("sr-only");
+expect(el["className"]).toContain("hidden");
+expect(el).toHaveClass("duration-300");
+expect(el).toHaveClass("sr-only");
+expect(el).toHaveClass("hidden");
+expect(el)["toHaveClass"]("active");
+expect(el.classList.contains("top-14")).toBe(true);
+expect(el.classList.contains("hidden")).toEqual(true);
+expect(el.classList.contains(activeClass)).toBeTruthy();
+expect(el.getAttribute("class")).toMatch(/border-l-2/);
+expect(el.getAttribute("class")).toContain("p-4");
+expect(el.getAttribute(`class`)).toBe("card");
+expect(el.getAttribute("CLASS")).toContain("sr-only");

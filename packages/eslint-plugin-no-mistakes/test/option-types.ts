@@ -81,6 +81,8 @@ export const invalidEnqueueFakeOptions: TestNoTypedEnqueueFakeOptions = {
 
 export const rule = plugin.rules?.["postgres-no-executor-adapter"];
 export const commonJsRule = pluginRequire.rules?.["postgres-no-executor-adapter"];
+export const styleClassRule = plugin.rules?.["test-no-style-class-assertion"];
+export const commonJsStyleClassRule = pluginRequire.rules?.["test-no-style-class-assertion"];
 
 export const poolListenerOptions: PostgresPoolRequiresErrorListenerOptions = {
   extraModules: ["@example/pg-compatible"],
