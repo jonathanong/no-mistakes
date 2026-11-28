@@ -15,6 +15,7 @@ const {
   destructureMemberFacts,
   memberExpressionStatus,
 } = require("./react-nullish-props");
+const { copyLoopMembers, notePair } = require("./react-nullish-loop-members");
 
 const isObjectPattern = (node) => node && node.type === "ObjectPattern";
 const isIdentifier = (node) => node && node.type === "Identifier";
@@ -149,13 +150,16 @@ function createNullishState(context) {
     }
   }
 
+  function finishLoop() {
+    copyLoopMembers(scopes.at(-1), scopes.at(-2));
+    scopes.pop();
+  }
+
   function noteObjectAlias(node) {
     const alias = objectAliasProps(node);
     const binding = resolveVariable(node.id, context);
-    if (alias?.props) objectBindings.set(binding, alias.props);
-    if (alias?.props) objectAliases.set(binding, alias.props);
-    if (alias?.unresolved) unresolvedBindings.set(binding, alias.unresolved);
-    if (alias?.unresolved) unresolvedAliases.set(binding, alias.unresolved);
+    notePair(objectBindings, objectAliases, binding, alias?.props);
+    notePair(unresolvedBindings, unresolvedAliases, binding, alias?.unresolved);
   }
 
   function defineVariable(node) {
@@ -207,11 +211,13 @@ function createNullishState(context) {
     defineVariable,
     enterFunction,
     expressionStatus,
+    finishLoop,
     popScope: () => scopes.pop(),
     pushScope,
     setFacts(next) {
       facts = next;
     },
+    shadowName: (name) => currentScope()?.bindings.add(name),
   };
 }
 

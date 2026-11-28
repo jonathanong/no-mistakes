@@ -49,6 +49,15 @@ module.exports = rule(
         );
       },
       "BlockStatement:exit": state.popScope,
+      "ForStatement, ForInStatement, ForOfStatement"() {
+        state.pushScope("loop");
+      },
+      "ForStatement:exit": state.finishLoop,
+      "ForInStatement:exit": state.finishLoop,
+      "ForOfStatement:exit": state.finishLoop,
+      ClassDeclaration(node) {
+        if (node.id) state.shadowName(node.id.name);
+      },
       VariableDeclarator: state.defineVariable,
       LogicalExpression(node) {
         if (node.operator !== "??" || suppressed(node)) return;

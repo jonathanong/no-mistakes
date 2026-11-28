@@ -413,6 +413,11 @@ describe("typescript import wrappers", () => {
         "react-no-nullish-react-node",
       ),
       eslintCase(
+        "loop const and class shadow an outer binding",
+        "react-nullish-loop-class.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
         "unresolved qualified getter terminal",
         "nullable-qualified-member.ts",
         "server-require-nullable-fetch-wrapper",
@@ -428,6 +433,16 @@ describe("typescript import wrappers", () => {
         "server-require-nullable-fetch-wrapper",
         {
           getterCalleePatterns: ["^api\\.getWidget$", "^services\\.api\\.getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "default member alias keeps its prefix",
+        "nullable-default-alias.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^default\\.getWidget$"],
           requiredWrapperCallee: "wrapNullable",
           nullableReturnTypeNames: ["Widget"],
         },
@@ -769,6 +784,14 @@ describe("typescript import wrappers", () => {
       [75, "nullish"],
     ]);
     expect(
+      cases
+        .find((item) => item.name === "loop const and class shadow an outer binding")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [6, "unanalyzable"],
+      [19, "unanalyzable"],
+    ]);
+    expect(
       cases.find((item) => item.name === "reassigned alias chain stays bounded").findings,
     ).toEqual([]);
     expect(
@@ -778,6 +801,14 @@ describe("typescript import wrappers", () => {
     ).toEqual([
       [5, "wrapper"],
       [10, "wrapper"],
+    ]);
+    expect(
+      cases
+        .find((item) => item.name === "default member alias keeps its prefix")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [7, "wrapper"],
+      [11, "wrapper"],
     ]);
     expect(
       cases
@@ -854,6 +885,7 @@ describe("typescript import wrappers", () => {
         "react-nullish-let-require.tsx",
         "react-nullish-computed-props.tsx",
         "react-nullish-merged.tsx",
+        "react-nullish-loop-class.tsx",
       ]),
       "nullish-ignore": oxlintOn(".oxlintrc-nullish-ignore.json", ["react-nullish-unresolved.tsx"]),
       fetch: oxlintOn(".oxlintrc-fetch.json", [
@@ -894,6 +926,9 @@ describe("typescript import wrappers", () => {
       "nullable-qualified": oxlintOn(".oxlintrc-nullable-qualified.json", [
         "nullable-qualified-member.ts",
         "nullable-named-chain.ts",
+      ]),
+      "nullable-default": oxlintOn(".oxlintrc-nullable-default.json", [
+        "nullable-default-alias.ts",
       ]),
       "nullable-ignore": oxlintOn(".oxlintrc-nullable-ignore.json", [
         "nullable-relay-getter.ts",

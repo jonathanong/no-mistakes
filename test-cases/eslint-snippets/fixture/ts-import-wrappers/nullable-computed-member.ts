@@ -25,3 +25,9 @@ const items: Record<string, (id: string) => Promise<Widget | null>> = {};
 export async function local(): Promise<Widget | null> {
   return items[method]("1");
 }
+
+import type * as types from "./api";
+
+export async function typeOnly(): Promise<Widget | null> {
+  return types[method]("1");
+}

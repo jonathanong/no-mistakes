@@ -32,13 +32,16 @@ function calleeNames(callee, context) {
   const path = calleePath(callee);
   const spelled = importSpellings(rootIdentifier(callee), path, context);
   const required = requiredMember(callee, context);
+  const dynamicBase = dynamicComputedMember(callee)
+    ? importFact(rootIdentifier(callee), context)
+    : null;
   return {
     names: [...new Set([path, ...spelled.names, required?.name].filter(Boolean))],
     unresolved:
       spelled.unresolved ||
       required?.unresolved === true ||
       requireModule(callee, context) === null ||
-      Boolean(dynamicComputedMember(callee) && importFact(rootIdentifier(callee), context)),
+      Boolean(dynamicBase && !dynamicBase.typeOnly),
   };
 }
 
@@ -74,10 +77,6 @@ function wrapperState(node, wrapper, context) {
     current = current.parent;
   }
   return unresolved ? "unresolved" : "outside";
-}
-
-function insideWrapper(node, wrapper, context) {
-  return wrapperState(node, wrapper, context) === "inside";
 }
 
 module.exports = Object.assign(
@@ -203,7 +202,7 @@ module.exports = Object.assign(
   {
     __test: {
       ...helpers,
-      insideWrapper,
+      insideWrapper: (node, wrapper, context) => wrapperState(node, wrapper, context) === "inside",
     },
   },
 );

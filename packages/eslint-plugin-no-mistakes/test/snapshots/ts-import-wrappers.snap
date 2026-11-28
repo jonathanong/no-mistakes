@@ -702,6 +702,36 @@
       "rule": "react-no-nullish-react-node"
     },
     {
+      "file": "react-nullish-loop-class.tsx",
+      "findings": [
+        {
+          "column": 19,
+          "endColumn": 32,
+          "endLine": 6,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-loop-class.tsx",
+          "line": 6,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 19,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-loop-class.tsx",
+          "line": 19,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "loop const and class shadow an outer binding",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
       "file": "react-nullish-merged.tsx",
       "findings": [
         {
@@ -1528,6 +1558,44 @@
       "options": {
         "getterCalleePatterns": [
           "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-default-alias.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 27,
+          "endLine": 7,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-default-alias.ts",
+          "line": 7,
+          "message": "Wrap nullable entity fetch 'default.getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 36,
+          "endLine": 11,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-default-alias.ts",
+          "line": 11,
+          "message": "Wrap nullable entity fetch 'default.getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "default member alias keeps its prefix",
+      "options": {
+        "getterCalleePatterns": [
+          "^default\\.getWidget$"
         ],
         "nullableReturnTypeNames": [
           "Widget"
@@ -2443,6 +2511,29 @@
         "options": null
       }
     ],
+    "nullable-default": [
+      {
+        "file": "nullable-default-alias.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-default-alias.ts",
+            "line": 7,
+            "message": "Wrap nullable entity fetch 'default.getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-default-alias.ts",
+            "line": 11,
+            "message": "Wrap nullable entity fetch 'default.getWidget' in wrapNullable so missing entities map to null consistently."
+          }
+        ],
+        "name": "nullable-default-alias.ts",
+        "options": null
+      }
+    ],
     "nullable-ignore": [
       {
         "file": "nullable-relay-getter.ts",
@@ -3112,6 +3203,27 @@
         "file": "react-nullish-local-require.tsx",
         "findings": [],
         "name": "react-nullish-local-require.tsx",
+        "options": null
+      },
+      {
+        "file": "react-nullish-loop-class.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 19,
+            "file": "react-nullish-loop-class.tsx",
+            "line": 6,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-loop-class.tsx",
+            "line": 19,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          }
+        ],
+        "name": "react-nullish-loop-class.tsx",
         "options": null
       },
       {

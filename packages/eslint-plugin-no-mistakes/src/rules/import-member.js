@@ -42,7 +42,7 @@ function memberFact(node, context, importFact, requireModule, namespaceMember, s
       fact = { ...fact, name: `${fact.name || fact.imported}.${name}`, imported: name };
       continue;
     }
-    fact = next;
+    fact = fact.name && !next.name ? { ...next, name: `${fact.name}.${name}` } : next;
   }
   return { ...fact, name: fact.name || names.join(".") };
 }
