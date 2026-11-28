@@ -1,13 +1,9 @@
 //! Windows Job Object regression: the child is created suspended, assigned to
 //! a job, and must be resumed before `command_output` waits.
-//!
-//! This lives in an integration test so native Windows CI can compile it
-//! against the ordinary rlib instead of the `--cfg test` unit-test harness
-//! that typechecks every lib test (~7,500 cases).
 
 #![cfg(windows)]
 
-use no_mistakes::invocation::{command_output, install_test_deadline};
+use no_mistakes_invocation::{command_output, install_test_deadline};
 use std::process::Command;
 use std::time::Duration;
 

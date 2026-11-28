@@ -111,14 +111,7 @@ function casePlan(platform, entries, inventory, index, count) {
       });
     }
   });
-  cases.sort((a, b) => {
-    const left = `${a.executable}\0${a.name}`;
-    const right = `${b.executable}\0${b.name}`;
-    return left < right ? -1 : left > right ? 1 : 0;
-  });
-  if (platform === "macOS" && count >= 2)
-    return require("./native-rust-partition.cjs").outlierPartition(cases, entries, index, count);
-  return cases.filter((_, offset) => offset % count === index - 1);
+  return require("./native-rust-partition.cjs").partition(cases, index, count);
 }
 
 function batchPlan(plan, limit = 24000) {

@@ -168,7 +168,7 @@ test("documentation tests cannot delay coverage archive consumers", () => {
 });
 
 test("native workspace caches preserve content-verified compiler inputs as one artifact", () => {
-  for (const id of ["native-build", "native-api-tests-macos", "native-test-build"]) {
+  for (const id of ["native-build", "native-api-tests-macos"]) {
     const body = job(id);
     assert.match(body, /shared-key: cargo-registry-v1/);
     assert.match(body, /cache-targets: false/);

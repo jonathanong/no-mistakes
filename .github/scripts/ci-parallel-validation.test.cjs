@@ -446,7 +446,6 @@ test("v2 workspace producers prefer matching manifests before compatible compile
     "linux-runtime",
     "native-build",
     "native-api-tests-macos",
-    "native-test-build",
     "standalone-build",
     "rust-coverage-build",
   ];
@@ -482,7 +481,7 @@ test("v2 workspace producers prefer matching manifests before compatible compile
     workflowJob("linux-runtime"),
     /key: linux-runtime-workspace-v2-\$\{\{ matrix\.role \}\}/,
   );
-  for (const name of ["native-build", "native-api-tests-macos", "native-test-build"]) {
+  for (const name of ["native-build", "native-api-tests-macos"]) {
     const body = workflowJob(name);
     assert.match(body, /key: [^\n]*\$\{\{ matrix\.target \}\}/);
     assert.match(body, /shared-key: cargo-registry-v1/);

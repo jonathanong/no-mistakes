@@ -22,11 +22,8 @@ function completed(result) {
 }
 
 function build() {
-  if (process.env.NO_MISTAKES_BUILD_NAPI !== "1")
-    throw new Error("native Rust tests require NO_MISTAKES_BUILD_NAPI=1");
   fs.rmSync(bundle, { recursive: true, force: true });
   const files = new Map();
-  let cli;
   const entries = targets(process.env.RUNNER_OS).map(({ selector }, index) => {
     completed(
       spawnSync(
@@ -44,8 +41,8 @@ function build() {
       fs.mkdirSync(path.dirname(output), { recursive: true });
       fs.copyFileSync(artifact.executable, output);
       files.set(relative, { path: relative, sha256: digest(output) });
-      if (!artifact.test && artifact.name === "no-mistakes" && artifact.kind.includes("bin"))
-        cli = relative;
+      if (artifact.name === "no-mistakes")
+        throw new Error("platform tests must not archive the full CLI");
     }
     const matches = artifacts.filter(
       (artifact) =>
@@ -66,7 +63,7 @@ function build() {
       path.resolve(group.executable),
       [...group.args, "--list", "--format", "terse"],
       {
-        cwd: path.resolve("crates/no-mistakes"),
+        cwd: path.resolve("crates/no-mistakes-invocation"),
         encoding: "utf8",
         maxBuffer: 16 * 1024 * 1024,
       },
@@ -76,7 +73,6 @@ function build() {
   });
   casePlan(process.env.RUNNER_OS, entries, inventory, 1, 1);
   fs.writeFileSync(path.join(bundle, "inventory.json"), `${JSON.stringify(inventory, null, 2)}\n`);
-  if (!cli) throw new Error("native archive is missing the CLI used by integration tests");
   fs.writeFileSync(
     path.join(bundle, "manifest.json"),
     `${JSON.stringify(
@@ -84,7 +80,6 @@ function build() {
         workspace: process.cwd(),
         platform: process.env.RUNNER_OS,
         sha: process.env.GITHUB_SHA,
-        cli,
         inventorySha256: digest(path.join(bundle, "inventory.json")),
         entries,
         files: [...files.values()],
@@ -97,9 +92,7 @@ function build() {
 
 function restore(manifest, directory = bundle) {
   if (manifest.workspace !== process.cwd())
-    throw new Error(
-      "native archive requires the producer checkout path (embedded fixture and CLI paths)",
-    );
+    throw new Error("native archive requires the producer checkout path (embedded fixture paths)");
   if (manifest.platform !== process.env.RUNNER_OS || manifest.sha !== process.env.GITHUB_SHA)
     throw new Error("native archive platform or source SHA mismatch");
   for (const file of manifest.files) {
@@ -124,13 +117,9 @@ function run(index, count) {
   const inventory = JSON.parse(fs.readFileSync(inventoryPath, "utf8"));
   const plan = casePlan(process.env.RUNNER_OS, manifest.entries, inventory, index, count);
   const batches = batchPlan(plan);
-  const scheduling =
-    process.env.RUNNER_OS === "macOS" && count >= 2
-      ? require("./native-rust-partition.cjs").schedulingSummary(plan, manifest.entries, count)
-      : undefined;
   fs.writeFileSync(
     "target/native-rust-shard.json",
-    `${JSON.stringify({ index, count, inventory, plan, batches, scheduling }, null, 2)}\n`,
+    `${JSON.stringify({ index, count, inventory, plan, batches }, null, 2)}\n`,
   );
   fs.writeFileSync("target/native-rust-results.jsonl", "");
   for (const entry of batches) {
@@ -138,8 +127,7 @@ function run(index, count) {
     const started = Date.now();
     const result = spawnSync(path.resolve(entry.executable), entry.args, {
       stdio: "inherit",
-      cwd: path.resolve("crates/no-mistakes"),
-      env: { ...process.env, NO_MISTAKES_CLI_BIN: path.resolve(manifest.cli) },
+      cwd: path.resolve("crates/no-mistakes-invocation"),
     });
     fs.appendFileSync(
       "target/native-rust-results.jsonl",

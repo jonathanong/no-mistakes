@@ -1,5 +1,4 @@
-//! Run the invocation unit and CLI tests on macOS from `no-mistakes-invocation`
-//! without compiling `no-mistakes`.
+//! Run the shared invocation unit tests on the native Unix platform.
 
 #[cfg(unix)]
 pub use no_mistakes_invocation::hooks;
@@ -14,14 +13,5 @@ pub use no_mistakes_invocation::hooks;
 mod invocation;
 
 #[cfg(unix)]
-#[path = "../../no-mistakes/tests/cli_invocation.rs"]
-mod cli_invocation;
-
-#[cfg(unix)]
-#[path = "../../no-mistakes/tests/common/saved_fixture.rs"]
-mod saved_fixture;
-
-#[cfg(unix)]
-mod test_support {
-    pub(crate) use super::saved_fixture::materialize_path as materialize_saved_fixture;
-}
+#[path = "../src/test_support.rs"]
+mod test_support;

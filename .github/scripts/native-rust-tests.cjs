@@ -12,45 +12,24 @@ function profileArgs(platform, pkg = "no-mistakes") {
 }
 
 function targets(platform) {
-  const shared = [
-    {
-      selector: ["--test", "suite_cli_postgres"],
-      cases: [["cli_postgres_snapshot_"], ["cli_mrf_snapshot_"]],
-    },
-    {
-      selector: ["--test", "suite_cli_package_config"],
-      cases: [["cli_pkgcfg_snapshot_"], ["cli_rrb_snapshot_"]],
-    },
-  ];
   if (platform === "Windows")
     return [
+      { selector: ["--test", "windows_invocation"], cases: [[]] },
       {
         selector: ["--test", "windows_job_object"],
-        cases: [["--", "--exact", "--test-threads=1"]],
+        cases: [["--", "--test-threads=1"]],
       },
-      ...shared,
     ];
-  if (platform === "macOS")
-    return [
-      { package: "no-mistakes-invocation", selector: ["--test", "macos_invocation"], cases: [[]] },
-      { selector: ["--bin", "no-mistakes"], cases: [["invocation::tests::blocked_check::"]] },
-      ...shared,
-    ];
+  if (platform === "macOS") return [{ selector: ["--test", "macos_invocation"], cases: [[]] }];
   throw new Error(`unsupported native test platform: ${platform}`);
 }
 
 function commands(mode, platform) {
   const selected = targets(platform);
-  const baseFor = (pkg = "no-mistakes") => [
-    "test",
-    ...profileArgs(platform, pkg),
-    "--locked",
-    "-p",
-    pkg,
-  ];
+  const base = ["test", "--locked", "-p", "no-mistakes-invocation"];
   if (mode === "build" || mode === "archive-build")
-    return selected.map(({ package: pkg, selector }) => [
-      ...baseFor(pkg),
+    return selected.map(({ selector }) => [
+      ...base,
       "--no-run",
       "--timings",
       "--verbose",
@@ -58,8 +37,8 @@ function commands(mode, platform) {
       ...selector,
     ]);
   if (mode === "run")
-    return selected.flatMap(({ package: pkg, selector, cases }) =>
-      cases.map((args) => [...baseFor(pkg), ...selector, ...args]),
+    return selected.flatMap(({ selector, cases }) =>
+      cases.map((args) => [...base, ...selector, ...args]),
     );
   throw new Error("usage: native-rust-tests.cjs <build|run>");
 }
@@ -80,8 +59,6 @@ function buildInvocation(argv = process.argv, env = process.env) {
         "--message-format=json-render-diagnostics",
       ];
   if (!args) throw new Error("expected a native test target index");
-  if (testBuild && env.NO_MISTAKES_BUILD_NAPI !== "1")
-    throw new Error("native Rust tests require NO_MISTAKES_BUILD_NAPI=1");
   return {
     directory: require("node:path").resolve(
       testBuild
@@ -93,8 +70,6 @@ function buildInvocation(argv = process.argv, env = process.env) {
 }
 
 function main(mode) {
-  if (process.env.NO_MISTAKES_BUILD_NAPI !== "1")
-    throw new Error("native Rust tests require NO_MISTAKES_BUILD_NAPI=1");
   for (const [index, args] of commands(mode, process.env.RUNNER_OS).entries()) {
     console.log(`cargo ${args.join(" ")}`);
     const result =

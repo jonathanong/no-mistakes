@@ -8,6 +8,7 @@ const {
   assertCliResult,
   buildCommand,
   cargoCommands,
+  cliCargoCommands,
   vitestArgs,
 } = require("./smoke.cjs");
 const { cliFixture, napiFixture, platforms } = require("./smoke-tests.cjs");
@@ -19,8 +20,7 @@ const systems = Object.entries(platforms);
 test("every OS lists Rust and API tests", () => {
   assert.deepEqual(Object.keys(platforms).sort(), ["macos", "windows"]);
   assert.throws(() => cargoCommands("linux"), /unsupported smoke OS/);
-  for (const [, { label, rust, api }] of systems) {
-    assert.ok(label);
+  for (const [, { rust, api }] of systems) {
     assert.ok(rust.length > 0);
     assert.ok(api.length > 0);
   }
@@ -135,25 +135,59 @@ test("the Windows smoke job runs on pull requests and drives the checked-in list
   assert.doesNotMatch(body, /pull_request_target|secrets\./);
 });
 
-test("macOS smoke builds only the small invocation harness with the main cache profile", () => {
-  const { commands, targets } = require("./native-rust-tests.cjs");
-  const cached = commands("build", "macOS")[0];
-  assert.deepEqual(
-    platforms.macos.rust.map(({ selector }) => selector),
-    [["--test", "macos_invocation"]],
-  );
-  assert.ok(
-    targets("macOS").some(
-      ({ selector, cases }) =>
-        selector.includes("--bin") &&
-        cases.some((filters) => filters.includes("invocation::tests::blocked_check::")),
-    ),
-  );
-  const [smoke] = cargoCommands("macos");
-  const profile = (args) => args.slice(0, args.indexOf("--locked"));
-  assert.deepEqual(profile(smoke), profile(cached));
-  assert.deepEqual(smoke.slice(smoke.indexOf("-p"), smoke.indexOf("-p") + 2), [
-    "-p",
-    "no-mistakes-invocation",
-  ]);
+test("native smoke builds invocation-only harnesses and exercises selected real CLI behaviors", () => {
+  for (const os of ["macos", "windows"]) {
+    const args = cargoCommands(os);
+    assert.ok(
+      args.every((command) => command[command.indexOf("-p") + 1] === "no-mistakes-invocation"),
+    );
+    assert.ok(args.some((command) => command.includes("cli_smoke") && command.includes("--exact")));
+  }
+  assert.ok(platforms.macos.rust.some(({ selector }) => selector.includes("macos_invocation")));
+  assert.ok(platforms.windows.rust.some(({ selector }) => selector.includes("windows_job_object")));
+});
+
+test("native API jobs run the same CLI cases with the platform runtime on main and dispatch", () => {
+  const source = read(".github/workflows/ci.yml");
+  for (const [os, id, binary, flag] of [
+    ["macos", "native-api-tests-macos", "no-mistakes", "macos"],
+    ["windows", "native-api-tests", "no-mistakes.exe", "windows"],
+  ]) {
+    const body = workflowJob(source, id);
+    assert.ok(body.includes(`needs.changes.outputs.${flag} == 'true'`));
+    const step = body
+      .split("      - name: Run platform CLI invocation tests\n")[1]
+      .split("\n      - ")[0];
+    assert.match(step, /NO_MISTAKES_CLI_BIN:/);
+    assert.ok(step.includes(`/target/debug/${binary}\n`));
+    assert.ok(step.includes(`smoke.cjs ${os} cli-rust`));
+    assert.match(step, /if: .* !cancelled\(\) && steps\.native-cli\.outcome == 'success'/);
+    assert.doesNotMatch(step, /continue-on-error/);
+    assert.match(body, /name: Run native CLI smoke test\n +id: native-cli/);
+    assert.ok(
+      body.indexOf("Upload real N-API test durations") <
+        body.indexOf("Run platform CLI invocation tests"),
+    );
+    const toolchain = body
+      .split("      - name: Install Rust for CLI invocation tests\n")[1]
+      .split("\n      - ")[0];
+    assert.ok(
+      body.indexOf("Upload real N-API test durations") <
+        body.indexOf("Install Rust for CLI invocation tests"),
+    );
+    assert.match(toolchain, /!cancelled\(\) && steps\.native-cli\.outcome == 'success'/);
+    assert.match(step, /steps\.cli-rust-toolchain\.outcome == 'success'/);
+    if (os === "macos") {
+      assert.match(
+        body,
+        /id: native-rust-toolchain\n +if: .*steps\.build-artifact-source\.outputs\.reuse != 'true'/,
+      );
+      assert.match(toolchain, /steps\.build-artifact-source\.outputs\.reuse == 'true'/);
+      assert.match(step, /steps\.build-artifact-source\.outputs\.reuse != 'true' \|\|/);
+    }
+    assert.deepEqual(
+      cliCargoCommands(os),
+      cargoCommands(os).filter((args) => args.includes("cli_smoke")),
+    );
+  }
 });

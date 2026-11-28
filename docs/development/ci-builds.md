@@ -74,36 +74,12 @@ The current validation graph is organized as follows:
   to produce LCOV and apply the coverage and complexity gates.
 - Standalone library tests build without the CLI. Each of the three PR shards
   builds and runs its own test slice on one runner. On other events, three
-  parallel producers each build one archive for the three test consumers. Native platform jobs build runtime and Rust test
-  artifacts separately. Each platform has its own producer and consumer jobs,
-  so its tests start when its artifacts are ready without waiting for the other
-  platform. Contract tests keep their build and test commands aligned.
-  On `main`, Windows runs two Rust shards and one real-addon API shard.
-  The main macOS suite runs one Rust test job and one real-addon API
-  test job. Each downloads its archive once and runs every selected case.
-  Folding the shards saves runner setup and download time. The test
-  cases in each native suite now share one job's elapsed-time budget.
-  macOS has two tiers because GitHub allows only five concurrent macOS jobs
-  account-wide, so macOS runners are the queue bottleneck. Windows is not
-  queue-bound, but its 14 jobs were about a quarter of pull request CI cost and
-  counted against the account's 40-job concurrency limit, so it has the same
-  two tiers.
-  A pull request that changes a macOS input runs one `macOS smoke` job
-  (`macos-smoke`). It builds the CLI and N-API addon, runs
-  `check` on a saved fixture and requires the `agents-md-max-size` finding on
-  `AGENTS.md:1`. It runs the explicit OS-dependent list in
-  `.github/scripts/smoke-tests.cjs` (keyed by OS): the macOS invocation and global-lock
-  harness (`crates/no-mistakes-invocation/tests/macos_invocation.rs`, which also
-  exercises `crates/no-mistakes/tests/cli_invocation.rs` against the built CLI
-  via `NO_MISTAKES_CLI_BIN`), one
-  `analyzeProject` call on a saved fixture through
-  the built addon, and real-addon API tests for the cross-process lock, rename
-  semantics, and diagnostics. The dependency-report API tests stay in the full
-  suite because their expected output depends on which test first sizes the
-  process Rayon pool. The list is explicit,
-  not heuristic, and `smoke-tests.test.cjs` fails when a listed file,
-  test target or test name no longer exists, and `smoke.cjs` fails when a
-  listed Cargo target runs zero tests.
+  parallel producers each build one archive for the three test consumers.
+  Each native Rust lane builds only `no-mistakes-invocation`. Windows publishes
+  an archive for one test runner. macOS builds and runs the harness on the same
+  runner. The independent native API lanes build the platform CLI and addon.
+  PRs use `macOS smoke` and `Windows smoke` to check those real binaries and the
+  small platform test harnesses.
 
   The [macOS scope](../../.github/scripts/macos-pr-scope.cjs) uses the same
   NUL-delimited merge-base diff as the Rust scope. It runs on an empty or
@@ -125,23 +101,23 @@ The current validation graph is organized as follows:
   CI workflows and their scripts, and native package code. A rename contributes
   both old and new paths. The rule scope reads both committed trees so a platform
   operation added or removed in an otherwise portable rule still triggers smoke.
-  `macos-smoke` restores the compatible macOS runtime workspace snapshot from
-  `main` (PRs only restore, never save target caches), runs `Build native CLI
-  and N-API addon` first, and then runs `Compile macOS-dependent Rust tests`
-  and `Run macOS-dependent Rust tests` against the standalone
-  `no-mistakes-invocation` crate (`-p no-mistakes-invocation --test
-  macos_invocation`, using `smoke.cjs`'s `profileArgs` with `codegen-units=64`
-  on `no-mistakes-invocation`) with `NO_MISTAKES_CLI_BIN` pointing at
-  `target/debug/no-mistakes`. Because `no-mistakes-invocation` does not depend
-  on `no-mistakes`, building the runtime CLI and shared-library addon first
-  neither invalidates the test harness nor compiles `no-mistakes` a second time,
-  so `macos-smoke` does not need a separate test-harness cache restore or
-  timestamp replay. `cache-topology.test.cjs` and `smoke-tests.test.cjs` guard
-  the build-first order, package selector, and profile.
-  The harness checks the macOS invocation adapters, direct-FIFO watchdog
-  deadlines (`blocked_fifo`), and CLI deadline enforcement against blocked
-  configuration loading (`cli_invocation`); the full `no-mistakes` binary test
-  harness runs in the native suite on `main`.
+  Both smoke jobs restore the platform runtime cache and build the CLI and
+  addon together. Rust smoke targets compile from `no-mistakes-invocation`.
+  The `cli_smoke` harness uses `NO_MISTAKES_CLI_BIN` to run the binary already
+  built by the job. macOS runs the lock handoff through Git’s filesystem monitor, Git timeout
+  JSON, and blocked configuration under the shared millisecond budget.
+  Windows runs a real check with drive-qualified paths and a deadline. Both
+  run the saved CLI fixture to check that it reports `agents-md-max-size` at
+  `AGENTS.md:1`, then load the platform addon through `analyzeProject`.
+  The native API jobs on main and manual dispatch reuse the same CLI cases
+  with their built or downloaded runtime. Linux coverage owns the portable
+  help text, flag placement, invalid timeout inputs, and successful millisecond
+  budget checks.
+  Addon smoke also exercises cross-process lock handoff, lock release after
+  process termination, and rename behavior. macOS retains CLI and addon
+  parity for invocation diagnostics. Windows CRLF and UTF-16 console
+  assertions run in the small Job Object harness.
+
   The full macOS jobs (`native-rust-tests-macos` and `native-api-tests-macos`)
   run on `main` and manual dispatch. They build in parallel and each runs its
   tests on its own build runner. They still publish the runtime and Rust test
@@ -156,48 +132,9 @@ The current validation graph is organized as follows:
   when the macOS scope requests it, accepts the skipped full Windows jobs
   and requires `Windows smoke` when the Rust scope requests it on a pull request, and the smoke jobs are not separate required checks. The release
   workflow does not use these outputs.
-  A pull request likewise runs one `Windows smoke` job (`windows-smoke`,
-  windows-2025) instead of the five full Windows jobs (`native-build`,
-  `native-test-build`, two `native-rust-tests` shards and one `native-api-tests`
-  job), so a push starts at most one Windows job. It restores the Windows
-  workspace cache that `main` builds, builds the CLI and N-API addon, runs
-  `check` on one saved fixture, runs `analyzeProject` through the built addon,
-  and runs the Windows list in `.github/scripts/smoke-tests.cjs`: the Job
-  Object and console code page harness (`tests/windows_job_object.rs`), the
-  portable CLI invocation tests (`tests/windows_invocation.rs`, which includes
-  `tests/cli_invocation.rs`), the cross-process lock and rename API tests,
-  drive-letter and UNC path normalization, and the Windows native package
-  resolution tests. Those cases cover path separators, drive letters, CRLF
-  output, file locking and native
-  runtime loading. The full Windows jobs run unchanged on pushes to `main` and
-  manual dispatch; the same trade-off and release check as macOS apply. Pull
-  requests from forks skip the Defender exclusion step, as before.
-  A push to `main` also places each macOS build in `ci-macos-main-<job>-all` and
-  each macOS test shard in `ci-macos-main-<job>-<shard>`.
-  `cancel-in-progress` stays false, so the running job finishes and a newer
-  main push drops only the older pending job in that slot. Pull requests,
-  manual dispatch, and other branches use a per-run group and do not join
-  `ci-macos-main`. Linux jobs, coverage uploads, and `Tests with coverage` use
-  the workflow's per-ref group. The group names use the literal job id.
-  `Tests with coverage` accepts a cancelled macOS job only for a push to `main`.
-  A superseded build is cancelled before its test job starts, so that test job
-  is skipped; `Tests with coverage` accepts that skip only when the producer was
-  cancelled on a push to `main`. The macOS cache-retain jobs still require
-  `success`, so a superseded run does not save a cache.
-  The completed seed run `43378356388`
-  showed macOS API bodies taking 27–38 seconds, jobs taking 70–94 seconds, and
-  queue waits of 8–12 minutes with roughly two jobs running concurrently.
-  Fewer macOS jobs reduce repeated setup and runner contention. Native producers
-  enumerate the original filtered Rust harnesses;
-  consumers partition exact case names and batch them by harness with the
-  original flags. This preserves normal test concurrency, including the Windows
-  Job Object serial setting, while avoiding repeated harness initialization.
-  Case plans and batch results remain available as artifacts. This divides the
-  snapshot suites across runners. The platform-specific invocation tests and API checks remain
-  required whenever those macOS jobs run.
-- Fan-in jobs preserve the existing required-check names and fail if a
-  producer or shard fails. Artifact transfer and per-job setup remain part of
-  elapsed PR wall time.
+  Windows runs one smoke job on PRs. On main and dispatch, the separate Rust
+  archive producer and consumer run alongside the native runtime and addon
+  jobs. Windows fork PRs skip the Defender exclusion step.
 
 Native API consumers use the [runtime downloader](../../.github/scripts/download-native-runtime.py)
 instead of a JavaScript artifact action so completed transfers do not depend on
@@ -518,8 +455,8 @@ reporting, and cleanup. Queue time is separate. Main run
 [`46045845814`](https://github.com/jongleberry/no-mistakes/actions/runs/46045845814)
 spent a combined 422 seconds running the Windows Rust shards, 336 seconds running
 the Windows API shards, and 184 seconds running the Linux N-API shards. Dividing
-the test time evenly across two runners projects a setup share of 25% for
-Windows Rust (70 / 281 seconds) and 23% for Linux N-API (28 / 120 seconds) at
+the Linux N-API test time evenly across two runners projects a setup share of
+23% (28 / 120 seconds) at
 the maximum observed setup times. Windows API uses one shard because one of two
 measured shards spent 47 of 150 seconds on setup. With the full 336-second
 baseline API test time, the maximum observed setup projects to 18%
@@ -551,69 +488,24 @@ overwrites its partial files. Exhausted retries fail the shard and its aggregate
 gate; cancellation does not start another download. The action owns transport
 retries; a fresh attempt restarts the transfer rather than resuming partial bytes.
 
-### Balancing the remaining macOS snapshot work
+### Native Rust test selection
 
-The completed baseline for the follow-up is run `43395217611`, at
-`b8d96eb76`: 11m42s overall, with macOS Rust shard 1 taking 8m13s. Its
-PostgreSQL batch contained 91 selected Rust cases and took 318 seconds; shard 2
-had 90 PostgreSQL cases and took 177 seconds in that batch. The preceding run
-`43393167734` had the same 91/90 split but batch durations of 218/184 seconds.
-Counting cases therefore did not balance the known slow work, and runner
-variance remains visible even with compilation reused.
+The Windows and macOS archive builders select `no-mistakes-invocation` and
+archive the test executables with their case inventory and checksums.
+The Windows Job Object and console tests keep serial execution. Each platform
+runs one deterministic partition. The archive validates the commit and
+checkout path before running, then retains the case inventory and outcomes.
 
-Timestamped libtest notices identify five outliers, several present in both
-runs. A notice that a
-test has run for more than 60 seconds, followed by its completion timestamp,
-provides a lower bound rather than an exact duration. In the slower run those
-bounds were over 174.9 seconds for bounded-statement snapshots, 96.1 for
-query-annotation snapshots, 78.3 for the additional bounded-statement snapshots,
-73.6 for transformed-UUID snapshots, and 71.5 for unanalyzable-schema snapshots.
-The old modulo plan placed four of these five cases together in shard 1.
+Linux's Rust integration coverage runs the full CLI PostgreSQL and package
+configuration snapshot suites. It also retains the real blocked-check worker.
+The native watchdog uses a FIFO directly, and both workers run the same
+handshake, timeout, exit-code, phase, and elapsed-time assertions. Native smoke
+uses the built executable for CLI-specific tests that need platform behavior.
 
-macOS's three Rust shards now assign the longest known outliers first to the
-least-loaded shard. The [cost policy](../../.github/scripts/native-rust-costs.json)
-records the source notices and completion timestamps. It uses floored
-lower-bound weights, stable harness
-names and full test names; ties use stable test identity and shard index.
-Unmeasured and new cases receive a default weight of one and remain included.
-Those weights are scheduling units, not predicted seconds. The archived
-373-case inventory produces 114/122/137 selected cases with 287/287/286-unit
-loads across three shards (previously 185/188 with 430-unit loads across two
-shards), separating bounded-statement and query-annotation work. Each selected
-case still runs exactly once, with the original filters, batching and flags.
-Windows currently runs two deterministic shards.
-
-The existing harness batching already avoids spawning a process per case.
-Adding runners would repeat checkout, runtime setup and artifact downloads
-(roughly 50–85 seconds per shard in the measured runs), and earlier runs showed
-macOS queues. The first change therefore balances work across two shards rather than
-increasing that overhead. Actual batch and end-to-end durations remain the
-acceptance evidence; estimated loads do not establish a ten-minute result.
-
-The first completed follow-up run `43403560928`, at `e3d89a6f0`, passed with
-the weighted plan. Its macOS PostgreSQL batches took
-153/223 seconds, compared with 318/177 seconds in the baseline. The two native
-Rust jobs took 4m22s/5m42s; the slowest job improved from 8m13s to 5m42s. The
-production inventory had grown to 374 cases, distributed 186/188 with 431/430
-weight units. Artifact comparison verified their union matched the complete
-inventory with no duplicates; the new case remained included automatically.
-
-That run still took **13m19s overall**. No job started for the first 1m16s.
-Both Windows workspace caches missed all compatible fallbacks: its runtime
-Cargo build took 6m21s, and its first test-target compile took 3m27s. Including
-setup and artifact handling, those producers took 8m42s and 6m07s. The Windows
-Rust producer finished at +7m44s, its slowest shard ran from +7m45s to +13m00s,
-and fan-in finished at +13m19s. That became the critical path; meeting ten
-minutes in that sample requires removing at least 3m19s from it. The macOS Rust
-branch finished at +11m22s, including initial scheduling and a 44-second queue
-for its producer. Its test execution no longer set the final completion time.
-
-Coverage remained at 98.0340% regions, 98.9991% lines, and 99.3110% functions,
-with the original floors and CRAP gate passing. Every previous CI job remained
-present. These before/after samples establish the changed assignment and
-observed durations, but different cache and scheduling states prevent treating
-the overall wall times as a controlled speedup estimate. Final PR-head timings
-are recorded in [PR #3329](https://github.com/jongleberry/no-mistakes/pull/3329).
+Main run [`46045845814`](https://github.com/jongleberry/no-mistakes/actions/runs/46045845814)
+spent 457 seconds in Windows Rust precompile and 440 seconds in macOS Rust
+precompile. Those samples include the full CLI and snapshot harnesses. They are
+recorded in the [native timing baseline](../../.github/scripts/native-rust-costs.json).
 
 ### Completed parallel validation
 

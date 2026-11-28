@@ -20,64 +20,18 @@ function stepBudgetSeconds(job, name, platform = "Windows") {
   return Number(platform === conditional[1] ? conditional[2] : conditional[3]) * 60;
 }
 
-test("native Rust and historical aggregate deadlines retain censored Windows progress", () => {
-  const observed = JSON.parse(
-    readFileSync(
-      path.join(root, "test-cases/rust-validation/fixture/windows-native-platform-timing.json"),
-      "utf8",
-    ),
+test("Windows platform compilation and execution fit distinct finite budgets", () => {
+  const { ci } = require("./fixtures/rust-build-deadlines.json");
+  const build = workflowJob("native-test-build");
+  const run = workflowJob("native-rust-tests");
+  assert.equal(
+    stepBudgetSeconds(build, "Precompile native Rust test targets"),
+    ci.testPrecompileStep,
   );
-  const job = workflowJob("native-rust-tests");
-  const elapsedBeforeRust =
-    (Date.parse(observed.platformTestsStartedAt) - Date.parse(observed.firstRunnerLogAt)) / 1000;
-  const elapsedRust =
-    (Date.parse(observed.platformTestsTimedOutAt) - Date.parse(observed.platformTestsStartedAt)) /
-    1000;
-  const rust = stepBudgetSeconds(job, "Run platform-specific Rust tests");
-  const historicalApi = 300;
-  assert.equal(observed.platformStepConclusion, "failure");
-  assert.ok(
-    observed.completedSnapshotTests.packageConfig.passed <
-      observed.completedSnapshotTests.packageConfig.selected,
-  );
-  assert.ok(
-    stepBudgetSeconds(workflowJob("native-test-build"), "Precompile native Rust test targets") +
-      rust >=
-      elapsedRust + observed.remainingSnapshotReserveSeconds,
-    "combined build and execution bounds retain historical compile-and-test progress",
-  );
-  assert.ok(rust <= 540, "keep the native Rust execution step bounded to nine minutes");
-  const required =
-    elapsedBeforeRust +
-    elapsedRust +
-    observed.remainingSnapshotReserveSeconds +
-    historicalApi +
-    observed.postJobReserveSeconds;
-  assert.ok(
-    required > jobBudgetSeconds(workflowJob("tests-gate")),
-    "historical serial work is not a shard deadline",
-  );
-  assert.ok(jobBudgetSeconds(job) >= rust + observed.postJobReserveSeconds);
-  const gate = workflowJob("tests-gate");
-  assert.ok(jobBudgetSeconds(gate) <= 180);
-  assert.match(gate, /native-rust-tests/);
-  assert.match(gate, /native-api-tests/);
-  for (const command of [
-    "--test windows_job_object -- --exact --test-threads=1",
-    "--test macos_invocation",
-    "--test suite_cli_postgres cli_postgres_snapshot_",
-    "--test suite_cli_postgres cli_mrf_snapshot_",
-    "--test suite_cli_package_config cli_pkgcfg_snapshot_",
-    "--test suite_cli_package_config cli_rrb_snapshot_",
-  ]) {
-    assert.ok(
-      require("./native-rust-tests.cjs")
-        .commands("run", "Windows")
-        .concat(require("./native-rust-tests.cjs").commands("run", "macOS"))
-        .some((args) => args.join(" ").includes(command)),
-      `retain native validation ${command}`,
-    );
-  }
+  assert.equal(stepBudgetSeconds(run, "Run platform-specific Rust tests"), ci.platformRustStep);
+  assert.equal(jobBudgetSeconds(build), ci.platformRustCompileJob);
+  assert.equal(jobBudgetSeconds(run), ci.platformRustWindowsJob);
+  assert.match(workflowJob("tests-gate"), /native-rust-tests/);
 });
 
 test("current native API budgets fit completed Windows setup and Rust work", () => {

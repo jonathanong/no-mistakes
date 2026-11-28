@@ -150,12 +150,3 @@ path = "tests/suite_cli_package_config.rs"
 [[test]]
 name = "suite_contracts"
 path = "tests/suite_contracts.rs"
-
-
-[[test]]
-name = "windows_invocation"
-path = "tests/windows_invocation.rs"
-
-[[test]]
-name = "windows_job_object"
-path = "tests/windows_job_object.rs"

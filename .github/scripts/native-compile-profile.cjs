@@ -8,11 +8,14 @@ function validateBuild(build, selector) {
   const units = build.units?.units;
   if (!Array.isArray(units) || !units.length)
     throw new Error("Cargo unit report is empty; no compilation evidence was captured");
+  if (selector && units.some((unit) => ["no_mistakes", "no-mistakes"].includes(unit.target.name)))
+    throw new Error("platform archive compiled the full CLI");
   const expected = selector ? ["rlib"] : ["cdylib", "rlib"];
+  const library = selector ? "no_mistakes_invocation" : "no_mistakes";
   if (
     !units.some(
       (unit) =>
-        unit.target.name === "no_mistakes" &&
+        unit.target.name === library &&
         !unit.profile.test &&
         JSON.stringify([...unit.target.crate_types].sort()) === JSON.stringify(expected),
     )
@@ -155,8 +158,12 @@ function runProfile({
         };
         report.testBuilds.push(entry);
         validateBuild(build, target.selector);
-        entry.runtimeComparison = compareCargoUnits(report.runtime.units, build.units);
-        entry.previousComparison = compareCargoUnits(previous, build.units);
+        entry.runtimeComparison = compareCargoUnits(report.runtime.units, build.units, {
+          rootPackageName: "no-mistakes-invocation",
+        });
+        entry.previousComparison = compareCargoUnits(previous, build.units, {
+          rootPackageName: "no-mistakes-invocation",
+        });
         previous = build.units;
       } catch (error) {
         report.diagnosticError = error.message;

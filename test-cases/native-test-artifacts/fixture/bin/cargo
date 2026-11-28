@@ -11,7 +11,9 @@ fs.copyFileSync("harness.cjs", file);
 fs.chmodSync(file, 0o755);
 console.log(JSON.stringify({ reason: "compiler-artifact", executable: file, target: { name, kind: [kind] }, profile: { test: true } }));
 fs.appendFileSync("compile.jsonl", `${JSON.stringify(args)}\n`);
-const cli = path.resolve("target/debug/no-mistakes");
-fs.copyFileSync("harness.cjs", cli);
-console.log(JSON.stringify({ reason: "compiler-artifact", executable: cli, target: { name: "no-mistakes", kind: ["bin"] }, profile: { test: false } }));
+if (process.env.NATIVE_FIXTURE_UNEXPECTED_CLI) {
+  const cli = path.resolve("target/debug/no-mistakes");
+  fs.copyFileSync("harness.cjs", cli);
+  console.log(JSON.stringify({ reason: "compiler-artifact", executable: cli, target: { name: "no-mistakes", kind: ["bin"] }, profile: { test: false } }));
+}
 process.exit(Number(process.env.NATIVE_TEST_FIXTURE_EXIT || 0));

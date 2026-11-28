@@ -104,7 +104,7 @@ test("same-head macOS timeout keeps censored evidence and bounded build headroom
   assert.equal(nativeStepBudget(buildName), current.nativeBuildStep);
   assert.equal(nativeStepBudget(precompileName), current.testPrecompileStep);
   assert.ok(jobBudget(job("tests-gate")) <= 180);
-  assert.equal(nativeStepBudget(rustName), 540);
+  assert.equal(nativeStepBudget(rustName), current.platformRustStep);
   assert.equal(nativeStepBudget(apiName), 600);
 });
 
@@ -214,7 +214,7 @@ test("native deadlines reserve bounded progress beyond the latest censored macOS
   assert.match(api.apiFailure, /report.*absent/);
   assert.equal(nativeStepBudget(buildName), current.nativeBuildStep);
   assert.equal(nativeStepBudget(precompileName), current.testPrecompileStep);
-  assert.equal(nativeStepBudget(rustName), 540);
+  assert.equal(nativeStepBudget(rustName), current.platformRustStep);
   assert.equal(nativeStepBudget(apiName), 600);
   assert.ok(nativeStepBudget(apiName) >= api.apiSeconds + 120);
   assert.ok(jobBudget(job("native-api-tests")) >= nativeStepBudget(apiName) + 120);
@@ -281,9 +281,8 @@ test("native build and test precompile deadlines use measured censored progress"
   } = evidence;
   assert.ok(build >= caps.nativeBuildStep);
   assert.equal(build, current.nativeBuildStep);
-  assert.ok(precompile >= caps.testPrecompileStep);
   assert.equal(precompile, current.testPrecompileStep);
-  assert.equal(execution, caps.platformRustStep);
+  assert.equal(execution, current.platformRustStep);
   assert.equal(api, caps.apiStep);
   assert.ok(
     build >=
@@ -294,8 +293,8 @@ test("native build and test precompile deadlines use measured censored progress"
       (run) => run.firstTestHarnessCargoReportedSeconds,
     ),
   );
-  assert.ok(precompile > failedRun.testPrecompile.observedElapsedSeconds);
-  assert.ok(precompile >= maxFirstHarness);
+  assert.ok(caps.testPrecompileStep > failedRun.testPrecompile.observedElapsedSeconds);
+  assert.ok(caps.testPrecompileStep >= maxFirstHarness);
   assert.ok(jobBudget(job("tests-gate")) < caps.job);
   assert.equal(
     aggregate.censoredCombinedBuildStep +
@@ -322,18 +321,10 @@ test("native build and test precompile deadlines use measured censored progress"
   });
 });
 
-test("macOS cold test precompile keeps the four-target archive inside the job", () => {
-  const data = observed("macos-native-test-precompile-cold-cache");
+test("macOS platform targets have a separate budget from historical CLI snapshots", () => {
   const body = job("native-rust-tests-macos");
-  const precompile = stepBudget(body, precompileName);
-  assert.equal(data.cache, "miss");
-  assert.equal(data.stepLimitSeconds, 900);
-  assert.equal(data.firstTargetCargoReportedSeconds, 859);
-  assert.equal(data.targetsPlanned, 4);
-  assert.equal(data.killedIn, "rust-objcopy");
-  assert.ok(precompile > data.stepLimitSeconds);
-  assert.ok(
-    precompile >= data.firstTargetCargoReportedSeconds + data.remainingTargetReserveSeconds,
-  );
-  assert.ok(precompile + data.postStepReserveSeconds <= jobBudget(body));
+  assert.equal(stepBudget(body, precompileName), current.testPrecompileStep);
+  assert.equal(stepBudget(body, rustName), current.platformRustStep);
+  assert.equal(jobBudget(body), current.platformRustMacosJob);
+  assert.ok(current.testPrecompileStep + current.platformRustStep < current.platformRustMacosJob);
 });

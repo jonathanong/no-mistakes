@@ -5,6 +5,7 @@ use std::process::{Command, Stdio};
 use std::time::Duration;
 use wait_timeout::ChildExt;
 
+#[cfg(unix)]
 #[path = "tests/blocked_check.rs"]
 mod blocked_check;
 #[path = "tests/error_formatting.rs"]

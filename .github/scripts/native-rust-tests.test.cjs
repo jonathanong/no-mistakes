@@ -13,19 +13,9 @@ const profile = require("../../test-cases/native-build-diagnostics/reports/macos
 
 for (const platform of ["Windows", "macOS"]) {
   const overrides = platform === "macOS" ? profile : [];
-  const baseFor = (pkg = "no-mistakes") => [
-    "test",
-    ...overrides.map((arg) => arg.replaceAll("no-mistakes", pkg)),
-    "--locked",
-    "-p",
-    pkg,
-  ];
-  const pkgForSelector = (selector) =>
-    platform === "macOS" && selector[1] === "macos_invocation"
-      ? "no-mistakes-invocation"
-      : "no-mistakes";
-  test(`native ${platform} runtime and every test command retain consistent package profiles`, () => {
-    const env = { RUNNER_OS: platform, NO_MISTAKES_BUILD_NAPI: "1" };
+  const base = ["test", "--locked", "-p", "no-mistakes-invocation"];
+  test(`native ${platform} builds the invocation tests independently of the runtime`, () => {
+    const env = { RUNNER_OS: platform };
     assert.deepEqual(buildInvocation(["node", "wrapper"], env).args, [
       "build",
       ...overrides,
@@ -38,10 +28,7 @@ for (const platform of ["Windows", "macOS"]) {
     ]);
     for (const mode of ["build", "archive-build", "run"]) {
       for (const args of commands(mode, platform)) {
-        const pkg = args[args.indexOf("-p") + 1];
-        const expectedBase = baseFor(pkg);
-        assert.deepEqual(args.slice(0, expectedBase.length), expectedBase);
-        assert.equal(args.filter((arg) => arg === "--config").length, overrides.length / 2);
+        assert.deepEqual(args.slice(0, base.length), base);
         assert.ok(!args.some((arg) => /opt-level|debug|assertions|features/.test(arg)));
       }
     }
@@ -56,11 +43,11 @@ for (const platform of ["Windows", "macOS"]) {
       const env = {
         ...process.env,
         RUNNER_OS: platform,
-        NO_MISTAKES_BUILD_NAPI: "1",
         RUSTFLAGS: "-D warnings",
         CARGO_TARGET_DIR: path.join(directory, "target"),
         PATH: `${path.join(directory, "bin")}${path.delimiter}${process.env.PATH}`,
       };
+      delete env.NO_MISTAKES_BUILD_NAPI;
       const options = { cwd: directory, env, encoding: "utf8", timeout: 20000 };
       try {
         const compiled = spawnSync(
@@ -90,7 +77,7 @@ for (const platform of ["Windows", "macOS"]) {
           .map(JSON.parse);
         assert.deepEqual(
           captured.slice(compiledCount).map(({ args }) => args),
-          expected[platform].map((args) => [...baseFor(pkgForSelector(args)), ...args]),
+          expected[platform].map((args) => [...base, ...args]),
         );
         const selectors = [
           ...new Map(
@@ -101,13 +88,13 @@ for (const platform of ["Windows", "macOS"]) {
           captured.slice(0, compiledCount).map(({ args }) => args),
           Array.from({ length: selectors.length / 2 }, (_, index) => {
             const sel = selectors.slice(index * 2, index * 2 + 2);
-            return [...baseFor(pkgForSelector(sel)), "--no-run", "--timings", "--verbose", ...sel];
+            return [...base, "--no-run", "--timings", "--verbose", ...sel];
           }),
         );
         assert.ok(
           captured.every(
             ({ napi, rustflags, target }) =>
-              napi === "1" && rustflags === env.RUSTFLAGS && target === env.CARGO_TARGET_DIR,
+              napi == null && rustflags === env.RUSTFLAGS && target === env.CARGO_TARGET_DIR,
           ),
         );
         const failed = spawnSync(
@@ -130,13 +117,6 @@ for (const platform of ["Windows", "macOS"]) {
           fs.readFileSync(path.join(directory, "commands.jsonl"), "utf8").trim().split("\n").length,
           captured.length + 2,
         );
-        const invalid = spawnSync(
-          process.execPath,
-          [path.join(__dirname, "native-rust-tests.cjs"), "run"],
-          { ...options, env: { ...env, NO_MISTAKES_BUILD_NAPI: "0" } },
-        );
-        assert.equal(invalid.status, 1);
-        assert.match(invalid.stderr, /require NO_MISTAKES_BUILD_NAPI=1/);
       } finally {
         fs.rmSync(directory, { recursive: true, force: true });
       }
@@ -154,7 +134,7 @@ test("native workflow keeps independent runtime and Rust archive builds", () => 
   assert.match(runtime, /name: native-runtime-\$\{\{ matrix.target \}\}/);
   assert.match(archive, /node \.github\/scripts\/native-test-archive.cjs build/);
   assert.doesNotMatch(archive, /crate-type = \["rlib", "cdylib"\]/);
-  for (const producer of [runtime, archive]) {
+  for (const producer of [runtime]) {
     assert.match(producer, /NO_MISTAKES_BUILD_NAPI: "1"/);
     assert.match(producer, /uses: actions\/cache\/restore@/);
     assert.match(producer, /shared-key: cargo-registry-v1/);
@@ -164,6 +144,8 @@ test("native workflow keeps independent runtime and Rust archive builds", () => 
       /hashFiles\([^)]*\.github\/workflows|github.sha.*cache|native-test-artifacts-v1/,
     );
   }
+  assert.doesNotMatch(archive, /NO_MISTAKES_BUILD_NAPI|actions\/cache\/restore@/);
+  assert.match(archive, /shared-key: native-rust-tests-v1-x86_64-pc-windows-msvc/);
   const rust = job("native-rust-tests");
   const api = job("native-api-tests");
   assert.match(rust, /needs: \[changes, native-test-build\]/);
@@ -174,7 +156,7 @@ test("native workflow keeps independent runtime and Rust archive builds", () => 
   assert.match(api, /needs: \[changes, native-build\]/);
   assert.match(api, /native-api-shards.cjs \$\{\{ matrix.shard \}\} \$\{\{ matrix.total \}\}/);
   for (const [consumer, windowsCount] of [
-    [`${rust}\n${job("native-rust-tests-macos")}`, 2],
+    [`${rust}\n${job("native-rust-tests-macos")}`, 1],
     [`${api}\n${job("native-api-tests-macos")}`, 1],
   ]) {
     const rows = [
@@ -217,32 +199,6 @@ test("native workflow keeps independent runtime and Rust archive builds", () => 
       /cargo (build|test)|native-test-archive.cjs build|build-native.cjs/,
     );
   }
-});
-
-test("split native compile deadlines retain historical cold-build evidence", () => {
-  const evidence = require("../../test-cases/rust-validation/fixture/macos-native-build-timeout-split.json");
-  const baseline = require("../../test-cases/rust-validation/fixture/macos-native-test-precompile-baseline.json");
-  const workflow = fs.readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8");
-  const job = (name) => workflowJob(workflow, name);
-  const deadline = (text, step) =>
-    Number(
-      text
-        .split(`- name: ${step}\n`)[1]
-        .split("\n      - name:")[0]
-        .match(/timeout-minutes: (\d+)/)[1],
-    ) * 60;
-  const runtime = deadline(job("native-build"), "Build native CLI and N-API addon");
-  const tests = deadline(job("native-test-build"), "Precompile native Rust test targets");
-  assert.ok(runtime >= evidence.failedRun.nativeBuild.elapsedSeconds);
-  assert.ok(
-    tests >=
-      Math.max(
-        ...baseline.historicalFirstHarnessCompiles.map(
-          (run) => run.firstTestHarnessCargoReportedSeconds,
-        ),
-      ),
-  );
-  assert.equal(evidence.failedRun.testPrecompile.firstTargetFinished, false);
 });
 
 test("native job timing reports the split compile phases and rejects incomplete baselines", () => {

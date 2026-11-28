@@ -46,5 +46,21 @@
     "ref": "refs/heads/main",
     "created_at": "2026-11-02T00:00:00Z",
     "last_accessed_at": "2026-11-02T00:00:00Z"
+  },
+  {
+    "id": 96,
+    "key": "v0-rust-native-rust-tests-v1-x86_64-pc-windows-msvc-Windows_NT-x64-aaabbbcc-eeefffdd",
+    "size_in_bytes": 536870912,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-01T00:00:00Z",
+    "last_accessed_at": "2026-11-01T00:00:00Z"
+  },
+  {
+    "id": 97,
+    "key": "v0-rust-native-rust-tests-v1-x86_64-pc-windows-msvc-Windows_NT-x64-bbbbcccc-fffeeecc",
+    "size_in_bytes": 536870912,
+    "ref": "refs/heads/main",
+    "created_at": "2026-11-02T00:00:00Z",
+    "last_accessed_at": "2026-11-02T00:00:00Z"
   }
 ]

@@ -40,7 +40,7 @@ mod cli_import_usages;
 mod cli_infra_swift;
 #[path = "cli_integration_route_coverage.rs"]
 mod cli_integration_route_coverage;
-#[path = "cli_invocation.rs"]
+#[path = "../../no-mistakes-invocation/tests/cli_invocation.rs"]
 mod cli_invocation;
 #[path = "cli_invocation_lock.rs"]
 mod cli_invocation_lock;
