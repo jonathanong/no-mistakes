@@ -1,5 +1,5 @@
 import { beginTransaction } from "@sample/transactions";
-import { enqueue } from "@sample/jobs";
+import { enqueue, enqueueFallback } from "@sample/jobs";
 
 export async function unawaitedClose() {
   const tx = beginTransaction();
@@ -80,5 +80,17 @@ export async function asyncCallbackNested(gate: Promise<void>, items: number[]) 
     Array.from(items, () => enqueue({ receiptId: "nested" }));
     items.forEach(enqueue);
   });
+  await tx.commit();
+}
+
+export async function globalStatic(items: number[]) {
+  const tx = await beginTransaction();
+  JSON.stringify(items, () => enqueue({ receiptId: "json" }));
+  await tx.commit();
+}
+
+export async function ambiguousPublisher(flag: boolean) {
+  const tx = await beginTransaction();
+  await (flag ? enqueue : enqueueFallback)({ receiptId: "ambiguous" });
   await tx.commit();
 }

@@ -356,6 +356,7 @@ fn queue_no_enqueue_in_transaction_scoped_handles_json_matches_snapshot() {
             ("src/statements.ts", 44),
             ("src/statements.ts", 45),
             ("src/statements.ts", 70),
+            ("src/statements.ts", 88),
             ("src/using.ts", 8)
         ]
     );
