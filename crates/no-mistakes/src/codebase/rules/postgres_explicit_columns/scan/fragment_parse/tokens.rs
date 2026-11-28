@@ -15,10 +15,8 @@ pub(super) fn extract_stars(
     extract_context_from_tokens(tokens, &mut ctx);
     let mut clause_returning = initial_returning;
     let mut clause_select = initial_select;
-    let mut clause_stack: Vec<(bool, bool)> = Vec::new();
     let mut in_exists = false;
-    let mut exists_depth = 0usize;
-    let mut depth = 0usize;
+    let mut clause_stack: Vec<(bool, bool, bool)> = Vec::new();
     let mut prev_code: Option<&TokenWithSpan> = None;
     let mut prev_prev: Option<&TokenWithSpan> = None;
     for (i, token) in tokens.iter().enumerate() {
@@ -27,21 +25,14 @@ pub(super) fn extract_stars(
         }
         match &token.token {
             Token::LParen => {
-                clause_stack.push((clause_select, clause_returning));
-                depth += 1;
-                if prev_code.is_some_and(|t| is_kw(t, Keyword::EXISTS)) && !in_exists {
-                    in_exists = true;
-                    exists_depth = depth;
-                }
+                clause_stack.push((clause_select, clause_returning, in_exists));
+                in_exists = prev_code.is_some_and(|t| is_kw(t, Keyword::EXISTS));
             }
             Token::RParen => {
-                if in_exists && depth == exists_depth {
-                    in_exists = false;
-                }
-                depth = depth.saturating_sub(1);
-                if let Some((prev_select, prev_returning)) = clause_stack.pop() {
+                if let Some((prev_select, prev_returning, prev_exists)) = clause_stack.pop() {
                     clause_select = prev_select;
                     clause_returning = prev_returning;
+                    in_exists = prev_exists;
                 }
             }
             Token::Mul if !in_exists && (clause_returning || clause_select) => {

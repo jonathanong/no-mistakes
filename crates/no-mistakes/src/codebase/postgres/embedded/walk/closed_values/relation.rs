@@ -96,14 +96,16 @@ fn literal_array_values(
     as_const_array_literals(init)
 }
 
-fn tuple_string_literals(ty: &TSType<'_>) -> Option<Vec<String>> {
-    let ty = match ty {
-        TSType::TSParenthesizedType(inner) => &inner.type_annotation,
-        TSType::TSTypeOperatorType(op) if op.operator == TSTypeOperatorOperator::Readonly => {
-            &op.type_annotation
+fn tuple_string_literals(mut ty: &TSType<'_>) -> Option<Vec<String>> {
+    loop {
+        match ty {
+            TSType::TSParenthesizedType(inner) => ty = &inner.type_annotation,
+            TSType::TSTypeOperatorType(op) if op.operator == TSTypeOperatorOperator::Readonly => {
+                ty = &op.type_annotation;
+            }
+            _ => break,
         }
-        _ => ty,
-    };
+    }
     let TSType::TSTupleType(tuple) = ty else {
         return None;
     };

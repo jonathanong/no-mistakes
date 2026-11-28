@@ -15,6 +15,7 @@ const MAX_PREFIX_BYTES: usize = 4096;
 #[derive(Clone, Default)]
 pub(super) struct BuilderTrace {
     pub(super) prefix: Option<String>,
+    pub(super) alt_prefixes: Vec<String>,
     pub(super) fragments: Vec<CallSqlFragment>,
 }
 
@@ -57,6 +58,7 @@ impl ScopeVisitor<'_> {
                         (scope_index, name.to_string()),
                         BuilderTrace {
                             prefix,
+                            alt_prefixes: Vec::new(),
                             fragments: returned,
                         },
                     );
@@ -88,7 +90,11 @@ impl ScopeVisitor<'_> {
             .filter(|text| text.len() <= MAX_PREFIX_BYTES);
         self.call_fragment_state.builders.insert(
             (scope_index, name.to_string()),
-            BuilderTrace { prefix, fragments },
+            BuilderTrace {
+                prefix,
+                alt_prefixes: Vec::new(),
+                fragments,
+            },
         );
     }
 
@@ -139,40 +145,36 @@ impl ScopeVisitor<'_> {
         if !known_builder {
             return;
         }
-        let context = self
+        let (context, alt_prefixes) = self
             .call_fragment_state
             .builders
             .get(&key)
-            .and_then(|trace| trace.prefix.clone())
-            .or_else(|| binding.sql.clone());
+            .map(|t| (t.prefix.clone(), t.alt_prefixes.clone()))
+            .unwrap_or_default();
+        let context = context.or_else(|| binding.sql.clone());
         let straight_line = self.control_depth == 0 && self.loop_depth == 0;
-        if binding.initialized {
-            if let Some(rels) = context
-                .as_deref()
-                .filter(|c| {
-                    crate::codebase::postgres::embedded::helpers::sentinel::in_relation_slot(
-                        c,
-                        c.len(),
-                    )
-                })
-                .and_then(|_| partial::closed_relation_names(self, arg))
-            {
-                let trace = self.call_fragment_state.builders.entry(key).or_default();
-                partial::apply_relation_append(
-                    trace,
-                    context.as_deref().unwrap_or_default(),
-                    &rels,
-                    straight_line,
-                    call.span.start,
-                    crate::codebase::ts_source::byte_offset_to_line(
-                        self.source,
-                        call.span.start as usize,
-                    ),
-                );
-                return;
-            }
+        if binding.initialized
+            && partial::try_relation_append(
+                self,
+                &key,
+                context.as_deref(),
+                arg,
+                straight_line,
+                call.span.start,
+            )
+        {
+            return;
         }
-        let added = partial::expr_fragments(self, arg, context.as_deref(), Some(call.span.start));
+        let added = if alt_prefixes.is_empty() {
+            partial::expr_fragments(self, arg, context.as_deref(), Some(call.span.start))
+        } else {
+            alt_prefixes
+                .iter()
+                .flat_map(|ctx| {
+                    partial::expr_fragments(self, arg, Some(ctx), Some(call.span.start))
+                })
+                .collect()
+        };
         if added.is_empty() {
             return;
         }

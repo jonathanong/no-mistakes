@@ -1,16 +1,14 @@
 use no_mistakes_postgres_sql::idents::{ident_key, object_name_key};
-use sqlparser::ast::{
-    Query, Select, SetExpr, Statement, TableFactor, TableObject, TableWithJoins,
-    UpdateTableFromKind,
-};
+use sqlparser::ast::{Query, Select, SetExpr, Statement, TableFactor, TableWithJoins};
 
+mod dml;
 mod exprs;
 mod items;
-use exprs::walk_subqueries;
-use items::{
-    collect_delete, collect_items, collect_returning, collect_table_expr, target_rel,
-    visit_join_constraint,
+use dml::{
+    collect_delete, collect_insert, collect_table_expr, collect_update, visit_join_constraint,
 };
+use exprs::walk_subqueries;
+use items::collect_items;
 
 pub(super) const SYNTHETIC_TARGET: &str = "__nm_frag_target";
 
@@ -27,6 +25,7 @@ pub(super) struct FragmentStar {
 pub(super) struct Rel {
     pub(super) table: String,
     pub(super) alias: Option<String>,
+    pub(super) join_aliases: Vec<String>,
     pub(super) is_local_derived: bool,
 }
 
@@ -45,44 +44,6 @@ fn collect_statement(statement: &Statement, ctes: &[String], out: &mut Vec<Fragm
         Statement::Explain { statement, .. } => collect_statement(statement, ctes, out),
         _ => {}
     }
-}
-
-fn collect_insert(insert: &sqlparser::ast::Insert, ctes: &[String], out: &mut Vec<FragmentStar>) {
-    if let TableObject::TableName(name) = &insert.table {
-        let target = Rel {
-            table: object_name_key(name),
-            alias: insert.table_alias.as_ref().map(|a| ident_key(&a.alias)),
-            is_local_derived: false,
-        };
-        collect_returning(&target, &[], ctes, insert.returning.as_deref(), out);
-    }
-    if let Some(source) = insert.source.as_deref() {
-        collect_query(source, ctes, false, out);
-    }
-}
-
-fn collect_update(update: &sqlparser::ast::Update, ctes: &[String], out: &mut Vec<FragmentStar>) {
-    let Some(target) = target_rel(&update.table.relation) else {
-        return;
-    };
-    let from = match &update.from {
-        Some(UpdateTableFromKind::BeforeSet(tables) | UpdateTableFromKind::AfterSet(tables)) => {
-            tables.as_slice()
-        }
-        None => &[],
-    };
-    let mut peers = collect_rels(from, ctes, out);
-    for join in &update.table.joins {
-        push_factor(&join.relation, ctes, &mut peers, out);
-        visit_join_constraint(&join.join_operator, ctes, out);
-    }
-    for assignment in &update.assignments {
-        walk_subqueries(&assignment.value, ctes, out);
-    }
-    if let Some(selection) = &update.selection {
-        walk_subqueries(selection, ctes, out);
-    }
-    collect_returning(&target, &peers, ctes, update.returning.as_deref(), out);
 }
 
 pub(super) fn collect_query(
@@ -126,6 +87,13 @@ fn collect_set(expr: &SetExpr, ctes: &[String], in_exists: bool, out: &mut Vec<F
             collect_set(right, ctes, in_exists, out);
         }
         SetExpr::Table(table) if !in_exists => collect_table_expr(table, ctes, out),
+        SetExpr::Values(values) => {
+            values
+                .rows
+                .iter()
+                .flat_map(|row| row.iter())
+                .for_each(|e| walk_subqueries(e, ctes, out));
+        }
         _ => {}
     }
 }
@@ -146,7 +114,11 @@ fn collect_select(select: &Select, ctes: &[String], in_exists: bool, out: &mut V
     }
 }
 
-pub(super) fn collect_rels(from: &[TableWithJoins], ctes: &[String], out: &mut Vec<FragmentStar>) -> Vec<Rel> {
+pub(super) fn collect_rels(
+    from: &[TableWithJoins],
+    ctes: &[String],
+    out: &mut Vec<FragmentStar>,
+) -> Vec<Rel> {
     let mut rels = Vec::new();
     for table in from {
         push_factor(&table.relation, ctes, &mut rels, out);
@@ -158,7 +130,12 @@ pub(super) fn collect_rels(from: &[TableWithJoins], ctes: &[String], out: &mut V
     rels
 }
 
-fn push_factor(factor: &TableFactor, ctes: &[String], rels: &mut Vec<Rel>, out: &mut Vec<FragmentStar>) {
+pub(super) fn push_factor(
+    factor: &TableFactor,
+    ctes: &[String],
+    rels: &mut Vec<Rel>,
+    out: &mut Vec<FragmentStar>,
+) {
     match factor {
         TableFactor::Table {
             name,
@@ -172,6 +149,7 @@ fn push_factor(factor: &TableFactor, ctes: &[String], rels: &mut Vec<Rel>, out: 
             rels.push(Rel {
                 table,
                 alias: alias.as_ref().map(|a| ident_key(&a.name)),
+                join_aliases: Vec::new(),
                 is_local_derived: is_cte,
             });
         }
@@ -182,12 +160,23 @@ fn push_factor(factor: &TableFactor, ctes: &[String], rels: &mut Vec<Rel>, out: 
             rels.push(Rel {
                 table: String::new(),
                 alias: alias.as_ref().map(|a| ident_key(&a.name)),
+                join_aliases: Vec::new(),
                 is_local_derived: true,
             });
         }
         TableFactor::NestedJoin {
-            table_with_joins, ..
-        } => rels.extend(collect_rels(std::slice::from_ref(table_with_joins), ctes, out)),
+            table_with_joins,
+            alias,
+        } => {
+            let mut inner = collect_rels(std::slice::from_ref(table_with_joins), ctes, out);
+            if let Some(alias) = alias {
+                let name = ident_key(&alias.name);
+                inner
+                    .iter_mut()
+                    .for_each(|r| r.join_aliases.push(name.clone()));
+            }
+            rels.extend(inner);
+        }
         _ => {}
     }
 }

@@ -1,0 +1,122 @@
+use super::exprs::walk_subqueries;
+use super::items::collect_returning;
+use super::{collect_query, collect_rels, push_factor, FragmentStar, Rel};
+use no_mistakes_postgres_sql::idents::{ident_key, object_name_key};
+use sqlparser::ast::{
+    Delete, FromTable, Insert, JoinConstraint, JoinOperator, Table, TableFactor, TableObject,
+    Update, UpdateTableFromKind,
+};
+
+pub(super) fn collect_insert(insert: &Insert, ctes: &[String], out: &mut Vec<FragmentStar>) {
+    if let TableObject::TableName(name) = &insert.table {
+        let target = Rel {
+            table: object_name_key(name),
+            alias: insert.table_alias.as_ref().map(|a| ident_key(&a.alias)),
+            join_aliases: Vec::new(),
+            is_local_derived: false,
+        };
+        collect_returning(&target, &[], ctes, insert.returning.as_deref(), out);
+    }
+    if let Some(source) = insert.source.as_deref() {
+        collect_query(source, ctes, false, out);
+    }
+}
+
+pub(super) fn collect_update(update: &Update, ctes: &[String], out: &mut Vec<FragmentStar>) {
+    let Some(target) = target_rel(&update.table.relation) else {
+        return;
+    };
+    let from = match &update.from {
+        Some(UpdateTableFromKind::BeforeSet(tables) | UpdateTableFromKind::AfterSet(tables)) => {
+            tables.as_slice()
+        }
+        None => &[],
+    };
+    let mut peers = collect_rels(from, ctes, out);
+    for join in &update.table.joins {
+        push_factor(&join.relation, ctes, &mut peers, out);
+        visit_join_constraint(&join.join_operator, ctes, out);
+    }
+    for assignment in &update.assignments {
+        walk_subqueries(&assignment.value, ctes, out);
+    }
+    if let Some(selection) = &update.selection {
+        walk_subqueries(selection, ctes, out);
+    }
+    collect_returning(&target, &peers, ctes, update.returning.as_deref(), out);
+}
+
+pub(super) fn collect_delete(delete: &Delete, ctes: &[String], out: &mut Vec<FragmentStar>) {
+    let tables = match &delete.from {
+        FromTable::WithFromKeyword(t) | FromTable::WithoutKeyword(t) => t,
+    };
+    let Some(target) = tables.first().and_then(|table| target_rel(&table.relation)) else {
+        return;
+    };
+    let peers = collect_rels(delete.using.as_deref().unwrap_or_default(), ctes, out);
+    delete
+        .selection
+        .iter()
+        .for_each(|s| walk_subqueries(s, ctes, out));
+    collect_returning(&target, &peers, ctes, delete.returning.as_deref(), out);
+}
+
+pub(super) fn collect_table_expr(table: &Table, ctes: &[String], out: &mut Vec<FragmentStar>) {
+    let Some(name) = &table.table_name else {
+        return;
+    };
+    let table_name = table.schema_name.as_ref().map_or_else(
+        || ident_key(name),
+        |schema| format!("{}.{}", ident_key(schema), ident_key(name)),
+    );
+    if !ctes.iter().any(|cte| cte.eq_ignore_ascii_case(&table_name)) {
+        out.push(FragmentStar {
+            returning: false,
+            qualifier: None,
+            relation: Some(table_name),
+            within_function: None,
+            line: 1,
+        });
+    }
+}
+
+pub(super) fn target_rel(factor: &TableFactor) -> Option<Rel> {
+    let TableFactor::Table {
+        name,
+        alias,
+        args: None,
+        ..
+    } = factor
+    else {
+        return None;
+    };
+    Some(Rel {
+        table: object_name_key(name),
+        alias: alias.as_ref().map(|a| ident_key(&a.name)),
+        join_aliases: Vec::new(),
+        is_local_derived: false,
+    })
+}
+
+pub(super) fn visit_join_constraint(
+    op: &JoinOperator,
+    ctes: &[String],
+    out: &mut Vec<FragmentStar>,
+) {
+    let (JoinOperator::Join(JoinConstraint::On(expr))
+    | JoinOperator::Inner(JoinConstraint::On(expr))
+    | JoinOperator::Left(JoinConstraint::On(expr))
+    | JoinOperator::LeftOuter(JoinConstraint::On(expr))
+    | JoinOperator::Right(JoinConstraint::On(expr))
+    | JoinOperator::RightOuter(JoinConstraint::On(expr))
+    | JoinOperator::FullOuter(JoinConstraint::On(expr))
+    | JoinOperator::LeftSemi(JoinConstraint::On(expr))
+    | JoinOperator::RightSemi(JoinConstraint::On(expr))
+    | JoinOperator::LeftAnti(JoinConstraint::On(expr))
+    | JoinOperator::RightAnti(JoinConstraint::On(expr))
+    | JoinOperator::StraightJoin(JoinConstraint::On(expr))) = op
+    else {
+        return;
+    };
+    walk_subqueries(expr, ctes, out);
+}

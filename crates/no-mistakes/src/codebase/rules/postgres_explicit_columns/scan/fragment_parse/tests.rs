@@ -62,6 +62,14 @@ fn ast_covers_dml_set_ops_table_and_nested_subqueries() {
             "SELECT id FROM narrow ORDER BY (SELECT count(*) FROM (SELECT * FROM wide) w)",
             vec![(false, Some("wide"))],
         ),
+        (
+            "INSERT INTO narrow (id) VALUES ((SELECT count(*) FROM (SELECT * FROM wide) AS w))",
+            vec![(false, Some("wide"))],
+        ),
+        (
+            "SELECT j.* FROM (wide w JOIN narrow n ON w.id = n.id) AS j",
+            vec![(false, Some("wide")), (false, Some("narrow"))],
+        ),
     ];
     for (sql, expected) in cases {
         let stars = extract_fragment_stars(sql, None);
@@ -141,4 +149,22 @@ fn context_and_token_fallback_handle_prefixes_ctes_commas_and_subqueries() {
     );
     let multi_rels: Vec<_> = multi_from.iter().map(|s| s.relation.as_deref()).collect();
     assert_eq!(multi_rels, vec![Some("narrow"), Some("wide")]);
+
+    let quoted_alias = extract_fragment_stars(
+        r#"SELECT w.* FROM narrow AS "W", wide AS w WHERE"#,
+        None,
+    );
+    assert_eq!(quoted_alias.len(), 1);
+    assert_eq!(quoted_alias[0].relation.as_deref(), Some("wide"));
+
+    let nested_in_exists = extract_fragment_stars(
+        "SELECT EXISTS (SELECT 1 WHERE (1, 2) IN (SELECT * FROM wide)) WHERE",
+        None,
+    );
+    assert_eq!(nested_in_exists.len(), 1);
+    assert_eq!(nested_in_exists[0].relation.as_deref(), Some("wide"));
+
+    let grouped_fn = extract_fragment_stars("SELECT row_to_json((w.*)) FROM wide w WHERE", None);
+    assert_eq!(grouped_fn.len(), 1);
+    assert_eq!(grouped_fn[0].within_function.as_deref(), Some("row_to_json"));
 }

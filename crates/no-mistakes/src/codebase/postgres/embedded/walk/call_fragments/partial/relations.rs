@@ -2,7 +2,35 @@ use super::partial_atom;
 use crate::codebase::postgres::embedded::helpers::sentinel;
 use crate::codebase::postgres::embedded::walk::ScopeVisitor;
 use crate::codebase::postgres::embedded::{placeholders, tags, CallSqlFragment};
+use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Expression, TemplateLiteral};
+
+pub(super) fn leaf_pieces(
+    visitor: &ScopeVisitor<'_>,
+    leaf: &Expression<'_>,
+    combined: &[String],
+    depth: u8,
+) -> Option<Vec<String>> {
+    if depth == 0 {
+        return None;
+    }
+    let expr = unwrap_ts_wrappers(leaf);
+    if let Expression::TemplateLiteral(template) = expr {
+        if !template.expressions.is_empty() {
+            return Some(partial_templates(visitor, template, depth - 1));
+        }
+    }
+    if let Some(piece) = partial_atom(visitor, expr, depth) {
+        return Some(vec![piece]);
+    }
+    if combined
+        .iter()
+        .all(|c| sentinel::in_relation_slot(c, c.len()))
+    {
+        return closed_relation_names(visitor, expr);
+    }
+    None
+}
 
 pub(super) fn partial_templates(
     visitor: &ScopeVisitor<'_>,
@@ -71,7 +99,32 @@ pub(in super::super) fn closed_relation_names(
     Some(values.into_iter().map(|v| v.sql).collect())
 }
 
-pub(in super::super) fn apply_relation_append(
+pub(in super::super) fn try_relation_append(
+    visitor: &mut ScopeVisitor<'_>,
+    key: &(usize, String),
+    context: Option<&str>,
+    arg: &Expression<'_>,
+    straight_line: bool,
+    append_start: u32,
+) -> bool {
+    let Some(context) = context.filter(|c| sentinel::in_relation_slot(c, c.len())) else {
+        return false;
+    };
+    let Some(rels) = closed_relation_names(visitor, arg) else {
+        return false;
+    };
+    let line =
+        crate::codebase::ts_source::byte_offset_to_line(visitor.source, append_start as usize);
+    let trace = visitor
+        .call_fragment_state
+        .builders
+        .entry(key.clone())
+        .or_default();
+    apply_relation_append(trace, context, &rels, straight_line, append_start, line);
+    true
+}
+
+fn apply_relation_append(
     trace: &mut super::super::BuilderTrace,
     context: &str,
     rels: &[String],
@@ -92,12 +145,18 @@ pub(in super::super) fn apply_relation_append(
                     if let Some(prefix) = &mut trace.prefix {
                         prefix.push_str(&rels[0]);
                     }
+                    trace.alt_prefixes.clear();
                 } else {
                     trace.prefix = None;
+                    trace.alt_prefixes = rels.iter().map(|rel| format!("{context}{rel}")).collect();
                 }
                 return;
             }
         }
+    }
+    if rels.len() > 1 {
+        trace.prefix = None;
+        trace.alt_prefixes = rels.iter().map(|rel| format!("{context}{rel}")).collect();
     }
     for rel in rels {
         trace.fragments.push(CallSqlFragment {

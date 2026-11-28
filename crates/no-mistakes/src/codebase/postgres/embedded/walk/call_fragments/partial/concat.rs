@@ -17,36 +17,62 @@ pub(super) fn collect_addition<'a>(
     flatten_add(expr, &mut leaves);
     let span = expr.span();
     let line = byte_offset_to_line(visitor.source, span.start as usize);
-    let mut combined = String::new();
+    let mut combined = vec![String::new()];
     let mut leading_static = String::new();
     let mut seen_opaque = false;
     let mut placeholders_used = 0usize;
     let mut trailing: Vec<(String, u32, (u32, u32))> = Vec::new();
+    let cap = crate::codebase::postgres::embedded::MAX_EMBEDDED_SQL_VARIANTS;
     for leaf in leaves {
         let leaf_span = leaf.span();
         let leaf_line = byte_offset_to_line(visitor.source, leaf_span.start as usize);
-        if let Some(piece) = partial_atom(visitor, leaf, depth) {
-            combined.push_str(&piece);
-            if !seen_opaque {
-                leading_static.push_str(&piece);
+        let pieces = super::relations::leaf_pieces(visitor, leaf, &combined, depth);
+        if let Some(pieces) = pieces {
+            if pieces.len() == 1 {
+                let piece = &pieces[0];
+                combined.iter_mut().for_each(|c| c.push_str(piece));
+                if !seen_opaque {
+                    leading_static.push_str(piece);
+                } else {
+                    trailing.push((piece.clone(), leaf_line, (leaf_span.start, leaf_span.end)));
+                }
+            } else if combined.len().saturating_mul(pieces.len()) <= cap {
+                let mut next = Vec::with_capacity(combined.len() * pieces.len());
+                for base in &combined {
+                    for piece in &pieces {
+                        next.push(format!("{base}{piece}"));
+                    }
+                }
+                combined = next;
+                if seen_opaque {
+                    for piece in pieces {
+                        trailing.push((piece, leaf_line, (leaf_span.start, leaf_span.end)));
+                    }
+                }
             } else {
-                trailing.push((piece, leaf_line, (leaf_span.start, leaf_span.end)));
+                seen_opaque = true;
+                placeholders_used += 1;
+                let ph = placeholders::internal_placeholder(placeholders_used);
+                combined.iter_mut().for_each(|c| c.push_str(&ph));
             }
         } else {
             seen_opaque = true;
             placeholders_used += 1;
-            combined.push_str(&placeholders::internal_placeholder(placeholders_used));
+            let ph = placeholders::internal_placeholder(placeholders_used);
+            combined.iter_mut().for_each(|c| c.push_str(&ph));
         }
     }
-    if !combined.trim().is_empty() {
-        push_clean(
-            out,
-            combined,
-            line,
-            (span.start, span.end),
-            context_sql,
-            append_site,
-        );
+    for sql in combined {
+        if !sql.trim().is_empty() {
+            push_clean(
+                out,
+                sql,
+                line,
+                (span.start, span.end),
+                context_sql,
+                append_site,
+            );
+        }
     }
     if seen_opaque && !trailing.is_empty() {
         let effective_ctx = if !leading_static.trim().is_empty() {

@@ -44,12 +44,35 @@ fn matching_close_paren(tokens: &[TokenWithSpan], open: usize) -> usize {
 }
 
 pub(super) fn enclosing_function(tokens: &[TokenWithSpan], star_index: usize) -> Option<String> {
-    let open = enclosing_open_paren(tokens, star_index)?;
-    for j in (0..open).rev() {
-        if matches!(tokens[j].token, Token::Whitespace(_)) {
-            continue;
+    let mut cursor = star_index;
+    while let Some(open) = enclosing_open_paren(tokens, cursor) {
+        let prev = (0..open)
+            .rev()
+            .find(|&j| !matches!(tokens[j].token, Token::Whitespace(_)))?;
+        match &tokens[prev].token {
+            Token::LParen => cursor = open,
+            Token::Word(word)
+                if !matches!(
+                    word.keyword,
+                    sqlparser::keywords::Keyword::SELECT
+                        | sqlparser::keywords::Keyword::WHERE
+                        | sqlparser::keywords::Keyword::AND
+                        | sqlparser::keywords::Keyword::OR
+                        | sqlparser::keywords::Keyword::IN
+                        | sqlparser::keywords::Keyword::EXISTS
+                        | sqlparser::keywords::Keyword::ON
+                        | sqlparser::keywords::Keyword::THEN
+                        | sqlparser::keywords::Keyword::ELSE
+                        | sqlparser::keywords::Keyword::WHEN
+                        | sqlparser::keywords::Keyword::CASE
+                        | sqlparser::keywords::Keyword::NOT
+                        | sqlparser::keywords::Keyword::RETURNING
+                ) =>
+            {
+                return word_value(&tokens[prev]);
+            }
+            _ => return None,
         }
-        return word_value(&tokens[j]);
     }
     None
 }

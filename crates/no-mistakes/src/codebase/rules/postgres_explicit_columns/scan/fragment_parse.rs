@@ -102,7 +102,11 @@ pub(super) fn is_kw(token: &TokenWithSpan, keyword: Keyword) -> bool {
 
 pub(super) fn word_value(token: &TokenWithSpan) -> Option<String> {
     match &token.token {
-        Token::Word(word) => Some(word.value.to_ascii_lowercase()),
+        Token::Word(word) => Some(if word.quote_style.is_some() {
+            word.value.clone()
+        } else {
+            word.value.to_ascii_lowercase()
+        }),
         _ => None,
     }
 }

@@ -186,7 +186,7 @@ fn read_table_and_alias(
         }
     } else if let Token::Word(word) = &alias_tok.token {
         if word.keyword == Keyword::NoKeyword {
-            return Some((alias_i + 1, (name, Some(word.value.to_ascii_lowercase()))));
+            return Some((alias_i + 1, (name, word_value(alias_tok))));
         }
     }
     Some((next_i, (name, None)))

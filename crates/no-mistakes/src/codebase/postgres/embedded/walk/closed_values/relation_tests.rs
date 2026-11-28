@@ -118,3 +118,60 @@ export function reassignedHelper(other: () => any) {
     );
     assert!(frags(2).is_empty());
 }
+
+#[test]
+fn parenthesized_tuple_concat_template_and_multi_relation_returning() {
+    let source = r#"
+import { query } from "@example/db";
+import sql from "sql-template-strings";
+
+const PAREN_TUPLE: (readonly ["entries", "audit_view"]) = ["entries", "audit_view"];
+type Pair = "entries" | "records";
+
+export function fromParenTuple(table: (typeof PAREN_TUPLE)[number], suffix: string) {
+  return query(`SELECT * FROM ${table}` + suffix);
+}
+
+export function multiRelationReturning(table: Pair) {
+  const q = sql`UPDATE `;
+  q.append(table);
+  q.append(" SET active = true RETURNING *");
+  return query(q);
+}
+"#;
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let facts = extract_embedded_sql_from_source(Path::new("src/multi.ts"), source, &options);
+    assert_eq!(facts.calls.len(), 2);
+    let first: Vec<String> = facts
+        .call_fragments
+        .get(&facts.call_spans[0])
+        .cloned()
+        .unwrap_or_default()
+        .into_iter()
+        .map(|f| f.sql)
+        .collect();
+    assert_eq!(
+        first,
+        vec![
+            "SELECT * FROM entries__nm_placeholder__"
+                .replace("__nm_placeholder__", "sql_placeholder_1"),
+            "SELECT * FROM audit_viewsql_placeholder_1".to_string(),
+        ]
+    );
+    let second_ctxs: Vec<Option<String>> = facts
+        .call_fragments
+        .get(&facts.call_spans[1])
+        .cloned()
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|f| f.sql.contains("RETURNING"))
+        .map(|f| f.context_sql)
+        .collect();
+    assert_eq!(
+        second_ctxs,
+        vec![
+            Some("UPDATE entries".to_string()),
+            Some("UPDATE records".to_string()),
+        ]
+    );
+}
