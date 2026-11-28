@@ -20,8 +20,6 @@ pub mod strict_package_layout;
 pub mod structured_config_policy;
 pub mod tsconfig_alias_folder_mapping;
 pub mod tsconfig_file_coverage;
-pub mod tsconfig_gate_coverage;
 pub mod version_pin_consistency;
 pub mod vite_optimize_deps_nested_imports;
-pub mod workflow_topology_policy;
 pub mod workspace_package_cycles;

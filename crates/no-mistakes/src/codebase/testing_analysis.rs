@@ -16,6 +16,7 @@ pub(crate) mod matcher_properties;
 pub(crate) mod plan;
 mod prepared_projects;
 pub(crate) mod project_filter;
+pub(crate) mod project_patterns;
 pub(crate) mod reliability;
 pub(crate) mod runner;
 pub(crate) mod runner_filter;

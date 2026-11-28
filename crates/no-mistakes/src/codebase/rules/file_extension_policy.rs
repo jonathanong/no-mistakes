@@ -174,7 +174,7 @@ pub(crate) fn check_file(
 }
 
 fn normalized_scope_path(path: &str) -> Option<String> {
-    let normalized = crate::codebase::workflow_topology::posix_path::normalize(path);
+    let normalized = crate::codebase::posix_path::normalize(path);
     if normalized == ".." || normalized.starts_with("../") {
         None
     } else {

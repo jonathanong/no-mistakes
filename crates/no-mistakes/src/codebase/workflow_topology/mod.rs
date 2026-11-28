@@ -47,7 +47,7 @@ pub mod graph_diagnostics;
 pub mod impact;
 pub mod model;
 pub mod parse;
-pub mod posix_path;
+pub use crate::codebase::posix_path;
 pub mod render_json;
 pub mod render_mermaid;
 pub mod secret_references;

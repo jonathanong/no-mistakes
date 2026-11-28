@@ -1,4 +1,4 @@
-pub(in super::super::super) fn job_key_line(source: &str, job_id: &str, keys: &[&str]) -> usize {
+pub(crate) fn job_key_line(source: &str, job_id: &str, keys: &[&str]) -> usize {
     let lines: Vec<&str> = source.lines().collect();
     let Some(job_at) = job_offset(&lines, job_id) else {
         return 1;

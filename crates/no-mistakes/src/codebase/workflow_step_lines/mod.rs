@@ -4,11 +4,11 @@ mod flow;
 mod job_line;
 mod scalar;
 
-pub(in super::super) use flow::yaml_plain;
-pub(in super::super) use job_line::job_key_line;
+pub(crate) use flow::yaml_plain;
+pub(crate) use job_line::job_key_line;
 
 #[derive(Debug, Clone)]
-pub(in super::super) struct Field {
+pub(crate) struct Field {
     pub name: String,
     pub line: usize,
     pub value_line: usize,
@@ -17,7 +17,7 @@ pub(in super::super) struct Field {
 }
 
 #[derive(Debug)]
-pub(in super::super) struct Step {
+pub(crate) struct Step {
     pub line: usize,
     pub fields: Vec<Field>,
 }
@@ -32,12 +32,12 @@ impl Step {
 }
 
 #[derive(Debug)]
-pub(in super::super) struct Job {
+pub(crate) struct Job {
     pub name: String,
     pub steps: Vec<Step>,
 }
 
-pub(in super::super) fn walk_steps(source: &str, action: bool) -> Vec<Job> {
+pub(crate) fn walk_steps(source: &str, action: bool) -> Vec<Job> {
     let mut walker = cursor::Walker::new(action);
     for (index, line) in source.lines().enumerate() {
         walker.feed(index + 1, line);
@@ -46,12 +46,7 @@ pub(in super::super) fn walk_steps(source: &str, action: bool) -> Vec<Job> {
     walker.jobs
 }
 
-pub(in super::super) fn first_key_line(
-    source: &str,
-    job_id: &str,
-    index: usize,
-    keys: &[&str],
-) -> usize {
+pub(crate) fn first_key_line(source: &str, job_id: &str, index: usize, keys: &[&str]) -> usize {
     let Some(job) = walk_steps(source, job_id == "(composite)")
         .into_iter()
         .find(|job| job.name == job_id)
