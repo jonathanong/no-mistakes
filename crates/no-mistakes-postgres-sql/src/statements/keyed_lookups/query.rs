@@ -1,16 +1,17 @@
 mod ctes;
+mod limits;
 mod outputs;
 
-use super::conditions::{cannot_match, decimal_integer, literal};
+use super::conditions::cannot_match;
 use super::select_exprs::walk_select;
 use super::{scope::ScopeStack, subquery, walk_nested_queries, walk_set_expr, LookupHistory};
-use crate::idents::{unwrap_expr, visit_shallow_exprs};
+use crate::idents::visit_shallow_exprs;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
+use limits::discard_exists_limit;
+pub(super) use limits::has_zero_limit;
 pub(super) use outputs::plain_output;
 use outputs::select_has_plain_outputs;
-use sqlparser::ast::{
-    CastKind, DataType, Expr, LimitClause, OrderByKind, Query, Select, SetExpr, Value,
-};
+use sqlparser::ast::{Expr, OrderByKind, Query, Select, SetExpr};
 
 pub(super) fn walk_query(
     query: &Query,
@@ -26,7 +27,8 @@ pub(super) fn walk_query_ordered(
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) -> LookupHistory {
-    ctes::walk_reachable(query, scopes, out);
+    let zero_limit = has_zero_limit(query.limit_clause.as_ref());
+    ctes::walk_reachable(query, zero_limit, scopes, out);
     let local_order;
     let order = match query.order_by.as_ref().map(|order| &order.kind) {
         Some(OrderByKind::Expressions(exprs)) => {
@@ -39,7 +41,7 @@ pub(super) fn walk_query_ordered(
         }
         _ => enclosing_order,
     };
-    let mut seen = if has_zero_limit(query.limit_clause.as_ref()) {
+    let mut seen = if zero_limit {
         LookupHistory::new()
     } else {
         walk_set_expr(&query.body, order, scopes, out)
@@ -92,66 +94,6 @@ pub(super) fn query_produces_no_rows(query: &Query) -> bool {
 
 pub(super) fn select_produces_no_rows(select: &Select) -> bool {
     select.selection.as_ref().is_some_and(cannot_match) && select_has_plain_outputs(select)
-}
-
-fn discard_exists_limit(limit: Option<&LimitClause>) -> bool {
-    match limit {
-        None => true,
-        Some(LimitClause::LimitOffset {
-            limit,
-            offset: None,
-            ..
-        }) => limit.as_ref().is_none_or(|count| {
-            matches!(limit_literal(count), Some(Value::Null))
-                || literal_limit_value(count).is_some_and(|value| value > 0)
-        }),
-        _ => false,
-    }
-}
-
-pub(super) fn has_zero_limit(limit: Option<&LimitClause>) -> bool {
-    let Some(LimitClause::LimitOffset {
-        limit: Some(count), ..
-    }) = limit
-    else {
-        return false;
-    };
-    literal_limit_value(count) == Some(0)
-}
-
-fn literal_limit_value(count: &Expr) -> Option<i64> {
-    match limit_literal(count)? {
-        Value::Number(number, _) => {
-            decimal_integer(number).or_else(|| decimal_zero(number).then_some(0))
-        }
-        Value::SingleQuotedString(number) | Value::EscapedStringLiteral(number) => {
-            number.trim_ascii().parse().ok()
-        }
-        _ => None,
-    }
-}
-
-fn limit_literal(count: &Expr) -> Option<&Value> {
-    let count = match unwrap_expr(count) {
-        Expr::Cast {
-            kind: CastKind::Cast | CastKind::DoubleColon,
-            expr,
-            data_type: DataType::BigInt(None),
-            format: None,
-            ..
-        } => expr.as_ref(),
-        count => count,
-    };
-    literal(count)
-}
-
-fn decimal_zero(number: &str) -> bool {
-    let mantissa = number.split(['e', 'E']).next().unwrap_or_default();
-    let mantissa = mantissa.trim_start_matches(['+', '-']);
-    mantissa.contains('0')
-        && mantissa
-            .bytes()
-            .all(|digit| matches!(digit, b'0' | b'.' | b'_'))
 }
 
 fn inspect_limits(

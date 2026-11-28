@@ -83,11 +83,17 @@ The rule stays silent when the lookups are not proven to read the same row:
   also carries direct row guards from `WHERE` and aggregate `FILTER` clauses
   into the expressions they control, and retains old-row guards for
   `MERGE RETURNING` when all reachable modifying actions delete rows.
+  `UPDATE RETURNING` retains guards on its unchanged `FROM` inputs.
+- Arguments to `pg_catalog.replace(text, text, text)` eliminated by the
+  PostgreSQL planner when a text argument is known null.
 - XML table namespaces, paths, and defaults when the document is a known XML
   null. PostgreSQL checks the document before evaluating those expressions.
 - Window calls eliminated by literal `CASE`, `COALESCE`, or Boolean
   expressions, unreachable DML actions, and query bodies with a literal
-  `LIMIT 0`. Simple per-row outputs are also skipped under literal
+  `LIMIT 0` or numeric limits that PostgreSQL rounds to zero. Read-only CTEs
+  skipped by zero row demand are also ignored. Data-modifying CTEs and CTEs
+  referenced by limit expressions remain eligible. Simple per-row outputs
+  are also skipped under literal
   `WHERE FALSE` or `WHERE NULL`. Aggregate transition inputs require source
   rows, and aggregate outputs can still run on empty input. CTEs and limit
   expressions are still inspected.
@@ -135,7 +141,10 @@ table aliases that mask the default qualifiers.
 The rule reads SQL without a PostgreSQL catalog. It assumes dotted references
 such as `a.name` resolve to columns. PostgreSQL can also interpret that syntax
 as a whole-row function call when the column is absent. Verify the binding
-when reviewing a finding on such a projection.
+when reviewing a finding on such a projection. In a scalar subquery
+with a single simple scan, a bare key column is assumed to belong to that scan.
+Qualify the column to make its binding explicit when a containing query could
+also supply that name.
 
 Findings point at the duplicate join or scalar subquery and name the line of the
 first lookup.

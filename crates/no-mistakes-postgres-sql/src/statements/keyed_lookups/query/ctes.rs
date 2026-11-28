@@ -1,3 +1,5 @@
+mod recursive;
+
 use super::{walk_query, ScopeStack};
 use crate::fx::FxHashSet;
 use crate::idents::ident_key;
@@ -7,6 +9,7 @@ use std::ops::ControlFlow;
 
 pub(super) fn walk_reachable(
     query: &Query,
+    zero_limit: bool,
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
@@ -14,7 +17,19 @@ pub(super) fn walk_reachable(
         return;
     };
     let mut uses = RelationUses::default();
-    let _ = query.visit(&mut uses);
+    if zero_limit {
+        let mut current = QueryUses::new(query, None);
+        current.body_skipped = true;
+        uses.frames.push(current);
+        for definition in &with.cte_tables {
+            let _ = definition.query.visit(&mut uses);
+        }
+        let _ = query.limit_clause.visit(&mut uses);
+        let _ = query.fetch.visit(&mut uses);
+        let _ = uses.post_visit_query(query);
+    } else {
+        let _ = query.visit(&mut uses);
+    }
     for index in uses.root_reachable.into_iter().rev() {
         walk_query(&with.cte_tables[index].query, scopes, out);
     }
@@ -31,6 +46,7 @@ struct QueryUses {
     definitions: Vec<Definition>,
     parent_definition: Option<usize>,
     recursive: bool,
+    body_skipped: bool,
 }
 
 struct Definition {
@@ -52,11 +68,15 @@ impl QueryUses {
             names: FxHashSet::default(),
             definitions,
             parent_definition,
+            body_skipped: false,
             recursive: query.with.as_ref().is_some_and(|with| with.recursive),
         }
     }
 
     fn resolve(&mut self) -> Vec<usize> {
+        if self.body_skipped && self.recursive {
+            return self.resolve_recursive_demand();
+        }
         let mut reachable = Vec::new();
         for (index, cte) in self.definitions.iter_mut().enumerate().rev() {
             if self.recursive || self.names.remove(&cte.name) || cte.forced {

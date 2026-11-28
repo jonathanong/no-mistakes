@@ -1,8 +1,8 @@
 use super::super::expr_norm::ExprNormalizer;
 use super::super::function_clauses::{
     coalesce_arguments, empty_aggregate_frame, filter_skips_inputs, row_window_value,
-    split_coalesce_arguments, visit_eager_functions, visit_function_filter, visit_function_inputs,
-    visit_ordered_set_arguments,
+    split_coalesce_arguments, strict_null_arguments, visit_eager_functions, visit_function_filter,
+    visit_function_inputs, visit_ordered_set_arguments,
 };
 use super::super::scope::ScopeSnapshot;
 use super::super::select_exprs::{target_identity, SelectTargets};
@@ -22,7 +22,9 @@ pub(super) fn inspect_function(
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
     skip_eager: bool,
 ) {
-    if function.over.is_some() && targets.skips_window_call(expr) {
+    if strict_null_arguments(function).is_some()
+        || function.over.is_some() && targets.skips_window_call(expr)
+    {
         return;
     }
     if let Some(arguments) = coalesce_arguments(function) {

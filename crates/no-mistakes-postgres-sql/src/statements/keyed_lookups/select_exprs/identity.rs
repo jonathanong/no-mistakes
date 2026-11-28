@@ -4,8 +4,9 @@ use super::super::expr_norm::types::integer_type_alias;
 use crate::idents::{ident_key, unwrap_expr};
 use crate::order::canonical_order_options;
 use sqlparser::ast::{
-    CastKind, Distinct, Expr, Ident, OrderByExpr, OrderByKind, OrderBySort, Query, SetExpr,
-    TableFactor, TableInheritance, Value, VisitMut, VisitorMut, WindowSpec,
+    CastKind, Distinct, DuplicateTreatment, Expr, FunctionArguments, Ident, OrderByExpr,
+    OrderByKind, OrderBySort, Query, SetExpr, TableFactor, TableInheritance, Value, VisitMut,
+    VisitorMut, WindowSpec,
 };
 use std::ops::ControlFlow;
 mod local_columns;
@@ -34,14 +35,7 @@ fn normalize(node: &mut impl VisitMut, normalize_targets: bool) {
         type Break = ();
 
         fn pre_visit_query(&mut self, query: &mut Query) -> ControlFlow<()> {
-            if let SetExpr::Select(select) = query.body.as_mut() {
-                if matches!(select.distinct, Some(Distinct::All)) {
-                    select.distinct = None;
-                }
-                if self.normalize_targets {
-                    normalize_local_columns(select);
-                }
-            }
+            normalize_query_body(&mut query.body, self.normalize_targets);
             if !self.normalize_targets {
                 return ControlFlow::Continue(());
             }
@@ -74,6 +68,11 @@ fn normalize(node: &mut impl VisitMut, normalize_targets: bool) {
                 }
             }
             if let Expr::Function(function) = expr {
+                if let FunctionArguments::List(arguments) = &mut function.args {
+                    if arguments.duplicate_treatment == Some(DuplicateTreatment::All) {
+                        arguments.duplicate_treatment = None;
+                    }
+                }
                 if let [name] = function.name.0.as_slice() {
                     self.quoted_keyword_function = name
                         .as_ident()
@@ -144,6 +143,24 @@ fn normalize(node: &mut impl VisitMut, normalize_targets: bool) {
         normalize_targets,
         quoted_keyword_function: None,
     });
+}
+
+fn normalize_query_body(body: &mut SetExpr, normalize_targets: bool) {
+    match body {
+        SetExpr::Select(select) => {
+            if matches!(select.distinct, Some(Distinct::All)) {
+                select.distinct = None;
+            }
+            if normalize_targets {
+                normalize_local_columns(select);
+            }
+        }
+        SetExpr::SetOperation { left, right, .. } => {
+            normalize_query_body(left, normalize_targets);
+            normalize_query_body(right, normalize_targets);
+        }
+        _ => {}
+    }
 }
 
 fn normalize_sort_options(order: &mut [OrderByExpr]) {

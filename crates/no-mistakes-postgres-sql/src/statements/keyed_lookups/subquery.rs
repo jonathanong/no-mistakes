@@ -59,9 +59,9 @@ fn inspect(
                 }
                 inspect(&branch.condition, outer, targets, &mut cond_seen, out, true);
                 let mut arm_seen = cond_seen.clone();
-                if operand.is_none() && condition.is_none() {
-                    arm_seen.restrict(&branch.condition, outer, true);
-                    cond_seen.restrict(&branch.condition, outer, false);
+                if condition.is_none() {
+                    arm_seen.restrict_case(operand.as_deref(), &branch.condition, outer, true);
+                    cond_seen.restrict_case(operand.as_deref(), &branch.condition, outer, false);
                 }
                 inspect(&branch.result, outer, targets, &mut arm_seen, out, true);
                 seen.merge(arm_seen);

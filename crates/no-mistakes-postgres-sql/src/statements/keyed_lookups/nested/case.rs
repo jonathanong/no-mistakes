@@ -1,6 +1,6 @@
 use super::super::conditions::case_condition;
 use super::super::LookupHistory;
-use super::{walk_nested_with_context, Nested};
+use super::Nested;
 use sqlparser::ast::{CaseWhen, Expr};
 
 impl Nested<'_> {
@@ -20,18 +20,11 @@ impl Nested<'_> {
             if test == Some(false) {
                 continue;
             }
-            walk_nested_with_context(
-                &branch.condition,
-                self.scopes,
-                self.out,
-                remaining.guard_only(),
-                self.empty_input,
-                self.windows,
-            );
+            self.walk_child_with_guards(&branch.condition, remaining.guard_only());
             let mut chosen = remaining.guard_only();
-            if operand.is_none() && test.is_none() {
-                chosen.restrict(&branch.condition, &outer, true);
-                remaining.restrict(&branch.condition, &outer, false);
+            if test.is_none() {
+                chosen.restrict_case(operand, &branch.condition, &outer, true);
+                remaining.restrict_case(operand, &branch.condition, &outer, false);
             }
             self.walk_case_arm(&branch.result, chosen);
             if test == Some(true) {
@@ -45,14 +38,7 @@ impl Nested<'_> {
 
     fn walk_case_arm(&mut self, expr: &Expr, guards: LookupHistory) {
         if guards.is_reachable() {
-            walk_nested_with_context(
-                expr,
-                self.scopes,
-                self.out,
-                guards,
-                self.empty_input,
-                self.windows,
-            );
+            self.walk_child_with_guards(expr, guards);
         } else {
             self.walk_eager_children(expr);
         }

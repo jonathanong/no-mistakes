@@ -40,3 +40,33 @@ fn reports_only_reachable_row_lookups_and_distinct_frame_outputs() {
         ]
     );
 }
+
+#[test]
+fn respects_planner_demand_and_equivalent_set_targets() {
+    let facts = fixture_facts("review-planner-guards");
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+
+    assert_eq!(
+        sites,
+        [
+            (15, 16),
+            (23, 24),
+            (35, 36),
+            (41, 42),
+            (67, 68),
+            (79, 80),
+            (101, 104),
+            (111, 113),
+            (122, 124),
+            (139, 140),
+            (147, 148),
+            (159, 161),
+            (166, 167),
+            (173, 174),
+        ]
+    );
+}

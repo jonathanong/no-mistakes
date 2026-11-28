@@ -1,5 +1,6 @@
 mod eager;
 mod frames;
+mod strict;
 mod window;
 
 use super::conditions::literal_condition;
@@ -12,6 +13,7 @@ use sqlparser::ast::{
     DuplicateTreatment, Expr, Function, FunctionArg, FunctionArgumentClause, FunctionArguments,
     Value,
 };
+pub(super) use strict::strict_null_arguments;
 pub(super) use window::{has_optional_window_default, null_position_inputs, row_window_value};
 
 pub(super) fn coalesce_arguments(function: &Function) -> Option<&[FunctionArg]> {
@@ -149,6 +151,7 @@ fn is_known_aggregate(function: &Function) -> bool {
                     | "sum"
                     | "avg"
                     | "count"
+                    | "corr"
                     | "array_agg"
                     | "string_agg"
                     | "bit_and"

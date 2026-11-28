@@ -1,6 +1,8 @@
-use super::super::function::{arguments_are_proven, bare_arguments, pure_name};
+use super::super::function::{
+    arguments_are_proven, bare_arguments, positional_argument, pure_name,
+};
 use super::{operand_type, substring_is_proven, BuiltinType};
-use sqlparser::ast::{Expr, Function, FunctionArg, FunctionArgExpr};
+use sqlparser::ast::Function;
 
 pub(super) fn function_result(function: &Function) -> Option<BuiltinType> {
     let name = pure_name(function)?;
@@ -9,14 +11,14 @@ pub(super) fn function_result(function: &Function) -> Option<BuiltinType> {
             let [argument] = bare_arguments(function)? else {
                 return None;
             };
-            operand_type(positional_expr(argument)?).filter(|kind| kind.numeric())
+            operand_type(positional_argument(argument)?).filter(|kind| kind.numeric())
         }
         "substr" | "substring" => substring_result(function, &name),
         "lower" | "upper" => {
             let [argument] = bare_arguments(function)? else {
                 return None;
             };
-            (operand_type(positional_expr(argument)?) == Some(BuiltinType::Text))
+            (operand_type(positional_argument(argument)?) == Some(BuiltinType::Text))
                 .then_some(BuiltinType::Text)
         }
         "md5" | "replace" | "split_part" if arguments_are_proven(function) => {
@@ -35,20 +37,13 @@ fn substring_result(function: &Function, name: &str) -> Option<BuiltinType> {
     let [source, start, tail @ ..] = bare_arguments(function)? else {
         return None;
     };
-    let source = positional_expr(source)?;
-    let start = positional_expr(start)?;
+    let source = positional_argument(source)?;
+    let start = positional_argument(start)?;
     let length = match tail {
         [] => None,
-        [length] => Some(positional_expr(length)?),
+        [length] => Some(positional_argument(length)?),
         _ => return None,
     };
     substring_is_proven(source, Some(start), length, name == "substring")
         .then_some(BuiltinType::Text)
-}
-
-fn positional_expr(arg: &FunctionArg) -> Option<&Expr> {
-    match arg {
-        FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => Some(expr),
-        _ => None,
-    }
 }

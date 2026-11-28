@@ -1,6 +1,7 @@
 use super::conditions::boolean_result_is_fixed;
 use super::function_clauses::{
-    coalesce_arguments, is_eager, split_coalesce_arguments, visit_ordered_set_arguments,
+    coalesce_arguments, is_eager, split_coalesce_arguments, strict_null_arguments,
+    visit_ordered_set_arguments,
 };
 use super::windows::WindowPlan;
 use super::{query::walk_exists, walk_query, LookupHistory, ScopeStack};
@@ -81,6 +82,9 @@ impl Nested<'_> {
                 self.blocked_expression_depth = 1;
                 self.walk_function(expr, function);
             }
+            Expr::Function(function) if strict_null_arguments(function).is_some() => {
+                self.blocked_expression_depth = 1;
+            }
             Expr::Function(function) => {
                 if let Some(arguments) = coalesce_arguments(function) {
                     let (evaluated, skipped) = split_coalesce_arguments(arguments);
@@ -106,12 +110,16 @@ impl Nested<'_> {
     }
 
     fn walk_child(&mut self, node: &impl Visit) {
+        self.walk_child_with_guards(node, self.guards.guard_only());
+    }
+
+    fn walk_child_with_guards(&mut self, node: &impl Visit, guards: LookupHistory) {
         Nested {
             query_depth: 0,
             blocked_expression_depth: 0,
             scopes: self.scopes,
             out: self.out,
-            guards: self.guards.guard_only(),
+            guards,
             empty_input: self.empty_input,
             windows: self.windows,
             earlier_aggregates_visited: self.earlier_aggregates_visited,

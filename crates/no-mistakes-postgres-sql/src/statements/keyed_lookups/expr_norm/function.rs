@@ -2,7 +2,7 @@ use super::super::builtins::SAFE_PURE_FUNCTIONS;
 use super::argument_list;
 use super::operators::comparable;
 use super::types::has_builtin_type;
-use crate::idents::{function_arg_expr, ident_key};
+use crate::idents::ident_key;
 use sqlparser::ast::{Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments};
 
 pub(super) fn normalize(
@@ -10,14 +10,15 @@ pub(super) fn normalize(
     mut norm_arg: impl FnMut(&Expr) -> Option<String>,
 ) -> Option<String> {
     let base = pure_name(function)?;
-    let args = checked_arguments(function)?
-        .iter()
-        .map(|arg| norm_arg(proven_argument(arg)?))
+    let args = validated_arguments(function)?
+        .map(&mut norm_arg)
         .collect::<Option<Vec<_>>>()?;
     Some(format!("fn({base},{})", argument_list(&args)))
 }
 
-pub(super) fn bare_arguments(function: &Function) -> Option<&[FunctionArg]> {
+pub(in crate::statements::keyed_lookups) fn bare_arguments(
+    function: &Function,
+) -> Option<&[FunctionArg]> {
     let FunctionArguments::List(list) = &function.args else {
         return None;
     };
@@ -27,19 +28,20 @@ pub(super) fn bare_arguments(function: &Function) -> Option<&[FunctionArg]> {
     .then_some(list.args.as_slice())
 }
 
-fn proven_argument(arg: &FunctionArg) -> Option<&Expr> {
+pub(in crate::statements::keyed_lookups) fn positional_argument(
+    arg: &FunctionArg,
+) -> Option<&Expr> {
     match arg {
-        FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) if has_builtin_type(expr) => Some(expr),
+        FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => Some(expr),
         _ => None,
     }
 }
 
 pub(super) fn arguments_are_proven(function: &Function) -> bool {
-    checked_arguments(function)
-        .is_some_and(|args| args.iter().all(|arg| proven_argument(arg).is_some()))
+    validated_arguments(function).is_some()
 }
 
-fn checked_arguments(function: &Function) -> Option<&[FunctionArg]> {
+fn validated_arguments(function: &Function) -> Option<impl Iterator<Item = &Expr>> {
     let args = bare_arguments(function)?;
     if function
         .name
@@ -51,11 +53,16 @@ fn checked_arguments(function: &Function) -> Option<&[FunctionArg]> {
         let [left, right] = args else {
             return None;
         };
-        if !comparable(function_arg_expr(left)?, function_arg_expr(right)?) {
+        if !comparable(positional_argument(left)?, positional_argument(right)?) {
             return None;
         }
+    } else if !args
+        .iter()
+        .all(|arg| positional_argument(arg).is_some_and(has_builtin_type))
+    {
+        return None;
     }
-    Some(args)
+    Some(args.iter().filter_map(positional_argument))
 }
 
 pub(in crate::statements::keyed_lookups) fn is_conditional_keyword(name: &str) -> bool {

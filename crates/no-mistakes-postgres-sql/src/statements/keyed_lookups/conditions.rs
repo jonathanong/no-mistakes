@@ -1,4 +1,6 @@
-use super::function_clauses::{coalesce_arguments, split_coalesce_arguments};
+use super::function_clauses::{
+    coalesce_arguments, split_coalesce_arguments, strict_null_arguments,
+};
 use crate::fx::FxHashSet;
 use crate::idents::{function_arg_expr, unwrap_expr};
 use sqlparser::ast::{BinaryOperator, CaseWhen, Expr, Value};
@@ -109,8 +111,10 @@ pub(super) fn collect_pruned_children(expr: &Expr, roots: &mut FxHashSet<*const 
             );
         }
         Expr::Function(function) => {
-            if let Some(arguments) = coalesce_arguments(function) {
-                let (_, skipped) = split_coalesce_arguments(arguments);
+            let skipped = strict_null_arguments(function).or_else(|| {
+                coalesce_arguments(function).map(|args| split_coalesce_arguments(args).1)
+            });
+            if let Some(skipped) = skipped {
                 roots.extend(
                     skipped
                         .iter()

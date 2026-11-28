@@ -72,6 +72,7 @@ pub(super) fn walk_update(
     scopes.push_frame();
     let mut seen = LookupHistory::new();
     register_table_with_joins(&update.table, scopes, &mut seen, out);
+    let target_bindings = scopes.binding_count();
     if let Some(from) = &update.from {
         let tables = match from {
             sqlparser::ast::UpdateTableFromKind::BeforeSet(t)
@@ -88,8 +89,9 @@ pub(super) fn walk_update(
         .map(|assignment| &assignment.value);
     inspect_exprs(exprs, scopes, &mut seen, out);
     if let Some(returning) = update.returning.as_deref() {
+        scopes.refresh_bindings(0..target_bindings);
         scopes.add_returning_aliases(Some("new"));
-        let mut returning_seen = LookupHistory::new();
+        let mut returning_seen = seen.guard_only();
         inspect_exprs(
             returning_exprs(Some(returning)),
             scopes,
