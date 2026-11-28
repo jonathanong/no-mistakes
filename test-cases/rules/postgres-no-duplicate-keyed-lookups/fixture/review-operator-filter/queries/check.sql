@@ -709,3 +709,23 @@ SELECT
     (SELECT a.n FROM accounts a WHERE a.id = o.account_id LIMIT CAST(1 AS bigint)),
     (SELECT b.n FROM accounts b WHERE b.id = o.account_id LIMIT CAST(1 AS bigint))
 FROM orders o;
+
+SELECT pg_catalog.lag(
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+    + (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+) OVER (ORDER BY o.id)
+FROM orders o;
+
+SELECT CASE WHEN public.orders.enabled THEN
+    (SELECT a.n FROM accounts a WHERE a.id = orders.id)
+END
+FROM public.orders;
+
+SELECT
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id LIMIT ALL),
+    (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT o.id FROM orders o
+JOIN accounts a ON a.id = o.account_id AND TRUE IN (FALSE, app.is_ready() IS NULL)
+JOIN accounts b ON b.id = o.account_id AND TRUE IN (FALSE, app.is_ready() IS NULL);

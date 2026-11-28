@@ -350,3 +350,11 @@ SELECT COALESCE(0, (SELECT a.n FROM accounts a WHERE a.id = o.id)),
        (SELECT b.n FROM accounts b WHERE b.id = o.id)
 FROM orders o
 GROUP BY o.id, GROUPING SETS ((2, o.region), ());
+
+SELECT 1 AS one, (SELECT a.n FROM accounts a WHERE a.id = $1) AS probe,
+       2 AS two
+GROUP BY probe;
+
+SELECT o.id, o.enabled, pg_catalog.count(*)
+FROM orders o
+GROUP BY (o.id, o.enabled);

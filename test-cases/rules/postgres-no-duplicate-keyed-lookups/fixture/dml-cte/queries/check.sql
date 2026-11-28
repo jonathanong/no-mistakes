@@ -222,3 +222,18 @@ SELECT (
     )
     TABLE local_numbers LIMIT 1
 );
+
+WITH read_wrapper AS ((
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    FROM orders o
+))
+TABLE read_wrapper;
+
+WITH unused_wrapper AS (
+    WITH local_value AS (SELECT 1 AS n)
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    FROM orders o CROSS JOIN local_value
+)
+SELECT * FROM public.unused_wrapper;
