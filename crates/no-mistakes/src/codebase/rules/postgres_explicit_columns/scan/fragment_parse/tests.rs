@@ -107,16 +107,44 @@ fn ast_covers_dml_set_ops_table_and_nested_subqueries() {
             vec![(false, Some("narrow"))],
         ),
         (
-            "SELECT * FROM narrow LEFT JOIN wide w ON w.id = (SELECT * FROM extra LIMIT 1) RIGHT JOIN a ON a.id = narrow.id FULL OUTER JOIN b ON b.id = a.id INNER JOIN c ON c.id = b.id CROSS JOIN d JOIN e USING (id)",
+            "SELECT * FROM narrow LEFT JOIN wide w ON w.id = (SELECT * FROM extra LIMIT 1) LEFT OUTER JOIN l1 ON l1.id = narrow.id RIGHT JOIN a ON a.id = narrow.id RIGHT OUTER JOIN r1 ON r1.id = a.id FULL OUTER JOIN b ON b.id = a.id INNER JOIN c ON c.id = b.id CROSS JOIN d JOIN e USING (id)",
             vec![
                 (false, Some("extra")),
                 (false, Some("narrow")),
                 (false, Some("wide")),
+                (false, Some("l1")),
                 (false, Some("a")),
+                (false, Some("r1")),
                 (false, Some("b")),
                 (false, Some("c")),
                 (false, Some("d")),
                 (false, Some("e")),
+            ],
+        ),
+        (
+            "INSERT INTO wide AS w (id) VALUES (1) ON CONFLICT (id) DO NOTHING RETURNING w.*",
+            vec![(true, Some("wide"))],
+        ),
+        (
+            "INSERT INTO narrow (id, n) VALUES (1, 0) ON CONFLICT (id) DO UPDATE SET n = (SELECT * FROM wide LIMIT 1)",
+            vec![(false, Some("wide"))],
+        ),
+        (
+            "UPDATE wide SET a = 1",
+            vec![],
+        ),
+        (
+            "DELETE FROM wide",
+            vec![],
+        ),
+        (
+            "SELECT my_fn(*), fn(a => (SELECT * FROM wide)) FROM narrow WHERE array(SELECT * FROM extra) IS NOT NULL AND count(*) > 0 AND CURRENT_TIMESTAMP IS NOT NULL AND id IN UNNEST((SELECT * FROM u1)) AND id IN (1, (SELECT * FROM u2)) AND EXISTS (SELECT * FROM ignored)",
+            vec![
+                (false, Some("narrow")),
+                (false, Some("wide")),
+                (false, Some("extra")),
+                (false, Some("u1")),
+                (false, Some("u2")),
             ],
         ),
         (
@@ -361,4 +389,34 @@ fn context_and_token_fallback_handle_prefixes_ctes_commas_and_subqueries() {
     let schema_qual = extract_fragment_stars("SELECT b.wide.* FROM a.wide, b.wide WHERE", None);
     assert_eq!(schema_qual.len(), 1);
     assert_eq!(schema_qual[0].relation.as_deref(), Some("b.wide"));
+
+    assert_eq!(extract_fragment_stars("RETURNING * WHERE", None).len(), 1);
+    assert_eq!(
+        extract_fragment_stars(", * WHERE", Some("UPDATE entries SET a = 1 RETURNING id")).len(),
+        1
+    );
+    assert_eq!(extract_fragment_stars(", * WHERE", Some("SELECT id")).len(), 1);
+    assert_eq!(extract_fragment_stars("* FROM wide WHERE", Some("SELECT ")).len(), 1);
+    assert_eq!(
+        extract_fragment_stars("* WHERE", Some("UPDATE entries SET a = 1 RETURNING ")).len(),
+        1
+    );
+    assert!(extract_fragment_stars("   ", None).is_empty());
+    assert!(extract_fragment_stars("/* * */", None).is_empty());
+
+    let edge_ctxs = [
+        "WITH a(x, (y)) AS (SELECT 1), 1 SELECT 1",
+        "WITH a(x",
+        "WITH a SELECT 1",
+        "SELECT 1 FROM ONLY",
+        "SELECT 1 FROM public.",
+        "SELECT 1 FROM wide AS",
+        "SELECT 1 FROM wide",
+        "UPDATE (1)",
+        "DELETE FROM a USING b WHERE",
+        "SELECT 1 FROM a, (SELECT 1) d JOIN (SELECT 2) e ON true, WHERE",
+    ];
+    for sql in edge_ctxs {
+        let _ = parse_context(sql);
+    }
 }
