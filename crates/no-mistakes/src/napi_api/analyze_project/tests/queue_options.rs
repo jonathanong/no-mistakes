@@ -169,8 +169,8 @@ fn queue_retention_call_site_warnings_match_in_prepared_reports() {
     );
     assert_eq!(prepared["queues"], standalone["queues"]);
     let warnings = standalone["warnings"].as_array().unwrap();
-    assert_eq!(warnings.len(), 8, "{standalone}");
-    for line in [12, 16] {
+    assert_eq!(warnings.len(), 9, "{standalone}");
+    for line in [12, 13, 16] {
         assert!(
             warnings.iter().any(|warning| {
                 let warning = warning.as_str().unwrap();

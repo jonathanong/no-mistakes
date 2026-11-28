@@ -28,7 +28,7 @@ pub(crate) fn module_catalog<'a>(
 }
 
 pub(in crate::codebase::rules) struct ResolvedModules {
-    files: BTreeMap<String, BTreeSet<PathBuf>>,
+    pub(in crate::codebase::rules) files: BTreeMap<String, BTreeSet<PathBuf>>,
 }
 
 impl ResolvedModules {
@@ -40,13 +40,6 @@ impl ResolvedModules {
 
     pub(in crate::codebase::rules) fn files(&self, module: &str) -> Option<&BTreeSet<PathBuf>> {
         self.files.get(module)
-    }
-
-    #[cfg(test)]
-    pub(in crate::codebase::rules) fn for_test(module: &str, files: BTreeSet<PathBuf>) -> Self {
-        let mut mapped = BTreeMap::new();
-        mapped.insert(module.to_string(), files);
-        Self { files: mapped }
     }
 }
 

@@ -7,7 +7,7 @@ use crate::codebase::dependencies::graph::{
     ResolvedCallTarget,
 };
 use crate::codebase::rules::no_single_enqueue_in_loop::modules::ResolvedModules;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -56,13 +56,15 @@ fn site(targets: Vec<KnownCallTarget>) -> ResolvedCallSite {
 #[test]
 fn mixed_candidates_are_neither_a_full_match_nor_a_miss() {
     let graph = from_raw_maps(PathBuf::from("/repo"), HashMap::new(), HashMap::new());
-    let resolved = ResolvedModules::for_test(
-        "glide-mq",
-        BTreeSet::from([
-            PathBuf::from("/repo/src/glide-mq.ts"),
-            PathBuf::from("/repo/src/also-glide.ts"),
-        ]),
-    );
+    let resolved = ResolvedModules {
+        files: BTreeMap::from([(
+            "glide-mq".to_string(),
+            BTreeSet::from([
+                PathBuf::from("/repo/src/glide-mq.ts"),
+                PathBuf::from("/repo/src/also-glide.ts"),
+            ]),
+        )]),
+    };
     let target = instance_target("delayMs");
     let fit = |targets| target_fit(&graph, &target, &site(targets), &resolved);
     assert_eq!(
