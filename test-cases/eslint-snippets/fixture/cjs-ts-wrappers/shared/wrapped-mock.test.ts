@@ -24,3 +24,9 @@ runner.mock("./renamed", () => ({ get: () => mockRenamed }));
 test("renamed", () => {
   mockRenamed = 1;
 });
+
+let mockItems = [];
+vi.mock("./dependency", (() => ({ mockItems })) as any);
+test("case", () => {
+  mockItems.push(1);
+});

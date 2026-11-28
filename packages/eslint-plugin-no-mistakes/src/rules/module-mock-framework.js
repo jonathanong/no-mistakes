@@ -46,7 +46,7 @@ function frameworkRequireSource(init, context) {
     source = argument.value;
   }
   if (!member) return source;
-  if (source === "vitest" && member === "vi") return source;
+  if (source === "vitest" && (member === "vi" || member === "vitest")) return source;
   if (source === "@jest/globals" && member === "jest") return source;
   return null;
 }
@@ -57,7 +57,7 @@ function frameworkRequireModule(def, name, context) {
   if (!FRAMEWORK_MODULES.has(source)) return null;
   if (def.node?.id?.type !== "ObjectPattern") return source;
   const key = patternKey(def.node.id, name);
-  if (source === "vitest" && key === "vi") return source;
+  if (source === "vitest" && (key === "vi" || key === "vitest")) return source;
   if (source === "@jest/globals" && key === "jest") return source;
   return null;
 }
@@ -71,7 +71,7 @@ function frameworkBindingModule(node, context, seen = new Set()) {
   if (node?.type === "MemberExpression") {
     const module = frameworkBindingModule(node.object, context, seen);
     const prop = memberPropertyName(node);
-    if (module === "vitest" && prop === "vi") return module;
+    if (module === "vitest" && (prop === "vi" || prop === "vitest")) return module;
     if (module === "@jest/globals" && prop === "jest") return module;
     return null;
   }
@@ -113,7 +113,7 @@ function frameworkBindingModule(node, context, seen = new Set()) {
         const key = patternKey(def.node.id, node.name);
         const source = frameworkBindingModule(def.node.init, context, seen);
         if (
-          (source === "vitest" && key === "vi") ||
+          (source === "vitest" && (key === "vi" || key === "vitest")) ||
           (source === "@jest/globals" && key === "jest")
         ) {
           return source;
@@ -183,7 +183,7 @@ function frameworkImportMatches(def, importModule) {
   }
   const imported = def.node?.imported;
   const name = imported?.type === "Literal" ? String(imported.value) : imported?.name;
-  if (importModule === "vitest") return name === "vi";
+  if (importModule === "vitest") return name === "vi" || name === "vitest";
   return name === "jest";
 }
 

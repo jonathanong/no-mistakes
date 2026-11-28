@@ -41,6 +41,7 @@ const groups = [
       "each-dynamic.test.ts",
       "each-nested.test.ts",
       "pattern-shape.js",
+      "inline-dynamic.js",
     ],
     valid: [
       "not-a-runner.test.ts",
@@ -54,6 +55,7 @@ const groups = [
       "nested-name.js",
       "computed-destructure.test.ts",
       "computed-registered.test.ts",
+      "inline-other.js",
     ],
   },
   {
@@ -68,6 +70,7 @@ const groups = [
       "reassigned-test-name.test.ts",
       "each-dynamic.test.ts",
       "each-nested.test.ts",
+      "inline-dynamic.js",
     ],
   },
   {
@@ -128,6 +131,7 @@ const groups = [
       "alias.mock.test.ts",
       "mutable-alias.mock.test.ts",
       "pattern-alias.test.ts",
+      "utility.test.ts",
     ],
     valid: [
       "foo.mock.test.ts",

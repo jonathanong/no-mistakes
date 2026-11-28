@@ -22,9 +22,7 @@ const { resolveVariable } = require("./test-no-shared-state-aliases");
 const TEST_NAMES = new Set(["test", "it", "describe"]);
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/;
 
-function isTestFile(filename) {
-  return TEST_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
-}
+const isTestFile = (filename) => TEST_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
 
 function constInit(node, context, seen) {
   if (!context || node?.type !== "Identifier" || seen.has(node.name)) return null;
@@ -64,9 +62,7 @@ function chainInfo(node, context, seen = new Set()) {
   return { names, root: current?.type === "Identifier" ? current : null, vitestRequire };
 }
 
-function hasSequentialMember(node) {
-  return chainInfo(node, null).names.includes("sequential");
-}
+const hasSequentialMember = (node) => chainInfo(node, null).names.includes("sequential");
 
 function unresolvedRegistration(node, context) {
   const sequential =
@@ -197,7 +193,10 @@ module.exports = Object.assign(
         },
         CallExpression(node) {
           pending.push(node);
-          if (!state.usesVitest && chainInfo(node.callee, context).vitestRequire) {
+          if (
+            !state.usesVitest &&
+            (chainInfo(node.callee, context).vitestRequire || unresolvedRegistration(node, context))
+          ) {
             state.usesVitest = true;
           }
         },

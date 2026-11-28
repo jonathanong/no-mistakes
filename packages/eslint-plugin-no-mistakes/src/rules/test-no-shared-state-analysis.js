@@ -86,7 +86,7 @@ function createViMockTracker(context, mutableTopLevel) {
     collectFactoryReferences(node) {
       const callee = unwrapExpression(node.callee);
       if (memberPropertyName(callee) !== "mock") return;
-      const factory = node.arguments[1];
+      const factory = node.arguments[1] && unwrapExpression(node.arguments[1]);
       if (!isFunctionNode(factory)) return;
       if (frameworkBindingModule(unwrapExpression(callee.object), context) !== "vitest") return;
       for (const { identifier } of context.sourceCode.getScope(factory).through) {

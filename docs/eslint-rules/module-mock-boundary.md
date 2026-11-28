@@ -57,7 +57,7 @@ instead of a boundary finding. See the exhaustive table in
 `const { expect } = require("vitest")` is not a framework mock.
 `import vt = require("vitest")` and `const vt = require("vitest")` followed by
 `vt.vi.mock` are the same framework binding as `import { vi } from "vitest"`.
-An inline `require("vitest").vi.mock("./dep")` and `require("@jest/globals").jest.mock("./dep")` are that same binding. `require("vitest").expect.mock` and `require("vitest").mock` are not.
+An inline `require("vitest").vi.mock("./dep")`, `require("vitest").vitest.mock("./dep")`, and `require("@jest/globals").jest.mock("./dep")` are that same binding. `const { vitest: api } = require("vitest")` and `import { vitest } from "vitest"` are too. `require("vitest").expect.mock` and `require("vitest").mock` are not.
 
 A default import of `vitest` or `@jest/globals`, a single `const` alias, a static `vi` or `jest` member including a string or expression-free template key, an optional call, and a comma callee are the same framework binding.
 

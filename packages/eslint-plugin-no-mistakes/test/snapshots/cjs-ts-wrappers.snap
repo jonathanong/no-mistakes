@@ -258,6 +258,50 @@
           "messageId": "boundary",
           "ruleId": "no-mistakes/module-mock-boundary",
           "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 39,
+          "endLine": 3,
+          "file": "inline-static.test.ts",
+          "line": 3,
+          "message": "Module mock boundary does not allow mocking internal module \"./dep\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 5,
+          "file": "inline-static.test.ts",
+          "line": 5,
+          "message": "Module mock boundary does not allow mocking internal module \"./member\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 7,
+          "file": "inline-static.test.ts",
+          "line": 7,
+          "message": "Module mock boundary does not allow mocking internal module \"./pattern\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 9,
+          "file": "inline-static.test.ts",
+          "line": 9,
+          "message": "Module mock boundary does not allow mocking internal module \"./chain\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
         }
       ],
       "kind": "invalid",
@@ -552,6 +596,12 @@
     },
     {
       "file": "computed-registered.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "inline-other.js",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -1248,6 +1298,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "inline-dynamic.js",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 32,
+          "endLine": 2,
+          "file": "inline-dynamic.js",
+          "line": 2,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "no-vitest-sequential:sequential-ignore": [
@@ -1313,6 +1381,16 @@
     },
     {
       "file": "each-nested.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "inline-dynamic.js",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -1557,17 +1635,6 @@
         {
           "column": 3,
           "endColumn": 38,
-          "endLine": 7,
-          "file": "dynamic.test.ts",
-          "line": 7,
-          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
-          "messageId": "unanalyzable",
-          "ruleId": "no-mistakes/test-no-error-message-matching",
-          "severity": 2
-        },
-        {
-          "column": 3,
-          "endColumn": 42,
           "endLine": 8,
           "file": "dynamic.test.ts",
           "line": 8,
@@ -1578,10 +1645,87 @@
         },
         {
           "column": 3,
-          "endColumn": 45,
+          "endColumn": 42,
           "endLine": 9,
           "file": "dynamic.test.ts",
           "line": 9,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 45,
+          "endLine": 10,
+          "file": "dynamic.test.ts",
+          "line": 10,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 52,
+          "endLine": 12,
+          "file": "dynamic.test.ts",
+          "line": 12,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 55,
+          "endLine": 14,
+          "file": "dynamic.test.ts",
+          "line": 14,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 36,
+          "endLine": 15,
+          "file": "dynamic.test.ts",
+          "line": 15,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 41,
+          "endLine": 16,
+          "file": "dynamic.test.ts",
+          "line": 16,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 40,
+          "endLine": 18,
+          "file": "dynamic.test.ts",
+          "line": 18,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 31,
+          "endLine": 19,
+          "file": "dynamic.test.ts",
+          "line": 19,
           "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/test-no-error-message-matching",
@@ -3762,6 +3906,24 @@
           "line": 1,
           "message": "Cannot tell whether a module mock mocks a module. Use a static vi.mock or jest.mock call.",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "utility.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 5,
+          "file": "utility.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
           "ruleId": "no-mistakes/vitest-mock-test-file-naming",
           "severity": 2
         }

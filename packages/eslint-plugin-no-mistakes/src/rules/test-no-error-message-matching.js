@@ -72,13 +72,12 @@ function expandArguments(args) {
       continue;
     }
     const list = unwrap(argument.argument);
-    if (
-      list?.type !== "ArrayExpression" ||
-      list.elements.some((element) => !element || element.type === "SpreadElement")
-    ) {
-      return null;
+    if (list?.type !== "ArrayExpression") return forwarded.length > 0 ? forwarded : null;
+    for (const element of list.elements) {
+      if (!element) return null;
+      if (element.type === "SpreadElement") return forwarded.length > 0 ? forwarded : null;
+      forwarded.push(element);
     }
-    forwarded.push(...list.elements);
   }
   return forwarded;
 }
@@ -88,7 +87,7 @@ function forwardedArguments(node) {
   if (current?.type !== "CallExpression") return null;
   const callee = unwrap(current.callee);
   const args = current.arguments;
-  if (callee?.type !== "MemberExpression") return args;
+  if (callee?.type !== "MemberExpression") return expandArguments(args);
   const name = memberName(callee);
   if (name === "call") {
     const expanded = expandArguments(args);
@@ -99,7 +98,7 @@ function forwardedArguments(node) {
     const list = unwrap(expanded?.[1]);
     return list?.type === "ArrayExpression" ? expandArguments(list.elements) : null;
   }
-  return args;
+  return expandArguments(args);
 }
 
 function opaqueExpect(node, context) {
