@@ -384,3 +384,53 @@ SELECT
     (SELECT substring('abc' FROM 1_000) FROM accounts a WHERE a.id = o.account_id),
     (SELECT substring('xyz' FROM 1000) FROM accounts b WHERE b.id = o.account_id)
 FROM orders o;
+
+SELECT o.id
+FROM orders o
+JOIN accounts a ON a.id = o.account_id
+    AND pg_catalog.md5('value') || pg_catalog.split_part('a,b', ',', 1) = 'expected'
+    AND pg_catalog.octet_length('abc'::text) % 2 = 1
+    AND (TRUE::boolean AND FALSE::bool) IS FALSE
+    AND pg_catalog.substr('abc'::text, +pg_catalog.abs(-2), 1) = 'b'
+JOIN accounts b ON b.id = o.account_id
+    AND pg_catalog.md5('value') || pg_catalog.split_part('a,b', ',', 1) = 'expected'
+    AND pg_catalog.octet_length('abc'::text) % 2 = 1
+    AND (TRUE::boolean AND FALSE::bool) IS FALSE
+    AND pg_catalog.substr('abc'::text, +pg_catalog.abs(-2), 1) = 'b';
+
+SELECT
+    (SELECT ARRAY[]::integer[] FROM accounts a WHERE a.id = o.account_id),
+    (SELECT ARRAY[]::integer[] FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT NULL = NULL FROM accounts a WHERE a.id = o.account_id),
+    (SELECT NULL = NULL FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT pg_catalog.btrim(' text ') || '' FROM accounts a WHERE a.id = o.account_id),
+    (SELECT pg_catalog.btrim(' text ') || '' FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT nullif(1, 1::numeric) FROM accounts a WHERE a.id = o.account_id),
+    (SELECT nullif(1, 1::numeric) FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id FETCH FIRST 1 ROW ONLY),
+    (SELECT b.n FROM accounts b WHERE b.id = o.account_id FETCH FIRST 1 ROW ONLY)
+FROM orders o;
+
+SELECT o.id
+FROM orders o
+JOIN accounts a ON a.id = o.account_id AND 1 IN (2, o.quantity::integer)
+JOIN accounts b ON b.id = o.account_id AND 1 IN (2, o.quantity::integer);
+
+SELECT
+    custom_schema.window_fn(
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id),
+        (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+    ) OVER ()
+FROM orders o;

@@ -428,7 +428,9 @@ fn checks_operator_signatures_and_shares_only_compatible_lookup_history() {
             (321, 320),
             (325, 329),
             (334, 358),
-            (384, 385)
+            (384, 385),
+            (390, 395),
+            (433, 434)
         ]
     );
 }

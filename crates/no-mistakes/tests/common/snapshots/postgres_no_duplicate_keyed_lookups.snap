@@ -1337,6 +1337,22 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         },
         {
           "file": "queries/check.sql",
+          "line": 395,
+          "message": "queries/check.sql:395: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 390). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "JOIN accounts b ON b.id = o.account_id",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 434,
+          "message": "queries/check.sql:434: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 433). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT b.n FROM accounts b WHERE b.id = o.account_id)",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
           "line": 51,
           "message": "queries/check.sql:51: duplicate keyed lookup of `accounts` on `id = $1` (already looked up at line 49). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
