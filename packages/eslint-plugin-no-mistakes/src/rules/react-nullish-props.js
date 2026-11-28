@@ -15,15 +15,17 @@ function containsNode(root, node) {
   return false;
 }
 
-function nearestNestedType(type, name) {
+function bodyStatements(node) {
+  if (Array.isArray(node?.body)) return node.body;
+  if (Array.isArray(node?.body?.body)) return node.body.body;
+  return null;
+}
+
+function nearestDeclarations(type, name) {
   let current = type?.parent;
   while (current && current.type !== "Program") {
-    const statements = Array.isArray(current.body)
-      ? current.body
-      : Array.isArray(current.body?.body)
-        ? current.body.body
-        : null;
-    for (const statement of statements ?? []) {
+    const found = [];
+    for (const statement of bodyStatements(current) ?? []) {
       const declaration = statement.declaration ?? statement;
       const typed =
         declaration.type === "TSTypeAliasDeclaration" ||
@@ -33,31 +35,68 @@ function nearestNestedType(type, name) {
         declaration.id?.name === name &&
         !containsNode(declaration, type) &&
         containsNode(declaration.parent, type)
-      ) {
-        return declaration;
-      }
+      )
+        found.push(declaration);
     }
+    if (found.length) return found;
     current = current.parent;
   }
   return null;
 }
 
+function noteStatus(status, key, incoming) {
+  const previous = status.get(key);
+  status.set(key, previous && previous !== incoming ? "unresolved" : incoming);
+}
+
+function mergeInterfaces(declarations, facts, seen) {
+  if (declarations.some((item) => seen.has(item))) return { props: null, unresolved: null };
+  for (const item of declarations) seen.add(item);
+  const status = new Map();
+  const inheritedProps = new Set();
+  const inheritedUnresolved = new Set();
+  for (const declaration of declarations) {
+    const own = classifiedProps(
+      { type: "TSTypeLiteral", members: declaration.body?.body ?? [] },
+      facts,
+      seen,
+    );
+    for (const key of own.declared) {
+      const incoming = own.props.has(key) ? "yes" : own.unresolved.has(key) ? "unresolved" : "no";
+      noteStatus(status, key, incoming);
+    }
+    for (const heritage of declaration.extends || []) {
+      const inherited = inheritedFacts(heritage, facts, seen);
+      for (const key of inherited?.props || []) inheritedProps.add(key);
+      for (const key of inherited?.unresolved || []) inheritedUnresolved.add(key);
+    }
+  }
+  const props = new Set();
+  const unresolved = new Set();
+  for (const [key, value] of status) {
+    if (value === "yes") props.add(key);
+    else if (value === "unresolved") unresolved.add(key);
+  }
+  for (const key of inheritedProps) if (!status.has(key)) props.add(key);
+  for (const key of inheritedUnresolved)
+    if (!status.has(key) && !props.has(key)) unresolved.add(key);
+  return { props, unresolved, declared: new Set(status.keys()) };
+}
+
 function inheritedFacts(heritage, facts, seen) {
   const expression = heritage?.expression;
   if (expression?.type !== "Identifier") return null;
-  const nested = nearestNestedType(heritage, expression.name);
+  const nested = nearestDeclarations(heritage, expression.name);
   if (!nested)
     return {
       props: facts.objectProps.get(expression.name) || null,
       unresolved: facts.unresolvedObjectProps?.get(expression.name) || null,
     };
-  if (nested.type === "TSTypeAliasDeclaration")
-    return classifiedProps(nested.typeAnnotation, facts, seen);
-  return classifiedProps(
-    { type: "TSTypeReference", typeName: expression, parent: heritage },
-    facts,
-    seen,
-  );
+  if (nested.length === 1 && nested[0].type === "TSTypeAliasDeclaration")
+    return classifiedProps(nested[0].typeAnnotation, facts, seen);
+  if (nested.every((item) => item.type === "TSInterfaceDeclaration"))
+    return mergeInterfaces(nested, facts, seen);
+  return { props: null, unresolved: null };
 }
 
 function classifiedProps(type, facts, seen = new Set()) {
@@ -77,29 +116,14 @@ function classifiedProps(type, facts, seen = new Set()) {
     return { props, unresolved, declared };
   }
   const name = typeName(type);
-  const local = name && !name.includes(".") ? nearestNestedType(type, name) : null;
-  if (local && seen.has(local)) return { props: null, unresolved: null };
-  if (local?.type === "TSTypeAliasDeclaration") {
-    seen.add(local);
-    return classifiedProps(local.typeAnnotation, facts, seen);
+  const local = name && !name.includes(".") ? nearestDeclarations(type, name) : null;
+  if (local?.some((item) => seen.has(item))) return { props: null, unresolved: null };
+  if (local?.length === 1 && local[0].type === "TSTypeAliasDeclaration") {
+    seen.add(local[0]);
+    return classifiedProps(local[0].typeAnnotation, facts, seen);
   }
-  if (local?.type === "TSInterfaceDeclaration") {
-    seen.add(local);
-    const own = classifiedProps(
-      { type: "TSTypeLiteral", members: local.body?.body ?? [] },
-      facts,
-      seen,
-    );
-    const props = new Set(own.props);
-    const unresolved = new Set(own.unresolved);
-    for (const heritage of local.extends || []) {
-      const inherited = inheritedFacts(heritage, facts, seen);
-      for (const key of inherited?.props || []) if (!own.declared.has(key)) props.add(key);
-      for (const key of inherited?.unresolved || [])
-        if (!own.declared.has(key) && !props.has(key)) unresolved.add(key);
-    }
-    return { props, unresolved, declared: own.declared };
-  }
+  if (local?.length && local.every((item) => item.type === "TSInterfaceDeclaration"))
+    return mergeInterfaces(local, facts, seen);
   return {
     props: name ? facts.objectProps.get(name) || null : null,
     unresolved: name ? facts.unresolvedObjectProps?.get(name) || null : null,

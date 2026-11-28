@@ -695,6 +695,36 @@
       "rule": "react-no-nullish-react-node"
     },
     {
+      "file": "react-nullish-local-cycle.tsx",
+      "findings": [
+        {
+          "column": 28,
+          "endColumn": 47,
+          "endLine": 15,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-local-cycle.tsx",
+          "line": 15,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 37,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-local-cycle.tsx",
+          "line": 37,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "local merged interface and alias cycle",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
       "file": "react-nullish-local-require.tsx",
       "findings": [],
       "name": "local require is not React",
@@ -1655,6 +1685,17 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 36,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-dynamic-require.ts",
+          "line": 10,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
         }
       ],
       "name": "dynamic require member stays unanalyzable",
@@ -1945,6 +1986,56 @@
         }
       ],
       "name": "named import member chain",
+      "options": {
+        "getterCalleePatterns": [
+          "^api\\.getWidget$",
+          "^services\\.api\\.getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-nested-destructure.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 18,
+          "endLine": 8,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-nested-destructure.ts",
+          "line": 8,
+          "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 18,
+          "endLine": 15,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-nested-destructure.ts",
+          "line": 15,
+          "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 18,
+          "endLine": 22,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-nested-destructure.ts",
+          "line": 22,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "nested destructure keeps the member path",
       "options": {
         "getterCalleePatterns": [
           "^api\\.getWidget$",
@@ -2615,6 +2706,34 @@
         "options": null
       },
       {
+        "file": "nullable-nested-destructure.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-nested-destructure.ts",
+            "line": 8,
+            "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-nested-destructure.ts",
+            "line": 15,
+            "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-nested-destructure.ts",
+            "line": 22,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          }
+        ],
+        "name": "nullable-nested-destructure.ts",
+        "options": null
+      },
+      {
         "file": "nullable-qualified-member.ts",
         "findings": [
           {
@@ -2794,6 +2913,13 @@
             "column": 10,
             "file": "nullable-dynamic-require.ts",
             "line": 7,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-dynamic-require.ts",
+            "line": 10,
             "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
           }
         ],

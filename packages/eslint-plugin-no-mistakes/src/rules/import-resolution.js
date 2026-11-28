@@ -2,6 +2,7 @@
 
 const { unwrapSequence } = require("./async-ast");
 const { memberFact, rootIdentifier } = require("./import-member");
+const { factAtPath, patternPath } = require("./import-pattern-path");
 const { literalString } = require("./logical-call");
 const { resolveVariable } = require("./async-target-bindings");
 
@@ -27,7 +28,7 @@ function requiredMember(callee, context, seen = new Set(), memo) {
 // undefined: not a require. null: require whose module is not a static string.
 function requireModule(node, context) {
   const call = unwrapSequence(node);
-  if (call?.type !== "CallExpression" || call.optional) return undefined;
+  if (call?.type !== "CallExpression") return undefined;
   if (!isFreeRequire(call.callee, context) || call.arguments.length !== 1) {
     return isFreeRequire(call.callee, context) ? null : undefined;
   }
@@ -73,22 +74,6 @@ function importBindingFact(def) {
   return { unresolved: true };
 }
 
-function patternLocal(value) {
-  while (value?.type === "AssignmentPattern") value = value.left;
-  return value?.type === "Identifier" ? value : null;
-}
-
-function patternImported(pattern, name) {
-  if (pattern?.type !== "ObjectPattern") return null;
-  for (const property of pattern.properties) {
-    if (property.type !== "Property" || patternLocal(property.value)?.name !== name) continue;
-    if (!property.computed && property.key?.type === "Identifier") return property.key.name;
-    const key = literalString(property.key);
-    return key === null ? undefined : key;
-  }
-  return null;
-}
-
 function namespaceMember(base, imported) {
   if (!base || base.typeOnly) return null;
   if (base.unresolved) return { unresolved: true };
@@ -98,7 +83,7 @@ function namespaceMember(base, imported) {
 }
 
 function destructureFact(declarator, name, context, seen) {
-  const imported = patternImported(declarator.id, name);
+  const imported = patternPath(declarator.id, name, literalString);
   if (imported === null) return null;
   const required = requireModule(declarator.init, context);
   if (required === undefined) {
@@ -106,13 +91,14 @@ function destructureFact(declarator, name, context, seen) {
     if (!source) return null;
     if (imported === undefined || source.unresolved || source.typeOnly)
       return source.typeOnly ? null : { unresolved: true };
-    const member = namespaceMember(source, imported);
-    if (member) return member;
-    if (source.kind !== "named" || !(source.name || source.imported)) return null;
-    return { ...source, name: `${source.name || source.imported}.${imported}`, imported };
+    return factAtPath(source, imported, namespaceMember);
   }
   if (imported === undefined || required === null) return { unresolved: true };
-  return namespaceMember({ module: required, kind: "namespace", typeOnly: false }, imported);
+  return factAtPath(
+    { module: required, kind: "namespace", typeOnly: false },
+    imported,
+    namespaceMember,
+  );
 }
 
 function factFromDef(def, name, context, seen) {

@@ -418,6 +418,11 @@ describe("typescript import wrappers", () => {
         "react-no-nullish-react-node",
       ),
       eslintCase(
+        "local merged interface and alias cycle",
+        "react-nullish-local-cycle.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
         "unresolved qualified getter terminal",
         "nullable-qualified-member.ts",
         "server-require-nullable-fetch-wrapper",
@@ -430,6 +435,16 @@ describe("typescript import wrappers", () => {
       eslintCase(
         "named import member chain",
         "nullable-named-chain.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^api\\.getWidget$", "^services\\.api\\.getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "nested destructure keeps the member path",
+        "nullable-nested-destructure.ts",
         "server-require-nullable-fetch-wrapper",
         {
           getterCalleePatterns: ["^api\\.getWidget$", "^services\\.api\\.getWidget$"],
@@ -628,6 +643,7 @@ describe("typescript import wrappers", () => {
     ).toEqual([
       [4, "unanalyzable"],
       [7, "unanalyzable"],
+      [10, "unanalyzable"],
     ]);
     expect(
       cases.find((item) => item.name === "type-only import-equals is not next").findings,
@@ -792,6 +808,14 @@ describe("typescript import wrappers", () => {
       [19, "unanalyzable"],
     ]);
     expect(
+      cases
+        .find((item) => item.name === "local merged interface and alias cycle")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [15, "nullish"],
+      [37, "unanalyzable"],
+    ]);
+    expect(
       cases.find((item) => item.name === "reassigned alias chain stays bounded").findings,
     ).toEqual([]);
     expect(
@@ -809,6 +833,15 @@ describe("typescript import wrappers", () => {
     ).toEqual([
       [7, "wrapper"],
       [11, "wrapper"],
+    ]);
+    expect(
+      cases
+        .find((item) => item.name === "nested destructure keeps the member path")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [8, "wrapper"],
+      [15, "wrapper"],
+      [22, "unanalyzable"],
     ]);
     expect(
       cases
@@ -926,6 +959,7 @@ describe("typescript import wrappers", () => {
       "nullable-qualified": oxlintOn(".oxlintrc-nullable-qualified.json", [
         "nullable-qualified-member.ts",
         "nullable-named-chain.ts",
+        "nullable-nested-destructure.ts",
       ]),
       "nullable-default": oxlintOn(".oxlintrc-nullable-default.json", [
         "nullable-default-alias.ts",

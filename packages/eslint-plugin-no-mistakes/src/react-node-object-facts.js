@@ -46,6 +46,24 @@ function publish(map, name, next, changed) {
   return true;
 }
 
+function reconcile(published, name, props, unresolved) {
+  const prior = published.get(name) ?? new Map();
+  const next = new Map();
+  const keptProps = new Set();
+  const keptUnresolved = new Set();
+  for (const key of new Set([...props, ...unresolved, ...prior.keys()])) {
+    const incoming = props.has(key) ? "yes" : unresolved.has(key) ? "unresolved" : "absent";
+    const previous = prior.get(key);
+    const status = previous && incoming !== previous ? "unresolved" : incoming;
+    if (status === "absent") continue;
+    next.set(key, status);
+    if (status === "yes") keptProps.add(key);
+    else keptUnresolved.add(key);
+  }
+  published.set(name, next);
+  return { props: keptProps, unresolved: keptUnresolved };
+}
+
 function assignReactObjectFacts(
   program,
   topLevelDeclaration,
@@ -53,6 +71,7 @@ function assignReactObjectFacts(
   objectProps,
   unresolvedObjectProps,
 ) {
+  const published = new Map();
   let objectsChanged = true;
   while (objectsChanged) {
     objectsChanged = false;
@@ -120,8 +139,9 @@ function assignReactObjectFacts(
       for (const key of inheritedProps) if (!status.has(key)) props.add(key);
       for (const key of inheritedUnresolved)
         if (!status.has(key) && !props.has(key)) unresolved.add(key);
-      objectsChanged = publish(objectProps, name, props, objectsChanged);
-      objectsChanged = publish(unresolvedObjectProps, name, unresolved, objectsChanged);
+      const kept = reconcile(published, name, props, unresolved);
+      objectsChanged = publish(objectProps, name, kept.props, objectsChanged);
+      objectsChanged = publish(unresolvedObjectProps, name, kept.unresolved, objectsChanged);
     }
   }
 }
