@@ -5,8 +5,7 @@ use serde_json::{json, Value};
 use std::path::PathBuf;
 
 fn root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/lang-frontends/unreadable-caller")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/unreadable-language-caller")
 }
 
 fn parse(text: &str) -> Value {
