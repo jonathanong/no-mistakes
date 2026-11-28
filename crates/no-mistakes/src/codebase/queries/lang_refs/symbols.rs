@@ -63,6 +63,7 @@ fn collect(args: &SymbolsArgs) -> Result<Output> {
             args.kinds.is_empty(),
         ));
     }
+    files.sort_by(|left, right| left.path.cmp(&right.path));
     Ok(Output {
         roots: args
             .files

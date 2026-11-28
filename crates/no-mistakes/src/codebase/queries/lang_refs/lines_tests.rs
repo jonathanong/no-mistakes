@@ -40,3 +40,29 @@ fn name_lines_cover_misses_segments_and_import_fallbacks() {
         )
     );
 }
+
+#[test]
+fn quoted_import_lines_keep_string_specifiers_and_unicode_bounds_names() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/lang-frontends/language-symbols/lines");
+    let quoted = root.join("quoted_import.go");
+    let unicode = root.join("unicode_name.py");
+    let sources = store(&quoted);
+    assert_eq!(
+        first_import_line(&sources, &quoted, "example.com/foo"),
+        Some(3)
+    );
+    assert_eq!(
+        first_import_line(&sources, &quoted, "example.com/missing"),
+        None
+    );
+    let sources = store(&unicode);
+    assert_eq!(
+        (
+            first_name_line(&sources, &unicode, "Greeter"),
+            first_name_line(&sources, &unicode, "_Greeter"),
+            first_name_line(&sources, &unicode, "Greeter_id"),
+        ),
+        (Some(3), Some(2), Some(4))
+    );
+}

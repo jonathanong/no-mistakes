@@ -24,6 +24,13 @@ enum Facts {
 }
 
 impl View {
+    pub(super) fn unread_files(&self) -> Vec<PathBuf> {
+        match &self.facts {
+            Facts::Lang(facts, _, _) => facts.unread_files.iter().cloned().collect(),
+            Facts::Swift(_) | Facts::Dotnet(_) => Vec::new(),
+        }
+    }
+
     pub(super) fn reference_files(&self, name: &str) -> BTreeSet<PathBuf> {
         let graph = crate::codebase::dependencies::graph::proven_lang_reference_files;
         match &self.facts {

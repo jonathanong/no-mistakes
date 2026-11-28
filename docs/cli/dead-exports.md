@@ -58,8 +58,10 @@ Elixir, or Dart file, `dead-exports` checks declarations from the language
 facts. `referenced` is true when another file has a proven reference of that
 name. `importerCount` is the number of distinct referencing files. With no
 names, every declaration is checked, sorted by name. A name that is not a
-declaration stays `referenced: false`, matching the TypeScript behavior for a
-name that is no longer an export. PHP references are `use` sites of the
+current declaration stays `referenced: false`. On a language file, that result
+does not show whether a deleted declaration is still referenced, because a
+reference is kept only while the name is still declared. PHP references are
+`use` sites of the
 qualified name, so a short class name can be dead while `App.Greeter` is
 referenced. The command exits non-zero when any checked name is dead. It does
 not guess references the extractor did not record. There is no `--config`

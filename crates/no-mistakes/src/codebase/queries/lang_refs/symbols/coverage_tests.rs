@@ -135,6 +135,25 @@ fn mixed_and_non_language_files_are_rejected_before_rendering() {
 }
 
 #[test]
+fn file_records_follow_path_order_and_roots_stay_in_request_order() {
+    let mut request = args("python/greeter.py");
+    request.files = vec![
+        PathBuf::from("python/greeter.py"),
+        PathBuf::from("python/caller.py"),
+    ];
+    let report = collect(&request).unwrap();
+    let paths: Vec<&str> = report.files.iter().map(|file| file.path.as_str()).collect();
+    assert_eq!(paths, ["python/caller.py", "python/greeter.py"]);
+    assert_eq!(
+        report.roots,
+        vec![
+            "python/greeter.py".to_string(),
+            "python/caller.py".to_string()
+        ]
+    );
+}
+
+#[test]
 fn missing_declaration_and_import_names_are_skipped() {
     let mut view =
         super::super::load::prepare_file(Path::new("python/greeter.py"), Some(&root()), None)

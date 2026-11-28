@@ -136,7 +136,7 @@ fn language_dead_report(rows: super::lang_refs::DeadExportRows) -> DeadExportsRe
         file: rows.file,
         results,
         any_dead,
-        diagnostics: super::diagnostics::QueryDiagnostics::default(),
+        diagnostics: rows.diagnostics,
     }
 }
 

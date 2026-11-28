@@ -1,0 +1,4 @@
+tests:
+  python:
+    packages:
+      - python

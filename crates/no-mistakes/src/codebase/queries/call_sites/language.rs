@@ -28,6 +28,6 @@ pub(super) fn from_args(args: &CallSitesArgs) -> Result<Option<CallSitesReport>>
         file: rows.file,
         export: args.export_name.clone(),
         call_sites,
-        diagnostics: std::sync::Arc::new(super::super::diagnostics::QueryDiagnostics::default()),
+        diagnostics: std::sync::Arc::new(rows.diagnostics),
     }))
 }

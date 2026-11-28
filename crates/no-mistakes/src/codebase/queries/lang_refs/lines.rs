@@ -19,13 +19,27 @@ pub(super) fn first_import_line(
     path: &Path,
     specifier: &str,
 ) -> Option<u32> {
-    first_name_line(sources, path, specifier).or_else(|| {
+    literal_line(sources, path, specifier).or_else(|| {
         specifier
             .rsplit(['/', '.'])
             .next()
-            .filter(|segment| *segment != specifier)
+            .filter(|segment| *segment != specifier && !segment.is_empty())
             .and_then(|segment| first_name_line(sources, path, segment))
     })
+}
+
+fn literal_line(sources: &SourceStore, path: &Path, specifier: &str) -> Option<u32> {
+    if specifier.is_empty() {
+        return None;
+    }
+    let source = sources.read_path(path).ok()?;
+    let text = strip_comments_keep_strings(&source);
+    for (index, line) in text.lines().enumerate() {
+        if contains_word(line, specifier) {
+            return Some((index as u32) + 1);
+        }
+    }
+    None
 }
 
 fn needles(name: &str) -> Vec<String> {
@@ -54,5 +68,5 @@ fn contains_word(line: &str, word: &str) -> bool {
 }
 
 fn is_ident(ch: char) -> bool {
-    ch.is_ascii_alphanumeric() || ch == '_'
+    ch.is_alphanumeric() || ch == '_'
 }

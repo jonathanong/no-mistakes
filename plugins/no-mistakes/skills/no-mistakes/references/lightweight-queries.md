@@ -92,7 +92,9 @@ Configured Swift, .NET, Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and
 Dart files use the same three commands. Rows come from language reference facts
 in the canonical graph. Call sites set `referenceOnly` and leave argument
 fields empty; that is not a proven zero-argument call. PHP rows are `use`
-sites. Unproven calls stay absent.
+sites. Unproven calls stay absent. For a language file, `referenced: false` on a
+name that is no longer declared does not show that a deleted declaration is
+unused. A language reference is kept only while that name is still declared.
 
 ## `registry-extension <file>`
 

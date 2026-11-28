@@ -21,6 +21,7 @@ pub(crate) struct DeadExportRow {
 pub(crate) struct DeadExportRows {
     pub file: String,
     pub rows: Vec<DeadExportRow>,
+    pub diagnostics: crate::codebase::queries::diagnostics::QueryDiagnostics,
 }
 
 pub(crate) struct CallSiteRow {
@@ -31,6 +32,7 @@ pub(crate) struct CallSiteRow {
 pub(crate) struct CallSiteRows {
     pub file: String,
     pub sites: Vec<CallSiteRow>,
+    pub diagnostics: crate::codebase::queries::diagnostics::QueryDiagnostics,
 }
 
 pub(crate) fn requests_language_file(files: &[impl AsRef<Path>]) -> bool {
@@ -66,9 +68,14 @@ pub(crate) fn language_dead_rows(
             }
         })
         .collect();
+    let diagnostics = crate::codebase::queries::diagnostics::QueryDiagnostics::operational_gaps(
+        &view.root,
+        &view.unread_files(),
+    );
     Ok(Some(DeadExportRows {
         file: view.rel_file,
         rows,
+        diagnostics,
     }))
 }
 
@@ -96,9 +103,14 @@ pub(crate) fn language_call_rows(
         })
         .collect();
     sites.sort_by(|left, right| (&left.file, left.line).cmp(&(&right.file, right.line)));
+    let diagnostics = crate::codebase::queries::diagnostics::QueryDiagnostics::operational_gaps(
+        &view.root,
+        &view.unread_files(),
+    );
     Ok(Some(CallSiteRows {
         file: view.rel_file,
         sites,
+        diagnostics,
     }))
 }
 
@@ -135,3 +147,5 @@ mod native_tests;
 mod reference_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod unread_tests;
