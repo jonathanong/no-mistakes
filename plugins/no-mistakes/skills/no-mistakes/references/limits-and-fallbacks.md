@@ -147,9 +147,10 @@ page.locator(`[data-testid="${id}"]`).click();
 ```
 
 Use `rg` for dynamic call-site discovery and prefer static literals when the
-relationship should be visible to agents. Kafka static topic literals in
-TypeScript, Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir, and Dart are
-`queue` edges. A runtime topic or a regex subscription is not.
+relationship should be visible to agents. Supported Kafka static topic literal
+forms in TypeScript, Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir, and
+Dart are `queue` edges. Runtime topics, regex subscriptions, and unsupported
+literal forms (such as Go backtick topics or Rust raw strings) are not.
 
 Swift, .NET, Java, Kotlin, Elixir, Dart, and Rust frontends record no
 language-specific queue jobs. The shared Kafka scanner checks configured

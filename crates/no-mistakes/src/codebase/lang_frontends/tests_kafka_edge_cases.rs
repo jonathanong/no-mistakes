@@ -83,9 +83,18 @@ fn go_outer_topic_ignores_nested_strings_and_suffixed_types() {
         "sarama.ProducerMessage{Topic: \"mail.welcome\", Metadata: metadata{Topic: \"audit\"}}";
     let quoted_brace = "ProducerMessage{Note: \"\\\"}\", Topic: \"mail.welcome\"}";
     let raw_str = "s := `Writer{Topic: \"ghost\"}`\nw := kafka.Writer{Topic: \"mail.welcome\"}";
-    let suffixed = "AuditWriter{Topic: \"audit\"}\nkafka.Writer{Topic: \"mail.welcome\"}";
+    let raw_url = "s := `https://host`\nw := kafka.Writer{Topic: \"mail.welcome\"}";
+    let suffixed = "var w *kafka.Writer\nAuditWriter{Topic: \"audit\"}\nkafka.Writer{MyTopic: \"x\", TopicName: \"y\", Topic, Topic: topicVar, Topic: \"\", Topic: \"a\nb\", Note: 'x', Topic: \"mail.welcome\"}";
     let unclosed = "kafka.Writer{Topic: \"mail.welcome\"}\n_ = \"unterminated";
-    for source in [before, after, quoted_brace, raw_str, suffixed, unclosed] {
+    for source in [
+        before,
+        after,
+        quoted_brace,
+        raw_str,
+        raw_url,
+        suffixed,
+        unclosed,
+    ] {
         assert_eq!(
             extract_kafka_topics_for(source, KafkaFile::from_path(Path::new("publish.go"))).0,
             welcome(),
@@ -106,15 +115,27 @@ fn named_produce_and_interpolation_stay_language_specific() {
         extract_kafka_topics_for(source, KafkaFile::from_path(Path::new("send.dart"))).0,
         welcome()
     );
+    let ruby_nested =
+        "producer.produce(payload, topic: \"mail.welcome\", headers: { topic: \"audit\" })";
     assert_eq!(
-        extract_kafka_topics_for(source, KafkaFile::from_path(Path::new("send.rb"))).0,
+        extract_kafka_topics_for(ruby_nested, KafkaFile::from_path(Path::new("send.rb"))).0,
         welcome()
     );
-    let dart_interp = "producer.produce(topic: 'mail.$tenant', messages: const []);";
+    let dart_interp =
+        "producer.produce(topic: 'mail.$tenant', messages: const []);\nproducer.produce(topic: 'mail.${tenant}', messages: const []);";
     assert!(
         extract_kafka_topics_for(dart_interp, KafkaFile::from_path(Path::new("send.dart")))
             .0
             .is_empty()
+    );
+    let dart_literal_dollar = "producer.produce(topic: 'mail.\\$1', messages: const []);\nproducer.produce(topic: 'mail.$1', messages: const []);";
+    assert_eq!(
+        extract_kafka_topics_for(
+            dart_literal_dollar,
+            KafkaFile::from_path(Path::new("send.dart")),
+        )
+        .0,
+        vec!["mail.$1".to_string(), "mail.\\$1".to_string()]
     );
     let ruby_interp = "producer.produce(payload, topic: \"mail.#$tenant\")\nproducer.produce(payload, topic: \"mail.#@tenant\")";
     assert!(
@@ -126,7 +147,7 @@ fn named_produce_and_interpolation_stay_language_specific() {
 
 #[test]
 fn rust_arrays_lifetimes_and_php_multiline_quotes_keep_expected_topics() {
-    let rust_regex = "consumer.subscribe(&[\"^mail.*\", \"mail.welcome\"]);";
+    let rust_regex = "consumer.subscribe(&[\"^mail.*\", \"mail.#{tenant}\", \"\", \"a\"\"b\", \"a\nb\", \"mail.welcome\"]);";
     assert_eq!(
         extract_kafka_topics_for(rust_regex, KafkaFile::from_path(Path::new("listen.rs"))).1,
         welcome()

@@ -89,7 +89,7 @@ fn topic_literal_span(source: &str, i: usize) -> Option<(usize, usize, usize)> {
     let body = source.get(cursor..)?;
     let close = body.find(quote)?;
     let text = &body[..close];
-    if text.is_empty() || text.contains('\n') || text.contains('\r') {
+    if text.is_empty() || text.contains(['\n', '\r']) {
         return None;
     }
     let end = cursor + close;

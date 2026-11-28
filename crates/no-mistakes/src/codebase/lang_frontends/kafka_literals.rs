@@ -113,7 +113,7 @@ fn rust_record_re() -> &'static Regex {
 fn named_produce_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"(?:\.|#)produce\(\s*[^)\n]*\btopic\s*:\s*["']([^"'\r\n]+)["']"#)
+        Regex::new(r#"(?:\.|#)produce\(\s*[^)\n]*?\btopic\s*:\s*["']([^"'\r\n]+)["']"#)
             .expect("named produce")
     })
 }

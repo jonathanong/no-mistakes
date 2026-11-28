@@ -7,11 +7,7 @@ pub(super) enum DollarScope {
 
 pub(super) fn complete_topic(source: &str, start: usize, end: usize, text: &str) -> Option<String> {
     let quote = source[..start].chars().next_back()?;
-    if (quote != '"' && quote != '\'')
-        || text.contains('\n')
-        || text.contains('\r')
-        || concatenated(source, end)
-    {
+    if concatenated(source, end) {
         return None;
     }
     let closing = source[end..].chars().next()?;
@@ -44,8 +40,7 @@ pub(super) fn quoted_element(element: &str, dollar_scope: DollarScope) -> Option
     let inner = element.strip_prefix(quote)?.strip_suffix(quote)?;
     if inner.is_empty()
         || inner.contains(quote)
-        || inner.contains('\n')
-        || inner.contains('\r')
+        || inner.contains(['\n', '\r'])
         || rejects_dollar(dollar_scope, quote, inner)
     {
         return None;
@@ -100,8 +95,7 @@ fn dollar_template(text: &str) -> bool {
 
 fn concatenated(source: &str, end: usize) -> bool {
     let rest = source[end..].trim_start();
-    let Some(quote) = rest.chars().next() else {
-        return false;
-    };
-    rest[quote.len_utf8()..].trim_start().starts_with('+')
+    rest.chars()
+        .next()
+        .is_some_and(|quote| rest[quote.len_utf8()..].trim_start().starts_with('+'))
 }

@@ -1,14 +1,15 @@
 /// Strip comments while keeping string literals so route/queue names survive.
 pub(crate) fn strip_comments_keep_strings(source: &str) -> String {
-    strip_comments(source, false)
+    strip_comments(source, false, false)
 }
-
-/// Rust lifetimes share `'` with character literals. Only a same-line closer is a string.
 pub(crate) fn strip_comments_keep_strings_rust(source: &str) -> String {
-    strip_comments(source, true)
+    strip_comments(source, true, false)
+}
+pub(crate) fn strip_comments_keep_strings_go(source: &str) -> String {
+    strip_comments(source, false, true)
 }
 
-fn strip_comments(source: &str, rust_apostrophe: bool) -> String {
+fn strip_comments(source: &str, rust_apostrophe: bool, go_backticks: bool) -> String {
     let mut out = String::with_capacity(source.len());
     let mut chars = source.chars().peekable();
     while let Some(ch) = chars.next() {
@@ -26,6 +27,16 @@ fn strip_comments(source: &str, rust_apostrophe: bool) -> String {
         if ch == '/' && chars.peek() == Some(&'*') {
             chars.next();
             skip_block(&mut chars, &mut out);
+            continue;
+        }
+        if go_backticks && ch == '`' {
+            out.push(ch);
+            for inner in chars.by_ref() {
+                out.push(inner);
+                if inner == '`' {
+                    break;
+                }
+            }
             continue;
         }
         let apostrophe = ch == '\'' && (!rust_apostrophe || single_quote_closes_on_line(&chars));

@@ -45,10 +45,6 @@ impl KafkaFile {
         }
     }
 
-    fn rust_apostrophe(self) -> bool {
-        matches!(self, Self::Historical | Self::Rust)
-    }
-
     pub(super) fn allows_go(self) -> bool {
         matches!(self, Self::Historical | Self::Go)
     }
@@ -78,10 +74,10 @@ impl KafkaFile {
     }
 
     fn strip(self, source: &str) -> String {
-        if self.rust_apostrophe() {
-            super::strip::strip_comments_keep_strings_rust(source)
-        } else {
-            super::strip::strip_comments_keep_strings(source)
+        match self {
+            Self::Historical | Self::Rust => super::strip::strip_comments_keep_strings_rust(source),
+            Self::Go => super::strip::strip_comments_keep_strings_go(source),
+            _ => super::strip::strip_comments_keep_strings(source),
         }
     }
 }
