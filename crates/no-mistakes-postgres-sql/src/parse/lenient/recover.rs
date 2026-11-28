@@ -2,6 +2,7 @@ use super::LocatedStatement;
 mod bodies;
 pub(crate) mod failure;
 pub(super) use failure::failed_source;
+mod label;
 mod locations;
 mod partition;
 mod partition_sound;
