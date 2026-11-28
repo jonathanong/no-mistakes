@@ -3,6 +3,12 @@
 const { unwrapSequence } = require("./async-ast");
 const { enclosingTypeParameter, nearestDeclarations } = require("./react-nullish-declarations");
 const {
+  UNSUBSTITUTED,
+  appliedStatus,
+  intersectedProps,
+  withAliasSubstitutions,
+} = require("./react-nullish-substitutions");
+const {
   assertedType,
   computedKey,
   keyName,
@@ -10,34 +16,6 @@ const {
   typeAnnotation,
   typeName,
 } = require("../react-node-types");
-
-const UNSUBSTITUTED = {};
-
-function appliedStatus(annotation, facts, substitutions) {
-  const name =
-    annotation?.type === "TSTypeReference" && annotation.typeName?.type === "Identifier"
-      ? annotation.typeName.name
-      : null;
-  let replacement;
-  if (name && substitutions)
-    for (const [param, value] of substitutions) if (param.name?.name === name) replacement = value;
-  if (replacement === undefined) return reactTypeStatus(annotation, facts);
-  return replacement === UNSUBSTITUTED ? "unresolved" : reactTypeStatus(replacement, facts);
-}
-
-function typeArgumentsOf(type) {
-  return type?.typeArguments?.params || type?.typeParameters?.params || [];
-}
-
-function withAliasSubstitutions(alias, type, outer) {
-  const params = alias.typeParameters?.params ?? [];
-  if (!params.length) return outer;
-  const args = typeArgumentsOf(type);
-  const next = new Map(outer || []);
-  for (let index = 0; index < params.length; index += 1)
-    next.set(params[index], args[index] ?? params[index].default ?? UNSUBSTITUTED);
-  return next;
-}
 
 function noteStatus(status, key, incoming) {
   const previous = status.get(key);
@@ -104,16 +82,24 @@ function inheritedFacts(heritage, facts, seen) {
 }
 
 function classifiedProps(type, facts, seen = new Set(), substitutions = null) {
+  if (type?.type === "TSIntersectionType")
+    return intersectedProps(type.types, (part) =>
+      classifiedProps(part, facts, seen, substitutions),
+    );
   if (type && type.type === "TSTypeLiteral") {
     const props = new Set();
     const unresolved = new Set();
     const declared = new Set();
     for (const member of type.members) {
-      if (member.type !== "TSPropertySignature") continue;
+      const getter = member.type === "TSMethodSignature" && member.kind === "get";
+      if (member.type !== "TSPropertySignature" && !getter) continue;
       const name = member.computed ? computedKey(member.key) : keyName(member.key);
       if (name == null) continue;
       declared.add(name);
-      const status = appliedStatus(typeAnnotation(member), facts, substitutions);
+      const annotation = getter
+        ? typeAnnotation({ typeAnnotation: member.returnType })
+        : typeAnnotation(member);
+      const status = appliedStatus(annotation, facts, substitutions);
       if (status === "yes") props.add(name);
       else if (status === "unresolved") unresolved.add(name);
     }
@@ -143,6 +129,8 @@ function classifiedProps(type, facts, seen = new Set(), substitutions = null) {
       seen.delete(parameter);
     }
   }
+  if (local?.some((item) => item.type === "ClassDeclaration" || item.type === "TSEnumDeclaration"))
+    return { props: null, unresolved: null };
   if (local?.length === 1 && local[0].type === "TSTypeAliasDeclaration") {
     seen.add(local[0]);
     try {

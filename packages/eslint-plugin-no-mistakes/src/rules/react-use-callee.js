@@ -148,7 +148,7 @@ function isPromiseResolve(node, context) {
     object?.type === "Identifier" &&
     object.name === "Promise" &&
     staticName(callee.property, callee.computed) === "resolve" &&
-    (!bound || (bound.defs.length === 0 && bound.scope?.type === "global"))
+    !bound?.defs?.some((def) => def.type === "Parameter")
   );
 }
 

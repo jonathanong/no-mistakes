@@ -45,11 +45,14 @@ function collectMembers(members, facts, params) {
   const unresolved = new Set();
   const declared = new Set();
   for (const member of members || []) {
-    if (member.type !== "TSPropertySignature") continue;
+    const getter = member.type === "TSMethodSignature" && member.kind === "get";
+    if (member.type !== "TSPropertySignature" && !getter) continue;
     const name = member.computed ? computedKey(member.key) : keyName(member.key);
     if (name == null) continue;
     declared.add(name);
-    const annotation = typeAnnotation(member);
+    const annotation = getter
+      ? typeAnnotation({ typeAnnotation: member.returnType })
+      : typeAnnotation(member);
     const status = namesParameter(annotation, params)
       ? "unresolved"
       : reactTypeStatus(annotation, facts);

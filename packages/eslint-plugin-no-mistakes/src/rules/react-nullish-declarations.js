@@ -19,16 +19,26 @@ function bodyStatements(node, type) {
   return statements;
 }
 
+function isValueShadow(declaration, name, type) {
+  return (
+    (declaration.type === "ClassDeclaration" || declaration.type === "TSEnumDeclaration") &&
+    declaration.id?.name === name &&
+    !containsNode(declaration, type)
+  );
+}
+
 function nearestDeclarations(type, name) {
   let current = type?.parent;
   while (current) {
     const found = [];
+    const shadows = [];
     const statements =
       current.body?.body && !containsNode(current.body, type)
         ? null
         : bodyStatements(current, type);
     for (const statement of statements ?? []) {
       const declaration = statement.declaration ?? statement;
+      if (isValueShadow(declaration, name, type)) shadows.push(declaration);
       const typed =
         declaration.type === "TSTypeAliasDeclaration" ||
         declaration.type === "TSInterfaceDeclaration";
@@ -41,6 +51,7 @@ function nearestDeclarations(type, name) {
         found.push(declaration);
     }
     if (found.length) return found;
+    if (shadows.length) return shadows;
     if (current.type === "Program") return null;
     current = current.parent;
   }

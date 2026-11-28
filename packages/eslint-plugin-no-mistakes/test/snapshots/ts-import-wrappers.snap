@@ -398,6 +398,17 @@
           "messageId": "nullish",
           "ruleId": "no-mistakes/react-no-nullish-react-node",
           "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 35,
+          "endLine": 24,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-const-shadow.tsx",
+          "line": 24,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
         }
       ],
       "name": "a const value replaces a ReactNode parameter",
@@ -698,6 +709,58 @@
         }
       ],
       "name": "generic arguments and switch aliases stay on their own path",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
+      "file": "react-nullish-shadow-edges.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 17,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-shadow-edges.tsx",
+          "line": 17,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 35,
+          "endLine": 44,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-shadow-edges.tsx",
+          "line": 44,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 75,
+          "endLine": 50,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-shadow-edges.tsx",
+          "line": 50,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 75,
+          "endLine": 56,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-shadow-edges.tsx",
+          "line": 56,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "getters, nearer classes, and intersections stay on their own path",
       "options": null,
       "rule": "react-no-nullish-react-node"
     },
@@ -5327,6 +5390,41 @@
           }
         ],
         "name": "react-nullish-self-alias.tsx",
+        "options": null
+      },
+      {
+        "file": "react-nullish-shadow-edges.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-shadow-edges.tsx",
+            "line": 17,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 22,
+            "file": "react-nullish-shadow-edges.tsx",
+            "line": 44,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-shadow-edges.tsx",
+            "line": 50,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-shadow-edges.tsx",
+            "line": 56,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          }
+        ],
+        "name": "react-nullish-shadow-edges.tsx",
         "options": null
       },
       {

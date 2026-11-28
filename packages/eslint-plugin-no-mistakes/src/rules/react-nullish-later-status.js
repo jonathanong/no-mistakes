@@ -4,7 +4,13 @@ const { unwrapSequence } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { constStringKey } = require("./const-string-key");
 const { classifiedProps } = require("./react-nullish-props");
-const { assertedType, computedKey, keyName, typeAnnotation } = require("../react-node-types");
+const {
+  assertedType,
+  computedKey,
+  keyName,
+  reactTypeStatus,
+  typeAnnotation,
+} = require("../react-node-types");
 
 function patternPropertyKey(pattern, name, context) {
   if (pattern?.type !== "ObjectPattern") return null;
@@ -53,14 +59,21 @@ function forwardPatternStatus(pattern, name, init, context, facts, annotation, l
   if (key === null) return "no";
   const type = annotation || initObjectType(init, context);
   const classified = type ? classifiedProps(type, facts) : null;
-  if (classified) {
+  if (classified?.props || classified?.unresolved) {
     if (key === undefined)
       return classified.props?.size || classified.unresolved?.size ? "unresolved" : "no";
     if (classified.props?.has(key)) return "yes";
     if (classified.unresolved?.has(key)) return "unresolved";
     return "no";
   }
+  if (type && reactTypeStatus(type, facts) === "unresolved") return "unresolved";
   return recordedKeyStatus(init, key, lookup) ?? (key === undefined ? "unresolved" : "no");
+}
+
+function hasOwnAnnotation(def) {
+  if (def.type !== "Variable") return false;
+  if (def.node?.id?.type === "ObjectPattern") return Boolean(typeAnnotation(def.node.id));
+  return def.node?.id?.type === "Identifier" && Boolean(typeAnnotation(def.node.id));
 }
 
 function laterBindingStatus(
@@ -79,6 +92,14 @@ function laterBindingStatus(
   const laterDefs = defs.filter((def) => def.node?.range?.[0] > identifier.range[0]);
   const forwardValue = laterDefs.some((def) => def.type === "Variable");
   const active = forwardValue ? laterDefs : defs;
+  const annotationDefs =
+    forwardValue && !laterDefs.some(hasOwnAnnotation)
+      ? defs.filter(
+          (def) =>
+            def.type === "Variable" &&
+            (hasOwnAnnotation(def) || def.node?.range?.[0] > identifier.range[0]),
+        )
+      : active;
   if (!active.length || seen.has(variable))
     return seen.has(variable) && active.length ? "unresolved" : null;
   if (!forwardValue && active.some((def) => !(def.node?.range?.[0] > identifier.range[0])))
@@ -87,7 +108,7 @@ function laterBindingStatus(
   try {
     let annotated = false;
     let unresolved = false;
-    for (const def of active) {
+    for (const def of annotationDefs) {
       if (def.type !== "Variable") continue;
       if (def.node?.id?.type === "ObjectPattern") {
         const patternType = typeAnnotation(def.node.id);

@@ -18,3 +18,10 @@ export function bareVar(node: ReactNode) {
   var slot;
   return slot ?? null;
 }
+
+export function forwardBareVar(node: ReactNode) {
+  var value: ReactNode = node;
+  const read = () => value ?? null;
+  var value;
+  return read();
+}

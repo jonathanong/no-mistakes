@@ -483,6 +483,11 @@ describe("typescript import wrappers", () => {
         "react-no-nullish-react-node",
       ),
       eslintCase(
+        "getters, nearer classes, and intersections stay on their own path",
+        "react-nullish-shadow-edges.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
         "numeric literal keys stay on that property",
         "react-nullish-numeric-keys.tsx",
         "react-no-nullish-react-node",
@@ -982,7 +987,10 @@ describe("typescript import wrappers", () => {
       cases
         .find((item) => item.name === "a const value replaces a ReactNode parameter")
         .findings.map((finding) => [finding.line, finding.messageId]),
-    ).toEqual([[19, "nullish"]]);
+    ).toEqual([
+      [19, "nullish"],
+      [24, "nullish"],
+    ]);
     expect(
       cases
         .find((item) => item.name === "generic arguments and switch aliases stay on their own path")
@@ -1001,6 +1009,19 @@ describe("typescript import wrappers", () => {
         .find((item) => item.name === "a non-react import named React is not the implicit type")
         .findings.map((finding) => [finding.line, finding.messageId]),
     ).toEqual([[5, "nullish"]]);
+    expect(
+      cases
+        .find(
+          (item) =>
+            item.name === "getters, nearer classes, and intersections stay on their own path",
+        )
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [17, "nullish"],
+      [44, "unanalyzable"],
+      [50, "nullish"],
+      [56, "unanalyzable"],
+    ]);
     expect(
       cases
         .find((item) => item.name === "numeric literal keys stay on that property")
@@ -1157,6 +1178,7 @@ describe("typescript import wrappers", () => {
         "react-nullish-numeric-keys.tsx",
         "react-nullish-generic-edges.tsx",
         "react-nullish-foreign-react.tsx",
+        "react-nullish-shadow-edges.tsx",
       ]),
       "nullish-ignore": oxlintOn(".oxlintrc-nullish-ignore.json", ["react-nullish-unresolved.tsx"]),
       fetch: oxlintOn(".oxlintrc-fetch.json", [
