@@ -100,3 +100,7 @@ pub(super) fn any_global_callback(site: &ResolvedCallSite) -> bool {
         )
     }) || site.alternatives.iter().any(any_global_callback)
 }
+
+#[cfg(test)]
+#[path = "analyze_callback_tests.rs"]
+mod tests;
