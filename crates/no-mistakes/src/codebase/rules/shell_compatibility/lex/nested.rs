@@ -1,4 +1,4 @@
-use super::Lexer;
+use super::{Lexer, Shell};
 
 impl Lexer<'_> {
     pub(super) fn skip_group(&mut self, end: u8) -> bool {
@@ -31,6 +31,21 @@ impl Lexer<'_> {
             self.advance();
         }
         ends.is_empty()
+    }
+
+    pub(super) fn skip_substitution(&mut self) -> bool {
+        if !matches!(self.shell, Shell::Bash)
+            || self.current() == Some(b'(')
+            || self.substitution_depth == 32
+        {
+            return self.skip_group(b')');
+        }
+        let heredocs = std::mem::take(&mut self.heredocs);
+        self.substitution_depth += 1;
+        let closed = self.visit_commands(true, |_, _, _| {});
+        self.substitution_depth -= 1;
+        self.heredocs = heredocs;
+        closed
     }
 
     pub(super) fn take_expansion_start(&mut self) -> Option<u8> {

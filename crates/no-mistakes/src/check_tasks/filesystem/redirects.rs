@@ -1,5 +1,6 @@
 mod explain_write_rollback;
 mod nextjs;
+mod shell;
 use super::*;
 use no_mistakes::codebase::rules::analysis_policy::AnalysisDiagnostics;
 
@@ -28,27 +29,10 @@ pub(super) fn run(
     } else {
         config
     };
-    let mut shell_remaining;
-    let config = if config.rule_configured(rules::SHELLCHECK_RUNNER) {
-        diagnostics.append(no_mistakes::perf_trace::rule(
-            "analysis.filesystem_rules.shellcheck-runner",
-            || {
-                rules::shellcheck_runner::diagnostics_with_files_sources_and_snapshot(
-                    root,
-                    config,
-                    files,
-                    &prepared.sources,
-                    prepared.snapshot,
-                    defer_suppression,
-                )
-            },
-        )?);
-        shell_remaining = config.clone();
-        super::handled::mark(&mut shell_remaining, |id| id == rules::SHELLCHECK_RUNNER);
-        &shell_remaining
-    } else {
-        config
-    };
+    let (config, shell_diagnostics) =
+        shell::run(root, config, files, &prepared, defer_suppression)?;
+    diagnostics.append(shell_diagnostics);
+    let config = config.as_ref();
     let mut without_version_pins;
     let config = if config.rule_configured(rules::VERSION_PIN_CONSISTENCY) {
         diagnostics.append(no_mistakes::perf_trace::rule(

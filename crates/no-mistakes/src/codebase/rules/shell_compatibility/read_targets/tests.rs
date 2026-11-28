@@ -3,8 +3,8 @@ use super::{decode_target, targets, Targets};
 
 fn parse_targets(source: &str) -> Targets {
     let mut parsed = None;
-    Lexer::new(source, Shell::Bash).commands(|words, _| {
-        parsed = targets(words);
+    Lexer::new(source, Shell::Bash).commands(|words, _, _| {
+        parsed = targets(&words);
     });
     parsed.expect("read/mapfile command")
 }

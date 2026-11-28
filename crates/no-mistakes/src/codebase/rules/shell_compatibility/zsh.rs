@@ -62,11 +62,11 @@ fn basename(interpreter: &str) -> Option<&str> {
 pub(super) fn scan(source: &str) -> Vec<(&str, usize)> {
     let mut hits = Vec::new();
     let mut hidden_scope = None;
-    Lexer::new(source, Shell::Zsh).commands(|words, scope| {
+    Lexer::new(source, Shell::Zsh).commands(|words, scope, _| {
         if hidden_scope.is_some_and(|hidden| hidden > scope) {
             hidden_scope = None;
         }
-        let mut command = command_words(words).peekable();
+        let mut command = command_words(&words).peekable();
         while let Some(word) = command.next_if(|word| assignment(word.raw).is_some()) {
             if hidden_scope.is_none() && uses_status(word.raw) {
                 hits.push(("status", word.line));
@@ -104,3 +104,6 @@ pub(super) fn scan(source: &str) -> Vec<(&str, usize)> {
 fn uses_status(word: &str) -> bool {
     word == "status" || assignment(word).is_some_and(|(name, _)| name == "status")
 }
+
+#[cfg(test)]
+mod tests;
