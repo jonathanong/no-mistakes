@@ -1477,6 +1477,28 @@
           "messageId": "resolve",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 38,
+          "endLine": 58,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-binding-edges.tsx",
+          "line": 58,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 38,
+          "endLine": 64,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-binding-edges.tsx",
+          "line": 64,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
         }
       ],
       "name": "import binding edges stay on their own write",
@@ -2592,8 +2614,41 @@
           "endLine": 27,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-nested-destructure.ts",
           "line": 27,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 18,
+          "endLine": 34,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-nested-destructure.ts",
+          "line": 34,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 18,
+          "endLine": 39,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-nested-destructure.ts",
+          "line": 39,
           "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently.",
           "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 18,
+          "endLine": 44,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-nested-destructure.ts",
+          "line": 44,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
           "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
           "severity": 2
         }
@@ -3304,7 +3359,28 @@
             "column": 10,
             "file": "nullable-nested-destructure.ts",
             "line": 27,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-nested-destructure.ts",
+            "line": 34,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-nested-destructure.ts",
+            "line": 39,
             "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-nested-destructure.ts",
+            "line": 44,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
           }
         ],
         "name": "nullable-nested-destructure.ts",
@@ -4486,6 +4562,20 @@
             "file": "react-use-binding-edges.tsx",
             "line": 52,
             "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-binding-edges.tsx",
+            "line": 58,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-binding-edges.tsx",
+            "line": 64,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
           }
         ],
         "name": "react-use-binding-edges.tsx",

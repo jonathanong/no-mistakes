@@ -51,3 +51,15 @@ export function assignedBefore(value: Promise<number>) {
   R = require("react");
   return R.use(Promise.resolve(value));
 }
+
+const useKey = "use";
+export function constDestructure(value: Promise<number>) {
+  const { [useKey]: read } = require("react");
+  return read(Promise.resolve(value));
+}
+
+declare const dynamicKey: string;
+export function dynamicDestructureKey(value: Promise<number>) {
+  const { [dynamicKey]: read } = require("react");
+  return read(Promise.resolve(value));
+}

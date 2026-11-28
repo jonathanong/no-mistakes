@@ -92,7 +92,7 @@ function namespaceMember(base, imported) {
 }
 
 function destructureFact(declarator, name, context, seen) {
-  const imported = patternPath(declarator.id, name, literalString);
+  const imported = patternPath(declarator.id, name, literalString, [], context);
   if (imported === null) return null;
   const required = requireModule(declarator.init, context);
   let fact;
@@ -109,7 +109,7 @@ function destructureFact(declarator, name, context, seen) {
       imported,
       namespaceMember,
     );
-  const fallback = patternDefault(declarator.id, name);
+  const fallback = patternDefault(declarator.id, name, context);
   if (!fallback) return fact;
   return withPatternDefault(fact, importFact(fallback, context, new Set(seen)));
 }

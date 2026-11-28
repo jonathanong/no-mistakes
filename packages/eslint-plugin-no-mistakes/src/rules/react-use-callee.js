@@ -3,6 +3,7 @@
 const { unwrapSequence } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
 const { importFact } = require("./import-resolution");
+const { constStringKey } = require("./const-string-key");
 const { literalString } = require("./logical-call");
 const { isGlobalPromiseAlias } = require("./react-no-use-promise-resolve-alias");
 
@@ -15,7 +16,7 @@ function staticName(node, computed) {
   return literalString(current);
 }
 
-function patternKey(pattern, name) {
+function patternKey(pattern, name, context) {
   if (pattern?.type !== "ObjectPattern") return null;
   for (const property of pattern.properties) {
     if (property.type !== "Property") continue;
@@ -23,7 +24,7 @@ function patternKey(pattern, name) {
     while (value?.type === "AssignmentPattern") value = value.left;
     if (value?.type === "Identifier" && value.name === name) {
       if (!property.computed) return staticName(property.key, false);
-      const key = literalString(property.key);
+      const key = literalString(property.key) ?? constStringKey(property.key, context);
       // undefined: this name's key is not static. null: the pattern does not bind it.
       return key == null ? undefined : key;
     }
@@ -53,14 +54,6 @@ function valueKind(node, context) {
   const variable = resolveVariable(node, context);
   const def = variable?.defs?.length === 1 ? variable.defs[0] : null;
   return def?.type === "Variable" ? def.parent?.kind : null;
-}
-
-function constStringKey(node, context) {
-  const current = unwrapSequence(node);
-  if (current?.type !== "Identifier" || valueKind(current, context) !== "const") return null;
-  const declarator = resolveVariable(current, context)?.defs[0]?.node;
-  if (declarator?.id?.type !== "Identifier" || !declarator.init) return null;
-  return literalString(declarator.init);
 }
 
 function selectorName(property, computed, context) {
@@ -111,7 +104,7 @@ function reactUseStatus(node, context, useNames, seen = new Set()) {
         if (def.node.id.type === "Identifier") {
           return reactUseStatus(def.node.init, context, useNames, seen);
         }
-        const key = patternKey(def.node.id, callee.name);
+        const key = patternKey(def.node.id, callee.name, context);
         if (key === undefined)
           return namespaceStatus(def.node.init, context) === "no" ? "no" : "unresolved";
         if (key !== "use") return "no";

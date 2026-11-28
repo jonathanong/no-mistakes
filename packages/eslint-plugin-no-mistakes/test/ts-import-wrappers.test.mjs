@@ -688,6 +688,8 @@ describe("typescript import wrappers", () => {
       [24, "resolve"],
       [32, "unanalyzable"],
       [52, "resolve"],
+      [58, "resolve"],
+      [64, "unanalyzable"],
     ]);
     expect(
       cases.find((item) => item.name === "annotated string is not a ReactNode").findings,
@@ -984,7 +986,10 @@ describe("typescript import wrappers", () => {
       [8, "wrapper"],
       [15, "unanalyzable"],
       [22, "unanalyzable"],
-      [27, "wrapper"],
+      [27, "unanalyzable"],
+      [34, "unanalyzable"],
+      [39, "wrapper"],
+      [44, "unanalyzable"],
     ]);
     expect(
       cases
