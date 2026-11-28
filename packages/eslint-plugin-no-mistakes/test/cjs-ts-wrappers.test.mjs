@@ -148,6 +148,7 @@ const groups = [
     valid: [
       "computed-modifier.test.ts",
       "computed-binding.test.ts",
+      "wrapped-mock.test.ts",
       "not-a-callee.test.ts",
       "suppressed.test.ts",
       "reassign.test.ts",

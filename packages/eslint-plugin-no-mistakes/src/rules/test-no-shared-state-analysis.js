@@ -1,5 +1,8 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
+const { memberPropertyName } = require("./logical-call");
+const { frameworkBindingModule } = require("./module-mock-framework");
 const {
   childNodes,
   isCalledFunction,
@@ -81,17 +84,11 @@ function createViMockTracker(context, mutableTopLevel) {
 
   return {
     collectFactoryReferences(node) {
-      if (
-        node.callee.type !== "MemberExpression" ||
-        node.callee.object.type !== "Identifier" ||
-        node.callee.object.name !== "vi" ||
-        node.callee.property.type !== "Identifier" ||
-        node.callee.property.name !== "mock"
-      ) {
-        return;
-      }
+      const callee = unwrapExpression(node.callee);
+      if (memberPropertyName(callee) !== "mock") return;
       const factory = node.arguments[1];
       if (!isFunctionNode(factory)) return;
+      if (frameworkBindingModule(unwrapExpression(callee.object), context) !== "vitest") return;
       for (const { identifier } of context.sourceCode.getScope(factory).through) {
         factoryReferences.add(identifier.name);
         markIfCaptured(identifier.name);

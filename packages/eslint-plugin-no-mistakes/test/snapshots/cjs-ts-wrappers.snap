@@ -1768,6 +1768,12 @@
       "options": null
     },
     {
+      "file": "wrapped-mock.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "not-a-callee.test.ts",
       "findings": [],
       "kind": "valid",

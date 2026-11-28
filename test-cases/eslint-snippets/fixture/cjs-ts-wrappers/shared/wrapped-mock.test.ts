@@ -1,0 +1,26 @@
+import { test, vi } from "vitest";
+
+let mockValue = 0;
+(vi as typeof vi).mock("./x", () => ({ get: () => mockValue }));
+test("wrapped", () => {
+  mockValue = 1;
+});
+
+let mockPlain = 0;
+vi.mock("./plain", () => ({ get: () => mockPlain }));
+test("plain", () => {
+  mockPlain = 1;
+});
+
+let mockKey = 0;
+vi["mock" as const]("./key", () => ({ get: () => mockKey }));
+test("key", () => {
+  mockKey = 1;
+});
+
+let mockRenamed = 0;
+const { vi: runner } = require("vitest");
+runner.mock("./renamed", () => ({ get: () => mockRenamed }));
+test("renamed", () => {
+  mockRenamed = 1;
+});
