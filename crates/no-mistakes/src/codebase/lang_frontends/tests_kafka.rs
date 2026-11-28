@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 
 pub(super) fn extract_kafka_topics(source: &str) -> (Vec<String>, Vec<String>) {
     // Callers without a path keep the historical Ruby-subscribe scan.
-    extract_kafka_topics_for(source, KafkaFile::new(true, false))
+    extract_kafka_topics_for(source, KafkaFile::historical())
 }
 
 fn source(root: &str, rel: &str) -> String {
@@ -160,4 +160,65 @@ fn kafka_file_kind_rejects_templates_concatenation_and_foreign_subscribe() {
     )
     .1
     .is_empty());
+}
+
+#[test]
+fn go_outer_topic_ignores_nested_metadata_topic() {
+    let before =
+        "sarama.ProducerMessage{Metadata: metadata{Topic: \"audit\"}, Topic: \"mail.welcome\"}";
+    let after =
+        "sarama.ProducerMessage{Topic: \"mail.welcome\", Metadata: metadata{Topic: \"audit\"}}";
+    let quoted_brace = "ProducerMessage{Note: \"}\", Topic: \"mail.welcome\"}";
+    for source in [before, after, quoted_brace] {
+        assert_eq!(
+            extract_kafka_topics_for(source, KafkaFile::from_path(Path::new("publish.go"))).0,
+            welcome(),
+            "{source}"
+        );
+    }
+}
+
+#[test]
+fn named_produce_stays_off_typescript_files() {
+    let source = "producer.produce({ topic: \"mail.welcome\" });";
+    assert!(
+        extract_kafka_topics_for(source, KafkaFile::from_path(Path::new("send.ts")))
+            .0
+            .is_empty()
+    );
+    assert_eq!(
+        extract_kafka_topics_for(source, KafkaFile::from_path(Path::new("send.dart"))).0,
+        welcome()
+    );
+    assert_eq!(
+        extract_kafka_topics_for(source, KafkaFile::from_path(Path::new("send.rb"))).0,
+        welcome()
+    );
+}
+
+#[test]
+fn rust_borrowed_array_drops_regex_subscriptions() {
+    let source = "consumer.subscribe(&[\"^mail.*\", \"mail.welcome\"]);";
+    assert_eq!(
+        extract_kafka_topics_for(source, KafkaFile::from_path(Path::new("listen.rs"))).1,
+        welcome()
+    );
+}
+
+#[test]
+fn php_multiline_single_quotes_hide_commented_topics() {
+    let source = "$body = 'first\n\"';\n// producer.send(\"ghost\");\n$producer->newTopic(\"mail.welcome\");";
+    assert_eq!(
+        extract_kafka_topics_for(source, KafkaFile::from_path(Path::new("send.php"))).0,
+        welcome()
+    );
+}
+
+#[test]
+fn rust_lifetime_comments_do_not_emit_topics() {
+    let source = "fn publish<'a>(topic: &'a str) {\n// FutureRecord::to(\"ghost\")\nlet _ = FutureRecord::to(\"mail.welcome\");\n}";
+    assert_eq!(
+        extract_kafka_topics_for(source, KafkaFile::from_path(Path::new("publish.rs"))).0,
+        welcome()
+    );
 }

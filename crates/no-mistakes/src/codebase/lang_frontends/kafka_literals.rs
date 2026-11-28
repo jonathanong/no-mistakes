@@ -1,32 +1,67 @@
+use super::kafka::KafkaFile;
+use super::kafka_go_record::go_outer_topic_spans;
 use super::kafka_topic_text::{bare_subscribe_literal, closed_literal};
 use regex::Regex;
 use std::sync::OnceLock;
 
 // Static shapes from docs/feature-parity.md. Runtime topics and regex subscriptions stay unmatched.
-pub(super) fn extra_produces(source: &str, dollar_templates: bool) -> Vec<String> {
+pub(super) fn extra_produces(source: &str, file: KafkaFile) -> Vec<String> {
     let mut values = Vec::new();
-    push_group(&mut values, source, go_record_re(), false);
-    push_group(&mut values, source, rust_record_re(), false);
-    push_group(&mut values, source, named_produce_re(), false);
-    push_group(&mut values, source, php_topic_re(), true);
-    push_group(&mut values, source, java_record_re(), dollar_templates);
-    push_group(&mut values, source, elixir_produce_re(), false);
+    if file.allows_go() {
+        push_go_records(&mut values, source);
+    }
+    if file.allows_rust_records() {
+        push_group(&mut values, source, rust_record_re(), false);
+    }
+    if file.allows_named_produce() {
+        push_group(&mut values, source, named_produce_re(), false);
+    }
+    if file.allows_php() {
+        push_group(&mut values, source, php_topic_re(), true);
+    }
+    if file.allows_java() {
+        push_group(
+            &mut values,
+            source,
+            java_record_re(),
+            file.dollar_templates(),
+        );
+    }
+    if file.allows_elixir() {
+        push_group(&mut values, source, elixir_produce_re(), false);
+    }
     values
 }
 
-pub(super) fn extra_consumes(
-    source: &str,
-    ruby_subscribe: bool,
-    dollar_templates: bool,
-) -> Vec<String> {
+pub(super) fn extra_consumes(source: &str, file: KafkaFile) -> Vec<String> {
     let mut values = Vec::new();
-    push_quoted_block(&mut values, source, go_subscribe_re(), false);
-    if ruby_subscribe {
+    if file.allows_go() {
+        push_quoted_block(&mut values, source, go_subscribe_re(), false);
+    }
+    if file.allows_ruby() {
         push_group(&mut values, source, ruby_subscribe_re(), false);
     }
-    push_quoted_block(&mut values, source, java_subscribe_re(), dollar_templates);
-    push_group(&mut values, source, elixir_subscribe_re(), false);
+    if file.allows_java() {
+        push_quoted_block(
+            &mut values,
+            source,
+            java_subscribe_re(),
+            file.dollar_templates(),
+        );
+    }
+    if file.allows_elixir() {
+        push_group(&mut values, source, elixir_subscribe_re(), false);
+    }
     values
+}
+
+fn push_go_records(values: &mut Vec<String>, source: &str) {
+    for (start, end) in go_outer_topic_spans(source) {
+        let text = &source[start..end];
+        if let Some(literal) = closed_literal(source, start, end, text, false) {
+            values.push(literal);
+        }
+    }
 }
 
 fn push_group(values: &mut Vec<String>, source: &str, re: &Regex, reject_dollar: bool) {
@@ -55,14 +90,6 @@ fn push_quoted_block(values: &mut Vec<String>, source: &str, re: &Regex, reject_
             }
         }
     }
-}
-
-fn go_record_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| {
-        Regex::new(r#"(?:Writer|ProducerMessage)\s*\{[^}]*\bTopic\s*:\s*["']([^"'\r\n]+)["']"#)
-            .expect("go record")
-    })
 }
 
 fn rust_record_re() -> &'static Regex {

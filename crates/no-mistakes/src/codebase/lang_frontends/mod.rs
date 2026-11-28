@@ -7,6 +7,7 @@ mod http_clients;
 pub(super) mod http_routes;
 mod java;
 mod kafka;
+mod kafka_go_record;
 mod kafka_literals;
 mod kafka_topic_text;
 mod kotlin;

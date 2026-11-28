@@ -3,24 +3,80 @@ use regex::Regex;
 use std::path::Path;
 use std::sync::OnceLock;
 
-pub(crate) struct KafkaFile {
-    ruby_subscribe: bool,
-    dollar_templates: bool,
+#[derive(Clone, Copy)]
+pub(crate) enum KafkaFile {
+    Historical,
+    Go,
+    Rust,
+    Ruby,
+    Php,
+    Java,
+    Kotlin,
+    Elixir,
+    Dart,
+    Shared,
 }
 
 impl KafkaFile {
-    pub(crate) fn new(ruby_subscribe: bool, dollar_templates: bool) -> Self {
-        Self {
-            ruby_subscribe,
-            dollar_templates,
-        }
+    pub(crate) fn historical() -> Self {
+        Self::Historical
     }
 
     pub(crate) fn from_path(path: &Path) -> Self {
         match path.extension().and_then(|ext| ext.to_str()) {
-            Some("rb") => Self::new(true, false),
-            Some("kt" | "kts" | "php") => Self::new(false, true),
-            _ => Self::new(false, false),
+            Some("go") => Self::Go,
+            Some("rs") => Self::Rust,
+            Some("rb") => Self::Ruby,
+            Some("php") => Self::Php,
+            Some("java") => Self::Java,
+            Some("kt" | "kts") => Self::Kotlin,
+            Some("ex" | "exs") => Self::Elixir,
+            Some("dart") => Self::Dart,
+            _ => Self::Shared,
+        }
+    }
+
+    pub(super) fn dollar_templates(self) -> bool {
+        matches!(self, Self::Php | Self::Kotlin)
+    }
+
+    fn rust_apostrophe(self) -> bool {
+        matches!(self, Self::Historical | Self::Rust)
+    }
+
+    pub(super) fn allows_go(self) -> bool {
+        matches!(self, Self::Historical | Self::Go)
+    }
+
+    pub(super) fn allows_rust_records(self) -> bool {
+        matches!(self, Self::Historical | Self::Rust)
+    }
+
+    pub(super) fn allows_named_produce(self) -> bool {
+        matches!(self, Self::Historical | Self::Ruby | Self::Dart)
+    }
+
+    pub(super) fn allows_php(self) -> bool {
+        matches!(self, Self::Historical | Self::Php)
+    }
+
+    pub(super) fn allows_java(self) -> bool {
+        matches!(self, Self::Historical | Self::Java | Self::Kotlin)
+    }
+
+    pub(super) fn allows_elixir(self) -> bool {
+        matches!(self, Self::Historical | Self::Elixir)
+    }
+
+    pub(super) fn allows_ruby(self) -> bool {
+        matches!(self, Self::Historical | Self::Ruby)
+    }
+
+    fn strip(self, source: &str) -> String {
+        if self.rust_apostrophe() {
+            super::strip::strip_comments_keep_strings_rust(source)
+        } else {
+            super::strip::strip_comments_keep_strings(source)
         }
     }
 }
@@ -29,18 +85,11 @@ pub(crate) fn extract_kafka_topics_for(
     source: &str,
     file: KafkaFile,
 ) -> (Vec<String>, Vec<String>) {
-    let source = super::strip::strip_comments_keep_strings(source);
+    let source = file.strip(source);
     let mut produces = extract_named(&source, kafka_produce_re());
-    produces.extend(super::kafka_literals::extra_produces(
-        &source,
-        file.dollar_templates,
-    ));
-    let mut consumes = extract_kafka_consumes(&source, file.dollar_templates);
-    consumes.extend(super::kafka_literals::extra_consumes(
-        &source,
-        file.ruby_subscribe,
-        file.dollar_templates,
-    ));
+    produces.extend(super::kafka_literals::extra_produces(&source, file));
+    let mut consumes = extract_kafka_consumes(&source, file.dollar_templates());
+    consumes.extend(super::kafka_literals::extra_consumes(&source, file));
     dedup(&mut produces);
     dedup(&mut consumes);
     (produces, consumes)
@@ -54,9 +103,10 @@ pub(crate) fn topic_identity(cluster: Option<&str>, topic: &str) -> String {
 }
 
 pub(crate) fn scan_file(path: &Path, sources: &SourceStore) -> Option<(Vec<String>, Vec<String>)> {
+    let file = KafkaFile::from_path(path);
     let source = sources.read_path(path).ok()?;
-    let text = super::strip::strip_comments_keep_strings(&source);
-    Some(extract_kafka_topics_for(&text, KafkaFile::from_path(path)))
+    let text = file.strip(&source);
+    Some(extract_kafka_topics_for(&text, file))
 }
 
 fn dedup(values: &mut Vec<String>) {
@@ -85,11 +135,16 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
 fn extract_kafka_consumes(source: &str, dollar_templates: bool) -> Vec<String> {
     let mut values = extract_named(source, kafka_consume_re());
     for cap in kafka_consume_array_re().captures_iter(source) {
-        let block = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+        let borrowed = cap.get(1).is_some();
+        let block = cap.get(2).map(|m| m.as_str()).unwrap_or("");
         for element in block.split(',') {
-            if let Some(literal) =
-                super::kafka_topic_text::quoted_element(element.trim(), dollar_templates)
-            {
+            let element = element.trim();
+            let literal = if borrowed {
+                super::kafka_topic_text::bare_subscribe_literal(element, dollar_templates)
+            } else {
+                super::kafka_topic_text::quoted_element(element, dollar_templates)
+            };
+            if let Some(literal) = literal {
                 values.push(literal);
             }
         }
@@ -118,5 +173,5 @@ fn kafka_consume_re() -> &'static Regex {
 
 fn kafka_consume_array_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r#"subscribe\(\s*&?\s*\[([^\]]*)\]"#).expect("consume array"))
+    RE.get_or_init(|| Regex::new(r#"subscribe\(\s*(&)?\s*\[([^\]]*)\]"#).expect("consume array"))
 }

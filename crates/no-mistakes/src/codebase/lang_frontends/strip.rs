@@ -1,5 +1,14 @@
 /// Strip comments while keeping string literals so route/queue names survive.
 pub(crate) fn strip_comments_keep_strings(source: &str) -> String {
+    strip_comments(source, false)
+}
+
+/// Rust lifetimes share `'` with character literals. Only a same-line closer is a string.
+pub(crate) fn strip_comments_keep_strings_rust(source: &str) -> String {
+    strip_comments(source, true)
+}
+
+fn strip_comments(source: &str, rust_apostrophe: bool) -> String {
     let mut out = String::with_capacity(source.len());
     let mut chars = source.chars().peekable();
     while let Some(ch) = chars.next() {
@@ -19,7 +28,8 @@ pub(crate) fn strip_comments_keep_strings(source: &str) -> String {
             skip_block(&mut chars, &mut out);
             continue;
         }
-        if ch == '"' || (ch == '\'' && single_quote_closes_on_line(&chars)) {
+        let apostrophe = ch == '\'' && (!rust_apostrophe || single_quote_closes_on_line(&chars));
+        if ch == '"' || apostrophe {
             out.push(ch);
             copy_quoted(&mut chars, &mut out, ch);
             continue;
