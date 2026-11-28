@@ -16,8 +16,9 @@ workspace = true
 crate-type = ["rlib"]
 
 [features]
-default = ["mermaid-validation"]
+default = ["mermaid-validation", "spike-cpd-finder"]
 mermaid-validation = ["dep:merman-analysis"]
+spike-cpd-finder = ["dep:cpd-finder"]
 test-instrumentation = [
   "no-mistakes-invocation/test-instrumentation",
   "no-mistakes-postgres-sql/test-instrumentation",
@@ -79,6 +80,12 @@ wait-timeout = "0.2"
 tempfile = "3"
 # Keep aligned with the OXC group above; its AST/string types are shared.
 oxc_semantic = "0.159.0"
+
+# Spike #4800 candidate crates (exact versions pinned for measurement).
+cpd-core = "=0.1.23"
+cpd-tokenizer = "=0.1.22"
+cpd-finder = { version = "=0.1.22", optional = true }
+lcov = "=0.8.2"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

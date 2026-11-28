@@ -73,6 +73,18 @@ fn run_domain_command(command: Command) -> Result<CommandDispatch> {
         Command::Effects(args) => effects::run(args),
         Command::RscCallers(args) => rsc_callers::run(args),
         Command::RegistryExtension(args) => registry_extension::run(args),
+        Command::Spike4800 { root } => {
+            let summary =
+                no_mistakes::spike_4800::run_spike(&no_mistakes::spike_4800::SpikeRunOptions {
+                    root,
+                    lcov_files: Vec::new(),
+                    complexity_files: Vec::new(),
+                    min_tokens: None,
+                    min_lines: None,
+                })?;
+            println!("{}", serde_json::to_string(&summary)?);
+            Ok(ExitCode::SUCCESS)
+        }
         command => return Ok(CommandDispatch::Unhandled(Box::new(command))),
     }?;
     Ok(CommandDispatch::Handled(code))

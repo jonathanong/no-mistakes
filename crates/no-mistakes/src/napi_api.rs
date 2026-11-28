@@ -42,6 +42,7 @@ pub(crate) use changes_diff::changes_diff_json_impl;
 mod mermaid;
 pub(crate) mod options;
 mod postgres_source;
+mod spike_4800_binding;
 mod typescript_modules;
 #[cfg(not(coverage))]
 pub use postgres_source::extract_executed_postgres_sql_json;
@@ -124,6 +125,11 @@ json_binding!(
     validate_mermaid_markdown_json,
     "validateMermaidMarkdownJson",
     validate_mermaid_markdown_json_impl
+);
+json_binding!(
+    spike_4800_json,
+    "spike4800Json",
+    spike_4800_binding::spike_4800_json_impl
 );
 
 include!("napi_api/planning_bindings.rs");

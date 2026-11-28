@@ -122,6 +122,11 @@ enum Command {
     RscCallers(rsc_callers::RscCallersArgs),
     /// Summarize how existing entries register in a registry file.
     RegistryExtension(registry_extension::RegistryExtensionArgs),
+    #[command(hide = true)]
+    Spike4800 {
+        #[arg(long)]
+        root: std::path::PathBuf,
+    },
 }
 
 fn main() -> ExitCode {
