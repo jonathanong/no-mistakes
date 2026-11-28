@@ -19,23 +19,34 @@ pub(super) fn walk_expr_stars(
     rels: &[Rel],
     ctes: &[String],
     returning: bool,
+    enclosing_fn: Option<&str>,
     line: usize,
     out: &mut Vec<FragmentStar>,
 ) {
     use sqlparser::ast::Spanned;
     let line = (expr.span().start.line as usize).max(line);
     match expr {
+        Expr::Wildcard(_) if !enclosing_fn.is_some_and(|f| f.eq_ignore_ascii_case("count")) => {
+            super::items::emit_bare(rels, returning, enclosing_fn.map(str::to_string), line, out);
+        }
+        Expr::QualifiedWildcard(q, ..) => {
+            let func = enclosing_fn.map(str::to_string);
+            super::items::emit_qualified(rels, q, returning, func, line, out);
+        }
+        Expr::Nested(inner) => {
+            walk_expr_stars(inner, rels, ctes, returning, enclosing_fn, line, out);
+        }
         Expr::Function(func) => walk_function_stars(func, rels, ctes, returning, line, out),
         Expr::Exists { subquery, .. } => super::collect_query(subquery, ctes, true, out),
         Expr::Subquery(subquery) => super::collect_query(subquery, ctes, false, out),
         Expr::In { expr, target, .. } => {
-            walk_expr_stars(expr, rels, ctes, returning, line, out);
+            walk_expr_stars(expr, rels, ctes, returning, None, line, out);
             walk_in_target(target, ctes, out, &mut |e, c, o| {
-                walk_expr_stars(e, rels, c, returning, line, o);
+                walk_expr_stars(e, rels, c, returning, None, line, o);
             });
         }
         _ => visit_children(expr, &mut |child| {
-            walk_expr_stars(child, rels, ctes, returning, line, out);
+            walk_expr_stars(child, rels, ctes, returning, None, line, out);
         }),
     }
 }
@@ -86,17 +97,11 @@ fn walk_function_stars(
                         super::items::emit_bare(rels, returning, Some(name.clone()), line, out);
                     }
                     FunctionArgExpr::QualifiedWildcard(q) => {
-                        super::items::emit_qualified(
-                            rels,
-                            q,
-                            returning,
-                            Some(name.clone()),
-                            line,
-                            out,
-                        );
+                        let func = Some(name.clone());
+                        super::items::emit_qualified(rels, q, returning, func, line, out);
                     }
                     FunctionArgExpr::Expr(e) => {
-                        walk_expr_stars(e, rels, ctes, returning, line, out);
+                        walk_expr_stars(e, rels, ctes, returning, Some(&name), line, out);
                     }
                     _ => {}
                 }

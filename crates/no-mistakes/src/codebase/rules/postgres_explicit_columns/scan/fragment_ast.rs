@@ -54,14 +54,15 @@ pub(super) fn collect_query(
 ) {
     let mut ctes = outer_ctes.to_vec();
     if let Some(with) = &query.with {
-        for cte in &with.cte_tables {
-            let name = ident_key(&cte.alias.name);
-            if with.recursive {
-                ctes.push(name.clone());
+        if with.recursive {
+            for cte in &with.cte_tables {
+                ctes.push(ident_key(&cte.alias.name));
             }
+        }
+        for cte in &with.cte_tables {
             collect_query(&cte.query, &ctes, false, out);
             if !with.recursive {
-                ctes.push(name);
+                ctes.push(ident_key(&cte.alias.name));
             }
         }
     }

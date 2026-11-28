@@ -1,5 +1,6 @@
 use super::context::extract_context_from_tokens;
-use super::{word_value, FragmentContext};
+use super::{is_kw, word_value, FragmentContext};
+use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
 pub(super) fn scope_context(
@@ -7,14 +8,31 @@ pub(super) fn scope_context(
     star_index: usize,
     outer: &FragmentContext,
 ) -> Option<FragmentContext> {
-    let open = enclosing_open_paren(tokens, star_index)?;
-    let close = matching_close_paren(tokens, open);
-    let mut inner = FragmentContext {
-        ctes: outer.ctes.clone(),
-        ..Default::default()
-    };
-    extract_context_from_tokens(&tokens[open + 1..close], &mut inner);
-    (!inner.from_relations.is_empty() || inner.mutation_target.is_some()).then_some(inner)
+    let mut cursor = star_index;
+    while let Some(open) = enclosing_open_paren(tokens, cursor) {
+        let close = matching_close_paren(tokens, open);
+        let slice = &tokens[open + 1..close];
+        let mut inner = FragmentContext {
+            ctes: outer.ctes.clone(),
+            ..Default::default()
+        };
+        extract_context_from_tokens(slice, &mut inner);
+        if !inner.from_relations.is_empty()
+            || inner.mutation_target.is_some()
+            || starts_with_query(slice)
+        {
+            return Some(inner);
+        }
+        cursor = open;
+    }
+    None
+}
+
+fn starts_with_query(tokens: &[TokenWithSpan]) -> bool {
+    tokens
+        .iter()
+        .find(|t| !matches!(t.token, Token::Whitespace(_)))
+        .is_some_and(|t| is_kw(t, Keyword::SELECT) || is_kw(t, Keyword::WITH))
 }
 
 fn enclosing_open_paren(tokens: &[TokenWithSpan], star_index: usize) -> Option<usize> {

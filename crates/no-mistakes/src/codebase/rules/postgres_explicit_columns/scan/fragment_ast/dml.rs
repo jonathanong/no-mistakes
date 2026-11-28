@@ -3,8 +3,8 @@ use super::items::collect_returning;
 use super::{collect_query, collect_rels, push_factor, FragmentStar, Rel};
 use no_mistakes_postgres_sql::idents::{ident_key, object_name_key};
 use sqlparser::ast::{
-    Delete, FromTable, Insert, JoinConstraint, JoinOperator, Table, TableFactor, TableObject,
-    Update, UpdateTableFromKind,
+    Delete, FromTable, Insert, JoinConstraint, JoinOperator, OnConflictAction, OnInsert, Table,
+    TableFactor, TableObject, Update, UpdateTableFromKind,
 };
 
 pub(super) fn collect_insert(insert: &Insert, ctes: &[String], out: &mut Vec<FragmentStar>) {
@@ -19,6 +19,16 @@ pub(super) fn collect_insert(insert: &Insert, ctes: &[String], out: &mut Vec<Fra
     }
     if let Some(source) = insert.source.as_deref() {
         collect_query(source, ctes, false, out);
+    }
+    if let Some(OnInsert::OnConflict(conflict)) = &insert.on {
+        if let OnConflictAction::DoUpdate(update) = &conflict.action {
+            for assignment in &update.assignments {
+                walk_subqueries(&assignment.value, ctes, out);
+            }
+            if let Some(selection) = &update.selection {
+                walk_subqueries(selection, ctes, out);
+            }
+        }
     }
 }
 

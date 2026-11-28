@@ -70,6 +70,18 @@ fn ast_covers_dml_set_ops_table_and_nested_subqueries() {
             "SELECT j.* FROM (wide w JOIN narrow n ON w.id = n.id) AS j",
             vec![(false, Some("wide")), (false, Some("narrow"))],
         ),
+        (
+            "WITH RECURSIVE a AS (SELECT * FROM wide), wide AS (SELECT 1 AS id) SELECT id FROM a",
+            vec![],
+        ),
+        (
+            "WITH a AS (SELECT * FROM wide), wide AS (SELECT 1 AS id) SELECT id FROM a",
+            vec![(false, Some("wide"))],
+        ),
+        (
+            "INSERT INTO narrow (id, n) VALUES (1, 0) ON CONFLICT (id) DO UPDATE SET n = (SELECT count(*) FROM (SELECT * FROM wide) w) WHERE id IN (SELECT * FROM extra)",
+            vec![(false, Some("wide")), (false, Some("extra"))],
+        ),
     ];
     for (sql, expected) in cases {
         let stars = extract_fragment_stars(sql, None);
@@ -79,6 +91,23 @@ fn ast_covers_dml_set_ops_table_and_nested_subqueries() {
             .collect();
         assert_eq!(actual, expected, "sql: {sql}");
     }
+
+    let grouped = extract_fragment_stars(
+        "SELECT count((w.*)), count((*)), row_to_json((w.*)), row_to_json((*)) FROM wide w",
+        None,
+    );
+    let grouped_actual: Vec<_> = grouped
+        .iter()
+        .map(|s| (s.relation.as_deref(), s.within_function.as_deref()))
+        .collect();
+    assert_eq!(
+        grouped_actual,
+        vec![
+            (Some("wide"), Some("count")),
+            (Some("wide"), Some("row_to_json")),
+            (Some("wide"), Some("row_to_json")),
+        ]
+    );
 }
 
 #[test]
@@ -167,4 +196,12 @@ fn context_and_token_fallback_handle_prefixes_ctes_commas_and_subqueries() {
     let grouped_fn = extract_fragment_stars("SELECT row_to_json((w.*)) FROM wide w WHERE", None);
     assert_eq!(grouped_fn.len(), 1);
     assert_eq!(grouped_fn[0].within_function.as_deref(), Some("row_to_json"));
+
+    let fn_in_subquery = extract_fragment_stars(
+        "SELECT (SELECT count(v.*) FROM allowed_view v) FROM wide v WHERE",
+        None,
+    );
+    assert_eq!(fn_in_subquery.len(), 1);
+    assert_eq!(fn_in_subquery[0].relation.as_deref(), Some("allowed_view"));
+    assert_eq!(fn_in_subquery[0].within_function.as_deref(), Some("count"));
 }

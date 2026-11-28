@@ -20,7 +20,7 @@ pub(super) fn collect_items(
             SelectItem::UnnamedExpr(expr)
             | SelectItem::ExprWithAlias { expr, .. }
             | SelectItem::ExprWithAliases { expr, .. } => {
-                walk_expr_stars(expr, rels, ctes, returning, line, out);
+                walk_expr_stars(expr, rels, ctes, returning, None, line, out);
             }
             _ => {}
         }

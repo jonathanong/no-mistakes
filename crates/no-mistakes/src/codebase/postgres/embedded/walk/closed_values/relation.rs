@@ -59,16 +59,16 @@ pub(super) fn note_const_relation_and_array(
     scope: usize,
     name: &str,
 ) {
-    if let Expression::Identifier(id) = unwrap_ts_wrappers(init) {
+    if let Some(id_name) = unwrap_alias_ident(init) {
         if let Some(i) = visitor
             .scopes
             .iter()
-            .rposition(|frame| frame.contains_key(id.name.as_str()))
+            .rposition(|frame| frame.contains_key(id_name))
         {
             visitor.literal_objects.closed.copy_const_alias(
                 i,
                 scope,
-                id.name.as_str(),
+                id_name,
                 name,
                 type_annotation.is_none(),
             );
@@ -133,25 +133,40 @@ fn tuple_element_string(element: &TSTupleElement<'_>) -> Option<String> {
     }
 }
 
+fn is_as_const(ty: &TSType<'_>) -> bool {
+    matches!(
+        ty,
+        TSType::TSTypeReference(reference)
+            if reference.type_arguments.is_none()
+                && matches!(&reference.type_name, TSTypeName::IdentifierReference(id) if id.name == "const")
+    )
+}
+
+fn unwrap_alias_ident<'a>(mut expr: &'a Expression<'a>) -> Option<&'a str> {
+    loop {
+        match expr {
+            Expression::ParenthesizedExpression(inner) => expr = &inner.expression,
+            Expression::TSSatisfiesExpression(inner) => expr = &inner.expression,
+            Expression::TSAsExpression(as_expr) if is_as_const(&as_expr.type_annotation) => {
+                expr = &as_expr.expression;
+            }
+            Expression::Identifier(id) => return Some(id.name.as_str()),
+            _ => return None,
+        }
+    }
+}
+
 fn as_const_array_literals(mut expr: &Expression<'_>) -> Option<Vec<String>> {
     let mut saw_as_const = false;
     loop {
         match expr {
             Expression::ParenthesizedExpression(inner) => expr = &inner.expression,
             Expression::TSSatisfiesExpression(inner) => expr = &inner.expression,
-            Expression::TSAsExpression(as_expr) => {
-                if matches!(
-                    &as_expr.type_annotation,
-                    TSType::TSTypeReference(reference)
-                        if reference.type_arguments.is_none()
-                            && matches!(&reference.type_name, TSTypeName::IdentifierReference(id) if id.name == "const")
-                ) {
-                    saw_as_const = true;
-                    expr = &as_expr.expression;
-                } else {
-                    return None;
-                }
+            Expression::TSAsExpression(as_expr) if is_as_const(&as_expr.type_annotation) => {
+                saw_as_const = true;
+                expr = &as_expr.expression;
             }
+            Expression::TSAsExpression(_) => return None,
             _ => break,
         }
     }

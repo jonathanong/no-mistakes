@@ -170,6 +170,7 @@ pub(super) fn invalidate_vars(pattern: &BindingPattern<'_>, visitor: &mut ScopeV
         if let Some(binding) = visitor.scopes[index].get_mut(name) {
             clear_binding(binding);
         }
+        visitor.clear_builder_fragment(index, name);
     });
 }
 

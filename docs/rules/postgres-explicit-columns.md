@@ -89,12 +89,14 @@ individual SQL fragments for `*`, `alias.*`, and `RETURNING *`:
   `q.append(' SELECT records.* FROM records')`), plus the builder's own leading
   SQL prefix when a later append is opaque. When the builder prefix declares a
   target table or `WITH` CTE, appended fragments resolve against it.
-- **Interpolated table names** — untagged or `sql`-tagged templates whose
-  `FROM` relation comes from a closed union of string literals (inline unions,
-  local type aliases, or `(typeof TABLE_LIST)[number]`). Each union member is
-  checked against the schema catalog: any base table exceeding `maxColumns` (or
-  listed in `relations`) is reported, while catalog views not listed in
-  `relations` remain allowed.
+- **Interpolated table names** — untagged templates (including concatenated
+  templates and plain-string builder appends) whose `FROM` relation comes from a
+  closed union of string literals (inline unions, local type aliases, or
+  `(typeof TABLE_LIST)[number]`). Interpolations inside `sql`-tagged templates
+  from `sql-template-strings` are bound as SQL value placeholders rather than
+  expanded as table names. Each union member is checked against the schema
+  catalog: any base table exceeding `maxColumns` (or listed in `relations`) is
+  reported, while catalog views not listed in `relations` remain allowed.
 - **Shared SQL constants** — string constants such as
   `const RETURNING_ALL = 'RETURNING *'` concatenated, interpolated, or appended
   into multiple statements are traced to each statement that uses them.

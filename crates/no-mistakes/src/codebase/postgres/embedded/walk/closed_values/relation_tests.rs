@@ -68,8 +68,13 @@ import sql from "sql-template-strings";
 
 const NAMES = ["entries", "audit_view"] as const;
 const ALIAS = NAMES;
+const WIDENED_ALIAS = NAMES as readonly string[];
 
 export function fromAliasedArray(table: (typeof ALIAS)[number], id: string) {
+  return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
+}
+
+export function fromWidenedAlias(table: (typeof WIDENED_ALIAS)[number], id: string) {
   return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
 }
 
@@ -88,10 +93,16 @@ export function reassignedHelper(other: () => any) {
   make = other;
   return query(make());
 }
+
+export function destructuredVarBuilder(obj: { q: any }) {
+  var q = sql`SELECT * FROM entries`;
+  var { q } = obj;
+  return query(q);
+}
 "#;
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
     let facts = extract_embedded_sql_from_source(Path::new("src/aliases.ts"), source, &options);
-    assert_eq!(facts.calls.len(), 3);
+    assert_eq!(facts.calls.len(), 5);
     let frags = |idx: usize| -> Vec<String> {
         facts
             .call_fragments
@@ -111,12 +122,17 @@ export function reassignedHelper(other: () => any) {
     );
     assert_eq!(
         frags(1),
+        vec!["SELECT * FROM sql_placeholder_1 WHERE id = $1"]
+    );
+    assert_eq!(
+        frags(2),
         vec![
             "SELECT $1 FROM entries",
             " UNION ALL SELECT sql_placeholder_1 FROM entries",
         ]
     );
-    assert!(frags(2).is_empty());
+    assert!(frags(3).is_empty());
+    assert!(frags(4).is_empty());
 }
 
 #[test]
