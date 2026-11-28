@@ -29,7 +29,14 @@ function createReactNodeFacts(program, context) {
   const aliases = new Map();
   const objectProps = new Map();
   const unresolvedObjectProps = new Map();
-  const typeFacts = () => ({ aliases, reactNodeNames, unresolvedNamespaces, unresolvedTypes });
+  const typeFacts = () => ({
+    aliases,
+    context,
+    reactNodeNames,
+    unresolvedNamespaces,
+    unresolvedTypes,
+  });
+  let seededReact = true;
 
   function topLevelDeclaration(statement) {
     return (statement.type === "ExportNamedDeclaration" ||
@@ -51,6 +58,7 @@ function createReactNodeFacts(program, context) {
         (specifier.type === "ImportSpecifier" && keyName(specifier.imported) === "default")
       ) {
         reactNodeNames.add(`${specifier.local.name}.ReactNode`);
+        if (specifier.local.name === "React") seededReact = false;
       }
     }
   }
@@ -63,8 +71,12 @@ function createReactNodeFacts(program, context) {
     const reference = declaration.moduleReference;
     const moduleName =
       reference?.type === "TSExternalModuleReference" ? literalString(reference.expression) : null;
-    if (moduleName === "react") reactNodeNames.add(`${declaration.id.name}.ReactNode`);
-    else if (moduleName === null) unresolvedNamespaces.add(declaration.id.name);
+    if (moduleName === "react") {
+      reactNodeNames.add(`${declaration.id.name}.ReactNode`);
+      if (declaration.id.name === "React") seededReact = false;
+    } else if (moduleName === null) unresolvedNamespaces.add(declaration.id.name);
+    else if (seededReact && declaration.id.name === "React")
+      reactNodeNames.delete("React.ReactNode");
   }
 
   for (const statement of program.body || []) {
@@ -81,6 +93,9 @@ function createReactNodeFacts(program, context) {
       if (fact.unresolved) unresolvedNamespaces.add(declarator.id.name);
       else if (fact.module === "react" && (fact.kind === "namespace" || fact.kind === "default")) {
         reactNodeNames.add(`${declarator.id.name}.ReactNode`);
+        if (declarator.id.name === "React") seededReact = false;
+      } else if (seededReact && declarator.id.name === "React" && fact.module) {
+        reactNodeNames.delete("React.ReactNode");
       }
     }
   }

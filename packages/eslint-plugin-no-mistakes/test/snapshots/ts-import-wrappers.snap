@@ -387,8 +387,39 @@
     },
     {
       "file": "react-nullish-const-shadow.tsx",
-      "findings": [],
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 19,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-const-shadow.tsx",
+          "line": 19,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
       "name": "a const value replaces a ReactNode parameter",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
+      "file": "react-nullish-foreign-react.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 23,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-foreign-react.tsx",
+          "line": 5,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "a non-react import named React is not the implicit type",
       "options": null,
       "rule": "react-no-nullish-react-node"
     },
@@ -582,6 +613,91 @@
         }
       ],
       "name": "direct type alias cycle reaches the cycle guard",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
+      "file": "react-nullish-generic-edges.tsx",
+      "findings": [
+        {
+          "column": 11,
+          "endColumn": 32,
+          "endLine": 19,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-generic-edges.tsx",
+          "line": 19,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 21,
+          "endLine": 34,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-generic-edges.tsx",
+          "line": 34,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 41,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-generic-edges.tsx",
+          "line": 41,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 55,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-generic-edges.tsx",
+          "line": 55,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 63,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-generic-edges.tsx",
+          "line": 63,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 12,
+          "endColumn": 21,
+          "endLine": 78,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-generic-edges.tsx",
+          "line": 78,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 35,
+          "endLine": 92,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-generic-edges.tsx",
+          "line": 92,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "generic arguments and switch aliases stay on their own path",
       "options": null,
       "rule": "react-no-nullish-react-node"
     },
@@ -1821,6 +1937,17 @@
           "endLine": 64,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-binding-edges.tsx",
           "line": 64,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 42,
+          "endLine": 69,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-binding-edges.tsx",
+          "line": 69,
           "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
@@ -4588,6 +4715,76 @@
         "options": null
       },
       {
+        "file": "react-nullish-foreign-react.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-foreign-react.tsx",
+            "line": 5,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          }
+        ],
+        "name": "react-nullish-foreign-react.tsx",
+        "options": null
+      },
+      {
+        "file": "react-nullish-generic-edges.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 11,
+            "file": "react-nullish-generic-edges.tsx",
+            "line": 19,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-generic-edges.tsx",
+            "line": 34,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-generic-edges.tsx",
+            "line": 41,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-generic-edges.tsx",
+            "line": 55,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-generic-edges.tsx",
+            "line": 63,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 12,
+            "file": "react-nullish-generic-edges.tsx",
+            "line": 78,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 22,
+            "file": "react-nullish-generic-edges.tsx",
+            "line": 92,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          }
+        ],
+        "name": "react-nullish-generic-edges.tsx",
+        "options": null
+      },
+      {
         "file": "react-nullish-let-require.tsx",
         "findings": [
           {
@@ -5317,6 +5514,13 @@
             "column": 10,
             "file": "react-use-binding-edges.tsx",
             "line": 64,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 11,
+            "file": "react-use-binding-edges.tsx",
+            "line": 69,
             "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
           }
         ],

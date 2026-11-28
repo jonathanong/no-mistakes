@@ -57,7 +57,7 @@ function valueKind(node, context) {
 }
 
 function selectorName(property, computed, context) {
-  return staticName(property, computed) || constStringKey(property, context);
+  return staticName(property, computed) ?? constStringKey(property, context);
 }
 
 function namedUse(fact) {
@@ -122,7 +122,7 @@ function reactUseStatus(node, context, useNames, seen = new Set()) {
   if (callee?.type !== "MemberExpression") return "no";
   const name = selectorName(callee.property, callee.computed, context);
   if (name === "use") return namespaceStatus(callee.object, context);
-  if (name) return "no";
+  if (name != null) return "no";
   const status = namespaceStatus(callee.object, context);
   return status === "no" ? "no" : "unresolved";
 }

@@ -63,6 +63,8 @@ function hasImportWrite(variable, context, seen, memo, importFact) {
 
 function readCanRunAfter(use, write) {
   for (let current = use?.parent; current; current = current.parent) {
+    if (current.type === "PropertyDefinition" && !current.static && !contains(current, write))
+      return true;
     if (
       current.type !== "FunctionDeclaration" &&
       current.type !== "FunctionExpression" &&

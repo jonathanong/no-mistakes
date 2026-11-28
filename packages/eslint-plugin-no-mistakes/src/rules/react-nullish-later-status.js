@@ -115,9 +115,9 @@ function laterBindingStatus(
       if (status === "unresolved") unresolved = true;
     }
     if (annotated) return unresolved ? "unresolved" : "no";
-    if ((variable.references ?? []).some((reference) => reference.isWrite() && !reference.init)) {
-      return "unresolved";
-    }
+    const written = (variable.references ?? []).some(
+      (reference) => reference.isWrite() && !reference.init,
+    );
     for (const def of active) {
       if (def.type !== "Variable") continue;
       if (def.node?.id?.type === "ObjectPattern") {
@@ -130,7 +130,7 @@ function laterBindingStatus(
           null,
           lookup,
         );
-        if (status === "yes") return "yes";
+        if (status === "yes") return written ? "unresolved" : "yes";
         if (status === "unresolved") unresolved = true;
         continue;
       }
@@ -141,7 +141,7 @@ function laterBindingStatus(
         : def.node.init
           ? expressionStatus(def.node.init, seen)
           : "no";
-      if (status === "yes") return "yes";
+      if (status === "yes") return written ? "unresolved" : "yes";
       if (status === "unresolved") unresolved = true;
     }
     return unresolved ? "unresolved" : "no";

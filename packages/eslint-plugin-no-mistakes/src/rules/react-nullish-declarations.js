@@ -47,4 +47,18 @@ function nearestDeclarations(type, name) {
   return null;
 }
 
-module.exports = { nearestDeclarations };
+function enclosingTypeParameter(type, name, local) {
+  let current = type?.parent;
+  while (current && current.type !== "Program") {
+    const param = current.typeParameters?.params?.find((item) => item.name?.name === name);
+    if (
+      param &&
+      !local?.some((item) => item.range[0] > current.range[0] && item.range[1] < current.range[1])
+    )
+      return param;
+    current = current.parent;
+  }
+  return null;
+}
+
+module.exports = { enclosingTypeParameter, nearestDeclarations };

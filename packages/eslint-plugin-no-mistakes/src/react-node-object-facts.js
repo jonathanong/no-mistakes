@@ -24,7 +24,23 @@ function heritageName(heritage) {
   return expression && expression.type === "Identifier" ? expression.name : null;
 }
 
-function collectMembers(members, facts) {
+function parameterNames(declaration) {
+  return new Set(
+    (declaration.typeParameters?.params ?? []).flatMap((param) =>
+      param.name?.name ? [param.name.name] : [],
+    ),
+  );
+}
+
+function namesParameter(annotation, params) {
+  return (
+    annotation?.type === "TSTypeReference" &&
+    annotation.typeName?.type === "Identifier" &&
+    params.has(annotation.typeName.name)
+  );
+}
+
+function collectMembers(members, facts, params) {
   const props = new Set();
   const unresolved = new Set();
   const declared = new Set();
@@ -33,7 +49,10 @@ function collectMembers(members, facts) {
     const name = member.computed ? computedKey(member.key) : keyName(member.key);
     if (name == null) continue;
     declared.add(name);
-    const status = reactTypeStatus(typeAnnotation(member), facts);
+    const annotation = typeAnnotation(member);
+    const status = namesParameter(annotation, params)
+      ? "unresolved"
+      : reactTypeStatus(annotation, facts);
     if (status === "yes") props.add(name);
     else if (status === "unresolved") unresolved.add(name);
   }
@@ -135,6 +154,7 @@ function assignReactObjectFacts(
             ? declaration.typeAnnotation.members
             : declaration.body?.body,
           facts,
+          parameterNames(declaration),
         );
         for (const key of collected.declared) {
           const incoming = collected.props.has(key)

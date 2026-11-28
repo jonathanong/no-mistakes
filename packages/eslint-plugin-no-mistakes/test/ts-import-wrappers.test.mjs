@@ -473,6 +473,16 @@ describe("typescript import wrappers", () => {
         "react-no-nullish-react-node",
       ),
       eslintCase(
+        "generic arguments and switch aliases stay on their own path",
+        "react-nullish-generic-edges.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
+        "a non-react import named React is not the implicit type",
+        "react-nullish-foreign-react.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
         "numeric literal keys stay on that property",
         "react-nullish-numeric-keys.tsx",
         "react-no-nullish-react-node",
@@ -698,6 +708,7 @@ describe("typescript import wrappers", () => {
       [52, "resolve"],
       [58, "resolve"],
       [64, "unanalyzable"],
+      [69, "unanalyzable"],
     ]);
     expect(
       cases.find((item) => item.name === "annotated string is not a ReactNode").findings,
@@ -968,8 +979,28 @@ describe("typescript import wrappers", () => {
       [380, "nullish"],
     ]);
     expect(
-      cases.find((item) => item.name === "a const value replaces a ReactNode parameter").findings,
-    ).toEqual([]);
+      cases
+        .find((item) => item.name === "a const value replaces a ReactNode parameter")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([[19, "nullish"]]);
+    expect(
+      cases
+        .find((item) => item.name === "generic arguments and switch aliases stay on their own path")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [19, "nullish"],
+      [34, "nullish"],
+      [41, "nullish"],
+      [55, "nullish"],
+      [63, "nullish"],
+      [78, "nullish"],
+      [92, "unanalyzable"],
+    ]);
+    expect(
+      cases
+        .find((item) => item.name === "a non-react import named React is not the implicit type")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([[5, "nullish"]]);
     expect(
       cases
         .find((item) => item.name === "numeric literal keys stay on that property")
@@ -1124,6 +1155,8 @@ describe("typescript import wrappers", () => {
         "react-nullish-binding-shadows.tsx",
         "react-nullish-scope-edges.tsx",
         "react-nullish-numeric-keys.tsx",
+        "react-nullish-generic-edges.tsx",
+        "react-nullish-foreign-react.tsx",
       ]),
       "nullish-ignore": oxlintOn(".oxlintrc-nullish-ignore.json", ["react-nullish-unresolved.tsx"]),
       fetch: oxlintOn(".oxlintrc-fetch.json", [

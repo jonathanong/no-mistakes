@@ -1,7 +1,7 @@
 "use strict";
 
 const { unwrapSequence } = require("./async-ast");
-const { nearestDeclarations } = require("./react-nullish-declarations");
+const { enclosingTypeParameter, nearestDeclarations } = require("./react-nullish-declarations");
 const {
   assertedType,
   computedKey,
@@ -11,21 +11,19 @@ const {
   typeName,
 } = require("../react-node-types");
 
-function enclosingTypeParameter(type, name, local) {
-  let current = type?.parent;
-  while (current && current.type !== "Program") {
-    const param = current.typeParameters?.params?.find((item) => item.name?.name === name);
-    if (
-      param &&
-      !local?.some((item) => item.range[0] > current.range[0] && item.range[1] < current.range[1])
-    )
-      return param;
-    current = current.parent;
-  }
-  return null;
-}
-
 const UNSUBSTITUTED = {};
+
+function appliedStatus(annotation, facts, substitutions) {
+  const name =
+    annotation?.type === "TSTypeReference" && annotation.typeName?.type === "Identifier"
+      ? annotation.typeName.name
+      : null;
+  let replacement;
+  if (name && substitutions)
+    for (const [param, value] of substitutions) if (param.name?.name === name) replacement = value;
+  if (replacement === undefined) return reactTypeStatus(annotation, facts);
+  return replacement === UNSUBSTITUTED ? "unresolved" : reactTypeStatus(replacement, facts);
+}
 
 function typeArgumentsOf(type) {
   return type?.typeArguments?.params || type?.typeParameters?.params || [];
@@ -46,17 +44,17 @@ function noteStatus(status, key, incoming) {
   status.set(key, previous && previous !== incoming ? "unresolved" : incoming);
 }
 
-function mergeInterfaces(declarations, facts, seen) {
+function mergeInterfaces(declarations, facts, seen, type, substitutions) {
   if (declarations.some((item) => seen.has(item))) return { props: null, unresolved: null };
   for (const item of declarations) seen.add(item);
   try {
-    return mergeInterfaceBody(declarations, facts, seen);
+    return mergeInterfaceBody(declarations, facts, seen, type, substitutions);
   } finally {
     for (const item of declarations) seen.delete(item);
   }
 }
 
-function mergeInterfaceBody(declarations, facts, seen) {
+function mergeInterfaceBody(declarations, facts, seen, type, substitutions) {
   const status = new Map();
   const inheritedProps = new Set();
   const inheritedUnresolved = new Set();
@@ -65,6 +63,7 @@ function mergeInterfaceBody(declarations, facts, seen) {
       { type: "TSTypeLiteral", members: declaration.body?.body ?? [] },
       facts,
       seen,
+      withAliasSubstitutions(declaration, type, substitutions),
     );
     for (const key of own.declared) {
       const incoming = own.props.has(key) ? "yes" : own.unresolved.has(key) ? "unresolved" : "no";
@@ -100,7 +99,7 @@ function inheritedFacts(heritage, facts, seen) {
   if (nested.length === 1 && nested[0].type === "TSTypeAliasDeclaration")
     return classifiedProps(nested[0].typeAnnotation, facts, seen);
   if (nested.every((item) => item.type === "TSInterfaceDeclaration"))
-    return mergeInterfaces(nested, facts, seen);
+    return mergeInterfaces(nested, facts, seen, heritage, null);
   return { props: null, unresolved: null };
 }
 
@@ -114,7 +113,7 @@ function classifiedProps(type, facts, seen = new Set(), substitutions = null) {
       const name = member.computed ? computedKey(member.key) : keyName(member.key);
       if (name == null) continue;
       declared.add(name);
-      const status = reactTypeStatus(typeAnnotation(member), facts);
+      const status = appliedStatus(typeAnnotation(member), facts, substitutions);
       if (status === "yes") props.add(name);
       else if (status === "unresolved") unresolved.add(name);
     }
@@ -158,7 +157,7 @@ function classifiedProps(type, facts, seen = new Set(), substitutions = null) {
     }
   }
   if (local?.length && local.every((item) => item.type === "TSInterfaceDeclaration"))
-    return mergeInterfaces(local, facts, seen);
+    return mergeInterfaces(local, facts, seen, type, substitutions);
   return {
     props: name ? facts.objectProps.get(name) || null : null,
     unresolved: name ? facts.unresolvedObjectProps?.get(name) || null : null,

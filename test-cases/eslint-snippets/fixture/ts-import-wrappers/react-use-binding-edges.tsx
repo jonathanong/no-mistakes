@@ -63,3 +63,20 @@ export function dynamicDestructureKey(value: Promise<number>) {
   const { [dynamicKey]: read } = require("react");
   return read(Promise.resolve(value));
 }
+
+let deferredUse;
+export class DeferredField {
+  value = deferredUse(Promise.resolve(1));
+}
+deferredUse = require("react").use;
+
+let staticUse;
+export class StaticField {
+  static value = staticUse(Promise.resolve(1));
+}
+staticUse = require("react").use;
+
+export function emptyComputed(value: Promise<number>) {
+  const React = require("react");
+  return React[""](Promise.resolve(value));
+}

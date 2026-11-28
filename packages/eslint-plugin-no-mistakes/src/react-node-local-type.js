@@ -9,6 +9,37 @@ function parameterShadows(declaration, name) {
   return declaration.typeParameters?.params?.some((param) => param.name?.name === name) === true;
 }
 
+function caseStatements(current, node) {
+  if (current?.type !== "SwitchStatement" || containsNode(current.discriminant, node)) return null;
+  const cases = current.cases ?? [];
+  if (!cases.some((item) => item.consequent?.some((statement) => containsNode(statement, node))))
+    return null;
+  const statements = [];
+  for (const item of cases) statements.push(...(item.consequent ?? []));
+  return statements;
+}
+
+function aliasScope(declaration) {
+  if (declaration.parent?.type === "SwitchCase") return declaration.parent.parent;
+  return declaration.parent?.type === "ExportNamedDeclaration"
+    ? declaration.parent.parent
+    : declaration.parent;
+}
+
+function defaultedAliasStatus(declaration, facts, seen, reactTypeStatus) {
+  const params = declaration.typeParameters?.params ?? [];
+  if (!params.some((param) => param.default)) return null;
+  const body = declaration.typeAnnotation;
+  const bodyName =
+    body?.type === "TSTypeReference" && body.typeName?.type === "Identifier"
+      ? body.typeName.name
+      : null;
+  const param = params.find((item) => item.name?.name === bodyName);
+  const next = new Set(seen);
+  next.add(declaration);
+  return param?.default ? reactTypeStatus(param.default, facts, next) : "unresolved";
+}
+
 function localTypeStatus(node, name, facts, seen, reactTypeStatus) {
   let current = node?.parent;
   while (current) {
@@ -28,13 +59,10 @@ function localTypeStatus(node, name, facts, seen, reactTypeStatus) {
       ? current.body
       : Array.isArray(current.body?.body)
         ? current.body.body
-        : null;
+        : caseStatements(current, node);
     for (const statement of statements ?? []) {
       const declaration = statement.declaration ?? statement;
-      const scope =
-        declaration.parent?.type === "ExportNamedDeclaration"
-          ? declaration.parent.parent
-          : declaration.parent;
+      const scope = aliasScope(declaration);
       if (
         (declaration.type === "ClassDeclaration" || declaration.type === "TSEnumDeclaration") &&
         declaration.id?.name === name &&
@@ -58,7 +86,10 @@ function localTypeStatus(node, name, facts, seen, reactTypeStatus) {
       if (declaration.type === "TSInterfaceDeclaration") return "no";
       if (seen.has(declaration)) return "unresolved";
       const supplied = node.typeArguments?.params || node.typeParameters?.params;
-      if (declaration.typeParameters?.params?.length && supplied?.length) return "unresolved";
+      const params = declaration.typeParameters?.params ?? [];
+      if (params.length && supplied?.length) return "unresolved";
+      const defaulted = defaultedAliasStatus(declaration, facts, seen, reactTypeStatus);
+      if (defaulted) return defaulted;
       const next = new Set(seen);
       next.add(declaration);
       return reactTypeStatus(declaration.typeAnnotation, facts, next);
