@@ -39,6 +39,23 @@ pub(super) fn walk_expr_stars(
         Expr::Nested(inner) | Expr::Cast { expr: inner, .. } => {
             walk_expr_stars(inner, rels, scope, returning, enclosing_fn, line, out);
         }
+        Expr::Case {
+            operand,
+            conditions,
+            else_result,
+            ..
+        } => {
+            if let Some(op) = operand {
+                walk_expr_stars(op, rels, scope, returning, None, line, out);
+            }
+            for when in conditions {
+                walk_expr_stars(&when.condition, rels, scope, returning, None, line, out);
+                walk_expr_stars(&when.result, rels, scope, returning, enclosing_fn, line, out);
+            }
+            if let Some(other) = else_result {
+                walk_expr_stars(other, rels, scope, returning, enclosing_fn, line, out);
+            }
+        }
         Expr::Function(func) => walk_function_stars(func, rels, scope, returning, line, out),
         Expr::Exists { subquery, .. } | Expr::Subquery(subquery) => {
             let outer = extend_outer(rels, scope.outer_rels);
@@ -95,6 +112,14 @@ fn walk_function_subqueries(func: &Function, scope: Scope<'_>, out: &mut Vec<Fra
     if let Some(filter) = &func.filter {
         walk_subqueries(filter, scope, out);
     }
+    if let Some(sqlparser::ast::WindowType::WindowSpec(spec)) = &func.over {
+        spec.partition_by
+            .iter()
+            .for_each(|e| walk_subqueries(e, scope, out));
+        spec.order_by
+            .iter()
+            .for_each(|o| walk_subqueries(&o.expr, scope, out));
+    }
 }
 
 fn walk_function_stars(
@@ -144,6 +169,14 @@ fn walk_function_stars(
     }
     if let Some(filter) = &func.filter {
         walk_expr_stars(filter, rels, scope, returning, None, line, out);
+    }
+    if let Some(sqlparser::ast::WindowType::WindowSpec(spec)) = &func.over {
+        spec.partition_by
+            .iter()
+            .for_each(|e| walk_expr_stars(e, rels, scope, returning, None, line, out));
+        spec.order_by
+            .iter()
+            .for_each(|o| walk_expr_stars(&o.expr, rels, scope, returning, None, line, out));
     }
 }
 

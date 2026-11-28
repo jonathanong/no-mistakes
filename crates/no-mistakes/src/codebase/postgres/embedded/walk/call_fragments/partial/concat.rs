@@ -26,7 +26,7 @@ pub(super) fn collect_addition<'a>(
     for leaf in leaves {
         let leaf_span = leaf.span();
         let leaf_line = byte_offset_to_line(visitor.source, leaf_span.start as usize);
-        let pieces = super::relations::leaf_pieces(visitor, leaf, &combined, depth);
+        let pieces = super::relations::leaf_pieces(visitor, leaf, &combined, context_sql, depth);
         if let Some(pieces) = pieces {
             if pieces.len() == 1 {
                 let piece = &pieces[0];

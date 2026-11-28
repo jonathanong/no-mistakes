@@ -8,6 +8,8 @@ use sqlparser::tokenizer::{Token, TokenWithSpan, Tokenizer};
 mod clauses;
 mod context;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod edge_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 mod token_scopes;
 mod tokens;
@@ -41,15 +43,15 @@ pub(super) fn extract_fragment_stars(sql: &str, context_sql: Option<&str>) -> Ve
         return Vec::new();
     }
     let mut out = Vec::new();
-    if let Ok(statements) = parse_postgres_sql(sql) {
-        if !statements.is_empty() {
-            fragment_ast::collect_statements(&statements, false, &mut out);
-            return out;
-        }
-    }
     let (ctx_select, ctx_returning, ctx_exists) = context_sql
         .map(|prefix| clauses::open_clause_at_end(&tokenize(prefix)))
         .unwrap_or((false, false, false));
+    if let Ok(statements) = parse_postgres_sql(sql) {
+        if !statements.is_empty() {
+            fragment_ast::collect_statements(&statements, ctx_exists, &mut out);
+            return out;
+        }
+    }
     let toks = tokenize(sql);
     if let Some((_, token)) = next_code(&toks, 0) {
         if is_kw(token, Keyword::RETURNING) {

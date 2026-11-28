@@ -41,15 +41,6 @@ impl ScopeVisitor<'_> {
         self.call_fragment_state.function_returns.remove(&key);
     }
 
-    pub(in crate::codebase::postgres::embedded::walk) fn clear_builder_fragment_by_name(
-        &mut self,
-        name: &str,
-    ) {
-        if let Some(index) = self.lookup_scope(name) {
-            self.clear_builder_fragment(index, name);
-        }
-    }
-
     pub(in crate::codebase::postgres::embedded::walk) fn note_assignment_fragment(
         &mut self,
         assign: &AssignmentExpression<'_>,
@@ -73,8 +64,13 @@ impl ScopeVisitor<'_> {
             | AssignmentOperator::LogicalNullish => {
                 let alt = partial::expr_fragments(self, &assign.right, None, None);
                 if !alt.is_empty() {
-                    let trace = self.call_fragment_state.builders.entry(key).or_default();
-                    trace.fragments.extend(alt);
+                    let mut rhs = BuilderTrace::from_fragments(alt);
+                    rhs.decl_depth = (self.control_depth, self.loop_depth);
+                    self.call_fragment_state
+                        .builders
+                        .entry(key)
+                        .or_default()
+                        .merge(rhs);
                 }
             }
             AssignmentOperator::Assign => {

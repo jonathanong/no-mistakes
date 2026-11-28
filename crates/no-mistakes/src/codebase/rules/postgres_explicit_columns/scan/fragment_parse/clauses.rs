@@ -1,4 +1,4 @@
-use super::is_kw;
+use super::{is_kw, next_code, read_optional_alias, skip_paren_group, word_value, FragmentContext};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
@@ -129,4 +129,46 @@ pub(super) fn is_implicit_alias_word(token: &TokenWithSpan) -> bool {
                     | Keyword::INSERT
                     | Keyword::FROM
             ))
+}
+
+pub(super) fn starts_with_query(tokens: &[TokenWithSpan]) -> bool {
+    tokens
+        .iter()
+        .find(|t| !matches!(t.token, Token::Whitespace(_)))
+        .is_some_and(|t| is_kw(t, Keyword::SELECT) || is_kw(t, Keyword::WITH))
+}
+
+pub(super) fn consume_table_function(
+    tokens: &[TokenWithSpan],
+    index: usize,
+    ctx: &mut FragmentContext,
+) -> Option<usize> {
+    let (i, tok) = next_code(tokens, index)?;
+    word_value(tok)?;
+    let mut next_i = i + 1;
+    if let Some((dot_i, dot)) = next_code(tokens, next_i) {
+        if matches!(dot.token, Token::Period) {
+            if let Some((part_i, part)) = next_code(tokens, dot_i + 1) {
+                if word_value(part).is_some() {
+                    next_i = part_i + 1;
+                }
+            }
+        }
+    }
+    let (paren_i, paren_tok) = next_code(tokens, next_i)?;
+    if !matches!(paren_tok.token, Token::LParen) {
+        return None;
+    }
+    let after_args = skip_paren_group(tokens, paren_i);
+    let (mut end, alias) = read_optional_alias(tokens, after_args);
+    if let Some((cols_i, cols_tok)) = next_code(tokens, end) {
+        if matches!(cols_tok.token, Token::LParen) {
+            end = skip_paren_group(tokens, cols_i);
+        }
+    }
+    ctx.has_derived_from = true;
+    if let Some(name) = alias {
+        ctx.derived_aliases.push(name);
+    }
+    Some(end)
 }

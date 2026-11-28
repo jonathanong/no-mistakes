@@ -22,7 +22,7 @@ pub(super) fn scope_context(
         extract_context_from_tokens(slice, &mut inner);
         if !inner.from_relations.is_empty()
             || inner.mutation_target.is_some()
-            || starts_with_query(slice)
+            || super::clauses::starts_with_query(slice)
         {
             collect_ancestors(tokens, open, outer, &mut inner);
             return Some(inner);
@@ -70,13 +70,6 @@ fn prev_code_index(tokens: &[TokenWithSpan], before: usize) -> Option<usize> {
         .find(|&j| !matches!(tokens[j].token, Token::Whitespace(_)))
 }
 
-pub(super) fn starts_with_query(tokens: &[TokenWithSpan]) -> bool {
-    tokens
-        .iter()
-        .find(|t| !matches!(t.token, Token::Whitespace(_)))
-        .is_some_and(|t| is_kw(t, Keyword::SELECT) || is_kw(t, Keyword::WITH))
-}
-
 fn enclosing_open_paren(tokens: &[TokenWithSpan], star_index: usize) -> Option<usize> {
     let mut depth = 0usize;
     for idx in (0..star_index).rev() {
@@ -106,6 +99,9 @@ fn matching_close_paren(tokens: &[TokenWithSpan], open: usize) -> usize {
 pub(super) fn enclosing_function(tokens: &[TokenWithSpan], star_index: usize) -> Option<String> {
     let mut cursor = star_index;
     while let Some(open) = enclosing_open_paren(tokens, cursor) {
+        if super::clauses::starts_with_query(&tokens[open + 1..star_index]) {
+            return None;
+        }
         let prev = (0..open)
             .rev()
             .find(|&j| !matches!(tokens[j].token, Token::Whitespace(_)))?;

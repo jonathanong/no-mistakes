@@ -342,14 +342,15 @@ fn context_and_token_fallback_handle_prefixes_ctes_commas_and_subqueries() {
 
     assert!(extract_fragment_stars("SELECT id FROM wide", None).is_empty());
     assert!(extract_fragment_stars("* FROM wide", Some("SELECT EXISTS (SELECT ")).is_empty());
-    assert_eq!(
-        extract_fragment_stars(
-            "* FROM wide INTERSECT SELECT * FROM peer",
-            Some("SELECT EXISTS (SELECT "),
-        )
-        .len(),
-        2
+    let intersect_stars = extract_fragment_stars(
+        "* FROM wide INTERSECT SELECT * FROM peer",
+        Some("SELECT EXISTS (SELECT "),
     );
+    let intersect_rels: Vec<_> = intersect_stars
+        .iter()
+        .map(|s| s.relation.as_deref())
+        .collect();
+    assert_eq!(intersect_rels, vec![Some("wide"), Some("peer")]);
 
     let comma_sel = extract_fragment_stars(", w.* FROM wide w", Some("SELECT id"));
     assert_eq!(comma_sel.len(), 1);

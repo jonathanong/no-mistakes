@@ -1,6 +1,6 @@
-use super::dml::{visit_join_constraint, visit_table_args};
+use super::dml::{rel_table_key, visit_join_constraint, visit_table_args};
 use super::{collect_query, FragmentStar, Rel, Scope};
-use no_mistakes_postgres_sql::idents::{ident_key, object_name_key};
+use no_mistakes_postgres_sql::idents::ident_key;
 use sqlparser::ast::{TableFactor, TableWithJoins};
 
 pub(super) fn extend_outer(local: &[Rel], outer: &[Rel]) -> Vec<Rel> {
@@ -26,7 +26,12 @@ pub(super) fn collect_rels(
         push_factor(&table.relation, scope, &mut rels, out);
         for join in &table.joins {
             push_factor(&join.relation, scope, &mut rels, out);
-            visit_join_constraint(&join.join_operator, scope, out);
+            let outer = extend_outer(&rels, scope.outer_rels);
+            let join_scope = Scope {
+                ctes: scope.ctes,
+                outer_rels: &outer,
+            };
+            visit_join_constraint(&join.join_operator, join_scope, out);
         }
     }
     rels
@@ -55,8 +60,8 @@ pub(super) fn push_factor(
                 }
                 return;
             }
-            let table = object_name_key(name);
-            let is_cte = !table.contains('.') && scope.ctes.iter().any(|cte| cte == &table);
+            let table = rel_table_key(name);
+            let is_cte = name.0.len() == 1 && scope.ctes.iter().any(|cte| cte == &table);
             rels.push(Rel {
                 table,
                 alias: alias.as_ref().map(|a| ident_key(&a.name)),

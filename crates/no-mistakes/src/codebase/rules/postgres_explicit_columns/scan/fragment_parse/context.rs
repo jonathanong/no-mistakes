@@ -74,7 +74,7 @@ fn consume_from_factor(
                     after
                 };
                 let inner = &tokens[paren_i + 1..inner_end];
-                if super::token_scopes::starts_with_query(inner) {
+                if super::clauses::starts_with_query(inner) {
                     ctx.has_derived_from = true;
                     if let Some(name) = alias {
                         ctx.derived_aliases.push(name);
@@ -84,6 +84,9 @@ fn consume_from_factor(
                 }
                 return Some(end);
             }
+        }
+        if let Some(end) = super::clauses::consume_table_function(tokens, index, ctx) {
+            return Some(end);
         }
     }
     let (next_i, rel) = read_table_and_alias(tokens, index)?;

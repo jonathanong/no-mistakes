@@ -163,3 +163,32 @@ export function multiInitAndTemplateLeaf(table: Pair, suffix: string) {
         vec!["SELECT * FROM sql_placeholder_1".to_string()]
     );
 }
+
+#[test]
+fn logical_assign_context_and_leading_concat_template() {
+    let source = r#"import { query } from "@example/db";
+type Pair = "entries" | "records";
+export function check(table: Pair, tail: string) {
+  let q = "UPDATE narrow SET flag = true";
+  q &&= "UPDATE wide SET flag = true";
+  q += " RETURNING *";
+  query(q);
+  let u = "UPDATE ";
+  u += `${table} SET active = true RETURNING *` + tail;
+  query(u);
+}"#;
+    let options = EmbeddedSqlOptions::configured("@example/db", &[]);
+    let facts =
+        extract_embedded_sql_from_source(Path::new("src/logical_concat.ts"), source, &options);
+    let frags: Vec<_> = facts.call_fragments.values().flatten().collect();
+    for (needle, ctx) in [
+        ("RETURNING *", "UPDATE narrow SET flag = true"),
+        ("RETURNING *", "UPDATE wide SET flag = true"),
+        ("entries SET active = true RETURNING *", "UPDATE "),
+        ("records SET active = true RETURNING *", "UPDATE "),
+    ] {
+        assert!(frags
+            .iter()
+            .any(|f| f.sql.contains(needle) && f.context_sql.as_deref() == Some(ctx)));
+    }
+}

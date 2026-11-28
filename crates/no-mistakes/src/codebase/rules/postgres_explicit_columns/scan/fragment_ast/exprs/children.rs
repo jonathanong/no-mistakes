@@ -27,6 +27,8 @@ fn visit_simple(expr: &Expr, visit: &mut impl FnMut(&Expr)) -> bool {
             true
         }
         Expr::BinaryOp { left, right, .. }
+        | Expr::IsDistinctFrom(left, right)
+        | Expr::IsNotDistinctFrom(left, right)
         | Expr::AnyOp { left, right, .. }
         | Expr::AllOp { left, right, .. }
         | Expr::Like {

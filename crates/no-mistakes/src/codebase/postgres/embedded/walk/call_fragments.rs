@@ -11,7 +11,7 @@ mod collect;
 mod inline;
 mod inline_append;
 mod partial;
-pub(crate) use collect::publish_call_fragments;
+pub(crate) use inline_append::publish_call_fragments;
 
 const MAX_PREFIX_BYTES: usize = 4096;
 
@@ -60,6 +60,12 @@ pub(super) struct CallFragmentState {
 }
 
 impl ScopeVisitor<'_> {
+    pub(super) fn clear_builder_fragment_by_name(&mut self, name: &str) {
+        if let Some(index) = self.lookup_scope(name) {
+            self.clear_builder_fragment(index, name);
+        }
+    }
+
     pub(super) fn note_builder_init(
         &mut self,
         scope_index: usize,

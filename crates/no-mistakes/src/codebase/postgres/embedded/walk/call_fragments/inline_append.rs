@@ -3,7 +3,7 @@ use super::super::ScopeVisitor;
 use super::partial::closed_relation_names;
 use super::BuilderTrace;
 use crate::codebase::postgres::embedded::helpers::sentinel;
-use crate::codebase::postgres::embedded::{first_call_argument, CallSqlFragment};
+use crate::codebase::postgres::embedded::{first_call_argument, placeholders, CallSqlFragment};
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use crate::fx::FxHashSet;
 use oxc_ast::ast::{CallExpression, Expression};
@@ -182,6 +182,15 @@ impl ScopeVisitor<'_> {
         }
         if let Some(scope_index) = self.lookup_scope(name) {
             try_copy_builder_init(self, scope_index, name, init);
+        }
+    }
+}
+
+pub(crate) fn publish_call_fragments(fragments: &mut [CallSqlFragment]) {
+    for fragment in fragments {
+        fragment.sql = placeholders::publish_placeholders(std::mem::take(&mut fragment.sql));
+        if let Some(context) = fragment.context_sql.take() {
+            fragment.context_sql = Some(placeholders::publish_placeholders(context));
         }
     }
 }

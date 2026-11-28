@@ -2,7 +2,7 @@ use super::super::resolve::compose;
 use super::super::ScopeVisitor;
 use super::{partial, BuilderTrace};
 use crate::codebase::postgres::embedded::{
-    first_call_argument, placeholders, tags, CallSqlFragment, EmbeddedSqlCall,
+    first_call_argument, tags, CallSqlFragment, EmbeddedSqlCall,
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashSet;
@@ -79,6 +79,11 @@ impl ScopeVisitor<'_> {
             .iter()
             .flat_map(|variant| variant.append_sites.iter().copied())
             .collect();
+        let variants_cover_init = !recovered.variants.is_empty()
+            && !recovered
+                .variants
+                .iter()
+                .any(|v| v.sql_text.contains("sql_placeholder_"));
         let Some(arg) = first_call_argument(call) else {
             return Vec::new();
         };
@@ -97,8 +102,8 @@ impl ScopeVisitor<'_> {
                                 let covered = fragment
                                     .append_site
                                     .is_some_and(|site| covered_sites.contains(&site));
-                                let duplicate_init = fragment.append_site.is_none()
-                                    && !recovered.variants.is_empty();
+                                let duplicate_init =
+                                    fragment.append_site.is_none() && variants_cover_init;
                                 !covered && !duplicate_init
                             })
                             .cloned()
@@ -131,7 +136,7 @@ impl ScopeVisitor<'_> {
                     self,
                     inner,
                     &covered_sites,
-                    !recovered.variants.is_empty(),
+                    variants_cover_init,
                 ) {
                     return frags;
                 }
@@ -158,15 +163,6 @@ impl ScopeVisitor<'_> {
             &mut |name| compose::tag_shadowed(name, self),
             self.functions.imported_sql_tags(),
         )
-    }
-}
-
-pub(crate) fn publish_call_fragments(fragments: &mut [CallSqlFragment]) {
-    for fragment in fragments {
-        fragment.sql = placeholders::publish_placeholders(std::mem::take(&mut fragment.sql));
-        if let Some(context) = fragment.context_sql.take() {
-            fragment.context_sql = Some(placeholders::publish_placeholders(context));
-        }
     }
 }
 

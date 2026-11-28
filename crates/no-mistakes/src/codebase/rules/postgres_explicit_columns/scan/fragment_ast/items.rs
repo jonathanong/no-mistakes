@@ -1,7 +1,7 @@
 use super::exprs::walk_expr_stars;
 use super::{FragmentStar, Rel, Scope, SYNTHETIC_TARGET};
 use no_mistakes_postgres_sql::idents::{
-    object_name_key, relation_suffix_key, relation_suffix_name,
+    object_name_identity, object_name_key, relation_suffix_key, relation_suffix_name,
 };
 use sqlparser::ast::{ObjectName, SelectItem, SelectItemQualifiedWildcardKind, Spanned};
 
@@ -68,14 +68,19 @@ pub(super) fn emit_qualified(
     line: usize,
     out: &mut Vec<FragmentStar>,
 ) {
-    let ident = object_name_key(name);
+    let multi_part = name.0.len() > 1;
+    let ident = if multi_part {
+        object_name_identity(name)
+    } else {
+        object_name_key(name)
+    };
     if ident.is_empty() {
         return;
     }
-    if resolve_in(rels, &ident, returning, &func, line, out)
+    if resolve_in(rels, &ident, multi_part, returning, &func, line, out)
         || outer_rels
             .chunk_by(|a, b| a.depth == b.depth)
-            .any(|level| resolve_in(level, &ident, returning, &func, line, out))
+            .any(|level| resolve_in(level, &ident, multi_part, returning, &func, line, out))
     {
         return;
     }
@@ -91,22 +96,27 @@ pub(super) fn emit_qualified(
 fn resolve_in(
     rels: &[Rel],
     ident: &str,
+    multi_part: bool,
     returning: bool,
     func: &Option<String>,
     line: usize,
     out: &mut Vec<FragmentStar>,
 ) -> bool {
-    let found = rels
-        .iter()
-        .find(|rel| rel.alias.as_deref() == Some(ident))
-        .or_else(|| {
-            rels.iter().find(|rel| {
-                rel.alias.is_none()
-                    && (rel.table == ident
-                        || relation_suffix_key(&rel.table) == ident
-                        || relation_suffix_name(&rel.table) == ident)
+    let found = if multi_part {
+        rels.iter()
+            .find(|rel| rel.alias.is_none() && rel.table == ident)
+    } else {
+        rels.iter()
+            .find(|rel| rel.alias.as_deref() == Some(ident))
+            .or_else(|| {
+                rels.iter().find(|rel| {
+                    rel.alias.is_none()
+                        && (rel.table == ident
+                            || relation_suffix_key(&rel.table) == ident
+                            || relation_suffix_name(&rel.table) == ident)
+                })
             })
-        });
+    };
     if let Some(rel) = found {
         if !rel.is_local_derived {
             out.push(FragmentStar {
@@ -118,6 +128,9 @@ fn resolve_in(
             });
         }
         return true;
+    }
+    if multi_part {
+        return false;
     }
     let joined: Vec<_> = rels
         .iter()

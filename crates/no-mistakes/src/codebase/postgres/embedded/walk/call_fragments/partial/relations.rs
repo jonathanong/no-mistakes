@@ -9,21 +9,26 @@ pub(super) fn leaf_pieces(
     visitor: &ScopeVisitor<'_>,
     leaf: &Expression<'_>,
     combined: &[String],
+    context_sql: Option<&str>,
     depth: u8,
 ) -> Option<Vec<String>> {
     if depth == 0 {
         return None;
     }
+    let prefixes: Vec<String> = match context_sql {
+        Some(ctx) => combined.iter().map(|c| format!("{ctx}{c}")).collect(),
+        None => combined.to_vec(),
+    };
     let expr = unwrap_ts_wrappers(leaf);
     if let Expression::TemplateLiteral(template) = expr {
         if !template.expressions.is_empty() {
-            return Some(partial_templates(visitor, template, combined, depth - 1));
+            return Some(partial_templates(visitor, template, &prefixes, depth - 1));
         }
     }
     if let Some(piece) = partial_atom(visitor, expr, depth) {
         return Some(vec![piece]);
     }
-    if combined
+    if prefixes
         .iter()
         .all(|c| sentinel::in_relation_slot(c, c.len()))
     {
