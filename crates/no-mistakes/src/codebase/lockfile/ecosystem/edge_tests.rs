@@ -114,13 +114,13 @@ fn composer_path_reference_and_registry_source_reference() {
         {
           "name": "acme/path",
           "version": "1.0.0",
-          "dist": { "type": "path", "reference": "dist-ref" },
-          "source": { "type": "path", "reference": "src-ref" }
+          "dist": { "type": "path", "url": "../path-dist", "reference": "dist-ref" },
+          "source": { "type": "path", "url": "../path-src", "reference": "src-ref" }
         },
         {
           "name": "acme/reg",
           "version": "2.0.0",
-          "dist": { "type": "zip", "reference": "" },
+          "dist": { "type": "zip", "url": "https://example.invalid/reg.zip", "reference": "" },
           "source": { "type": "git", "url": "https://example.invalid/reg.git", "reference": "src-pin" }
         }
       ]
@@ -130,7 +130,7 @@ fn composer_path_reference_and_registry_source_reference() {
         &packages,
         "acme/path",
         "1.0.0",
-        "dist-ref",
+        "../path-dist#dist-ref",
         ResolutionKind::Directory,
     );
     expect(

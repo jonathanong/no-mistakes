@@ -1,5 +1,6 @@
 mod composer;
 mod gemfile;
+mod gemfile_fields;
 mod gomod;
 mod pipfile;
 mod toml_lock;

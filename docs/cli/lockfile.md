@@ -53,7 +53,7 @@ Other Poetry packages use sorted file hashes, including legacy
 `[metadata.files]` and `[metadata.hashes]` representations. For a local file
 dependency, the legacy file list contributes only the matching archive hash. A Poetry directory uses its source path as the fingerprint.
 Poetry `url` and `file` sources are tarballs.
-uv requires a top-level `version` marker. uv git uses the commit in the URL fragment after `#`, then `rev`, and
+uv requires a top-level `version` marker. A package name cannot contain spaces, and a present empty version is malformed. uv git uses the commit in the URL fragment after `#`, then `rev`, and
 includes the Git subdirectory selector. A git source with neither pin is malformed. uv
 `editable`, `directory`, and `virtual` sources use the directory path as
 their fingerprint and may omit `version`. uv combines sorted wheel and
@@ -72,11 +72,11 @@ names written in place of canonical versions. An empty `require ()` block
 contributes no packages.
 `replace`, `exclude`, `retract`, and `go.sum`
 are not packages. `Gemfile.lock` reads specs indented four spaces. A package-shaped line at another indent is malformed, and deeper
-lines are dependencies. A `GIT` revision contributes to its fingerprint along with any `glob`
+lines are dependencies. An unrecognized line at column zero ends the current section. A package version must start with a number and may include a prerelease or platform suffix. A `GIT` revision contributes to its fingerprint along with any `glob`
 selector and enabled submodules. A matching `CHECKSUMS` entry supplies its fingerprint. A lone `sha256`
 digest stays bare, and any other algorithm-tagged list is stored as sorted `algo=digest` pairs. A `PATH` entry uses its `remote` value and any `glob` selector as the
 directory fingerprint. `PLUGIN SOURCE` specs use the plugin remote as their
-fingerprint. `composer.lock` reads `packages` and `packages-dev`. A null development section contributes no packages.
+fingerprint. `composer.lock` reads `packages` and `packages-dev`. A present `dist` or `source` object requires `type` and `url`. A null development section contributes no packages.
 Distribution references take precedence over checksums. An unpinned archive
 without a checksum uses its distribution URL. A path source
 uses its directory URL and any reference, and a git source with no dist is git.

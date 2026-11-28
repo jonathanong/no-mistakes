@@ -77,10 +77,19 @@ fn package_source<'a>(
             .into_iter()
             .filter_map(|field| value.get(field))
             .any(|field| !field.is_null() && !field.is_string())
+        || !required_text(value, "type")
+        || !required_text(value, "url")
     {
         return Err(ComposerError);
     }
     Ok(Some(value))
+}
+
+fn required_text(value: &serde_json::Value, key: &str) -> bool {
+    value
+        .get(key)
+        .and_then(|field| field.as_str())
+        .is_some_and(|text| !text.is_empty())
 }
 
 fn text<'a>(value: Option<&'a serde_json::Value>, key: &str) -> &'a str {

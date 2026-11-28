@@ -1,0 +1,7 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    sample-alpha (1.2.3)
+
+EXTRA_DATA
+    phantom (9.9.9)

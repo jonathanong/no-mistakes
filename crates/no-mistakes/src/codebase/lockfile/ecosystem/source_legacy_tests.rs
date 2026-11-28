@@ -135,3 +135,67 @@ fn uv_requires_a_format_marker_and_a_git_pin() {
         packages_for_diff(PackageManager::Uv, &fixture("uv", "empty-fragment.lock")).unwrap();
     expect(&packages, "sample", "1.0.0", "abc123", ResolutionKind::Git);
 }
+
+#[test]
+fn lockfile_parsers_reject_empty_identity_fields() {
+    for (manager, dir, name) in [
+        (PackageManager::Composer, "composer", "empty-dist.lock"),
+        (
+            PackageManager::Composer,
+            "composer",
+            "dist-missing-url.lock",
+        ),
+        (PackageManager::Gemfile, "gemfile", "bad-version.lock"),
+        (PackageManager::Uv, "uv", "bad-name.lock"),
+        (PackageManager::Uv, "uv", "empty-package-version.lock"),
+    ] {
+        assert!(
+            packages_for_diff(manager, &fixture(dir, name)).is_err(),
+            "{dir}/{name}"
+        );
+    }
+    let packages = packages_for_diff(
+        PackageManager::Gemfile,
+        &fixture("gemfile", "unknown-header.lock"),
+    )
+    .unwrap();
+    expect(
+        &packages,
+        "sample-alpha",
+        "1.2.3",
+        "",
+        ResolutionKind::Registry,
+    );
+    assert!(packages.iter().all(|package| package.name != "phantom"));
+    let versions = packages_for_diff(
+        PackageManager::Gemfile,
+        &fixture("gemfile", "prerelease.lock"),
+    )
+    .unwrap();
+    expect(
+        &versions,
+        "sample-pre",
+        "1.0.0.pre.1",
+        "",
+        ResolutionKind::Registry,
+    );
+    expect(
+        &versions,
+        "sample-platform",
+        "1.2.3-x86_64-linux",
+        "",
+        ResolutionKind::Registry,
+    );
+    let directory = packages_for_diff(
+        PackageManager::Uv,
+        &fixture("uv", "versionless-directory.lock"),
+    )
+    .unwrap();
+    expect(
+        &directory,
+        "sample-app",
+        "",
+        "lib/sample",
+        ResolutionKind::Directory,
+    );
+}

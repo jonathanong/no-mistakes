@@ -69,8 +69,12 @@ fn package(pkg: UvPackage) -> Result<ResolvedPackage, TomlError> {
     let fingerprint = super::super::hash_fingerprint(hashes);
     let distribution_hash = (!fingerprint.is_empty()).then_some(fingerprint.as_str());
     let (kind, fingerprint) = resolution(pkg.source.as_ref(), distribution_hash)?;
+    if !package_name(&pkg.name) {
+        return Err(TomlError);
+    }
     let version = match pkg.version {
-        Some(version) => version,
+        Some(version) if !version.is_empty() => version,
+        Some(_) => return Err(TomlError),
         None if kind == ResolutionKind::Directory => String::new(),
         None => return Err(TomlError),
     };
@@ -120,6 +124,18 @@ fn resolution(
         ResolutionKind::Registry,
         distribution_hash.unwrap_or_default().to_string(),
     ))
+}
+
+fn package_name(name: &str) -> bool {
+    let mut chars = name.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    first.is_ascii_alphanumeric()
+        && !name.ends_with('.')
+        && !name.ends_with('_')
+        && !name.ends_with('-')
+        && chars.all(|ch| ch.is_ascii_alphanumeric() || ch == '.' || ch == '_' || ch == '-')
 }
 
 fn git_pin(url: &str, rev: Option<&str>) -> Result<String, TomlError> {

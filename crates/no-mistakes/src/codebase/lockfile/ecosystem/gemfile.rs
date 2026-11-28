@@ -1,4 +1,5 @@
 use super::super::{ResolutionKind, ResolvedPackage};
+use super::gemfile_fields::{checksum_fingerprint, is_gem_version};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct GemfileError;
@@ -35,30 +36,34 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
         if trimmed.is_empty() {
             continue;
         }
-        if indent == 0 && is_header(trimmed) {
+        if indent == 0 {
             section_fingerprint = "";
             source_glob = None;
             git_submodules = false;
-            section = match trimmed {
-                "GEM" => Section::Specs(ResolutionKind::Registry),
-                "GIT" => Section::Specs(ResolutionKind::Git),
-                "PATH" => Section::Specs(ResolutionKind::Directory),
-                "PLUGIN SOURCE" => Section::Specs(ResolutionKind::Other),
-                "CHECKSUMS" => Section::Checksums,
-                _ => Section::Other,
-            };
-            saw_header |= matches!(
-                trimmed,
-                "GEM"
-                    | "GIT"
-                    | "PATH"
-                    | "PLUGIN SOURCE"
-                    | "PLATFORMS"
-                    | "DEPENDENCIES"
-                    | "BUNDLED WITH"
-                    | "RUBY VERSION"
-                    | "CHECKSUMS"
-            );
+            if is_header(trimmed) {
+                section = match trimmed {
+                    "GEM" => Section::Specs(ResolutionKind::Registry),
+                    "GIT" => Section::Specs(ResolutionKind::Git),
+                    "PATH" => Section::Specs(ResolutionKind::Directory),
+                    "PLUGIN SOURCE" => Section::Specs(ResolutionKind::Other),
+                    "CHECKSUMS" => Section::Checksums,
+                    _ => Section::Other,
+                };
+                saw_header |= matches!(
+                    trimmed,
+                    "GEM"
+                        | "GIT"
+                        | "PATH"
+                        | "PLUGIN SOURCE"
+                        | "PLATFORMS"
+                        | "DEPENDENCIES"
+                        | "BUNDLED WITH"
+                        | "RUBY VERSION"
+                        | "CHECKSUMS"
+                );
+            } else {
+                section = Section::None;
+            }
             continue;
         }
         if matches!(
@@ -108,6 +113,9 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
         let Some((name, version, _)) = spec(trimmed) else {
             return Err(GemfileError);
         };
+        if !is_gem_version(version) {
+            return Err(GemfileError);
+        }
         let mut fingerprint = super::source_fingerprint(section_fingerprint, "glob", source_glob);
         if git_submodules {
             fingerprint.push_str("#submodules=true");
@@ -140,38 +148,4 @@ fn spec(trimmed: &str) -> Option<(&str, &str, Option<String>)> {
     let version = &after[..close];
     let extra = after[close + 1..].trim();
     Some((name, version, checksum_fingerprint(extra)))
-}
-
-fn checksum_fingerprint(extra: &str) -> Option<String> {
-    let mut parts = Vec::new();
-    for token in extra.split(',') {
-        let Some((algo, digest)) = token.trim().split_once('=') else {
-            continue;
-        };
-        if algo.is_empty()
-            || digest.is_empty()
-            || !algo.chars().all(|ch| ch.is_ascii_alphanumeric())
-            || !digest.chars().all(|ch| ch.is_ascii_hexdigit())
-        {
-            continue;
-        }
-        parts.push((algo, digest));
-    }
-    if parts.is_empty() {
-        return None;
-    }
-    if parts.len() == 1 && parts[0].0 == "sha256" {
-        return Some(parts[0].1.to_string());
-    }
-    parts.sort_unstable();
-    let mut fingerprint = String::new();
-    for (algo, digest) in parts {
-        if !fingerprint.is_empty() {
-            fingerprint.push(',');
-        }
-        fingerprint.push_str(algo);
-        fingerprint.push('=');
-        fingerprint.push_str(digest);
-    }
-    Some(fingerprint)
 }
