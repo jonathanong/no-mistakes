@@ -24,3 +24,22 @@ export async function flat(id: string): Promise<Widget | null> {
   const { getWidget: read } = data;
   return read(id);
 }
+
+export async function nestedDefault(id: string): Promise<Widget | null> {
+  const { default: read } = data;
+  return read.getWidget(id);
+}
+
+export async function nestedDefaultMember(id: string): Promise<Widget | null> {
+  const {
+    default: { getWidget: read },
+  } = data;
+  return read(id);
+}
+
+export async function secondDefault(id: string): Promise<Widget | null> {
+  const {
+    default: { getWidget: read },
+  } = api;
+  return read(id);
+}

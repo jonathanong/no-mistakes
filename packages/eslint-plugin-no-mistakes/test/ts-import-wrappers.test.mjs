@@ -943,6 +943,9 @@ describe("typescript import wrappers", () => {
       [192, "nullish"],
       [197, "nullish"],
       [201, "nullish"],
+      [227, "nullish"],
+      [236, "nullish"],
+      [246, "unanalyzable"],
     ]);
     expect(
       cases
@@ -993,6 +996,8 @@ describe("typescript import wrappers", () => {
       [7, "wrapper"],
       [11, "wrapper"],
       [20, "wrapper"],
+      [30, "wrapper"],
+      [37, "wrapper"],
     ]);
     expect(
       cases

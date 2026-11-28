@@ -1307,6 +1307,39 @@
           "messageId": "nullish",
           "ruleId": "no-mistakes/react-no-nullish-react-node",
           "severity": 2
+        },
+        {
+          "column": 35,
+          "endColumn": 46,
+          "endLine": 227,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 227,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 20,
+          "endColumn": 33,
+          "endLine": 236,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 236,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 21,
+          "endLine": 246,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 246,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
         }
       ],
       "name": "scope edges keep each ReactNode binding",
@@ -2218,6 +2251,28 @@
           "endLine": 20,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-default-alias.ts",
           "line": 20,
+          "message": "Wrap nullable entity fetch 'default.getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 28,
+          "endLine": 30,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-default-alias.ts",
+          "line": 30,
+          "message": "Wrap nullable entity fetch 'default.getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 18,
+          "endLine": 37,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-default-alias.ts",
+          "line": 37,
           "message": "Wrap nullable entity fetch 'default.getWidget' in wrapNullable so missing entities map to null consistently.",
           "messageId": "wrapper",
           "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
@@ -3419,6 +3474,20 @@
             "column": 10,
             "file": "nullable-default-alias.ts",
             "line": 20,
+            "message": "Wrap nullable entity fetch 'default.getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-default-alias.ts",
+            "line": 30,
+            "message": "Wrap nullable entity fetch 'default.getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-default-alias.ts",
+            "line": 37,
             "message": "Wrap nullable entity fetch 'default.getWidget' in wrapNullable so missing entities map to null consistently."
           }
         ],
@@ -4638,6 +4707,27 @@
             "file": "react-nullish-scope-edges.tsx",
             "line": 201,
             "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 35,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 227,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 20,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 236,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 246,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
           }
         ],
         "name": "react-nullish-scope-edges.tsx",

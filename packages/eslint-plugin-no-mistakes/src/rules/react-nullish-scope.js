@@ -16,6 +16,11 @@ const {
 } = require("./react-nullish-props");
 const { notePair, objectAliasProps } = require("./react-nullish-loop-members");
 const { laterBindingStatus } = require("./react-nullish-later-status");
+const {
+  reassignedBinding,
+  rememberStatus,
+  storedStatus,
+} = require("./react-nullish-binding-status");
 
 const isObjectPattern = (node) => node && node.type === "ObjectPattern";
 const isIdentifier = (node) => node && node.type === "Identifier";
@@ -27,7 +32,8 @@ function createNullishState(context) {
   const unresolvedBindings = new Map();
   // Keep added alias facts lexical without removing legacy declared-name findings.
   const objectAliases = new Map();
-  const unresolvedAliases = new Map();
+  const unresolvedAliases = new Map(),
+    bindingStatus = new Map();
   let facts = {
     aliases: new Map(),
     objectProps: new Map(),
@@ -73,7 +79,8 @@ function createNullishState(context) {
 
   function variableScope(node) {
     if (!node.parent || node.parent.kind !== "var") return currentScope();
-    const outer = (scope) => scope.kind === "function" || scope.kind === "program";
+    const outer = (scope) =>
+      scope.kind === "function" || scope.kind === "program" || scope.kind === "static";
     return scopes.findLast(outer) ?? currentScope();
   }
 
@@ -109,6 +116,7 @@ function createNullishState(context) {
     const type = typeAnnotation(param) || typeAnnotation(target);
     if (isIdentifier(target)) {
       noteType(target.name, type);
+      rememberStatus(bindingStatus, target, reactTypeStatus(type, facts), context);
       defineObjectType(target, type);
     } else if (target.type === "ArrayPattern" || target.type === "RestElement") {
       bindPatternNames(target, defineBinding);
@@ -145,8 +153,11 @@ function createNullishState(context) {
       scope.bindings.add(node.id.name);
       noteType(node.id.name, type, scope);
       const initStatus = expressionStatus(node.init);
-      if (!type && initStatus === "yes") defineNamed("reactNodes", node.id.name, scope);
-      else if (!type && initStatus === "unresolved") defineUnresolved(node.id.name, scope);
+      let status = type ? reactTypeStatus(type, facts) : initStatus;
+      if (!type && status === "yes" && reassignedBinding(node.id, context)) status = "unresolved";
+      if (!type && status === "yes") defineNamed("reactNodes", node.id.name, scope);
+      else if (!type && status === "unresolved") defineUnresolved(node.id.name, scope);
+      rememberStatus(bindingStatus, node.id, status, context);
       defineObjectType(node.id, type, scope);
       if (!type) noteObjectAlias(node);
       return;
@@ -180,7 +191,7 @@ function createNullishState(context) {
         facts,
         seen,
       );
-      return later ?? variableStatus(current.name);
+      return later ?? storedStatus(bindingStatus, current, context) ?? variableStatus(current.name);
     }
     if (current?.type !== "MemberExpression") return "no";
     return memberExpressionStatus(current, facts, lookupMembers);

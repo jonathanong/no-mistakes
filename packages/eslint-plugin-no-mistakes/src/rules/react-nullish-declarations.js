@@ -25,12 +25,7 @@ function nearestDeclarations(type, name) {
         declaration.type === "TSTypeAliasDeclaration" &&
         contained &&
         !declaration.typeParameters?.params?.some((param) => param.name?.name === name);
-      if (
-        typed &&
-        declaration.id?.name === name &&
-        (!contained || selfAlias) &&
-        containsNode(declaration.parent, type)
-      )
+      if (typed && declaration.id?.name === name && (!contained || selfAlias))
         found.push(declaration);
     }
     if (found.length) return found;

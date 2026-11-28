@@ -42,7 +42,10 @@ function namespaceMember(base, imported) {
   if (!base || base.typeOnly) return null;
   if (base.unresolved) return { unresolved: true };
   if (base.kind !== "namespace" && base.kind !== "default") return null;
-  if (imported === "default") return { ...base, kind: "default", imported: null };
+  if (imported === "default") {
+    const name = base.name ? `${base.name}.default` : "default";
+    return { ...base, kind: "default", imported: null, name };
+  }
   return { module: base.module, kind: "named", imported, typeOnly: false };
 }
 

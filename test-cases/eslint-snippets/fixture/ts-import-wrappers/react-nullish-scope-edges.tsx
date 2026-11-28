@@ -216,3 +216,41 @@ export function localSelf() {
   const read = (p: Props) => p.child ?? null;
   return read;
 }
+
+export function shadowedForward(child: string) {
+  const read = (child: ReactNode) => value ?? "";
+  const value = child;
+  return read(null);
+}
+
+export function forwardOuter(child: ReactNode) {
+  const read = (child: string) => value ?? "";
+  const value = child;
+  return read(null);
+}
+
+export function staticVar(node: ReactNode, value: string) {
+  class Box {
+    static {
+      var value = node;
+      const read = value ?? null;
+      void read;
+    }
+  }
+  return value ?? "";
+}
+
+export function reassignedLet(node: ReactNode) {
+  let value = node;
+  value = "text";
+  return value ?? "";
+}
+
+export namespace LocalProps {
+  export interface Props {
+    child: string;
+  }
+  export function view(props: Props) {
+    return props.child ?? "";
+  }
+}
