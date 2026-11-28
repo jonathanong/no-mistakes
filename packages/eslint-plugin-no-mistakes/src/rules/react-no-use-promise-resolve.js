@@ -52,7 +52,7 @@ module.exports = Object.assign(
           if (status === "no") return;
           const argument = forwardedArgument(node, context);
           const resolved =
-            isPromiseResolve(argument, context) ||
+            isPromiseResolve(argument) ||
             (ordinaryUseCall(node, context) && isAliasedPromiseResolve(node.arguments[0], context));
           if (status === "yes" && resolved) {
             context.report({ node, messageId: "resolve" });

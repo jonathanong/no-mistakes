@@ -1279,6 +1279,17 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 33,
+          "endLine": 155,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 155,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
         }
       ],
       "name": "react use binding shapes",
@@ -3485,6 +3496,13 @@
             "file": "react-use-bindings.tsx",
             "line": 152,
             "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 155,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
           }
         ],
         "name": "react-use-bindings.tsx",

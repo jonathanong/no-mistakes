@@ -567,6 +567,7 @@ describe("typescript import wrappers", () => {
       [132, "unanalyzable"],
       [147, "resolve"],
       [152, "unanalyzable"],
+      [155, "resolve"],
     ]);
     expect(
       cases.find((item) => item.name === "promise type query alias").findings.map((f) => f.line),
