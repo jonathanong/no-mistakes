@@ -1,17 +1,8 @@
 "use strict";
 
-function mergeMembers(target, source) {
-  for (const [name, props] of source) {
-    const prior = target.get(name);
-    target.set(name, prior ? new Set([...prior, ...props]) : props);
-  }
-}
-
-function copyLoopMembers(loop, parent) {
-  if (!loop || !parent) return;
-  mergeMembers(parent.objectTypes, loop.objectTypes);
-  mergeMembers(parent.unresolvedMembers, loop.unresolvedMembers);
-}
+const { unwrapSequence } = require("./async-ast");
+const { resolveVariable } = require("./async-target-bindings");
+const { assertedObjectFacts } = require("./react-nullish-props");
 
 function notePair(primary, aliases, binding, value) {
   if (!value) return;
@@ -19,4 +10,24 @@ function notePair(primary, aliases, binding, value) {
   aliases.set(binding, value);
 }
 
-module.exports = { copyLoopMembers, notePair };
+function objectAliasProps(node, facts, context, objectBindings, unresolvedBindings) {
+  const asserted = assertedObjectFacts(node.init, facts);
+  if (asserted) return node.parent.kind === "const" ? asserted : null;
+  const init = unwrapSequence(node.init);
+  if (node.parent.kind !== "const" || init?.type !== "Identifier") return null;
+  const source = resolveVariable(init, context);
+  const target = resolveVariable(node.id, context);
+  const reassigned = (binding) => binding.references.some((ref) => ref.isWrite() && !ref.init);
+  if (!source || source.defs.length !== 1 || reassigned(source) || reassigned(target)) return null;
+  const def = source.defs[0];
+  // Sequential name facts must not cross a TDZ shadow or a parameter initializer.
+  const initialized =
+    def.type === "Parameter"
+      ? def.node.body.range[0] < init.range[0]
+      : def.type === "Variable" && def.parent.kind === "const" && def.node.range[1] < init.range[0];
+  return initialized
+    ? { props: objectBindings.get(source), unresolved: unresolvedBindings.get(source) }
+    : null;
+}
+
+module.exports = { notePair, objectAliasProps };

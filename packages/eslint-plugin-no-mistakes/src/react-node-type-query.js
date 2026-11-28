@@ -3,6 +3,9 @@
 const { localTypeStatus } = require("./react-node-local-type");
 const { literalString } = require("./rules/module-mock-helpers");
 const { constStringKey } = require("./rules/react-use-callee");
+const { resolveVariable } = require("./rules/async-target-bindings");
+
+const TYPE_SHADOW = new Set(["ClassName", "FunctionName", "TSModuleName", "Type", "TypeParameter"]);
 
 function keyName(node) {
   if (!node) return null;
@@ -84,6 +87,13 @@ function assertedType(node) {
   return null;
 }
 
+function qualifierShadowsImport(typeNode, facts) {
+  const root = typeNode?.typeName?.type === "TSQualifiedName" ? typeNode.typeName.left : null;
+  if (root?.type !== "Identifier" || !facts.context) return false;
+  const variable = resolveVariable(root, facts.context);
+  return Boolean(variable?.defs.length) && variable.defs.every((def) => TYPE_SHADOW.has(def.type));
+}
+
 function reactTypeStatus(type, facts, seen = new Set()) {
   const current = unwrapType(type);
   if (!current || !facts) return "no";
@@ -111,6 +121,7 @@ function reactTypeStatus(type, facts, seen = new Set()) {
     const local = localTypeStatus(current, name, facts, seen, reactTypeStatus);
     if (local !== null) return local;
   }
+  if (qualifierShadowsImport(current, facts)) return "no";
   const root = name?.split(".")[0];
   if (root && name.endsWith(".ReactNode") && facts.unresolvedNamespaces?.has(root)) {
     return "unresolved";

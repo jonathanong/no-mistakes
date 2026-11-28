@@ -40,7 +40,7 @@ function factAtPath(source, names, namespaceMember) {
     if (!fact || fact.unresolved) return { unresolved: true };
     const member = namespaceMember(fact, name);
     if (member) {
-      fact = member;
+      fact = fact.name && !member.name ? { ...member, name: `${fact.name}.${name}` } : member;
       continue;
     }
     if (fact.kind !== "named" || !(fact.name || fact.imported)) return null;

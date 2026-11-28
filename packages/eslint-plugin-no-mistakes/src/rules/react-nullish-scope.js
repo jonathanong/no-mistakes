@@ -10,12 +10,12 @@ const {
   typeAnnotation,
 } = require("../react-node-types");
 const {
-  assertedObjectFacts,
   classifiedProps,
   destructureMemberFacts,
   memberExpressionStatus,
 } = require("./react-nullish-props");
-const { copyLoopMembers, notePair } = require("./react-nullish-loop-members");
+const { notePair, objectAliasProps } = require("./react-nullish-loop-members");
+const { laterBindingStatus } = require("./react-nullish-later-status");
 
 const isObjectPattern = (node) => node && node.type === "ObjectPattern";
 const isIdentifier = (node) => node && node.type === "Identifier";
@@ -104,29 +104,6 @@ function createNullishState(context) {
     return null;
   }
 
-  function objectAliasProps(node) {
-    const asserted = assertedObjectFacts(node.init, facts);
-    if (asserted) return node.parent.kind === "const" ? asserted : null;
-    const init = unwrapSequence(node.init);
-    if (node.parent.kind !== "const" || init?.type !== "Identifier") return null;
-    const source = resolveVariable(init, context);
-    const target = resolveVariable(node.id, context);
-    const reassigned = (binding) => binding.references.some((ref) => ref.isWrite() && !ref.init);
-    if (!source || source.defs.length !== 1 || reassigned(source) || reassigned(target))
-      return null;
-    const def = source.defs[0];
-    // Sequential name facts must not cross a TDZ shadow or a parameter initializer.
-    const initialized =
-      def.type === "Parameter"
-        ? def.node.body.range[0] < init.range[0]
-        : def.type === "Variable" &&
-          def.parent.kind === "const" &&
-          def.node.range[1] < init.range[0];
-    return initialized
-      ? { props: objectBindings.get(source), unresolved: unresolvedBindings.get(source) }
-      : null;
-  }
-
   function defineParam(param) {
     const target = (param.parameter ?? param).left ?? param.parameter ?? param;
     const type = typeAnnotation(param) || typeAnnotation(target);
@@ -151,12 +128,11 @@ function createNullishState(context) {
   }
 
   function finishLoop() {
-    copyLoopMembers(scopes.at(-1), scopes.at(-2));
     scopes.pop();
   }
 
   function noteObjectAlias(node) {
-    const alias = objectAliasProps(node);
+    const alias = objectAliasProps(node, facts, context, objectBindings, unresolvedBindings);
     const binding = resolveVariable(node.id, context);
     notePair(objectBindings, objectAliases, binding, alias?.props);
     notePair(unresolvedBindings, unresolvedAliases, binding, alias?.unresolved);
@@ -191,11 +167,21 @@ function createNullishState(context) {
     if (members.allUnresolved) bindPatternNames(node.id, (name) => defineUnresolved(name, scope));
   }
 
-  function expressionStatus(node) {
+  function expressionStatus(node, seen = new Set()) {
     const asserted = assertedType(node);
     if (asserted) return reactTypeStatus(asserted, facts);
     const current = unwrapSequence(node);
-    if (isIdentifier(current)) return variableStatus(current.name);
+    if (isIdentifier(current)) {
+      const later = laterBindingStatus(
+        current,
+        context,
+        (type) => reactTypeStatus(type, facts),
+        expressionStatus,
+        facts,
+        seen,
+      );
+      return later ?? variableStatus(current.name);
+    }
     if (current?.type !== "MemberExpression") return "no";
     return memberExpressionStatus(current, facts, lookupMembers);
   }
@@ -216,6 +202,7 @@ function createNullishState(context) {
     pushScope,
     setFacts(next) {
       facts = next;
+      facts.context = context;
     },
     shadowName: (name) => currentScope()?.bindings.add(name),
   };

@@ -33,7 +33,7 @@ const suite = {
     aliasCase("object-aliases"),
     // 3 nullish.
     aliasCase("object-alias-loop-bindings"),
-    // 8 nullish.
+    // 6 nullish.
     aliasCase("object-alias-target-shadows"),
   ],
 };

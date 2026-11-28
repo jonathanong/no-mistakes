@@ -30,12 +30,14 @@ export function reverse(props: TextProps, value: ReactProps) {
     const { children } = p;
     const destructured = children ?? null;
   }
-  return p.children ?? null; // Preserve the legacy declared-loop conservative finding.
+  return p.children ?? null;
 }
 
 export function caught(props: ReactProps) {
   const p = props;
-  try { throw { children: "text" }; } catch (p) {
+  try {
+    throw { children: "text" };
+  } catch (p) {
     const direct = p.children ?? null;
     const { children } = p;
     const destructured = children ?? null;
@@ -43,8 +45,11 @@ export function caught(props: ReactProps) {
   return p.children ?? null;
 }
 
-export function retainedDeclared(props: { children: string | undefined; footer: ReactNode }, value: ReactProps) {
-  // The new footer alias fact must not remove the existing declared children finding.
+export function retainedDeclared(
+  props: { children: string | undefined; footer: ReactNode },
+  value: ReactProps,
+) {
+  // The loop's ReactProps does not replace this later binding.
   for (const p: ReactProps = value; false;) {}
   const p = props;
   return [p.children ?? null, p.footer ?? null];

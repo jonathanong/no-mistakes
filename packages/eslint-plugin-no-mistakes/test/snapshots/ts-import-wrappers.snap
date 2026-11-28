@@ -1034,6 +1034,80 @@
       "rule": "react-no-nullish-react-node"
     },
     {
+      "file": "react-nullish-binding-shadows.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 23,
+          "endLine": 16,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-binding-shadows.tsx",
+          "line": 16,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 27,
+          "endLine": 20,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-binding-shadows.tsx",
+          "line": 20,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 50,
+          "endLine": 24,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-binding-shadows.tsx",
+          "line": 24,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 35,
+          "endLine": 41,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-binding-shadows.tsx",
+          "line": 41,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 12,
+          "endColumn": 29,
+          "endLine": 54,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-binding-shadows.tsx",
+          "line": 54,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 27,
+          "endLine": 60,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-binding-shadows.tsx",
+          "line": 60,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "shadowed ReactNode bindings stay on their own declaration",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
       "file": "react-nullish-import-type.tsx",
       "findings": [
         {
@@ -1694,6 +1768,17 @@
           "endLine": 11,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-default-alias.ts",
           "line": 11,
+          "message": "Wrap nullable entity fetch 'default.getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 18,
+          "endLine": 20,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-default-alias.ts",
+          "line": 20,
           "message": "Wrap nullable entity fetch 'default.getWidget' in wrapNullable so missing entities map to null consistently.",
           "messageId": "wrapper",
           "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
@@ -2779,6 +2864,13 @@
             "file": "nullable-default-alias.ts",
             "line": 11,
             "message": "Wrap nullable entity fetch 'default.getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-default-alias.ts",
+            "line": 20,
+            "message": "Wrap nullable entity fetch 'default.getWidget' in wrapNullable so missing entities map to null consistently."
           }
         ],
         "name": "nullable-default-alias.ts",
@@ -3469,6 +3561,55 @@
           }
         ],
         "name": "react-nullish-assertions.ts",
+        "options": null
+      },
+      {
+        "file": "react-nullish-binding-shadows.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-binding-shadows.tsx",
+            "line": 16,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-binding-shadows.tsx",
+            "line": 20,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-binding-shadows.tsx",
+            "line": 24,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 24,
+            "file": "react-nullish-binding-shadows.tsx",
+            "line": 41,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 12,
+            "file": "react-nullish-binding-shadows.tsx",
+            "line": 54,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-binding-shadows.tsx",
+            "line": 60,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          }
+        ],
+        "name": "react-nullish-binding-shadows.tsx",
         "options": null
       },
       {

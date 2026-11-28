@@ -448,6 +448,11 @@ describe("typescript import wrappers", () => {
         "react-no-nullish-react-node",
       ),
       eslintCase(
+        "shadowed ReactNode bindings stay on their own declaration",
+        "react-nullish-binding-shadows.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
         "unresolved qualified getter terminal",
         "nullable-qualified-member.ts",
         "server-require-nullable-fetch-wrapper",
@@ -862,6 +867,18 @@ describe("typescript import wrappers", () => {
     ).toEqual([]);
     expect(
       cases
+        .find((item) => item.name === "shadowed ReactNode bindings stay on their own declaration")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [16, "nullish"],
+      [20, "nullish"],
+      [24, "nullish"],
+      [41, "nullish"],
+      [54, "nullish"],
+      [60, "nullish"],
+    ]);
+    expect(
+      cases
         .find((item) => item.name === "erased require and a later assignment")
         .findings.map((finding) => [finding.line, finding.messageId]),
     ).toEqual([
@@ -889,6 +906,7 @@ describe("typescript import wrappers", () => {
     ).toEqual([
       [7, "wrapper"],
       [11, "wrapper"],
+      [20, "wrapper"],
     ]);
     expect(
       cases
@@ -978,6 +996,7 @@ describe("typescript import wrappers", () => {
         "react-nullish-loop-class.tsx",
         "react-nullish-self-alias.tsx",
         "react-nullish-nested-heritage.tsx",
+        "react-nullish-binding-shadows.tsx",
       ]),
       "nullish-ignore": oxlintOn(".oxlintrc-nullish-ignore.json", ["react-nullish-unresolved.tsx"]),
       fetch: oxlintOn(".oxlintrc-fetch.json", [

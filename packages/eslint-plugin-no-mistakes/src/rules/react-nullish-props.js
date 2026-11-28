@@ -107,7 +107,7 @@ function classifiedProps(type, facts, seen = new Set()) {
     for (const member of type.members) {
       if (member.type !== "TSPropertySignature") continue;
       const name = member.computed ? literalString(member.key) : keyName(member.key);
-      if (!name) continue;
+      if (name == null) continue;
       declared.add(name);
       const status = reactTypeStatus(typeAnnotation(member), facts);
       if (status === "yes") props.add(name);
@@ -139,12 +139,12 @@ function memberExpressionStatus(member, facts, lookup) {
   const key = member.computed ? literalString(member.property) : keyName(member.property);
   const asserted = assertedObjectFacts(member.object, facts);
   if (asserted) {
-    if (key && asserted.props?.has(key)) return "yes";
-    if (key && asserted.unresolved?.has(key)) return "unresolved";
+    if (key != null && asserted.props?.has(key)) return "yes";
+    if (key != null && asserted.unresolved?.has(key)) return "unresolved";
     return "no";
   }
   const object = unwrapSequence(member.object);
-  if (object?.type !== "Identifier" || !key) return "no";
+  if (object?.type !== "Identifier" || key == null) return "no";
   if (lookup(object, "objectTypes")?.has(key)) return "yes";
   if (lookup(object, "unresolvedMembers")?.has(key)) return "unresolved";
   return "no";

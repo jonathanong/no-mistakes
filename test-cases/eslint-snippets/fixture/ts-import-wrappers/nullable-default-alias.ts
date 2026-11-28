@@ -14,3 +14,13 @@ export async function direct(id: string): Promise<Widget | null> {
 export async function ordinary(id: string): Promise<Widget | null> {
   return read.getWidget(id);
 }
+
+export async function destructured(id: string): Promise<Widget | null> {
+  const { getWidget: read } = api;
+  return read(id);
+}
+
+export async function flat(id: string): Promise<Widget | null> {
+  const { getWidget: read } = data;
+  return read(id);
+}
