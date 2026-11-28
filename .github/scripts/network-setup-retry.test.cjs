@@ -77,7 +77,7 @@ test("every pnpm Node setup in CI has a bounded, fatal-on-exhaustion retry", () 
       index += 2;
     }
   }
-  assert.equal(count, 18, "CI must retain all pnpm/setup attempts across its job definitions");
+  assert.equal(count, 20, "CI must retain all pnpm/setup attempts across its job definitions");
   assert.ok(
     [...matrixOperatingSystems].some((os) => os.startsWith("windows")),
     "pnpm setup matrix must include Windows",

@@ -139,7 +139,7 @@ test("pnpm stores restore on PRs but save only on main", () => {
     /if: .*steps\.pnpm-setup\.outcome == 'failure'/.test(step),
   );
   const firsts = setups.filter((step) => !retries.includes(step));
-  assert.equal(setups.length, 18);
+  assert.equal(setups.length, 20);
   assert.equal(firsts.length, retries.length);
   for (const step of firsts) {
     assert.match(step, /cache: true/);

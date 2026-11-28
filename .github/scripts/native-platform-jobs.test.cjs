@@ -23,7 +23,12 @@ test("the macOS jobs retain the Windows build and test phases on parallel runner
         .flatMap(stepNames)
         .filter((name) => name !== "Exclude workspace from Microsoft Defender"),
     );
-    if (run === "native-rust-tests") expected.add("Test native build diagnostics");
+    if (run === "native-rust-tests") {
+      expected.add("Set up pnpm and Node.js (attempt 1 of 2)");
+      expected.add("Back off before Node.js setup attempt 2 of 2");
+      expected.add("Retry pnpm and Node.js setup");
+      expected.add("Test native build diagnostics");
+    }
 
     const names = stepNames(macos);
     assert.equal(names.length, expected.size, run);

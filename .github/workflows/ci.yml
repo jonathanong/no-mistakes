@@ -1294,6 +1294,37 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/build-artifact-source.cjs
 
+      - name: Set up pnpm and Node.js (attempt 1 of 2)
+        id: pnpm-setup
+        continue-on-error: true
+        timeout-minutes: 3
+        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
+        with:
+          runtime: node@24
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/main' }}
+          install: false
+
+      - name: Back off before Node.js setup attempt 2 of 2
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          # A timed-out cache restore can leave a partial store; the retry skips the cache.
+          rm -rf "$HOME/setup-pnpm/store"
+          echo "Node.js setup attempt 1 failed; retrying attempt 2 of 2 in 5 seconds"
+          sleep 5
+
+      - name: Retry pnpm and Node.js setup
+        if: ${{ !cancelled() && steps.pnpm-setup.outcome == 'failure' }}
+        timeout-minutes: 3
+        uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
+        with:
+          runtime: node@24
+          cache: false
+          cache-dependency-path: .github/pnpm-lockfile-cache-disabled
+          install: false
+
       - name: Test native build diagnostics
         if: ${{ runner.os == 'macOS' }}
         timeout-minutes: 2

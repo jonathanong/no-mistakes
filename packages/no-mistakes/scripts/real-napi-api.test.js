@@ -9,8 +9,6 @@ const { setTimeout: delay } = require("node:timers/promises");
 const { Worker } = require("node:worker_threads");
 const beforeAll = globalThis.beforeAll || require("node:test").before;
 const test = globalThis.test || require("node:test").test;
-require("./invocation-diagnostics-api.test.js");
-require("./github-actions-download-integrity-api.test.js");
 
 const repositoryRoot = join(__dirname, "..", "..", "..");
 const fixtureRoot = join(repositoryRoot, "fixtures", "napi", "real-addon-dependencies");
@@ -433,4 +431,6 @@ test(
   },
 );
 
+require("./github-actions-download-integrity-api.test.js");
+require("./invocation-diagnostics-api.test.js");
 require("./real-napi-progress.test.js");
