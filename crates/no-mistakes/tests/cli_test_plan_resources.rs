@@ -9,6 +9,15 @@ fn bin() -> PathBuf {
 
 #[test]
 fn resource_change_plan_json_keeps_resource_call_site_provenance() {
+    assert_resource_plan("resources/page.txt", 3);
+}
+
+#[test]
+fn ecosystem_lockfile_changes_keep_resource_graph_impact() {
+    assert_resource_plan("resources/go.mod", 4);
+}
+
+fn assert_resource_plan(changed_file: &str, line: usize) {
     // Use a copied fixture root: repository inventories intentionally omit the
     // worktree's untracked fixture additions while they are under development.
     let fixture = gitignore_fixture::materialize_saved("../test-plan/resource-impact");
@@ -16,7 +25,7 @@ fn resource_change_plan_json_keeps_resource_call_site_provenance() {
     let output = Command::new(bin())
         .args(["test", "plan", "--root"])
         .arg(root)
-        .args(["--changed-file", "resources/page.txt", "--json"])
+        .args(["--changed-file", changed_file, "--json"])
         .output()
         .expect("no-mistakes should run");
     assert!(
@@ -26,6 +35,7 @@ fn resource_change_plan_json_keeps_resource_call_site_provenance() {
     );
 
     let plan: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(plan["warnings"], serde_json::json!([]), "{plan:#?}");
     let selected = plan["selected_tests"]
         .as_array()
         .expect("plan JSON must include selected tests");
@@ -41,7 +51,7 @@ fn resource_change_plan_json_keeps_resource_call_site_provenance() {
     );
     assert_eq!(
         reason["via_details"][0]["call_sites"],
-        serde_json::json!([{"call_kind": "read-file-sync", "line": 3}])
+        serde_json::json!([{"call_kind": "read-file-sync", "line": line}])
     );
 }
 

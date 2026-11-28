@@ -1,0 +1,30 @@
+{
+  "content-hash": "abc",
+  "packages": [
+    {
+      "name": "acme/sample-alpha",
+      "version": "1.2.3",
+      "dist": {
+        "type": "zip",
+        "url": "https://example.invalid/sample-alpha.zip",
+        "reference": "aaaa"
+      }
+    },
+    {
+      "name": "acme/sample-git",
+      "version": "0.9.0",
+      "source": {
+        "type": "git",
+        "url": "https://example.invalid/sample-git.git",
+        "reference": "abc123"
+      }
+    }
+  ],
+  "packages-dev": [
+    {
+      "name": "acme/sample-path",
+      "version": "0.1.0",
+      "dist": { "type": "path", "url": "../sample-path", "reference": null }
+    }
+  ]
+}

@@ -405,3 +405,83 @@ fn lockfile_diff_invalid_head_without_explicit_lockfile_warns_and_succeeds() {
         "should produce no output when returning early"
     );
 }
+
+#[test]
+fn lockfile_diff_skips_a_malformed_cargo_lock() {
+    let dir = empty_repo();
+    let root = dir.path();
+    let lock = root.join("Cargo.lock");
+    let malformed = ecosystem_lock("cargo/malformed.lock");
+    let valid = ecosystem_lock("cargo/base.lock");
+    std::fs::copy(&malformed, &lock).unwrap();
+    git_commit(root, &["Cargo.lock"], "malformed");
+    std::fs::copy(&valid, &lock).unwrap();
+    assert_malformed_skip(root);
+
+    git_commit(root, &["Cargo.lock"], "valid");
+    std::fs::copy(&malformed, &lock).unwrap();
+    assert_malformed_skip(root);
+}
+
+fn ecosystem_lock(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/lockfile")
+        .join(name)
+}
+
+fn assert_malformed_skip(root: &Path) {
+    let output = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "HEAD",
+        "--lockfile",
+        "Cargo.lock",
+    ]);
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("malformed Cargo.lock content"), "{stderr}");
+    let entries: Vec<serde_json::Value> = serde_json::from_str(&stdout(&output)).unwrap();
+    assert!(entries.is_empty(), "{entries:?}");
+}
+
+#[test]
+fn lockfile_diff_warns_and_omits_an_unreadable_worktree_lockfile() {
+    let repo = empty_repo();
+    let root = repo.path();
+    let lock = root.join("Cargo.lock");
+    std::fs::copy(ecosystem_lock("cargo/base.lock"), &lock).unwrap();
+    git_commit(root, &["Cargo.lock"], "valid");
+    std::fs::copy(ecosystem_lock("cargo/unreadable.lock"), &lock).unwrap();
+    let output = run(&[
+        "lockfile",
+        "diff",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "HEAD",
+        "--lockfile",
+        "Cargo.lock",
+        "--format",
+        "json",
+    ]);
+    assert!(output.status.success());
+    let warnings = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        warnings.contains("`Cargo.lock` could not be read"),
+        "{warnings}"
+    );
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(&stdout(&output)).unwrap(),
+        serde_json::json!([])
+    );
+}
+
+#[path = "cli_lockfile_revisions.rs"]
+mod revisions;

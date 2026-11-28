@@ -1,0 +1,12 @@
+[[package]]
+name = "sample-alpha"
+version = "1.0.0"
+description = """
+name = "not-a-package"
+version = "9.9.9"
+"""
+
+[metadata]
+lock-version = "2.0"
+python-versions = ">=3.8"
+content-hash = "multiline"

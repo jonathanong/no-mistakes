@@ -8,6 +8,7 @@ require("./api-tests/planning");
 require("./api-tests/exports");
 require("./api-tests/invocation-errors");
 require("./api-tests/declarations-core");
+require("./api-tests/declarations-lockfile");
 require("./api-tests/declarations-unbounded");
 require("./api-tests/declarations-export-invariants");
 require("./api-tests/declarations-mutable");

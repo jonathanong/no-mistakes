@@ -1,0 +1,4 @@
+[[package]]
+name = "sample"
+version = "1.0.0"
+source = { registry = "https://packages.example.invalid/simple" }

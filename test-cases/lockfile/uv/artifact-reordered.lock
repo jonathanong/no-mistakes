@@ -1,0 +1,7 @@
+version = 1
+
+[[package]]
+name = "sample"
+version = "1.0.0"
+wheels = [{ hash = "sha256:bbb" }, { hash = "sha256:aaa" }]
+sdist = { hash = "sha256:same-sdist" }

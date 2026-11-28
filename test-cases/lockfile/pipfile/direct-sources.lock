@@ -1,0 +1,12 @@
+{
+  "default": {
+    "sample-file": { "file": "https://packages.example.invalid/archive.whl" },
+    "sample-url": { "url": "https://packages.example.invalid/package.tar.gz" },
+    "sample-hg": { "hg": "https://vcs.example.invalid/hg" },
+    "sample-svn": { "svn": "https://vcs.example.invalid/svn" },
+    "sample-bzr": { "bzr": "https://vcs.example.invalid/bzr" }
+  },
+  "develop": {
+    "sample-registry": { "version": "==1.0.0", "hashes": ["sha256:abcd"] }
+  }
+}

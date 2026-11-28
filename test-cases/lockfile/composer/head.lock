@@ -1,0 +1,30 @@
+{
+  "content-hash": "def",
+  "packages": [
+    {
+      "name": "acme/sample-alpha",
+      "version": "1.2.4",
+      "dist": {
+        "type": "zip",
+        "url": "https://example.invalid/sample-alpha.zip",
+        "reference": "bbbb"
+      }
+    },
+    {
+      "name": "acme/sample-gamma",
+      "version": "2.0.0",
+      "dist": {
+        "type": "zip",
+        "url": "https://example.invalid/sample-gamma.zip",
+        "reference": "ffff"
+      }
+    }
+  ],
+  "packages-dev": [
+    {
+      "name": "acme/sample-path",
+      "version": "0.1.0",
+      "dist": { "type": "path", "url": "../sample-path", "reference": null }
+    }
+  ]
+}

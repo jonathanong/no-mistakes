@@ -143,9 +143,10 @@ cross-file uniqueness.
 - Replace `rg` for exact call lines, comments, or strings.
 - Walk `importers` over non-TS/JS graphs (`importers` is the fast TS/JS
   reverse static-import scan). Use `dependents --relationship <lang>`.
-- Parse non-npm lockfiles in `lockfile diff`. SwiftPM and NuGet pins
-  participate in test planning; `poetry.lock`, `go.mod`, `Cargo.lock`, and
-  similar diffs are later work.
+- Parse `pom.xml`, Gradle lockfiles, `mix.lock`, or `pubspec.yaml` in
+  `lockfile diff`. Those stay native fallback. `go.sum` is not a package
+  diff; `go.mod` require directives are. SwiftPM and NuGet pins participate
+  in test planning.
 
 See the [agent guide](agent-guide.md) for the change lifecycle, the
 [CLI index](cli/README.md) for commands, and

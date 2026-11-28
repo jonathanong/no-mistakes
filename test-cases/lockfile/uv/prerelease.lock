@@ -1,0 +1,9 @@
+version = 1
+
+[[package]]
+name = "sample-pre"
+version = "1!2.0.0a1.post2.dev3+local.1"
+
+[[package]]
+name = "sample-app"
+source = { directory = "lib/sample" }

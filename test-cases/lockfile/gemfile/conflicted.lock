@@ -1,0 +1,8 @@
+GEM
+  remote: https://packages.example.invalid/
+  specs:
+  <<<<<<< base
+    sample-library (1.0.0)
+  =======
+    sample-library (2.0.0)
+  >>>>>>> head

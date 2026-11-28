@@ -1,0 +1,6 @@
+{
+  "packages": [
+    { "name": "example/path", "version": "1.0.0", "dist": { "type": "path", "url": "../example-b" } },
+    { "name": "example/checked", "version": "1.0.0", "dist": { "type": "zip", "url": "https://packages.example.invalid/basic.zip", "shasum": "bbbb" } }
+  ]
+}

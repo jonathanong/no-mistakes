@@ -1,0 +1,9 @@
+version = 3
+
+[[package]]
+name = "sample-pre"
+version = "1.0.0-alpha.1"
+
+[[package]]
+name = "sample-build"
+version = "1.0.0+build.5"

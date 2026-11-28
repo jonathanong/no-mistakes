@@ -1,0 +1,6 @@
+{
+  "packages": [
+    { "name": "example/sample", "version": "1.2.3" }
+  ],
+  "packages-dev": null
+}

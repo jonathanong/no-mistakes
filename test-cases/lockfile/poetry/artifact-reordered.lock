@@ -1,0 +1,4 @@
+[[package]]
+name = "sample"
+version = "1.0.0"
+files = [{ file = "sample-1.whl", hash = "sha256:bbb" }, { file = "sample-0.whl", hash = "sha256:aaa" }]

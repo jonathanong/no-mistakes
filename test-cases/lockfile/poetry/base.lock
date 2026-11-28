@@ -1,0 +1,74 @@
+[[package]]
+name = "sample-alpha"
+version = "1.2.3"
+description = "synthetic hash"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "sample_alpha-1.2.3-py3-none-any.whl", hash = "sha256:aaaa"},
+]
+
+[package.dependencies]
+sample-beta = ">=0.1"
+
+[[package]]
+name = "sample-git"
+version = "0.9.0"
+description = "synthetic"
+optional = false
+python-versions = "*"
+
+[package.source]
+type = "git"
+url = "https://example.invalid/sample-git.git"
+reference = "abc123"
+
+[[package]]
+name = "sample-dir"
+version = "0.1.0"
+description = "synthetic"
+optional = false
+python-versions = "*"
+
+[package.source]
+type = "directory"
+url = "lib/sample-dir"
+
+[[package]]
+name = "sample-url"
+version = "0.2.0"
+description = "synthetic"
+optional = false
+python-versions = "*"
+
+[package.source]
+type = "url"
+url = "https://example.invalid/sample-url.tar.gz"
+
+[[package]]
+name = "sample-legacy"
+version = "0.3.0"
+description = "synthetic"
+optional = false
+python-versions = "*"
+
+[package.source]
+type = "legacy"
+url = "https://example.invalid/legacy"
+
+[[package]]
+name = "sample-meta"
+version = "1.0.0"
+description = "synthetic"
+optional = false
+python-versions = "*"
+
+[metadata]
+lock-version = "2.0"
+python-versions = ">=3.8"
+content-hash = "deadbeef"
+
+[metadata.files]
+sample-meta = [
+    {file = "sample_meta-1.0.0-py3-none-any.whl", hash = "sha256:eeee"},
+]

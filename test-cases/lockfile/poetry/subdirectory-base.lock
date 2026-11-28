@@ -1,0 +1,9 @@
+[[package]]
+name = "sample"
+version = "1.0.0"
+[package.source]
+type = "git"
+url = "https://example.invalid/sample"
+reference = "main"
+resolved_reference = "abc123"
+subdirectory = "packages/sample"

@@ -1,0 +1,31 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    sample-alpha (1.2.3)
+      sample-dep (~> 1.0)
+    sample-beta (0.4.0)
+
+PATH
+  remote: vendor/sample-app
+  specs:
+    sample-app (0.1.0)
+      sample-alpha
+
+GIT
+  remote: https://example.invalid/sample-git.git
+  revision: abc123
+  specs:
+    sample-git (0.9.0)
+
+CHECKSUMS
+  sample-alpha (1.2.3) sha256=aaaa
+  sample-beta (0.4.0) sha256=bbbb
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  sample-alpha
+
+BUNDLED WITH
+   2.5.0

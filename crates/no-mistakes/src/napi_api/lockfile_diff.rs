@@ -4,7 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
 mod git;
-use git::{detect_lockfiles_from_head, find_git_root, git_ref_exists, git_show_file};
+use git::find_git_root;
+use lockfile::{git_ref_exists, git_show_file};
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
@@ -59,67 +60,33 @@ pub(crate) fn lockfile_diff_json_impl(options: serde_json::Value) -> napi::Resul
                 head
             )));
         }
-        // Detect from head commit so newly added lockfiles are found even when
-        // the working tree is still at a different commit.
-        detect_lockfiles_from_head(&git_root, head, &root).map_err(git_io_to_napi)?
+        lockfile::detect_lockfiles_at_refs(&git_root, &root, &base, head).map_err(git_io_to_napi)?
     } else {
         let visible_paths = no_mistakes::codebase::ts_source::discover_visible_paths(&root);
-        [
-            "pnpm-lock.yaml",
-            "package-lock.json",
-            "npm-shrinkwrap.json",
-            "yarn.lock",
-            "bun.lock",
-        ]
-        .iter()
-        .map(|name| no_mistakes::codebase::ts_resolver::normalize_path(&root.join(name)))
-        .filter(|candidate| {
-            visible_paths
-                .iter()
-                .any(|path| no_mistakes::codebase::ts_resolver::normalize_path(path) == *candidate)
-        })
-        .collect()
+        lockfile::LOCKFILE_BASENAMES
+            .iter()
+            .map(|name| no_mistakes::codebase::ts_resolver::normalize_path(&root.join(name)))
+            .filter(|candidate| {
+                visible_paths.iter().any(|path| {
+                    no_mistakes::codebase::ts_resolver::normalize_path(path) == *candidate
+                })
+            })
+            .collect()
     };
 
     let mut entries = Vec::new();
     let mut warnings = Vec::new();
-
     for lf_path in &lf_paths {
-        let basename = lf_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
-        let rel = lf_path
-            .strip_prefix(&git_root)
-            .unwrap_or(lf_path)
-            .to_string_lossy()
-            .replace('\\', "/");
-        let Some(manager) = lockfile::detect_manager(basename) else {
-            if lockfile::is_binary_lockfile(basename) {
-                let message = lockfile::binary_lockfile_warning(basename);
-                if !options.include_warnings {
-                    return Err(napi::Error::from_reason(message));
-                }
-                warnings.push(LockfileDiffWarning {
-                    code: "binary-lockfile",
-                    lockfile: rel,
-                    message,
-                });
+        match diff_one_lockfile(lf_path, &git_root, options.head.as_deref(), &base)? {
+            LockfileOutcome::Entry(entry) => entries.push(entry),
+            LockfileOutcome::Warning(warning) if options.include_warnings => {
+                warnings.push(warning);
             }
-            continue;
-        };
-        let new_content = match options.head.as_deref() {
-            Some(head) => git_lockfile_content(&git_root, head, &rel, "head")?,
-            None => std::fs::read_to_string(lf_path).unwrap_or_default(),
-        };
-        let old_content = git_lockfile_content(&git_root, &base, &rel, "base")?;
-        let old_pkgs = lockfile::parse_lockfile(manager, &old_content);
-        let new_pkgs = lockfile::parse_lockfile(manager, &new_content);
-        let diff = lockfile::diff(&old_pkgs, &new_pkgs);
-        entries.push(LockfileDiffEntry {
-            lockfile: rel,
-            manager: manager_name(manager).to_string(),
-            added: diff.added,
-            removed: diff.removed,
-            changed: diff.changed,
-        });
+            LockfileOutcome::Warning(warning) => {
+                return Err(napi::Error::from_reason(warning.message));
+            }
+            LockfileOutcome::Unsupported => {}
+        }
     }
 
     if options.include_warnings {
@@ -137,25 +104,75 @@ fn git_lockfile_content(
     reference: &str,
     lockfile: &str,
     kind: &str,
-) -> napi::Result<String> {
-    if let Some(content) = git_show_file(git_root, reference, lockfile).map_err(git_io_to_napi)? {
-        return Ok(content);
+) -> napi::Result<Option<String>> {
+    match git_show_file(git_root, reference, lockfile) {
+        Ok(Some(content)) => return Ok(Some(content)),
+        Ok(None) => {}
+        Err(error) => return Err(git_io_to_napi(error)),
     }
     if !git_ref_exists(git_root, reference).map_err(git_io_to_napi)? {
         return Err(napi::Error::from_reason(format!(
             "Could not retrieve `{lockfile}` at ref `{reference}`; ensure the {kind} ref exists in the git history"
         )));
     }
-    Ok(String::new())
+    Ok(None)
+}
+
+enum LockfileOutcome {
+    Entry(LockfileDiffEntry),
+    Warning(LockfileDiffWarning),
+    Unsupported,
+}
+
+fn diff_one_lockfile(
+    lf_path: &Path,
+    git_root: &Path,
+    head: Option<&str>,
+    base: &str,
+) -> napi::Result<LockfileOutcome> {
+    let basename = lf_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+    let rel = lockfile::git_lockfile_path(git_root, lf_path);
+    let Some(manager) = lockfile::detect_manager(basename) else {
+        return Ok(if lockfile::is_binary_lockfile(basename) {
+            LockfileOutcome::Warning(LockfileDiffWarning {
+                code: "binary-lockfile",
+                lockfile: rel,
+                message: lockfile::binary_lockfile_warning(basename),
+            })
+        } else {
+            LockfileOutcome::Unsupported
+        });
+    };
+    let new_content = match head {
+        Some(head) => git_lockfile_content(git_root, head, &rel, "head")?,
+        None => lockfile::read_worktree_lockfile(lf_path).map_err(|error| {
+            napi::Error::from_reason(format!("`{rel}` could not be read: {error}"))
+        })?,
+    };
+    let old_content = git_lockfile_content(git_root, base, &rel, "base")?;
+    let old_pkgs = packages_for_entry(manager, &rel, old_content.as_deref())?;
+    let new_pkgs = packages_for_entry(manager, &rel, new_content.as_deref())?;
+    let diff = lockfile::diff(&old_pkgs, &new_pkgs);
+    Ok(LockfileOutcome::Entry(LockfileDiffEntry {
+        lockfile: rel,
+        manager: manager_name(manager).to_string(),
+        added: diff.added,
+        removed: diff.removed,
+        changed: diff.changed,
+    }))
+}
+
+fn packages_for_entry(
+    manager: PackageManager,
+    rel: &str,
+    content: Option<&str>,
+) -> napi::Result<Vec<lockfile::ResolvedPackage>> {
+    lockfile::packages_for_optional_diff(manager, content)
+        .map_err(|error| napi::Error::from_reason(format!("`{rel}` has {}", error.description)))
 }
 
 fn manager_name(m: PackageManager) -> &'static str {
-    match m {
-        PackageManager::Npm => "npm",
-        PackageManager::Pnpm => "pnpm",
-        PackageManager::Yarn => "yarn",
-        PackageManager::Bun => "bun",
-    }
+    m.as_str()
 }
 
 #[cfg(test)]

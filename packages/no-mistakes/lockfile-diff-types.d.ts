@@ -24,7 +24,18 @@ export interface LockfileDiffReport {
 
 export interface LockfileDiffEntry {
   lockfile: string;
-  manager: "npm" | "pnpm" | "yarn" | "bun";
+  manager:
+    | "npm"
+    | "pnpm"
+    | "yarn"
+    | "bun"
+    | "poetry"
+    | "uv"
+    | "pipfile"
+    | "go"
+    | "cargo"
+    | "gemfile"
+    | "composer";
   added: string[];
   removed: string[];
   changed: string[];

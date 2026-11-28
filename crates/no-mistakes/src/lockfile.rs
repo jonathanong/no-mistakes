@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Args, Subcommand};
-use no_mistakes::codebase::lockfile::{self, PackageManager};
+use no_mistakes::codebase::lockfile::{self, git_ref_exists, PackageManager};
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -64,8 +64,6 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
     let lockfile_paths = if let Some(lf) = args.lockfile {
         vec![root.join(lf)]
     } else if let Some(head) = args.head.as_deref() {
-        // When --head is supplied, detect from the head commit so we find lockfiles
-        // added or removed between base and head that don't exist on disk.
         if !git_ref_exists(&git_root, head)? {
             eprintln!(
                 "warning: head ref `{}` does not exist; no lockfiles detected",
@@ -73,7 +71,7 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
             );
             return Ok(ExitCode::SUCCESS);
         }
-        detect_lockfiles_from_head(&git_root, head, &root)?
+        lockfile::detect_lockfiles_at_refs(&git_root, &root, &args.base, head)?
     } else {
         let visible_paths = no_mistakes::codebase::ts_source::try_discover_visible_paths(&root)?;
         detect_lockfiles_in_root(&root, &visible_paths)
@@ -89,29 +87,44 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
             }
             continue;
         };
-        let rel = lf_path
-            .strip_prefix(&git_root)
-            .unwrap_or(lf_path)
-            .to_string_lossy()
-            .replace('\\', "/");
+        let rel = lockfile::git_lockfile_path(&git_root, lf_path);
 
         let head = args.head.as_deref().unwrap_or("HEAD");
         let new_content = if args.head.is_some() {
-            let Some(c) = git_content_or_empty(&git_root, head, &rel)? else {
-                eprintln!("warning: could not retrieve {} at ref {}", rel, head);
+            let RefContent::Readable(c) = git_content(&git_root, head, &rel)? else {
                 continue;
             };
             c
         } else {
-            std::fs::read_to_string(lf_path).unwrap_or_default()
+            match lockfile::read_worktree_lockfile(lf_path) {
+                Ok(content) => content,
+                Err(error) => {
+                    eprintln!("warning: `{rel}` could not be read: {error}; skipping it");
+                    continue;
+                }
+            }
         };
-        let Some(old_content) = git_content_or_empty(&git_root, &args.base, &rel)? else {
-            eprintln!("warning: could not retrieve {} at ref {}", rel, args.base);
+        let RefContent::Readable(old_content) = git_content(&git_root, &args.base, &rel)? else {
             continue;
         };
 
-        let old_pkgs = lockfile::parse_lockfile(manager, &old_content);
-        let new_pkgs = lockfile::parse_lockfile(manager, &new_content);
+        let old_pkgs = match lockfile::packages_for_optional_diff(manager, old_content.as_deref()) {
+            Ok(packages) => packages,
+            Err(error) => {
+                eprintln!(
+                    "warning: `{rel}` at `{}` has {}; skipping it",
+                    args.base, error.description
+                );
+                continue;
+            }
+        };
+        let new_pkgs = match lockfile::packages_for_optional_diff(manager, new_content.as_deref()) {
+            Ok(packages) => packages,
+            Err(error) => {
+                eprintln!("warning: `{rel}` has {}; skipping it", error.description);
+                continue;
+            }
+        };
         let diff = lockfile::diff(&old_pkgs, &new_pkgs);
 
         outputs.push(LockfileDiffOutput {
@@ -144,10 +157,5 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
 include!("lockfile/git.rs");
 
 fn manager_name(m: PackageManager) -> &'static str {
-    match m {
-        PackageManager::Npm => "npm",
-        PackageManager::Pnpm => "pnpm",
-        PackageManager::Yarn => "yarn",
-        PackageManager::Bun => "bun",
-    }
+    m.as_str()
 }

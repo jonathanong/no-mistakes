@@ -1,0 +1,5 @@
+PLUGIN SOURCE
+  remote: https://packages.example.invalid
+  type: sample
+  specs:
+    sample-plugin-gem (1.1.0)

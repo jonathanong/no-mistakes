@@ -175,7 +175,8 @@ fn detect_lockfiles_from_head_uses_subdirectory_paths() {
         .current_dir(root)
         .output()
         .unwrap();
-    let found = detect_lockfiles_from_head(root, "HEAD", &root.join("app")).unwrap();
+    let found =
+        lockfile::detect_lockfiles_at_refs(root, &root.join("app"), "HEAD", "HEAD").unwrap();
     assert_eq!(found.len(), 1);
     assert!(found[0].ends_with("pnpm-lock.yaml"));
 }

@@ -92,6 +92,7 @@ words:
   - bstr
   - btrim
   - greppable
+  - gomod
   - guardrailsrc
   - inout
   - invalidators

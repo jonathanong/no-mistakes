@@ -1,0 +1,25 @@
+[[package]]
+name = "sample-pin"
+version = "1.0.0"
+description = "synthetic"
+
+[package.source]
+type = "git"
+url = "https://example.invalid/sample-pin.git"
+reference = "main"
+resolved_reference = "aaa111"
+
+[[package]]
+name = "sample-ref"
+version = "0.1.0"
+description = "synthetic"
+
+[package.source]
+type = "git"
+url = "https://example.invalid/sample-ref.git"
+reference = "ccc333"
+
+[metadata]
+lock-version = "2.0"
+python-versions = ">=3.8"
+content-hash = "pin-base"

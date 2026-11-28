@@ -1,0 +1,21 @@
+version = 1
+revision = 1
+requires-python = ">=3.12"
+
+[[package]]
+name = "sample-app"
+version = "0.1.0"
+source = { editable = "." }
+
+[[package]]
+name = "sample-alpha"
+version = "1.2.3"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://example.invalid/sample_alpha-1.2.3-py3-none-any.whl", hash = "sha256:aaaa" },
+]
+
+[[package]]
+name = "sample-git"
+version = "0.4.0"
+source = { git = "https://example.invalid/sample-git.git", rev = "abc123", tag = "v0.4.0" }
