@@ -434,3 +434,120 @@ SELECT
         (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
     ) OVER ()
 FROM orders o;
+
+SELECT pg_catalog.nth_value(
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+    + (SELECT b.n FROM accounts b WHERE b.id = o.account_id),
+    NULL::integer
+) OVER ()
+FROM orders o;
+
+SELECT pg_catalog.nth_value(
+    pg_catalog.sum((SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+        + (SELECT b.n FROM accounts b WHERE b.id = o.account_id)),
+    NULL
+) OVER ()
+FROM orders o;
+
+SELECT pg_catalog.nth_value(
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+    + (SELECT b.n FROM accounts b WHERE b.id = o.account_id),
+    1
+) OVER ()
+FROM orders o;
+
+SELECT pg_catalog.lag(
+    0::bigint, 0, pg_catalog.sum(
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+        + (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+    )
+) OVER ()
+FROM orders o;
+
+SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id) + 01
+FROM orders o
+ORDER BY (SELECT a.n FROM accounts a WHERE a.id = o.id) + 1;
+
+SELECT
+    (SELECT a.n FROM accounts a WHERE a.id = o.id) + 01,
+    (SELECT b.n FROM accounts b WHERE b.id = o.id) + 1
+FROM orders o;
+
+SELECT
+    CASE WHEN o.enabled THEN (SELECT a.n FROM accounts a WHERE a.id = o.account_id) END,
+    CASE WHEN NOT o.enabled THEN (SELECT b.n FROM accounts b WHERE b.id = o.account_id) END
+FROM orders o;
+
+SELECT
+    CASE WHEN o.enabled THEN 0 ELSE (SELECT a.n FROM accounts a WHERE a.id = o.account_id) END,
+    CASE WHEN o.enabled THEN (SELECT b.n FROM accounts b WHERE b.id = o.account_id) END,
+    (SELECT c.n FROM accounts c WHERE c.id = o.account_id)
+FROM orders o;
+
+SELECT
+    CASE WHEN o.enabled THEN (SELECT a.n FROM accounts a WHERE a.id = o.account_id) END,
+    CASE WHEN o.enabled THEN (SELECT b.n FROM accounts b WHERE b.id = o.account_id) END
+FROM orders o;
+
+SELECT
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id LIMIT '0'),
+    (SELECT b.n FROM accounts b WHERE b.id = o.account_id LIMIT '0')
+FROM orders o;
+
+SELECT
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id LIMIT '1'),
+    (SELECT b.n FROM accounts b WHERE b.id = o.account_id LIMIT '1')
+FROM orders o;
+
+SELECT
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id LIMIT NULL),
+    (SELECT b.n FROM accounts b WHERE b.id = o.account_id LIMIT NULL)
+FROM orders o;
+
+SELECT pg_catalog.sum(o.amount) OVER (
+    ROWS (SELECT a.n FROM accounts a WHERE a.id = $1) PRECEDING
+), pg_catalog.avg(o.amount) OVER (
+    ROWS (SELECT ALL a.n FROM accounts a WHERE a.id = $1) PRECEDING
+)
+FROM orders o;
+
+SELECT CASE 1 WHEN 2 THEN pg_catalog.sum(o.amount) OVER w ELSE 0 END
+FROM orders o
+WINDOW w AS (
+    ROWS BETWEEN (SELECT a.n FROM accounts a WHERE a.id = $1) PRECEDING
+         AND (SELECT b.n FROM accounts b WHERE b.id = $1) FOLLOWING
+);
+
+SELECT CASE TRUE WHEN TRUE THEN pg_catalog.sum(o.amount) OVER w ELSE 0 END
+FROM orders o
+WINDOW w AS (
+    ROWS BETWEEN (SELECT a.n FROM accounts a WHERE a.id = $1) PRECEDING
+         AND (SELECT b.n FROM accounts b WHERE b.id = $1) FOLLOWING
+);
+
+SELECT CASE 1.0 WHEN 1.0 THEN pg_catalog.sum(o.amount) OVER w ELSE 0 END
+FROM orders o
+WINDOW w AS (
+    ROWS BETWEEN (SELECT a.n FROM accounts a WHERE a.id = $1) PRECEDING
+         AND (SELECT b.n FROM accounts b WHERE b.id = $1) FOLLOWING
+);
+
+SELECT CASE WHEN o.enabled THEN CASE WHEN NOT o.enabled THEN
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+    + (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+END END
+FROM orders o;
+
+SELECT CASE NULL WHEN NULL THEN pg_catalog.sum(o.amount) OVER w ELSE 0 END
+FROM orders o
+WINDOW w AS (
+    ROWS BETWEEN (SELECT a.n FROM accounts a WHERE a.id = $1) PRECEDING
+         AND (SELECT b.n FROM accounts b WHERE b.id = $1) FOLLOWING
+);
+
+SELECT pg_catalog.nth_value(
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+    + (SELECT b.n FROM accounts b WHERE b.id = o.account_id),
+    NULL::int4
+) OVER ()
+FROM orders o;

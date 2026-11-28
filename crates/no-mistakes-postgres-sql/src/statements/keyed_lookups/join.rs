@@ -5,19 +5,19 @@ use super::inspect_exprs;
 use super::normalize::{extract_lookup_key, LookupKey};
 use super::scope::{ScopeSnapshot, ScopeStack};
 use super::table::lookup_table;
+use super::LookupHistory;
 use crate::idents::{ident_key, object_name_identity, relation_suffix_name};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use factor::register_factor;
 use sqlparser::ast::{
     Join, JoinConstraint, JoinOperator, ObjectName, Spanned, TableAlias, TableWithJoins,
 };
-use std::collections::BTreeMap;
 use using_clause::{column_name, UsingColumns};
 
 pub(super) fn register_table_with_joins(
     table: &TableWithJoins,
     scopes: &mut ScopeStack,
-    seen: &mut BTreeMap<LookupKey, (usize, usize)>,
+    seen: &mut LookupHistory,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
     register_join_chain(table, scopes, seen, out);
@@ -26,7 +26,7 @@ pub(super) fn register_table_with_joins(
 fn register_join_chain(
     table: &TableWithJoins,
     scopes: &mut ScopeStack,
-    seen: &mut BTreeMap<LookupKey, (usize, usize)>,
+    seen: &mut LookupHistory,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) -> UsingColumns {
     let left_start = scopes.binding_count();
@@ -40,7 +40,7 @@ fn register_join_chain(
 pub(super) fn register_table_factor(
     factor: &sqlparser::ast::TableFactor,
     scopes: &mut ScopeStack,
-    seen: &mut BTreeMap<LookupKey, (usize, usize)>,
+    seen: &mut LookupHistory,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
     register_factor(factor, scopes, seen, out);
@@ -51,7 +51,7 @@ fn inspect_join(
     left_start: usize,
     scopes: &mut ScopeStack,
     using: &mut UsingColumns,
-    seen: &mut BTreeMap<LookupKey, (usize, usize)>,
+    seen: &mut LookupHistory,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
     let constraint = join_constraint(&join.join_operator);
@@ -176,10 +176,10 @@ pub(super) fn record_lookup(
     key_display: String,
     line: usize,
     column: usize,
-    seen: &mut BTreeMap<LookupKey, (usize, usize)>,
+    seen: &mut LookupHistory,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
-    if let Some(&(first_line, first_column)) = seen.get(&key) {
+    if let Some((first_line, first_column)) = seen.observe(&key, (line, column)) {
         out.push(SqlDuplicateKeyedLookupFact {
             relation: key.relation,
             key_display,
@@ -188,7 +188,5 @@ pub(super) fn record_lookup(
             line,
             column,
         });
-    } else {
-        seen.insert(key, (line, column));
     }
 }

@@ -103,3 +103,35 @@ LIMIT 0 OFFSET (
     SELECT (SELECT a.n FROM accounts a WHERE a.id = $1)
          + (SELECT b.m FROM accounts b WHERE b.id = $1)
 );
+
+MERGE INTO orders o USING incoming s ON FALSE
+WHEN MATCHED THEN UPDATE SET
+    account_name = (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+    account_tier = (SELECT b.tier FROM accounts b WHERE b.id = o.account_id)
+WHEN NOT MATCHED THEN INSERT (account_name, account_tier) VALUES (
+    (SELECT c.name FROM accounts c WHERE c.id = s.account_id),
+    (SELECT d.tier FROM accounts d WHERE d.id = s.account_id)
+);
+
+MERGE INTO orders o USING incoming s ON NULL
+WHEN MATCHED THEN UPDATE SET
+    account_name = (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+    account_tier = (SELECT b.tier FROM accounts b WHERE b.id = o.account_id)
+WHEN NOT MATCHED BY SOURCE THEN DO NOTHING
+RETURNING (SELECT c.name FROM accounts c WHERE c.id = o.account_id),
+          (SELECT d.tier FROM accounts d WHERE d.id = o.account_id);
+
+MERGE INTO orders o USING incoming s ON o.id = s.id
+WHEN MATCHED THEN DO NOTHING
+RETURNING (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+          (SELECT b.tier FROM accounts b WHERE b.id = o.account_id);
+
+MERGE INTO orders o USING incoming s ON o.id = s.id
+WHEN MATCHED THEN DELETE
+WHEN NOT MATCHED THEN INSERT (id) VALUES (DEFAULT)
+RETURNING (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+          (SELECT b.tier FROM accounts b WHERE b.id = o.account_id);
+
+INSERT INTO orders AS o DEFAULT VALUES ON CONFLICT DO NOTHING
+RETURNING (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+          (SELECT b.tier FROM accounts b WHERE b.id = o.account_id);

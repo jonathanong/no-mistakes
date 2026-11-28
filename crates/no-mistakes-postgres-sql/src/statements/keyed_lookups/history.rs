@@ -1,0 +1,87 @@
+use super::normalize::LookupKey;
+use super::scope::ScopeSnapshot;
+use crate::idents::{ident_key, unwrap_expr};
+use sqlparser::ast::{Expr, UnaryOperator};
+use std::collections::BTreeMap;
+
+type Column = (usize, String);
+type Site = (usize, usize);
+
+const TRUE: u8 = 1;
+const FALSE: u8 = 2;
+const NULL: u8 = 4;
+const ANY: u8 = TRUE | FALSE | NULL;
+
+#[derive(Clone, Default)]
+struct Guards(BTreeMap<Column, u8>);
+
+impl Guards {
+    fn matches(&self, other: &Self) -> bool {
+        self.0
+            .iter()
+            .all(|(column, allowed)| allowed & other.0.get(column).copied().unwrap_or(ANY) != 0)
+    }
+}
+
+#[derive(Clone, Default)]
+pub(super) struct LookupHistory {
+    active: Guards,
+    sites: BTreeMap<LookupKey, Vec<(Guards, Site)>>,
+}
+
+impl LookupHistory {
+    pub(super) fn new() -> Self {
+        Self::default()
+    }
+
+    pub(super) fn restrict(&mut self, condition: &Expr, outer: &ScopeSnapshot, taken: bool) {
+        let (column, test) = match unwrap_expr(condition) {
+            Expr::UnaryOp {
+                op: UnaryOperator::Not,
+                expr,
+            } => (unwrap_expr(expr), FALSE),
+            column => (column, TRUE),
+        };
+        let Expr::CompoundIdentifier(parts) = column else {
+            return;
+        };
+        let [qualifier, column] = parts.as_slice() else {
+            return;
+        };
+        let column = ident_key(column);
+        if let Some(binding) = outer.resolve_column(&ident_key(qualifier), &column) {
+            let allowed = if taken { test } else { ANY ^ test };
+            *self.active.0.entry((binding, column)).or_insert(ANY) &= allowed;
+        }
+    }
+
+    pub(super) fn observe(&mut self, key: &LookupKey, site: Site) -> Option<Site> {
+        if self.active.0.values().any(|allowed| *allowed == 0) {
+            return None;
+        }
+        let sites = self.sites.entry(key.clone()).or_default();
+        let first = sites
+            .iter()
+            .find(|(guards, _)| guards.matches(&self.active))
+            .map(|(_, site)| *site);
+        if site_is_new(sites, &self.active) {
+            sites.push((self.active.clone(), site));
+        }
+        first
+    }
+
+    pub(super) fn merge(&mut self, other: Self) {
+        for (key, sites) in other.sites {
+            let current = self.sites.entry(key).or_default();
+            for (guards, site) in sites {
+                if site_is_new(current, &guards) {
+                    current.push((guards, site));
+                }
+            }
+        }
+    }
+}
+
+fn site_is_new(sites: &[(Guards, Site)], guards: &Guards) -> bool {
+    sites.iter().all(|(existing, _)| existing.0 != guards.0)
+}

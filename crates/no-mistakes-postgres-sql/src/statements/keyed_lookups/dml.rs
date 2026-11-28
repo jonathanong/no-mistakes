@@ -1,7 +1,7 @@
-use super::function_clauses::literal_condition;
+use super::conditions::literal_condition;
 use super::join::{register_table_factor, register_table_with_joins};
 use super::scope::ScopeStack;
-use super::{inspect_exprs, returning_exprs};
+use super::{inspect_exprs, returning_exprs, LookupHistory};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{
     Delete, Expr, FromTable, Insert, Merge, MergeAction, MergeClauseKind, MergeInsertKind,
@@ -40,7 +40,7 @@ pub(super) fn walk_insert(
             .iter()
             .map(|assignment| &assignment.value)
             .chain(update.selection.iter());
-        inspect_exprs(exprs, scopes, &mut BTreeMap::new(), out);
+        inspect_exprs(exprs, scopes, &mut LookupHistory::new(), out);
         scopes.pop_frame();
     }
     if let Some(returning) = returning {
@@ -48,7 +48,7 @@ pub(super) fn walk_insert(
         inspect_exprs(
             returning_exprs(Some(returning)),
             scopes,
-            &mut BTreeMap::new(),
+            &mut LookupHistory::new(),
             out,
         );
     }
@@ -64,7 +64,7 @@ pub(super) fn walk_update(
         return;
     }
     scopes.push_frame();
-    let mut seen = BTreeMap::new();
+    let mut seen = LookupHistory::new();
     register_table_with_joins(&update.table, scopes, &mut seen, out);
     if let Some(from) = &update.from {
         let tables = match from {
@@ -83,7 +83,7 @@ pub(super) fn walk_update(
     inspect_exprs(exprs, scopes, &mut seen, out);
     if let Some(returning) = update.returning.as_deref() {
         scopes.add_returning_aliases(Some("new"));
-        let mut returning_seen = BTreeMap::new();
+        let mut returning_seen = LookupHistory::new();
         inspect_exprs(
             returning_exprs(Some(returning)),
             scopes,
@@ -103,7 +103,7 @@ pub(super) fn walk_delete(
         return;
     }
     scopes.push_frame();
-    let mut seen = BTreeMap::new();
+    let mut seen = LookupHistory::new();
     let from_tables = match &delete.from {
         FromTable::WithFromKeyword(tables) | FromTable::WithoutKeyword(tables) => tables,
     };
@@ -124,12 +124,16 @@ pub(super) fn walk_merge(
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
     scopes.push_frame();
-    let mut base_seen = BTreeMap::new();
+    let mut base_seen = LookupHistory::new();
     register_table_factor(&merge.table, scopes, &mut base_seen, out);
     register_table_factor(&merge.source, scopes, &mut base_seen, out);
     inspect_exprs(std::iter::once(&*merge.on), scopes, &mut base_seen, out);
     let mut category_seen = BTreeMap::new();
     let mut closed_categories = BTreeSet::new();
+    if !can_affect_rows(Some(&merge.on)) {
+        closed_categories.insert(MergeClauseKind::Matched);
+    }
+    let mut modifies_rows = false;
     for clause in &merge.clauses {
         let category = match clause.clause_kind {
             MergeClauseKind::NotMatchedByTarget => MergeClauseKind::NotMatched,
@@ -145,6 +149,7 @@ pub(super) fn walk_merge(
         if let Some(predicate) = &clause.predicate {
             inspect_exprs(std::iter::once(predicate), scopes, pred_seen, out);
         }
+        modifies_rows |= !matches!(clause.action, MergeAction::DoNothing { .. });
         let mut action_seen = pred_seen.clone();
         let mut exprs = Vec::new();
         collect_merge_action_exprs(&clause.action, &mut exprs);
@@ -153,15 +158,17 @@ pub(super) fn walk_merge(
             closed_categories.insert(category);
         }
     }
-    if let Some(OutputClause::Returning { select_items, .. }) = &merge.output {
-        scopes.add_returning_aliases(None);
-        let mut returning_seen = BTreeMap::new();
-        inspect_exprs(
-            returning_exprs(Some(select_items)),
-            scopes,
-            &mut returning_seen,
-            out,
-        );
+    if modifies_rows {
+        if let Some(OutputClause::Returning { select_items, .. }) = &merge.output {
+            scopes.add_returning_aliases(None);
+            let mut returning_seen = LookupHistory::new();
+            inspect_exprs(
+                returning_exprs(Some(select_items)),
+                scopes,
+                &mut returning_seen,
+                out,
+            );
+        }
     }
     scopes.pop_frame();
 }

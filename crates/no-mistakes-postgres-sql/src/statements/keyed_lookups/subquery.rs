@@ -1,17 +1,17 @@
+use super::conditions::case_condition;
 use super::expr_norm::ExprNormalizer;
 use super::function_clauses::{
-    coalesce_arguments, filter_skips_inputs, is_eager, literal_condition, split_coalesce_arguments,
+    coalesce_arguments, filter_skips_inputs, is_eager, split_coalesce_arguments,
     visit_eager_functions, visit_function_inputs, visit_ordered_set_arguments,
 };
 use super::join::record_lookup;
-use super::normalize::LookupKey;
 use super::scope::ScopeSnapshot;
 use super::select_exprs::{target_identity, SelectTargets};
 use super::windows::window_expressions;
+use super::LookupHistory;
 use crate::idents::{function_arg_expr, unwrap_expr, visit_child_exprs};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{Expr, FunctionArg, WindowType};
-use std::collections::BTreeMap;
 mod lookup;
 
 use lookup::extract_scalar_subquery;
@@ -20,7 +20,7 @@ pub(super) fn inspect_expr(
     expr: &Expr,
     outer: &ScopeSnapshot,
     targets: &SelectTargets<'_>,
-    seen: &mut BTreeMap<LookupKey, (usize, usize)>,
+    seen: &mut LookupHistory,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
     inspect(expr, outer, targets, seen, out, false);
@@ -56,17 +56,18 @@ fn inspect(
             }
             let mut cond_seen = seen.clone();
             for branch in conditions {
-                let condition = operand
-                    .is_none()
-                    .then(|| literal_condition(&branch.condition))
-                    .flatten();
+                let condition = case_condition(operand.as_deref(), &branch.condition);
                 if condition == Some(false) {
                     continue;
                 }
                 inspect(&branch.condition, outer, targets, &mut cond_seen, out, true);
                 let mut arm_seen = cond_seen.clone();
+                if operand.is_none() && condition.is_none() {
+                    arm_seen.restrict(&branch.condition, outer, true);
+                    cond_seen.restrict(&branch.condition, outer, false);
+                }
                 inspect(&branch.result, outer, targets, &mut arm_seen, out, true);
-                merge_history(seen, arm_seen);
+                seen.merge(arm_seen);
                 if condition == Some(true) {
                     return;
                 }
@@ -74,7 +75,7 @@ fn inspect(
             if let Some(else_expr) = else_result {
                 inspect(else_expr, outer, targets, &mut cond_seen, out, true);
             }
-            merge_history(seen, cond_seen);
+            seen.merge(cond_seen);
         }
         Expr::Function(function) if skip_eager && is_eager(function) => {}
         Expr::Function(function) => {
@@ -102,7 +103,7 @@ fn inspect(
                     .map(|_| target_identity(filter));
                 let mut filtered = seen.clone();
                 if let Some(key) = &key {
-                    merge_history(&mut filtered, targets.take_filter_history(key));
+                    filtered.merge(targets.take_filter_history(key));
                 }
                 visit_function_inputs(function, &mut |expr| {
                     inspect(expr, input_scope, targets, &mut filtered, out, skip_eager);
@@ -151,11 +152,5 @@ fn inspect_coalesce(
     let (evaluated, _) = split_coalesce_arguments(arguments);
     for argument in evaluated.iter().filter_map(function_arg_expr) {
         inspect(argument, outer, targets, seen, out, true);
-    }
-}
-
-fn merge_history(seen: &mut super::LookupHistory, branch: super::LookupHistory) {
-    for (key, site) in branch {
-        seen.entry(key).or_insert(site);
     }
 }

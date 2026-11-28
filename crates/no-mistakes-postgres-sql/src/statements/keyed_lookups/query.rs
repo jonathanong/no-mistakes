@@ -1,5 +1,6 @@
+use super::conditions::literal;
 use super::{scope::ScopeStack, subquery, walk_nested_queries, walk_set_expr, LookupHistory};
-use crate::idents::{unwrap_expr, visit_shallow_exprs};
+use crate::idents::visit_shallow_exprs;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 use sqlparser::ast::{Expr, LimitClause, OrderByKind, Query, Value};
 
@@ -50,9 +51,15 @@ pub(super) fn has_zero_limit(limit: Option<&LimitClause>) -> bool {
     else {
         return false;
     };
-    matches!(unwrap_expr(count), Expr::Value(value) if matches!(&value.value,
-        Value::Number(number, _) if number.starts_with('0')
-            && number.bytes().all(|digit| matches!(digit, b'0' | b'_'))))
+    match literal(count) {
+        Some(Value::Number(number, _)) => {
+            number.starts_with('0') && number.bytes().all(|digit| matches!(digit, b'0' | b'_'))
+        }
+        Some(Value::SingleQuotedString(number) | Value::EscapedStringLiteral(number)) => {
+            number.trim_ascii().parse::<i64>() == Ok(0)
+        }
+        _ => false,
+    }
 }
 
 fn inspect_limits(

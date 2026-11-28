@@ -1,8 +1,10 @@
 mod builtins;
+mod conditions;
 mod dml;
 mod expr_norm;
 mod function_clauses;
 mod grouping;
+mod history;
 mod join;
 mod nested;
 mod normalize;
@@ -14,15 +16,12 @@ mod table;
 mod windows;
 
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
+use history::LookupHistory;
 use nested::walk_nested_queries;
-use normalize::LookupKey;
 use query::walk_query;
 use scope::ScopeStack;
 use select_exprs::walk_select;
 use sqlparser::ast::{CopySource, Expr, SelectItem, SetExpr, Statement};
-use std::collections::BTreeMap;
-
-type LookupHistory = BTreeMap<LookupKey, (usize, usize)>;
 
 pub(crate) fn collect(statement: &Statement, out: &mut Vec<SqlDuplicateKeyedLookupFact>) {
     let mut scopes = ScopeStack::default();
@@ -74,7 +73,7 @@ fn walk_set_expr(
         SetExpr::Query(query) => query::walk_query_ordered(query, order_exprs, scopes, out),
         SetExpr::Values(values) => {
             scopes.push_frame();
-            let mut seen = BTreeMap::new();
+            let mut seen = LookupHistory::new();
             inspect_exprs(
                 values
                     .rows
@@ -118,7 +117,7 @@ fn select_item_expr(item: &SelectItem) -> Option<&Expr> {
 fn inspect_exprs<'a>(
     exprs: impl IntoIterator<Item = &'a Expr>,
     scopes: &mut ScopeStack,
-    seen: &mut BTreeMap<LookupKey, (usize, usize)>,
+    seen: &mut LookupHistory,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) {
     let outer = scopes.snapshot();

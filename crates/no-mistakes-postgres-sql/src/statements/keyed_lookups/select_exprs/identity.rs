@@ -1,9 +1,10 @@
+use super::super::conditions::decimal_integer;
 use super::super::expr_norm::function::is_conditional_keyword;
 use crate::idents::{ident_key, unwrap_expr};
 use crate::order::canonical_order_options;
 use sqlparser::ast::{
     CastKind, DataType, Distinct, Expr, Ident, OrderByExpr, OrderByKind, OrderBySort, Query,
-    SetExpr, TableFactor, TableInheritance, VisitMut, VisitorMut, WindowSpec,
+    SetExpr, TableFactor, TableInheritance, Value, VisitMut, VisitorMut, WindowSpec,
 };
 use std::ops::ControlFlow;
 mod local_columns;
@@ -32,14 +33,16 @@ fn normalize(node: &mut impl VisitMut, normalize_targets: bool) {
         type Break = ();
 
         fn pre_visit_query(&mut self, query: &mut Query) -> ControlFlow<()> {
-            if !self.normalize_targets {
-                return ControlFlow::Continue(());
-            }
             if let SetExpr::Select(select) = query.body.as_mut() {
                 if matches!(select.distinct, Some(Distinct::All)) {
                     select.distinct = None;
                 }
-                normalize_local_columns(select);
+                if self.normalize_targets {
+                    normalize_local_columns(select);
+                }
+            }
+            if !self.normalize_targets {
+                return ControlFlow::Continue(());
             }
             if let Some(order) = &mut query.order_by {
                 if let OrderByKind::Expressions(items) = &mut order.kind {
@@ -52,6 +55,15 @@ fn normalize(node: &mut impl VisitMut, normalize_targets: bool) {
         fn pre_visit_expr(&mut self, expr: &mut Expr) -> ControlFlow<()> {
             if matches!(expr, Expr::Nested(_)) {
                 *expr = unwrap_expr(expr).clone();
+            }
+            if let Expr::Value(value) = expr {
+                if let Value::Number(number, _) = &mut value.value {
+                    if number.len() > 1 && (number.starts_with('0') || number.contains('_')) {
+                        if let Some(value) = decimal_integer(number) {
+                            *number = value.to_string();
+                        }
+                    }
+                }
             }
             if let Expr::Function(function) = expr {
                 if let [name] = function.name.0.as_slice() {

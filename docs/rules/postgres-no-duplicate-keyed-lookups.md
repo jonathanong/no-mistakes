@@ -63,10 +63,13 @@ The rule stays silent when the lookups are not proven to read the same row:
   when the filter is a literal false or null.
 - Optional default expressions in `lag` and `lead` window calls. PostgreSQL
   evaluates them only when the requested row falls outside the partition.
+  The value argument of `pg_catalog.nth_value` is also skipped when its
+  position is a literal null. Earlier aggregate inputs remain eligible.
 - `COALESCE` arguments after a known non-null literal. Aggregate and window
   inputs still follow their separate evaluation rules.
-- Results of searched `CASE` branches with literal false or null conditions,
-  and branches after a literal true condition.
+- Unreachable `CASE` results, including simple cases with comparable integer
+  or Boolean literals. For searched cases, the rule can keep opposing tests
+  of the same qualified Boolean column separate across expressions.
 - Window calls eliminated by literal `CASE` or `COALESCE` short-circuiting,
   unreachable DML actions, and query bodies with a literal `LIMIT 0`.
   CTEs and limit expressions are still inspected.
@@ -105,6 +108,11 @@ lookups that use a source row from those that use grouped values.
 The rule recognizes PostgreSQL 18's default `OLD` and `NEW` qualifiers in
 `RETURNING`. It distinguishes pre-change and post-change rows and respects
 table aliases that mask the default qualifiers.
+
+The rule reads SQL without a PostgreSQL catalog. It assumes dotted references
+such as `a.name` resolve to columns. PostgreSQL can also interpret that syntax
+as a whole-row function call when the column is absent. Verify the binding
+when reviewing a finding on such a projection.
 
 Findings point at the duplicate join or scalar subquery and name the line of the
 first lookup.

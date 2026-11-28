@@ -1,6 +1,7 @@
+use super::conditions::{case_condition, visit_case_children};
 use super::function_clauses::{
-    coalesce_arguments, filter_skips_inputs, has_optional_window_default, literal_condition,
-    split_coalesce_arguments, visit_case_children, visit_eager_functions, visit_function_inputs,
+    coalesce_arguments, filter_skips_inputs, has_optional_window_default, nth_value_skipped_input,
+    split_coalesce_arguments, visit_eager_functions, visit_function_inputs,
     visit_ordered_set_arguments,
 };
 use super::{walk_query, ScopeStack};
@@ -33,7 +34,9 @@ impl Nested<'_> {
     fn walk_conditional_children(&mut self, expr: &Expr) {
         match expr {
             Expr::Function(function)
-                if filter_skips_inputs(function) || has_optional_window_default(function) =>
+                if filter_skips_inputs(function)
+                    || has_optional_window_default(function)
+                    || nth_value_skipped_input(function).is_some() =>
             {
                 self.blocked_expression_depth = 1;
                 walk_nested_queries(&function.filter, self.scopes, self.out);
@@ -60,18 +63,26 @@ impl Nested<'_> {
                 }
             }
             Expr::Case {
-                operand: None,
+                operand,
                 conditions,
                 else_result,
                 ..
             } if conditions
                 .iter()
-                .any(|branch| literal_condition(&branch.condition).is_some()) =>
+                .any(|branch| case_condition(operand.as_deref(), &branch.condition).is_some()) =>
             {
                 self.blocked_expression_depth = 1;
-                visit_case_children(conditions, else_result.as_deref(), |expr, reachable| {
-                    self.walk_conditional_child(expr, reachable);
-                });
+                if let Some(operand) = operand {
+                    walk_nested_queries(operand, self.scopes, self.out);
+                }
+                visit_case_children(
+                    operand.as_deref(),
+                    conditions,
+                    else_result.as_deref(),
+                    |expr, reachable| {
+                        self.walk_conditional_child(expr, reachable);
+                    },
+                );
             }
             _ => {}
         }

@@ -1,8 +1,9 @@
+use super::super::conditions::visit_case_children;
 use super::{needs_original_frame, written_window_identity};
 use crate::fx::{FxHashMap, FxHashSet};
 use crate::idents::{function_arg_expr, ident_key};
 use crate::statements::keyed_lookups::function_clauses::{
-    coalesce_arguments, split_coalesce_arguments, visit_case_children,
+    coalesce_arguments, split_coalesce_arguments,
 };
 use sqlparser::ast::{Expr, Query, Spanned, Visitor, WindowSpec, WindowType};
 use sqlparser::tokenizer::Location;
@@ -61,16 +62,21 @@ impl WindowReferences {
 
         match expr {
             Expr::Case {
-                operand: None,
+                operand,
                 conditions,
                 else_result,
                 ..
             } => {
-                visit_case_children(conditions, else_result.as_deref(), |child, reachable| {
-                    if !reachable {
-                        self.blocked_roots.insert(std::ptr::from_ref(child));
-                    }
-                });
+                visit_case_children(
+                    operand.as_deref(),
+                    conditions,
+                    else_result.as_deref(),
+                    |child, reachable| {
+                        if !reachable {
+                            self.blocked_roots.insert(std::ptr::from_ref(child));
+                        }
+                    },
+                );
             }
             Expr::Function(function) => {
                 if let Some(arguments) = coalesce_arguments(function) {
