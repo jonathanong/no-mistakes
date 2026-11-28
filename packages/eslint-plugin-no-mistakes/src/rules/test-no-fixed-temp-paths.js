@@ -59,10 +59,19 @@ function reachedThroughRequire(node, context, seen = new Set()) {
       current = unwrapExpression(current.object);
       continue;
     }
-    if (current.type !== "Identifier" || seen.has(current.name)) return false;
-    seen.add(current.name);
+    if (current.type !== "Identifier") return false;
     const variable = resolveVariable(current, context);
-    const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+    if (!variable || seen.has(variable)) return false;
+    seen.add(variable);
+    const def = variable.defs.length === 1 ? variable.defs[0] : null;
+    // `import fs = require("node:fs")` is a require(). An ordinary import is not.
+    if (
+      def?.type === "ImportBinding" &&
+      def.parent?.type === "TSImportEqualsDeclaration" &&
+      def.parent.moduleReference?.type === "TSExternalModuleReference"
+    ) {
+      return true;
+    }
     if (def?.type !== "Variable" || def.parent?.kind !== "const") return false;
     current = unwrapExpression(def.node?.init);
   }

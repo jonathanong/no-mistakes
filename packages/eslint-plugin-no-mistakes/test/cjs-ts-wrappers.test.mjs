@@ -172,6 +172,7 @@ const groups = [
       "default-mock.test.ts",
       "member-require.test.ts",
       "destructured-dynamic.test.ts",
+      "unaliased-dynamic.test.ts",
       "member-dynamic.test.ts",
       "let-dynamic.test.ts",
       "let-namespace.test.ts",
@@ -206,6 +207,7 @@ const groups = [
     valid: [
       "dynamic.test.ts",
       "destructured-dynamic.test.ts",
+      "unaliased-dynamic.test.ts",
       "member-dynamic.test.ts",
       "let-dynamic.test.ts",
       "let-namespace.test.ts",
@@ -406,6 +408,8 @@ const groups = [
       "promises.test.ts",
       "mock-after.test.ts",
       "process.test.ts",
+      "shadow-require.test.ts",
+      "import-equals.test.ts",
     ],
     valid: [
       "other-member.test.ts",

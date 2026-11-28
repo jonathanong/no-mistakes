@@ -29,13 +29,8 @@ function recordModuleBinding(source, id, testCalleeNames, namespaces, testAliase
   if ((source !== "vitest" && source !== "@playwright/test") || !id) return;
   if (id.type === "Identifier") {
     if (context && isReassigned(id, context)) return;
-    if (source === "vitest") {
-      namespaces.add(id.name);
-      testAliases.add(id, "namespace");
-    } else {
-      testCalleeNames.add(id.name);
-      testAliases.add(id, "test");
-    }
+    (source === "vitest" ? namespaces : testCalleeNames).add(id.name);
+    testAliases.add(id, source === "vitest" ? "namespace" : "test");
     return;
   }
   for (const { key, local } of patternNames(id)) {
@@ -86,6 +81,14 @@ function recordImportEquals(node, testCalleeNames, namespaces, testAliases) {
 function recordTopLevelRequires(node, testCalleeNames, namespaces, testAliases, context) {
   for (const declaration of node.declarations) {
     recordRequireDeclarator(declaration, testCalleeNames, namespaces, testAliases, context);
+    if (
+      declaration.parent?.kind !== "const" ||
+      declaration.id?.type !== "ObjectPattern" ||
+      !isUnresolved(moduleLoad(declaration.init, context))
+    ) {
+      continue;
+    }
+    for (const { local } of patternNames(declaration.id)) testCalleeNames.delete(local.name);
   }
 }
 

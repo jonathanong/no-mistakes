@@ -29,7 +29,7 @@ call whose filesystem binding is not static, because Jest replaces `require()`.
 `const loaded = require(spec); loaded.writeFileSync("/tmp/a.txt", "a")` still
 reports `unanalyzable` beside `vi.mock("node:fs")`, and
 `require("node:fs").writeFileSync("/tmp/b.txt", "b")` still reports the fixed
-path. That advisory includes `access`,
+path. A shadowed const such as `const fs = require("node:fs"); const alias = fs; { const fs = alias; fs.writeFileSync("/tmp/result", "") }` still reports beside `vi.mock("node:fs")`. `import fs = require("node:fs")` does too. An ordinary `import fs from "node:fs"` stays exempt. That advisory includes `access`,
 `chmod`, `readdir`, and `createWriteStream` on an unresolved `fs` binding,
 and `execFile`, `spawn`, and `exec`, including their `Sync` forms, on an
 unresolved binding. An unrelated member stays quiet.

@@ -2485,6 +2485,42 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "shadow-require.test.ts",
+      "findings": [
+        {
+          "column": 20,
+          "endColumn": 33,
+          "endLine": 8,
+          "file": "shadow-require.test.ts",
+          "line": 8,
+          "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+          "messageId": "fixedTempPath",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "import-equals.test.ts",
+      "findings": [
+        {
+          "column": 18,
+          "endColumn": 31,
+          "endLine": 5,
+          "file": "import-equals.test.ts",
+          "line": 5,
+          "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+          "messageId": "fixedTempPath",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-fixed-temp-paths:temp-ignore": [
@@ -3019,6 +3055,24 @@
       "options": null
     },
     {
+      "file": "unaliased-dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 6,
+          "file": "unaliased-dynamic.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
       "file": "member-dynamic.test.ts",
       "findings": [
         {
@@ -3224,6 +3278,16 @@
     },
     {
       "file": "destructured-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "unaliased-dynamic.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [

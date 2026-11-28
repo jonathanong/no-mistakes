@@ -33,7 +33,8 @@ test("user", () => {
   `.test`, `.it`, or `.describe` call whose receiver comes from a non-static
   `require` reports `unanalyzable`. `.skip` and `.each` on that call, such as
   `vt.test.skip(...)` and `vt.test.each(rows)(...)`, report `unanalyzable` too. A destructured `test`, `it`, or `describe`
-  from that require, such as `const { test: check } = require(specifier)`, reports
+  from that require, such as `const { test: check } = require(specifier)` or
+  `const { test } = require(specifier)`, reports
   `unanalyzable`, including `check.skip(...)`. A `const` alias of that binding, such as
   `const run = check` and `const again = mid` after `const mid = check`, reports
   `unanalyzable` too. A `let` alias does not. `const check = require(specifier).test`
