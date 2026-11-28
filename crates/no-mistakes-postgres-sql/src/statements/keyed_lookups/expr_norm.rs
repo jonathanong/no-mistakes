@@ -1,17 +1,22 @@
 pub(super) mod function;
 mod operators;
+mod order_keys;
 pub(super) mod types;
 
 use super::scope::ScopeSnapshot;
 use crate::idents::{ident_key, unwrap_expr};
-use crate::order::canonical_order_options;
-use sqlparser::ast::{CastKind, Expr, Ident, InTarget, OrderByExpr, Value};
+use sqlparser::ast::{CastKind, Expr, Ident, InTarget, Value};
 
 pub(super) struct ExprNormalizer<'a> {
     self_qualifier: Option<&'a str>,
     allow_unqualified_self: bool,
     outer: &'a ScopeSnapshot,
-    key_anchor: Option<bool>,
+    key_anchor: Option<KeyAnchor>,
+}
+
+struct KeyAnchor {
+    found: bool,
+    allows_constants: bool,
 }
 
 impl<'a> ExprNormalizer<'a> {
@@ -32,13 +37,20 @@ impl<'a> ExprNormalizer<'a> {
         expr: &Expr,
         self_qualifier: &'a str,
         outer: &'a ScopeSnapshot,
+        allows_constants: bool,
     ) -> Option<(String, bool)> {
         let mut normalizer = Self {
-            key_anchor: Some(false),
+            key_anchor: Some(KeyAnchor {
+                found: false,
+                allows_constants,
+            }),
             ..Self::new(Some(self_qualifier), false, outer)
         };
         let text = normalizer.normalize(expr)?;
-        Some((text, normalizer.key_anchor == Some(true)))
+        Some((
+            text,
+            normalizer.key_anchor.is_some_and(|anchor| anchor.found),
+        ))
     }
 
     pub(super) fn normalize(&mut self, expr: &Expr) -> Option<String> {
@@ -50,13 +62,15 @@ impl<'a> ExprNormalizer<'a> {
                 Some(format!("self.{}", ident_key(ident)))
             }
             Expr::Value(value) => {
-                if matches!(value.value, Value::Placeholder(_)) {
-                    self.mark_anchor();
+                match value.value {
+                    Value::Placeholder(_) => self.mark_anchor(),
+                    Value::Null => {}
+                    _ => self.mark_constant_anchor(),
                 }
                 Some(format!("val:{value}"))
             }
             Expr::TypedString(typed) if operators::known_cast_target(&typed.data_type) => {
-                self.mark_anchor();
+                self.mark_constant_anchor();
                 Some(format!(
                     "typed({},{})",
                     atom(&types::cast_type(&typed.data_type)?),
@@ -109,7 +123,13 @@ impl<'a> ExprNormalizer<'a> {
 
     fn mark_anchor(&mut self) {
         if let Some(anchor) = &mut self.key_anchor {
-            *anchor = true;
+            anchor.found = true;
+        }
+    }
+
+    fn mark_constant_anchor(&mut self) {
+        if let Some(anchor) = &mut self.key_anchor {
+            anchor.found |= anchor.allows_constants;
         }
     }
 
@@ -160,23 +180,6 @@ impl<'a> ExprNormalizer<'a> {
             atom(&target),
             argument_list(&items)
         ))
-    }
-
-    pub(super) fn order_by(&mut self, order_by: &[OrderByExpr]) -> Option<Vec<String>> {
-        order_by.iter().map(|item| self.order_key(item)).collect()
-    }
-
-    fn order_key(&mut self, item: &OrderByExpr) -> Option<String> {
-        let expr = unwrap_expr(&item.expr);
-        // PostgreSQL can resolve a bare name or position against the SELECT list.
-        if matches!(expr, Expr::Identifier(_))
-            || matches!(expr, Expr::Value(value) if matches!(value.value, Value::Number(..)))
-        {
-            return None;
-        }
-        let expr = self.normalize(expr)?;
-        let (ascending, nulls_first) = canonical_order_options(&item.options)?;
-        Some(format!("{expr}:{ascending}:{nulls_first}"))
     }
 }
 

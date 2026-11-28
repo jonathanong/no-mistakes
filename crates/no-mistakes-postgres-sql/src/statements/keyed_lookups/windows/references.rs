@@ -1,4 +1,4 @@
-use super::super::conditions::visit_case_children;
+use super::super::conditions::{boolean_result_is_fixed, visit_case_children};
 use super::{needs_original_frame, written_window_identity};
 use crate::fx::{FxHashMap, FxHashSet};
 use crate::idents::{function_arg_expr, ident_key};
@@ -61,6 +61,10 @@ impl WindowReferences {
         }
 
         match expr {
+            Expr::BinaryOp { left, op, right } if boolean_result_is_fixed(left, op, right) => {
+                self.blocked_roots
+                    .extend([left.as_ref(), right.as_ref()].map(std::ptr::from_ref));
+            }
             Expr::Case {
                 operand,
                 conditions,

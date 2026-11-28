@@ -1,4 +1,4 @@
-use super::conditions::case_condition;
+use super::conditions::{boolean_result_is_fixed, case_condition};
 use super::expr_norm::ExprNormalizer;
 use super::function_clauses::{
     coalesce_arguments, filter_skips_inputs, is_eager, row_window_value, split_coalesce_arguments,
@@ -35,6 +35,13 @@ fn inspect(
     skip_eager: bool,
 ) {
     match unwrap_expr(expr) {
+        Expr::BinaryOp { left, op, right } if boolean_result_is_fixed(left, op, right) => {
+            if !skip_eager {
+                visit_eager_functions(expr, &mut |eager| {
+                    inspect(eager, outer, targets, seen, out, false);
+                });
+            }
+        }
         Expr::Subquery(query) => {
             if let Some((key, key_display, line, column)) = extract_scalar_subquery(query, outer) {
                 record_lookup(key, key_display, line, column, seen, out);

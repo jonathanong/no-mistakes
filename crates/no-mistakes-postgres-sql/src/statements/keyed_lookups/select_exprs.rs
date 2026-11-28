@@ -1,8 +1,10 @@
 pub(super) mod identity;
 
+use super::conditions::literal_condition;
 use super::function_clauses::is_eager;
 use super::grouping;
 use super::join::register_table_with_joins;
+use super::query::{plain_output, select_has_plain_outputs};
 use super::scope::{ScopeSnapshot, ScopeStack};
 use super::subquery::inspect_expr;
 use super::windows::WindowPlan;
@@ -72,6 +74,12 @@ pub(super) fn walk_select(
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) -> LookupHistory {
+    if select.selection.as_ref().and_then(literal_condition) == Some(false)
+        && select_has_plain_outputs(select)
+        && order_by.iter().all(|expr| plain_output(expr))
+    {
+        return LookupHistory::new();
+    }
     scopes.push_frame();
     let mut seen = LookupHistory::new();
     for table in &select.from {

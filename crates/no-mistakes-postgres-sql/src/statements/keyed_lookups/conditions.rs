@@ -1,5 +1,5 @@
 use crate::idents::unwrap_expr;
-use sqlparser::ast::{CaseWhen, Expr, Value};
+use sqlparser::ast::{BinaryOperator, CaseWhen, Expr, Value};
 
 pub(super) fn literal_condition(expr: &Expr) -> Option<bool> {
     match literal(expr)? {
@@ -55,4 +55,15 @@ pub(super) fn literal(expr: &Expr) -> Option<&Value> {
         Expr::Value(value) => Some(&value.value),
         _ => None,
     }
+}
+
+pub(super) fn boolean_result_is_fixed(left: &Expr, op: &BinaryOperator, right: &Expr) -> bool {
+    let annihilator = match op {
+        BinaryOperator::And => false,
+        BinaryOperator::Or => true,
+        _ => return false,
+    };
+    [left, right]
+        .into_iter()
+        .any(|expr| matches!(literal(expr), Some(Value::Boolean(value)) if *value == annihilator))
 }

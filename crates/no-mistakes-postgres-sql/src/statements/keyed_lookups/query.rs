@@ -1,6 +1,6 @@
 mod ctes;
 
-use super::conditions::literal;
+use super::conditions::{decimal_integer, literal};
 use super::select_exprs::walk_select;
 use super::select_item_expr;
 use super::{scope::ScopeStack, subquery, walk_nested_queries, walk_set_expr, LookupHistory};
@@ -65,10 +65,14 @@ pub(super) fn walk_exists(
 fn discard_exists_projection(query: &Query, select: &Select) -> bool {
     query.with.is_none()
         && query.order_by.is_none()
-        && query.limit_clause.is_none()
+        && discard_exists_limit(query.limit_clause.as_ref())
         && query.fetch.is_none()
         && query.locks.is_empty()
-        && select.having.is_none()
+        && select_has_plain_outputs(select)
+}
+
+pub(super) fn select_has_plain_outputs(select: &Select) -> bool {
+    select.having.is_none()
         && matches!(
             select.distinct,
             None | Some(Distinct::All | Distinct::Distinct)
@@ -79,15 +83,28 @@ fn discard_exists_projection(query: &Query, select: &Select) -> bool {
             .projection
             .iter()
             .filter_map(select_item_expr)
-            .all(|expr| {
-                matches!(
-                    unwrap_expr(expr),
-                    Expr::Identifier(_)
-                        | Expr::CompoundIdentifier(_)
-                        | Expr::Value(_)
-                        | Expr::Subquery(_)
-                )
-            })
+            .all(plain_output)
+}
+
+pub(super) fn plain_output(expr: &Expr) -> bool {
+    matches!(
+        unwrap_expr(expr),
+        Expr::Identifier(_) | Expr::CompoundIdentifier(_) | Expr::Value(_) | Expr::Subquery(_)
+    )
+}
+
+fn discard_exists_limit(limit: Option<&LimitClause>) -> bool {
+    match limit {
+        None => true,
+        Some(LimitClause::LimitOffset {
+            limit,
+            offset: None,
+            ..
+        }) => limit
+            .as_ref()
+            .is_none_or(|count| literal_limit_value(count).is_some_and(|value| value > 0)),
+        _ => false,
+    }
 }
 
 pub(super) fn has_zero_limit(limit: Option<&LimitClause>) -> bool {
@@ -97,6 +114,10 @@ pub(super) fn has_zero_limit(limit: Option<&LimitClause>) -> bool {
     else {
         return false;
     };
+    literal_limit_value(count) == Some(0)
+}
+
+fn literal_limit_value(count: &Expr) -> Option<i64> {
     let count = match unwrap_expr(count) {
         Expr::Cast {
             kind: CastKind::Cast | CastKind::DoubleColon,
@@ -107,14 +128,12 @@ pub(super) fn has_zero_limit(limit: Option<&LimitClause>) -> bool {
         } => expr.as_ref(),
         count => count,
     };
-    match literal(count) {
-        Some(Value::Number(number, _)) => {
-            number.starts_with('0') && number.bytes().all(|digit| matches!(digit, b'0' | b'_'))
+    match literal(count)? {
+        Value::Number(number, _) => decimal_integer(number),
+        Value::SingleQuotedString(number) | Value::EscapedStringLiteral(number) => {
+            number.trim_ascii().parse().ok()
         }
-        Some(Value::SingleQuotedString(number) | Value::EscapedStringLiteral(number)) => {
-            number.trim_ascii().parse::<i64>() == Ok(0)
-        }
-        _ => false,
+        _ => None,
     }
 }
 

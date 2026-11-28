@@ -104,7 +104,8 @@ fn try_oriented(
     outer: &ScopeSnapshot,
 ) -> Option<(String, String, bool, String)> {
     let self_col = self_column(self_side, self_qualifier, single_table_subquery)?;
-    let (norm_rhs, anchor) = ExprNormalizer::outer_key(outer_side, self_qualifier, outer)?;
+    let (norm_rhs, anchor) =
+        ExprNormalizer::outer_key(outer_side, self_qualifier, outer, !single_table_subquery)?;
     Some((
         self_col,
         norm_rhs,

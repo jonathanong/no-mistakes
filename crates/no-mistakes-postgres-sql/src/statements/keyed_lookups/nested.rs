@@ -1,4 +1,4 @@
-use super::conditions::{case_condition, visit_case_children};
+use super::conditions::{boolean_result_is_fixed, case_condition, visit_case_children};
 use super::function_clauses::{
     coalesce_arguments, filter_skips_inputs, has_optional_window_default, null_position_inputs,
     split_coalesce_arguments, visit_eager_functions, visit_function_inputs,
@@ -33,6 +33,10 @@ struct Nested<'a> {
 impl Nested<'_> {
     fn walk_conditional_children(&mut self, expr: &Expr) {
         match expr {
+            Expr::BinaryOp { left, op, right } if boolean_result_is_fixed(left, op, right) => {
+                self.blocked_expression_depth = 1;
+                self.walk_eager_children(expr);
+            }
             Expr::Exists { subquery, .. } => {
                 self.blocked_expression_depth = 1;
                 walk_exists(subquery, self.scopes, self.out);

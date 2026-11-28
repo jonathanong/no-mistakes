@@ -30,7 +30,8 @@ row-limit clauses.
   aliases (`accounts a1` vs `accounts a2`).
 - Repeated `JOIN` clauses (`INNER`, `LEFT`, `RIGHT`, `FULL`, `USING`) against
   the same relation on the same key, regardless of equality operand order
-  (`a.id = o.account_id` vs `o.account_id = a.id`). This comparison
+  (`a.id = o.account_id` vs `o.account_id = a.id`). A join key may use a
+  column, a parameter, or a supported literal. This comparison
   assumes the join key uses commutative `=` semantics. For a chained
   `USING` join, both inputs of the preceding merge must have a provably
   identical column type, such as two aliases of the same relation. A join
@@ -75,11 +76,13 @@ The rule stays silent when the lookups are not proven to read the same row:
 - Unreachable `CASE` results, including simple cases with comparable integer
   or Boolean literals. For searched cases, the rule can keep opposing tests
   of the same qualified Boolean column separate across expressions.
-- Window calls eliminated by literal `CASE` or `COALESCE` short-circuiting,
-  unreachable DML actions, and query bodies with a literal `LIMIT 0`.
-  CTEs and limit expressions are still inspected.
+- Window calls eliminated by literal `CASE`, `COALESCE`, or Boolean
+  expressions, unreachable DML actions, and query bodies with a literal
+  `LIMIT 0`. Simple per-row outputs are also skipped under literal
+  `WHERE FALSE` or `WHERE NULL`. CTEs and limit expressions are still inspected.
 - Unreferenced read-only CTEs when their lack of references can be proven,
-  and discarded projections in simple `EXISTS` queries. Data-modifying
+  and discarded projections in simple `EXISTS` queries, including those
+  with a positive literal limit. Data-modifying
   CTEs and `EXISTS` conditions still receive analysis.
 - Volatile key expressions (UUID generators such as `gen_random_uuid()`,
   `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined
@@ -103,8 +106,9 @@ PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
 clauses. Identical named and inline window specifications can share their
 frame bounds when their written specifications match. Each explicitly
 referenced named declaration keeps its own identity. The rule skips frame
-bounds when all calls sharing the window are
-`pg_catalog.row_number()` and PostgreSQL replaces the frame. An aggregate can
+bounds when all calls sharing the window are built-in ranking functions
+that replace the frame, such as `pg_catalog.row_number()` and
+`pg_catalog.rank()`. An aggregate can
 also reuse an argument in its ordering clause. The
 rule counts an identical reused expression once. A matching grouping
 expression is also reused in projections, `HAVING`, `ORDER BY`, and window

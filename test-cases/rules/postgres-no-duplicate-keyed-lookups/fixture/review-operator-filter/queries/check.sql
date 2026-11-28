@@ -729,3 +729,109 @@ FROM orders o;
 SELECT o.id FROM orders o
 JOIN accounts a ON a.id = o.account_id AND TRUE IN (FALSE, app.is_ready() IS NULL)
 JOIN accounts b ON b.id = o.account_id AND TRUE IN (FALSE, app.is_ready() IS NULL);
+
+SELECT o.id FROM orders o
+JOIN accounts a ON a.status = 'active'
+JOIN accounts b ON b.status = 'active';
+
+SELECT o.id FROM orders o
+JOIN accounts a ON a.active_since = '2020-01-01'::date
+JOIN accounts b ON b.active_since = CAST('2020-01-01' AS date);
+
+SELECT o.id FROM orders o
+JOIN accounts a ON a.active_since = DATE '2020-01-01'
+JOIN accounts b ON b.active_since = DATE '2020-01-01';
+
+SELECT EXISTS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id),
+           (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    FROM orders o
+    LIMIT 1
+);
+
+SELECT EXISTS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id),
+           (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    FROM orders o
+    LIMIT ALL
+);
+
+SELECT EXISTS (
+    SELECT 1 FROM orders o
+    WHERE (SELECT a.n FROM accounts a WHERE a.id = o.id) > 0
+      AND (SELECT b.n FROM accounts b WHERE b.id = o.id) > 0
+    LIMIT CAST(1 AS bigint)
+);
+
+SELECT EXISTS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id),
+           (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    FROM orders o
+    LIMIT $1
+);
+
+SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id),
+       (SELECT b.n FROM accounts b WHERE b.id = o.id)
+FROM orders o
+WHERE FALSE;
+
+SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id),
+       (SELECT b.n FROM accounts b WHERE b.id = o.id)
+FROM orders o
+WHERE TRUE;
+
+SELECT (SELECT a.n FROM accounts a WHERE a.id = $1),
+       (SELECT b.n FROM accounts b WHERE b.id = $1), count(*)
+FROM orders
+WHERE FALSE;
+
+SELECT FALSE AND (pg_catalog.row_number() OVER w > 0),
+       (pg_catalog.rank() OVER w > 0) OR TRUE
+FROM orders o
+WINDOW w AS (
+    PARTITION BY (SELECT a.n FROM accounts a WHERE a.id = o.id),
+                 (SELECT b.n FROM accounts b WHERE b.id = o.id)
+);
+
+SELECT FALSE OR (pg_catalog.row_number() OVER w > 0),
+       (pg_catalog.rank() OVER w > 0) AND TRUE
+FROM orders o
+WINDOW w AS (
+    PARTITION BY (SELECT a.n FROM accounts a WHERE a.id = o.id),
+                 (SELECT b.n FROM accounts b WHERE b.id = o.id)
+);
+
+SELECT pg_catalog.rank() OVER w, pg_catalog.dense_rank() OVER w,
+       pg_catalog.percent_rank() OVER w, pg_catalog.cume_dist() OVER w
+FROM orders o
+WINDOW w AS (
+    ORDER BY o.id
+    ROWS BETWEEN (SELECT a.n FROM accounts a WHERE a.id = $1) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = $1) FOLLOWING
+);
+
+SELECT pg_catalog.rank() OVER w, pg_catalog.sum(o.id) OVER w
+FROM orders o
+WINDOW w AS (
+    ORDER BY o.id
+    ROWS BETWEEN (SELECT a.n FROM accounts a WHERE a.id = $1) PRECEDING
+        AND (SELECT b.n FROM accounts b WHERE b.id = $1) FOLLOWING
+);
+
+SELECT
+    (SELECT a.n FROM accounts a WHERE a.active_since = DATE '2020-01-01'),
+    (SELECT b.n FROM accounts b WHERE b.active_since = DATE '2020-01-01');
+
+SELECT o.id FROM orders o
+JOIN accounts a ON a.status = NULL
+JOIN accounts b ON b.status = NULL;
+
+SELECT EXISTS (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id),
+           (SELECT b.n FROM accounts b WHERE b.id = o.id)
+    FROM orders o
+    LIMIT 0
+);
+
+SELECT NULL AND (pg_catalog.row_number() OVER () > 0)
+FROM orders o;

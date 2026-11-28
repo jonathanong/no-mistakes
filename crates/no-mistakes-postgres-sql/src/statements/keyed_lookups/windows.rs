@@ -134,8 +134,11 @@ fn needs_original_frame(function: &Function) -> bool {
     !(schema
         .as_ident()
         .is_some_and(|schema| ident_key(schema) == "pg_catalog")
-        && name
-            .as_ident()
-            .is_some_and(|name| ident_key(name) == "row_number")
+        && name.as_ident().is_some_and(|name| {
+            matches!(
+                ident_key(name).as_str(),
+                "row_number" | "rank" | "dense_rank" | "percent_rank" | "cume_dist"
+            )
+        })
         && matches!(&function.args, FunctionArguments::List(args) if args.args.is_empty()))
 }
