@@ -232,6 +232,7 @@ fn reuses_resolved_grouping_and_order_targets_and_visits_distinct_window_referen
             (59, 60),
             (65, 66),
             (73, 74),
+            (80, 81),
             (88, 89),
             (125, 126),
             (135, 136)
@@ -327,4 +328,31 @@ fn respects_scalar_grouping_nested_sort_defaults_and_eager_window_inputs() {
         .map(|fact| (fact.first_line, fact.line))
         .collect();
     assert_eq!(sites, [(8, 9), (23, 24), (43, 44)]);
+}
+
+#[test]
+fn preserves_sql_target_identity_and_proves_equality_predicate_inputs() {
+    let facts = fixture_facts("review-sql-identity");
+    assert!(!facts.parse_failed);
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+    assert_eq!(
+        sites,
+        [
+            (13, 14),
+            (28, 29),
+            (33, 37),
+            (46, 47),
+            (58, 59),
+            (67, 68),
+            (72, 73),
+            (80, 81),
+            (87, 88),
+            (93, 94),
+            (98, 99)
+        ]
+    );
 }

@@ -44,6 +44,12 @@ pub(super) fn register_factor(
                 .map_or_else(|| "unnest".to_owned(), |alias| ident_key(&alias.name));
             Some(scopes.add_named_alias(qualifier))
         }
+        TableFactor::JsonTable {
+            json_expr, alias, ..
+        } => {
+            inspect_exprs(std::iter::once(json_expr), scopes, seen, out);
+            scopes.add_alias_only(alias.as_ref())
+        }
         TableFactor::Derived {
             subquery, alias, ..
         } => {

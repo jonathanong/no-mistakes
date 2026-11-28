@@ -10,23 +10,30 @@ use crate::fx::FxHashSet;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
 pub(super) use identity::target_identity;
 use identity::{normalize_sort_options, normalize_target};
-use sqlparser::ast::{Distinct, Expr, Select, WindowSpec};
+use sqlparser::ast::{Distinct, Expr, Select, SelectItem, WindowSpec};
 use std::borrow::Cow;
 use std::cell::{OnceCell, RefCell};
 
 #[derive(Default)]
 pub(super) struct SelectTargets<'a> {
-    projection: Vec<Cow<'a, Expr>>,
+    projection: &'a [SelectItem],
+    grouping: Option<&'a grouping::GroupReuse>,
     keys: OnceCell<RefCell<FxHashSet<Expr>>>,
     windows: RefCell<FxHashSet<WindowSpec>>,
 }
 
 impl<'a> SelectTargets<'a> {
-    fn new(projection: Vec<Cow<'a, Expr>>) -> Self {
+    fn new(projection: &'a [SelectItem], grouping: &'a grouping::GroupReuse) -> Self {
         Self {
             projection,
+            grouping: Some(grouping),
             ..Self::default()
         }
+    }
+
+    pub(super) fn filter_grouped<'expr>(&self, expr: &'expr Expr) -> Cow<'expr, Expr> {
+        self.grouping
+            .map_or(Cow::Borrowed(expr), |grouping| grouping.filter(expr))
     }
 
     pub(super) fn reuses_window(&self, spec: &WindowSpec) -> bool {
@@ -46,7 +53,8 @@ impl<'a> SelectTargets<'a> {
                 RefCell::new(
                     self.projection
                         .iter()
-                        .map(|expr| target_identity(expr))
+                        .filter_map(select_item_expr)
+                        .map(target_identity)
                         .collect(),
                 )
             })
@@ -69,47 +77,81 @@ pub(super) fn walk_select(
     let outer = scopes.snapshot();
     let group_by = grouping::targets(&select.group_by);
     let reuse = grouping::GroupReuse::new(&group_by);
-    let projection = select
-        .projection
-        .iter()
-        .filter_map(select_item_expr)
-        .map(|expr| reuse.filter(expr))
-        .collect();
-    let targets = SelectTargets::new(projection);
-    let having = select.having.as_ref().map(|expr| reuse.filter(expr));
-    for expr in inspectable(select, order_by, &targets, &group_by, having.as_deref()) {
-        inspect_expr(expr, &outer, &targets, &mut seen, out);
-        walk_nested_queries(expr, scopes, out);
+    let targets = SelectTargets::new(&select.projection, &reuse);
+    for expr in expressions(select, order_by, &targets, &group_by) {
+        inspect_expr(&expr, &outer, &targets, &mut seen, out);
+        walk_nested_queries(expr.as_ref(), scopes, out);
     }
     scopes.pop_frame();
     seen
 }
 
-fn inspectable<'a>(
+enum Inspection {
+    Independent,
+    Projection,
+    Grouping,
+    Reusable,
+}
+
+fn expressions<'a>(
     select: &'a Select,
     order_by: &'a [&'a Expr],
     select_targets: &'a SelectTargets<'a>,
     grouping_targets: &'a [&'a Expr],
-    having: Option<&'a Expr>,
-) -> impl Iterator<Item = &'a Expr> {
+) -> impl Iterator<Item = Cow<'a, Expr>> {
     let distinct_on = match &select.distinct {
         Some(Distinct::On(expressions)) => expressions.as_slice(),
         _ => &[],
     };
-    let projection = select_targets.projection.iter().map(Cow::as_ref);
-
-    let clause_target = |expr| (expr, true);
-    let independent = |expr| (expr, false);
+    let mut seen_grouping = FxHashSet::default();
+    let projection = select.projection.iter().filter_map(select_item_expr);
+    let reusable = |expr| (expr, Inspection::Reusable);
     distinct_on
         .iter()
-        .map(clause_target)
-        .chain(projection.map(independent))
-        .chain(select.selection.iter().map(independent))
-        .chain(grouping_targets.iter().copied().map(clause_target))
-        .chain(having.into_iter().map(independent))
-        .chain(referenced_expressions(select, distinct_on, order_by))
-        .chain(order_by.iter().copied().map(clause_target))
-        .filter_map(move |(expr, can_reuse)| {
-            (!can_reuse || !select_targets.reuses(expr)).then_some(expr)
+        .map(reusable)
+        .chain(projection.map(|expr| (expr, Inspection::Projection)))
+        .chain(
+            select
+                .selection
+                .iter()
+                .map(|expr| (expr, Inspection::Independent)),
+        )
+        .chain(
+            grouping_targets
+                .iter()
+                .map(|&expr| (expr, Inspection::Grouping)),
+        )
+        .chain(
+            select
+                .having
+                .iter()
+                .map(|expr| (expr, Inspection::Projection)),
+        )
+        .chain(
+            referenced_expressions(select, distinct_on, order_by).map(|(expr, can_reuse)| {
+                (
+                    expr,
+                    if can_reuse {
+                        Inspection::Reusable
+                    } else {
+                        Inspection::Independent
+                    },
+                )
+            }),
+        )
+        .chain(order_by.iter().copied().map(reusable))
+        .filter_map(move |(expr, inspection)| match inspection {
+            Inspection::Independent => Some(Cow::Borrowed(expr)),
+            Inspection::Projection => Some(select_targets.filter_grouped(expr)),
+            Inspection::Reusable => {
+                (!select_targets.reuses(expr)).then(|| select_targets.filter_grouped(expr))
+            }
+            Inspection::Grouping => {
+                if !seen_grouping.insert(target_identity(expr)) {
+                    return None;
+                }
+                select_targets.reuses(expr);
+                Some(Cow::Borrowed(expr))
+            }
         })
 }

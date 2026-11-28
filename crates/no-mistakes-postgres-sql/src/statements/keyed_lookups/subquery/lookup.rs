@@ -5,7 +5,8 @@ use super::super::scope::ScopeSnapshot;
 use super::super::table::lookup_table;
 use crate::idents::{ident_key, object_name_identity, relation_suffix_name};
 use sqlparser::ast::{
-    Expr, GroupByExpr, LimitClause, OrderByKind, Query, Select, SetExpr, Spanned, Visit, Visitor,
+    Distinct, Expr, GroupByExpr, LimitClause, OrderByKind, Query, Select, SetExpr, Spanned, Visit,
+    Visitor,
 };
 use std::ops::ControlFlow;
 
@@ -20,7 +21,7 @@ pub(super) fn extract_scalar_subquery(
     let SetExpr::Select(select) = query.body.as_ref() else {
         return None;
     };
-    if select.distinct.is_some()
+    if matches!(select.distinct, Some(Distinct::Distinct | Distinct::On(_)))
         || select.having.is_some()
         || !empty_group_by(&select.group_by)
         || select.from.len() != 1

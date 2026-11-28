@@ -73,8 +73,10 @@ fn inspect(
                 match &function.over {
                     Some(WindowType::WindowSpec(spec)) if !targets.reuses_window(spec) => {
                         for (expr, can_reuse) in window_expressions(spec) {
-                            if !can_reuse || !targets.reuses(expr) {
+                            if !can_reuse {
                                 visit(expr);
+                            } else if !targets.reuses(expr) {
+                                visit(&targets.filter_grouped(expr));
                             }
                         }
                     }

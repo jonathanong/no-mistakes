@@ -2,8 +2,8 @@ use super::super::table::lookup_table;
 use crate::idents::{ident_key, object_name_identity, relation_suffix_name, unwrap_expr};
 use crate::order::canonical_order_options;
 use sqlparser::ast::{
-    CastKind, Expr, Ident, OrderByExpr, OrderByKind, OrderBySort, Query, Select, SelectItem,
-    SetExpr, TableFactor, VisitMut, VisitorMut,
+    CastKind, Distinct, Expr, Ident, OrderByExpr, OrderByKind, OrderBySort, Query, Select,
+    SelectItem, SetExpr, TableFactor, TableInheritance, VisitMut, VisitorMut,
 };
 use std::ops::ControlFlow;
 
@@ -20,6 +20,9 @@ pub(super) fn normalize_target(node: &mut impl VisitMut) {
 
         fn pre_visit_query(&mut self, query: &mut Query) -> ControlFlow<()> {
             if let SetExpr::Select(select) = query.body.as_mut() {
+                if matches!(select.distinct, Some(Distinct::All)) {
+                    select.distinct = None;
+                }
                 normalize_local_columns(select);
             }
             if let Some(order) = &mut query.order_by {
@@ -47,9 +50,16 @@ pub(super) fn normalize_target(node: &mut impl VisitMut) {
         fn pre_visit_table_factor(&mut self, factor: &mut TableFactor) -> ControlFlow<()> {
             match factor {
                 TableFactor::Table {
-                    alias: Some(alias), ..
+                    alias, inheritance, ..
+                } => {
+                    if matches!(inheritance, Some(TableInheritance::IncludeDescendants)) {
+                        *inheritance = None;
+                    }
+                    if let Some(alias) = alias {
+                        alias.explicit = false;
+                    }
                 }
-                | TableFactor::Derived {
+                TableFactor::Derived {
                     alias: Some(alias), ..
                 }
                 | TableFactor::Function {

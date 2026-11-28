@@ -1,11 +1,12 @@
 use crate::idents::{ident_key, object_name_identity, relation_suffix_name};
 use sqlparser::ast::{Ident, ObjectName, TableAlias};
+use std::collections::BTreeMap;
 
 #[derive(Clone)]
 struct Binding {
     id: usize,
     qualifier: String,
-    columns: Option<Vec<String>>,
+    columns: Option<BTreeMap<String, Option<usize>>>,
 }
 
 #[derive(Default)]
@@ -43,11 +44,19 @@ impl ScopeStack {
         self.add_binding(qualifier, None)
     }
 
-    pub(super) fn add_using_alias(&mut self, qualifier: String, columns: Vec<String>) {
+    pub(super) fn add_using_alias(
+        &mut self,
+        qualifier: String,
+        columns: BTreeMap<String, Option<usize>>,
+    ) {
         self.add_binding(qualifier, Some(columns));
     }
 
-    fn add_binding(&mut self, qualifier: String, columns: Option<Vec<String>>) -> usize {
+    fn add_binding(
+        &mut self,
+        qualifier: String,
+        columns: Option<BTreeMap<String, Option<usize>>>,
+    ) -> usize {
         let id = self.next_id;
         self.next_id += 1;
         self.frames
@@ -73,9 +82,21 @@ impl ScopeStack {
             .frames
             .last_mut()
             .expect("bindings require a query scope");
+        let mut refreshed = BTreeMap::new();
         for binding in &mut frame[bindings] {
+            refreshed.insert(binding.id, self.next_id);
             binding.id = self.next_id;
             self.next_id += 1;
+        }
+        for columns in frame
+            .iter_mut()
+            .filter_map(|binding| binding.columns.as_mut())
+        {
+            for id in columns.values_mut().flatten() {
+                if let Some(new) = refreshed.get(id) {
+                    *id = *new;
+                }
+            }
         }
     }
 
@@ -96,12 +117,15 @@ impl ScopeSnapshot {
         for frame in self.frames.iter().rev() {
             let mut matches = frame.iter().filter(|b| b.qualifier == qualifier);
             if let Some(first) = matches.next() {
-                return (matches.next().is_none()
-                    && first
-                        .columns
-                        .as_ref()
-                        .is_none_or(|columns| columns.iter().any(|name| name == column)))
-                .then_some(first.id);
+                if matches.next().is_some() {
+                    return None;
+                }
+                return match &first.columns {
+                    None => Some(first.id),
+                    Some(columns) => columns
+                        .get(column)
+                        .map(|binding| binding.unwrap_or(first.id)),
+                };
             }
         }
         None

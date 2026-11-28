@@ -116,7 +116,9 @@ impl<'a> ExprNormalizer<'a> {
         let (operator, inner) = match expr {
             Expr::IsTrue(inner) => ("is_true", inner),
             Expr::IsFalse(inner) => ("is_false", inner),
-            Expr::IsDistinctFrom(left, right) | Expr::IsNotDistinctFrom(left, right) => {
+            Expr::IsDistinctFrom(left, right) | Expr::IsNotDistinctFrom(left, right)
+                if types::has_builtin_type(left) && types::has_builtin_type(right) =>
+            {
                 let operator = if matches!(expr, Expr::IsDistinctFrom(..)) {
                     "is_distinct"
                 } else {
@@ -133,7 +135,9 @@ impl<'a> ExprNormalizer<'a> {
                 target: InTarget::List(items),
                 negated,
                 ..
-            } => return self.in_list(expr, items, *negated),
+            } if types::list_operands_are_proven(expr, items) => {
+                return self.in_list(expr, items, *negated)
+            }
             _ => return None,
         };
         Some(format!("{operator}({})", self.normalize(inner)?))

@@ -30,7 +30,8 @@ row-limit clauses.
   aliases (`accounts a1` vs `accounts a2`).
 - Repeated `JOIN` clauses (`INNER`, `LEFT`, `RIGHT`, `FULL`, `USING`) against
   the same relation on the same key, regardless of equality operand order
-  (`a.id = o.account_id` vs `o.account_id = a.id`). For a chained
+  (`a.id = o.account_id` vs `o.account_id = a.id`). This comparison
+  assumes the join key uses commutative `=` semantics. For a chained
   `USING` join, both inputs of the preceding merge must have a provably
   identical column type, such as two aliases of the same relation. A join
   that can extend a binding with NULL starts a new lookup history for that
@@ -66,7 +67,8 @@ The rule stays silent when the lookups are not proven to read the same row:
   need known built-in types, and casts also need known built-in target types.
   The rule skips function arguments and casts of columns or parameters whose
   types it cannot establish. It also skips operators in compound expressions
-  when their operand types or behavior are unknown.
+  when their operand types or behavior are unknown, including the comparisons
+  used by `IS DISTINCT FROM` and `IN`.
 - Sampled table scans, `ONLY` table scans, or scalar subqueries that lock rows.
 
 PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
@@ -74,7 +76,7 @@ PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
 clauses. Identical inline window specifications share their frame bounds. An
 aggregate can also reuse an argument in its ordering clause. The
 rule counts an identical reused expression once. A matching grouping
-expression is also reused in projections, `HAVING`, and arguments to
+expression is also reused in projections, `HAVING`, `ORDER BY`, and arguments to
 recognized scalar functions. The rule still checks aggregate inputs
 independently.
 

@@ -1,12 +1,12 @@
 SELECT o.id
 FROM orders o
-JOIN accounts a ON a.id = o.account_id AND a.flag IN (a."x,self.y")
-JOIN accounts b ON b.id = o.account_id AND b.flag IN (b.x, b.y);
+JOIN accounts a ON a.id = o.account_id AND CAST(a.flag IS NULL AS text) IN (CAST(a."x,self.y" IS NULL AS text))
+JOIN accounts b ON b.id = o.account_id AND CAST(b.flag IS NULL AS text) IN (CAST(b.x IS NULL AS text), CAST(b.y IS NULL AS text));
 
 SELECT o.id
 FROM orders o
-JOIN accounts a ON a.id = o.account_id AND a.flag IN (a.x, a.y)
-JOIN accounts b ON b.id = o.account_id AND b.flag IN (b.y, b.x);
+JOIN accounts a ON a.id = o.account_id AND CAST(a.flag IS NULL AS text) IN (CAST(a.x IS NULL AS text), CAST(a.y IS NULL AS text))
+JOIN accounts b ON b.id = o.account_id AND CAST(b.flag IS NULL AS text) IN (CAST(b.y IS NULL AS text), CAST(b.x IS NULL AS text));
 
 SELECT o.id
 FROM orders o

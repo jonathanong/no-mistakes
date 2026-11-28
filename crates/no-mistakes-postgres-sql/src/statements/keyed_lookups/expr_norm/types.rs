@@ -1,6 +1,8 @@
 use super::function::{arguments_are_proven, pure_name};
 use crate::idents::unwrap_expr;
-use sqlparser::ast::{ArrayElemTypeDef, BinaryOperator, DataType, Expr, UnaryOperator, Value};
+use sqlparser::ast::{
+    ArrayElemTypeDef, BinaryOperator, DataType, Expr, InTarget, UnaryOperator, Value,
+};
 
 pub(super) fn cast_type(data_type: &DataType) -> Option<String> {
     match data_type {
@@ -34,6 +36,10 @@ pub(super) fn binary_is_proven(op: &BinaryOperator, left: &Expr, right: &Expr) -
         && has_builtin_type(right)
 }
 
+pub(super) fn list_operands_are_proven(expr: &Expr, items: &[Expr]) -> bool {
+    has_builtin_type(expr) && items.iter().all(has_builtin_type)
+}
+
 pub(super) fn unary_is_proven(op: UnaryOperator, expr: &Expr) -> bool {
     matches!(
         op,
@@ -48,6 +54,14 @@ pub(in crate::statements::keyed_lookups) fn projection_expr_is_unproven(expr: &E
         }
         Expr::BinaryOp { left, op, right } => !binary_is_proven(op, left, right),
         Expr::UnaryOp { op, expr } => !unary_is_proven(*op, expr),
+        Expr::IsDistinctFrom(left, right) | Expr::IsNotDistinctFrom(left, right) => {
+            !has_builtin_type(left) || !has_builtin_type(right)
+        }
+        Expr::In {
+            expr,
+            target: InTarget::List(items),
+            ..
+        } => !list_operands_are_proven(expr, items),
         Expr::Cast {
             expr, data_type, ..
         } => !has_builtin_type(expr) || cast_type(data_type).is_none(),
