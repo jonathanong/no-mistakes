@@ -1,4 +1,6 @@
-const PRE: &[&[u8]] = &[b"alpha", b"beta", b"preview", b"rc", b"a", b"b", b"c"];
+const PRE: &[&[u8]] = &[
+    b"alpha", b"beta", b"preview", b"pre", b"rc", b"a", b"b", b"c",
+];
 const POST: &[&[u8]] = &[b"post", b"rev", b"r"];
 const DEV: &[&[u8]] = &[b"dev"];
 
@@ -22,7 +24,7 @@ pub(super) fn pep440(version: &str) -> bool {
         return false;
     }
     take_tag(bytes, &mut index, PRE);
-    take_tag(bytes, &mut index, POST);
+    take_post(bytes, &mut index);
     take_tag(bytes, &mut index, DEV);
     index == bytes.len()
 }
@@ -49,7 +51,19 @@ fn release(bytes: &[u8], index: &mut usize) -> bool {
     true
 }
 
-fn take_tag(bytes: &[u8], index: &mut usize, labels: &[&[u8]]) -> bool {
+fn take_post(bytes: &[u8], index: &mut usize) {
+    let start = *index;
+    if bytes.get(*index) == Some(&b'-') {
+        *index += 1;
+        if digits(bytes, index) {
+            return;
+        }
+        *index = start;
+    }
+    take_tag(bytes, index, POST);
+}
+
+fn take_tag(bytes: &[u8], index: &mut usize, labels: &[&[u8]]) {
     let start = *index;
     if matches!(bytes.get(*index), Some(b'.' | b'_' | b'-')) {
         *index += 1;
@@ -60,17 +74,17 @@ fn take_tag(bytes: &[u8], index: &mut usize, labels: &[&[u8]]) -> bool {
             .is_some_and(|slice| slice.eq_ignore_ascii_case(label))
     }) else {
         *index = start;
-        return false;
+        return;
     };
     *index += label.len();
     if matches!(bytes.get(*index), Some(b'.' | b'_' | b'-')) {
+        let separator = *index;
         *index += 1;
+        if !digits(bytes, index) && bytes.get(*index).is_some() {
+            *index = separator;
+        }
     }
-    if digits(bytes, index) {
-        return true;
-    }
-    *index = start;
-    false
+    digits(bytes, index);
 }
 
 fn digits(bytes: &[u8], index: &mut usize) -> bool {
