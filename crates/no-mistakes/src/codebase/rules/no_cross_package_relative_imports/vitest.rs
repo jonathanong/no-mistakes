@@ -8,15 +8,19 @@ use crate::config::v2::Unanalyzable;
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use std::path::Path;
 
+pub(super) struct VitestSite<'a> {
+    pub(super) file: &'a Path,
+    pub(super) relative_file: &'a str,
+    pub(super) owner: &'a WorkspacePackage,
+    pub(super) message: &'a str,
+    pub(super) policy: Unanalyzable,
+}
+
 impl Inputs<'_> {
     pub(super) fn record_vitest_calls(
         &self,
-        file: &Path,
-        relative_file: &str,
-        owner: &WorkspacePackage,
+        site: &VitestSite<'_>,
         facts: &TsFileFacts,
-        message: &str,
-        policy: Unanalyzable,
         diagnostics: &mut AnalysisDiagnostics,
     ) {
         for call in vitest_import_calls(facts) {
@@ -32,28 +36,29 @@ impl Inputs<'_> {
             }
             match call.receiver {
                 VitestReceiver::Direct => self.record_direct_vitest_call(
-                    file,
-                    relative_file,
-                    owner,
+                    site,
                     call.line,
                     call.specifier,
                     call.computed,
-                    message,
-                    policy,
                     diagnostics,
                 ),
                 VitestReceiver::Unproven { imported_from } => {
                     if imported_from.is_some_and(|source| {
-                        self.graph.import_target(file, source) == Some(&ImportTarget::External)
+                        self.graph.import_target(site.file, source) == Some(&ImportTarget::External)
                     }) || (!call.computed
-                        && stays_in_owner_package(file, call.specifier, owner, self.workspace))
+                        && stays_in_owner_package(
+                            site.file,
+                            call.specifier,
+                            site.owner,
+                            self.workspace,
+                        ))
                     {
                         continue;
                     }
                     diagnostics.unanalyzable(
-                        policy,
+                        site.policy,
                         unanalyzable(
-                            relative_file,
+                            site.relative_file,
                             call.line,
                             call.specifier,
                             "the receiver of importActual or importMock is unresolved. Import vi directly from Vitest.",
@@ -66,21 +71,17 @@ impl Inputs<'_> {
 
     fn record_direct_vitest_call(
         &self,
-        file: &Path,
-        relative_file: &str,
-        owner: &WorkspacePackage,
+        site: &VitestSite<'_>,
         line: u32,
         specifier: &str,
         computed: bool,
-        message: &str,
-        policy: Unanalyzable,
         diagnostics: &mut AnalysisDiagnostics,
     ) {
         if computed {
             diagnostics.unanalyzable(
-                policy,
+                site.policy,
                 unanalyzable(
-                    relative_file,
+                    site.relative_file,
                     line,
                     specifier,
                     "the specifier is computed. Use a literal import specifier.",
@@ -88,14 +89,15 @@ impl Inputs<'_> {
             );
             return;
         }
-        if stays_in_owner_package(file, specifier, owner, self.workspace) {
+        if stays_in_owner_package(site.file, specifier, site.owner, self.workspace) {
             return;
         }
-        let Some(ImportTarget::File(target)) = self.graph.import_target(file, specifier) else {
+        let Some(ImportTarget::File(target)) = self.graph.import_target(site.file, specifier)
+        else {
             diagnostics.unanalyzable(
-                policy,
+                site.policy,
                 unanalyzable(
-                    relative_file,
+                    site.relative_file,
                     line,
                     specifier,
                     "the relative specifier has no unique file target. Run resolve-check and fix resolution.",
@@ -103,17 +105,17 @@ impl Inputs<'_> {
             );
             return;
         };
-        let crosses_boundary = !target.starts_with(&owner.dir)
+        let crosses_boundary = !target.starts_with(&site.owner.dir)
             || self
                 .workspace
                 .nearest_package(target)
-                .is_some_and(|target_owner| target_owner.dir != owner.dir);
+                .is_some_and(|target_owner| target_owner.dir != site.owner.dir);
         if crosses_boundary {
             diagnostics.findings.push(RuleFinding {
                 rule: RULE_ID.to_owned(),
-                file: relative_file.to_owned(),
+                file: site.relative_file.to_owned(),
                 line: line as usize,
-                message: message.to_owned(),
+                message: site.message.to_owned(),
                 import: Some(specifier.to_owned()),
                 target: Some(crate::codebase::ts_source::relative_slash_path(
                     self.root, target,

@@ -117,12 +117,14 @@ impl Inputs<'_> {
                 }),
         );
         self.record_vitest_calls(
-            file,
-            &relative_file,
-            owner,
+            &vitest::VitestSite {
+                file,
+                relative_file: &relative_file,
+                owner,
+                message,
+                policy,
+            },
             facts,
-            message,
-            policy,
             &mut diagnostics,
         );
         Ok(diagnostics)
