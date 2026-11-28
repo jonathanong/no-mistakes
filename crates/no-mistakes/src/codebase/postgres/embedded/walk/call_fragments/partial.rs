@@ -97,7 +97,7 @@ fn collect(
             );
         }
         Expression::TemplateLiteral(template) => {
-            for sql in partial_templates(visitor, template, depth - 1) {
+            for sql in partial_templates(visitor, template, &[], depth - 1) {
                 push_clean(
                     out,
                     sql,
@@ -122,7 +122,7 @@ fn collect(
             let sqls = if parameterized {
                 vec![partial_parameterized_template(&tagged.quasi)]
             } else {
-                partial_templates(visitor, &tagged.quasi, depth - 1)
+                partial_templates(visitor, &tagged.quasi, &[], depth - 1)
             };
             for sql in sqls {
                 push_clean(

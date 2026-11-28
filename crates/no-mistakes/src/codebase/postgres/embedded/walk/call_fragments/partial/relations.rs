@@ -17,7 +17,7 @@ pub(super) fn leaf_pieces(
     let expr = unwrap_ts_wrappers(leaf);
     if let Expression::TemplateLiteral(template) = expr {
         if !template.expressions.is_empty() {
-            return Some(partial_templates(visitor, template, depth - 1));
+            return Some(partial_templates(visitor, template, combined, depth - 1));
         }
     }
     if let Some(piece) = partial_atom(visitor, expr, depth) {
@@ -35,23 +35,31 @@ pub(super) fn leaf_pieces(
 pub(super) fn partial_templates(
     visitor: &ScopeVisitor<'_>,
     template: &TemplateLiteral<'_>,
+    prefixes: &[String],
     depth: u8,
 ) -> Vec<String> {
     let mut versions = vec![String::new()];
     for (index, quasi) in template.quasis.iter().enumerate() {
         let text = tags::quasi_text(quasi, false);
-        for version in &mut versions {
-            version.push_str(&text);
-        }
+        versions.iter_mut().for_each(|v| v.push_str(&text));
         if let Some(expr) = template.expressions.get(index) {
             if let Some(piece) = partial_atom(visitor, expr, depth) {
-                for version in &mut versions {
-                    version.push_str(&piece);
-                }
-            } else if versions
-                .iter()
-                .all(|version| sentinel::in_relation_slot(version, version.len()))
-            {
+                versions.iter_mut().for_each(|v| v.push_str(&piece));
+                continue;
+            }
+            let in_slot = if prefixes.is_empty() {
+                versions
+                    .iter()
+                    .all(|v| sentinel::in_relation_slot(v, v.len()))
+            } else {
+                prefixes.iter().all(|p| {
+                    versions.iter().all(|v| {
+                        let full = format!("{p}{v}");
+                        sentinel::in_relation_slot(&full, full.len())
+                    })
+                })
+            };
+            if in_slot {
                 if let Some(rels) = closed_relation_names(visitor, expr) {
                     let cap = crate::codebase::postgres::embedded::MAX_EMBEDDED_SQL_VARIANTS;
                     if versions.len().saturating_mul(rels.len()) <= cap {
@@ -65,16 +73,9 @@ pub(super) fn partial_templates(
                         continue;
                     }
                 }
-                let placeholder = placeholders::internal_placeholder(index + 1);
-                for version in &mut versions {
-                    version.push_str(&placeholder);
-                }
-            } else {
-                let placeholder = placeholders::internal_placeholder(index + 1);
-                for version in &mut versions {
-                    version.push_str(&placeholder);
-                }
             }
+            let placeholder = placeholders::internal_placeholder(index + 1);
+            versions.iter_mut().for_each(|v| v.push_str(&placeholder));
         }
     }
     versions

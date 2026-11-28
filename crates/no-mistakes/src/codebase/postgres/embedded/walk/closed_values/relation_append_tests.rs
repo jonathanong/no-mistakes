@@ -57,10 +57,17 @@ export function conciseArrowHelper(suffix: string) {
   const make = () => sql`SELECT * FROM entries`.append(suffix);
   return query(make());
 }
+
+export function multiInitAndTemplateLeaf(table: Pair, suffix: string) {
+  let q = `UPDATE ${table}`;
+  q += " SET active = true RETURNING *";
+  query(q);
+  return query("SELECT * FROM " + `${table}` + suffix);
+}
 "#;
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
     let facts = extract_embedded_sql_from_source(Path::new("src/multi.ts"), source, &options);
-    assert_eq!(facts.calls.len(), 8);
+    assert_eq!(facts.calls.len(), 10);
     let first: Vec<String> = facts
         .call_fragments
         .get(&facts.call_spans[0])
@@ -133,4 +140,26 @@ export function conciseArrowHelper(suffix: string) {
         .map(|f| f.sql)
         .collect();
     assert!(arrow_frags.iter().any(|s| s == "SELECT * FROM entries"));
+    assert_eq!(
+        returning_ctxs(8),
+        vec![
+            Some("UPDATE entries".to_string()),
+            Some("UPDATE records".to_string()),
+        ]
+    );
+    let leaf_frags: Vec<String> = facts
+        .call_fragments
+        .get(&facts.call_spans[9])
+        .cloned()
+        .unwrap_or_default()
+        .into_iter()
+        .map(|f| f.sql)
+        .collect();
+    assert_eq!(
+        leaf_frags,
+        vec![
+            "SELECT * FROM entriessql_placeholder_1".to_string(),
+            "SELECT * FROM recordssql_placeholder_1".to_string(),
+        ]
+    );
 }

@@ -1,12 +1,33 @@
 use super::super::calls::chain;
 use super::super::ScopeVisitor;
-use super::partial;
+use super::{partial, BuilderTrace, MAX_PREFIX_BYTES};
 use crate::codebase::postgres::embedded::{first_call_argument, CallSqlFragment};
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
 use crate::fx::FxHashSet;
 use oxc_ast::ast::{
     AssignmentExpression, AssignmentOperator, AssignmentTarget, CallExpression, Expression,
 };
+
+impl BuilderTrace {
+    pub(super) fn from_fragments(fragments: Vec<CallSqlFragment>) -> Self {
+        let (prefix, alt_prefixes) = if fragments.len() == 1 {
+            let p = (fragments[0].sql.len() <= MAX_PREFIX_BYTES).then(|| fragments[0].sql.clone());
+            (p, Vec::new())
+        } else {
+            let alts = fragments
+                .iter()
+                .filter(|item| item.sql.len() <= MAX_PREFIX_BYTES)
+                .map(|item| item.sql.clone())
+                .collect();
+            (None, alts)
+        };
+        Self {
+            prefix,
+            alt_prefixes,
+            fragments,
+        }
+    }
+}
 
 impl ScopeVisitor<'_> {
     pub(in crate::codebase::postgres::embedded::walk) fn note_assignment_fragment(

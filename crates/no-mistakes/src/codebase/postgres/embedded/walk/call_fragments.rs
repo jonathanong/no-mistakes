@@ -60,14 +60,9 @@ impl ScopeVisitor<'_> {
                 let key = self.plain_key(callee.name.as_str());
                 if let Some(returned) = self.call_fragment_state.function_returns.get(&key).cloned()
                 {
-                    let prefix = returned.first().map(|item| item.sql.clone());
                     self.call_fragment_state.builders.insert(
                         (scope_index, name.to_string()),
-                        BuilderTrace {
-                            prefix,
-                            alt_prefixes: Vec::new(),
-                            fragments: returned,
-                        },
+                        BuilderTrace::from_fragments(returned),
                     );
                     return;
                 }
@@ -77,7 +72,13 @@ impl ScopeVisitor<'_> {
             return;
         }
         let span = init.span();
-        let fragments = if let Some(text) = sql.filter(|text| !text.trim().is_empty()) {
+        let from_expr = partial::expr_fragments(self, init, None, None);
+        let prefer_expr = from_expr.len() > 1
+            || (!from_expr.is_empty()
+                && (sql.is_none() || matches!(init, Expression::TemplateLiteral(_))));
+        let fragments = if prefer_expr {
+            from_expr
+        } else if let Some(text) = sql.filter(|text| !text.trim().is_empty()) {
             vec![CallSqlFragment {
                 sql: text.to_string(),
                 line,
@@ -86,22 +87,14 @@ impl ScopeVisitor<'_> {
                 append_site: None,
             }]
         } else {
-            partial::expr_fragments(self, init, None, None)
+            from_expr
         };
         if fragments.is_empty() {
             return;
         }
-        let prefix = fragments
-            .first()
-            .map(|item| item.sql.clone())
-            .filter(|text| text.len() <= MAX_PREFIX_BYTES);
         self.call_fragment_state.builders.insert(
             (scope_index, name.to_string()),
-            BuilderTrace {
-                prefix,
-                alt_prefixes: Vec::new(),
-                fragments,
-            },
+            BuilderTrace::from_fragments(fragments),
         );
     }
 
