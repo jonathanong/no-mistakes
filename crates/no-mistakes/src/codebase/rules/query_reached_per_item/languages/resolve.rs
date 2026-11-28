@@ -1,5 +1,5 @@
 use super::regions::{split_separator, Scan};
-use super::{style_for, Ctx, Sink};
+use super::{Ctx, Sink};
 use crate::codebase::rules::RuleFinding;
 use std::collections::HashMap;
 
@@ -15,9 +15,6 @@ pub(super) fn project(
     let Some(source) = text else {
         return unreadable(file, ctx);
     };
-    if style_for(extension).is_none() {
-        return Vec::new();
-    }
     project_scan(file, &super::regions::scan(source, extension), ctx)
 }
 

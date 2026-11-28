@@ -59,7 +59,7 @@ impl Frame {
     }
 }
 
-pub(super) fn style_for(extension: &str) -> Option<Style> {
+fn style_for(extension: &str) -> Option<Style> {
     match extension {
         "py" => Some(Style::Indent),
         "rb" | "ex" | "exs" => Some(Style::Block),

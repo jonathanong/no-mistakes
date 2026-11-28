@@ -13,7 +13,6 @@ mod resolve;
 #[cfg(test)]
 mod tests;
 
-use regions::style_for;
 use resolve::project;
 
 pub(super) struct Sink {

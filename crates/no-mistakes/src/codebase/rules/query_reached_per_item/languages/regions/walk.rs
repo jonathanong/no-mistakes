@@ -1,8 +1,6 @@
 use super::calls::{enclosing_loop_line_callees, per_item_callees};
 use super::carry::Carry;
-use super::notes::{
-    record, record_after_brace, record_inline_body, record_loop_line, record_saved,
-};
+use super::notes::{record, record_inline_body, record_loop_line, record_saved, record_tail};
 use super::params::parameter_names;
 use super::statement::{close_unbraced, params_of, params_of_loop, release_armed, Unbraced};
 use super::syntax::{
@@ -44,13 +42,13 @@ pub(super) fn scan_brace(source: &str) -> Scan {
         } else if matches!(pending, Some(Pending { header: Header::Function(_), .. }))
             && (trimmed.starts_with(')') || brace_header(line).is_none())
         {
-            if let Some((before, _)) = line.split_once('{') {
+            if let Some((before, tail)) = line.split_once('{') {
                 if let Some(mut waiting) = pending.take() {
                     waiting.signature.push(' ');
                     waiting.signature.push_str(before.trim());
                     let params = pending_params(&waiting);
                     push(&mut stack, &mut scan, waiting.header, depth, false, params);
-                    record_after_brace(&mut scan, &stack, line, line_no);
+                    record_tail(&mut scan, &stack, tail, line_no);
                     carry.note(line, line_no);
                 }
             } else if trimmed.ends_with(';') || trimmed.starts_with('}') {

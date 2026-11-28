@@ -189,3 +189,75 @@ fn multiline_signatures_and_mixed_helper_bodies_prove_sinks() {
         "{unbraced_block:#?}"
     );
 }
+
+#[test]
+fn lexer_edges_inline_ruby_clean_helpers_and_duplicate_enclosing_scopes() {
+    let nested_braces = project_ext(
+        "fn load(items: &[&str]) {\n    for item in items { let x = { 1 }; example.store.read_row(item); } tail();\n    {\n        let escaped = '\\n';\n        let digit = '1';\n        let suffix = foo'a;\n        let eof = '\n    }\n}\n",
+        "rs",
+    );
+    assert_eq!(nested_braces.len(), 1, "{nested_braces:#?}");
+    assert!(nested_braces[0].message.contains("load → read_row"));
+
+    let go_unterminated = project_ext(
+        "func load(items []string) {\n    raw := `line1\nline2`\n    for _, item := range items {\n        example.store.read_row(item)\n    }\n    /* unterminated block comment\n",
+        "go",
+    );
+    assert_eq!(go_unterminated.len(), 1, "{go_unterminated:#?}");
+
+    let go_eof = project_ext(
+        "func load(items []string) {\n    for _, item := range items {\n        example.store.read_row(item)\n    }\n    s := \"unterminated\n",
+        "go",
+    );
+    assert_eq!(go_eof.len(), 1, "{go_eof:#?}");
+
+    let go_raw_eof = project_ext(
+        "func load(items []string) {\n    for _, item := range items {\n        example.store.read_row(item)\n    }\n    r := `unterminated\n",
+        "go",
+    );
+    assert_eq!(go_raw_eof.len(), 1, "{go_raw_eof:#?}");
+
+    let ruby_inline = project_ext(
+        "def fetch(item); example.store.read_row item; end\ndef load(items)\n  for item in items do\n    fetch(item)\n    example.store.read_row # trailing comment\n  end\nend\n",
+        "rb",
+    );
+    assert!(
+        ruby_inline
+            .iter()
+            .any(|finding| finding.message.contains("load → fetch → read_row")),
+        "{ruby_inline:#?}"
+    );
+
+    let generics_and_carry = project_ext(
+        "void load(List<Row> items) {\n    for (Row item : items) {\n        example.store.read_row<Map<K, V>>(item);\n        if (a < b > (c) && d > (e)) {}\n        example.store.read_row\n            (item); other(item);\n    }\n}\n",
+        "cs",
+    );
+    assert!(
+        generics_and_carry
+            .iter()
+            .filter(|finding| finding.causes.is_empty())
+            .count()
+            == 2,
+        "{generics_and_carry:#?}"
+    );
+
+    let clean_and_module = project_ext(
+        "fn noop(item: &str) {\n    example.store.write_row(item);\n}\nfor item in items {\n    noop(item);\n}\n",
+        "rs",
+    );
+    assert!(clean_and_module.is_empty(), "{clean_and_module:#?}");
+
+    let dup_enclosing = project_ext(
+        "fn helper(item: &str) { example.store.read_row(item); }\nfn load(items: &[&str]) {\n    for item in items {\n        helper(item);\n    }\n}\nfn load(items: &[&str]) {\n    for item in items {\n        helper(item);\n    }\n}\n",
+        "rs",
+    );
+    assert_eq!(dup_enclosing.len(), 2, "{dup_enclosing:#?}");
+    assert!(dup_enclosing.iter().all(|f| !f.causes.is_empty()));
+
+    let pending_cancel = project_ext(
+        "interface I {\n    void decl(\n        int x\n    )\n}\nvoid load(List<Row> rows) {\n    for (Row row : rows)\n        example.store.read_row(\n            row\n        );\n}\n",
+        "java",
+    );
+    assert_eq!(pending_cancel.len(), 1, "{pending_cancel:#?}");
+    assert!(pending_cancel[0].message.contains("load → read_row"));
+}

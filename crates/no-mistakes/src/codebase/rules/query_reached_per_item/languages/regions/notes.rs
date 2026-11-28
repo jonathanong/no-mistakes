@@ -46,17 +46,11 @@ pub(super) fn record_loop_line(
     if enclosing.is_empty() {
         return;
     }
-    let mut outer = stack.to_vec();
-    if matches!(outer.last(), Some(Frame::Loop { .. })) {
-        outer.pop();
-    }
-    record_callees(scan, &outer, &enclosing);
+    let outer = &stack[..stack.len().saturating_sub(1)];
+    record_callees(scan, outer, &enclosing);
 }
 
-pub(super) fn record_after_brace(scan: &mut Scan, stack: &[Frame], line: &str, line_no: u32) {
-    let Some((_, tail)) = line.split_once('{') else {
-        return;
-    };
+pub(super) fn record_tail(scan: &mut Scan, stack: &[Frame], tail: &str, line_no: u32) {
     let callees = calls(tail)
         .into_iter()
         .map(|callee| (line_no, callee))
