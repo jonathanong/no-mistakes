@@ -223,7 +223,9 @@ rule's `unanalyzable` policy (`advise` by default, or `report` / `ignore` via
   share a replay budget. A separate outermost loop gets a fresh budget. If a
   loop still needs another replay when its nest exhausts the budget, the rule
   reports uncertainty at its `done`, preserves the findings it already saw,
-  and weakens array facts the loop could invalidate.
+  and weakens array facts the loop could invalidate. An infinite loop keeps
+  the `break` path it already reached, including `set +u` on that path, instead
+  of folding in the state from before the loop.
 - **Dynamic `unset` operands**: `unset` with a dynamic target (such as
   `unset "$name"`) clears nonempty guarantees on tracked arrays and widens them
   to `unanalyzable` until the array is refilled or guarded. When the `unset`

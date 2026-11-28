@@ -56,3 +56,25 @@ fn nest_exhaustion_abstains_on_a_refilled_array() {
     });
     assert!(exhausted, "{:?}", result.unanalyzable);
 }
+
+#[test]
+fn infinite_loop_exhaustion_keeps_the_break_nounset_state() {
+    let source = include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../test-cases/rules/shell-compatibility/exhaustion-refill/infinite.sh"
+    ));
+    let result = analyze(source);
+    assert!(
+        result
+            .unanalyzable
+            .iter()
+            .any(|(_, detail)| detail.starts_with("Bash loop nest replay budget exhausted")),
+        "{:?}",
+        result.unanalyzable
+    );
+    assert!(
+        !result.findings.iter().any(|(name, _)| *name == "items"),
+        "{:?}",
+        result.findings
+    );
+}

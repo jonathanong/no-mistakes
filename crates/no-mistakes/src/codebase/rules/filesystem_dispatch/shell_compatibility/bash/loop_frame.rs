@@ -102,7 +102,9 @@ impl<'a> Repeat<'a> {
         let leave = self.finish_iteration(state, optional);
         if exhausted && !leave.is_leaving() {
             let exit = state.clone();
-            state.merge(&self.entry);
+            if !self.kind.infinite {
+                state.merge(&self.entry);
+            }
             state.keep_exit_findings_under_exhaustion(&exit);
             state.widen_unanalyzable(self.empties, self.touches);
         }
