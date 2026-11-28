@@ -1,0 +1,31 @@
+{
+  "dropWrapper": {
+    "output": "import { expect } from \"vitest\";\nimport { screen } from \"@testing-library/react\";\n\nexport async function asyncQueries() {\n  screen.getByText(\"Save\");\n  screen.getByText(\"Save\");\n  screen.getByText(\"Save\");\n  screen.getAllByRole(\"button\");\n  screen.getAllByRole(\"button\");\n\n  await screen.findByText(\"Loaded\");\n  await screen.findByText(\"Loaded\");\n  await screen.findByText(\"Loaded\");\n  await screen.findByText(\"Loaded\");\n\n  await screen.findAllByRole(\"listitem\");\n  await screen.findAllByRole(\"listitem\");\n  await screen.findAllByRole(\"listitem\");\n\n  const btn = screen.getByRole(\"button\");\n  expect(btn).toBeDefined();\n}\n\nexport function syncQueries() {\n  expect(screen.findByText(\"Loaded\")).toBeDefined();\n  expect(screen.findByText(\"Loaded\")).resolves.toBeDefined();\n  expect(screen.findAllByRole(\"listitem\")).not.toBeNull();\n}\n\nexpect(screen.findByText(\"TopLevel\")).toBeDefined();\n",
+    "remainingLines": [
+      21,
+      25,
+      26,
+      27,
+      30
+    ]
+  },
+  "jestDomImport": {
+    "output": "import \"@testing-library/jest-dom/vitest\";\nimport { expect } from \"vitest\";\nimport { screen } from \"@testing-library/react\";\n\nexport async function asyncWithJestDom() {\n  expect(screen.getByText(\"Save\")).toBeInTheDocument();\n  expect(screen.getByText(\"Save\")).toBeInTheDocument();\n  expect(screen.getByText(\"Save\")).toBeInTheDocument();\n\n  const btn = screen.getByRole(\"button\");\n  expect(btn).toBeInTheDocument();\n\n  const awaited = await screen.findByText(\"Ready\");\n  expect(awaited).toBeInTheDocument();\n\n  expect(await screen.findByText(\"Loaded\")).toBeInTheDocument();\n  await expect(screen.findByText(\"Loaded\")).resolves.toBeInTheDocument();\n  expect(await screen.findByText(\"Loaded\")).toBeInTheDocument();\n  await expect(screen.findByText(\"Loaded\")).resolves.toBeInTheDocument();\n\n  screen.getAllByRole(\"button\");\n  await screen.findAllByRole(\"listitem\");\n  await screen.findAllByRole(\"listitem\");\n}\n\nexport function syncWithJestDom() {\n  expect(screen.findByText(\"Loaded\")).toBeDefined();\n  expect(screen.findByText(\"Loaded\")).resolves.toBeDefined();\n}\n",
+    "remainingLines": [
+      27,
+      28
+    ]
+  },
+  "jestDomPackageJson": {
+    "output": "import { expect } from \"vitest\";\nimport { screen } from \"@testing-library/react\";\n\nexpect(screen.getByText(\"Save\")).toBeInTheDocument();\n"
+  },
+  "jestDomRequire": {
+    "output": "require(\"@testing-library/jest-dom\");\nconst { expect } = require(\"vitest\");\nconst { screen } = require(\"@testing-library/react\");\n\nexpect(screen.getByText(\"Save\")).toBeInTheDocument();\n"
+  },
+  "jestDomSetupFile": {
+    "output": "import { expect } from \"vitest\";\nimport { screen } from \"@testing-library/react\";\n\nexpect(screen.getByText(\"Save\")).toBeInTheDocument();\nscreen.getAllByRole(\"button\");\n"
+  },
+  "jestDomTypeSetup": {
+    "output": "import { expect } from \"vitest\";\nimport { screen } from \"@testing-library/react\";\n\nexpect(screen.getByText(\"Save\")).toBeInTheDocument();\nscreen.getAllByRole(\"button\");\n"
+  }
+}

@@ -85,6 +85,7 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 | [`test-no-skips`](test-no-skips.md)                                   | Reject skipped, conditional, pending, and focused tests.        |
 | [`test-no-style-class-assertion`](test-no-style-class-assertion.md)   | Reject test assertions on styling class names.                  |
 | [`test-no-typed-enqueue-fake`](test-no-typed-enqueue-fake.md)           | Keep enqueue fake signatures explicit.                         |
+| [`test-no-unfailable-assertion`](test-no-unfailable-assertion.md)       | Reject assertions that pass for every input.                   |
 | [`test-no-wall-time-assertions`](test-no-wall-time-assertions.md)     | Replace elapsed wall-time assertions with deterministic checks. |
 | [`vitest-mock-test-file-naming`](vitest-mock-test-file-naming.md)     | Name module-mocking tests `*.mock.test.*`.                      |
 | [`vitest-timeout-cap`](vitest-timeout-cap.md)                         | Cap Vitest defaults and test timeout overrides.                 |

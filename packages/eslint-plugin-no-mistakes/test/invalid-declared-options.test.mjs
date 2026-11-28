@@ -24,6 +24,12 @@ const cases = [
     { allowedPaths: ["bench/**"] },
     { allowedPaths: "bench/**" },
   ],
+  [
+    "test-no-unfailable-assertion",
+    "severities",
+    { severities: { "throwing-query": "error" }, report: "error" },
+    { severities: "error" },
+  ],
   ["no-argv-main-guard", "message", { message: "compare real paths" }, { message: 1 }],
   [
     "no-banned-import-outside-allowed-paths",

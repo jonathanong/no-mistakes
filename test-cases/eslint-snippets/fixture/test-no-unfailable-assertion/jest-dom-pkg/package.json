@@ -1,0 +1,5 @@
+{
+  "jest": {
+    "setupFilesAfterEnv": ["@testing-library/jest-dom"]
+  }
+}

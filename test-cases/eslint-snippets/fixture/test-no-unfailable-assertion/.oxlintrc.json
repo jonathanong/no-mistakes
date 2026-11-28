@@ -1,0 +1,6 @@
+{
+  "jsPlugins": ["../../../../packages/eslint-plugin-no-mistakes"],
+  "rules": {
+    "no-mistakes/test-no-unfailable-assertion": "error"
+  }
+}

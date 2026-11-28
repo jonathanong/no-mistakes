@@ -1,0 +1,2221 @@
+[
+  {
+    "file": "commonjs.test.cjs",
+    "findings": [
+      {
+        "column": 7,
+        "endColumn": 55,
+        "endLine": 8,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/commonjs.test.cjs",
+        "line": 8,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 50,
+        "endLine": 9,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/commonjs.test.cjs",
+        "line": 9,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 33,
+        "endLine": 10,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/commonjs.test.cjs",
+        "line": 10,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 7,
+        "endColumn": 33,
+        "endLine": 15,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/commonjs.test.cjs",
+        "line": 15,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/commonjs.test.cjs",
+        "line": 20,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 21,
+        "endLine": 21,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/commonjs.test.cjs",
+        "line": 21,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 28,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/commonjs.test.cjs",
+        "line": 28,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      }
+    ],
+    "name": "commonjs and switch cases (untyped)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion",
+    "sourceType": "commonjs"
+  },
+  {
+    "file": "defined-by-type.test.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 32,
+        "endLine": 17,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
+        "line": 17,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 38,
+        "endLine": 18,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
+        "line": 18,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 49,
+        "endLine": 19,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
+        "line": 19,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 58,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
+        "line": 20,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 40,
+        "endLine": 21,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
+        "line": 21,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 46,
+        "endLine": 22,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
+        "line": 22,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 30,
+        "endLine": 25,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-by-type.test.ts",
+        "line": 25,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      }
+    ],
+    "name": "defined-by-type (typed)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "defined-by-type.test.ts",
+    "findings": [],
+    "name": "defined-by-type (untyped)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "defined-then-deref.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 29,
+        "endLine": 16,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 16,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 34,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 20,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 43,
+        "endLine": 24,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 24,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 36,
+        "endLine": 28,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 28,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 32,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 32,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 36,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 36,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 40,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 40,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 34,
+        "endLine": 45,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 45,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      }
+    ],
+    "name": "defined-then-deref (typed)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "defined-then-deref.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 29,
+        "endLine": 16,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 16,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 34,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 20,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 43,
+        "endLine": 24,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 24,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 36,
+        "endLine": 28,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 28,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 32,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 32,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 36,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 36,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 40,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 40,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 34,
+        "endLine": 45,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/defined-then-deref.test.ts",
+        "line": 45,
+        "message": "[advisory] Redundant defined check: a subsequent assertion already dereferences this value. Remove the extra toBeDefined() check or narrow with an explicit guard.",
+        "messageId": "defined-then-deref",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      }
+    ],
+    "name": "defined-then-deref (untyped)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "discarded-locator.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 25,
+        "endLine": 21,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/discarded-locator.test.ts",
+        "line": 21,
+        "message": "[advisory] Playwright locator is created and discarded without asserting or acting on it. Await an assertion or action on the locator.",
+        "messageId": "discarded-locator",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 35,
+        "endLine": 22,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/discarded-locator.test.ts",
+        "line": 22,
+        "message": "[advisory] Playwright locator is created and discarded without asserting or acting on it. Await an assertion or action on the locator.",
+        "messageId": "discarded-locator",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 36,
+        "endLine": 23,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/discarded-locator.test.ts",
+        "line": 23,
+        "message": "[advisory] Playwright locator is created and discarded without asserting or acting on it. Await an assertion or action on the locator.",
+        "messageId": "discarded-locator",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 28,
+        "endLine": 24,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/discarded-locator.test.ts",
+        "line": 24,
+        "message": "[advisory] Playwright locator is created and discarded without asserting or acting on it. Await an assertion or action on the locator.",
+        "messageId": "discarded-locator",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 49,
+        "endLine": 25,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/discarded-locator.test.ts",
+        "line": 25,
+        "message": "[advisory] Playwright locator is created and discarded without asserting or acting on it. Await an assertion or action on the locator.",
+        "messageId": "discarded-locator",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 31,
+        "endLine": 26,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/discarded-locator.test.ts",
+        "line": 26,
+        "message": "[advisory] Playwright locator is created and discarded without asserting or acting on it. Await an assertion or action on the locator.",
+        "messageId": "discarded-locator",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 33,
+        "endLine": 28,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/discarded-locator.test.ts",
+        "line": 28,
+        "message": "[advisory] Playwright locator is created and discarded without asserting or acting on it. Await an assertion or action on the locator.",
+        "messageId": "discarded-locator",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 32,
+        "endLine": 29,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/discarded-locator.test.ts",
+        "line": 29,
+        "message": "[advisory] Playwright locator is created and discarded without asserting or acting on it. Await an assertion or action on the locator.",
+        "messageId": "discarded-locator",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      }
+    ],
+    "name": "discarded-locator (typed)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "discarded-locator.test.ts",
+    "findings": [],
+    "name": "discarded-locator (untyped)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "same-value.test.ts",
+    "findings": [],
+    "name": "report advisory omits error-severity codes",
+    "options": {
+      "report": "advisory"
+    },
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "same-value.test.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 24,
+        "endLine": 14,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 14,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 25,
+        "endLine": 15,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 15,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 16,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 16,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 23,
+        "endLine": 17,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 17,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 20,
+        "endLine": 18,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 18,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 32,
+        "endLine": 19,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 19,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 34,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 20,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 31,
+        "endLine": 24,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 24,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 28,
+        "endLine": 25,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 25,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 27,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 27,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 33,
+        "endLine": 28,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 28,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 51,
+        "endLine": 29,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 29,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 34,
+        "endLine": 34,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 34,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      }
+    ],
+    "name": "same-value (typed)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "same-value.test.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 24,
+        "endLine": 14,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 14,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 25,
+        "endLine": 15,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 15,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 16,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 16,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 23,
+        "endLine": 17,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 17,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 20,
+        "endLine": 18,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 18,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 32,
+        "endLine": 19,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 19,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 34,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 20,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 31,
+        "endLine": 24,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 24,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 28,
+        "endLine": 25,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 25,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 27,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 27,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 33,
+        "endLine": 28,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 28,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 51,
+        "endLine": 29,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 29,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 5,
+        "endColumn": 34,
+        "endLine": 34,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/same-value.test.ts",
+        "line": 34,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      }
+    ],
+    "name": "same-value (untyped)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "throwing-query.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 49,
+        "endLine": 11,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 11,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 12,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 12,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 48,
+        "endLine": 14,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 14,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 51,
+        "endLine": 15,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 15,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 54,
+        "endLine": 16,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 16,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 57,
+        "endLine": 18,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 18,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 67,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 20,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 78,
+        "endLine": 22,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 22,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 43,
+        "endLine": 25,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 25,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 26,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 26,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 48,
+        "endLine": 29,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 29,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 54,
+        "endLine": 30,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 30,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 59,
+        "endLine": 32,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 32,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 63,
+        "endLine": 34,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 34,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 41,
+        "endLine": 36,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 36,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 51,
+        "endLine": 38,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 38,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 52,
+        "endLine": 39,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 39,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 31,
+        "endLine": 42,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 42,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 59,
+        "endLine": 45,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 45,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 40,
+        "endLine": 49,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 49,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 48,
+        "endLine": 51,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 51,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 38,
+        "endLine": 53,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 53,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 68,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 68,
+        "message": "Assertion cannot fail: the checked value's type excludes undefined. Assert on a concrete value or behavior instead.",
+        "messageId": "defined-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      }
+    ],
+    "name": "severities disables throwing-query so defined-by-type catches it",
+    "options": {
+      "severities": {
+        "throwing-query": "off"
+      }
+    },
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "throwing-query.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 49,
+        "endLine": 11,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 11,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 12,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 12,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 50,
+        "endLine": 13,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 13,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 48,
+        "endLine": 14,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 14,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 51,
+        "endLine": 15,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 15,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 54,
+        "endLine": 16,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 16,
+        "message": "Testing Library 'getAllByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 17,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 17,
+        "message": "Testing Library 'getAllByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 57,
+        "endLine": 18,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 18,
+        "message": "Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 59,
+        "endLine": 19,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 19,
+        "message": "Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 67,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 20,
+        "message": "Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 68,
+        "endLine": 21,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 21,
+        "message": "Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 78,
+        "endLine": 22,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 22,
+        "message": "Testing Library 'findAllByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 43,
+        "endLine": 25,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 25,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 26,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 26,
+        "message": "Testing Library 'findAllByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 48,
+        "endLine": 29,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 29,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 54,
+        "endLine": 30,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 30,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 59,
+        "endLine": 32,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 32,
+        "message": "Testing Library 'getByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 63,
+        "endLine": 34,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 34,
+        "message": "Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 41,
+        "endLine": 36,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 36,
+        "message": "Testing Library 'getByLabelText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 51,
+        "endLine": 38,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 38,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 52,
+        "endLine": 39,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 39,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 31,
+        "endLine": 42,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 42,
+        "message": "Testing Library 'getByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 59,
+        "endLine": 45,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 45,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 40,
+        "endLine": 49,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 49,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 48,
+        "endLine": 51,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 51,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 38,
+        "endLine": 53,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 53,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 68,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 68,
+        "message": "Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      }
+    ],
+    "name": "severities promotes throwing-query to error",
+    "options": {
+      "report": "error",
+      "severities": {
+        "throwing-query": "error"
+      }
+    },
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "suppressed-file.test.ts",
+    "findings": [],
+    "name": "suppressed-file (typed)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "suppressions.test.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 12,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/suppressions.test.ts",
+        "line": 12,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 26,
+        "endLine": 15,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/suppressions.test.ts",
+        "line": 15,
+        "message": "Assertion cannot fail: it compares a literal or the same value against itself. Assert on the behavior under test instead.",
+        "messageId": "same-value",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      }
+    ],
+    "name": "suppressions (typed)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "throwing-query.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 49,
+        "endLine": 11,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 11,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 12,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 12,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 50,
+        "endLine": 13,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 13,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 48,
+        "endLine": 14,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 14,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 51,
+        "endLine": 15,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 15,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 54,
+        "endLine": 16,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 16,
+        "message": "[advisory] Testing Library 'getAllByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 17,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 17,
+        "message": "[advisory] Testing Library 'getAllByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 57,
+        "endLine": 18,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 18,
+        "message": "[advisory] Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 59,
+        "endLine": 19,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 19,
+        "message": "[advisory] Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 67,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 20,
+        "message": "[advisory] Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 68,
+        "endLine": 21,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 21,
+        "message": "[advisory] Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 78,
+        "endLine": 22,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 22,
+        "message": "[advisory] Testing Library 'findAllByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 43,
+        "endLine": 25,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 25,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 26,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 26,
+        "message": "[advisory] Testing Library 'findAllByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 48,
+        "endLine": 29,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 29,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 54,
+        "endLine": 30,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 30,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 59,
+        "endLine": 32,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 32,
+        "message": "[advisory] Testing Library 'getByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 63,
+        "endLine": 34,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 34,
+        "message": "[advisory] Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 41,
+        "endLine": 36,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 36,
+        "message": "[advisory] Testing Library 'getByLabelText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 51,
+        "endLine": 38,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 38,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 52,
+        "endLine": 39,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 39,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 31,
+        "endLine": 42,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 42,
+        "message": "[advisory] Testing Library 'getByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 59,
+        "endLine": 45,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 45,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 40,
+        "endLine": 49,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 49,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 48,
+        "endLine": 51,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 51,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 38,
+        "endLine": 53,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 53,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 68,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 68,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      }
+    ],
+    "name": "throwing-query (typed)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "throwing-query.test.ts",
+    "findings": [
+      {
+        "column": 3,
+        "endColumn": 49,
+        "endLine": 11,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 11,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 12,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 12,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 50,
+        "endLine": 13,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 13,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 48,
+        "endLine": 14,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 14,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 51,
+        "endLine": 15,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 15,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 54,
+        "endLine": 16,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 16,
+        "message": "[advisory] Testing Library 'getAllByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 17,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 17,
+        "message": "[advisory] Testing Library 'getAllByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 57,
+        "endLine": 18,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 18,
+        "message": "[advisory] Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 59,
+        "endLine": 19,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 19,
+        "message": "[advisory] Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 67,
+        "endLine": 20,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 20,
+        "message": "[advisory] Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 68,
+        "endLine": 21,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 21,
+        "message": "[advisory] Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 78,
+        "endLine": 22,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 22,
+        "message": "[advisory] Testing Library 'findAllByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 43,
+        "endLine": 25,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 25,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 26,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 26,
+        "message": "[advisory] Testing Library 'findAllByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 48,
+        "endLine": 29,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 29,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 54,
+        "endLine": 30,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 30,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 59,
+        "endLine": 32,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 32,
+        "message": "[advisory] Testing Library 'getByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 9,
+        "endColumn": 63,
+        "endLine": 34,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 34,
+        "message": "[advisory] Testing Library 'findByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 41,
+        "endLine": 36,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 36,
+        "message": "[advisory] Testing Library 'getByLabelText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 51,
+        "endLine": 38,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 38,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 52,
+        "endLine": 39,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 39,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 31,
+        "endLine": 42,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 42,
+        "message": "[advisory] Testing Library 'getByRole' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 59,
+        "endLine": 45,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 45,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 40,
+        "endLine": 49,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 49,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 48,
+        "endLine": 51,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 51,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 38,
+        "endLine": 53,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 53,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 55,
+        "endLine": 68,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/throwing-query.test.ts",
+        "line": 68,
+        "message": "[advisory] Testing Library 'getByText' already throws when nothing matches. Assert on visible content, attributes, or state instead.",
+        "messageId": "throwing-query",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      }
+    ],
+    "name": "throwing-query (untyped)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "truthy-by-type.test.ts",
+    "findings": [
+      {
+        "column": 1,
+        "endColumn": 31,
+        "endLine": 39,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 39,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 34,
+        "endLine": 40,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 40,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 34,
+        "endLine": 41,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 41,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 31,
+        "endLine": 42,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 42,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 28,
+        "endLine": 43,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 43,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 39,
+        "endLine": 44,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 44,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 33,
+        "endLine": 45,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 45,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 30,
+        "endLine": 46,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 46,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 33,
+        "endLine": 47,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 47,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 33,
+        "endLine": 48,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 48,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 33,
+        "endLine": 49,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 49,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 38,
+        "endLine": 50,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 50,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 45,
+        "endLine": 51,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 51,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 30,
+        "endLine": 52,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 52,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 33,
+        "endLine": 53,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 53,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 31,
+        "endLine": 54,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 54,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 1,
+        "endColumn": 42,
+        "endLine": 55,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 55,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      },
+      {
+        "column": 3,
+        "endColumn": 29,
+        "endLine": 58,
+        "file": "test-cases/eslint-snippets/fixture/test-no-unfailable-assertion/truthy-by-type.test.ts",
+        "line": 58,
+        "message": "Assertion cannot fail: the checked value's type is always truthy. Assert on a concrete property or outcome instead.",
+        "messageId": "truthy-by-type",
+        "ruleId": "no-mistakes/test-no-unfailable-assertion",
+        "severity": 2
+      }
+    ],
+    "name": "truthy-by-type (typed)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  },
+  {
+    "file": "truthy-by-type.test.ts",
+    "findings": [],
+    "name": "truthy-by-type (untyped)",
+    "options": null,
+    "rule": "test-no-unfailable-assertion"
+  }
+]

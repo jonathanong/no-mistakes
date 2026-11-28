@@ -1,6 +1,8 @@
 import plugin, {
   type NoTopLevelAwaitOptions,
   type TestNoTypedEnqueueFakeOptions,
+  type TestNoUnfailableAssertionOptions,
+  type TestNoUnfailableAssertionSeverity,
   type TestNoWallTimeAssertionsOptions,
   type NoLocaleLessDateFormatOptions,
   type PlaywrightTestTimeoutCapOptions,
@@ -129,6 +131,14 @@ export const wallTimeOptions: TestNoWallTimeAssertionsOptions = { allowedPaths: 
 export const defaultWallTimeOptions: pluginRequire.TestNoWallTimeAssertionsOptions = {};
 // @ts-expect-error Allowed benchmark paths must be strings.
 export const invalidWallTimeOptions: TestNoWallTimeAssertionsOptions = { allowedPaths: [1] };
+
+export const unfailableOptions: TestNoUnfailableAssertionOptions = {
+  severities: { "throwing-query": "error", "defined-then-deref": "off" },
+  report: "error",
+};
+export const defaultUnfailableOptions: pluginRequire.TestNoUnfailableAssertionOptions = {};
+// @ts-expect-error Severity must be error, advisory, or off.
+export const invalidSeverity: TestNoUnfailableAssertionSeverity = "warn";
 
 export const paginationOptions: PlaywrightNoRawScrollPaginationOptions = {
   cursorParams: ["after"],
