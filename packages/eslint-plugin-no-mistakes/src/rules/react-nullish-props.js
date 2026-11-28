@@ -1,9 +1,9 @@
 "use strict";
 
-const { literalString } = require("./module-mock-helpers");
 const { unwrapSequence } = require("./async-ast");
 const {
   assertedType,
+  computedKey,
   keyName,
   reactTypeStatus,
   typeAnnotation,
@@ -128,7 +128,7 @@ function classifiedProps(type, facts, seen = new Set()) {
     const declared = new Set();
     for (const member of type.members) {
       if (member.type !== "TSPropertySignature") continue;
-      const name = member.computed ? literalString(member.key) : keyName(member.key);
+      const name = member.computed ? computedKey(member.key) : keyName(member.key);
       if (name == null) continue;
       declared.add(name);
       const status = reactTypeStatus(typeAnnotation(member), facts);
@@ -174,7 +174,7 @@ function assertedObjectFacts(node, facts) {
 }
 
 function memberExpressionStatus(member, facts, lookup) {
-  const key = member.computed ? literalString(member.property) : keyName(member.property);
+  const key = member.computed ? computedKey(member.property) : keyName(member.property);
   const asserted = assertedObjectFacts(member.object, facts);
   if (asserted) {
     if (key != null && asserted.props?.has(key)) return "yes";

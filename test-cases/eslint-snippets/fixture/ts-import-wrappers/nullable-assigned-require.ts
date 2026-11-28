@@ -36,3 +36,27 @@ export async function assignedDynamic(): Promise<Widget | null> {
   read = require(moduleName).getWidget;
   return read();
 }
+
+export async function destructured(): Promise<Widget | null> {
+  let { read } = { read: () => null };
+  read = require("./data").getWidget;
+  return read();
+}
+
+export async function destructuredLocal(): Promise<Widget | null> {
+  let { read } = { read: () => null };
+  return read();
+}
+
+export async function destructuredTwice(): Promise<Widget | null> {
+  let { read } = { read: () => null };
+  read = require("./data").getWidget;
+  read = () => Promise.resolve(null);
+  return read();
+}
+
+export async function arrayDestructured(): Promise<Widget | null> {
+  let [read] = [() => null];
+  read = require("./data").getWidget;
+  return read();
+}

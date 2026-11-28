@@ -98,3 +98,16 @@ export function interfaceProps(p: Props) {
 export function constrainedNode<Props extends { child: ReactNode }>(p: Props) {
   return p.child ?? null;
 }
+
+export function forwardLet(node: ReactNode) {
+  const read = () => value ?? "";
+  let value = node;
+  return read();
+}
+
+export function reassignedForward(node: ReactNode) {
+  const read = () => value ?? "";
+  let value = node;
+  value = "text";
+  return read();
+}

@@ -16,7 +16,12 @@ function hasImportWrite(variable, context, seen, memo, importFact) {
 }
 
 function laterFact(def, variable, context, seen, memo, importFact, use) {
-  if (def?.type !== "Variable" || def.node?.id?.type !== "Identifier") return null;
+  const idType = def?.node?.id?.type;
+  if (
+    def?.type !== "Variable" ||
+    (idType !== "Identifier" && idType !== "ObjectPattern" && idType !== "ArrayPattern")
+  )
+    return null;
   let matched = null;
   let noise = 0;
   for (const reference of variable.references ?? []) {

@@ -13,6 +13,11 @@ function keyName(node) {
   return node.type === "Literal" ? String(node.value) : null;
 }
 
+function computedKey(node) {
+  if (node?.type === "Literal" && typeof node.value === "number") return String(node.value);
+  return literalString(node);
+}
+
 const UNWRAP_TYPES = new Set(["TSParenthesizedType", "TSOptionalType", "TSRestType"]);
 
 function unwrapType(node) {
@@ -168,7 +173,7 @@ function definePattern(
   for (const property of pattern.properties) {
     if (property.type !== "Property") continue;
     const name = property.computed
-      ? literalString(property.key) || (context && constStringKey(property.key, context))
+      ? computedKey(property.key) || (context && constStringKey(property.key, context))
       : keyName(property.key);
     const value =
       property.value?.type === "AssignmentPattern" ? property.value.left : property.value;
@@ -183,6 +188,7 @@ function definePattern(
 module.exports = {
   assertedType,
   bindPatternNames,
+  computedKey,
   definePattern,
   keyName,
   qualifierText,

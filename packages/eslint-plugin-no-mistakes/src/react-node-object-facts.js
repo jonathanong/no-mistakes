@@ -1,7 +1,12 @@
 "use strict";
 
-const { literalString } = require("./rules/module-mock-helpers");
-const { keyName, reactTypeStatus, typeAnnotation, typeName } = require("./react-node-type-query");
+const {
+  computedKey,
+  keyName,
+  reactTypeStatus,
+  typeAnnotation,
+  typeName,
+} = require("./react-node-type-query");
 
 function setChanged(previous, next) {
   if (!previous || previous.size !== next.size) return true;
@@ -25,7 +30,7 @@ function collectMembers(members, facts) {
   const declared = new Set();
   for (const member of members || []) {
     if (member.type !== "TSPropertySignature") continue;
-    const name = member.computed ? literalString(member.key) : keyName(member.key);
+    const name = member.computed ? computedKey(member.key) : keyName(member.key);
     if (!name) continue;
     declared.add(name);
     const status = reactTypeStatus(typeAnnotation(member), facts);

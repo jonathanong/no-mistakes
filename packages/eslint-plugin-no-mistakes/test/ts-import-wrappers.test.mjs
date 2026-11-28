@@ -468,6 +468,11 @@ describe("typescript import wrappers", () => {
         "react-no-nullish-react-node",
       ),
       eslintCase(
+        "numeric literal keys stay on that property",
+        "react-nullish-numeric-keys.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
         "unresolved qualified getter terminal",
         "nullable-qualified-member.ts",
         "server-require-nullable-fetch-wrapper",
@@ -922,6 +927,20 @@ describe("typescript import wrappers", () => {
       [79, "nullish"],
       [95, "nullish"],
       [99, "nullish"],
+      [103, "nullish"],
+      [109, "unanalyzable"],
+    ]);
+    expect(
+      cases
+        .find((item) => item.name === "numeric literal keys stay on that property")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [6, "nullish"],
+      [10, "nullish"],
+      [19, "nullish"],
+      [23, "nullish"],
+      [28, "unanalyzable"],
+      [32, "nullish"],
     ]);
     expect(
       cases
@@ -933,6 +952,9 @@ describe("typescript import wrappers", () => {
       [16, "wrapper"],
       [31, "unanalyzable"],
       [37, "unanalyzable"],
+      [43, "wrapper"],
+      [55, "unanalyzable"],
+      [61, "wrapper"],
     ]);
     expect(
       cases.find((item) => item.name === "reassigned alias chain stays bounded").findings,
@@ -1046,6 +1068,7 @@ describe("typescript import wrappers", () => {
         "react-nullish-nested-heritage.tsx",
         "react-nullish-binding-shadows.tsx",
         "react-nullish-scope-edges.tsx",
+        "react-nullish-numeric-keys.tsx",
       ]),
       "nullish-ignore": oxlintOn(".oxlintrc-nullish-ignore.json", ["react-nullish-unresolved.tsx"]),
       fetch: oxlintOn(".oxlintrc-fetch.json", [

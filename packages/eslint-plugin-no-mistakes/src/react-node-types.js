@@ -14,6 +14,7 @@ const { assignReactObjectFacts } = require("./react-node-object-facts");
 const {
   assertedType,
   bindPatternNames,
+  computedKey,
   definePattern,
   keyName,
   reactTypeStatus,
@@ -122,6 +123,7 @@ function createReactNodeFacts(program, context) {
 module.exports = {
   assertedType,
   bindPatternNames,
+  computedKey,
   createReactNodeFacts,
   definePattern,
   keyName,

@@ -10,6 +10,9 @@ function laterBindingStatus(identifier, context, reactTypeStatus, expressionStat
   if (!defs.every((def) => def.node?.range?.[0] > identifier.range[0])) return null;
   seen.add(variable);
   try {
+    if ((variable.references ?? []).some((reference) => reference.isWrite() && !reference.init)) {
+      return "unresolved";
+    }
     let unresolved = false;
     for (const def of defs) {
       if (def.type !== "Variable" || def.node?.id?.type !== "Identifier") continue;
