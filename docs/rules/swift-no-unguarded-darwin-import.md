@@ -1,11 +1,11 @@
 # `swift-no-unguarded-darwin-import`
 
-<!-- cspell:ignore getpagesize -->
+<!-- cspell:ignore getpagesize macCatalyst -->
 
 ## Why and when
 
-Enable this rule on Swift test sources that compile on Apple and other
-platforms. An unconditional `Darwin` import prevents the test target from
+Enable this rule on portable SwiftPM test targets that also compile on Linux. An
+unconditional import of an Apple-only module prevents the test target from
 compiling where the module is unavailable.
 [Swift conditional compilation](https://docs.swift.org/latest/documentation/the-swift-programming-language/statements/#Conditional-Compilation-Block).
 
@@ -15,41 +15,90 @@ compiling where the module is unavailable.
 rules:
   - rule: swift-no-unguarded-darwin-import
     scope: repository
-    include: ["Tests/**"]
 ```
 
 ## What it catches
 
-The rule reports plain and selective `Darwin` imports in selected `.swift`
-files. Other Apple-only modules such as UIKit, AppKit, and Security are
-outside its scope. It points to the `import` keyword when the
+The rule inspects `.swift` files that belong to declared `.testTarget(...)`
+entries in a portable `Package.swift`. It skips:
+
+- Non-test SwiftPM targets (`.target`, `.executableTarget`, `.macro`, `.plugin`,
+  and `.systemLibrary`), such as a macOS app's `Sources/` entry point.
+- Xcode and XcodeGen app projects that have no `Package.swift`.
+
+A `platforms:` list only sets deployment floors, so it never exempts a package.
+
+When an enclosing `Package.swift` is unreadable or its `platforms:` or
+`targets:` cannot be determined statically (for example, conditional compilation
+in the manifest or dynamic helper expressions), matching imports are routed
+through `options.unanalyzable` instead of reported as definite findings.
+
+Inside portable SwiftPM test targets, the rule reports plain and selective
+imports of configured modules. It points to the `import` keyword when the
 declaration spans lines, follows a semicolon, or has attributes with arguments.
 Comments and import-shaped text in strings and regex literals are ignored.
 
-A direct `canImport(Darwin)` or `os(macOS)`, `os(iOS)`, `os(tvOS)`,
-`os(watchOS)`, or `os(visionOS)` condition proves a guard in its `#if` or
-`#elseif` branch. That proof also applies inside nested blocks. Each sibling
-branch needs its own proof. A branch without a provable guard is unanalyzable.
-This includes feature flags, negated or compound conditions, and `#else`
-without a proven enclosing guard.
-
-Scope the rule with `include` and `exclude` so Apple-only targets can keep
-direct imports.
+A `canImport(Module)` guard proves an import of that same module. An `os(...)`
+guard proves the branch excludes Linux when it names a recognized Apple or
+non-Linux platform (`macOS`, `iOS`, `tvOS`, `watchOS`, `visionOS`, `Windows`,
+`FreeBSD`, and similar). Conjunctions (`&&`) combining a proven guard with
+other predicates—such as `#if os(iOS) && !targetEnvironment(macCatalyst)` or
+`#if os(macOS) && canImport(AppKit)`—and disjunctions (`||`) where every branch
+proves the guard—such as `#if (os(iOS) || os(macOS)) && !targetEnvironment(macCatalyst)`—are
+decidable. These proofs apply to the selected `#if` or `#elseif` branch and its
+nested blocks. Each sibling branch needs its own proof. A branch without a
+provable guard is unanalyzable. This includes bare feature flags (`#if DEBUG`),
+negated guards (`#if !os(macOS)`), disjunctions with an unproven branch
+(`#if canImport(Darwin) || DEBUG`), and `#else` without a proven enclosing
+guard.
 
 ## Options and defaults
 
-The rule is off by default. `options.allow` defaults to an empty set of path
-globs. The optional `options.message` appends a hint to the default fix.
-Use `options.unanalyzable` to route unproven guards and unreadable files.
+The rule is off by default. `options.modules` defaults to `["Darwin"]`. Set it
+to replace that list with the Apple-only modules your repository wants to guard.
+
+Recommended opt-in list for portable SwiftPM test targets:
+
+```yaml
+rules:
+  - rule: swift-no-unguarded-darwin-import
+    scope: repository
+    options:
+      modules: [Darwin, Security, UIKit, AppKit]
+```
+
+Use bare, case-sensitive module identifiers without spaces, periods, or
+backticks. An empty list selects no modules. An invalid entry fails the check
+with exit code 2. `CoreFoundation` is available on Linux and is omitted from the
+recommended list.
+
+`options.allow` defaults to an empty set of path globs. The optional
+`options.message` appends a hint to the default fix.
+Use `options.unanalyzable` to route unproven guards, manifests whose targets or
+platforms cannot be determined statically, and unreadable files.
 It defaults to `report`. Use `advise` for non-failing advisories or `ignore`
-to omit these diagnostics. Unconditional imports remain findings.
+to omit these diagnostics. Unconditional imports in proven portable test targets
+remain findings.
 The CLI and the async Node `check()`, `checkJson()`, and `analyzeProject()`
 check report use the same rule.
 
 ## Valid example
 
 ```swift
-// Tests/ClockTests.swift
+// Package.swift
+// swift-tools-version: 5.9
+import PackageDescription
+
+let package = Package(
+    name: "Clock",
+    targets: [
+        .testTarget(name: "ClockTests"),
+    ]
+)
+```
+
+```swift
+// Tests/ClockTests/ClockTests.swift
 import XCTest
 #if canImport(Darwin)
 import Darwin
@@ -65,7 +114,20 @@ final class ClockTests: XCTestCase {
 ## Counterexample
 
 ```swift
-// Tests/ClockTests.swift
+// Package.swift
+// swift-tools-version: 5.9
+import PackageDescription
+
+let package = Package(
+    name: "Clock",
+    targets: [
+        .testTarget(name: "ClockTests"),
+    ]
+)
+```
+
+```swift
+// Tests/ClockTests/ClockTests.swift
 import XCTest
 import Darwin
 
@@ -78,9 +140,9 @@ final class ClockTests: XCTestCase {
 
 ## Fix
 
-Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.
-When a test can use a portable API instead, move to that API and remove the
-Darwin import.
+Wrap the import and the tests that use it in a matching `#if canImport(...)`
+guard, an `#if os(...)` guard that excludes Linux, or `#if !os(Linux)`. When a test can use a portable API,
+move to that API and remove the platform-specific import.
 
 ## Analysis
 
@@ -91,9 +153,12 @@ the check at `max`.
 
 ### Limits
 
-The rule recognizes individual positive predicates, including parenthesized
-forms. It leaves general condition evaluation to Swift and uses the configured
-paths to identify portable tests. Swift files with invalid UTF-8 are decoded
+The rule parses static `Package.swift` `platforms:` and `targets:` declarations
+and evaluates Boolean combinations (`&&`, `||`, parentheses)
+of `canImport(...)` and `os(...)` predicates; negation is accepted only as
+`!os(Linux)`, and other `!` operands, including `!targetEnvironment(...)`, add no proof across single-line and multiline
+directives. General Swift condition evaluation and dynamic manifests are routed
+through `options.unanalyzable`. Swift files with invalid UTF-8 are decoded
 lossily. If the source cannot be read, the diagnostic names the file and asks
 the user to restore access.
 

@@ -332,8 +332,11 @@ through the selected unanalyzable policy. This remains independent of
 [`react-no-nested-buttons-and-links`](../rules/react-no-nested-buttons-and-links.md) checks native control nesting in selected JSX and TSX files. Use common scope and path filters. Its `options.unanalyzable` inherits repository `unanalyzable` when set and otherwise defaults to `advise`.
 
 Use the opt-in [`swift-no-unguarded-darwin-import`](../rules/swift-no-unguarded-darwin-import.md)
-rule on portable Swift test sources. Select those files with common
-`include` and `exclude` filters.
+rule on portable SwiftPM test targets. It defaults to `Darwin` and skips
+non-test targets and Xcode/XcodeGen app projects without `Package.swift`. A
+`platforms:` list only sets deployment floors, so Apple-only packages are
+still checked. Set `options.modules` to opt into wider Apple-only module
+lists (such as `[Darwin, Security, UIKit, AppKit]`).
 
 [`nextjs-no-caching`](../rules/nextjs-no-caching.md#effort) supports `low`:
 check literal fetch options, route segment exports, and directly exported

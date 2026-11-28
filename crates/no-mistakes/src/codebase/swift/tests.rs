@@ -49,6 +49,53 @@ fn target_index_prefers_the_deepest_matching_target_root() {
 }
 
 #[test]
+fn target_index_keeps_a_deeper_root_when_a_later_root_is_shallower() {
+    let deep = PathBuf::from("/repo/Client/Sources/App/Generated/Client.swift");
+    let package = SwiftPackageFacts {
+        package_root: PathBuf::from("/repo/Client"),
+        local_package_paths: Vec::new(),
+        local_package_bindings: BTreeMap::new(),
+        products: BTreeMap::new(),
+        targets: BTreeMap::from([
+            (
+                "Aaa".to_string(),
+                SwiftTargetFacts {
+                    name: "Aaa".to_string(),
+                    roots: vec![PathBuf::from("/repo/Client/Sources/App/Generated")],
+                    ..Default::default()
+                },
+            ),
+            (
+                "Zzz".to_string(),
+                SwiftTargetFacts {
+                    name: "Zzz".to_string(),
+                    roots: vec![PathBuf::from("/repo/Client/Sources/App")],
+                    ..Default::default()
+                },
+            ),
+        ]),
+    };
+
+    let index = target_index(&[package], std::slice::from_ref(&deep));
+
+    assert_eq!(index.get(&deep).map(String::as_str), Some("Aaa"));
+}
+
+#[test]
+fn swift_files_outside_every_target_root_stay_unassigned() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/swift-target-ownership/fixture");
+    let outside = root.join("OutsideTarget.swift");
+    let facts = collect_swift_facts(&root, std::slice::from_ref(&outside), &[".".to_string()]);
+
+    assert_eq!(facts.files[&outside].target, None);
+    assert!(facts
+        .files_by_target
+        .values()
+        .all(|files| !files.contains(&outside)));
+}
+
+#[test]
 fn package_manifests_are_not_indexed_as_swift_source_symbols() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/test-plan/swift-native-topology/fixture");

@@ -1,0 +1,383 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "apple_guard_conjunctions": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "apple_platforms_package_portable_test": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/AppleKitTests/AppleKitTests.swift",
+          "line": 1,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin"
+        },
+        {
+          "file": "Tests/AppleKitTests/AppleKitTests.swift",
+          "line": 2,
+          "message": "Wrap the UIKit import and the tests that use it in `#if canImport(UIKit)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import UIKit"
+        },
+        {
+          "file": "Tests/AppleKitTests/AppleKitTests.swift",
+          "line": 3,
+          "message": "Wrap the AppKit import and the tests that use it in `#if canImport(AppKit)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import AppKit"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom_modules": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 2,
+          "message": "Wrap the Security import and the tests that use it in `#if canImport(Security)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Security"
+        },
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 27,
+          "message": "Cannot verify that this compilation branch guards the Security import. Wrap the Security import and the tests that use it in `#if canImport(Security)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Security",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 49,
+          "message": "Cannot verify that this compilation branch guards the Security import. Wrap the Security import and the tests that use it in `#if canImport(Security)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Security",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 7,
+          "message": "Wrap the SampleFramework import and the tests that use it in `#if canImport(SampleFramework)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import SampleFramework"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "default_modules": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 1,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin"
+        },
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 26,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic_platforms_advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "Tests/DynamicManifestTests/DynamicManifestTests.swift",
+          "line": 1,
+          "message": "Cannot verify whether this file belongs to a portable SwiftPM test target (cannot statically determine platforms in Package.swift). Wrap the Security import and the tests that use it in `#if canImport(Security)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Security",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "dynamic_platforms_unanalyzable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/DynamicManifestTests/DynamicManifestTests.swift",
+          "line": 1,
+          "message": "Cannot verify whether this file belongs to a portable SwiftPM test target (cannot statically determine platforms in Package.swift). Wrap the Security import and the tests that use it in `#if canImport(Security)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Security",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "dynamic_targets_unanalyzable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/DynamicTargetTests/DynamicTargetTests.swift",
+          "line": 1,
+          "message": "Cannot verify whether this file belongs to a portable SwiftPM test target (cannot statically determine targets in Package.swift). Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "empty_modules": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "macos_app_source_skipped": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "opt_in_apple_modules": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 1,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin"
+        },
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 2,
+          "message": "Wrap the Security import and the tests that use it in `#if canImport(Security)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Security"
+        },
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 26,
+          "message": "Cannot verify that this compilation branch guards the Darwin import. Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 27,
+          "message": "Cannot verify that this compilation branch guards the Security import. Wrap the Security import and the tests that use it in `#if canImport(Security)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Security",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 28,
+          "message": "Cannot verify that this compilation branch guards the UIKit import. Wrap the UIKit import and the tests that use it in `#if canImport(UIKit)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import UIKit",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 29,
+          "message": "Cannot verify that this compilation branch guards the AppKit import. Wrap the AppKit import and the tests that use it in `#if canImport(AppKit)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import AppKit",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 3,
+          "message": "Wrap the UIKit import and the tests that use it in `#if canImport(UIKit)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import UIKit"
+        },
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 33,
+          "message": "Cannot verify that this compilation branch guards the UIKit import. Wrap the UIKit import and the tests that use it in `#if canImport(UIKit)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import UIKit",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 4,
+          "message": "Wrap the AppKit import and the tests that use it in `#if canImport(AppKit)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import AppKit"
+        },
+        {
+          "file": "Tests/AppleImports.swift",
+          "line": 49,
+          "message": "Cannot verify that this compilation branch guards the Security import. Wrap the Security import and the tests that use it in `#if canImport(Security)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Security",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "portable_security_default": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "portable_security_opt_in": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/VaultCoreTests/VaultCoreTests.swift",
+          "line": 1,
+          "message": "Wrap the Security import and the tests that use it in `#if canImport(Security)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Security"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "test_target_under_sources_reported": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Sources/ClockTests/ClockTests.swift",
+          "line": 1,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "versioned_manifest_unanalyzable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/ClockTests/ClockTests.swift",
+          "line": 1,
+          "message": "Cannot verify whether this file belongs to a portable SwiftPM test target (cannot statically determine targets with a version-specific Package manifest). Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "xcodegen_app_skipped": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  }
+}
