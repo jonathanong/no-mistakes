@@ -87,7 +87,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/ignored.yml",
           "line": 10,
-          "message": ".github/workflows/ignored.yml:10: job `verify` step 1 runs repository script `scripts/ignored.sh`, which is not covered by on.pull_request.paths-ignore. Remove `scripts/ignored.sh` from on.pull_request.paths-ignore (or add a `!scripts/ignored.sh` negation) so edits to this script trigger the workflow.",
+          "message": ".github/workflows/ignored.yml:10: job `verify` step 1 runs repository script `scripts/ignored.sh`, which is not covered by on.pull_request.paths-ignore. Remove `scripts/ignored.sh` from on.pull_request.paths-ignore, or narrow that ignore pattern. Use `paths` when the workflow should include this script and exclude others.",
           "rule": "github-actions-workflow-script-paths",
           "sourceLine": "- run: bash scripts/ignored.sh",
           "target": "scripts/ignored.sh"
@@ -140,7 +140,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": ".github/workflows/ignored.yml",
           "line": 10,
-          "message": ".github/workflows/ignored.yml:10: job `verify` step 1 runs repository script `scripts/ignored.sh`, which is not covered by on.pull_request.paths-ignore. Remove `scripts/ignored.sh` from on.pull_request.paths-ignore (or add a `!scripts/ignored.sh` negation) so edits to this script trigger the workflow.",
+          "message": ".github/workflows/ignored.yml:10: job `verify` step 1 runs repository script `scripts/ignored.sh`, which is not covered by on.pull_request.paths-ignore. Remove `scripts/ignored.sh` from on.pull_request.paths-ignore, or narrow that ignore pattern. Use `paths` when the workflow should include this script and exclude others.",
           "rule": "github-actions-workflow-script-paths",
           "sourceLine": "- run: bash scripts/ignored.sh",
           "target": "scripts/ignored.sh"

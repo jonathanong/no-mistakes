@@ -1,9 +1,12 @@
+mod cd;
 mod paths;
+mod visit;
 
 pub(super) use paths::resolve_rel_path;
 
-use crate::codebase::rules::github_actions_download_integrity::words::{self, Command};
-use paths::{apply_cd, check_candidate, is_dynamic_word, unanalyzable};
+use crate::codebase::rules::github_actions_download_integrity::words;
+use cd::apply_cd;
+use paths::{is_dynamic_word, unanalyzable};
 
 const MAX_NESTED_DEPTH: usize = 4;
 
@@ -72,6 +75,7 @@ fn scan_nested(
         ));
         return;
     }
+    let mut previous = None;
     let mut dir_timeline = vec![(0usize, dir.clone())];
     for command in &parsed.commands {
         let Some((name, at)) = words::command_at(&command.words) else {
@@ -80,8 +84,10 @@ fn scan_nested(
         let cmd_word = &command.words[at];
         let cmd_line = cmd_word.line + state.line_offset;
         if name == "cd" {
-            dir = apply_cd(&dir, command, at);
-            dir_timeline.push((cmd_word.line, dir.clone()));
+            let next = apply_cd(&dir, previous.as_ref(), command, at);
+            previous = Some(dir);
+            dir = next;
+            dir_timeline.push((command.anchor, dir.clone()));
             continue;
         }
         if is_dynamic_word(cmd_word, command.dynamic) {
@@ -100,91 +106,12 @@ fn scan_nested(
             ));
             continue;
         }
-        if try_shell_c(&name, command, at, &dir, state, hits) {
+        if visit::try_shell_c(&name, command, at, &dir, state, hits) {
             continue;
         }
-        inspect_command(&name, command, at, &dir, state, hits);
+        visit::inspect_command(&name, command, at, &dir, state, hits);
     }
-    if state.depth < MAX_NESTED_DEPTH {
-        for (sub_line, body) in &parsed.substitutions {
-            let active_dir = dir_timeline
-                .iter()
-                .rev()
-                .find(|(line, _)| *line < *sub_line)
-                .map(|(_, dir)| dir.clone())
-                .unwrap_or_else(|| dir_timeline[0].1.clone());
-            let nested = ScanState {
-                script_dirs: state.script_dirs,
-                line_offset: state.line_offset + sub_line.saturating_sub(1),
-                depth: state.depth + 1,
-            };
-            scan_nested(body, active_dir, &nested, hits);
-        }
-    }
-}
-
-fn inspect_command(
-    name: &str,
-    command: &Command,
-    at: usize,
-    dir: &WorkingDir,
-    state: &ScanState<'_>,
-    hits: &mut Vec<ScriptHit>,
-) {
-    let cmd_word = &command.words[at];
-    if cmd_word.text.contains('/') && !cmd_word.text.contains("://") {
-        check_candidate(
-            cmd_word,
-            command.dynamic,
-            dir,
-            state.script_dirs,
-            state.line_offset,
-            hits,
-        );
-        return;
-    }
-    if let Some(target) = super::extract::interpreter_script_arg(name, &command.words, at + 1) {
-        check_candidate(
-            target,
-            command.dynamic,
-            dir,
-            state.script_dirs,
-            state.line_offset,
-            hits,
-        );
-    }
-}
-
-fn try_shell_c(
-    name: &str,
-    command: &Command,
-    at: usize,
-    dir: &WorkingDir,
-    state: &ScanState<'_>,
-    hits: &mut Vec<ScriptHit>,
-) -> bool {
-    if !matches!(name, "bash" | "sh" | "zsh") {
-        return false;
-    }
-    let Some(operand) = super::extract::shell_c_operand(&command.words, at + 1) else {
-        return false;
-    };
-    let op_line = operand.line + state.line_offset;
-    if is_dynamic_word(operand, command.dynamic) {
-        hits.push(unanalyzable(
-            op_line,
-            operand.text.clone(),
-            format!("passes a dynamic script to `{name} -c`, which cannot be statically checked against workflow path filters. Run the script directly with a literal path."),
-        ));
-    } else if state.depth < MAX_NESTED_DEPTH {
-        let nested = ScanState {
-            script_dirs: state.script_dirs,
-            line_offset: op_line.saturating_sub(1),
-            depth: state.depth + 1,
-        };
-        scan_nested(&operand.text, dir.clone(), &nested, hits);
-    }
-    true
+    visit::scan_substitutions(&parsed.substitutions, &dir_timeline, state, hits);
 }
 
 fn syntax_abstention(parsed: &words::Parse) -> Option<&'static str> {

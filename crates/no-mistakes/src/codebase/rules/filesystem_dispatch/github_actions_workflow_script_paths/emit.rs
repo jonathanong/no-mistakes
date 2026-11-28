@@ -117,7 +117,7 @@ fn remediation_hint(path: &str, missed: &[&EventFilter], events_text: &str) -> S
     if all_paths {
         format!("Add `{path}` (or its script directory) to {events_text} so edits to this script trigger the workflow.")
     } else if all_ignore {
-        format!("Remove `{path}` from {events_text} (or add a `!{path}` negation) so edits to this script trigger the workflow.")
+        format!("Remove `{path}` from {events_text}, or narrow that ignore pattern. Use `paths` when the workflow should include this script and exclude others.")
     } else {
         format!("Update {events_text} so edits to `{path}` trigger the workflow.")
     }

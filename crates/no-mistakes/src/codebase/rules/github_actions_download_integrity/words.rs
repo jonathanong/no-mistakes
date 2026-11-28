@@ -30,7 +30,8 @@ pub(in crate::codebase::rules) struct Parse {
     pub(in crate::codebase::rules) unterminated_heredoc: bool,
     pub(in crate::codebase::rules) unterminated_quote: bool,
     pub(in crate::codebase::rules) unterminated_substitution: bool,
-    pub(in crate::codebase::rules) substitutions: Vec<(usize, String)>,
+    /// Nested bodies as `(line, char_start, body)` in the parent script.
+    pub(in crate::codebase::rules) substitutions: Vec<(usize, usize, String)>,
     pub(super) skip_lines: Vec<usize>,
     // Character offsets in the unmodified shell source.
     pub(in crate::codebase::rules) heredoc_ranges: Vec<Range<usize>>,

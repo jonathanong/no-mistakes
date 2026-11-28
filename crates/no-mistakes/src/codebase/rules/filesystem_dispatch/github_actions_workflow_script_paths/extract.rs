@@ -26,51 +26,45 @@ const TSX_VAL_FLAGS: &[&str] = &[
 const TSX_INLINE_FLAGS: &[&str] = &["-e", "--eval", "-p", "--print"];
 const SUBCMD_VAL_FLAGS: &[&str] = &["--cwd", "--config", "-c", "--env-file"];
 
-pub(super) fn shell_c_operand(words: &[Word], mut index: usize) -> Option<&Word> {
-    while let Some(word) = words.get(index) {
-        let text = word.text.as_str();
-        if text == "-c" || text == "--command" {
-            return words.get(index + 1);
-        }
-        if let Some(cluster) = text.strip_prefix('-').filter(|body| !body.starts_with('-')) {
-            if let Some((_, after)) = cluster.split_once('c') {
-                return after.is_empty().then(|| words.get(index + 1)).flatten();
-            }
-        }
-        if !text.starts_with('-') {
-            return None;
-        }
-        index += 1 + usize::from(matches!(text, "-o" | "-O" | "--rcfile"));
-    }
-    None
+pub(super) enum ScriptArg<'a> {
+    Path(&'a Word),
+    DirectoryFlag(&'a Word),
 }
 
 pub(super) fn interpreter_script_arg<'a>(
     name: &str,
     words: &'a [Word],
     start: usize,
-) -> Option<&'a Word> {
+) -> Option<ScriptArg<'a>> {
     match name {
         "bash" | "sh" | "zsh" | "dash" | "ash" | "ksh" => {
-            first_script_arg(words, start, SHELL_VAL_FLAGS, SHELL_INLINE_FLAGS)
+            first_script_arg(words, start, SHELL_VAL_FLAGS, SHELL_INLINE_FLAGS).map(ScriptArg::Path)
         }
-        "source" | "." => words.get(start),
-        "node" => first_script_arg(words, start, NODE_VAL_FLAGS, NODE_INLINE_FLAGS),
-        "tsx" | "ts-node" => first_script_arg(words, start, TSX_VAL_FLAGS, TSX_INLINE_FLAGS),
+        "source" | "." => words.get(start).map(ScriptArg::Path),
+        "node" => {
+            first_script_arg(words, start, NODE_VAL_FLAGS, NODE_INLINE_FLAGS).map(ScriptArg::Path)
+        }
+        "tsx" | "ts-node" => {
+            first_script_arg(words, start, TSX_VAL_FLAGS, TSX_INLINE_FLAGS).map(ScriptArg::Path)
+        }
         "python" | "python3" => first_script_arg(
             words,
             start,
             &["-W", "-X", "--check-hash-based-pycs"],
             &["-c", "-m"],
-        ),
-        "ruby" | "perl" => first_script_arg(words, start, &["-I", "-r"], &["-e", "-E"]),
+        )
+        .map(ScriptArg::Path),
+        "ruby" | "perl" => {
+            first_script_arg(words, start, &["-I", "-r"], &["-e", "-E"]).map(ScriptArg::Path)
+        }
         "pwsh" => first_script_arg(
             words,
             start,
             &["-WorkingDirectory", "-ConfigurationName"],
             &["-c", "-Command"],
-        ),
-        "bun" | "deno" => unwrap_subcommand_runner(name, words, start),
+        )
+        .map(ScriptArg::Path),
+        "bun" | "deno" => unwrap_subcommand_runner(name, words, start).map(ScriptArg::Path),
         "npx" | "pnpx" | "pnpm" | "npm" | "yarn" | "uv" => {
             unwrap_package_runner(name, words, start)
         }
@@ -100,7 +94,7 @@ fn unwrap_subcommand_runner<'a>(name: &str, words: &'a [Word], start: usize) -> 
     None
 }
 
-fn unwrap_package_runner<'a>(name: &str, words: &'a [Word], start: usize) -> Option<&'a Word> {
+fn unwrap_package_runner<'a>(name: &str, words: &'a [Word], start: usize) -> Option<ScriptArg<'a>> {
     let mut idx = start;
     while let Some(word) = words.get(idx) {
         let text = word.text.as_str();
@@ -108,11 +102,15 @@ fn unwrap_package_runner<'a>(name: &str, words: &'a [Word], start: usize) -> Opt
             idx += 1;
             break;
         }
+        if let Some(skip) = noop_directory_flag(words, idx) {
+            idx += skip;
+            continue;
+        }
+        if directory_flag(text) {
+            return Some(ScriptArg::DirectoryFlag(word));
+        }
         if text.starts_with('-') {
-            idx += 1 + usize::from(matches!(
-                text,
-                "-C" | "--dir" | "--prefix" | "-F" | "--filter" | "--package" | "-p"
-            ));
+            idx += 1 + usize::from(matches!(text, "-F" | "--filter" | "--package" | "-p"));
             continue;
         }
         if (matches!(name, "pnpm" | "npm" | "yarn") && matches!(text, "exec" | "dlx"))
@@ -125,12 +123,32 @@ fn unwrap_package_runner<'a>(name: &str, words: &'a [Word], start: usize) -> Opt
     }
     let next = words.get(idx)?;
     if next.text.contains('/') && !next.text.contains("://") {
-        return Some(next);
+        return Some(ScriptArg::Path(next));
     }
     let nested = words::basename(&next.text);
     (nested != name)
         .then(|| interpreter_script_arg(&nested, words, idx + 1))
         .flatten()
+}
+
+fn directory_flag(text: &str) -> bool {
+    matches!(text, "-C" | "--dir" | "--prefix")
+        || text.starts_with("--dir=")
+        || text.starts_with("--prefix=")
+        || (text.starts_with("-C") && text.len() > 2)
+}
+
+fn noop_directory_flag(words: &[Word], idx: usize) -> Option<usize> {
+    let text = words.get(idx)?.text.as_str();
+    if matches!(text, "-C" | "--dir" | "--prefix") {
+        let value = words.get(idx + 1)?.text.as_str();
+        return (value == "." || value == "./").then_some(2);
+    }
+    let attached = text
+        .strip_prefix("--dir=")
+        .or_else(|| text.strip_prefix("--prefix="))
+        .or_else(|| text.strip_prefix("-C").filter(|value| !value.is_empty()))?;
+    (attached == "." || attached == "./").then_some(1)
 }
 
 fn first_script_arg<'a>(

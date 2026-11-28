@@ -21,6 +21,11 @@ pub(super) fn compile_pattern_sequence(raw: &Value) -> Result<Vec<CompiledGlob>,
         if has_extglob(pattern) {
             return Err(format!("uses unsupported extglob syntax `{pattern}`."));
         }
+        if has_github_quantifier(pattern) {
+            return Err(format!(
+                "uses GitHub `?` or `+` quantifiers in `{pattern}`, which this check does not evaluate."
+            ));
+        }
         let (negate, body) = match pattern.strip_prefix('!') {
             Some(rest) => (true, rest),
             None => (false, pattern),
@@ -56,6 +61,19 @@ fn has_extglob(pattern: &str) -> bool {
     ["+(", "?(", "!(", "@(", "*("]
         .iter()
         .any(|marker| pattern.contains(marker))
+}
+
+fn has_github_quantifier(pattern: &str) -> bool {
+    let mut class = false;
+    for ch in pattern.chars() {
+        match ch {
+            '[' if !class => class = true,
+            ']' if class => class = false,
+            '?' | '+' if !class => return true,
+            _ => {}
+        }
+    }
+    false
 }
 
 fn normalize_github_glob(pattern: &str) -> String {

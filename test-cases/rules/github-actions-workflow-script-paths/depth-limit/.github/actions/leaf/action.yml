@@ -1,0 +1,5 @@
+name: leaf
+runs:
+  using: composite
+  steps:
+    - run: scripts/leaf.sh

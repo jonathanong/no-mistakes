@@ -36,11 +36,15 @@ after stripping `@ref` and trailing slashes, case-insensitively for remote
 `owner/repo` actions and verbatim for local `./...` paths. Duplicate families,
 dynamic `uses` expressions, or out-of-range caps fail at configuration load.
 `onlyConfiguredActions` defaults to `false`; set it to `true` (with a non-empty
-`actionCaps`) to require timeouts only on steps matching `actionCaps`. When
-`actionCaps` is configured and a workflow step has a dynamic `uses:` value
-(`${{ ... }}`) whose timeout is missing or exceeds the strictest configured
-action cap, the rule reports an `unanalyzable` diagnostic governed by
-`options.unanalyzable` (default `advise`).
+`actionCaps`) to require timeouts only on steps matching `actionCaps`.
+`actionCaps[].uses` must name one concrete action family. Wildcards such as
+`actions/*` fail at configuration load. When `actionCaps` is configured and a
+workflow step has a dynamic `uses:` value (`${{ ... }}`), a literal timeout
+above `maxMinutes` is a finding even if it is within the smallest action cap.
+A missing timeout, or a literal timeout within `maxMinutes` but above that
+smallest cap, is an `unanalyzable` diagnostic governed by
+`options.unanalyzable` (default `advise`). A literal timeout within both caps
+stays quiet.
 `allow` accepts a reasoned exception for a specific step, identified as
 `path#jobId#stepId`. For a step without `id`, use its 1-based position in the
 job's `steps` array, such as `path#jobId#2`. An allow entry permits an absent or

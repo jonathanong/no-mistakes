@@ -153,7 +153,10 @@ pub(super) fn family_of(uses: &str) -> Option<String> {
         .split_once('@')
         .map(|(family, _)| family)
         .unwrap_or(trimmed);
-    (!family.is_empty()).then(|| canonicalize_family(family))
+    if family.is_empty() || family.contains(['*', '?', '[']) {
+        return None;
+    }
+    Some(canonicalize_family(family))
 }
 
 fn canonicalize_family(family: &str) -> String {

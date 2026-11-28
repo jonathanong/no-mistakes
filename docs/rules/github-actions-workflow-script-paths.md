@@ -21,7 +21,8 @@ without path filters stay silent.
 
 For each path-filtered workflow, the rule parses every job `run` step with the
 shared shell parser and follows local composite actions (`uses: ./...`) up to
-four levels deep. It collects repository script invocations inside the
+four levels deep. A deeper composite, or a shell command nested more than four
+levels, is unanalyzable. It collects repository script invocations inside the
 configured `scriptDirs`:
 
 - Direct path execution (for example `./scripts/check.sh` or `tools/ci/lint.sh`),
@@ -35,19 +36,23 @@ configured `scriptDirs`:
 
 Each resolved script path is evaluated against every checked path-filtered
 event on that workflow using ordered gitignore-style glob matching (including
-`!` negations). When any path-filtered event fails to cover the script, the
+`!` negations on `paths`). GitHub's `?` and `+` quantifiers are not that
+matcher: a pattern that uses either is unanalyzable. `paths-ignore` is
+exclusion-only, so the remediation tells you to narrow the ignore or switch to
+`paths`. When any path-filtered event fails to cover the script, the
 rule reports the invocation line (or the `uses:` line for a script run inside a
 local composite action) and names the missing event filters.
 
 When a workflow cannot be proven statically—invalid YAML, unreadable bytes,
 YAML merge keys or unrecognized `on:` / `paths:` shapes, dynamic `paths`
-expressions or unsupported extended globs, dynamic command names, `eval`, dynamic
-`bash -c`, dynamic script paths under `scriptDirs`, dynamic `working-directory`,
-unterminated shell syntax, unreadable local composite actions, a non-string
-`run` inside a local composite action, or a nested `./` action that is
-dynamic or cannot be resolved—the rule
-abstains from reporting a pass and records an `unanalyzable` diagnostic
-governed by `options.unanalyzable` (default `advise`).
+expressions, unsupported extended globs, GitHub `?` or `+` quantifiers, dynamic
+command names, `eval`, dynamic or clustered `bash -c`, dynamic script paths
+under `scriptDirs`, dynamic `working-directory`, `cd` or package-runner
+directory changes this check cannot model, unterminated shell syntax, nesting
+past four levels, unreadable local composite actions, a non-string `run` inside
+a local composite action, or a nested `./` action that is dynamic or cannot be
+resolved—the rule abstains from reporting a pass and records an `unanalyzable`
+diagnostic governed by `options.unanalyzable` (default `advise`).
 
 ## Options and defaults
 
@@ -176,8 +181,12 @@ steps:
 - Invalid YAML, non-UTF-8 bytes, YAML merge or non-string keys in root or `on:`,
   unrecognized `on:` / `paths:` / `paths-ignore:` shapes, dynamic `paths`
   expressions or unsupported extended globs, dynamic commands, `eval`, dynamic
-  `bash -c`, dynamic script paths under `scriptDirs`, dynamic `working-directory`,
-  unterminated shell syntax, and unreadable or malformed local composite actions
+  `bash -c` (including clustered forms such as `bash -ce`), dynamic script paths
+  under `scriptDirs` (including an expansion in the middle of a path segment),
+  dynamic `working-directory`, `cd -` when the previous directory is unknown,
+  `cd` options this check cannot model, package-runner directory flags such as
+  `pnpm --dir`, unterminated shell syntax, composite or shell nesting past four
+  levels, and unreadable or malformed local composite actions
   never pass silently; they emit a diagnostic governed by `options.unanalyzable`
   (default `advise`).
 

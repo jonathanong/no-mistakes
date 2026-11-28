@@ -58,9 +58,19 @@ fn walk_action(
         });
         return missing;
     };
-    if !visited.insert(action_path.clone()) || depth >= MAX_ACTION_DEPTH {
+    if visited.contains(&action_path) {
         return action_path;
     }
+    if depth >= MAX_ACTION_DEPTH {
+        hits.push(unanalyzable_hit(
+            &action_path,
+            &format!(
+                "calls local action `{action_path}` nested more than {MAX_ACTION_DEPTH} levels deep, so its repository scripts could not be checked against workflow path filters."
+            ),
+        ));
+        return action_path;
+    }
+    visited.insert(action_path.clone());
     let Ok(value) = sources.parse_loaded_yaml(&full_path, &source, true) else {
         hits.push(ScriptHit {
             line: 1,

@@ -1,6 +1,6 @@
 use super::super::options::{matches_script_dir, prefixes_script_dir};
 use super::{ScriptHit, ScriptHitKind, WorkingDir};
-use crate::codebase::rules::github_actions_download_integrity::words::{Command, Word};
+use crate::codebase::rules::github_actions_download_integrity::words::Word;
 
 pub(super) fn check_candidate(
     word: &Word,
@@ -56,26 +56,6 @@ pub(super) fn check_candidate(
     }
 }
 
-pub(super) fn apply_cd(current: &WorkingDir, command: &Command, at: usize) -> WorkingDir {
-    let Some(arg) = command.words.get(at + 1) else {
-        return WorkingDir::OutsideRepo;
-    };
-    if is_dynamic_word(arg, command.dynamic) {
-        return WorkingDir::Dynamic(arg.text.clone());
-    }
-    let raw = arg.text.trim();
-    if raw.is_empty() || raw == "-" || raw.starts_with('/') || raw.starts_with('~') {
-        return WorkingDir::OutsideRepo;
-    }
-    match current {
-        WorkingDir::Known(base) => {
-            resolve_rel_path(base, raw).map_or(WorkingDir::OutsideRepo, WorkingDir::Known)
-        }
-        WorkingDir::Dynamic(raw_dir) => WorkingDir::Dynamic(raw_dir.clone()),
-        WorkingDir::OutsideRepo => WorkingDir::OutsideRepo,
-    }
-}
-
 pub(in super::super) fn resolve_rel_path(base: &str, raw: &str) -> Option<String> {
     if raw.starts_with('/') || raw.starts_with('~') || raw.contains("://") {
         return None;
@@ -118,24 +98,29 @@ fn dynamic_may_target_script_dir(raw: &str, dir: &WorkingDir, script_dirs: &[Str
     match dir {
         WorkingDir::OutsideRepo => false,
         WorkingDir::Dynamic(_) => true,
-        WorkingDir::Known(base) => {
-            if !base.is_empty() && prefixes_script_dir(base, script_dirs) {
-                return true;
-            }
-            let prefix = raw
-                .split(['$', '{'])
-                .next()
-                .unwrap_or("")
-                .trim_end_matches('/');
-            if prefix.is_empty() || prefix == "." {
-                return true;
-            }
-            resolve_rel_path(base, prefix).is_some_and(|resolved| {
-                prefixes_script_dir(&resolved, script_dirs)
-                    || script_dirs
-                        .iter()
-                        .any(|dir| dir.starts_with(&format!("{resolved}/")))
-            })
-        }
+        WorkingDir::Known(base) => dynamic_known_may_target(raw, base, script_dirs),
     }
+}
+
+fn dynamic_known_may_target(raw: &str, base: &str, script_dirs: &[String]) -> bool {
+    if !base.is_empty() && prefixes_script_dir(base, script_dirs) {
+        return true;
+    }
+    let head = raw.split(['$', '{']).next().unwrap_or("");
+    let prefix = head.trim_end_matches('/');
+    if prefix.is_empty() || prefix == "." {
+        return true;
+    }
+    let Some(resolved) = resolve_rel_path(base, prefix) else {
+        return false;
+    };
+    if prefixes_script_dir(&resolved, script_dirs)
+        || script_dirs
+            .iter()
+            .any(|dir| dir.starts_with(&format!("{resolved}/")))
+    {
+        return true;
+    }
+    // A partial segment such as `scr${part}ipts` can still name `scripts`.
+    !head.ends_with('/') && script_dirs.iter().any(|dir| dir.starts_with(&resolved))
 }

@@ -1,0 +1,5 @@
+name: l1
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/l2

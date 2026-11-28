@@ -83,6 +83,8 @@ fn triggers_report_unanalyzable_shapes() {
         "on:\n  pull_request:\n    paths: 'scripts/**'\njobs: {}",
         "on:\n  pull_request:\n    paths: ['${{ inputs.glob }}']\njobs: {}",
         "on:\n  pull_request:\n    paths: ['scripts/+(a|b).sh']\njobs: {}",
+        "on:\n  pull_request:\n    paths: ['scripts/check.jsx?']\njobs: {}",
+        "on:\n  pull_request:\n    paths: ['scripts/check.sh+']\njobs: {}",
         "on:\n  pull_request:\n    paths: [42]\njobs: {}",
         "on:\n  pull_request:\n    paths: ['']\njobs: {}",
         "on:\n  pull_request:\n    paths: ['[invalid']\njobs: {}",
@@ -101,6 +103,7 @@ fn triggers_report_unanalyzable_shapes() {
         "on: push\njobs: {}",
         "  on: push\n",
         "on:\n  pull_request:\n  # comment\n  push:\n    paths:\n      - '**foo.sh'\njobs: {}",
+        "on:\n  pull_request:\n    paths: ['scripts/check.jsx[?]']\njobs: {}",
     ] {
         let value: Value = serde_yaml::from_str(ok).unwrap();
         let events = vec!["push".to_string(), "pull_request".to_string()];
@@ -289,7 +292,10 @@ fn scans_cd_and_dynamic_working_directory_paths() {
         WorkingDir::Known(String::new()),
         &dirs,
     );
-    assert_eq!(cd_hits.len(), 1, "{cd_hits:?}");
+    assert_eq!(cd_hits.len(), 2, "{cd_hits:?}");
+    assert!(cd_hits
+        .iter()
+        .any(|hit| hit.token() == Some("./in-prev.sh")));
 
     let nested_prefix = scan_script(
         "node \"tools/${X}\"\nnode \"/abs/${X}\"\nbash -- scripts/dash.sh\nsh -o errexit -c 'bash scripts/opt.sh'\nsh --command 'bash scripts/cmd.sh'\nsh -ce 'ignored'\nbash -x\n",
