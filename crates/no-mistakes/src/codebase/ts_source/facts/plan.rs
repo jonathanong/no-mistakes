@@ -10,6 +10,7 @@ impl TsFactPlan {
         self.function_calls |= other.function_calls;
         self.value_flow |= other.value_flow;
         self.identifier_provenance |= other.identifier_provenance;
+        self.scoped_transaction_handles |= other.scoped_transaction_handles;
         self.per_item_calls |= other.per_item_calls;
         self.call_sites |= other.call_sites;
         self.resources |= other.resources;
@@ -31,7 +32,11 @@ impl TsFactPlan {
     }
 
     pub(crate) fn needs_value_flow(self) -> bool {
-        self.value_flow || self.identifier_provenance || self.effect_calls || self.per_item_calls
+        self.value_flow
+            || self.identifier_provenance
+            || self.scoped_transaction_handles
+            || self.effect_calls
+            || self.per_item_calls
     }
 
     pub(crate) fn needs_import_facts(self) -> bool {
@@ -65,6 +70,7 @@ impl TsFactPlan {
             && !self.function_calls
             && !self.value_flow
             && !self.identifier_provenance
+            && !self.scoped_transaction_handles
             && !self.per_item_calls
             && !self.call_sites
             && !self.resources
@@ -114,6 +120,7 @@ impl TsFactPlan {
             && (!required.function_calls || self.function_calls)
             && (!required.value_flow || self.needs_value_flow())
             && (!required.identifier_provenance || self.identifier_provenance)
+            && (!required.scoped_transaction_handles || self.scoped_transaction_handles)
             && (!required.per_item_calls || self.per_item_calls)
             && (!required.call_sites || self.call_sites)
             && (!required.resources || self.resources)

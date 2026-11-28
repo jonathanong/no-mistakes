@@ -32,6 +32,7 @@ fn extract_import_facts_with_plan_and_rhs_probe(
             {
                 collector.fresh_receiver_effects.rhs_probe = probe;
             }
+            collector.value_flow.scoped_handles.enabled = plan.scoped_transaction_handles;
             // Establish the file lexical environment before visiting expressions so a
             // later declaration cannot make an earlier global-looking call resolve to
             // a built-in. This is collection from the already parsed Program, not a

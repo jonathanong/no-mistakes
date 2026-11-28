@@ -1,13 +1,15 @@
 # `queue-no-enqueue-in-transaction`
 
-Reports a configured queue publish in the body of an inline transaction callback.
+Reports a configured queue publish inside an inline transaction callback or
+while a scoped transaction handle is live.
 
 ## Why and when
 
 A queue publish that persists independently of a database transaction can survive
 its rollback. A worker can then receive work that depends on data the transaction
 never committed. Enable this rule for transaction APIs that invoke their callbacks
-before committing and publishers whose effects survive rollback.
+before committing or return a handle that stays open until it is closed.
+Configure publishers whose effects survive rollback.
 
 ## What it catches
 
@@ -19,6 +21,8 @@ the `enqueue` export identity. Configure each source module specifier and export
 resolver exposes for your calls. Local functions that shadow an imported name, calls imported from unrelated
 modules, and local function, class, or static `const` declarations exported
 from relative modules stay outside the check.
+
+### Callback transactions
 
 The transaction call must use a direct import binding so its argument positions
 can be proved, and the configured argument must be an inline arrow or
@@ -48,6 +52,23 @@ arm, so a configured publisher in one arm is still reported. Separate nested fun
 initializers have separate bodies and are outside the rule's direct-body
 analysis.
 
+### Scoped transaction handles
+
+Bind the result of a direct call to a configured begin API to one local
+`const`, `let`, or `await using` variable. Await the begin call if it returns
+a promise. The rule reports direct configured publisher calls while the handle
+is live. A standalone `await tx.commit()` or `await tx.rollback()` on the
+same binding, in the same statement list as the declaration, ends the
+transaction after the close completes. An `await using` handle also ends at
+the end of its declaration scope.
+
+The rule applies the `unanalyzable` policy to unsupported begin shapes,
+handles that escape or are captured by another function, and closes it cannot
+prove, such as a conditional commit or a commit without `await`. Unresolved publisher targets
+while a handle is live follow the same policy.
+
+### Unanalyzable calls
+
 Shapes the rule cannot soundly prove are recorded as `unanalyzable` (never
 silently passed) and routed through the rule's `unanalyzable` policy (`report`
 by default, or `advise` / `ignore`):
@@ -67,13 +88,16 @@ by default, or `advise` / `ignore`):
 ## Options and defaults
 
 The rule is off by default. Opt in with a repository-scoped application and
-supply both non-empty lists below. Module and export names must contain text.
-Each transaction module and export pair may appear once. Use `include` and `exclude` to select files by
-repository-relative paths.
+supply a non-empty `publishers` list and at least one configured transaction
+API in `transactions` or `beginTransactions`. You can configure both
+transaction styles in one rule application. Module and export names must
+contain text. Each module and export pair may appear once across both transaction
+lists. Use `include` and `exclude` to select repository-relative paths.
 
 | Option | Meaning |
 | --- | --- |
 | `transactions` | Transaction APIs, declared as `{ module, export, callbackArgument }`. The callback argument index is zero-based and has no default. Each listed API must call the callback before commit. |
+| `beginTransactions` | APIs that return a transaction handle, declared as `{ module, export }`. |
 | `publishers` | Independently durable queue APIs, declared as `{ module, export }`. Leave transaction-bound outbox writers outside this list. |
 | `unanalyzable` | `report` (default), `advise`, or `ignore` for shapes the rule cannot prove. |
 
@@ -87,6 +111,9 @@ rules:
         - module: "@sample/database"
           export: transaction
           callbackArgument: 1
+      beginTransactions:
+        - module: "@sample/database"
+          export: beginTransaction
       publishers:
         - module: "@sample/jobs"
           export: enqueue
@@ -125,10 +152,35 @@ await transaction("write", async (tx) => {
 });
 ```
 
+This `await using` handle is still live when the enqueue runs. Its implicit
+disposal runs when the block exits.
+
+```ts
+import { beginTransaction } from "@sample/database";
+import { enqueue } from "@sample/jobs";
+
+{
+  await using tx = await beginTransaction();
+  const receiptId = await tx.insertReceipt();
+  await enqueue({ receiptId });
+}
+```
+
 ## Fix
 
-Move this enqueue after the transaction commits. Return the job data from the
-callback and enqueue it after the transaction call resolves.
+Move the enqueue after the transaction commits. With a callback API, return
+the job data and enqueue it after the transaction call resolves. With a
+scoped handle, await the commit before calling the publisher.
+
+```ts
+import { beginTransaction } from "@sample/database";
+import { enqueue } from "@sample/jobs";
+
+const tx = await beginTransaction();
+const receiptId = await tx.insertReceipt();
+await tx.commit();
+await enqueue({ receiptId });
+```
 
 ## Suppression
 

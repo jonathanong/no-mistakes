@@ -16,6 +16,7 @@ pub(crate) fn extract_import_facts_with_forwarders(
         value_flow: plan.needs_value_flow(),
         identifier_provenance: plan.identifier_provenance,
         call_eligibility: plan.call_eligibility,
+        scoped_transaction_handles: plan.scoped_transaction_handles,
     };
     extract_import_facts_with_demands_and_forwarders(program, source, demands, forwarders)
 }

@@ -65,7 +65,10 @@ macro_rules! visit_type_and_expression_methods {
         }
 
         fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+            let receiver = self.scoped_handle_receiver(call);
+            let previous = std::mem::replace(&mut self.value_flow.scoped_handles.receiver, receiver);
             self.visit_receiver_call(call);
+            self.value_flow.scoped_handles.receiver = previous;
         }
 
         fn visit_await_expression(&mut self, expression: &oxc_ast::ast::AwaitExpression<'a>) {

@@ -12,9 +12,15 @@ export interface QueueNoEnqueueInTransactionBoundary {
   callbackArgument: number;
 }
 
-/** YAML options for the queue-no-enqueue-in-transaction rule. */
+export interface QueueNoEnqueueInTransactionBegin {
+  module: string;
+  export: string;
+}
+
+/** YAML options for the queue-no-enqueue-in-transaction rule. Configure at least one transaction API. */
 export interface QueueNoEnqueueInTransactionOptions {
-  transactions: QueueNoEnqueueInTransactionBoundary[];
+  transactions?: QueueNoEnqueueInTransactionBoundary[];
+  beginTransactions?: QueueNoEnqueueInTransactionBegin[];
   publishers: QueueNoEnqueueInTransactionPublisher[];
   /** Policy for shapes the rule cannot prove (default: "report"). */
   unanalyzable?: Unanalyzable;

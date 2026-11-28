@@ -1,0 +1,800 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "callback_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/callback.ts",
+          "import": "enqueue",
+          "line": 12,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId: \"async-callback\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/callback.ts",
+          "import": "enqueue",
+          "line": 6,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId });",
+          "target": "@sample/jobs#enqueue"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "handles": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/ambiguous.ts",
+          "import": "<unknown>",
+          "line": 21,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await list[index]({ receiptId: \"array-dynamic\" });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/ambiguous.ts",
+          "import": "<unknown>",
+          "line": 22,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await map[key]({ receiptId: \"object-dynamic\" });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/ambiguous.ts",
+          "import": "<unknown>",
+          "line": 7,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await (flag ? enqueue : enqueueFallback)({ receiptId: \"ternary\" });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/ambiguous.ts",
+          "import": "queueClient.send",
+          "line": 29,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "queueClient.send({ receiptId: item });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/conditional.ts",
+          "import": "beginTransaction",
+          "line": 4,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "<unknown>",
+          "line": 18,
+          "message": "ambiguous call target may invoke a configured transaction; call the imported transaction directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const pending = await (maybeBegin ?? database.beginTransaction)();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "<unknown>",
+          "line": 27,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await (maybeEnqueue ?? enqueue)({ receiptId: label });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 12,
+          "message": "transaction handle initializer is not a direct begin call assigned to a single local binding; bind the imported call directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "var mutable = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 14,
+          "message": "transaction handle initializer is not a direct begin call assigned to a single local binding; bind the imported call directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const idle = 0, grouped = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 16,
+          "message": "transaction handle initializer is not a direct begin call assigned to a single local binding; bind the imported call directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const optional = await database.beginTransaction?.();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 37,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 41,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const shared = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/escape.ts",
+          "import": "beginTransaction",
+          "line": 4,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/explicit.ts",
+          "import": "enqueue",
+          "line": 7,
+          "message": "Move this enqueue after the transaction commits. Await the handle's commit before publishing.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/long-chain.ts",
+          "import": "<unknown>.i",
+          "line": 5,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await tx.a().b().c().d().e().f().g().h().i();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/reexported-handle.ts",
+          "import": "publish",
+          "line": 5,
+          "message": "Move this enqueue after the transaction commits. Await the handle's commit before publishing.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await publish({ receiptId: \"inside\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/shadowed.ts",
+          "import": "enqueue",
+          "line": 10,
+          "message": "Move this enqueue after the transaction commits. Await the handle's commit before publishing.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId: \"outer-transaction-is-open\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "<unknown>",
+          "line": 103,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await (flag ? enqueue : enqueueFallback)({ receiptId: \"ambiguous\" });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "<unknown>.items.push",
+          "line": 54,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "tx.getQueue().items.push(job);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "beginTransaction",
+          "line": 18,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "beginTransaction",
+          "line": 26,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "beginTransaction",
+          "line": 5,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 44,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "Array.from(items, () => enqueue({ receiptId: \"from\" }));",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 45,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "items.map(() => enqueue({ receiptId: \"map\" }));",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 62,
+          "message": "publish inside an async built-in callback may run after the transaction closes; move the publish after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId: \"deferred\" });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 70,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "enqueue({ receiptId: \"before-await\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 80,
+          "message": "publish inside an async built-in callback may run after the transaction closes; move the publish after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "Array.from(items, () => enqueue({ receiptId: \"nested\" }));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 88,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "JSON.stringify(items, () => enqueue({ receiptId: \"json\" }));",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 97,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "invoke(items, () => enqueue({ receiptId: \"global-alternative\" }));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "invoke",
+          "line": 97,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "invoke(items, () => enqueue({ receiptId: \"global-alternative\" }));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "items.forEach",
+          "line": 81,
+          "message": "publish inside an async built-in callback may run after the transaction closes; move the publish after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "items.forEach(enqueue);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "import": "beginTransaction",
+          "line": 10,
+          "message": "transaction handle initializer is not a direct begin call assigned to a single local binding; bind the imported call directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const { commit } = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "import": "beginTransaction",
+          "line": 18,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "import": "beginTransaction",
+          "line": 5,
+          "message": "transaction handle has no proven commit or rollback before this scope ends; await commit or rollback directly or use await using",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "import": "enqueue",
+          "line": 31,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "return () => enqueue({ receiptId: \"deferred\" });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "import": "publish",
+          "line": 25,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await publish();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/using.ts",
+          "import": "enqueue",
+          "line": 8,
+          "message": "Move this enqueue after the transaction commits. Await the handle's commit before publishing.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId });",
+          "target": "@sample/jobs#enqueue"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "mixed_advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/ambiguous.ts",
+          "import": "<unknown>",
+          "line": 21,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await list[index]({ receiptId: \"array-dynamic\" });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/ambiguous.ts",
+          "import": "<unknown>",
+          "line": 22,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await map[key]({ receiptId: \"object-dynamic\" });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/ambiguous.ts",
+          "import": "<unknown>",
+          "line": 7,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await (flag ? enqueue : enqueueFallback)({ receiptId: \"ternary\" });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/ambiguous.ts",
+          "import": "queueClient.send",
+          "line": 29,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "queueClient.send({ receiptId: item });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/conditional.ts",
+          "import": "beginTransaction",
+          "line": 4,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "<unknown>",
+          "line": 18,
+          "message": "ambiguous call target may invoke a configured transaction; call the imported transaction directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const pending = await (maybeBegin ?? database.beginTransaction)();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "<unknown>",
+          "line": 27,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await (maybeEnqueue ?? enqueue)({ receiptId: label });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 12,
+          "message": "transaction handle initializer is not a direct begin call assigned to a single local binding; bind the imported call directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "var mutable = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 14,
+          "message": "transaction handle initializer is not a direct begin call assigned to a single local binding; bind the imported call directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const idle = 0, grouped = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 16,
+          "message": "transaction handle initializer is not a direct begin call assigned to a single local binding; bind the imported call directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const optional = await database.beginTransaction?.();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 37,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/edges.ts",
+          "import": "database.beginTransaction",
+          "line": 41,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const shared = await database.beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/escape.ts",
+          "import": "beginTransaction",
+          "line": 4,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/long-chain.ts",
+          "import": "<unknown>.i",
+          "line": 5,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await tx.a().b().c().d().e().f().g().h().i();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "<unknown>",
+          "line": 103,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await (flag ? enqueue : enqueueFallback)({ receiptId: \"ambiguous\" });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "<unknown>.items.push",
+          "line": 54,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "tx.getQueue().items.push(job);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "beginTransaction",
+          "line": 18,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "beginTransaction",
+          "line": 26,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "beginTransaction",
+          "line": 5,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 62,
+          "message": "publish inside an async built-in callback may run after the transaction closes; move the publish after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId: \"deferred\" });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 80,
+          "message": "publish inside an async built-in callback may run after the transaction closes; move the publish after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "Array.from(items, () => enqueue({ receiptId: \"nested\" }));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 97,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "invoke(items, () => enqueue({ receiptId: \"global-alternative\" }));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "invoke",
+          "line": 97,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "invoke(items, () => enqueue({ receiptId: \"global-alternative\" }));",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "items.forEach",
+          "line": 81,
+          "message": "publish inside an async built-in callback may run after the transaction closes; move the publish after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "items.forEach(enqueue);",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "import": "beginTransaction",
+          "line": 10,
+          "message": "transaction handle initializer is not a direct begin call assigned to a single local binding; bind the imported call directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const { commit } = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "import": "beginTransaction",
+          "line": 18,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "import": "beginTransaction",
+          "line": 5,
+          "message": "transaction handle has no proven commit or rollback before this scope ends; await commit or rollback directly or use await using",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "import": "enqueue",
+          "line": 31,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "return () => enqueue({ receiptId: \"deferred\" });",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "import": "publish",
+          "line": 25,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await publish();",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/callback.ts",
+          "import": "enqueue",
+          "line": 12,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId: \"async-callback\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/callback.ts",
+          "import": "enqueue",
+          "line": 6,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/explicit.ts",
+          "import": "enqueue",
+          "line": 7,
+          "message": "Move this enqueue after the transaction commits. Await the handle's commit before publishing.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/reexported-handle.ts",
+          "import": "publish",
+          "line": 5,
+          "message": "Move this enqueue after the transaction commits. Await the handle's commit before publishing.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await publish({ receiptId: \"inside\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/shadowed.ts",
+          "import": "enqueue",
+          "line": 10,
+          "message": "Move this enqueue after the transaction commits. Await the handle's commit before publishing.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId: \"outer-transaction-is-open\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 44,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "Array.from(items, () => enqueue({ receiptId: \"from\" }));",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 45,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "items.map(() => enqueue({ receiptId: \"map\" }));",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 70,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "enqueue({ receiptId: \"before-await\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "enqueue",
+          "line": 88,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "JSON.stringify(items, () => enqueue({ receiptId: \"json\" }));",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/using.ts",
+          "import": "enqueue",
+          "line": 8,
+          "message": "Move this enqueue after the transaction commits. Await the handle's commit before publishing.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId });",
+          "target": "@sample/jobs#enqueue"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scoped_barrel_begin": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/consumer.ts",
+          "import": "enqueue",
+          "line": 6,
+          "message": "Move this enqueue after the transaction commits. Await the handle's commit before publishing.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId: \"inside\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/consumer.ts",
+          "import": "tx.commit",
+          "line": 7,
+          "message": "unresolved call target may invoke a configured transaction (dynamic member, factory return, or wildcard re-export); import and call the transaction directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await tx.commit();",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scoped_opaque": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/receipt.ts",
+          "import": "<unknown>",
+          "line": 6,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await createPublisher()({ receiptId: \"opaque\" });",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

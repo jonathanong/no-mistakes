@@ -128,7 +128,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`no-mistakes-config`](no-mistakes-config.md)                                 | Lint `.no-mistakes.yml` paths, empty globs, and env-level `limit` with `direct`. |
 | [`no-raw-ephemeral-port`](no-raw-ephemeral-port.md)                           | Ban raw ephemeral port 0 binds and Node `listen(0)` calls.                      |
 | [`no-single-enqueue-in-loop`](no-single-enqueue-in-loop.md)                   | Report a configured single enqueue inside an open per-item loop or callback.   |
-| [`queue-no-enqueue-in-transaction`](queue-no-enqueue-in-transaction.md)         | Report independently durable publishes in a configured transaction callback.  |
+| [`queue-no-enqueue-in-transaction`](queue-no-enqueue-in-transaction.md)         | Report independently durable publishes before a configured transaction closes. |
 | [`package-json-registry-only`](package-json-registry-only.md)                 | Require package registries to match configured policy.                          |
 | [`package-json-export-target-prefix`](package-json-export-target-prefix.md) | Require the `./` prefix on selected Node package export targets. |
 | [`package-json-nested-workspace-coverage`](package-json-nested-workspace-coverage.md) | Require nested workspace entries to exactly cover configured dependency packages. |

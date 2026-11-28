@@ -304,3 +304,125 @@ fn queue_no_enqueue_in_transaction_json_matches_snapshot() {
         ]
     );
 }
+
+#[test]
+fn queue_no_enqueue_in_transaction_scoped_handles_json_matches_snapshot() {
+    let root = rules_path(RULE, "fixture", "scoped-handles");
+    let opaque = rules_path(RULE, "fixture", "scoped-opaque");
+    let barrel_begin = rules_path(RULE, "fixture", "scoped-barrel-begin");
+    let reports = assert_saved_fixture_report(
+        "queue_no_enqueue_in_transaction_scoped_handles",
+        &[
+            ("handles", root.clone(), root.join(".no-mistakes.yml")),
+            ("mixed_advise", root.clone(), root.join("advise.yml")),
+            ("callback_only", root.clone(), root.join("baseline.yml")),
+            (
+                "scoped_opaque",
+                opaque.clone(),
+                opaque.join(".no-mistakes.yml"),
+            ),
+            (
+                "scoped_barrel_begin",
+                barrel_begin.clone(),
+                barrel_begin.join(".no-mistakes.yml"),
+            ),
+        ],
+        &[],
+        &[],
+    );
+
+    let handles = &reports["handles"];
+    assert_eq!(handles["exitCode"], 1);
+    assert_eq!(handles["report"]["advisories"], serde_json::json!([]));
+    let findings = handles["report"]["rules"].as_array().unwrap();
+    let mut locations: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding["target"] == "@sample/jobs#enqueue")
+        .map(|finding| {
+            assert_eq!(finding["rule"], RULE);
+            (
+                finding["file"].as_str().unwrap(),
+                finding["line"].as_u64().unwrap(),
+            )
+        })
+        .collect();
+    locations.sort_unstable();
+    assert_eq!(
+        locations,
+        [
+            ("src/explicit.ts", 7),
+            ("src/reexported-handle.ts", 5),
+            ("src/shadowed.ts", 10),
+            ("src/statements.ts", 44),
+            ("src/statements.ts", 45),
+            ("src/statements.ts", 70),
+            ("src/statements.ts", 88),
+            ("src/using.ts", 8)
+        ]
+    );
+    let opaque_rules = reports["scoped_opaque"]["report"]["rules"]
+        .as_array()
+        .unwrap();
+    assert_eq!(reports["scoped_opaque"]["exitCode"], 1);
+    assert_eq!(opaque_rules.len(), 1);
+    assert_eq!(opaque_rules[0]["file"], "src/receipt.ts");
+    assert_eq!(opaque_rules[0]["line"], 6);
+    assert_eq!(opaque_rules[0]["target"], "unanalyzable");
+    let mut uncertain: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding["target"] == "unanalyzable")
+        .map(|finding| finding["file"].as_str().unwrap())
+        .collect();
+    uncertain.sort_unstable();
+    uncertain.dedup();
+    assert_eq!(
+        uncertain,
+        [
+            "src/ambiguous.ts",
+            "src/conditional.ts",
+            "src/edges.ts",
+            "src/escape.ts",
+            "src/long-chain.ts",
+            "src/statements.ts",
+            "src/unresolved.ts"
+        ]
+    );
+
+    let mixed = &reports["mixed_advise"];
+    assert_eq!(mixed["exitCode"], 1);
+    let callback_only = &reports["callback_only"];
+    assert_eq!(callback_only["exitCode"], 1);
+    let callbacks = callback_only["report"]["rules"].as_array().unwrap();
+    assert_eq!(callbacks.len(), 2);
+    for callback in callbacks {
+        assert_eq!(callback["file"], "src/callback.ts");
+        assert_eq!(callback["target"], "@sample/jobs#enqueue");
+    }
+    let mut callback_lines: Vec<_> = callbacks
+        .iter()
+        .map(|c| c["line"].as_u64().unwrap())
+        .collect();
+    callback_lines.sort_unstable();
+    assert_eq!(callback_lines, [6, 12]);
+
+    let mut expected: Vec<_> = findings
+        .iter()
+        .filter(|finding| finding["target"] == "@sample/jobs#enqueue")
+        .chain(callbacks)
+        .cloned()
+        .collect();
+    expected.sort_by_key(serde_json::Value::to_string);
+    assert_eq!(mixed["report"]["rules"], serde_json::json!(expected));
+    let mut advised: Vec<_> = mixed["report"]["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|finding| {
+            assert_eq!(finding["target"], "unanalyzable");
+            finding["file"].as_str().unwrap()
+        })
+        .collect();
+    advised.sort_unstable();
+    advised.dedup();
+    assert_eq!(advised, uncertain);
+}

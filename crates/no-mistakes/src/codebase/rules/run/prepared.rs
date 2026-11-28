@@ -75,6 +75,10 @@ fn graph_plan_with_forbidden(
         plan.calls = true;
         plan.imports = true;
         plan.builtin_receivers = true;
+        plan.scoped_transaction_handles = config
+            .rule_applications(queue_no_enqueue_in_transaction::RULE_ID)
+            .iter()
+            .any(|rule| rule.options.get("beginTransactions").is_some());
         needed = true;
     }
     if config.rule_configured(super::super::coverage_producer_assertion_owner::RULE_ID) {

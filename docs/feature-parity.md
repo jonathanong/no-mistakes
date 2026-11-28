@@ -100,8 +100,9 @@ and batched `analyzeProject` queries share this behavior.
 
 TS/JS [`queue-no-enqueue-in-transaction`](rules/queue-no-enqueue-in-transaction.md)
 reports direct calls to configured queue publishers in inline transaction
-callbacks. Rust, CLI `check`, async Node `check()`, and `analyzeProject()`
-check reports share the same call identity, callback scope, and suppression.
+callbacks or while scoped transaction handles are live. Rust, CLI `check`,
+async Node `check()`, and `analyzeProject()` check reports share the same
+call identity, transaction scope, and suppression.
 
 Statically named top-level `const` CommonJS namespace, destructured, and member
 bindings use the same canonical imported-call projection. Shadowed bindings stay
