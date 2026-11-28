@@ -209,14 +209,15 @@ has `kind`, an original-source `span`, and nested `occurrences`:
 - `unknown` fails closed.
 
 Wholly literal `EXECUTE` keeps the existing `literalExecute` statement facts and is
-classified from the decoded command (`dml` or `utility`) instead of `dynamicExecute`.
+classified from the decoded command (`dml`, `utility`, or `controlFlow`) instead of `dynamicExecute`.
+A decoded command that does not classify is `unknown`. A decoded script that executes a non-literal command stays `dynamicExecute`.
 Nested literal `EXECUTE` commands share the walker's 64-level budget. Exhausting
 that budget fails closed instead of recursing without a limit.
 A `FOR ... IN EXECUTE` header uses that classification for the operand, including a
 wholly parsed literal `SELECT`, which is `utility`. A qualified call such as
 `public.execute(...)` is not that slot: the header still fail-closes it as
 `dynamicExecute`, and the argument is not parsed as static DML.
-Unquoted `INTO` ends that command the same way `USING` does, so the occurrence
+In a parsed block, unquoted `INTO` ends that command the same way `USING` does, so the occurrence
 follows the literal and the statement is kind `other`. The block stays incomplete
 unless a `utility` occurrence has the same span. A literal `SELECT` followed
 by `INTO` can leave the block complete.
@@ -843,7 +844,7 @@ ordered `using: PostgresSqlExpression[]`, with enclosing source coordinates.
 The decoded command still contains typed `$1` placeholders: parameter expressions
 are preserved as syntax and never substituted or interpreted at runtime.
 Variables, unknown concatenation operands, and format calls keep the enclosing
-block incomplete. An unsupported modifier is statement kind `other` in statement position.
+block incomplete. In a parsed block, an unsupported modifier is statement kind `other` in statement position.
 The block stays incomplete unless a `utility` occurrence has the same span,
 so a literal `SELECT` followed by `INTO` can leave the block complete. An unquoted `INTO` target ends the command expression
 the same way `USING` does, and the occurrence is classified from the literal.

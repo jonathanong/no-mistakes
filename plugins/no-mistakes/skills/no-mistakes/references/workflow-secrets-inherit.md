@@ -28,7 +28,7 @@ caller secret unless this ban is on.
 `requireExplicitWorkflowCallBindings: true` also reports `secrets: inherit`
 when `forbidSecretsInherit` is off, and it requires every secret declared on
 a local callee plus every required input to be mapped. When both options are
-on, that inherit finding is emitted once. A remote call that sets
+on, that inherit finding is emitted once. When at least one of those options is on, a remote call that sets
 `secrets: inherit` reports that finding and returns without an unanalyzable
 diagnostic, so `options.unanalyzable` does not cover unchecked remote inputs
 on that call. Other unverifiable calls follow `options.unanalyzable`:
