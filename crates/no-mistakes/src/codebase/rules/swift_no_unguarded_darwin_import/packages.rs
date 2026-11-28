@@ -45,7 +45,20 @@ impl PackageIndex {
                 let root = manifest_path.parent()?.to_path_buf();
                 Some((root, sources.read_source_path(manifest_path).ok()))
             });
-        Self::from_manifests(manifests)
+        let mut index = Self::from_manifests(manifests);
+        let versioned: Vec<PathBuf> = all_files
+            .iter()
+            .filter(|path| is_versioned_manifest(path))
+            .filter_map(|path| path.parent().map(Path::to_path_buf))
+            .collect();
+        for package in &mut index.packages {
+            if versioned.contains(&package.root) {
+                package.state = PackageState::Uncertain(
+                    "cannot statically determine targets with a version-specific Package manifest",
+                );
+            }
+        }
+        index
     }
 
     pub(super) fn from_manifests(
@@ -104,6 +117,12 @@ impl PackageIndex {
             None => FileScope::Skip,
         }
     }
+}
+
+fn is_versioned_manifest(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|n| n.to_str())
+        .is_some_and(|n| n.starts_with("Package@swift-") && n.ends_with(".swift"))
 }
 
 fn parse_manifest(package_root: &Path, source: &str) -> PackageState {

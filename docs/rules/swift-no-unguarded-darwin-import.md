@@ -141,7 +141,7 @@ final class ClockTests: XCTestCase {
 ## Fix
 
 Wrap the import and the tests that use it in a matching `#if canImport(...)`
-guard, an Apple-only `#if os(...)` guard, or `#if !os(Linux)`. When a test can use a portable API,
+guard, an `#if os(...)` guard that excludes Linux, or `#if !os(Linux)`. When a test can use a portable API,
 move to that API and remove the platform-specific import.
 
 ## Analysis
@@ -154,8 +154,9 @@ the check at `max`.
 ### Limits
 
 The rule parses static `Package.swift` `platforms:` and `targets:` declarations
-and evaluates monotone positive Boolean combinations (`&&`, `||`, parentheses)
-of `canImport(...)` and `os(...)` predicates across single-line and multiline
+and evaluates Boolean combinations (`&&`, `||`, parentheses)
+of `canImport(...)` and `os(...)` predicates; negation is accepted only as
+`!os(Linux)`, and other `!` operands, including `!targetEnvironment(...)`, add no proof across single-line and multiline
 directives. General Swift condition evaluation and dynamic manifests are routed
 through `options.unanalyzable`. Swift files with invalid UTF-8 are decoded
 lossily. If the source cannot be read, the diagnostic names the file and asks

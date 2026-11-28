@@ -40,7 +40,7 @@ pub(super) fn parse_targets(package_root: &Path, body: &str) -> (Vec<ParsedTarge
     let mut uncertain = false;
     for item in manifest::split_top_level_items(items_body) {
         match parse_target(package_root, item) {
-            TargetParse::Target(target) => targets.push(target),
+            TargetParse::Targets(found) => targets.extend(found),
             TargetParse::SkipBinary => {}
             TargetParse::Uncertain => uncertain = true,
         }
@@ -49,7 +49,7 @@ pub(super) fn parse_targets(package_root: &Path, body: &str) -> (Vec<ParsedTarge
 }
 
 enum TargetParse {
-    Target(ParsedTarget),
+    Targets(Vec<ParsedTarget>),
     SkipBinary,
     Uncertain,
 }
@@ -58,10 +58,12 @@ fn parse_target(package_root: &Path, item: &str) -> TargetParse {
     let Some((kind, args)) = manifest::call_name_and_args(item) else {
         return TargetParse::Uncertain;
     };
-    let (is_test, default_dir) = match kind {
-        "testTarget" => (true, "Tests"),
-        "target" | "executableTarget" | "macro" | "systemLibrary" => (false, "Sources"),
-        "plugin" => (false, "Plugins"),
+    let (is_test, default_dirs): (bool, &[&str]) = match kind {
+        "testTarget" => (true, &["Tests", "Sources", "Source", "src", "srcs"]),
+        "target" | "executableTarget" | "macro" | "systemLibrary" => {
+            (false, &["Sources", "Source", "src", "srcs"])
+        }
+        "plugin" => (false, &["Plugins"]),
         "binaryTarget" => return TargetParse::SkipBinary,
         _ => return TargetParse::Uncertain,
     };
@@ -70,26 +72,33 @@ fn parse_target(package_root: &Path, item: &str) -> TargetParse {
     else {
         return TargetParse::Uncertain;
     };
-    let rel_path = match manifest::top_level_label_value(args, "path") {
+    let rel_paths: Vec<PathBuf> = match manifest::top_level_label_value(args, "path") {
         Some(expr) => match manifest::static_string_literal(expr) {
-            Some(path) => PathBuf::from(path),
+            Some(path) => vec![PathBuf::from(path)],
             None => return TargetParse::Uncertain,
         },
-        None => PathBuf::from(default_dir).join(&name),
+        None => default_dirs
+            .iter()
+            .map(|dir| PathBuf::from(dir).join(&name))
+            .collect(),
     };
-    let root = normalize_path(&package_root.join(rel_path));
-    let Some(excludes) = parse_optional_paths(args, "exclude", &root) else {
-        return TargetParse::Uncertain;
-    };
-    let Some(sources) = parse_optional_paths(args, "sources", &root) else {
-        return TargetParse::Uncertain;
-    };
-    TargetParse::Target(ParsedTarget {
-        is_test,
-        root,
-        excludes: excludes.unwrap_or_default(),
-        sources,
-    })
+    let mut targets = Vec::new();
+    for rel_path in rel_paths {
+        let root = normalize_path(&package_root.join(rel_path));
+        let Some(excludes) = parse_optional_paths(args, "exclude", &root) else {
+            return TargetParse::Uncertain;
+        };
+        let Some(sources) = parse_optional_paths(args, "sources", &root) else {
+            return TargetParse::Uncertain;
+        };
+        targets.push(ParsedTarget {
+            is_test,
+            root,
+            excludes: excludes.unwrap_or_default(),
+            sources,
+        });
+    }
+    TargetParse::Targets(targets)
 }
 
 fn parse_optional_paths(args: &str, label: &str, root: &Path) -> Option<Option<Vec<PathBuf>>> {

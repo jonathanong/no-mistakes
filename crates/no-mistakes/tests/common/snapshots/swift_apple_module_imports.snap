@@ -327,6 +327,47 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "test_target_under_sources_reported": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Sources/ClockTests/ClockTests.swift",
+          "line": 1,
+          "message": "Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "versioned_manifest_unanalyzable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "Tests/ClockTests/ClockTests.swift",
+          "line": 1,
+          "message": "Cannot verify whether this file belongs to a portable SwiftPM test target (cannot statically determine targets with a version-specific Package manifest). Wrap the Darwin import and the tests that use it in `#if canImport(Darwin)`.",
+          "rule": "swift-no-unguarded-darwin-import",
+          "sourceLine": "import Darwin",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "xcodegen_app_skipped": {
     "exitCode": 0,
     "report": {

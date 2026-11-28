@@ -314,6 +314,16 @@ fn swift_apple_module_imports_json_matches_snapshot() {
                 "../configs/apple-opt-in-advise.yml",
             ),
             c(
+                "versioned_manifest_unanalyzable",
+                "swift-no-unguarded-darwin-import/scope-versioned-manifest",
+                "../configs/repo-default.yml",
+            ),
+            c(
+                "test_target_under_sources_reported",
+                "swift-no-unguarded-darwin-import/scope-source-dir-tests",
+                "../configs/repo-default.yml",
+            ),
+            c(
                 "dynamic_targets_unanalyzable",
                 "swift-no-unguarded-darwin-import/scope-dynamic-targets",
                 "../configs/repo-default.yml",

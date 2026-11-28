@@ -310,8 +310,9 @@ through the selected unanalyzable policy. This remains independent of
 
 Use the opt-in [`swift-no-unguarded-darwin-import`](../rules/swift-no-unguarded-darwin-import.md)
 rule on portable SwiftPM test targets. It defaults to `Darwin` and skips
-non-test targets, Apple-only packages, and Xcode/XcodeGen app projects without
-`Package.swift`. Set `options.modules` to opt into wider Apple-only module
+non-test targets and Xcode/XcodeGen app projects without `Package.swift`. A
+`platforms:` list only sets deployment floors, so Apple-only packages are
+still checked. Set `options.modules` to opt into wider Apple-only module
 lists (such as `[Darwin, Security, UIKit, AppKit]`).
 
 [`nextjs-no-caching`](../rules/nextjs-no-caching.md#effort) supports `low`:
