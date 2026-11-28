@@ -31,6 +31,31 @@ const mutableJobs = [
 mutableJobs.push({ name: "later-job", data: {}, opts: {} });
 const flowChild = { name: "flow-child", queueName: "events", data: {}, opts: { deduplication: { id: "fc", mode: "debounce", ttl: 100 } } };
 
+declare function readDedup(): object;
+declare function makeDedup(): object;
+declare function readChildren(): object[];
+declare const ghostSource: object;
+let reassignedTtl = 5;
+const nullDedup = null;
+const opaqueDedup = readDedup();
+const flowShared = { name: "shared-flow", queueName: "events", data: {}, opts: {} };
+const flowOpaque = readChildren();
+const flowLoopA: object = { name: "loop-a", ...flowShared };
+let bulkLetJobs = [
+  { name: "bulk-let", data: {}, opts: { deduplication: { id: "bl", mode: "debounce", ttl: 11 } } },
+];
+const aliasA = 1;
+const aliasB = aliasA;
+const aliasC = aliasB;
+const aliasD = aliasC;
+const aliasE = aliasD;
+const aliasF = aliasE;
+const aliasG = aliasF;
+const aliasH = aliasG;
+const aliasI = aliasH;
+const aliasJ = aliasI;
+declare const ttlNoInit: number;
+
 function scopeMarker(): never {
   throw new Error("scope");
 }
@@ -101,4 +126,23 @@ export async function cases(): Promise<void> {
     opts: {},
     children: [flowChild, mysteryChild],
   });
+  await queue.add("spread-unbound", {}, { deduplication: { id: "u1", mode: "debounce", ttl: 1, ...unboundDedup } });
+  await queue.add("spread-null-const", {}, { deduplication: { id: "u2", mode: "debounce", ttl: 2, ...nullDedup } });
+  await queue.add("spread-opaque-const", {}, { deduplication: { id: "u3", ...opaqueDedup } });
+  await queue.add("spread-call", {}, { deduplication: { id: "u4", ...makeDedup() } });
+  await queue.add("computed-dedup-key", {}, { deduplication: { id: "u5", [selectKey()]: 1 } });
+  await queue.add("dedup-unbound", {}, { deduplication: unboundDedup });
+  await queue.add("dedup-call", {}, { deduplication: makeDedup() });
+  await queue.add("mode-null", {}, { deduplication: { id: "u6", mode: null, ttl: 3 } });
+  await queue.add("ttl-unbound", {}, { deduplication: { id: "u7", mode: "debounce", ttl: unboundTtl } });
+  await queue.add("ttl-reassigned", {}, { deduplication: { id: "u8", mode: "debounce", ttl: reassignedTtl } });
+  await queue.add("ttl-no-init", {}, { deduplication: { id: "u9", mode: "debounce", ttl: ttlNoInit } });
+  await queue.add("ttl-deep-alias", {}, { deduplication: { id: "u10", mode: "debounce", ttl: aliasJ } });
+  await queue.addBulk([, { name: "bulk-elision", data: {}, opts: { deduplication: { id: "be", mode: "debounce", ttl: 13 } } }]);
+  await queue.addBulk(bulkLetJobs);
+  await queue.addBulk([[[[[[[[[[{ name: "bulk-deep", data: {}, opts: { deduplication: { id: "bd", mode: "debounce", ttl: 14 } } }]]]]]]]]]]);
+  await flow.add({ name: "flow-ghost", queueName: "events", data: {}, opts: {}, ...ghostSource, children: [] });
+  await flow.add({ name: "flow-opaque", queueName: "events", data: {}, opts: {}, ...flowOpaque, children: [] });
+  await flow.add({ name: "flow-loop", queueName: "events", data: {}, opts: {}, ...flowLoopA, ...flowLoopA, children: [] });
+  await flow.add({ name: "flow-computed", queueName: "events", data: {}, opts: {}, [selectKey()]: 1, children: [] });
 }

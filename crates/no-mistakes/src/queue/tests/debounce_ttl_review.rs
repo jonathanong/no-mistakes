@@ -42,6 +42,8 @@ fn review_cases_find_known_ttl_and_abstain_when_unknown() {
         "null-spread",
         "bulk-push",
         "flow-child",
+        "spread-null-const",
+        "bulk-elision",
     ] {
         assert!(
             findings.iter().any(|line| line.contains(marker)),
@@ -73,6 +75,21 @@ fn review_cases_find_known_ttl_and_abstain_when_unknown() {
         "spread-bomb",
         "mutableJobs",
         "spread-queue",
+        "spread-unbound",
+        "spread-opaque-const",
+        "spread-call",
+        "computed-dedup-key",
+        "dedup-unbound",
+        "dedup-call",
+        "ttl-unbound",
+        "ttl-reassigned",
+        "ttl-no-init",
+        "ttl-deep-alias",
+        "addBulk(bulkLetJobs)",
+        "bulk-deep",
+        "flow-ghost",
+        "flow-opaque",
+        "flow-computed",
     ] {
         assert!(
             abstained.iter().any(|line| line.contains(marker)),
