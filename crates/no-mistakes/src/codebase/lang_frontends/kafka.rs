@@ -3,12 +3,59 @@ use regex::Regex;
 use std::path::Path;
 use std::sync::OnceLock;
 
+pub(crate) struct KafkaFile {
+    ruby_subscribe: bool,
+    dollar_templates: bool,
+}
+
+impl KafkaFile {
+    #[cfg(test)]
+    fn unknown() -> Self {
+        Self {
+            ruby_subscribe: true,
+            dollar_templates: false,
+        }
+    }
+
+    pub(crate) fn from_path(path: &Path) -> Self {
+        match path.extension().and_then(|ext| ext.to_str()) {
+            Some("rb") => Self {
+                ruby_subscribe: true,
+                dollar_templates: false,
+            },
+            Some("kt" | "kts" | "php") => Self {
+                ruby_subscribe: false,
+                dollar_templates: true,
+            },
+            _ => Self {
+                ruby_subscribe: false,
+                dollar_templates: false,
+            },
+        }
+    }
+}
+
+#[cfg(test)]
 pub(crate) fn extract_kafka_topics(source: &str) -> (Vec<String>, Vec<String>) {
+    extract_kafka_topics_for(source, KafkaFile::unknown())
+}
+
+pub(crate) fn extract_kafka_topics_for(
+    source: &str,
+    file: KafkaFile,
+) -> (Vec<String>, Vec<String>) {
     let source = super::strip::strip_comments_keep_strings(source);
     let mut produces = extract_named(&source, kafka_produce_re());
-    produces.extend(super::kafka_literals::extra_produces(&source));
-    let mut consumes = extract_kafka_consumes(&source);
-    consumes.extend(super::kafka_literals::extra_consumes(&source));
+    produces.extend(super::kafka_literals::extra_produces(
+        &source,
+        file.dollar_templates,
+    ));
+    let mut consumes = extract_kafka_consumes(&source, file.dollar_templates);
+    consumes.extend(super::kafka_literals::extra_consumes(
+        &source,
+        file.ruby_subscribe,
+        file.dollar_templates,
+    ));
     dedup(&mut produces);
     dedup(&mut consumes);
     (produces, consumes)
@@ -24,7 +71,7 @@ pub(crate) fn topic_identity(cluster: Option<&str>, topic: &str) -> String {
 pub(crate) fn scan_file(path: &Path, sources: &SourceStore) -> Option<(Vec<String>, Vec<String>)> {
     let source = sources.read_path(path).ok()?;
     let text = super::strip::strip_comments_keep_strings(&source);
-    Some(extract_kafka_topics(&text))
+    Some(extract_kafka_topics_for(&text, KafkaFile::from_path(path)))
 }
 
 fn dedup(values: &mut Vec<String>) {
@@ -36,11 +83,13 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     let mut values: Vec<String> = re
         .captures_iter(source)
         .filter_map(|cap| {
-            cap.iter()
-                .skip(1)
-                .flatten()
-                .map(|m| m.as_str().to_string())
-                .next()
+            let matched = cap.iter().skip(1).flatten().next()?;
+            super::kafka_topic_text::complete_topic(
+                source,
+                matched.start(),
+                matched.end(),
+                matched.as_str(),
+            )
         })
         .collect();
     values.sort();
@@ -48,13 +97,17 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     values
 }
 
-fn extract_kafka_consumes(source: &str) -> Vec<String> {
+fn extract_kafka_consumes(source: &str, dollar_templates: bool) -> Vec<String> {
     let mut values = extract_named(source, kafka_consume_re());
     for cap in kafka_consume_array_re().captures_iter(source) {
-        values.extend(extract_named(
-            cap.get(1).map(|m| m.as_str()).unwrap_or(""),
-            kafka_quoted_re(),
-        ));
+        let block = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+        for element in block.split(',') {
+            if let Some(literal) =
+                super::kafka_topic_text::quoted_element(element.trim(), dollar_templates)
+            {
+                values.push(literal);
+            }
+        }
     }
     values.sort();
     values.dedup();
@@ -64,24 +117,21 @@ fn extract_kafka_consumes(source: &str) -> Vec<String> {
 fn kafka_produce_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"(?:\.|#)send\(\s*(?:\{[^}]*topic\s*:\s*["']([^"']+)["']|["']([^"']+)["'])"#)
-            .expect("produce")
+        Regex::new(
+            r#"(?:\.|#)send\(\s*(?:\{[^}]*topic\s*:\s*["']([^"'\r\n]+)["']|["']([^"'\r\n]+)["'])"#,
+        )
+        .expect("produce")
     })
 }
 
 fn kafka_consume_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"subscribe\(\s*\{[^}]*topic\s*:\s*["']([^"']+)["']"#).expect("consume")
+        Regex::new(r#"subscribe\(\s*\{[^}]*topic\s*:\s*["']([^"'\r\n]+)["']"#).expect("consume")
     })
 }
 
 fn kafka_consume_array_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r#"subscribe\(\s*&?\s*\[([^\]]*)\]"#).expect("consume array"))
-}
-
-fn kafka_quoted_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r#"["']([^"']+)["']"#).expect("quoted topic"))
 }

@@ -1,5 +1,6 @@
 fn listen(consumer: &Consumer, topic: &str) {
     consumer.subscribe(&["mail.welcome"]);
+    consumer.subscribe(&[topic_for("tenant")]);
     consumer.subscribe(&[topic]);
     consumer.subscribe(Regex::new("mail\\..*").unwrap());
 }

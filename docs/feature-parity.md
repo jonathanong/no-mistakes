@@ -1086,9 +1086,9 @@ Future<void> loadUsers() async {
 ```
 
 `dart:async`, `import 'package:app/*'`, computed `Uri.parse(prefix + "/users")`,
-and files outside configured packages are non-edges. Queues are declined: no
-documented static producer or worker. There is no Dart server graph to attach
-one to. Native fallback is
+and files outside configured packages are non-edges. The Dart queue cell is declined because no
+language-specific producer or worker is documented; Kafka static topics still
+use the shared scanner. Native fallback is
 `pubspec.yaml` plus non-test `.dart` files; any `.dart` under `/test/` is
 non-production. v1 emits `dart test`, not `flutter test`.
 

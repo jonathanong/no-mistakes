@@ -1,5 +1,7 @@
-use crate::codebase::lang_frontends::kafka::extract_kafka_topics;
-use std::path::PathBuf;
+use crate::codebase::lang_frontends::kafka::{
+    extract_kafka_topics, extract_kafka_topics_for, KafkaFile,
+};
+use std::path::{Path, PathBuf};
 
 fn source(root: &str, rel: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -10,7 +12,7 @@ fn source(root: &str, rel: &str) -> String {
 }
 
 fn topics(root: &str, rel: &str) -> (Vec<String>, Vec<String>) {
-    extract_kafka_topics(&source(root, rel))
+    extract_kafka_topics_for(&source(root, rel), KafkaFile::from_path(Path::new(rel)))
 }
 
 fn welcome() -> Vec<String> {
@@ -100,4 +102,59 @@ fn dynamic_kafka_shapes_stay_unmatched() {
     let (produces, consumes) = extract_kafka_topics(source);
     assert_eq!(produces, welcome());
     assert_eq!(consumes, vec!["mail.#{tenant}".to_string()]);
+}
+
+#[test]
+fn kafka_file_kind_rejects_templates_concatenation_and_foreign_subscribe() {
+    assert_eq!(
+        extract_kafka_topics("$producer->newTopic('mail.$tenant');").0,
+        vec!["mail.$tenant".to_string()]
+    );
+    assert!(
+        extract_kafka_topics("$producer->newTopic(\"mail.$tenant\");")
+            .0
+            .is_empty()
+    );
+    let kotlin = "ProducerRecord(\"mail.$tenant\", null)";
+    assert!(
+        extract_kafka_topics_for(kotlin, KafkaFile::from_path(Path::new("publish.kt")))
+            .0
+            .is_empty()
+    );
+    assert_eq!(
+        extract_kafka_topics_for(kotlin, KafkaFile::from_path(Path::new("Publish.java"))).0,
+        vec!["mail.$tenant".to_string()]
+    );
+    let ruby_shape = "client.subscribe(\"mail.welcome\")";
+    assert!(
+        extract_kafka_topics_for(ruby_shape, KafkaFile::from_path(Path::new("worker.ts")))
+            .1
+            .is_empty()
+    );
+    assert_eq!(
+        extract_kafka_topics_for(ruby_shape, KafkaFile::from_path(Path::new("worker.rb"))).1,
+        welcome()
+    );
+    let rust_array =
+        "consumer.subscribe(&[topic_for(\"tenant\")]);\nconsumer.subscribe(&[\"mail.welcome\"]);";
+    assert_eq!(extract_kafka_topics(rust_array).1, welcome());
+    assert!(extract_kafka_topics("FutureRecord::to(\"mail.\nwelcome\")")
+        .0
+        .is_empty());
+    let concatenated = "producer.send({ topic: \"mail.\" + tenant });\nconsumer.subscribe({ topic: \"mail.\" + name });\nproducer.send({ topic: \"mail.welcome\" });";
+    let (produces, consumes) = extract_kafka_topics(concatenated);
+    assert_eq!(produces, welcome());
+    assert!(consumes.is_empty());
+    assert!(extract_kafka_topics_for(
+        "$consumer->subscribe([\"mail.$tenant\"]);",
+        KafkaFile::from_path(Path::new("listen.php")),
+    )
+    .1
+    .is_empty());
+    assert!(extract_kafka_topics_for(
+        "consumer.subscribe(listOf(\"mail.$tenant\"))",
+        KafkaFile::from_path(Path::new("listen.kt")),
+    )
+    .1
+    .is_empty());
 }
