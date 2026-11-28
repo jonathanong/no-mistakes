@@ -23,9 +23,6 @@ rules:
       schemaCatalogPath: db/schema.json
       typeSuffix: _type
       idSuffix: _id
-      allow:
-        - column: audit_entries.subject_id
-          reason: immutable audit history preserves deleted subjects
 ```
 
 - `schemaCatalogPath` (required): repository-relative path to a complete schema
@@ -134,11 +131,13 @@ has no low implementation`) and runs the rule at `max`.
 
 ## Suppression
 
-Use `allow` entries with an exact `table.column` (either the `_id` or `_type`
-column) and a nonempty `reason` for intentional exceptions such as immutable
-audit logs. Duplicate entries, malformed `table.column` values, and empty
-reasons are configuration errors; unused entries are reported as stale so
-exceptions stay current.
+`allow` defaults to an empty list. For an intentional exception such as an
+immutable audit log, put
+`allow: [{ column: audit_entries.subject_id, reason: immutable audit history preserves deleted subjects }]`
+in the rule's options. Use entries with an exact `table.column` (either the
+`_id` or `_type` column) and a nonempty `reason`. Duplicate entries, malformed
+`table.column` values, and empty reasons are configuration errors; unused
+entries are reported as stale so exceptions stay current.
 
 Catalog JSONC also supports `no-mistakes-disable-file`,
 `no-mistakes-disable-line`, and `no-mistakes-disable-next-line` for this rule.
