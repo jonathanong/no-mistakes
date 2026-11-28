@@ -33,7 +33,6 @@ enum PackageState {
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Platforms {
     Portable,
-    AppleOnly,
     Uncertain,
 }
 
@@ -89,9 +88,6 @@ impl PackageIndex {
                 targets_uncertain,
             } => (*platforms, targets, *targets_uncertain),
         };
-        if platforms == Platforms::AppleOnly {
-            return FileScope::Skip;
-        }
         let matched = targets
             .iter()
             .filter(|target| target.contains(path))
@@ -146,52 +142,33 @@ fn parse_platforms(body: &str) -> Platforms {
     if items.is_empty() {
         return Platforms::Portable;
     }
-    let mut saw_non_apple = false;
     for item in items {
-        match classify_platform(item) {
-            PlatformKind::Apple => {}
-            PlatformKind::NonApple => saw_non_apple = true,
-            PlatformKind::Unknown => return Platforms::Uncertain,
+        if !is_known_platform(item) {
+            return Platforms::Uncertain;
         }
     }
-    if saw_non_apple {
-        Platforms::Portable
-    } else {
-        Platforms::AppleOnly
-    }
+    Platforms::Portable
 }
 
-enum PlatformKind {
-    Apple,
-    NonApple,
-    Unknown,
-}
-
-fn classify_platform(item: &str) -> PlatformKind {
+fn is_known_platform(item: &str) -> bool {
     let Some((name, args)) = manifest::call_name_and_args(item) else {
-        return PlatformKind::Unknown;
+        return false;
     };
     match name {
-        "macOS" | "iOS" | "tvOS" | "watchOS" | "visionOS" | "macCatalyst" | "driverKit" => {
-            PlatformKind::Apple
-        }
-        "linux" | "windows" | "android" | "openbsd" | "freebsd" | "wasi" => PlatformKind::NonApple,
-        "custom" => {
-            let Some(platform) = manifest::split_top_level_items(args)
-                .into_iter()
-                .next()
-                .and_then(manifest::static_string_literal)
-            else {
-                return PlatformKind::Unknown;
-            };
-            match platform.to_ascii_lowercase().as_str() {
-                "macos" | "ios" | "tvos" | "watchos" | "visionos" | "maccatalyst" | "driverkit"
-                | "osx" | "xros" => PlatformKind::Apple,
-                "linux" | "windows" | "android" | "openbsd" | "freebsd" | "wasi" | "cygwin"
-                | "haiku" => PlatformKind::NonApple,
-                _ => PlatformKind::Unknown,
-            }
-        }
-        _ => PlatformKind::Unknown,
+        "macOS" | "iOS" | "tvOS" | "watchOS" | "visionOS" | "macCatalyst" | "driverKit"
+        | "linux" | "windows" | "android" | "openbsd" | "freebsd" | "wasi" => true,
+        "custom" => manifest::split_top_level_items(args)
+            .into_iter()
+            .next()
+            .and_then(manifest::static_string_literal)
+            .is_some_and(|platform| {
+                matches!(
+                    platform.to_ascii_lowercase().as_str(),
+                    "macos" | "ios" | "tvos" | "watchos" | "visionos" | "maccatalyst"
+                        | "driverkit" | "osx" | "xros" | "linux" | "windows" | "android"
+                        | "openbsd" | "freebsd" | "wasi" | "cygwin" | "haiku"
+                )
+            }),
+        _ => false,
     }
 }

@@ -110,9 +110,7 @@ impl<'a> Scanner<'a> {
                 continue;
             }
             if self.source[index..].starts_with("/*") {
-                self.index = self.source[index + 2..]
-                    .find("*/")
-                    .map_or(self.source.len(), |offset| index + 2 + offset + 2);
+                self.index = block_comment_end(self.source, index);
                 continue;
             }
             if ch == '"' {
@@ -125,6 +123,26 @@ impl<'a> Scanner<'a> {
         }
         None
     }
+}
+
+fn block_comment_end(source: &str, start: usize) -> usize {
+    let mut depth = 0usize;
+    let mut index = start;
+    while index < source.len() {
+        if source[index..].starts_with("/*") {
+            depth += 1;
+            index += 2;
+        } else if source[index..].starts_with("*/") {
+            depth -= 1;
+            index += 2;
+            if depth == 0 {
+                return index;
+            }
+        } else {
+            index += source[index..].chars().next().map_or(1, char::len_utf8);
+        }
+    }
+    source.len()
 }
 
 fn is_identifier_char(ch: char) -> bool {

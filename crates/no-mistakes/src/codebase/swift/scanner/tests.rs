@@ -38,3 +38,12 @@ fn scanner_reads_escaped_strings() {
     assert_eq!(value, r#"hello \"swift\""#);
     assert_eq!(&r#""hello \"swift\"" trailing"#[next..], " trailing");
 }
+
+#[test]
+fn scanner_skips_nested_block_comments_to_the_outer_close() {
+    let source = "/* a /* b */ still comment */x";
+    let mut scanner = Scanner::new(source);
+    assert_eq!(scanner.next_code_index(), Some(source.len() - 1));
+    let unterminated = "/* a /* b */ rest";
+    assert_eq!(Scanner::new(unterminated).next_code_index(), None);
+}

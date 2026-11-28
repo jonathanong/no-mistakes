@@ -24,10 +24,9 @@ entries in a portable `Package.swift`. It skips:
 
 - Non-test SwiftPM targets (`.target`, `.executableTarget`, `.macro`, `.plugin`,
   and `.systemLibrary`), such as a macOS app's `Sources/` entry point.
-- SwiftPM packages whose `platforms:` array lists only Apple platforms
-  (`.iOS`, `.macOS`, `.tvOS`, `.watchOS`, `.visionOS`, `.macCatalyst`,
-  `.driverKit`).
 - Xcode and XcodeGen app projects that have no `Package.swift`.
+
+A `platforms:` list only sets deployment floors, so it never exempts a package.
 
 When an enclosing `Package.swift` is unreadable or its `platforms:` or
 `targets:` cannot be determined statically (for example, conditional compilation
@@ -86,6 +85,7 @@ check report use the same rule.
 ## Valid example
 
 ```swift
+// swift-tools-version: 5.9
 // Package.swift
 import PackageDescription
 
@@ -114,6 +114,7 @@ final class ClockTests: XCTestCase {
 ## Counterexample
 
 ```swift
+// swift-tools-version: 5.9
 // Package.swift
 import PackageDescription
 
@@ -140,7 +141,7 @@ final class ClockTests: XCTestCase {
 ## Fix
 
 Wrap the import and the tests that use it in a matching `#if canImport(...)`
-guard or an Apple-only `#if os(...)` guard. When a test can use a portable API,
+guard, an Apple-only `#if os(...)` guard, or `#if !os(Linux)`. When a test can use a portable API,
 move to that API and remove the platform-specific import.
 
 ## Analysis

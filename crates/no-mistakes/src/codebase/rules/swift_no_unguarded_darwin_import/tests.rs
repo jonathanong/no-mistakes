@@ -31,6 +31,14 @@ fn swift_darwin_imports_report_unreadable_selected_sources() {
 }
 
 #[test]
+fn condition_parser_proves_negated_linux_and_leaves_other_negations_unproven() {
+    assert_eq!(parse_condition(" !os(Linux)\n"), Proof::All);
+    assert_eq!(parse_condition(" !( os(Linux) )\n"), Proof::None);
+    assert_eq!(parse_condition(" !DEBUG\n"), Proof::None);
+    assert_eq!(parse_condition(" !os(macOS)\n"), Proof::None);
+}
+
+#[test]
 fn condition_parser_handles_apple_conjunctions_disjunctions_and_negations() {
     assert_eq!(
         parse_condition(" os(iOS) && !targetEnvironment(macCatalyst)\nimport UIKit"),
@@ -181,7 +189,7 @@ fn package_manifest_classifier_handles_platforms_targets_excludes_and_uncertaint
     );
     assert!(matches!(
         custom_apple.classify(&root.join("Tests/AppleCustomTests/A.swift")),
-        FileScope::Skip
+        FileScope::PortableTest
     ));
 
     let conditional = manifest_index(
@@ -276,7 +284,7 @@ fn package_manifest_classifier_handles_nested_packages_plugins_and_dynamic_field
     ));
     assert!(matches!(
         nested.classify(&inner.join("Tests/InnerTests/A.swift")),
-        FileScope::Skip
+        FileScope::PortableTest
     ));
 
     let no_targets = manifest_index(outer, r#"let package = Package(name: "Empty")"#);

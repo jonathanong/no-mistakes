@@ -90,8 +90,15 @@ impl<'a> Parser<'a> {
 
     fn parse_unary(&mut self) -> Option<Proof<'a>> {
         if self.eat("!") {
+            self.skip_ws();
+            let start = self.pos;
             let _ = self.parse_unary()?;
-            return Some(Proof::None);
+            let operand = self.text[start..self.pos].trim_matches(is_cond_ws);
+            let excludes_linux = operand
+                .strip_prefix("os(")
+                .and_then(|rest| rest.strip_suffix(')'))
+                .is_some_and(|arg| arg.trim_matches(is_cond_ws).trim_matches('`') == "Linux");
+            return Some(if excludes_linux { Proof::All } else { Proof::None });
         }
         if self.eat("(") {
             let inner = self.parse_or()?;
