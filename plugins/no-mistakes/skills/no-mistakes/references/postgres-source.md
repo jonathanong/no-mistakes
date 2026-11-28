@@ -83,6 +83,11 @@ A Unicode `U&` body and a national `N'` body are statement kind `other`, with
 no `bodyEncoding`. A non-literal command (`format` or an identifier) is
 occurrence kind `dynamicExecute`; in statement position it is also statement
 kind `other`.
+Those statement kinds are projected only when the block is parsed. `RAISE`,
+`EXCEPTION`, a loop, or a procedural `CASE` makes the block walker-only. When
+its occurrences include no `utility` or `dml`, the block is not parsed, so an
+`EXECUTE` has no typed statement even in statement position. That includes a
+non-literal command and a literal `controlFlow` command.
 Dollar-quoted (`bodyEncoding: "dollarQuoted"`), standard single-quoted
 (`singleQuoted`, doubled quotes), and PostgreSQL `E` escape strings
 (`escapedString`) are the projected literal forms. They are decoded by the

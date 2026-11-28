@@ -864,6 +864,8 @@ In statement position:
 - A Unicode `U&` body and a national `N'` body are statement kind `other`, with no `bodyEncoding`.
 - A non-literal command (`format` or an identifier) is occurrence kind `dynamicExecute` and statement kind `other`.
 
+Those statement kinds are projected only when the block is parsed. `RAISE`, `EXCEPTION`, a loop, or a procedural `CASE` makes the block walker-only. When its occurrences include no `utility` or `dml`, the block is not parsed and an `EXECUTE` has no typed statement, including a non-literal command and a literal `controlFlow` command in statement position.
+
 ### Structured trigger events and cast types
 
 Trigger `events` retain their display strings. Additive `eventFacts` expose
