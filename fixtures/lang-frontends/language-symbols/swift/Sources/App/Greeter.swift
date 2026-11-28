@@ -1,0 +1,3 @@
+struct Greeter {}
+
+struct Unused {}

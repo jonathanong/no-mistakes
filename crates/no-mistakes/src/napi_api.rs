@@ -20,7 +20,7 @@ mod analyze_project;
 pub(crate) use analyze_project::analyze_project_json_impl;
 mod async_task;
 mod cli_parity;
-mod codebase;
+pub(crate) mod codebase;
 mod diagnostics;
 pub(crate) use diagnostics::diagnostics_snapshot_impl;
 #[cfg(not(coverage))]

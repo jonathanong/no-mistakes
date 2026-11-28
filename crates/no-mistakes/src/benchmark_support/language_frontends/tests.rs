@@ -1,6 +1,6 @@
 use super::*;
 
-const EXPECTED_FILES: usize = 150;
+const EXPECTED_FILES: usize = 180;
 const EXPECTED_PARSED: usize = 71;
 const EXPECTED_IMPORTS: usize = 67;
 const EXPECTED_ENQUEUES: usize = 7;
@@ -8,7 +8,7 @@ const EXPECTED_WORKERS: usize = 6;
 const EXPECTED_ROUTES: usize = 89;
 const EXPECTED_EDGES: usize = 224;
 const EXPECTED_QUEUE_EDGES: usize = 14;
-const EXPECTED_GLOB_MATCHES: usize = 150;
+const EXPECTED_GLOB_MATCHES: usize = 180;
 
 #[test]
 fn language_frontend_adapters_drive_production_collectors() {

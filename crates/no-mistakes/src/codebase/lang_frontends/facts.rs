@@ -25,6 +25,8 @@ pub(crate) struct LangFactMap {
     pub package_path_deps: BTreeSet<(String, String)>,
     /// Files handed to the per-file extractor, including reads that yielded no facts.
     pub scanned_files: usize,
+    /// Configured files the extractor skipped because the source could not be read.
+    pub unread_files: BTreeSet<PathBuf>,
 }
 
 impl LangFactMap {
@@ -88,9 +90,23 @@ where
 {
     let scanned_files = files.len();
     use rayon::prelude::*;
-    let parsed: Vec<LangFileFacts> = files.par_iter().filter_map(|path| parse(path)).collect();
-    let mut facts = index_parsed_files(parsed);
+    let parsed: Vec<(PathBuf, Option<LangFileFacts>)> = files
+        .par_iter()
+        .map(|path| (path.clone(), parse(path)))
+        .collect();
+    let mut unread_files = BTreeSet::new();
+    let mut parsed_files = Vec::new();
+    for (path, file) in parsed {
+        match file {
+            Some(file) => parsed_files.push(file),
+            None => {
+                unread_files.insert(path);
+            }
+        }
+    }
+    let mut facts = index_parsed_files(parsed_files);
     facts.scanned_files = scanned_files;
+    facts.unread_files = unread_files;
     facts
 }
 

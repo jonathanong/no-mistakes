@@ -313,3 +313,25 @@ fn skipped_calls_and_unknown_candidate_relevance_are_reported() {
         .contains("Partial analysis"));
     crate::codebase::queries::render::tests::assert_report_writers_surface_io_errors(&[&report]);
 }
+
+#[test]
+fn language_reference_sites_render_without_call_arguments() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/lang-frontends/language-symbols");
+    let report = compute(&CallSitesArgs {
+        file: PathBuf::from("python/greeter.py"),
+        export_name: "Greeter".to_string(),
+        root: Some(root),
+        tsconfig: None,
+        format: Some(Format::Human),
+        json: false,
+    })
+    .unwrap();
+    assert!(!report.call_sites.is_empty());
+    assert!(report.call_sites.iter().all(|site| site.reference_only));
+    let mut human = Vec::new();
+    render(&report, Format::Human, &mut human).unwrap();
+    let text = String::from_utf8(human).unwrap();
+    assert!(text.contains("reference"), "{text}");
+    crate::codebase::queries::render::tests::assert_report_writers_surface_io_errors(&[&report]);
+}

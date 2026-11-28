@@ -15,6 +15,7 @@ pub mod call_sites;
 pub mod dead_exports;
 pub mod exports_of;
 pub mod importers;
+pub(crate) mod lang_refs;
 pub mod resolve_check;
 
 mod diagnostics;

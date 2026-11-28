@@ -1,4 +1,7 @@
 pub fn run(args: SymbolsArgs) -> Result<()> {
+    if crate::codebase::queries::lang_refs::requests_language_file(&args.files) {
+        return crate::codebase::queries::lang_refs::run_symbols(args);
+    }
     let _diagnostics = crate::diagnostics::LegacyDiagnosticsGuard::new(args.timings, false);
     let mut timings = crate::codebase::timing::PhaseTimings::start();
     if args.mode == SymbolsMode::SignatureImpact {
@@ -33,6 +36,10 @@ pub fn run(args: SymbolsArgs) -> Result<()> {
 }
 
 pub fn run_json(args: SymbolsArgs) -> Result<String> {
+    if crate::codebase::queries::lang_refs::requests_language_file(&args.files) {
+        return crate::codebase::queries::lang_refs::symbols_json(&args)?
+            .context("language symbols JSON");
+    }
     if args.mode == SymbolsMode::SignatureImpact {
         return impact::report_json(args);
     }

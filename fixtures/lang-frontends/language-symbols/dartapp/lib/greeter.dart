@@ -1,0 +1,3 @@
+class Greeter {}
+
+class Unused {}

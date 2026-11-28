@@ -45,5 +45,6 @@ pub(crate) struct DotnetFactMap {
     pub declarations: HashMap<String, BTreeSet<PathBuf>>,
     pub methods: HashMap<String, BTreeSet<PathBuf>>,
     pub files_by_project: HashMap<PathBuf, BTreeSet<PathBuf>>,
+    pub unread_files: BTreeSet<PathBuf>,
     pub warnings: Vec<String>,
 }

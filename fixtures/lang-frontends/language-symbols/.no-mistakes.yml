@@ -1,0 +1,35 @@
+tests:
+  python:
+    packages:
+      - python
+  go:
+    modules:
+      - go
+  rust:
+    packages:
+      - rustpkg
+  rails:
+    apps:
+      - rails
+  php:
+    apps:
+      - php
+  java:
+    packages:
+      - java
+  kotlin:
+    packages:
+      - kotlin
+  elixir:
+    apps:
+      - elixir
+  dart:
+    packages:
+      - dartapp
+  swift:
+    packages:
+      - swift
+  dotnet:
+    projects:
+      app:
+        project: dotnet/App.csproj

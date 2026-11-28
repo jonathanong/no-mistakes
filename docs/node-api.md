@@ -473,6 +473,12 @@ loopback hosts create `http` edges to matching routes across configured
 languages. `serverRouteEdges` reports those same literals as `client-call`.
 Computed URLs and URLs on other hosts produce no edge. Both entrypoints are the async functions the CLI JSON commands
 call.
+`symbols`, `deadExports`, and `callSites` return the same JSON rows as the
+CLI for a configured Swift, .NET, Python, Go, Rust, Rails, PHP, Java, Kotlin,
+Elixir, or Dart file. Language call sites set `referenceOnly` and leave
+`argCount`, `hasSpread`, and `args` empty: the facts record names, not call
+shapes, so those empty fields are not a proven zero-argument call. `exportsOf`
+and `importers` stay TypeScript.
 
 | CLI                                        | Node API                                                                                                                                                                                                                                                                   |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -362,8 +362,10 @@ unproven. Recovered modifying SQL still requires statement-level classification.
 
 v1 is the Swift/.NET bar plus the named key feature for each stack: a module
 graph, `tests plan`, and either HTTP routes or queues. SwiftPM and NuGet
-dependency artifacts participate in semantic native test planning. Playwright, React,
-Next.js fetches, call-sites, dead-exports, and applying every rule family to every language it
+dependency artifacts participate in semantic native test planning. `symbols`,
+`call-sites`, and `dead-exports` answer from those language facts for Swift,
+.NET, Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and Dart.
+Playwright, React, Next.js fetches, and applying every rule family to every language it
 can (for example the PostgreSQL rules over SQL in Rust code, tracked in
 [#4740](https://github.com/jongleberry/no-mistakes/issues/4740)) are later work. There are no
 per-language CLIs and none are planned: one `no-mistakes` invocation analyzes every
@@ -494,9 +496,12 @@ already show the non-TS pattern: language-specific edge kinds behind
 fast TS/JS-only reverse static-import scan; it does not walk language
 graphs. Use `dependents --relationship <lang>` for those.
 
-**Symbols.** Named declarations and who references them. TS/JS has `symbols`,
-`exports-of`, `dead-exports`, and `call-sites`. Swift and .NET collect
-declarations and references into facts and project them as `*-ref` edges.
+**Symbols.** Named declarations and who references them. TypeScript has
+`symbols`, `exports-of`, `dead-exports`, and `call-sites`. For Swift, .NET,
+Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and Dart, `symbols`,
+`call-sites`, and `dead-exports` answer from the same language reference facts
+that build the canonical graph. `exports-of` and `importers` stay TypeScript.
+Dedicated language CLIs are later work.
 
 **Test impact.** `tests plan`, `tests why`, `tests impact`, and
 `impacted-checks` must select native tests from changed files once the language
@@ -744,10 +749,11 @@ out of scope. Configure producer and consumer file globs through
 Rust v1 is a language frontend at the Swift/.NET bar: configured
 `tests.rust.packages` emit `rust-use` / `rust-mod` / `rust-package` edges,
 `tests plan cargo` selects crate tests, and static Axum / Actix / Rocket
-registrations emit `route` edges. Language `symbols` / `call-sites`
-and PostgreSQL rules over SQL in Rust code
+registrations emit `route` edges. `symbols`, `call-sites`, and `dead-exports`
+answer from those `rust-use` facts. `Cargo.lock` diffs participate in
+`lockfile diff`. PostgreSQL rules over SQL in Rust code
 ([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)) are later work.
-`Cargo.lock` diffs participate in `lockfile diff`.
+There is no dedicated `no-mistakes rust` CLI.
 
 | Feature          | TS/JS reference     | Rust equivalent                                                                                                                              |
 | ---------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1143,8 +1149,8 @@ Queue cells that say `declined` are closed. Do not invent a framework for them.
 
 Keep using `rg` for holes the status table still marks `no` or later:
 Laravel resource routes with computed options or arguments, Phoenix resource
-routes with options, Kafka calls outside the documented literal shapes, language
-`symbols`/`call-sites`, and rule families that apply only to TS/JS or `.sql`
+routes with options, Kafka calls outside the documented literal shapes, and rule
+families that apply only to TS/JS or `.sql`
 ([#4740](https://github.com/jongleberry/no-mistakes/issues/4740)).
 
 See [Architecture](architecture.md) for the one-pass session rules,

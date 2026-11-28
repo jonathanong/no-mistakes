@@ -40,6 +40,23 @@ impl QueryDiagnostics {
         }
     }
 
+    pub(crate) fn operational_gaps(root: &Path, files: &[PathBuf]) -> Self {
+        let mut incomplete_files: Vec<_> = files
+            .iter()
+            .map(|file| QueryIncompleteFile {
+                file: rel_str(file, root),
+                reason: "operational-error",
+                message: "Configured language file could not be read".to_string(),
+            })
+            .collect();
+        incomplete_files.sort_by(|left, right| left.file.cmp(&right.file));
+        incomplete_files.dedup_by(|left, right| left.file == right.file);
+        Self {
+            partial: !incomplete_files.is_empty(),
+            incomplete_files,
+        }
+    }
+
     pub(crate) fn is_partial(&self) -> bool {
         self.partial
     }

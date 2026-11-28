@@ -50,3 +50,19 @@ without diagnostics; use JSON before making decisions that depend on absence.
 `anyDead`, `referenced`, importer counts, and exit status retain their existing
 meaning. A partial report with `anyDead: true` is not sufficient evidence to
 delete an export; repair the listed files and rerun the query first.
+
+## Language files
+
+For a configured Swift, .NET, Python, Go, Rust, Rails, PHP, Java, Kotlin,
+Elixir, or Dart file, `dead-exports` checks declarations from the language
+facts. `referenced` is true when another file has a proven reference of that
+name. `importerCount` is the number of distinct referencing files. With no
+names, every declaration is checked, sorted by name. A name that is not a
+current declaration stays `referenced: false`. On a language file, that result
+does not show whether a deleted declaration is still referenced, because a
+reference is kept only while the name is still declared. PHP references are
+`use` sites of the
+qualified name, so a short class name can be dead while `App.Greeter` is
+referenced. The command exits non-zero when any checked name is dead. It does
+not guess references the extractor did not record. There is no `--config`
+flag; the command reads the `.no-mistakes.yml` at `--root`.

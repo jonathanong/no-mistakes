@@ -70,6 +70,11 @@ impl DeadExportsReport {
 }
 
 fn compute(args: &DeadExportsArgs) -> Result<DeadExportsReport> {
+    if let Some(rows) =
+        super::lang_refs::language_dead_rows(&args.file, &args.names, args.root.as_deref(), None)?
+    {
+        return Ok(language_dead_report(rows));
+    }
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
     let analysis = build_reverse_analysis(&target)?;
     let symbols = analysis.symbols(&target)?;
@@ -114,6 +119,25 @@ fn compute(args: &DeadExportsArgs) -> Result<DeadExportsReport> {
         any_dead,
         diagnostics: analysis.diagnostics,
     })
+}
+
+fn language_dead_report(rows: super::lang_refs::DeadExportRows) -> DeadExportsReport {
+    let results: Vec<DeadResult> = rows
+        .rows
+        .into_iter()
+        .map(|row| DeadResult {
+            name: row.name,
+            referenced: row.referenced,
+            importer_count: row.importer_count,
+        })
+        .collect();
+    let any_dead = results.iter().any(|result| !result.referenced);
+    DeadExportsReport {
+        file: rows.file,
+        results,
+        any_dead,
+        diagnostics: rows.diagnostics,
+    }
 }
 
 impl Report for DeadExportsReport {

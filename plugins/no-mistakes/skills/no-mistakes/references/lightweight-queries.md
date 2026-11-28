@@ -88,6 +88,15 @@ Dynamic selection and aliases invalidated by reassignment can remain unresolved.
 no-mistakes call-sites src/api.mts handler --format json
 ```
 
+Configured Swift, .NET, Python, Go, Rust, Rails, PHP, Java, Kotlin, Elixir, and
+Dart files use `symbols`, `dead-exports`, and `call-sites` (`exports-of` stays
+TypeScript-only). Rows come from language reference facts
+in the canonical graph. Call sites set `referenceOnly` and leave argument
+fields empty; that is not a proven zero-argument call. PHP rows are `use`
+sites. Unproven calls stay absent. For a language file, `referenced: false` on a
+name that is no longer declared does not show that a deleted declaration is
+unused. A language reference is kept only while that name is still declared.
+
 ## `registry-extension <file>`
 
 Best-effort, heuristic summary of the repeated "register an entry" shape in a
