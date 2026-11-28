@@ -187,7 +187,7 @@ fn write_scope(rule: &str, options: &mut serde_yaml::Mapping, scope: &Scope, kee
     if !scope.trusted_sql_tags.is_empty() {
         set_tags(options, &scope.trusted_sql_tags);
     }
-    if !scope.schema_catalog_path.is_empty() {
+    if !scope.schema_catalog_path.is_empty() && rule != "postgres-no-duplicate-keyed-lookups" {
         set_string(options, "schemaCatalogPath", &scope.schema_catalog_path);
     }
     if !scope.unanalyzable_sql.is_empty() && rule != "postgres-lock-inventory" {

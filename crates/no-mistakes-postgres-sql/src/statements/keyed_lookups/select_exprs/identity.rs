@@ -1,7 +1,9 @@
 use super::super::table::lookup_table;
 use crate::idents::{ident_key, object_name_identity, relation_suffix_name, unwrap_expr};
+use crate::order::canonical_order_options;
 use sqlparser::ast::{
-    CastKind, Expr, Ident, Query, Select, SelectItem, SetExpr, TableFactor, VisitMut, VisitorMut,
+    CastKind, Expr, Ident, OrderByExpr, OrderByKind, OrderBySort, Query, Select, SelectItem,
+    SetExpr, TableFactor, VisitMut, VisitorMut,
 };
 use std::ops::ControlFlow;
 
@@ -19,6 +21,11 @@ pub(super) fn normalize_target(node: &mut impl VisitMut) {
         fn pre_visit_query(&mut self, query: &mut Query) -> ControlFlow<()> {
             if let SetExpr::Select(select) = query.body.as_mut() {
                 normalize_local_columns(select);
+            }
+            if let Some(order) = &mut query.order_by {
+                if let OrderByKind::Expressions(items) = &mut order.kind {
+                    normalize_sort_options(items);
+                }
             }
             ControlFlow::Continue(())
         }
@@ -70,6 +77,19 @@ pub(super) fn normalize_target(node: &mut impl VisitMut) {
     }
 
     let _ = node.visit(&mut Identifiers);
+}
+
+pub(super) fn normalize_sort_options(order: &mut [OrderByExpr]) {
+    for item in order {
+        if let Some((ascending, nulls_first)) = canonical_order_options(&item.options) {
+            item.options.sort = Some(if ascending {
+                OrderBySort::Asc
+            } else {
+                OrderBySort::Desc
+            });
+            item.options.nulls_first = Some(nulls_first);
+        }
+    }
 }
 
 fn normalize_local_columns(select: &mut Select) {

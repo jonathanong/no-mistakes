@@ -7,6 +7,11 @@ fn postgres_no_duplicate_keyed_lookups_check_json_snapshot() {
     let rule = "postgres-no-duplicate-keyed-lookups";
     let rows = [
         ("scalar_subqueries", "scalar-subqueries", "enabled-sql.yml"),
+        (
+            "project_catalog",
+            "scalar-subqueries",
+            "project-catalog.yml",
+        ),
         ("joins_and_mixed", "joins", "enabled-sql.yml"),
         ("dml_and_with", "dml-cte", "enabled-sql.yml"),
         ("normalization", "normalization", "enabled-sql.yml"),
@@ -25,6 +30,11 @@ fn postgres_no_duplicate_keyed_lookups_check_json_snapshot() {
         ),
         ("review_planning", "review-planning", "enabled-sql.yml"),
         ("review_edges", "review-edges", "enabled-sql.yml"),
+        (
+            "review_evaluation_followup",
+            "review-evaluation-followup",
+            "enabled-sql.yml",
+        ),
         (
             "review_binding_evaluation",
             "review-binding-evaluation",

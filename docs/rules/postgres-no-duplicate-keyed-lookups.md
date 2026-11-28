@@ -74,13 +74,17 @@ PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
 clauses. Identical inline window specifications share their frame bounds. An
 aggregate can also reuse an argument in its ordering clause. The
 rule counts an identical reused expression once. A matching grouping
-expression is also reused in projections and `HAVING` outside function
-arguments.
+expression is also reused in projections, `HAVING`, and arguments to
+recognized scalar functions. The rule still checks aggregate inputs
+independently.
 
 Findings point at the duplicate join or scalar subquery and name the line of the
 first lookup.
 
 ## Options and defaults
+
+A project can configure `postgres.schemaCatalogPath` for other rules. This
+rule uses the project executor and SQL scope settings.
 
 This rule is off by default and runs only when explicitly configured in
 `.no-mistakes.yml`. Unknown option keys fail early during configuration

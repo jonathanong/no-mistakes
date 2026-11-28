@@ -250,6 +250,35 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "project_catalog": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries/check.sql",
+          "line": 4,
+          "message": "queries/check.sql:4: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 3). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT tier FROM accounts WHERE id = o.account_id) AS account_tier,",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 6,
+          "message": "queries/check.sql:6: duplicate keyed lookup of `profiles` on `id = o.owner_id` (already looked up at line 5). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "(SELECT p2.handle FROM profiles p2 WHERE o.owner_id = p2.id) AS owner_handle",
+          "target": "profiles"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "query_clauses": {
     "exitCode": 1,
     "report": {
@@ -696,6 +725,43 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "queries/check.sql:9: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 8). Verify that consolidation preserves row multiplicity and unmatched rows.",
           "rule": "postgres-no-duplicate-keyed-lookups",
           "sourceLine": "JOIN accounts b ON b.id = o.account_id AND b.flag IN (b.y, b.x);",
+          "target": "accounts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "review_evaluation_followup": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "queries/check.sql",
+          "line": 24,
+          "message": "queries/check.sql:24: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 23). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "HAVING pg_catalog.min((SELECT a.n FROM accounts a WHERE a.id = o.account_id)) > 0;",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 44,
+          "message": "queries/check.sql:44: duplicate keyed lookup of `accounts` on `id = o.account_id` (already looked up at line 43). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "ELSE last_value((SELECT a.name FROM accounts a WHERE a.id = o.account_id)) OVER ()",
+          "target": "accounts"
+        },
+        {
+          "file": "queries/check.sql",
+          "line": 9,
+          "message": "queries/check.sql:9: duplicate keyed lookup of `accounts` on `id = -CAST(o.raw_key IS NULL AS INTEGER)` (already looked up at line 8). Verify that consolidation preserves row multiplicity and unmatched rows.",
+          "rule": "postgres-no-duplicate-keyed-lookups",
+          "sourceLine": "LEFT JOIN accounts b ON b.id = -CAST(o.raw_key IS NULL AS integer);",
           "target": "accounts"
         }
       ],

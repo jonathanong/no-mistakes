@@ -8,8 +8,8 @@ use super::windows::referenced_expressions;
 use super::{select_item_expr, walk_nested_queries, LookupHistory};
 use crate::fx::FxHashSet;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
-use identity::normalize_target;
 pub(super) use identity::target_identity;
+use identity::{normalize_sort_options, normalize_target};
 use sqlparser::ast::{Distinct, Expr, Select, WindowSpec};
 use std::borrow::Cow;
 use std::cell::{OnceCell, RefCell};
@@ -34,6 +34,7 @@ impl<'a> SelectTargets<'a> {
             return false;
         }
         let mut key = spec.clone();
+        normalize_sort_options(&mut key.order_by);
         normalize_target(&mut key);
         !self.windows.borrow_mut().insert(key)
     }
