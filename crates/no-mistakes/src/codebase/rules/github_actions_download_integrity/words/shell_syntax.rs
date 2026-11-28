@@ -28,6 +28,7 @@ pub(super) fn take_heredoc_start(
     if chars[*index] != '<'
         || chars.get(*index + 1) != Some(&'<')
         || chars.get(*index + 2) == Some(&'<')
+        || (*index > 0 && chars[*index - 1] == '<')
     {
         return None;
     }
