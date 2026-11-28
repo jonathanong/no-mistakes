@@ -60,3 +60,18 @@ export async function arrayDestructured(): Promise<Widget | null> {
   read = require("./data").getWidget;
   return read();
 }
+
+export async function destructuredAlias(): Promise<Widget | null> {
+  const api = { read: () => null };
+  let { read } = api;
+  read = api.read;
+  return read();
+}
+
+export async function stagedTarget(): Promise<Widget | null> {
+  let target;
+  let read = target;
+  target = require("./data").getWidget;
+  read = target;
+  return read();
+}

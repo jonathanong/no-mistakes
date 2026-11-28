@@ -63,6 +63,10 @@ module.exports = rule(
         if (node.id) state.shadowName(node.id.name);
       },
       "ClassExpression:exit": state.popScope,
+      StaticBlock() {
+        state.pushScope("static");
+      },
+      "StaticBlock:exit": state.popScope,
       SwitchStatement() {
         state.pushScope("switch");
       },

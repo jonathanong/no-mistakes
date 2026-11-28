@@ -111,3 +111,37 @@ export function reassignedForward(node: ReactNode) {
   value = "text";
   return read();
 }
+
+export function staticMethod(child: ReactNode) {
+  return class Box {
+    static {
+      const child = 1;
+    }
+    render() {
+      return child ?? null;
+    }
+  };
+}
+
+export function staticInner(child: ReactNode) {
+  class Box {
+    static {
+      const child = 1;
+      const read = () => child ?? null;
+      read();
+    }
+  }
+  return child ?? null;
+}
+
+export function forwardDestructure(props: { child: ReactNode }) {
+  const read = () => child ?? null;
+  const { child } = props;
+  return read();
+}
+
+export function forwardPlain(props: { child: string }) {
+  const read = () => child ?? null;
+  const { child } = props;
+  return read();
+}

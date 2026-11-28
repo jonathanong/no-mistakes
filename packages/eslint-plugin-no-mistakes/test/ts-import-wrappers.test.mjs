@@ -931,6 +931,9 @@ describe("typescript import wrappers", () => {
       [99, "nullish"],
       [103, "nullish"],
       [109, "unanalyzable"],
+      [121, "nullish"],
+      [134, "nullish"],
+      [138, "nullish"],
     ]);
     expect(
       cases
@@ -957,6 +960,7 @@ describe("typescript import wrappers", () => {
       [43, "wrapper"],
       [55, "unanalyzable"],
       [61, "wrapper"],
+      [76, "unanalyzable"],
     ]);
     expect(
       cases.find((item) => item.name === "reassigned alias chain stays bounded").findings,

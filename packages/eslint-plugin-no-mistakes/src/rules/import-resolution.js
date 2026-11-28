@@ -97,7 +97,7 @@ function destructureFact(declarator, name, context, seen) {
   const required = requireModule(declarator.init, context);
   let fact;
   if (required === undefined) {
-    const source = importFact(declarator.init, context, seen);
+    const source = importFact(declarator.init, context, new Set(seen));
     if (!source) fact = null;
     else if (imported === undefined || source.unresolved || source.typeOnly)
       fact = source.typeOnly ? null : { unresolved: true };
@@ -160,11 +160,12 @@ function importFact(node, context, seen = new Set(), memo = new Map()) {
   if (current.type !== "Identifier") return null;
   const variable = resolveRuntimeVariable(current, context) ?? resolveVariable(current, context);
   if (!variable || variable.defs.length === 0) return null;
-  if (memo.has(variable)) return memo.get(variable);
+  const cacheKey = current.range ? current.range[0] : variable;
+  if (memo.has(cacheKey)) return memo.get(cacheKey);
   if (seen.has(variable)) return { unresolved: true };
   seen.add(variable);
   const result = readBinding(variable, current, context, seen, memo);
-  memo.set(variable, result);
+  memo.set(cacheKey, result);
   return result;
 }
 
