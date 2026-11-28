@@ -26,7 +26,7 @@ pub(super) fn walk_expr_stars(
     use sqlparser::ast::Spanned;
     let line = (expr.span().start.line as usize).max(line);
     match expr {
-        Expr::Wildcard(_) if !enclosing_fn.is_some_and(|f| f.eq_ignore_ascii_case("count")) => {
+        Expr::Wildcard(_) if !enclosing_fn.is_some_and(is_count_fn) => {
             super::items::emit_bare(rels, returning, enclosing_fn.map(str::to_string), line, out);
         }
         Expr::QualifiedWildcard(q, ..) => {
@@ -93,7 +93,7 @@ fn walk_function_stars(
         FunctionArguments::List(args) => {
             for arg in &args.args {
                 match arg_expr(arg) {
-                    FunctionArgExpr::Wildcard if !name.eq_ignore_ascii_case("count") => {
+                    FunctionArgExpr::Wildcard if !is_count_fn(&name) => {
                         super::items::emit_bare(rels, returning, Some(name.clone()), line, out);
                     }
                     FunctionArgExpr::QualifiedWildcard(q) => {
@@ -109,6 +109,10 @@ fn walk_function_stars(
         }
         FunctionArguments::None => {}
     }
+}
+
+fn is_count_fn(name: &str) -> bool {
+    name.eq_ignore_ascii_case("count") || name.eq_ignore_ascii_case("pg_catalog.count")
 }
 
 fn arg_expr(arg: &FunctionArg) -> &FunctionArgExpr {

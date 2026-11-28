@@ -179,3 +179,22 @@ pub(super) fn push_clean(
         append_site,
     });
 }
+
+pub(in super::super) fn self_addition_parts<'a>(
+    expr: &'a Expression<'a>,
+    target: &str,
+) -> Option<Vec<&'a Expression<'a>>> {
+    let mut parts = Vec::new();
+    let mut cur = expr;
+    while let Expression::BinaryExpression(bin) = unwrap_ts_wrappers(cur) {
+        if bin.operator != BinaryOperator::Addition {
+            return None;
+        }
+        parts.push(&bin.right);
+        cur = &bin.left;
+    }
+    matches!(unwrap_ts_wrappers(cur), Expression::Identifier(id) if id.name == target).then(|| {
+        parts.reverse();
+        parts
+    })
+}

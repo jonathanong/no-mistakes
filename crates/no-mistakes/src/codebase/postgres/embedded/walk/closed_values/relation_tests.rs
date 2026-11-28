@@ -99,10 +99,22 @@ export function destructuredVarBuilder(obj: { q: any }) {
   var { q } = obj;
   return query(q);
 }
+
+export function selfAdditionPreservesEarlierWildcard(filter: string) {
+  let q = "SELECT * FROM entries";
+  q = q + filter + " ORDER BY id";
+  return query(q);
+}
+
+export function destructuredAssignClearsBuilder(obj: { q: any }) {
+  let q = sql`SELECT * FROM entries`;
+  ({ q } = obj);
+  return query(q);
+}
 "#;
     let options = EmbeddedSqlOptions::configured("@example/db", &[]);
     let facts = extract_embedded_sql_from_source(Path::new("src/aliases.ts"), source, &options);
-    assert_eq!(facts.calls.len(), 5);
+    assert_eq!(facts.calls.len(), 7);
     let frags = |idx: usize| -> Vec<String> {
         facts
             .call_fragments
@@ -133,6 +145,8 @@ export function destructuredVarBuilder(obj: { q: any }) {
     );
     assert!(frags(3).is_empty());
     assert!(frags(4).is_empty());
+    assert!(frags(5).iter().any(|sql| sql == "SELECT * FROM entries"));
+    assert!(frags(6).is_empty());
 }
 
 #[test]

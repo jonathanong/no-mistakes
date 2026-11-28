@@ -99,12 +99,12 @@ fn push_qualified(
             .map(|(t, _)| t.clone())
     });
     if let Some(rel) = &relation {
-        if !rel.contains('.') && ctx.ctes.iter().any(|c| c.eq_ignore_ascii_case(rel)) {
+        if !rel.contains('.') && ctx.ctes.iter().any(|c| c == rel) {
             return;
         }
     } else if qualifier
         .as_deref()
-        .is_some_and(|q| ctx.ctes.iter().any(|c| c.eq_ignore_ascii_case(q)))
+        .is_some_and(|q| ctx.ctes.iter().any(|c| c == q))
     {
         return;
     }
@@ -150,7 +150,7 @@ fn push_bare(
         return;
     }
     for (t, _) in &ctx.from_relations {
-        if !t.contains('.') && ctx.ctes.iter().any(|c| c.eq_ignore_ascii_case(t)) {
+        if !t.contains('.') && ctx.ctes.iter().any(|c| c == t) {
             continue;
         }
         out.push(FragmentStar {

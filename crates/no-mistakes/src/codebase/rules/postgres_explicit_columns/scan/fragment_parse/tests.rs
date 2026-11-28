@@ -82,6 +82,18 @@ fn ast_covers_dml_set_ops_table_and_nested_subqueries() {
             "INSERT INTO narrow (id, n) VALUES (1, 0) ON CONFLICT (id) DO UPDATE SET n = (SELECT count(*) FROM (SELECT * FROM wide) w) WHERE id IN (SELECT * FROM extra)",
             vec![(false, Some("wide")), (false, Some("extra"))],
         ),
+        (
+            "SELECT EXISTS (SELECT * FROM wide INTERSECT SELECT * FROM peer)",
+            vec![(false, Some("wide")), (false, Some("peer"))],
+        ),
+        (
+            r#"WITH "Wide" AS (SELECT 1 AS id) SELECT * FROM wide"#,
+            vec![(false, Some("wide"))],
+        ),
+        (
+            "SELECT pg_catalog.count(*), pg_catalog.count(w.*) FROM wide w",
+            vec![(false, Some("wide"))],
+        ),
     ];
     for (sql, expected) in cases {
         let stars = extract_fragment_stars(sql, None);
@@ -204,4 +216,13 @@ fn context_and_token_fallback_handle_prefixes_ctes_commas_and_subqueries() {
     assert_eq!(fn_in_subquery.len(), 1);
     assert_eq!(fn_in_subquery[0].relation.as_deref(), Some("allowed_view"));
     assert_eq!(fn_in_subquery[0].within_function.as_deref(), Some("count"));
+
+    assert!(extract_fragment_stars(", w.*", Some("SELECT id FROM wide w ORDER BY id")).is_empty());
+
+    let quoted_cte = extract_fragment_stars(
+        r#"WITH "Wide" AS (SELECT 1) SELECT * FROM wide WHERE"#,
+        None,
+    );
+    assert_eq!(quoted_cte.len(), 1);
+    assert_eq!(quoted_cte[0].relation.as_deref(), Some("wide"));
 }

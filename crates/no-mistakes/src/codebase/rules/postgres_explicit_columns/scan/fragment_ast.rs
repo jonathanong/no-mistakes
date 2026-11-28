@@ -83,9 +83,16 @@ fn collect_set(expr: &SetExpr, ctes: &[String], in_exists: bool, out: &mut Vec<F
         SetExpr::Insert(stmt) | SetExpr::Update(stmt) | SetExpr::Delete(stmt) => {
             collect_statement(stmt, ctes, out);
         }
-        SetExpr::SetOperation { left, right, .. } => {
-            collect_set(left, ctes, in_exists, out);
-            collect_set(right, ctes, in_exists, out);
+        SetExpr::SetOperation {
+            op, left, right, ..
+        } => {
+            let child_exists = in_exists
+                && !matches!(
+                    op,
+                    sqlparser::ast::SetOperator::Intersect | sqlparser::ast::SetOperator::Except
+                );
+            collect_set(left, ctes, child_exists, out);
+            collect_set(right, ctes, child_exists, out);
         }
         SetExpr::Table(table) if !in_exists => collect_table_expr(table, ctes, out),
         SetExpr::Values(values) => {
@@ -145,8 +152,7 @@ pub(super) fn push_factor(
             ..
         } => {
             let table = object_name_key(name);
-            let is_cte = !table.contains('.')
-                && ctes.iter().any(|cte| cte.eq_ignore_ascii_case(&table));
+            let is_cte = !table.contains('.') && ctes.iter().any(|cte| cte == &table);
             rels.push(Rel {
                 table,
                 alias: alias.as_ref().map(|a| ident_key(&a.name)),

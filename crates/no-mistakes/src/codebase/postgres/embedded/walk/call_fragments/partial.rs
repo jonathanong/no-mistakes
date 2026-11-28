@@ -7,6 +7,7 @@ use oxc_span::GetSpan;
 
 mod concat;
 mod relations;
+pub(super) use concat::self_addition_parts;
 use concat::{collect_addition, partial_atom, partial_parameterized_template, push_clean};
 use relations::partial_templates;
 pub(crate) use relations::publish_call_fragments;

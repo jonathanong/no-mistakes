@@ -49,6 +49,15 @@ impl<'a> ScopeVisitor<'a> {
         ) {
             self.visit_expression(&assign.right);
             assignments::visit_target(self, &assign.left);
+            resolve::functions::reassigned::for_each_assigned_name(&assign.left, &mut |name| {
+                if let Some(index) = self
+                    .scopes
+                    .iter()
+                    .rposition(|scope| scope.contains_key(name))
+                {
+                    self.clear_builder_fragment(index, name);
+                }
+            });
             return;
         }
         let exemptions = self.builder_reference_exemptions.len();

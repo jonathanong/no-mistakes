@@ -21,45 +21,52 @@ impl ScopeVisitor<'_> {
         let AssignmentTarget::AssignmentTargetIdentifier(id) = &assign.left else {
             return;
         };
-        let Some(scope_index) = self
-            .scopes
-            .iter()
-            .rposition(|scope| scope.contains_key(id.name.as_str()))
-        else {
+        let Some(scope_index) = self.lookup_scope(id.name.as_str()) else {
             return;
         };
         let key = (scope_index, id.name.to_string());
         match assign.operator {
             AssignmentOperator::Addition => {
-                let context = self
-                    .call_fragment_state
-                    .builders
-                    .get(&key)
-                    .and_then(|trace| trace.prefix.clone());
-                let added = partial::expr_fragments(
-                    self,
-                    &assign.right,
-                    context.as_deref(),
-                    Some(assign.span.start),
-                );
-                if added.is_empty() {
-                    return;
-                }
-                let trace = self.call_fragment_state.builders.entry(key).or_default();
-                partial::extend_prefix(
-                    trace,
-                    &added,
-                    self.control_depth == 0 && self.loop_depth == 0,
-                );
-                trace.fragments.extend(added);
+                self.append_assignment_expr(key, &assign.right, assign.span.start);
             }
             AssignmentOperator::Assign => {
-                self.clear_builder_fragment(scope_index, id.name.as_str());
-                let line = byte_offset_to_line(self.source, assign.span.start as usize);
-                self.note_builder_init(scope_index, id.name.as_str(), &assign.right, None, line);
+                if let Some(parts) = partial::self_addition_parts(&assign.right, id.name.as_str()) {
+                    for part in parts {
+                        self.append_assignment_expr(key.clone(), part, assign.span.start);
+                    }
+                } else {
+                    self.clear_builder_fragment(scope_index, id.name.as_str());
+                    let line = byte_offset_to_line(self.source, assign.span.start as usize);
+                    self.note_builder_init(
+                        scope_index,
+                        id.name.as_str(),
+                        &assign.right,
+                        None,
+                        line,
+                    );
+                }
             }
             _ => self.clear_builder_fragment(scope_index, id.name.as_str()),
         }
+    }
+
+    fn append_assignment_expr(&mut self, key: (usize, String), rhs: &Expression<'_>, site: u32) {
+        let context = self
+            .call_fragment_state
+            .builders
+            .get(&key)
+            .and_then(|trace| trace.prefix.clone());
+        let added = partial::expr_fragments(self, rhs, context.as_deref(), Some(site));
+        if added.is_empty() {
+            return;
+        }
+        let trace = self.call_fragment_state.builders.entry(key).or_default();
+        partial::extend_prefix(
+            trace,
+            &added,
+            self.control_depth == 0 && self.loop_depth == 0,
+        );
+        trace.fragments.extend(added);
     }
 
     pub(in crate::codebase::postgres::embedded::walk) fn pop_builder_fragments(
@@ -90,11 +97,7 @@ impl ScopeVisitor<'_> {
         let Expression::Identifier(id) = unwrap_ts_wrappers(expr) else {
             return;
         };
-        let Some(scope_index) = self
-            .scopes
-            .iter()
-            .rposition(|scope| scope.contains_key(id.name.as_str()))
-        else {
+        let Some(scope_index) = self.lookup_scope(id.name.as_str()) else {
             return;
         };
         if let Some(trace) = self
@@ -130,11 +133,7 @@ impl ScopeVisitor<'_> {
         };
         match unwrap_ts_wrappers(arg) {
             Expression::Identifier(id) => {
-                if let Some(scope_index) = self
-                    .scopes
-                    .iter()
-                    .rposition(|scope| scope.contains_key(id.name.as_str()))
-                {
+                if let Some(scope_index) = self.lookup_scope(id.name.as_str()) {
                     if let Some(trace) = self
                         .call_fragment_state
                         .builders
@@ -168,22 +167,25 @@ impl ScopeVisitor<'_> {
                 }
                 Vec::new()
             }
-            Expression::CallExpression(inner)
-                if matches!(unwrap_ts_wrappers(&inner.callee), Expression::Identifier(_)) =>
-            {
+            Expression::CallExpression(inner) => {
                 let Expression::Identifier(callee) = unwrap_ts_wrappers(&inner.callee) else {
                     return Vec::new();
                 };
-                let key = self.plain_key(callee.name.as_str());
                 self.call_fragment_state
                     .function_returns
-                    .get(&key)
+                    .get(&self.plain_key(callee.name.as_str()))
                     .cloned()
                     .unwrap_or_default()
             }
             _ if recovered.variants.is_empty() => partial::expr_fragments(self, arg, None, None),
             _ => Vec::new(),
         }
+    }
+
+    fn lookup_scope(&self, name: &str) -> Option<usize> {
+        self.scopes
+            .iter()
+            .rposition(|scope| scope.contains_key(name))
     }
 
     pub(super) fn is_tagged_sql_fragment(&self, expr: &Expression<'_>) -> bool {

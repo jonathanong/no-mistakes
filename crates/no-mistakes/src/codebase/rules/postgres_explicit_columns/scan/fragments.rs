@@ -129,7 +129,7 @@ impl FileScanner<'_> {
             return;
         }
         for relation in candidates {
-            if !relation.contains('.') && ctx.ctes.iter().any(|cte| cte.eq_ignore_ascii_case(&relation)) {
+            if !relation.contains('.') && ctx.ctes.iter().any(|cte| cte == &relation) {
                 continue;
             }
             if is_placeholder_relation(&relation) {

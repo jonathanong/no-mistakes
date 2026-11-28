@@ -79,7 +79,7 @@ pub(super) fn collect_table_expr(table: &Table, ctes: &[String], out: &mut Vec<F
         || ident_key(name),
         |schema| format!("{}.{}", ident_key(schema), ident_key(name)),
     );
-    if !ctes.iter().any(|cte| cte.eq_ignore_ascii_case(&table_name)) {
+    if !ctes.iter().any(|cte| cte == &table_name) {
         out.push(FragmentStar {
             returning: false,
             qualifier: None,

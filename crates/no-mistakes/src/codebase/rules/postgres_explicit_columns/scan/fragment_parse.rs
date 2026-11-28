@@ -52,7 +52,7 @@ pub(super) fn extract_fragment_stars(sql: &str, context_sql: Option<&str>) -> Ve
                 fragment_ast::collect_statements(&statements, &mut out);
                 return out;
             }
-        } else if matches!(token.token, Token::Comma) {
+        } else if matches!(token.token, Token::Comma) && (ctx_select || ctx_returning) {
             let wrapped = if ctx_returning {
                 format!("DELETE FROM {SYNTHETIC_TARGET} RETURNING 1 {sql}")
             } else {
