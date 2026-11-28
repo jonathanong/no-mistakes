@@ -428,9 +428,10 @@ path is then `enclosing → local → export`.
 The enclosing name is the nearest function, or `<module>` at file scope. A Go
 method `func (s *Server) load` uses `load`. The `{` of a brace header must be
 on the header line. Python uses indentation. Ruby and Elixir use
-`def`/`fun`/`end` and `for`/`while`/`do`/`end`. `else`, `elsif`, `elseif`, and
-`elif` do not open a block, so a nested `if`/`else`/`end` stays inside the loop
-and the loop closes on its own `end`. `each` is a loop when the line also has
+`def`/`fun`/`end` and `for`/`while`/`do`/`end`. `else`, `elsif`, `elseif`,
+`elif`, and a postfix `if` or `unless` do not open a block. `begin`/`end` and
+`value = if` do. A nested `if`/`else`/`end` stays inside the loop, and the loop
+closes on its own `end`. `each` is a loop when the line also has
 ` do`, ends with `do`, or contains `{`. `forEach` and `ForEach` are loops when
 the header line contains `{`. A member call on a receiver that is not a
 configured module (`item.fetch`, `$item->fetch`), a second hop, a duplicate

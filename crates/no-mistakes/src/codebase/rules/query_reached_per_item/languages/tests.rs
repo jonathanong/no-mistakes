@@ -299,6 +299,10 @@ fn else_branches_method_names_and_foreach_keep_their_frames() {
     assert!(ruby_findings.iter().all(|finding| finding.message.contains("for `example.store.read_row`")));
     let elixir = "defmodule Worker do\n  def load(items) do\n    for item <- items do\n      if item do\n        example.store.read_row(item)\n      else\n        example.store.read_row(item)\n      end\n    end\n    example.store.read_row(item)\n  end\nend\n";
     assert_eq!(project_ext(elixir, "ex").len(), 2);
+    let begin = "def load(items)\n  for item in items do\n    begin\n      item.fetch()\n    end\n    value = if item\n      item.load()\n    end\n    example.store.read_row(item) if item\n  end\n  example.store.read_row(item)\nend\n";
+    let begun = project_ext(begin, "rb");
+    assert_eq!(begun.len(), 3);
+    assert!(begun.iter().all(|finding| finding.message.contains("for ")));
     let method = "func (s *Server) load(items []string) {\n    for _, item := range items {\n        example.store.read_row(item)\n    }\n}\n";
     let go = project_ext(method, "go");
     assert!(go.iter().any(|finding| finding.message.contains("load → read_row")));

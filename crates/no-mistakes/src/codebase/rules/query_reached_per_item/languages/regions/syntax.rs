@@ -51,19 +51,34 @@ pub(super) fn block_header(line: &str) -> Option<Header> {
 }
 
 pub(super) fn opener_count(line: &str) -> usize {
-    let mut primary = 0usize;
+    let mut primary = conditional_openers(line);
     let mut dos = 0usize;
     for word in words(line) {
         match word {
             "do" => dos += 1,
-            "defmodule" | "if" | "class" | "module" | "case" | "cond" | "fn" | "unless" | "def"
-            | "fun" | "for" | "while" | "each" => {
-                primary += 1
-            }
+            "defmodule" | "class" | "module" | "case" | "cond" | "fn" | "begin" | "def" | "fun"
+            | "for" | "while" | "each" => primary += 1,
             _ => {}
         }
     }
     if primary > 0 { primary } else { dos }
+}
+
+fn conditional_openers(line: &str) -> usize {
+    let head = |text: &str| {
+        ["if", "unless"].iter().any(|word| {
+            text.trim_start().strip_prefix(*word).is_some_and(|rest| {
+                rest.chars().next().is_none_or(|ch| !ch.is_ascii_alphanumeric() && ch != '_')
+            })
+        })
+    };
+    if head(line) {
+        1
+    } else {
+        line.rfind('=')
+            .is_some_and(|eq| !line[..eq].ends_with(['=', '!', '<', '>']) && head(&line[eq + 1..]))
+            .into()
+    }
 }
 
 pub(super) fn end_count(line: &str) -> usize {
@@ -87,20 +102,12 @@ pub(super) fn calls(line: &str) -> Vec<String> {
 }
 
 pub(crate) fn split_separator(callee: &str) -> Option<(&str, &str)> {
-    let bytes = callee.as_bytes();
     let mut best = None;
-    let mut index = 0;
-    while index < bytes.len() {
-        if bytes[index] == b'.' {
+    for (index, _) in callee.char_indices() {
+        if callee[index..].starts_with('.') {
             best = Some((index, 1));
-            index += 1;
-        } else if index + 1 < bytes.len()
-            && (bytes[index..index + 2] == *b"::" || bytes[index..index + 2] == *b"->")
-        {
+        } else if callee[index..].starts_with("::") || callee[index..].starts_with("->") {
             best = Some((index, 2));
-            index += 2;
-        } else {
-            index += 1;
         }
     }
     let (at, len) = best?;
@@ -108,21 +115,16 @@ pub(crate) fn split_separator(callee: &str) -> Option<(&str, &str)> {
 }
 
 fn construct_label(trimmed: &str) -> &'static str {
-    if first_word(trimmed) == "while" {
-        "while"
-    } else if first_word(trimmed) == "foreach" {
-        "foreach"
-    } else if each_line(trimmed) {
-        "each"
-    } else {
-        "for"
+    match first_word(trimmed) {
+        "while" => "while",
+        "foreach" => "foreach",
+        _ if each_line(trimmed) => "each",
+        _ => "for",
     }
 }
 
 fn each_line(trimmed: &str) -> bool {
-    words(trimmed)
-        .iter()
-        .any(|word| *word == "each" || word.eq_ignore_ascii_case("foreach"))
+    words(trimmed).iter().any(|word| *word == "each" || word.eq_ignore_ascii_case("foreach"))
         && (trimmed.contains(" do") || trimmed.contains('{'))
 }
 
