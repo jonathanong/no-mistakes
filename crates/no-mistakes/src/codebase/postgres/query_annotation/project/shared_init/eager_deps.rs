@@ -1,4 +1,5 @@
 use super::File;
+use crate::codebase::dependencies::extract::ImportedBindingKind;
 use crate::codebase::postgres::query_annotation::evaluate::run::preload::collect_top_level_steps_names;
 use crate::codebase::postgres::query_annotation::module_ids::{ModuleId, ModuleIds};
 use crate::codebase::postgres::query_annotation::Expr;
@@ -26,21 +27,59 @@ pub(super) fn for_module(
     for name in names {
         let binding = &file.module.ts.imported_bindings[file.module.imports[name]];
         if let Some(target) = file.module.target(&binding.specifier, path, resolve) {
-            let mut visiting = FxHashSet::default();
-            collect_export_targets(
-                files,
-                ids,
-                target,
-                &binding.imported,
-                resolve,
-                &mut visiting,
-                &mut deps,
-            );
+            if binding.kind == ImportedBindingKind::Namespace {
+                let mut visiting_ns = FxHashSet::default();
+                collect_namespace_targets(files, ids, target, resolve, &mut visiting_ns, &mut deps);
+            } else {
+                let mut visiting = FxHashSet::default();
+                collect_export_targets(
+                    files,
+                    ids,
+                    target,
+                    &binding.imported,
+                    resolve,
+                    &mut visiting,
+                    &mut deps,
+                );
+            }
         }
     }
     deps.sort_by(|left, right| ids.path(*left).cmp(ids.path(*right)));
     deps.dedup();
     deps
+}
+
+fn collect_namespace_targets<'a>(
+    files: &'a FxHashMap<PathBuf, File<'_>>,
+    ids: &ModuleIds,
+    path: &'a Path,
+    resolve: &impl Fn(&str, &Path) -> Option<PathBuf>,
+    visiting: &mut FxHashSet<&'a Path>,
+    deps: &mut Vec<ModuleId>,
+) {
+    if !visiting.insert(path) {
+        return;
+    }
+    let Some(file) = files.get(path) else {
+        return;
+    };
+    for binding in &file.module.ts.exported_bindings {
+        let mut export_visiting = FxHashSet::default();
+        collect_export_targets(
+            files,
+            ids,
+            path,
+            &binding.exported,
+            resolve,
+            &mut export_visiting,
+            deps,
+        );
+    }
+    for specifier in &file.module.ts.star_reexport_specifiers {
+        if let Some(target) = file.module.target(specifier, path, resolve) {
+            collect_namespace_targets(files, ids, target, resolve, visiting, deps);
+        }
+    }
 }
 
 fn collect_export_targets<'a>(

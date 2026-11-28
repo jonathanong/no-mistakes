@@ -53,8 +53,10 @@ pub(super) fn evaluate(
                 );
                 let shared = shared_status.shared();
                 let mut per_file = Vec::with_capacity(roots_len);
-                if let (Some(seed_index), Some(shared_cache)) = (shared_status.seed_root(), &shared)
-                {
+                for _ in 0..2 {
+                    let Some(seed_index) = shared_status.next_seed_root(&roots) else {
+                        break;
+                    };
                     let seed_path = roots.remove(seed_index);
                     let events = run_root(
                         &files,
@@ -66,20 +68,6 @@ pub(super) fn evaluate(
                         &seed_path,
                     );
                     per_file.push((seed_path, events));
-                    if !roots.is_empty() && shared_cache.entries.len() < shared_cache.eligible.len()
-                    {
-                        let next_seed = roots.remove(0);
-                        let events = run_root(
-                            &files,
-                            resolve,
-                            untrusted_array_intrinsics,
-                            &shared,
-                            &failed_sources,
-                            &observer,
-                            &next_seed,
-                        );
-                        per_file.push((next_seed, events));
-                    }
                 }
                 per_file.par_extend(root_tasks(roots).map(|path| {
                     let events = run_root(

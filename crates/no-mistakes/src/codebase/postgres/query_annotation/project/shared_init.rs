@@ -1,4 +1,5 @@
 use super::super::evaluate::module_cache::shared::SharedInit;
+use super::super::module_ids::ModuleId;
 use super::File;
 use crate::codebase::check_facts::sql_source_prerequisites::FailedSqlSources;
 use crate::diagnostics::{InvocationObserver, TimingKind};
@@ -6,17 +7,19 @@ use crate::fx::{FxHashMap, FxHashSet};
 use dashmap::DashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::time::Duration;
 
 mod candidates;
+mod diagnostics;
 mod eager_deps;
 pub(in crate::codebase::postgres::query_annotation) mod executor_scan;
+
+pub(super) use diagnostics::record;
 
 pub(super) enum SharedInitStatus {
     Enabled {
         shared: Arc<SharedInit>,
         candidates: usize,
-        seed_root: Option<usize>,
+        root_reachable: FxHashMap<PathBuf, Vec<ModuleId>>,
     },
     Disabled {
         reason: &'static str,
@@ -31,11 +34,32 @@ impl SharedInitStatus {
         }
     }
 
-    pub(super) fn seed_root(&self) -> Option<usize> {
-        match self {
-            Self::Enabled { seed_root, .. } => *seed_root,
-            Self::Disabled { .. } => None,
+    pub(super) fn next_seed_root(&self, remaining: &[PathBuf]) -> Option<usize> {
+        let Self::Enabled {
+            shared,
+            root_reachable,
+            ..
+        } = self
+        else {
+            return None;
+        };
+        if shared.entries.len() >= shared.eligible.len() {
+            return None;
         }
+        remaining
+            .iter()
+            .enumerate()
+            .map(|(index, path)| {
+                let count = root_reachable.get(path).map_or(0, |ids| {
+                    ids.iter()
+                        .filter(|id| !shared.entries.contains_key(id))
+                        .count()
+                });
+                (index, count)
+            })
+            .filter(|(_, count)| *count > 0)
+            .max_by(|(i1, c1), (i2, c2)| c1.cmp(c2).then_with(|| i2.cmp(i1)))
+            .map(|(index, _)| index)
     }
 }
 
@@ -96,22 +120,20 @@ pub(super) fn build(
                 uncacheable.insert(*id);
             }
         }
-        let seed_root = if eligible.is_empty() {
-            None
+        let root_reachable = if eligible.is_empty() {
+            FxHashMap::default()
         } else {
-            graph
-                .root_reachable
+            roots
                 .iter()
-                .enumerate()
-                .map(|(index, reachable)| {
-                    (
-                        index,
-                        reachable.iter().filter(|id| eligible.contains(id)).count(),
-                    )
+                .zip(graph.root_reachable)
+                .filter_map(|(path, reachable)| {
+                    let covered: Vec<ModuleId> = reachable
+                        .into_iter()
+                        .filter(|id| eligible.contains(id))
+                        .collect();
+                    (!covered.is_empty()).then(|| (path.clone(), covered))
                 })
-                .filter(|(_, count)| *count > 0)
-                .max_by(|(i1, c1), (i2, c2)| c1.cmp(c2).then_with(|| i2.cmp(i1)))
-                .map(|(index, _)| index)
+                .collect()
         };
         let direct_deps = eligible
             .iter()
@@ -126,9 +148,9 @@ pub(super) fn build(
             direct_deps,
             entries: DashMap::new(),
         });
-        (shared, seed_root)
+        (shared, root_reachable)
     };
-    let (shared, seed_root) = match observer {
+    let (shared, root_reachable) = match observer {
         Some(obs) => obs.trace(
             "postgres.annotation.shared_init.build",
             TimingKind::Parallel,
@@ -139,52 +161,11 @@ pub(super) fn build(
     SharedInitStatus::Enabled {
         shared,
         candidates: total_candidates,
-        seed_root,
+        root_reachable,
     }
 }
 
-pub(super) fn record(
-    observer: &InvocationObserver,
-    profile_index: usize,
-    roots_len: usize,
-    status: &SharedInitStatus,
-) {
-    if !observer.verbose() {
-        return;
-    }
-    match status {
-        SharedInitStatus::Disabled { reason } => {
-            observer.increment("postgres.annotation.shared_init.disabled", 1);
-            observer.increment("postgres.annotation.shared_init.cache_hits", 0);
-            observer.increment("postgres.annotation.shared_init.cache_misses", 0);
-            observer.increment("postgres.annotation.shared_init.builds", 0);
-            observer.record_duration(
-                "postgres.annotation.shared_init.build",
-                Duration::ZERO,
-                TimingKind::Parallel,
-            );
-            observer.record_note(format!(
-                "postgres.annotation.shared_init.profile[{profile_index}]: disabled (reason={reason}, roots={roots_len})"
-            ));
-        }
-        SharedInitStatus::Enabled {
-            shared, candidates, ..
-        } => {
-            let cached = shared.cached_count();
-            let misses = candidates.saturating_sub(cached);
-            observer.increment("postgres.annotation.shared_init.disabled", 0);
-            observer.increment("postgres.annotation.shared_init.cache_hits", 0);
-            observer.increment(
-                "postgres.annotation.shared_init.cache_misses",
-                misses as u64,
-            );
-            observer.increment("postgres.annotation.shared_init.builds", cached as u64);
-            observer.record_note(format!(
-                "postgres.annotation.shared_init.profile[{profile_index}]: enabled (candidates={candidates}, cached={cached}, roots={roots_len})"
-            ));
-        }
-    }
-}
-
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod seed_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;

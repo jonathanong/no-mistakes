@@ -70,7 +70,7 @@ impl<F: Fn(&str, &Path) -> Option<PathBuf>> Evaluator<'_, F> {
                     if supported && !super::calls::scopes::inert(test) {
                         self.poison_guard_writes(test, *env);
                         if self.next_builder == 0 {
-                            self.untrusted_array_intrinsics = true;
+                            self.mark_untrusted_array_intrinsics();
                         } else {
                             self.invalidate_live_builders();
                         }

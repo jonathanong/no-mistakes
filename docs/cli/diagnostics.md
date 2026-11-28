@@ -320,9 +320,11 @@ least one statically shared imported module build a per-profile pure module
 cache (`postgres.annotation.shared_init.builds`,
 `postgres.annotation.shared_init.cache_hits`,
 `postgres.annotation.shared_init.cache_misses`, and
-`postgres.annotation.shared_init.build`). Pure imported modules are initialized
-once and remapped on demand into each root that imports them; impure or cyclic
-modules stay isolated per root. `postgres.annotation.shared_init.disabled`
+`postgres.annotation.shared_init.build`). Pure imported modules are
+captured once a root initializes them, then remapped on demand into each root
+that imports them. Concurrent roots or a deferred dependency can initialize a
+module again before its capture is stored. Impure or cyclic modules stay
+isolated per root. `postgres.annotation.shared_init.disabled`
 counts profiles that skip this cache, and `--verbose-timings` emits one
 `[note] postgres.annotation.shared_init.profile[N]: ...` line per profile with
 either `enabled` counts or `disabled (reason=...)` (`fewer_than_two_roots`,

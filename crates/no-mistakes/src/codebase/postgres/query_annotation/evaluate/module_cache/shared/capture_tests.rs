@@ -99,3 +99,42 @@ fn mismatched_mode_stays_pure_until_initialization_reads_the_flag() {
         Some(SharedEntry::Impure)
     ));
 }
+
+#[test]
+fn guard_branch_without_builders_records_untrusted_intrinsic_write() {
+    use crate::codebase::postgres::query_annotation::{Expr, Step};
+
+    let target = PathBuf::from("target.mts");
+    let facts = QueryAnnotationFileFacts {
+        roots: vec![Step::Branch(
+            Expr::Opaque(Vec::new()),
+            vec![Step::Return(Expr::Boolean(false))],
+            Vec::new(),
+        )],
+        ..Default::default()
+    };
+    let (ids, files) = empty_files(std::slice::from_ref(&target), &facts);
+    let target_id = ids.id(&target);
+    let resolve = |_: &str, _: &std::path::Path| None;
+    let shared = Arc::new(SharedInit {
+        untrusted_array_intrinsics: true,
+        eligible: [target_id].into_iter().collect(),
+        direct_deps: FxHashMap::default(),
+        entries: dashmap::DashMap::new(),
+    });
+    let mut eval = evaluator::new(&files, resolve, true);
+    eval.modules.shared = Some(Arc::clone(&shared));
+    assert_eq!(eval.next_builder, 0);
+    let mut env = eval.environment_scope(Scope::default());
+    let guard = eval.begin_shared_capture(target_id, env).unwrap();
+    eval.steps(&facts.roots, &target, &mut env, 16, true);
+    eval.finish_shared_capture(target_id, env, guard);
+    assert!(
+        eval.modules.untrusted_intrinsic_writes > 0,
+        "next_builder == 0 guard branch must increment untrusted_intrinsic_writes"
+    );
+    assert!(matches!(
+        shared.entries.get(&target_id).as_deref(),
+        Some(SharedEntry::Impure)
+    ));
+}

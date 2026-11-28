@@ -247,7 +247,7 @@ fn build_handles_missing_module_ids_cyclic_candidates_and_non_verbose_notes() {
             reason: "no_shared_imports"
         }
     ));
-    assert_eq!(status.seed_root(), None);
+    assert_eq!(status.next_seed_root(&[]), None);
 
     let ids = Arc::new(ModuleIds::new([
         r1.clone(),
@@ -262,15 +262,13 @@ fn build_handles_missing_module_ids_cyclic_candidates_and_non_verbose_notes() {
     files.insert(b.clone(), make_file(&facts, vec!["./a.mts"], &ids));
     let targets = FxHashMap::from_iter([("./a.mts", a.clone()), ("./b.mts", b.clone())]);
     let resolve = |specifier: &str, _: &std::path::Path| targets.get(specifier).cloned();
-    let status = super::build(&files, &[r1, r2], &resolve, false, &empty_failures, None);
+    let roots = [r1, r2];
+    let status = super::build(&files, &roots, &resolve, false, &empty_failures, None);
     assert!(matches!(
         status,
-        super::SharedInitStatus::Enabled {
-            candidates: 2,
-            seed_root: None,
-            ..
-        }
+        super::SharedInitStatus::Enabled { candidates: 2, .. }
     ));
+    assert_eq!(status.next_seed_root(&roots), None);
     assert_eq!(status.shared().unwrap().cached_count(), 0);
     let quiet = crate::diagnostics::InvocationObserver::new(false);
     quiet.record_note("ignored".into());
