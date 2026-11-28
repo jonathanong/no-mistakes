@@ -1,0 +1,45 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "tsconfig-alias-folder-mapping": {
+    "exitCode": 2,
+    "stderr": "error: tsconfig-alias-folder-mapping.yml:6: invalid options for rule `tsconfig-alias-folder-mapping` at options.checkExists: invalid type: integer `1`, expected a boolean\n"
+  },
+  "tsconfig-file-coverage": {
+    "exitCode": 2,
+    "stderr": "error: tsconfig-file-coverage.yml:6: invalid options for rule `tsconfig-file-coverage` at options.requiredBasename: invalid type: integer `1`, expected a string\n"
+  },
+  "tsconfig-gate-coverage": {
+    "exitCode": 2,
+    "stderr": "error: tsconfig-gate-coverage.yml:6: invalid options for rule `tsconfig-gate-coverage` at options.allowProjects: invalid type: integer `1`, expected a map\n"
+  },
+  "valid": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "vitest-ci-path-coverage": {
+    "exitCode": 2,
+    "stderr": "error: vitest-ci-path-coverage.yml:6: invalid options for rule `vitest-ci-path-coverage` at options.includeVitestProjectGlobs: invalid type: integer `1`, expected a boolean\n"
+  },
+  "vitest-default-excludes": {
+    "exitCode": 2,
+    "stderr": "error: vitest-default-excludes.yml:6: invalid options for rule `vitest-default-excludes` at options.files: invalid type: integer `1`, expected a sequence\n"
+  },
+  "vitest-project-mapping": {
+    "exitCode": 2,
+    "stderr": "error: vitest-project-mapping.yml:6: invalid options for rule `vitest-project-mapping` at options.explicitProjectsOnly: invalid type: integer `1`, expected a boolean\n"
+  },
+  "vitest-test-correspondence": {
+    "exitCode": 2,
+    "stderr": "error: vitest-test-correspondence.yml:6: invalid options for rule `vitest-test-correspondence` at options.direction: unknown variant `sideways`, expected one of `both`, `test-to-source`, `source-to-test`\n"
+  }
+}

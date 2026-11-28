@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: vitest-project-mapping
+    scope: repository
+    options:
+      explicitProjectsOnly: 1

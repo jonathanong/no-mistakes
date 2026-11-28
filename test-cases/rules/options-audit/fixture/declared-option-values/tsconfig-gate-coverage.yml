@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository
+    options:
+      allowProjects: 1
