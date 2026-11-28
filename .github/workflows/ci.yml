@@ -2710,9 +2710,11 @@ jobs:
           SHARD_RESULT: ${{ needs.rust-coverage-shards.result }}
           INTEGRATION_SHARD_RESULT: ${{ needs.rust-coverage-shards-integration.result }}
         run: |
-          test "$BUILD_RESULT" = success && test "$SHARD_RESULT" = success
+          test "$BUILD_RESULT" = success
+          test "$SHARD_RESULT" = success
           if [ "$EVENT_NAME" = pull_request ]; then
-            test "$INTEGRATION_BUILD_RESULT" = success && test "$INTEGRATION_SHARD_RESULT" = success
+            test "$INTEGRATION_BUILD_RESULT" = success
+            test "$INTEGRATION_SHARD_RESULT" = success
           fi
   docs-tests:
     name: Docs tests

@@ -34,7 +34,47 @@ test("JavaScript coverage rejects any unsuccessful shard result", () => {
     const child = spawnSync("bash", ["-eu", "-c", script], {
       env: { ...process.env, SHARDS: fixture.result },
     });
-    assert.equal(child.status, fixture.exit, fixture.result);
+  assert.equal(child.status, fixture.exit, fixture.result);
+  }
+});
+
+test("Rust tests and coverage rejects any unsuccessful producer or shard on push and PR", () => {
+  const step = job("tests").split(
+    "      - name: Require successful Rust producer and all test shards\n",
+  )[1];
+  assert.ok(step);
+  const script = step
+    .split("        run: |\n")[1]
+    .replace(/^          /gm, "");
+  const passed = {
+    BUILD_RESULT: "success",
+    SHARD_RESULT: "success",
+    INTEGRATION_BUILD_RESULT: "success",
+    INTEGRATION_SHARD_RESULT: "success",
+  };
+  for (const eventName of ["push", "pull_request"]) {
+    for (const dependency of Object.keys(passed)) {
+      for (const fixture of results) {
+        const child = spawnSync("bash", ["-e", "-c", script], {
+          env: {
+            ...process.env,
+            EVENT_NAME: eventName,
+            ...passed,
+            [dependency]: fixture.result,
+          },
+        });
+        const required =
+          eventName === "pull_request" ||
+          dependency === "BUILD_RESULT" ||
+          dependency === "SHARD_RESULT";
+        const expected = required ? fixture.exit : 0;
+        assert.equal(
+          child.status,
+          expected,
+          `event=${eventName}, ${dependency}: ${fixture.result}`,
+        );
+      }
+    }
   }
 });
 

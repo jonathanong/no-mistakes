@@ -160,8 +160,7 @@ still checks dependency, feature, and profile fingerprints normally. This makes
 unchanged native and archived Rust test artifacts reusable across fresh checkouts
 without hiding source changes. Dependency caches remain reusable when Rust source
 changes. A cold or changed native library still requires compilation. All Rust target cache saves run on main only; pull requests restore those
-dependencies and workspace snapshots, then share their newly built outputs
-through artifacts without publishing another target cache.
+dependencies and workspace snapshots without publishing another target cache. Other multi-job pipelines share their newly built outputs through artifacts, while fresh Windows and macOS Native API PR builds use their binaries directly on the build runner and skip `Upload native-runtime`.
 
 The Linux Clippy jobs share a dependency-only cache for check metadata.
 Only the all-feature Clippy job saves that cache on main. Both Clippy commands
