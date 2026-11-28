@@ -6,18 +6,18 @@ const { workflowJob } = require("./workflow-contract.cjs");
 const source = readFileSync(path.join(__dirname, "../workflows/ci.yml"), "utf8");
 const producers = [
   "linux-runtime",
-  "native-build",
   "native-test-build",
   "standalone-build",
   "rust-coverage-build",
+  "rust-coverage-build-integration",
 ];
 const consumers = {
   "linux-api-tests": "linux-runtime",
   "ast-analysis": "linux-runtime",
   "native-rust-tests": "native-test-build",
-  "native-api-tests": "native-build",
   "standalone-shards": "standalone-build",
   "rust-coverage-shards": "rust-coverage-build",
+  "rust-coverage-shards-integration": "rust-coverage-build-integration",
   tests: "rust-coverage-build",
 };
 const steps = (body) => body.split("      - name: ").slice(1);
@@ -106,8 +106,15 @@ test("warm validation installs LLVM tools before retaining the profile pooling t
   assert.match(body, /node --test[^\n]*rust-profile-pooling.test.cjs/);
 });
 
-test("full macOS tests run on their builders and download only validated reused artifacts", () => {
+test("full native API and macOS Rust tests run on their builders and download only validated reused artifacts", () => {
   for (const [name, build, upload, download, run] of [
+    [
+      "native-api-tests",
+      "Build native CLI and N-API addon",
+      "Upload native-runtime",
+      "Download native-runtime",
+      "Run real N-API API test",
+    ],
     [
       "native-api-tests-macos",
       "Build native CLI and N-API addon",

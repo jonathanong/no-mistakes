@@ -77,7 +77,7 @@ test("every pnpm Node setup in CI has a bounded, fatal-on-exhaustion retry", () 
       index += 2;
     }
   }
-  assert.equal(count, 20, "CI must retain all pnpm/setup attempts across its job definitions");
+  assert.equal(count, 18, "CI must retain all pnpm/setup attempts across its job definitions");
   assert.ok(
     [...matrixOperatingSystems].some((os) => os.startsWith("windows")),
     "pnpm setup matrix must include Windows",
@@ -89,23 +89,25 @@ test("every pnpm Node setup in CI has a bounded, fatal-on-exhaustion retry", () 
 });
 
 test("Rust coverage shard artifact download retries within a bounded fatal sequence", () => {
-  const job = workflow.jobs["rust-coverage-shards"];
-  assert.ok(job, "rust-coverage-shards job must exist");
-  const index = job.steps.findIndex(
-    (step) =>
-      step.uses?.startsWith("actions/download-artifact@") &&
-      step.with?.name?.startsWith("rust-coverage-build"),
-  );
-  assert.notEqual(index, -1, "coverage build artifact download must exist");
-  assertRetryPair(job, index, {
-    id: "coverage-download",
-    firstName: "Download instrumented Rust tests (attempt 1 of 2)",
-    condition: downloadCondition,
-    retryName: "Retry instrumented Rust test download",
-    action: "actions/download-artifact@",
-    firstTimeout: 4,
-    retryTimeout: 4,
-  });
-  assert.equal(job.steps[index + 3].name, "Start isolated PostgreSQL for catalog fixtures");
-  assert.equal(job.steps[index + 3].if, undefined);
+  for (const name of ["rust-coverage-shards", "rust-coverage-shards-integration"]) {
+    const job = workflow.jobs[name];
+    assert.ok(job, `${name} job must exist`);
+    const index = job.steps.findIndex(
+      (step) =>
+        step.uses?.startsWith("actions/download-artifact@") &&
+        step.with?.name?.startsWith("rust-coverage-build"),
+    );
+    assert.notEqual(index, -1, `${name}: coverage build artifact download must exist`);
+    assertRetryPair(job, index, {
+      id: "coverage-download",
+      firstName: "Download instrumented Rust tests (attempt 1 of 2)",
+      condition: downloadCondition,
+      retryName: "Retry instrumented Rust test download",
+      action: "actions/download-artifact@",
+      firstTimeout: 4,
+      retryTimeout: 4,
+    });
+    assert.equal(job.steps[index + 3].name, "Start isolated PostgreSQL for catalog fixtures");
+    assert.equal(job.steps[index + 3].if, undefined);
+  }
 });

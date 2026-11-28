@@ -57,7 +57,7 @@ test("current native API budgets fit completed Windows setup and Rust work", () 
   assert.ok(api <= 600, "keep the Windows API phase bounded to ten minutes");
   assert.equal(stepBudgetSeconds(job, "Run real N-API API test", "macOS"), 600);
   assert.ok(jobBudgetSeconds(job) >= api + observed.postJobReserveSeconds);
-  assert.ok(jobBudgetSeconds(job) <= 3000);
+  assert.ok(jobBudgetSeconds(job) <= 3900);
   assert.match(job, /node \.github\/scripts\/report-native-api-tests\.cjs/);
   assert.match(job, /Upload real N-API test durations/);
 });
@@ -84,6 +84,6 @@ test("Windows API deadline includes startup and teardown for the expanded suite"
   assert.ok(api <= 600, "retain a bounded ten-minute API phase");
   assert.equal(stepBudgetSeconds(job, "Run real N-API API test", "macOS"), 600);
   assert.ok(jobBudgetSeconds(job) >= api + observed.postJobReserveSeconds);
-  assert.ok(jobBudgetSeconds(job) <= 3000);
+  assert.ok(jobBudgetSeconds(job) <= 3900);
   assert.match(job, /report-native-api-tests\.cjs target\/native-api-tests\.json target/);
 });

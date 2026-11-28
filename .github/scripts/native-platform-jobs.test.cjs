@@ -6,15 +6,16 @@ const { workflowJob } = require("./workflow-contract.cjs");
 const source = readFileSync(path.resolve(__dirname, "../workflows/ci.yml"), "utf8");
 const job = (name) => workflowJob(source, name);
 const stepNames = (body) => [...body.matchAll(/^      - name: (.+)$/gm)].map((match) => match[1]);
-const families = ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"];
+const families = ["native-test-build", "native-rust-tests", "native-api-tests"];
 
 test("the macOS jobs retain the Windows build and test phases on parallel runners", () => {
-  for (const [build, run] of [
-    ["native-build", "native-api-tests"],
-    ["native-test-build", "native-rust-tests"],
+  for (const [windowsJobs, run] of [
+    [["native-api-tests"], "native-api-tests"],
+    [["native-test-build", "native-rust-tests"], "native-rust-tests"],
   ]) {
-    const windows = [job(build), job(run)];
-    assert.ok(windows[1].includes(`    needs: [changes, ${build}]`));
+    const windows = windowsJobs.map(job);
+    if (windowsJobs.length === 1) assert.match(windows[0], /^    needs: changes$/m);
+    else assert.ok(windows[1].includes(`    needs: [changes, ${windowsJobs[0]}]`));
     const macos = job(`${run}-macos`);
     assert.match(macos, /^    needs: changes$/m);
     const expected = new Set(
@@ -22,6 +23,7 @@ test("the macOS jobs retain the Windows build and test phases on parallel runner
         .flatMap(stepNames)
         .filter((name) => name !== "Exclude workspace from Microsoft Defender"),
     );
+    if (run === "native-rust-tests") expected.add("Test native build diagnostics");
 
     const names = stepNames(macos);
     assert.equal(names.length, expected.size, run);

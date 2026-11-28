@@ -108,7 +108,6 @@ test("required names and every full test family remain in the aggregate", () => 
     "packages",
     "javascript-coverage",
     "linux-api-tests",
-    "native-build",
     "native-test-build",
     "native-rust-tests",
     "native-rust-tests-macos",
@@ -123,10 +122,11 @@ test("required names and every full test family remain in the aggregate", () => 
     assert.ok(job("tests-gate").includes(name), name);
   for (const name of [
     "rust-coverage-build",
+    "rust-coverage-build-integration",
     "rust-coverage-shards",
+    "rust-coverage-shards-integration",
     "standalone-build",
     "standalone-shards",
-    "native-build",
     "native-test-build",
     "native-rust-tests",
     "native-rust-tests-macos",
@@ -165,7 +165,7 @@ test("documentation tests cannot delay coverage archive consumers", () => {
 });
 
 test("native workspace caches preserve content-verified compiler inputs as one artifact", () => {
-  for (const id of ["native-build", "native-api-tests-macos"]) {
+  for (const id of ["native-api-tests", "native-api-tests-macos"]) {
     const body = job(id);
     assert.match(body, /shared-key: cargo-registry-v1/);
     assert.match(body, /cache-targets: false/);
@@ -181,11 +181,7 @@ test("native workspace caches preserve content-verified compiler inputs as one a
     assert.ok(fallback.includes("env.RUSTFLAGS"));
     assert.ok(fallback.includes("hashFiles('Cargo.toml'"));
     const restore = body.indexOf("cargo-cache-inputs.cjs restore");
-    const compile = body.indexOf(
-      id === "native-build" || id === "native-api-tests-macos"
-        ? "node .github/scripts/build-native.cjs"
-        : "node .github/scripts/native-test-archive.cjs build",
-    );
+    const compile = body.indexOf("node .github/scripts/build-native.cjs");
     const capture = body.indexOf("cargo-cache-inputs.cjs capture");
     assert.ok(restore > 0 && restore < compile && compile < capture);
     assert.match(body, /steps\.native-workspace-cache\.outputs\.cache-hit/);

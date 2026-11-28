@@ -8,6 +8,14 @@
     "name": "compiled synthetic case 0 (1)"
   },
   {
+    "file": "packages/no-mistakes/scripts/real-napi-rules-api.test.js",
+    "name": "compiled synthetic rules case (0)"
+  },
+  {
+    "file": "packages/no-mistakes/scripts/real-napi-rules-api.test.js",
+    "name": "compiled synthetic rules case (1)"
+  },
+  {
     "file": "packages/no-mistakes/scripts/unused-disable-directives-api.test.js",
     "name": "compiled synthetic case 1 (0)"
   },

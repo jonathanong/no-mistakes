@@ -16,7 +16,7 @@ const paths = (step) =>
     .join("\n");
 const producers = [
   "linux-runtime",
-  "native-build",
+  "native-api-tests",
   "native-api-tests-macos",
   "standalone-build",
   "rust-coverage-build",
@@ -106,15 +106,18 @@ test("dependency caches are main-only, dependency-only and shared across compati
   assert.match(job("quality-rust"), /flags: -D warnings --cfg coverage/);
   assert.match(job("docs-tests"), /shared-key: rust-doctests-v1/);
   for (const name of [
-    "native-build",
+    "native-api-tests",
     "native-api-tests-macos",
     "rust-coverage-build",
+    "rust-coverage-build-integration",
     "standalone-build",
   ]) {
-    assert.match(job(name), /shared-key: cargo-registry-v1-\$\{\{ hashFiles\('Cargo.lock'\) \}\}/);
-    assert.match(job(name), /add-rust-environment-hash-key: false/);
-    assert.match(job(name), /cache-bin: false/);
-    assert.match(job(name), /cache-targets: false/);
+    const registry = jobs[name].steps.find(({ name }) => name === "Cache Cargo registry sources");
+    assert.ok(registry, name);
+    assert.equal(registry.with["shared-key"], "cargo-registry-v1-${{ hashFiles('Cargo.lock') }}");
+    assert.equal(registry.with["add-rust-environment-hash-key"], false);
+    assert.equal(registry.with["cache-bin"], false);
+    assert.equal(registry.with["cache-targets"], false);
   }
   assert.match(workflow.split("\njobs:")[0], /CARGO_INCREMENTAL: "0"/);
 });
@@ -136,7 +139,7 @@ test("pnpm stores restore on PRs but save only on main", () => {
     /if: .*steps\.pnpm-setup\.outcome == 'failure'/.test(step),
   );
   const firsts = setups.filter((step) => !retries.includes(step));
-  assert.equal(setups.length, 20);
+  assert.equal(setups.length, 18);
   assert.equal(firsts.length, retries.length);
   for (const step of firsts) {
     assert.match(step, /cache: true/);

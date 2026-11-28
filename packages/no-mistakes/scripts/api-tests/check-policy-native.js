@@ -1,5 +1,4 @@
 require("../workflow-activity-types-api.test.js");
-require("../github-actions-download-integrity-api.test.js");
 require("../workflow-topology-policy-bans-api.test.js");
 require("../workflow-topology-reusable-concurrency-api.test.js");
 require("../script-input-policy-api.test.js");

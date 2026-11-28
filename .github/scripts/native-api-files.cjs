@@ -1,16 +1,8 @@
-const platformFiles = [
-  "real-napi-api",
-  "unused-disable-directives-api",
-  "sql-verdicts-api",
-  "postgres-procedural-occurrence-api",
-  "postgres-procedural-loop-coverage-api",
-  "guarded-array-receiver-api",
-  "dependabot-cooldown-policy-api",
-  "forbidden-dependencies-globs-api",
-].map((name) => `packages/no-mistakes/scripts/${name}.test.js`);
+const platformFiles = ["packages/no-mistakes/scripts/real-napi-api.test.js"];
 
 const linuxFiles = [
   "packages/no-mistakes/scripts/real-napi-api.test.js",
+  "packages/no-mistakes/scripts/real-napi-rules-api.test.js",
   "packages/no-mistakes/scripts/unused-disable-directives-api.test.js",
   "packages/no-mistakes/scripts/sql-verdicts-api.test.js",
   "packages/no-mistakes/scripts/foreign-receiver-declaration-order-api.test.js",

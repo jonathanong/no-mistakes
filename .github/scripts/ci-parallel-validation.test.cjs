@@ -23,7 +23,7 @@ test("native API timeout leaves startup and teardown room after the observed Win
   const seconds = stepBudgetSeconds(native, "Run real N-API API test", "Windows");
   assert.ok(seconds >= required, "native API step must include launcher/teardown reserve");
   assert.ok(seconds <= 600, "keep the correction bounded rather than removing its deadline");
-  assert.match(native, /\n    timeout-minutes: 20\n/);
+  assert.match(native, /\n    timeout-minutes: 65\n/);
   const entries = [
     ...native.matchAll(
       /- os: (windows-2025|macos-15)\n\s+target: [^\n]+\n\s+shard: (\d+)\n\s+total: (\d+)/g,
@@ -149,25 +149,34 @@ test("coverage compilation and execution shards have separate failure-aware jobs
   assert.equal(observed.stepConclusion, "failure");
   assert.equal(observed.failedRustTests, 0);
   const build = workflowJob("rust-coverage-build");
+  const buildIntegration = workflowJob("rust-coverage-build-integration");
   const shards = workflowJob("rust-coverage-shards");
+  const shardsIntegration = workflowJob("rust-coverage-shards-integration");
   assert.match(build, /rust-coverage-shards\.cjs archive/);
+  assert.match(buildIntegration, /rust-coverage-shards\.cjs archive/);
+  assert.match(buildIntegration, /COVERAGE_GROUP: integration/);
   assert.match(shards, /needs: rust-coverage-build/);
+  assert.match(shardsIntegration, /needs: rust-coverage-build-integration/);
   assert.match(shards, /fail-fast: false/);
-  const groups = `group: ${"${{"} fromJSON(github.event_name == 'pull_request' && '["lib","integration"]' || '["all"]') }}`;
-  assert.ok(build.includes(groups));
-  assert.ok(shards.includes(groups));
+  assert.match(shardsIntegration, /fail-fast: false/);
+  const groupExpr = `COVERAGE_GROUP: ${"${{"} github.event_name == 'pull_request' && 'lib' || 'all' }}`;
+  assert.ok(build.includes(groupExpr));
+  assert.ok(shards.includes(groupExpr));
   assert.match(shards, /shard: \[1, 2, 3, 4, 5, 6\]/);
+  assert.match(shardsIntegration, /shard: \[1, 2, 3, 4, 5, 6\]/);
   assert.match(workflowJob("tests"), /rust-coverage-shards\.cjs restore-split/);
   assert.match(shards, /rust-coverage-shards\.cjs shard/);
+  assert.match(shardsIntegration, /rust-coverage-shards\.cjs shard/);
   const step = stepBudgetSeconds(shards, "Run Rust tests for coverage");
   assert.equal(step, 480);
+  assert.equal(stepBudgetSeconds(shardsIntegration, "Run Rust tests for coverage"), 480);
   assert.ok(
     tests > step,
     "the historical serial suite is not evidence that each partition meets its deadline",
   );
   assert.match(
     workflowJob("tests"),
-    /needs: \[changes, rust-coverage-build, rust-coverage-shards\]/,
+    /needs: \[changes, rust-coverage-build, rust-coverage-build-integration, rust-coverage-shards, rust-coverage-shards-integration\]/,
   );
 });
 
@@ -361,7 +370,6 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
     "javascript-coverage",
     "linux-api-tests",
     "timeout-policy-browser-tests",
-    "native-build",
     "native-test-build",
     "native-rust-tests",
     "native-rust-tests-macos",
@@ -441,7 +449,7 @@ test("coverage and standalone producers retain content-verified workspace caches
 test("v2 workspace producers prefer matching manifests before compatible compiler fallbacks", () => {
   const producers = [
     "linux-runtime",
-    "native-build",
+    "native-api-tests",
     "native-api-tests-macos",
     "standalone-build",
     "rust-coverage-build",
@@ -478,7 +486,7 @@ test("v2 workspace producers prefer matching manifests before compatible compile
     workflowJob("linux-runtime"),
     /key: linux-runtime-workspace-v2-\$\{\{ matrix\.role \}\}/,
   );
-  for (const name of ["native-build", "native-api-tests-macos"]) {
+  for (const name of ["native-api-tests", "native-api-tests-macos"]) {
     const body = workflowJob(name);
     assert.match(body, /key: [^\n]*\$\{\{ matrix\.target \}\}/);
     assert.match(body, /shared-key: cargo-registry-v1/);
