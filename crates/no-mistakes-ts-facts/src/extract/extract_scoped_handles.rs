@@ -27,9 +27,7 @@ pub struct ScopedHandle {
 
 impl ScopedHandles {
     pub(super) fn leave_group(&mut self, scope: usize) {
-        if !self.bindings.is_empty() {
-            self.bindings.remove(&scope);
-        }
+        self.bindings.remove(&scope);
     }
 }
 
@@ -136,7 +134,10 @@ impl ImportCollector {
 
     pub(super) fn note_scoped_handle_use(&mut self, id: &IdentifierReference<'_>) {
         let facts = &self.value_flow.scoped_handles;
-        if facts.bindings.is_empty() || facts.receiver == Some(id.span.start) {
+        if self.namespace.type_depth > 0
+            || facts.bindings.is_empty()
+            || facts.receiver == Some(id.span.start)
+        {
             return;
         }
         let owner = self.current_function_id();

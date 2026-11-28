@@ -33,6 +33,7 @@ pub(super) struct FileEnv<'a> {
     pub(super) structural_params: FxHashSet<(usize, &'a str)>,
     pub(super) invalidated_locals: FxHashSet<(usize, &'a str)>,
     pub(super) written_members: FxHashSet<(usize, &'a str, Option<&'a str>)>,
+    pub(super) scoped_handle_calls: FxHashSet<(u32, u32)>,
 }
 
 impl FileEnv<'_> {
@@ -115,7 +116,12 @@ pub(super) fn classify_builtin_site(
             return builtins::global_static_call(name, method);
         }
     }
-    if let ValueExpression::Named { name, scope: Some(scope), .. } = receiver.as_ref() {
+    if let ValueExpression::Named {
+        name,
+        scope: Some(scope),
+        ..
+    } = receiver.as_ref()
+    {
         if env.structural_params.contains(&(*scope, name.as_str()))
             || env.has_member_write(*scope, name, method)
         {
@@ -129,7 +135,8 @@ pub(super) fn classify_builtin_site(
     if env.file_facts.builtin_receiver_calls.contains(&call.offset) {
         return Some(builtin);
     }
-    is_local_or_builtin_receiver(env, receiver, method, call.offset, tx_owner, depth).then_some(builtin)
+    is_local_or_builtin_receiver(env, receiver, method, call.offset, tx_owner, depth)
+        .then_some(builtin)
 }
 
 fn returned_or_typed_from_publisher(env: &FileEnv<'_>, site: &ResolvedCallSite) -> bool {
@@ -153,10 +160,14 @@ fn is_local_or_builtin_receiver(
         return false;
     }
     match expr {
-        ValueExpression::Named { name, scope: Some(scope), .. } => {
-            local::is_clean_scoped_local(env, *scope, name, method, call_offset, tx_owner, depth)
-        }
-        ValueExpression::Named { name, scope: None, .. } => {
+        ValueExpression::Named {
+            name,
+            scope: Some(scope),
+            ..
+        } => local::is_clean_scoped_local(env, *scope, name, method, call_offset, tx_owner, depth),
+        ValueExpression::Named {
+            name, scope: None, ..
+        } => {
             !env.imports.contains_key(name.as_str())
                 && builtins::GLOBAL_STATIC_OBJECTS.contains(&name.as_str())
         }
@@ -175,18 +186,13 @@ fn is_local_or_builtin_receiver(
                     || is_local_or_builtin_receiver(env, arm, method, call_offset, tx_owner, depth)
             })
         }
-        ValueExpression::Derived(parts) => !parts.iter().any(|p| expr_is_import(p, &env.imports)),
+        ValueExpression::Derived(parts) => {
+            !parts.iter().any(|p| local::expr_is_import(p, &env.imports))
+        }
         ValueExpression::Call(start, end) => {
             local::inner_call_is_clean(env, *start, *end, tx_owner, depth)
         }
         ValueExpression::Unknown => env.builtin_construct_offsets.contains(&call_offset),
         _ => false,
     }
-}
-
-fn expr_is_import(mut expr: &ValueExpression, imports: &FxHashMap<&str, &ImportedBinding>) -> bool {
-    while let ValueExpression::Member(inner, _) = expr {
-        expr = inner.as_ref();
-    }
-    matches!(expr, ValueExpression::Named { name, scope: None | Some(0), .. } if imports.contains_key(name.as_str()))
 }

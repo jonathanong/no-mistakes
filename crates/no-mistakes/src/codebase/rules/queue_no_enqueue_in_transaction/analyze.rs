@@ -80,15 +80,12 @@ pub(super) fn check_file(ctx: &Context<'_>, file: &Path, diagnostics: &mut Analy
         .collect();
     let boundaries =
         collect_boundaries(ctx, file, sites, &calls_by_key, &imports, flow, diagnostics);
-    super::scoped::check(
-        ctx,
-        sites,
-        flow,
-        &boundaries.handles,
-        &calls_by_key,
-        diagnostics,
-    );
     let tx_callbacks = &boundaries.callbacks;
+    let scoped_handle_calls = boundaries
+        .handles
+        .iter()
+        .flat_map(|handle| handle.method_calls.iter().copied())
+        .collect();
     let env = FileEnv {
         ctx,
         file,
@@ -148,7 +145,17 @@ pub(super) fn check_file(ctx: &Context<'_>, file: &Path, diagnostics: &mut Analy
         structural_params: structural_params(&flow.parameters),
         invalidated_locals: invalidated_locals(flow, &file_facts.callable_binding_declared_at),
         written_members: written_members(flow),
+        scoped_handle_calls,
     };
+    super::scoped::check(
+        &env,
+        sites,
+        flow,
+        &boundaries.handles,
+        &calls_by_key,
+        &sites_by_caller,
+        diagnostics,
+    );
     let mut walk = CallbackWalk {
         visited: tx_callbacks.iter().copied().map(|cb| (cb, cb)).collect(),
         worklist: tx_callbacks.iter().map(|&cb| (cb, cb)).collect(),
@@ -156,23 +163,11 @@ pub(super) fn check_file(ctx: &Context<'_>, file: &Path, diagnostics: &mut Analy
         diagnostics,
     };
     let mut cursors: FxHashMap<(CallableId, CallableId, u32, &str), usize> = FxHashMap::default();
-    while let Some((caller, tx_owner)) = walk.worklist.pop() {
-        let Some(caller_sites) = sites_by_caller.get(&caller) else {
-            continue;
-        };
-        for site in caller_sites {
-            let key = site_key(site);
-            let cursor = cursors
-                .entry((tx_owner, caller, key.0, key.1))
-                .or_insert(0);
-            let call = calls_by_key.get(&key).and_then(|list| {
-                list.iter()
-                    .filter(|c| c.context == Some(caller))
-                    .nth(*cursor)
-                    .copied()
-            });
-            *cursor += 1;
-            super::analyze_callback::check_callback_site(&env, site, call, tx_owner, &mut walk);
-        }
-    }
+    super::analyze_callback::drain_callbacks(
+        &env,
+        &calls_by_key,
+        &sites_by_caller,
+        &mut walk,
+        &mut cursors,
+    );
 }

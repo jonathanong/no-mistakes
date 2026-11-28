@@ -124,6 +124,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "@sample/jobs#enqueue"
         },
         {
+          "file": "src/reexported-handle.ts",
+          "import": "publish",
+          "line": 5,
+          "message": "Move this enqueue after the transaction commits. Await the handle's commit before publishing.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await publish({ receiptId: \"inside\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
           "file": "src/shadowed.ts",
           "import": "enqueue",
           "line": 10,
@@ -345,6 +354,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "@sample/jobs#enqueue"
         },
         {
+          "file": "src/reexported-handle.ts",
+          "import": "publish",
+          "line": 5,
+          "message": "Move this enqueue after the transaction commits. Await the handle's commit before publishing.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await publish({ receiptId: \"inside\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
           "file": "src/shadowed.ts",
           "import": "enqueue",
           "line": 10,
@@ -361,6 +379,28 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "rule": "queue-no-enqueue-in-transaction",
           "sourceLine": "await enqueue({ receiptId });",
           "target": "@sample/jobs#enqueue"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "scoped_opaque": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/receipt.ts",
+          "import": "<unknown>",
+          "line": 6,
+          "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await createPublisher()({ receiptId: \"opaque\" });",
+          "target": "unanalyzable"
         }
       ],
       "warnings": []

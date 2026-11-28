@@ -308,12 +308,18 @@ fn queue_no_enqueue_in_transaction_json_matches_snapshot() {
 #[test]
 fn queue_no_enqueue_in_transaction_scoped_handles_json_matches_snapshot() {
     let root = rules_path(RULE, "fixture", "scoped-handles");
+    let opaque = rules_path(RULE, "fixture", "scoped-opaque");
     let reports = assert_saved_fixture_report(
         "queue_no_enqueue_in_transaction_scoped_handles",
         &[
             ("handles", root.clone(), root.join(".no-mistakes.yml")),
             ("mixed_advise", root.clone(), root.join("advise.yml")),
             ("callback_only", root.clone(), root.join("baseline.yml")),
+            (
+                "scoped_opaque",
+                opaque.clone(),
+                opaque.join(".no-mistakes.yml"),
+            ),
         ],
         &[],
         &[],
@@ -339,10 +345,19 @@ fn queue_no_enqueue_in_transaction_scoped_handles_json_matches_snapshot() {
         locations,
         [
             ("src/explicit.ts", 7),
+            ("src/reexported-handle.ts", 5),
             ("src/shadowed.ts", 10),
             ("src/using.ts", 8)
         ]
     );
+    let opaque_rules = reports["scoped_opaque"]["report"]["rules"]
+        .as_array()
+        .unwrap();
+    assert_eq!(reports["scoped_opaque"]["exitCode"], 1);
+    assert_eq!(opaque_rules.len(), 1);
+    assert_eq!(opaque_rules[0]["file"], "src/receipt.ts");
+    assert_eq!(opaque_rules[0]["line"], 6);
+    assert_eq!(opaque_rules[0]["target"], "unanalyzable");
     let mut uncertain: Vec<_> = findings
         .iter()
         .filter(|finding| finding["target"] == "unanalyzable")

@@ -1,9 +1,14 @@
-use super::{classify_builtin_site, is_callback_param_handle, is_local_or_builtin_receiver, FileEnv};
-use crate::codebase::dependencies::extract::{CallableId, InvocationKind, ValueExpression};
+use super::{
+    classify_builtin_site, is_callback_param_handle, is_local_or_builtin_receiver, FileEnv,
+};
+use crate::codebase::dependencies::extract::{
+    CallableId, ImportedBinding, InvocationKind, ValueExpression,
+};
 use crate::codebase::dependencies::graph::ResolvedCallTarget;
 use crate::codebase::rules::queue_no_enqueue_in_transaction::analyze::exact_target;
 use crate::codebase::rules::queue_no_enqueue_in_transaction::builtins;
 use crate::codebase::rules::queue_no_enqueue_in_transaction::reexports::{self, ResolvedApi};
+use crate::fx::FxHashMap;
 
 pub(super) fn is_clean_scoped_local(
     env: &FileEnv<'_>,
@@ -67,6 +72,7 @@ pub(super) fn inner_call_is_clean(
         .copied()
         .is_some_and(|inner| {
             is_callback_param_handle(Some(inner), tx_owner, &env.callback_params)
+                || super::super::scoped::is_owned_handle_call(env, inner, 0)
                 || env
                     .sites_by_key
                     .get(&(inner.offset, inner.source_callee.as_str()))
@@ -76,8 +82,8 @@ pub(super) fn inner_call_is_clean(
                                 && match &site.target {
                                     ResolvedCallTarget::RepositoryFunction { .. }
                                     | ResolvedCallTarget::Global { .. } => true,
-                                    ResolvedCallTarget::ModuleExport { .. } => {
-                                        exact_target(site).is_some_and(|api| {
+                                    ResolvedCallTarget::ModuleExport { .. } => exact_target(site)
+                                        .is_some_and(|api| {
                                             matches!(
                                                 reexports::follow_export(
                                                     env.ctx,
@@ -96,8 +102,7 @@ pub(super) fn inner_call_is_clean(
                                                 Some(api.1),
                                                 &env.ctx.targets.publisher_modules,
                                             )
-                                        })
-                                    }
+                                        }),
                                     ResolvedCallTarget::Unknown => {
                                         classify_builtin_site(env, site, inner, tx_owner, depth)
                                             .is_some()
@@ -107,4 +112,14 @@ pub(super) fn inner_call_is_clean(
                         })
                     })
         })
+}
+
+pub(super) fn expr_is_import(
+    mut expr: &ValueExpression,
+    imports: &FxHashMap<&str, &ImportedBinding>,
+) -> bool {
+    while let ValueExpression::Member(inner, _) = expr {
+        expr = inner.as_ref();
+    }
+    matches!(expr, ValueExpression::Named { name, scope: None | Some(0), .. } if imports.contains_key(name.as_str()))
 }
