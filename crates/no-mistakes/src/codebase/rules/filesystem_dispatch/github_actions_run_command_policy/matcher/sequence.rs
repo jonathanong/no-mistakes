@@ -2,26 +2,35 @@ use super::args::ArgMatch;
 use super::dynamic_match::dynamic_word_could_match_literal;
 use crate::codebase::rules::github_actions_download_integrity::words::Word;
 
-pub(super) fn match_token_sequence(
-    words: &[&Word],
-    tokens: &[String],
-    command_dynamic: bool,
-) -> ArgMatch {
-    match_token_sequence_skipping(words, tokens, command_dynamic, &[])
-}
-
 pub(super) fn match_token_sequence_skipping(
     words: &[&Word],
     tokens: &[String],
     command_dynamic: bool,
     consumed_starts: &[bool],
 ) -> ArgMatch {
+    match_token_sequence_masked(words, tokens, command_dynamic, consumed_starts, &[])
+}
+
+pub(super) fn match_token_sequence_masked(
+    words: &[&Word],
+    tokens: &[String],
+    command_dynamic: bool,
+    consumed_starts: &[bool],
+    indefinite: &[bool],
+) -> ArgMatch {
     let mut dynamic_hit = None;
-    for (start, window) in words.windows(tokens.len()).enumerate() {
+    let token_len = tokens.len();
+    if token_len == 0 || words.len() < token_len {
+        return ArgMatch::NotMatched;
+    }
+    for (start, window) in words.windows(token_len).enumerate() {
         if consumed_starts.get(start).copied().unwrap_or(false) {
             continue;
         }
         match match_token_window(window, tokens, command_dynamic) {
+            ArgMatch::Matched if window_indefinite(indefinite, start, token_len) => {
+                dynamic_hit.get_or_insert_with(|| (words[start].text.clone(), words[start].line));
+            }
             ArgMatch::Matched => return ArgMatch::Matched,
             ArgMatch::DynamicValue { token, line } => {
                 dynamic_hit.get_or_insert((token, line));
@@ -33,6 +42,12 @@ pub(super) fn match_token_sequence_skipping(
         Some((token, line)) => ArgMatch::DynamicValue { token, line },
         None => ArgMatch::NotMatched,
     }
+}
+
+fn window_indefinite(indefinite: &[bool], start: usize, len: usize) -> bool {
+    indefinite
+        .get(start..start + len)
+        .is_some_and(|flags| flags.contains(&true))
 }
 
 fn match_token_window(window: &[&Word], tokens: &[String], command_dynamic: bool) -> ArgMatch {

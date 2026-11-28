@@ -40,12 +40,19 @@ For each configured entry in `options.commands`:
   command substitutions are inspected. Single-quoted strings and `$(( ... ))`
   arithmetic expansions are not executed as commands.
 - If `whenAnyArgs` is non-empty, the policy applies only when at least one
-  listed argument or argument pair is present on the invocation.
+  listed argument or argument pair is present on the invocation. A dynamic
+  word that does not start with `-` is uncertain when it could expand to a
+  listed flag (`tool run "$MODE"` with `whenAnyArgs: [--write]`), so the
+  policy abstains instead of treating that flag as absent.
 - If `unlessAnyArgs` is non-empty, the policy is skipped when any listed
   argument or argument pair is present (for example `unlessAnyArgs: [graphql]`
   so `gh api graphql -f query=...` stays exempt from requiring `--method`).
   Non-flag single-token matchers match positional arguments only, so values
-  consumed by `valueFlags` (such as `-q graphql`) never exempt a command.
+  consumed by `valueFlags` (such as `-q graphql`) never exempt a command. A
+  dynamic word that could expand to a `valueFlags` entry makes a following
+  positional exemption uncertain: `tool emit "$OPT" exempt` with
+  `valueFlags: [--label]` and `unlessAnyArgs: [exempt]` does not skip the
+  policy. Literal `--label exempt` still consumes `exempt`.
 - Every entry in `requireArgs` must be present. If `requireAnyArgs` is
   non-empty, at least one listed alternative must be present. Flag matchers
   skip values consumed by `valueFlags`, accept separate (`--method GET`,
@@ -66,6 +73,9 @@ unquoted word-splitting expansion that could supply a required argument, a
 dynamic value for a required flag (`--method "$METHOD"`), a dynamic positional
 that could match an `unlessAnyArgs` exemption when a requirement would
 otherwise fail (`gh api -f x=1 "$ENDPOINT"` with `unlessAnyArgs: [graphql]`),
+a dynamic word that could expand to a configured flag (`tool run "$MODE"`
+with `whenAnyArgs: [--write]`) or to a `valueFlags` entry that would consume
+a later exemption (`tool emit "$OPT" exempt` with `valueFlags: [--label]`),
 or an unterminated quote, expansion, or here-document—it abstains from
 reporting a policy violation and records a diagnostic under the configured
 uncertainty policy. A variable-prefixed
@@ -237,7 +247,9 @@ steps:
   command whose required arguments are absent, dynamic values on required flags
   (such as `--method "$METHOD"`), dynamic arguments that could match an
   `unlessAnyArgs` exemption when a policy would otherwise fail (such as
-  `gh api -f x=1 "$ENDPOINT"` with `unlessAnyArgs: [graphql]`), and
+  `gh api -f x=1 "$ENDPOINT"` with `unlessAnyArgs: [graphql]`), a dynamic
+  word that could expand to a configured flag or to a `valueFlags` entry
+  that would consume a later exemption, and
   unterminated quotes, expansions, or here-documents abstain from policy failure
   and emit a diagnostic governed by the effective unanalyzable policy.
 - Variable-prefixed script paths whose final path segment is a literal matching

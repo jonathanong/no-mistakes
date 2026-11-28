@@ -420,3 +420,59 @@ commands:
         "{open_positional:?}"
     );
 }
+
+#[test]
+fn dynamic_words_do_not_settle_flag_gates_or_consume_exemptions() {
+    let compiled = compile_yaml(
+        r#"
+commands:
+  - command: [tool, run]
+    valueFlags: [--label]
+    whenAnyArgs: [--write]
+    requireArgs: [--confirm]
+  - command: [tool, emit]
+    valueFlags: [--label]
+    unlessAnyArgs: [exempt]
+    requireArgs: [--strict]
+"#,
+    );
+    let dynamic_when = scan_script(r#"tool run "$MODE""#, &compiled);
+    assert!(
+        matches!(
+            dynamic_when.first().map(|hit| &hit.kind),
+            Some(HitKind::Unanalyzable { .. })
+        ),
+        "{dynamic_when:?}"
+    );
+    assert!(
+        scan_script("tool run resource", &compiled).is_empty(),
+        "a literal non-flag does not activate whenAnyArgs"
+    );
+    assert!(scan_script("tool run --write --confirm", &compiled).is_empty());
+    let missing_confirm = scan_script("tool run --write", &compiled);
+    assert!(
+        matches!(
+            missing_confirm.first().map(|hit| &hit.kind),
+            Some(HitKind::MissingRequired { .. })
+        ),
+        "{missing_confirm:?}"
+    );
+
+    let dynamic_exempt = scan_script(r#"tool emit "$OPT" exempt"#, &compiled);
+    assert!(
+        matches!(
+            dynamic_exempt.first().map(|hit| &hit.kind),
+            Some(HitKind::Unanalyzable { .. })
+        ),
+        "{dynamic_exempt:?}"
+    );
+    assert!(scan_script("tool emit exempt", &compiled).is_empty());
+    let consumed_exempt = scan_script("tool emit --label exempt resource", &compiled);
+    assert!(
+        matches!(
+            consumed_exempt.first().map(|hit| &hit.kind),
+            Some(HitKind::MissingRequired { .. })
+        ),
+        "{consumed_exempt:?}"
+    );
+}

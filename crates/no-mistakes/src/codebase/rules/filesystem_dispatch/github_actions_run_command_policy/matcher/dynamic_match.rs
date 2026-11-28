@@ -1,6 +1,16 @@
 use super::is_dynamic_word;
 use crate::codebase::rules::github_actions_download_integrity::words::Word;
 
+pub(super) fn could_be_value_flag(
+    word: &Word,
+    command_dynamic: bool,
+    value_flags: &[String],
+) -> bool {
+    value_flags
+        .iter()
+        .any(|flag| dynamic_word_could_match_literal(word, command_dynamic, flag))
+}
+
 pub(super) fn dynamic_word_could_match_literal(
     word: &Word,
     command_dynamic: bool,

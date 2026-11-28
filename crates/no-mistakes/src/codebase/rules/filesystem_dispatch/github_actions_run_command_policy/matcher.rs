@@ -5,6 +5,7 @@ mod args;
 mod dynamic_match;
 mod evaluate;
 mod flag_match;
+mod positional;
 mod sequence;
 
 use args::{extract_positionals, is_option_token, takes_value, unwrap_group};

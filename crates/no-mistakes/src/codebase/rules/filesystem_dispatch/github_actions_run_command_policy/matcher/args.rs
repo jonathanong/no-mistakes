@@ -21,7 +21,12 @@ pub(super) fn match_invocation(
         .first()
         .is_some_and(|token| is_option_token(token));
     if !is_flag {
-        return match_positionals(&inv.positionals, matcher, inv.command_dynamic);
+        return super::positional::match_positionals(
+            &inv.subcommand_args,
+            &matcher.tokens,
+            inv.command_dynamic,
+            value_flags,
+        );
     }
     let global = match_flag_slice(
         &inv.global_args,
@@ -46,30 +51,6 @@ pub(super) fn match_invocation(
         | (_, ArgMatch::DynamicValue { token, line }) => ArgMatch::DynamicValue { token, line },
         _ => ArgMatch::NotMatched,
     }
-}
-
-fn match_positionals(
-    positionals: &[&Word],
-    matcher: &ArgMatcher,
-    command_dynamic: bool,
-) -> ArgMatch {
-    if matcher.tokens.len() == 1 {
-        let target = &matcher.tokens[0];
-        let mut dynamic_hit = None;
-        for word in positionals {
-            if word.text == *target {
-                return ArgMatch::Matched;
-            }
-            if dynamic_word_could_match_literal(word, command_dynamic, target) {
-                dynamic_hit.get_or_insert_with(|| (word.text.clone(), word.line));
-            }
-        }
-        return match dynamic_hit {
-            Some((token, line)) => ArgMatch::DynamicValue { token, line },
-            None => ArgMatch::NotMatched,
-        };
-    }
-    super::sequence::match_token_sequence(positionals, &matcher.tokens, command_dynamic)
 }
 
 fn match_flag_slice(
@@ -126,6 +107,19 @@ fn match_flag_slice(
             }
             index += 1 + usize::from(consumes_next);
         } else {
+            let could_be_flag = matcher.tokens.first().is_some_and(|token| {
+                dynamic_word_could_match_literal(word, command_dynamic, token)
+            });
+            let pair_value_ok = matcher.tokens.len() <= 1
+                || matcher.tokens.get(1).is_some_and(|expected| {
+                    region.get(index + 1).is_some_and(|next| {
+                        next.text == *expected
+                            || dynamic_word_could_match_literal(next, command_dynamic, expected)
+                    })
+                });
+            if could_be_flag && pair_value_ok {
+                dynamic_hit.get_or_insert_with(|| (word.text.clone(), word.line));
+            }
             index += 1;
         }
     }
