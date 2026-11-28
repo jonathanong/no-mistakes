@@ -372,6 +372,7 @@ fn queue_no_enqueue_in_transaction_scoped_handles_json_matches_snapshot() {
             "src/edges.ts",
             "src/escape.ts",
             "src/long-chain.ts",
+            "src/statements.ts",
             "src/unresolved.ts"
         ]
     );

@@ -151,6 +151,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "target": "@sample/jobs#enqueue"
         },
         {
+          "file": "src/statements.ts",
+          "import": "beginTransaction",
+          "line": 18,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "beginTransaction",
+          "line": 26,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "beginTransaction",
+          "line": 5,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
           "file": "src/unresolved.ts",
           "import": "beginTransaction",
           "line": 10,
@@ -300,6 +327,33 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "message": "call target or execution timing is unresolved inside the transaction handle scope; call a statically known publisher after commit",
           "rule": "queue-no-enqueue-in-transaction",
           "sourceLine": "await tx.a().b().c().d().e().f().g().h().i();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "beginTransaction",
+          "line": 18,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "beginTransaction",
+          "line": 26,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = await beginTransaction();",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/statements.ts",
+          "import": "beginTransaction",
+          "line": 5,
+          "message": "transaction handle escapes or may close outside the straight-line scope; keep the handle local and await commit or rollback directly",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "const tx = beginTransaction();",
           "target": "unanalyzable"
         },
         {
