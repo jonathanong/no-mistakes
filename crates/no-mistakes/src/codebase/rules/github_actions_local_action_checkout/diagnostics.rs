@@ -1,7 +1,8 @@
 use super::scan::check_source;
 use super::scan::unresolved;
 use super::{Options, RULE_ID};
-use crate::codebase::rules::{self, analysis_policy::AnalysisDiagnostics};
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
+use crate::codebase::rules::{self};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;

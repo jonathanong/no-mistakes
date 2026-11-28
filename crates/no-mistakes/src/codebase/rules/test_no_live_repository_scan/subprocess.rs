@@ -6,7 +6,7 @@ use super::config::Options;
 use super::findings;
 use super::RULE_ID;
 use crate::codebase::dependencies::graph::{ResolvedCallSite, TsFactLookup};
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::config::v2::schema::RuleDef;
 use std::path::Path;
 

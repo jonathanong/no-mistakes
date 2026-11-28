@@ -132,7 +132,7 @@ pub fn prepare_project_source_inputs(
     root: &Path,
     tracked_paths: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    workspace: &crate::codebase::workspace_resolution::IndexedWorkspaceMap,
 ) -> ProjectSourceInputs {
     let tracked = tracked_tsconfigs(root, tracked_paths);
     let config_paths = tracked

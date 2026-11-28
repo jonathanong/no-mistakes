@@ -372,7 +372,7 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
         .collect(),
         ..Default::default()
     };
-    let test_filter = crate::codebase::test_filter::TestFileFilter::new(
+    let test_filter = crate::codebase::testing_analysis::test_filter::TestFileFilter::new(
         &root,
         &crate::config::v2::NoMistakesConfig::default(),
     );

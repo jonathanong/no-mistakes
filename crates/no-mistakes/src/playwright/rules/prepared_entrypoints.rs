@@ -19,8 +19,9 @@ pub fn prepare(
         None, root, &paths, &sources,
     );
     let tsconfig = tsconfig?;
-    let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, &sources)
-        .unwrap_or_default();
+    let workspace =
+        crate::codebase::package_analysis::load_indexed_from_source_store(root, &sources)
+            .unwrap_or_default();
     prepare_with_settings(
         root,
         config,
@@ -44,7 +45,7 @@ pub fn prepare_from_snapshot(
     tsconfig: Arc<crate::codebase::ts_resolver::TsConfig>,
 ) -> Result<Option<PreparedPlaywrightRules>> {
     let workspace = Arc::new(
-        crate::codebase::workspaces::load_indexed_from_source_store(
+        crate::codebase::package_analysis::load_indexed_from_source_store(
             root,
             &snapshot.source_store_for(root),
         )
@@ -73,7 +74,7 @@ pub fn prepare_from_snapshot_with_catalog(
     snapshot: Arc<VisiblePathSnapshot>,
     tsconfig: Arc<crate::codebase::ts_resolver::TsConfig>,
     tsconfig_catalog: Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
-    workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+    workspace: Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
 ) -> Result<Option<PreparedPlaywrightRules>> {
     prepare_with_settings(
         root,
@@ -98,7 +99,7 @@ pub fn prepare_from_snapshot_with_catalog_partial(
     snapshot: Arc<VisiblePathSnapshot>,
     tsconfig: Arc<crate::codebase::ts_resolver::TsConfig>,
     tsconfig_catalog: Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
-    workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
+    workspace: Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,
 ) -> Result<Option<PreparedPlaywrightRules>> {
     prepare_with_settings(
         root,

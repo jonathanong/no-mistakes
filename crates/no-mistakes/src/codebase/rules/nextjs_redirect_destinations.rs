@@ -124,7 +124,7 @@ pub fn diagnostics_with_files_and_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
     defer_suppression: bool,
-) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     prepared::with_standalone(root, config, files, sources, |resolver| {
         diagnostics_prepared(
             root,
@@ -147,7 +147,7 @@ pub fn diagnostics_prepared(
     snapshot: Option<&crate::codebase::ts_source::VisiblePathSnapshot>,
     resolver: &PreparedConfigResolver<'_>,
     defer_suppression: bool,
-) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     let mut diagnostics = dispatch::collect(
         root,
         config,

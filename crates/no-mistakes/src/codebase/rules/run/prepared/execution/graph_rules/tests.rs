@@ -221,7 +221,7 @@ fn failed_application_retains_healthy_findings_for_the_same_rule() {
 
 fn graph_rule_findings(
     request: GraphRuleRequest<'_>,
-) -> Result<crate::codebase::rules::analysis_policy::AnalysisDiagnostics> {
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     graph_rule_findings_with_session(request, None)
 }
 

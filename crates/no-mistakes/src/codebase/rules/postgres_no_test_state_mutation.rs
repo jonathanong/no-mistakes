@@ -92,7 +92,7 @@ pub(crate) fn check_with_files_and_sources(
     files: &[PathBuf],
     sources: &Arc<SourceStore>,
 ) -> Result<Vec<RuleFinding>> {
-    let prepared_config = super::analysis_policy::prepare_requested_rule_config(
+    let prepared_config = crate::codebase::rule_analysis_hooks::prepare_requested_rule_config(
         root, RULE_ID, config, files, sources,
     )?;
     let config = prepared_config.as_ref().unwrap_or(config);

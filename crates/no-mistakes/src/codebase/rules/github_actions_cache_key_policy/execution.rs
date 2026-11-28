@@ -1,4 +1,5 @@
-use super::super::{self as rules, analysis_policy::AnalysisDiagnostics};
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
+use super::super::{self as rules};
 use super::{collect_config_errors, hit, judge, local_action, options, scan, text, RULE_ID};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};

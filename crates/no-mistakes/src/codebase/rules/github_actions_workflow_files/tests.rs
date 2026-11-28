@@ -1,6 +1,7 @@
 use super::{no_poll_wait_job, pr_diff_range, SourceStore};
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::rules::{
-    analysis_policy::AnalysisDiagnostics, github_actions_action_timeout_pair,
+    github_actions_action_timeout_pair,
     github_actions_docker_host_ports, github_actions_download_integrity,
     github_actions_vitest_project_selection, RuleFinding,
 };

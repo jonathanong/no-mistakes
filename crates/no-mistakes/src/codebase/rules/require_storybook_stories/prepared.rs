@@ -1,6 +1,6 @@
 use super::{runner::check_diagnostics_with_resolver, CheckFactMap, NoMistakesConfig};
 use crate::codebase::analysis_session::AnalysisSession;
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::ts_resolver::{normalize_path, ScopedImportResolver, TsConfigCatalog};
 use anyhow::Result;
 use std::path::Path;

@@ -7,7 +7,7 @@ fn run(
     effort: Option<Effort>,
     policy: Unanalyzable,
     transitive: bool,
-) -> crate::codebase::rules::analysis_policy::AnalysisDiagnostics {
+) -> no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics {
     let root = fixture("effort");
     let name = if effort == Some(Effort::Low) {
         ".no-mistakes.low.yml"
@@ -31,7 +31,7 @@ fn run(
 fn run_config(
     root: &std::path::Path,
     mut config: NoMistakesConfig,
-) -> crate::codebase::rules::analysis_policy::AnalysisDiagnostics {
+) -> no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics {
     let files = crate::codebase::ts_source::discover_files(root, &[]);
     let sources = crate::codebase::rules::source_store_for_files(&files);
     crate::codebase::rules::analysis_policy::prepare_rule_analysis(

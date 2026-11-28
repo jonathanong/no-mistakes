@@ -1,10 +1,10 @@
 use super::*;
 use crate::codebase::rules::{
-    analysis_policy::AnalysisDiagnostics,
     file_diagnostics::{self, InputUncertainty},
     github_actions_workflow_files::{parse_yaml, read_workflow_source},
     path_filter::GlobMatcher,
 };
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::ts_source::{
     discover_files_from_visible, relative_slash_path, SourceStore, VisiblePathSnapshot,
 };

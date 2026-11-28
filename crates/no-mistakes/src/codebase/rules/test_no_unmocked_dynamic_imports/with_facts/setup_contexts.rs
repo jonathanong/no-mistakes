@@ -2,7 +2,7 @@ use super::super::RULE_ID;
 use super::{config, setup_mocks};
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::ts_resolver::ScopedImportResolver;
 use crate::codebase::ts_source::has_disable_file_comment;
 use crate::config::v2::Unanalyzable;

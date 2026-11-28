@@ -1,7 +1,7 @@
 mod path;
 
 use crate::codebase::config::InferredRoots;
-use crate::codebase::test_filter::TestFileFilter;
+use crate::codebase::testing_analysis::test_filter::TestFileFilter;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::{NoMistakesConfig, ProjectType};
 use crate::server_routes::graph::PreparedServerAnalysis;

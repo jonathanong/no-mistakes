@@ -1,7 +1,8 @@
-use super::{analysis_policy::AnalysisDiagnostics, RuleFinding};
+use super::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig};
 use anyhow::Result;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use rayon::prelude::*;
 use std::path::Path;
 

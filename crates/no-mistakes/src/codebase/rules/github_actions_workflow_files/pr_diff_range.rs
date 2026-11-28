@@ -1,5 +1,5 @@
 use crate::codebase::rules;
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;

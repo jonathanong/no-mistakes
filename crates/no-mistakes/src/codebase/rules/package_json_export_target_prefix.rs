@@ -1,5 +1,5 @@
 use super::file_diagnostics::{self, InputUncertainty};
-use super::{analysis_policy::AnalysisDiagnostics};
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::source_locations::ConfigPath;

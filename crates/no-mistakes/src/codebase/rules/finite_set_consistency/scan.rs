@@ -22,7 +22,7 @@ pub(super) struct ScanInput<'a> {
 
 pub(super) fn scan(
     input: ScanInput<'_>,
-) -> Result<super::super::analysis_policy::AnalysisDiagnostics> {
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     let ScanInput {
         root,
         config,
@@ -47,7 +47,7 @@ pub(super) fn scan(
         Vec::new()
     };
     let policy = config.effective_rule_analysis(rule)?;
-    let mut output = super::super::analysis_policy::AnalysisDiagnostics::default();
+    let mut output = no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics::default();
     let mut unsupported_sets = BTreeSet::new();
     let mut sets = BTreeMap::new();
     for spec in &opts.sets {

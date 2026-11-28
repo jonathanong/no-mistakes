@@ -2,7 +2,7 @@ use super::super::config::{AnalyzerCommand, Options};
 use super::Gate;
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{ResolvedCallSite, ResolvedCallTarget, TsFactLookup};
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_source::module_facts::arguments::{
     ArgumentValue, ArgumentValues, PathOrigin, PathProvenance,

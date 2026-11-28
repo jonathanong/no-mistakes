@@ -15,7 +15,7 @@ pub(super) use request::GraphRuleRequest;
 pub(super) fn graph_rule_findings_with_session(
     request: GraphRuleRequest<'_>,
     session: Option<&crate::codebase::analysis_session::AnalysisSession>,
-) -> Result<crate::codebase::rules::analysis_policy::AnalysisDiagnostics> {
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     let config = session
         .filter(|session| {
             matches!(
@@ -97,7 +97,7 @@ pub(super) fn graph_rule_findings_with_session(
         collect_application(&request, session, &mut findings, &mut advisories)?;
     }
     Ok(
-        crate::codebase::rules::analysis_policy::AnalysisDiagnostics {
+        no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics {
             findings,
             advisories,
             suppressed: Vec::new(),

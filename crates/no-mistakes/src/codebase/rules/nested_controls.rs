@@ -3,7 +3,7 @@ mod extract;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod tests;
 
-use super::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::{CheckFactMap, CheckFactPlan};

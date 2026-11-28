@@ -1,7 +1,7 @@
 use super::hit;
 use super::options::Options;
 use super::scan::Step;
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::config::v2::Unanalyzable;
 
 pub(super) fn check(

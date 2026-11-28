@@ -1,7 +1,7 @@
 use super::{is_relative, Inputs, RULE_ID};
 use crate::codebase::dependencies::extract::ImportKind;
 use crate::codebase::dependencies::graph::{vitest_import_calls, ImportTarget, VitestReceiver};
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::workspaces::WorkspacePackage;

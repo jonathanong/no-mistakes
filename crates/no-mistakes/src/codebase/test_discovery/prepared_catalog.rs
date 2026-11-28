@@ -74,7 +74,7 @@ impl PreparedTestProjects {
     }
 
     #[doc(hidden)]
-    pub(crate) fn graph_route_occurrences(&self) -> &BTreeMap<PathBuf, Vec<crate::playwright::integration_routes::RouteOccurrence>> {
+    pub(crate) fn graph_route_occurrences(&self) -> &BTreeMap<PathBuf, Vec<crate::codebase::playwright_facts::integration::RouteOccurrence>> {
         &self.graph_route_occurrences
     }
 

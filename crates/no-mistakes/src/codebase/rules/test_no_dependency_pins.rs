@@ -3,7 +3,7 @@ mod patterns;
 mod runtime_patterns;
 mod scan;
 
-use super::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use super::file_diagnostics::{classified_applications, ClassifiedInputFindings, FileRuleInputs};
 use super::path_filter::GlobMatcher;
 use super::source_access::read_failure;

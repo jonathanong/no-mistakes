@@ -1,8 +1,8 @@
-use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::rules::RuleFinding;
 use crate::config::v2::Unanalyzable;
 use crate::playwright::analysis::types::Analysis;
 use crate::playwright::rules::{PLAYWRIGHT_COVERAGE, PLAYWRIGHT_UNIQUE_TEST_IDS};
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 
 mod emit;
 

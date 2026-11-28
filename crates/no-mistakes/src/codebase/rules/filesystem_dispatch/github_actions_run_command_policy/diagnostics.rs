@@ -1,12 +1,11 @@
 use super::options::{self, Options};
 use super::runs;
 use super::RULE_ID;
-use crate::codebase::rules::{
-    self, analysis_policy::AnalysisDiagnostics, source_access, RuleFinding,
-};
+use crate::codebase::rules::{self, source_access, RuleFinding};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use rayon::prelude::*;
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};

@@ -16,7 +16,7 @@ fn fragment_resolver_distinguishes_external_and_missing_project_imports() {
     use super::super::import_resolution::{FragmentImportResolution, FragmentResolver};
     use crate::codebase::analysis_session::AnalysisSession;
     use crate::codebase::ts_resolver::TsConfigCatalog;
-    use crate::codebase::workspaces::IndexedWorkspaceMap;
+    use crate::codebase::workspace_resolution::IndexedWorkspaceMap;
     use std::path::Path;
 
     let root = Path::new(concat!(

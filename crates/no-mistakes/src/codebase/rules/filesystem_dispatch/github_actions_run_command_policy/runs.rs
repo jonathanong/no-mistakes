@@ -2,12 +2,12 @@ use super::judge::{self, Hit, HitKind};
 use super::options::CompiledOptions;
 use super::RULE_ID;
 use crate::codebase::rules::{
-    analysis_policy::AnalysisDiagnostics,
     github_actions_script_expressions::{step_run_lines, StepRun},
     github_actions_workflow_files::run_scripts::{run_scripts, RunScript},
     RuleFinding,
 };
 use crate::config::v2::Unanalyzable;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use serde_yaml::Value;
 
 pub(super) fn check_parsed(

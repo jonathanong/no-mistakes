@@ -5,9 +5,9 @@ use super::{
     package_name, package_root_for_specifier, project_relative_scoped_facts, PendingRelativeCall,
     PendingRelativeScope, PendingRelativeSpan, RelativeScopedCandidate,
 };
+use crate::codebase::package_analysis::load_indexed_from_source_store;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{discover_visible_paths, FileInventory, SourceStore};
-use crate::codebase::workspaces::load_indexed_from_source_store;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -107,7 +107,7 @@ fn fixture_root() -> PathBuf {
     ))
 }
 
-fn workspace(root: &Path) -> crate::codebase::workspaces::IndexedWorkspaceMap {
+fn workspace(root: &Path) -> crate::codebase::workspace_resolution::IndexedWorkspaceMap {
     let files = discover_visible_paths(root);
     let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&files)));
     load_indexed_from_source_store(root, &sources).expect("workspace")

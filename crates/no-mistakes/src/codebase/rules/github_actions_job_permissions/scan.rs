@@ -1,6 +1,7 @@
 use super::findings::{inherited, unresolved};
 use super::permissions;
-use crate::codebase::rules::{self, analysis_policy::AnalysisDiagnostics};
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
+use crate::codebase::rules::{self};
 use crate::config::v2::Unanalyzable;
 use serde_yaml::Value;
 

@@ -17,7 +17,7 @@ pub(super) fn check_items<T>(
     items: &[T],
     path_for: impl Fn(&T) -> &Path + Sync,
     facts_for: impl Fn(&T) -> (&FileFacts, Option<&str>) + Sync,
-) -> Result<super::super::analysis_policy::AnalysisDiagnostics>
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics>
 where
     T: Sync,
 {
@@ -29,7 +29,7 @@ where
         inferred_roots,
         defer_suppression,
     } = context;
-    let mut diagnostics = super::super::analysis_policy::AnalysisDiagnostics::default();
+    let mut diagnostics = no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics::default();
     let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
     for rule in config.rule_applications(RULE_ID) {
         let mut findings = Vec::new();

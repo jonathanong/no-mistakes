@@ -1,7 +1,8 @@
-use crate::codebase::rules::{self, analysis_policy::AnalysisDiagnostics, RuleFinding};
+use crate::codebase::rules::{self, RuleFinding};
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use std::path::{Path, PathBuf};
 
 mod diagnostics;

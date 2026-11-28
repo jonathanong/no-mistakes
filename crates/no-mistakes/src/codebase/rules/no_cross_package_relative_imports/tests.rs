@@ -219,7 +219,7 @@ fn vitest_helper_imports_follow_the_unanalyzable_policy() {
 fn direct_vitest_call_checks_prepared_crossing_before_lexical_same_package_return() {
     use super::vitest::{record_direct_vitest_target, VitestSite};
     use crate::codebase::dependencies::graph::ImportTarget;
-    use crate::codebase::rules::analysis_policy::AnalysisDiagnostics;
+    use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
     use crate::codebase::workspaces::{IndexedWorkspaceMap, WorkspacePackage};
     use crate::config::v2::Unanalyzable;
 

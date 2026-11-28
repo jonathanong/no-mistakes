@@ -4,7 +4,7 @@ use crate::codebase::ts_resolver::{
     normalize_path, ImportResolution, ScopedImportResolver, TsConfigCatalog,
     WorkspaceFallbackResolver,
 };
-use crate::codebase::workspaces::IndexedWorkspaceMap;
+use crate::codebase::workspace_resolution::IndexedWorkspaceMap;
 use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -70,7 +70,7 @@ pub(super) fn resolve_modules(
     );
     let workspace = match catalog.sources {
         Some(sources) => {
-            crate::codebase::workspaces::load_indexed_from_source_store(root, sources)?
+            crate::codebase::package_analysis::load_indexed_from_source_store(root, sources)?
         }
         None => IndexedWorkspaceMap::default(),
     };

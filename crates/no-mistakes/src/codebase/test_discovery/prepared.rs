@@ -6,7 +6,7 @@ pub struct PreparedTestProjects {
     projects: BTreeMap<TestRunner, std::result::Result<Vec<ConfigProject>, String>>,
     discovery_files: Vec<PathBuf>,
     graph_facts: crate::codebase::ts_source::facts::TsFactMap,
-    graph_route_occurrences: BTreeMap<PathBuf, Vec<crate::playwright::integration_routes::RouteOccurrence>>,
+    graph_route_occurrences: BTreeMap<PathBuf, Vec<crate::codebase::playwright_facts::integration::RouteOccurrence>>,
     dotnet_facts: Option<crate::codebase::dotnet::DotnetFactMap>,
     swift_facts: Option<crate::codebase::swift::SwiftFactMap>,
     cargo_targets: Option<cargo_targets::CargoTargets>,

@@ -84,10 +84,9 @@ fn analyze_project_with_prepared_inner<T>(
         .as_ref()
         .and_then(|config| build_filter(&ConfigView::new(config).server_route_globs()).ok())
         .flatten();
-    let test_filter = prepared
-        .config
-        .as_ref()
-        .map(|config| crate::codebase::test_filter::TestFileFilter::new(root, config));
+    let test_filter = prepared.config.as_ref().map(|config| {
+        crate::codebase::testing_analysis::test_filter::TestFileFilter::new(root, config)
+    });
     let filter = build_filter(filters)?;
     let client_paths = client_source_paths(prepared, filter.as_ref(), test_filter.as_ref());
     let mut facts = HashMap::new();
@@ -134,9 +133,7 @@ pub(crate) fn configure_fact_context(
     {
         context.set_server_route_filter(
             glob,
-            Some(crate::codebase::test_filter::TestFileFilter::new(
-                root, config,
-            )),
+            Some(crate::codebase::testing_analysis::test_filter::TestFileFilter::new(root, config)),
         );
     }
 }

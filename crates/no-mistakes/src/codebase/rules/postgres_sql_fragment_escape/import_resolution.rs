@@ -1,7 +1,7 @@
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::dependencies::graph::GraphFiles;
 use crate::codebase::ts_resolver::{ScopedImportResolver, TsConfigCatalog};
-use crate::codebase::workspaces::IndexedWorkspaceMap;
+use crate::codebase::workspace_resolution::IndexedWorkspaceMap;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 

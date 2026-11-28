@@ -1,4 +1,5 @@
-use super::{analysis_policy::AnalysisDiagnostics, path_filter::GlobMatcher};
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
+use super::{path_filter::GlobMatcher};
 use crate::codebase::check_facts::{CheckFactMap, CheckFactPlan};
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::{schema::RuleDef, NoMistakesConfig, Unanalyzable};

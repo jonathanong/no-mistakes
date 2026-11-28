@@ -1,4 +1,4 @@
-use super::analysis_policy::AnalysisDiagnostics;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use super::file_diagnostics::{self, InputUncertainty};
 use super::masked_source::FileAllow;
 use super::source_access;

@@ -29,7 +29,7 @@ pub(super) fn selected_components(
     selection: SelectionOptions<'_>,
     include: &GlobMatcher,
     exclude: &GlobMatcher,
-    test_filter: &crate::codebase::test_filter::TestFileFilter,
+    test_filter: &crate::codebase::testing_analysis::test_filter::TestFileFilter,
 ) -> (Vec<Component>, Vec<super::RuleFinding>) {
     let opts = selection.options;
     let defer_suppression = selection.defer_suppression;

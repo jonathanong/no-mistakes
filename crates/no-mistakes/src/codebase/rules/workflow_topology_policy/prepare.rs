@@ -83,7 +83,7 @@ pub(super) fn diagnostics_with_files(
     root: &Path,
     config: &NoMistakesConfig,
     defer_suppression: bool,
-) -> anyhow::Result<crate::codebase::rules::analysis_policy::AnalysisDiagnostics> {
+) -> anyhow::Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
     let sources = snapshot.source_store_for(root);
     let files = snapshot.paths_for(root);

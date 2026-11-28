@@ -1,9 +1,9 @@
 use crate::codebase::rules::{
-    analysis_policy::AnalysisDiagnostics,
     file_diagnostics::{classified_applications, ClassifiedInputFindings, FileRuleInputs},
     source_access::read_failure,
     RuleFinding,
 };
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{Context, Result};

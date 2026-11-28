@@ -70,9 +70,9 @@ pub fn diagnostics_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &SourceStore,
     defer_suppression: bool,
-) -> Result<super::analysis_policy::AnalysisDiagnostics> {
+) -> Result<no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics> {
     let skip = super::skip_dir_set(config);
-    let mut diagnostics = super::analysis_policy::AnalysisDiagnostics::default();
+    let mut diagnostics = no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
         let opts = rule.try_rule_options()?;
         let prepared = PreparedRule::new(&opts, root, &super::target_roots(root, config, rule))?;

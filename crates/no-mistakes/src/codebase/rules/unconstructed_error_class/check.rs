@@ -3,7 +3,7 @@ use super::config::Options;
 use super::RULE_ID;
 use crate::codebase::dependencies::graph::{ClassDeclaration, DepGraph, GraphBuildPlan};
 use crate::codebase::rules::path_filter::RulePathFilter;
-use crate::codebase::rules::{analysis_policy::AnalysisDiagnostics};
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_source::{is_test_file, relative_slash_path};
 use crate::config::v2::schema::RuleDef;

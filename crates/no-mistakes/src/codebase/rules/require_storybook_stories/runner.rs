@@ -8,8 +8,9 @@ use super::{
     stale_or_blank_allow_findings, transitive_covered_components, GlobMatcher, Options, RULE_ID,
 };
 use crate::codebase::check_facts::CheckFactMap;
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::rules::{
-    analysis_policy::AnalysisDiagnostics, path_filter::RulePathFilter,
+    path_filter::RulePathFilter,
 };
 use no_mistakes_rule_kernel::finding::sort_findings;
 use crate::codebase::ts_resolver::{normalize_path, ImportResolution};

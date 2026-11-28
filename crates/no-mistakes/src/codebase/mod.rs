@@ -23,6 +23,7 @@ pub mod pnpm_lock;
 pub mod postgres;
 pub(crate) mod postgres_analysis;
 pub mod queries;
+pub(crate) mod rule_analysis_hooks;
 pub mod rules;
 pub(crate) mod shell_heredoc;
 pub(crate) mod shell_words;
