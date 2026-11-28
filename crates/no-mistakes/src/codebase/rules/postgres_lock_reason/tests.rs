@@ -391,6 +391,7 @@ fn reason_status_merge_and_multi_tag_parsing_cover_all_branches() {
 #[test]
 fn findings_and_options_cover_undeclared_executors_legacy_policy_and_unreadable_sql() {
     use crate::codebase::postgres::{SqlFunctionCallFact, UndeclaredExecutorType};
+    use crate::codebase::rules::validate_options::collect_config_errors as collect;
     use crate::config::v2::Unanalyzable;
 
     let mut out = Vec::new();
@@ -469,7 +470,7 @@ fn findings_and_options_cover_undeclared_executors_legacy_policy_and_unreadable_
         "unanalyzableSql": "bogus",
     }));
     let mut errors = Vec::new();
-    collect_config_errors(Path::new("."), None, &invalid, &mut errors);
+    collect(Path::new("."), None, &invalid, RULE_ID, collect_application_errors, &mut errors);
     assert_eq!(errors.len(), 2);
 
     let root = fixture("error");
