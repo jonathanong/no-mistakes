@@ -96,7 +96,7 @@ function forwardedArguments(node) {
   if (name === "apply") {
     const expanded = expandArguments(args);
     const list = unwrap(expanded?.[1]);
-    return list?.type === "ArrayExpression" ? list.elements : null;
+    return list?.type === "ArrayExpression" ? expandArguments(list.elements) : null;
   }
   return args;
 }

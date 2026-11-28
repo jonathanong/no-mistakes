@@ -31,6 +31,12 @@
       "options": null
     },
     {
+      "file": "let-alias.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "mocks.test.ts",
       "findings": [
         {
@@ -328,6 +334,12 @@
   "module-mock-preserve-exports:preserve": [
     {
       "file": "suppressed.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "let-alias.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -1566,6 +1578,17 @@
           "messageId": "message",
           "ruleId": "no-mistakes/test-no-error-message-matching",
           "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 50,
+          "endLine": 8,
+          "file": "static-apply.test.ts",
+          "line": 8,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
         }
       ],
       "kind": "invalid",
@@ -1734,6 +1757,12 @@
   "test-no-shared-state:shared": [
     {
       "file": "computed-modifier.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-binding.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -3067,6 +3096,12 @@
     },
     {
       "file": "late-fake-timers.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-now.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null

@@ -165,6 +165,7 @@ function frameworkBindingOpaque(node, context, seen = new Set()) {
       const key = patternKey(def.node.id, node.name);
       if (key === null && frameworkBindingModule(def.node.init, context)) return false;
     }
+    if (def.parent?.kind !== "const") return false;
     return (
       opaqueIdentifierAlias(def, context, seen, frameworkBindingOpaque) ||
       Boolean(def.node?.init && frameworkBindingOpaque(def.node.init, context, seen))

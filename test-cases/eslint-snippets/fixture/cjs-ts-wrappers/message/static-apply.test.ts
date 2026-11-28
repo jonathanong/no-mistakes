@@ -5,4 +5,5 @@ test("reads", () => {
   const err = new Error("boom");
   exact.apply(err.message, values).toBe(42);
   exact.apply(null, [err.message]).toBe(42);
+  exact.apply(null, [...[err.message]]).toBe("x");
 });

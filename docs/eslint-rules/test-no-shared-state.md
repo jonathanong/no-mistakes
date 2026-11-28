@@ -36,7 +36,7 @@ test("user", () => {
   from that require, such as `const { test: check } = require(specifier)`, reports
   `unanalyzable`, including `check.skip(...)`. `const check = require(specifier).test`
   followed by `check.skip(...)` does too. A computed modifier such as
-  `check[modifier](...)` stays silent. A later write of that destructure, such as
+  `check[modifier](...)` stays silent. `const { ["runner"]: runner } = require(moduleName); runner.test(...)` stays silent, while `const { runner } = require(moduleName)` does not. A later write of that destructure, such as
   `let { test: check } = require(specifier); check = localHelper`, does not.
   A destructured `expect` does not. A computed key such as
   `const { ["test"]: check } = require("vitest")` is not a test registration.

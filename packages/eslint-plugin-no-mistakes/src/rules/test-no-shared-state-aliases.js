@@ -13,6 +13,17 @@ function resolveVariable(node, context) {
   return null;
 }
 
+function hidesComputedKey(node, context) {
+  const variable = node?.type === "Identifier" ? resolveVariable(node, context) : null;
+  const id = variable?.defs.length === 1 ? variable.defs[0].node?.id : null;
+  if (id?.type !== "ObjectPattern") return false;
+  return id.properties.some((property) => {
+    const value =
+      property.value?.type === "AssignmentPattern" ? property.value.left : property.value;
+    return property.type === "Property" && property.computed && value?.name === node.name;
+  });
+}
+
 function baseIdentifier(callee) {
   callee = unwrapExpression(callee);
   if (callee?.type === "ChainExpression") return baseIdentifier(callee.expression);
@@ -178,6 +189,7 @@ function recordTopLevelBindings(node, tools) {
 module.exports = {
   createImportedTestAliases,
   hasOwnProperty,
+  hidesComputedKey,
   hasProperty,
   isDescribeBinding,
   recordImportedTests,

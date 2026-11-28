@@ -6,7 +6,7 @@ const { requireResolution, requireSource } = require("./async-target-sources");
 const { literalString } = require("./logical-call");
 const { isUnresolved, moduleLoad } = require("./module-load");
 const { reportUnanalyzable } = require("./rule-unanalyzable");
-const { resolveVariable } = require("./test-no-shared-state-aliases");
+const { hidesComputedKey, resolveVariable } = require("./test-no-shared-state-aliases");
 
 const TEST_NAMES = new Set(["describe", "it", "test"]);
 const REGISTRATION_MODIFIERS = new Set(["concurrent", "each", "fails", "only", "skip", "todo"]);
@@ -160,10 +160,11 @@ function reportOpaqueRegistration(call, context, suppressed, source) {
     return;
   }
   const { alias, member: registration } = registrationParts(callee);
+  const receiver = unwrapExpression(registration?.object);
   const unresolvedMember =
     registration &&
-    (isUnresolved(moduleLoad(registration.object, context)) ||
-      dynamicLetReceiver(registration.object, context));
+    !hidesComputedKey(receiver, context) &&
+    (isUnresolved(moduleLoad(receiver, context)) || dynamicLetReceiver(receiver, context));
   if (
     !unresolvedMember &&
     !dynamicDestructuredTest(alias, context) &&

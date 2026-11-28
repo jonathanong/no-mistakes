@@ -160,9 +160,10 @@ function expectArguments(node, context) {
       const expanded = spreadArguments(args);
       if (!expanded) return null;
       const list = unwrap(expanded[1]);
-      if (list?.type !== "ArrayExpression") return null;
+      const elements = list?.type === "ArrayExpression" ? spreadArguments(list.elements) : null;
+      if (!elements) return null;
       callee = callee.object;
-      args = list.elements;
+      args = elements;
     }
   }
   return isExpectCallee(callee, context) ? args : null;

@@ -84,6 +84,7 @@ const groups = [
       "static-member.test.ts",
       "resolved-computed.test.ts",
       "inline-other.test.ts",
+      "let-alias.test.ts",
     ],
   },
   {
@@ -96,7 +97,7 @@ const groups = [
     rule: "module-mock-preserve-exports",
     dir: "preserve",
     invalid: ["mocks.test.ts", "dynamic.test.ts", "call-apply.test.ts", "opaque-follow.test.ts"],
-    valid: ["suppressed.test.ts"],
+    valid: ["suppressed.test.ts", "let-alias.test.ts"],
   },
   {
     rule: "module-mock-preserve-exports",
@@ -146,6 +147,7 @@ const groups = [
     ],
     valid: [
       "computed-modifier.test.ts",
+      "computed-binding.test.ts",
       "not-a-callee.test.ts",
       "suppressed.test.ts",
       "reassign.test.ts",
@@ -174,7 +176,12 @@ const groups = [
       "shapes.test.ts",
       "decoy-timer.test.ts",
     ],
-    valid: ["fake-timers.test.ts", "local-fluent.test.ts", "late-fake-timers.test.ts"],
+    valid: [
+      "fake-timers.test.ts",
+      "local-fluent.test.ts",
+      "late-fake-timers.test.ts",
+      "computed-now.test.ts",
+    ],
   },
   {
     rule: "test-no-wall-time-assertions",

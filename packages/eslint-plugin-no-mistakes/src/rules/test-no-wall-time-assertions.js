@@ -88,6 +88,7 @@ function opaqueNow(node, context) {
   const value = localOrigin(node, context);
   if (value?.type !== "CallExpression") return false;
   const callee = unwrap(value.callee);
+  if (callee?.type === "MemberExpression" && callee.computed) return false;
   if (memberName(callee) !== "now") return false;
   return isUnresolved(moduleLoad(unwrap(callee.object), context));
 }
