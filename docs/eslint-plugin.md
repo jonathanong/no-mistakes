@@ -439,6 +439,19 @@ reports `vi.mocked` and `jest.mocked` casts of matching imports.
 `unanalyzable?: "finding" | "ignore"` defaults to `"finding"`.
 See [the rule reference](eslint-rules/test-no-typed-enqueue-fake.md).
 
+### `test-no-unfailable-assertion`
+
+Opt-in, type-aware, autofixable for `throwing-query`.
+`severities?: Partial<Record<TestNoUnfailableAssertionCode, "error" | "advisory" | "off">>`
+configures per-code severity for `defined-by-type`, `same-value`,
+`truthy-by-type`, `throwing-query`, `discarded-locator`, and
+`defined-then-deref`. `report?: "all" | "error" | "advisory"` defaults to
+`"all"` and filters reported findings by configured severity. Type-based codes
+skip cleanly when TypeScript parser services are unavailable, while syntax- and
+binding-based codes still run. Disable comments require a non-empty
+`-- <reason>`. See
+[the rule reference](eslint-rules/test-no-unfailable-assertion.md).
+
 ### `test-no-wall-time-assertions`
 
 Opt-in. `allowedPaths?: string[]` defaults to `[]` and exempts benchmark paths

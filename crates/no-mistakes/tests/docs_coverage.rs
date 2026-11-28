@@ -366,6 +366,7 @@ fn test_file_hygiene_eslint_rules_have_public_docs_and_options() {
         "test-no-fixed-temp-paths",
         "test-no-style-class-assertion",
         "test-no-typed-enqueue-fake",
+        "test-no-unfailable-assertion",
         "test-no-wall-time-assertions",
     ] {
         assert!(registry.contains(&format!("\"{rule}\": require(\"./rules/{rule}\")")));
@@ -385,6 +386,9 @@ fn test_file_hygiene_eslint_rules_have_public_docs_and_options() {
     assert!(types.contains("export interface TestNoConfigMirrorParser"));
     assert!(types.contains("export interface TestNoWallTimeAssertionsOptions"));
     assert!(types.contains("allowedPaths?: string[]"));
+    assert!(types.contains("export interface TestNoUnfailableAssertionOptions"));
+    assert!(types.contains("severities?: Partial<Record<TestNoUnfailableAssertionCode"));
+    assert!(types.contains("report?: TestNoUnfailableAssertionReport"));
 }
 
 #[test]

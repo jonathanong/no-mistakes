@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": [],
+    "paths": {
+      "vitest": ["./ambient.d.ts"],
+      "@testing-library/react": ["./ambient.d.ts"]
+    },
+    "noEmit": true
+  },
+  "include": ["*.ts", "*.d.ts"]
+}

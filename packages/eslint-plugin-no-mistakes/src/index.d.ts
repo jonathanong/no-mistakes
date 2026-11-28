@@ -140,6 +140,23 @@ declare namespace plugin {
     unanalyzable?: RuleUnanalyzable;
   }
 
+  export type TestNoUnfailableAssertionCode =
+    | "defined-by-type"
+    | "same-value"
+    | "truthy-by-type"
+    | "throwing-query"
+    | "discarded-locator"
+    | "defined-then-deref";
+
+  export type TestNoUnfailableAssertionSeverity = "error" | "advisory" | "off";
+
+  export type TestNoUnfailableAssertionReport = "all" | "error" | "advisory";
+
+  export interface TestNoUnfailableAssertionOptions {
+    severities?: Partial<Record<TestNoUnfailableAssertionCode, TestNoUnfailableAssertionSeverity>>;
+    report?: TestNoUnfailableAssertionReport;
+  }
+
   export interface NoLocaleLessDateFormatOptions {
     methods?: string[];
     constructors?: string[];

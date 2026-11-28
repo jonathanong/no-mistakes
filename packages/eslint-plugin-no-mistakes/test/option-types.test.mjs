@@ -9,6 +9,7 @@ it("checks the exported rule option types", () => {
       resolve(__dirname, "option-types.ts"),
       resolve(__dirname, "option-types-unanalyzable.ts"),
       resolve(__dirname, "option-types-config-mirror.ts"),
+      resolve(__dirname, "option-types-unfailable.ts"),
     ],
     {
       noEmit: true,

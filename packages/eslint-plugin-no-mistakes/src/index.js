@@ -65,6 +65,7 @@ const rules = {
   "test-no-shared-state": require("./rules/test-no-shared-state"),
   "test-no-style-class-assertion": require("./rules/test-no-style-class-assertion"),
   "test-no-typed-enqueue-fake": require("./rules/test-no-typed-enqueue-fake"),
+  "test-no-unfailable-assertion": require("./rules/test-no-unfailable-assertion"),
   "ts-no-const-aliases": require("./rules/ts-no-const-aliases"),
   "ts-no-export-renaming": require("./rules/ts-no-export-renaming"),
   "ts-no-function-aliases": require("./rules/ts-no-function-aliases"),
