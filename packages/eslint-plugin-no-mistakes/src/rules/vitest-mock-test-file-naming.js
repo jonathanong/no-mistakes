@@ -2,7 +2,10 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
-const { literalString } = require("./module-mock-helpers");
+const { unwrapExpression, unwrapSequence } = require("./async-ast");
+const { literalString } = require("./logical-call");
+const { frameworkBindingOpaque, isFrameworkBinding } = require("./module-mock-framework");
+const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/;
@@ -11,6 +14,27 @@ const MOCK_TEST_FILE_PATTERN = /\.mock\.test\.[cm]?[jt]sx?$/;
 // `vi.spyOn`, env stubs, and `.mock*()` chain helpers are test doubles, not
 // module mocks (issue #388).
 const MOCK_METHODS = new Set(["mock", "doMock", "unmock", "doUnmock"]);
+
+function isDefaultImport(node, context, seen = new Set()) {
+  let current = unwrapExpression(node);
+  while (current?.type === "Identifier") {
+    const variable = resolveVariable(current, context);
+    if (!variable || seen.has(variable)) return false;
+    const def = variable.defs.length === 1 ? variable.defs[0] : null;
+    if (def?.node?.type === "ImportDefaultSpecifier") return true;
+    if (
+      def?.type !== "Variable" ||
+      def.node?.parent?.kind !== "const" ||
+      def.node.id?.type !== "Identifier" ||
+      !def.node.init
+    ) {
+      return false;
+    }
+    seen.add(variable);
+    current = unwrapExpression(def.node.init);
+  }
+  return false;
+}
 
 function isTestFile(filename) {
   return TEST_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
@@ -21,86 +45,44 @@ function isMockTestFile(filename) {
 }
 
 function propertyName(node, computed) {
+  node = unwrapExpression(node);
   if (!node) return null;
   if (computed && node.type === "Identifier") return null;
   if (!computed && typeof node.name === "string" && node.type !== "Literal") return node.name;
   return literalString(node) || (node.type === "Literal" ? String(node.value) : null);
 }
 
-function unwrap(node) {
-  while (node?.type === "ChainExpression") node = node.expression;
-  if (node?.type === "SequenceExpression" && node.expressions?.length) {
-    return unwrap(node.expressions.at(-1));
-  }
-  return node;
+function patternMock(pattern, name) {
+  return pattern.properties.some((property) => {
+    if (property.type !== "Property") return false;
+    let value = property.value;
+    while (value?.type === "AssignmentPattern") value = value.left;
+    const key = property.computed ? literalString(property.key) : propertyName(property.key, false);
+    return value?.type === "Identifier" && value.name === name && MOCK_METHODS.has(key);
+  });
 }
 
-function isFrameworkBinding(node, context, seen = new Set()) {
-  node = unwrap(node);
+function destructuredOpaqueMock(node, context) {
+  const callee = unwrapSequence(node.callee);
+  if (callee?.type !== "Identifier") return false;
+  const variable = resolveVariable(callee, context);
+  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  const init = unwrapSequence(def?.node?.init);
   if (
-    node?.type === "MemberExpression" &&
-    ["vi", "jest"].includes(propertyName(node.property, node.computed))
-  )
-    return isFrameworkBinding(node.object, context, seen);
-  if (node?.type !== "Identifier" || seen.has(node.name)) return false;
-  seen.add(node.name);
-  let scope = context.sourceCode.getScope(node);
-  while (scope) {
-    const variable = scope.variables.find((candidate) => candidate.name === node.name);
-    if (!variable) {
-      scope = scope.upper;
-      continue;
-    }
-    const def = variable.defs.length === 1 ? variable.defs[0] : null;
-    if (
-      def?.type === "Variable" &&
-      def.node?.parent?.kind === "const" &&
-      def.node.init &&
-      !variable.references.some((ref) => ref.isWrite() && !ref.init)
-    ) {
-      if (
-        def.node.id.type === "Identifier" &&
-        ["Identifier", "MemberExpression"].includes(unwrap(def.node.init)?.type)
-      )
-        return isFrameworkBinding(def.node.init, context, seen);
-      if (
-        def.node.id.type === "ObjectPattern" &&
-        def.node.init.type === "Identifier" &&
-        def.node.id.properties.some(
-          (property) =>
-            property.type === "Property" &&
-            property.value?.type === "Identifier" &&
-            property.value.name === node.name &&
-            ["vi", "jest"].includes(propertyName(property.key, property.computed)),
-        )
-      )
-        return isFrameworkBinding(def.node.init, context, seen);
-    }
-    return variable.defs.some(
-      (def) =>
-        (def.type === "ImportBinding" &&
-          def.node.type !== "ImportDefaultSpecifier" &&
-          (def.parent?.source?.value === "vitest" ||
-            def.parent?.source?.value === "@jest/globals")) ||
-        isFrameworkRequire(def),
-    );
+    def?.type !== "Variable" ||
+    def.node?.parent?.kind !== "const" ||
+    def.node?.id?.type !== "ObjectPattern" ||
+    init?.type !== "Identifier" ||
+    isFrameworkBinding(init, context) ||
+    !frameworkBindingOpaque(init, context)
+  ) {
+    return false;
   }
-  return node.name === "vi" || node.name === "jest";
-}
-
-function isFrameworkRequire(def) {
-  const init = def.node?.init;
-  return (
-    def.type === "Variable" &&
-    init?.type === "CallExpression" &&
-    init.callee.type === "Identifier" &&
-    init.callee.name === "require" &&
-    (init.arguments[0]?.value === "vitest" || init.arguments[0]?.value === "@jest/globals")
-  );
+  return patternMock(def.node.id, callee.name);
 }
 
 function mockMember(node, context, seen = new Set()) {
-  const callee = unwrap(node);
+  const callee = unwrapSequence(node);
   if (callee?.type === "Identifier") {
     if (seen.has(callee.name)) return false;
     const variable = resolveVariable(callee, context);
@@ -111,20 +93,8 @@ function mockMember(node, context, seen = new Set()) {
       return mockMember(def.node.init, context, seen);
     }
     if (def.node.id?.type !== "ObjectPattern" || !def.node.init) return false;
-    return def.node.id.properties.some((property) => {
-      if (property.type !== "Property") return false;
-      let value = property.value;
-      while (value?.type === "AssignmentPattern") value = value.left;
-      const key = property.computed
-        ? literalString(property.key)
-        : propertyName(property.key, false);
-      return (
-        value?.type === "Identifier" &&
-        value.name === callee.name &&
-        MOCK_METHODS.has(key) &&
-        isFrameworkBinding(def.node.init, context)
-      );
-    });
+    if (isDefaultImport(def.node.init, context)) return false;
+    return patternMock(def.node.id, callee.name) && isFrameworkBinding(def.node.init, context);
   }
   if (callee?.type !== "MemberExpression") return false;
   const method = propertyName(callee.property, callee.computed);
@@ -132,8 +102,10 @@ function mockMember(node, context, seen = new Set()) {
     return mockMember(callee.object, context, seen);
   }
   if (!MOCK_METHODS.has(method)) return false;
-  const object = unwrap(callee.object);
-  if (object?.type === "Identifier") return isFrameworkBinding(object, context);
+  const object = unwrapSequence(callee.object);
+  if (object?.type === "Identifier") {
+    return isFrameworkBinding(object, context) && !isDefaultImport(object, context);
+  }
   if (object?.type !== "MemberExpression") return false;
   const inner = propertyName(object.property, object.computed);
   return (
@@ -147,6 +119,48 @@ function isMockingCall(node, context) {
   return mockMember(node.callee, context);
 }
 
+function constAliasTarget(node, context, seen) {
+  const current = unwrapSequence(node);
+  if (current?.type !== "Identifier") return current;
+  const variable = resolveVariable(current, context);
+  if (!variable || seen.has(variable) || variable.defs.length !== 1) return null;
+  const def = variable.defs[0];
+  if (
+    def.type !== "Variable" ||
+    def.node?.parent?.kind !== "const" ||
+    def.node.id?.type !== "Identifier" ||
+    !def.node.init
+  ) {
+    return null;
+  }
+  seen.add(variable);
+  return unwrapSequence(def.node.init);
+}
+
+function opaqueCallee(node, context) {
+  let callee = unwrapSequence(node);
+  const seen = new Set();
+  while (callee?.type === "Identifier") callee = constAliasTarget(callee, context, seen);
+  while (
+    callee?.type === "MemberExpression" &&
+    (propertyName(callee.property, callee.computed) === "call" ||
+      propertyName(callee.property, callee.computed) === "apply")
+  ) {
+    callee = constAliasTarget(unwrapSequence(callee.object), context, seen);
+    while (callee?.type === "Identifier") callee = constAliasTarget(callee, context, seen);
+  }
+  return callee;
+}
+
+function opaqueMock(node, context) {
+  const callee = opaqueCallee(node.callee, context);
+  if (callee?.type !== "MemberExpression") return false;
+  const method = propertyName(callee.property, callee.computed);
+  if (method === null || !MOCK_METHODS.has(method)) return false;
+  if (isFrameworkBinding(callee.object, context)) return false;
+  return frameworkBindingOpaque(callee.object, context);
+}
+
 module.exports = Object.assign(
   rule(
     {
@@ -155,23 +169,37 @@ module.exports = Object.assign(
         description: "require .mock.test filenames for module-mocking tests",
         recommended: false,
       },
-      schema: [],
+      schema: [
+        {
+          type: "object",
+          additionalProperties: false,
+          properties: { unanalyzable: UNANALYZABLE_SCHEMA },
+        },
+      ],
       messages: {
         needsMock:
           "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
         unnecessaryMock:
           "Tests without module mocking (vi.mock/vi.doMock) must not use a .mock.test.<ext> filename.",
+        unanalyzable:
+          "Cannot tell whether {{subject}} mocks a module. Use a static vi.mock or jest.mock call.",
       },
     },
     (context) => {
       const suppressed = ruleSuppression(context, "vitest-mock-test-file-naming");
       let usesMocking = false;
+      let opaque = false;
       return {
         CallExpression(node) {
-          if (isMockingCall(node, context) && !suppressed(node)) usesMocking = true;
+          if (suppressed(node)) return;
+          if (isMockingCall(node, context)) usesMocking = true;
+          else if (opaqueMock(node, context) || destructuredOpaqueMock(node, context))
+            opaque = true;
         },
         "Program:exit"(node) {
           if (!isTestFile(context.filename)) return;
+          if (opaque) reportUnanalyzable(context, node, "a module mock");
+          if (opaque && !usesMocking) return;
           if (usesMocking && !isMockTestFile(context.filename)) {
             context.report({ node, messageId: "needsMock" });
           }

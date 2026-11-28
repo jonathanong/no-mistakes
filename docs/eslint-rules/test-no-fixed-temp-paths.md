@@ -23,7 +23,16 @@ non-empty segment.
 
 A file that mocks `fs`, `node:fs`, `fs/promises`, or `node:fs/promises` through
 Vitest's `vi.mock` or Jest's `jest.mock` is exempt, even if the mock call follows
-the filesystem use.
+the filesystem use. `jest.mock` also drops an `unanalyzable` report for a
+call whose filesystem binding is not static, because Jest replaces `require()`.
+`vi.mock` does not replace `require()`, so
+`const loaded = require(spec); loaded.writeFileSync("/tmp/a.txt", "a")` still
+reports `unanalyzable` beside `vi.mock("node:fs")`, and
+`require("node:fs").writeFileSync("/tmp/b.txt", "b")` still reports the fixed
+path. A shadowed const such as `const fs = require("node:fs"); const alias = fs; { const fs = alias; fs.writeFileSync("/tmp/result", "") }` still reports beside `vi.mock("node:fs")`. `import fs = require("node:fs")` does too. An ordinary `import fs from "node:fs"` stays exempt. That advisory includes `access`,
+`chmod`, `readdir`, and `createWriteStream` on an unresolved `fs` binding,
+and `execFile`, `spawn`, and `exec`, including their `Sync` forms, on an
+unresolved binding. An unrelated member stays quiet.
 
 ## Disallowed
 
@@ -82,7 +91,17 @@ using directory = mkdtempDisposableSync(prefix);
 
 Enable this opt-in rule with `"no-mistakes/test-no-fixed-temp-paths": "error"`.
 It checks `.test` and `.spec` files with JS, TS, JSX, TSX, and their
-CommonJS and ESM extensions. This rule has no options. It is disabled by default in both presets.
+CommonJS and ESM extensions. It is disabled by default in both presets.
+
+`unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
+filesystem call whose `fs` binding comes from a non-static `require` reports
+`unanalyzable`.
+
+`fs.writeFileSync`, `const { ["writeFileSync" as const]: write } = fs`, and
+`(require as NodeRequire)("node:fs")` are the same filesystem binding.
+`loaded.promises.writeFile` and `const { promises } = require(spec)` keep an
+unresolved `fs` binding through `promises`. `loaded.lstatSync` from that require reports `unanalyzable`, as `statSync` does. A destructured name that is not a
+filesystem method, such as `const { test } = require(spec)`, stays quiet. A computed member of a static `fs`, `fs/promises`, `path`, or `os` binding, such as `fs[method]("/tmp/result", "")`, stays silent. A computed destructure of that module, such as `const { [method]: write } = fs`, stays silent too. A computed identifier on a non-static `require(spec)`, such as `loaded[method]` or `const { [method]: write } = require(spec)`, stays silent, while `const { writeFile = fallback }` still reports `unanalyzable`.
 
 ## Fix
 
@@ -117,6 +136,8 @@ before the first code token to apply a broader suppression.
 - Only `vi.mock` and `jest.mock` trigger the file-wide mock exemption.
   `vi.doMock` and `jest.doMock` leave filesystem calls subject to the check.
   The exemption covers tests that later restore real filesystem methods.
+  A call reached through `require()` stays subject to the check when the file
+  uses `vi.mock`, and stays exempt when it uses `jest.mock`.
 
 ## Related rules
 

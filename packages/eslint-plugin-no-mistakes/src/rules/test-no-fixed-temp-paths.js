@@ -4,9 +4,15 @@ const { posix } = require("node:path");
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { unwrapExpression } = require("./async-ast");
-const { stableConstInitializer } = require("./async-target-bindings");
+const { resolveVariable, stableConstInitializer } = require("./async-target-bindings");
+const { requireResolution } = require("./async-target-sources");
 const { literalString } = require("./logical-call");
-const { bindingResolver, isFilesystemMock } = require("./test-no-fixed-temp-paths-bindings");
+const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
+const {
+  UNRESOLVED,
+  bindingResolver,
+  isFilesystemMock,
+} = require("./test-no-fixed-temp-paths-bindings");
 const { forEachPathArgument } = require("./test-no-fixed-temp-paths-sinks");
 
 const RULE_NAME = "test-no-fixed-temp-paths";
@@ -45,6 +51,33 @@ function isFixedTempPath(node, resolve, origin) {
   );
 }
 
+function reachedThroughRequire(node, context, seen = new Set()) {
+  let current = unwrapExpression(node?.type === "CallExpression" ? node.callee : node);
+  while (current) {
+    if (current.type === "CallExpression" && requireResolution(current, context)) return true;
+    if (current.type === "MemberExpression") {
+      current = unwrapExpression(current.object);
+      continue;
+    }
+    if (current.type !== "Identifier") return false;
+    const variable = resolveVariable(current, context);
+    if (!variable || seen.has(variable)) return false;
+    seen.add(variable);
+    const def = variable.defs.length === 1 ? variable.defs[0] : null;
+    // `import fs = require("node:fs")` is a require(). An ordinary import is not.
+    if (
+      def?.type === "ImportBinding" &&
+      def.parent?.type === "TSImportEqualsDeclaration" &&
+      def.parent.moduleReference?.type === "TSExternalModuleReference"
+    ) {
+      return true;
+    }
+    if (def?.type !== "Variable" || def.parent?.kind !== "const") return false;
+    current = unwrapExpression(def.node?.init);
+  }
+  return false;
+}
+
 module.exports = rule(
   {
     type: "problem",
@@ -52,10 +85,18 @@ module.exports = rule(
       description: "require unique temporary paths in tests",
       recommended: false,
     },
-    schema: [],
+    schema: [
+      {
+        type: "object",
+        additionalProperties: false,
+        properties: { unanalyzable: UNANALYZABLE_SCHEMA },
+      },
+    ],
     messages: {
       fixedTempPath:
         "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+      unanalyzable:
+        "Cannot tell whether {{subject}} writes a fixed temporary path. Use a static fs or path binding.",
     },
   },
   (context) => {
@@ -63,7 +104,10 @@ module.exports = rule(
     const suppressed = ruleSuppression(context, RULE_NAME);
     const resolve = bindingResolver(context);
     const findings = new Set();
-    let mocksFilesystem = false;
+    const requireFindings = new Set();
+    const advisories = new Set();
+    let vitestMocksFs = false;
+    let jestMocksFs = false;
     function origin(input) {
       const seen = new Set();
       let node = unwrapExpression(input);
@@ -74,22 +118,37 @@ module.exports = rule(
       }
       return node;
     }
-    function recordPath(node) {
-      if (isFixedTempPath(node, resolve, origin) && !suppressed(node)) findings.add(node);
+    function recordPath(node, call) {
+      if (!isFixedTempPath(node, resolve, origin) || suppressed(node)) return;
+      findings.add(node);
+      if (reachedThroughRequire(call, context)) requireFindings.add(node);
     }
     return {
       CallExpression(node) {
-        if (mocksFilesystem) return;
         const binding = resolve(node.callee);
-        if (isFilesystemMock(node, binding)) {
-          mocksFilesystem = true;
+        if (binding === UNRESOLVED) {
+          if (!suppressed(node)) advisories.add(node);
           return;
         }
-        forEachPathArgument(node.arguments, binding, origin, recordPath);
+        if (isFilesystemMock(node, binding)) {
+          if (binding === "vitest.vi.mock") vitestMocksFs = true;
+          else jestMocksFs = true;
+          return;
+        }
+        forEachPathArgument(node.arguments, binding, origin, (path) => recordPath(path, node));
       },
       "Program:exit"() {
-        if (mocksFilesystem) return;
-        for (const node of findings) context.report({ node, messageId: "fixedTempPath" });
+        if (jestMocksFs) return;
+        const reportFinding = (node) => context.report({ node, messageId: "fixedTempPath" });
+        if (!vitestMocksFs) {
+          for (const node of advisories) reportUnanalyzable(context, node, "this call");
+          for (const node of findings) reportFinding(node);
+          return;
+        }
+        for (const node of advisories) {
+          if (reachedThroughRequire(node, context)) reportUnanalyzable(context, node, "this call");
+        }
+        for (const node of requireFindings) reportFinding(node);
       },
     };
   },

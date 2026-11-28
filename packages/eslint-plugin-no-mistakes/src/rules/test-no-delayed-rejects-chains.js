@@ -1,6 +1,10 @@
 "use strict";
 
-const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
+const {
+  isTransparentExpression,
+  unwrapExpression,
+  unwrapTransparentParent,
+} = require("./async-ast");
 const { literalString } = require("./module-mock-helpers");
 const {
   isNonRejectingHandler,
@@ -10,38 +14,46 @@ const {
 const PROMISE_CHAIN_METHODS = new Set(["catch", "finally", "then"]);
 
 function literalPropertyName(member) {
-  if (!member?.property) return null;
-  if (member.computed && member.property.type === "Identifier") return null;
-  if (!member.computed && member.property.type === "Identifier") return member.property.name;
-  if (!member.computed && typeof member.property.name === "string") return member.property.name;
-  return literalString(member.property);
+  member = unwrapExpression(member);
+  if (member?.type !== "MemberExpression") return null;
+  const property = unwrapExpression(member.property);
+  if (!property) return null;
+  if (member.computed && property.type === "Identifier") return null;
+  if (property.type === "Identifier") return property.name;
+  return literalString(property);
 }
 
 function isPromiseChainMember(node) {
-  return node.type === "MemberExpression" && PROMISE_CHAIN_METHODS.has(literalPropertyName(node));
+  const member = unwrapExpression(node);
+  return (
+    member?.type === "MemberExpression" && PROMISE_CHAIN_METHODS.has(literalPropertyName(member))
+  );
 }
 
 function promiseChainBase(node) {
   let current = unwrapExpression(node);
-  while (current.type === "CallExpression" && isPromiseChainMember(current.callee)) {
-    current = unwrapExpression(current.callee.object);
+  while (current?.type === "CallExpression" && isPromiseChainMember(current.callee)) {
+    current = unwrapExpression(unwrapExpression(current.callee).object);
   }
   return current;
 }
 
 function continuationCall(node) {
-  const chainNode = unwrapTransparentParent(node);
+  let chainNode = unwrapTransparentParent(node);
+  while (isTransparentExpression(chainNode.parent)) chainNode = chainNode.parent;
   const member = chainNode.parent;
   if (
     member?.type !== "MemberExpression" ||
-    member.object !== chainNode ||
-    !PROMISE_CHAIN_METHODS.has(literalPropertyName(member)) ||
-    member.parent?.type !== "CallExpression" ||
-    member.parent.callee !== member
+    unwrapExpression(member.object) !== unwrapExpression(chainNode) ||
+    !PROMISE_CHAIN_METHODS.has(literalPropertyName(member))
   ) {
     return null;
   }
-  return member.parent;
+  let parent = member.parent;
+  while (isTransparentExpression(parent)) parent = parent.parent;
+  return parent?.type === "CallExpression" && unwrapExpression(parent.callee) === member
+    ? parent
+    : null;
 }
 
 function initialCallIsSafe(node) {

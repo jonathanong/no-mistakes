@@ -2,6 +2,8 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { boundaryOptions } = require("./module-mock-schema");
+const { reportUnanalyzable } = require("./rule-unanalyzable");
 const { baselineKey, baselineMap } = require("./module-mock-baseline");
 const { matchDirectMockCallApply } = require("./module-mock-call-apply");
 const { integrationAllows } = require("./module-mock-integration");
@@ -59,10 +61,12 @@ module.exports = rule(
       description: "enforce configured module mock boundaries",
       recommended: false,
     },
-    schema: [{ type: "object" }],
+    schema: [boundaryOptions],
     messages: {
       boundary: "{{message}}",
       stale: "{{message}}",
+      unanalyzable:
+        "Cannot tell whether {{subject}} is a framework mock. Use a static vitest or Jest import.",
     },
   },
   (context) => {
@@ -115,11 +119,23 @@ module.exports = rule(
       },
       CallExpression(node) {
         const memberMock = isModuleMockMemberCall(node, context);
+        if (memberMock?.unanalyzable) {
+          if (MODULE_MOCK_METHODS.has(memberMock.method) && !suppressed(node)) {
+            reportUnanalyzable(context, node, "this call");
+          }
+          return;
+        }
         if (memberMock && MODULE_MOCK_METHODS.has(memberMock.method)) {
           reportIfDisallowed(node, memberMock);
           return;
         }
         const directCall = matchDirectMockCallApply(node, context, MODULE_MOCK_METHODS);
+        if (directCall?.mock.unanalyzable) {
+          if (MODULE_MOCK_METHODS.has(directCall.mock.method) && !suppressed(node)) {
+            reportUnanalyzable(context, node, "this call");
+          }
+          return;
+        }
         if (directCall) {
           reportIfDisallowed(node, directCall.mock, directCall.specifierNode, directCall.factory);
           return;

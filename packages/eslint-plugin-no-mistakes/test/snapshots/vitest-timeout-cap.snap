@@ -1570,13 +1570,13 @@
           "severity": 2
         },
         {
-          "column": 1,
-          "endColumn": 43,
+          "column": 23,
+          "endColumn": 42,
           "endLine": 4,
           "file": "fixture.test.ts",
           "line": 4,
-          "message": "Vitest framework API carrier cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
-          "messageId": "unknown",
+          "message": "Vitest testTimeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
           "ruleId": "no-mistakes/vitest-timeout-cap",
           "severity": 2
         },

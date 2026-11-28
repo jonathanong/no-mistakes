@@ -3,6 +3,8 @@
 const { posix, relative } = require("node:path");
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { isUnresolved, moduleLoad } = require("./module-load");
+const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
 const {
   EXPECT_MODULES,
   isExpectCallee,
@@ -82,10 +84,43 @@ function isFrameworkExpect(node, context) {
   return member?.name === "expect" && ASSERTION_MODULES.has(member.source);
 }
 
+function opaqueNow(node, context) {
+  const value = localOrigin(node, context);
+  if (value?.type !== "CallExpression") return false;
+  const callee = unwrap(value.callee);
+  if (callee?.type === "MemberExpression" && callee.computed) return false;
+  if (memberName(callee) !== "now") return false;
+  const receiver = unwrap(callee.object);
+  if (receiver?.type === "MemberExpression" && receiver.computed) return false;
+  return isUnresolved(moduleLoad(receiver, context));
+}
+
+function withoutNot(assertion) {
+  while (assertion?.type === "MemberExpression" && memberName(assertion) === "not") {
+    if (assertion.computed) return null;
+    assertion = unwrap(assertion.object);
+  }
+  return assertion;
+}
+
+function opaqueWallClock(node, context) {
+  const callee = unwrap(node.callee);
+  if (callee?.computed || !MATCHERS.has(memberName(callee))) return false;
+  const assertion = withoutNot(unwrap(callee.object));
+  if (assertion?.type !== "CallExpression" || !isFrameworkExpect(assertion.callee, context)) {
+    return false;
+  }
+  const argument = localOrigin(assertion.arguments?.[0], context);
+  return (
+    argument?.type === "BinaryExpression" &&
+    argument.operator === "-" &&
+    (opaqueNow(argument.left, context) || opaqueNow(argument.right, context))
+  );
+}
+
 function isWallTimeAssertion(callee, context) {
   if (!MATCHERS.has(memberName(callee))) return false;
-  let assertion = unwrap(callee.object);
-  while (memberName(assertion) === "not") assertion = unwrap(assertion.object);
+  const assertion = withoutNot(unwrap(callee.object));
   return (
     assertion?.type === "CallExpression" &&
     isFrameworkExpect(assertion.callee, context) &&
@@ -106,13 +141,18 @@ module.exports = rule(
     schema: [
       {
         type: "object",
-        properties: { allowedPaths: { type: "array", items: { type: "string" } } },
+        properties: {
+          allowedPaths: { type: "array", items: { type: "string" } },
+          unanalyzable: UNANALYZABLE_SCHEMA,
+        },
         additionalProperties: false,
       },
     ],
     messages: {
       wallTime:
         "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+      unanalyzable:
+        "Cannot tell whether {{subject}} reads wall time. Use a static Date, performance, or perf_hooks binding.",
     },
   },
   (context) => {
@@ -120,6 +160,7 @@ module.exports = rule(
     const suppressed = ruleSuppression(context, "test-no-wall-time-assertions");
     let usesFakeTimers = false;
     const assertions = [];
+    const advisories = [];
     return {
       CallExpression(node) {
         if (usesFakeTimers) return;
@@ -128,10 +169,15 @@ module.exports = rule(
           usesFakeTimers = true;
         } else if (isWallTimeAssertion(callee, context) && !suppressed(node)) {
           assertions.push(node);
+        } else if (!suppressed(node) && opaqueWallClock(node, context)) {
+          advisories.push(node);
         }
       },
       "Program:exit"() {
         if (usesFakeTimers) return;
+        for (const node of advisories) {
+          reportUnanalyzable(context, node, "this elapsed-time assertion");
+        }
         for (const node of assertions) context.report({ node, messageId: "wallTime" });
       },
     };

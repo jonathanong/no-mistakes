@@ -247,7 +247,17 @@ it("runs", () => {}, budget);
   Positive values, configuration caps, override caps, and `unknownValues` still
   follow their normal checks. This option must be a boolean.
 - `unknownValues` is `"ignore"` by default. Set it to `"finding"` to report
-  unresolved timeout expressions.
+  unresolved timeout expressions. A non-static `require` of `vitest` is an
+  unresolved framework binding, so `vt.test(..., timeout)` follows this option
+  instead of passing silently. `require(moduleName).test.bind(null)(...)` keeps
+  that same advisory.
+
+`const vt = require("vitest")` and `const { test } = require("vitest")` are
+test registrations. Reading `cfg.test.testTimeout as number` still sees the
+numeric timeout. A pattern or loop write, such as
+`[(cfg.test.testTimeout as number)] = [60000]`, `[cfg.test.testTimeout] = [60000]`,
+or `for (cfg.test.testTimeout of [60000])`, is not a read of the initializer. `test.apply(null, [name, callback] as const)` still forwards
+that callback, including `ctx.onTestFinished`. Repeated loads of the same module are one receiver: `require("vitest").vi.setConfig.call(require("vitest").vi, { testTimeout: 60000 })` and the matching `.apply` still see that timeout. `setConfig` ignores its receiver, so `require("vitest").vi.setConfig.call(require("other").vi, { testTimeout: 60000 })` still sees that timeout.
 
 Both numeric caps must be positive finite numbers. Set the rule in the files
 that contain Vitest tests or configuration:

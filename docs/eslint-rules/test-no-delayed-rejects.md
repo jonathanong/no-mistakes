@@ -114,7 +114,17 @@ the async matcher was not awaited at its creation.
 
 ## Options
 
-This rule has no options.
+`unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
+`.rejects` matcher whose `expect` comes from a non-static `require` reports
+`unanalyzable`. A computed identifier property, such as `check(promise)[rejects]`,
+is not that matcher. A static computed key is still that matcher, including
+`check(promise)["rejects"]` and an expression-free template key. A suppression directive on `.rejects` silences the advisory.
+
+`const { expect } = require("vitest")`, an `expect` alias, `vt.expect` from
+`require("vitest")`, and `import vt = require("vitest")` are the same expect.
+`(expect(promise).rejects as any).toThrow()` is still that matcher. An
+immediate `(promise.catch as typeof promise.catch)(() => {})` still counts as
+observing the rejection.
 
 ## Fix
 
@@ -138,7 +148,13 @@ observer before a later coordination await.
 Nested forwarding uses the function actually passed as the receiver:
 `expect.call.call(expect, null, promise)` observes the promise, while
 `expect.call.call(other, null, promise)` invokes `other` and cannot suppress a
-later delayed `expect(promise).rejects` finding. An extracted intrinsic such as
+later delayed `expect(promise).rejects` finding. The same call does not report
+`unanalyzable` when `expect` comes from a non-static `require`, and neither does
+a spread argument list such as `check.apply.call(other, null, [...items])`.
+`check(promise).rejects` and `check.call(null, promise).rejects` still report
+`unanalyzable`. A single `check.call(null, ...values)` does too, because the
+spread does not change the invoked function. Nested forwarding such as
+`check.call.call(other, ...values)` stays quiet when the receiver is not resolved. An extracted intrinsic such as
 `const invoke = expect.call` is not itself an expectation binding.
 
 A computed identifier key is not static. `expect.poll` receives a callback,

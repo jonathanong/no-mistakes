@@ -7,6 +7,7 @@ const {
 } = require("./async-target-bindings");
 const { importSpecifierName } = require("./test-no-shared-state-callees");
 const { unwrapExpression, isFunction } = require("./async-ast");
+const { requireResolution } = require("./async-target-sources");
 const { createCallbackBindings } = require("./timeout-callback-bindings");
 const HOOKS = new Set([
   "beforeAll",
@@ -42,6 +43,8 @@ function createBindingResolver(context) {
       ["test", "hook", "setter", "unknown"].includes(owner.kind)
     )
       return { kind: "invocation", target: owner, mode: name, root: owner.root };
+    if (owner.kind === "unknown")
+      return owner.required ? { kind: "unknown", root: owner.root, required: true } : null;
     if (owner.kind === "namespace")
       return name === null
         ? { kind: "unknown", root: owner.root }
@@ -56,8 +59,7 @@ function createBindingResolver(context) {
     if (HOOKS.has(name)) return { kind: "hook", name, root: owner.root };
     if (CHAIN.has(name)) return { ...owner };
     if (name === "describe" || name === "suite") return { ...owner, name };
-    if (BUILDERS.has(name)) return { kind: "builder", name, owner, root: owner.root };
-    return null;
+    return BUILDERS.has(name) ? { kind: "builder", name, owner, root: owner.root } : null;
   }
   function resolve(node) {
     node = unwrapExpression(node);
@@ -70,6 +72,14 @@ function createBindingResolver(context) {
         : null;
     }
     if (node.type === "CallExpression") {
+      const required = requireResolution(node, context);
+      if (required) {
+        if (required.source === null) return { kind: "unknown", root: node, required: true };
+        if (["vitest", "vitest/config", "vite"].includes(required.source)) {
+          return { kind: "namespace", source: required.source, root: required.source };
+        }
+        return null;
+      }
       const callee = unwrapExpression(node.callee);
       if (callee.type === "MemberExpression" && member(callee) === "bind") {
         const target = resolve(callee.object),
@@ -79,6 +89,7 @@ function createBindingResolver(context) {
           target?.kind === "setter"
             ? receiver?.kind === "runtime" && receiver.root === target.root
             : target?.kind === "hook" && receiver?.root === target.root;
+        if (target?.required && !valid) return target;
         if (!valid)
           return target && new Set(["setter", "hook", "test"]).has(target.kind)
             ? { kind: "unknown", root: target.root }
@@ -116,8 +127,8 @@ function createBindingResolver(context) {
             call.arguments.some(
               (arg) =>
                 callback(arg) === fn ||
-                (arg.type === "ArrayExpression" &&
-                  arg.elements.some((element) => callback(element) === fn)),
+                (unwrapExpression(arg)?.type === "ArrayExpression" &&
+                  unwrapExpression(arg).elements.some((element) => callback(element) === fn)),
             ),
           )
           .map((call) => invocation(call))
@@ -163,11 +174,8 @@ function createBindingResolver(context) {
   function invocation(node) {
     const api = resolve(node.callee);
     if (api?.kind !== "invocation") return { api, args: node.arguments };
-    if (api.target.kind === "setter") {
-      const receiver = resolve(node.arguments[0]);
-      if (receiver?.kind !== "runtime" || receiver.root !== api.target.root)
-        return { api: { kind: "unknown", root: api.root }, args: [] };
-    }
+    if (node.arguments[0]?.type === "SpreadElement")
+      return { api: { kind: "unknown", root: api.root }, args: [] };
     if (api.mode === "call")
       return node.arguments.slice(1).some((arg) => arg.type === "SpreadElement")
         ? { api: { kind: "unknown", root: api.root }, args: [] }

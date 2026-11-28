@@ -1,9 +1,15 @@
 "use strict";
 const { options } = require("../helpers");
-const { resolveVariable, stableConstInitializer } = require("./async-target-bindings");
+const { resolveVariable } = require("./async-target-bindings");
+const { requireResolution } = require("./async-target-sources");
 const { importSpecifierName } = require("./test-no-shared-state-callees");
-const { literalString } = require("./module-mock-helpers");
-const { unwrapExpression, isFunction } = require("./async-ast");
+const { unwrapExpression, isFunction, isTransparentExpression } = require("./async-ast");
+const {
+  memberName,
+  patternBindingName,
+  requireExport,
+  requireMemberBinding,
+} = require("./test-no-skips-members");
 const NAMES = new Set(["it", "test", "describe"]);
 const MODULES = new Set(["vitest", "@playwright/test"]);
 const CONFIGURED_NAMESPACE = "configured-test-module";
@@ -21,44 +27,6 @@ function admit(source, importedName, namespace, testModules) {
   }
   if (!testModules.has(source) || importedName !== (namespace ? "*" : "test")) return null;
   return namespace ? CONFIGURED_NAMESPACE : { framework: "@playwright/test", name: "test" };
-}
-function immutableKey(node, context) {
-  const seen = new Set();
-  while (node) {
-    node = unwrapExpression(node);
-    const literal = literalString(node);
-    if (literal !== null) return literal;
-    node = stableConstInitializer(node, context, seen);
-  }
-  return null;
-}
-function memberName(node, context) {
-  if (!node.computed && node.property.type === "Identifier") return node.property.name;
-  return immutableKey(node.property, context);
-}
-function unwrapBinding(node) {
-  let current = node;
-  while (current.type === "AssignmentPattern") current = current.left;
-  return current;
-}
-function propertyKey(property) {
-  if (!property.computed && property.key.type === "Identifier") return property.key.name;
-  return literalString(property.key);
-}
-// The key that introduces the identifier, after defaults and nested objects.
-// `const { test: t = x } = require("vitest")` and
-// `const { runner: { test: t } = fallback } = require("vitest")` both yield `test`.
-function patternBindingName(pattern, name) {
-  for (const property of pattern.properties) {
-    if (property.type !== "Property") continue;
-    const value = unwrapBinding(property.value);
-    if (value.type === "Identifier" && value.name === name) return propertyKey(property);
-    if (value.type === "ObjectPattern") {
-      const nested = patternBindingName(value, name);
-      if (nested) return nested;
-    }
-  }
-  return null;
 }
 function testModulesFor(context) {
   const cached = testModulesByContext.get(context);
@@ -99,11 +67,15 @@ function imported(node, context, namespace = false, seen = new Set()) {
         source = equals.source;
         importedName = namespace ? "*" : equals.name;
       } else if (def.parent?.source) {
+        if (def.parent.importKind === "type" || def.node.importKind === "type") continue;
         source = def.parent.source.value;
         if (def.node.type === "ImportNamespaceSpecifier") importedName = "*";
-        else if (def.node.type === "ImportDefaultSpecifier")
+        else if (def.node.type === "ImportDefaultSpecifier") {
           importedName = source === "@playwright/test" ? "test" : null;
-        else importedName = importSpecifierName(def.node);
+          if (source === "vitest" && namespace) importedName = "*";
+        } else importedName = importSpecifierName(def.node);
+        if (importedName === "default" && source === "@playwright/test") importedName = "test";
+        if (importedName === "default" && source === "vitest" && namespace) importedName = "*";
       }
     } else if (def.type === "Variable") {
       const declaration = def.node;
@@ -111,28 +83,36 @@ function imported(node, context, namespace = false, seen = new Set()) {
       let init = unwrapExpression(declaration.init || {});
       const awaited = init.type === "AwaitExpression";
       if (awaited) init = unwrapExpression(init.argument);
-      if (
-        init.type === "CallExpression" &&
-        init.callee.type === "Identifier" &&
-        init.callee.name === "require"
-      ) {
-        const requireVariable = resolveVariable(init.callee, context);
-        if (requireVariable?.defs.length) continue;
-        source = init.arguments[0]?.type === "Literal" ? init.arguments[0].value : null;
-      } else if (init.type === "ImportExpression" && awaited) {
-        source = init.source?.type === "Literal" ? init.source.value : null;
+      const exported = declaration.id.type === "Identifier" ? requireExport(init, context) : null;
+      const required = exported ? null : requireResolution(init, context);
+      if (exported) source = exported.source;
+      else if (required) source = required.source;
+      else if (init.type === "ImportExpression" && awaited) {
+        const specifier = unwrapExpression(init.source);
+        source = specifier?.type === "Literal" ? specifier.value : null;
       }
       if (declaration.id.type === "ObjectPattern") {
-        importedName = patternBindingName(declaration.id, node.name);
+        const configured = Boolean(source) && testModules.has(source) && !MODULES.has(source);
+        importedName = patternBindingName(declaration.id, node.name, configured);
+      } else if (exported && declaration.id.name === node.name) {
+        importedName = exported.name;
       } else if (declaration.id.type === "Identifier" && declaration.id.name === node.name) {
         importedName = "*";
       }
       if (!source && init.type === "Identifier" && declaration.id.type === "ObjectPattern") {
         const namespaceSource = imported(init, context, true, seen);
         if (
+          !namespace &&
+          namespaceSource === CONFIGURED_NAMESPACE &&
+          patternBindingName(declaration.id, node.name, true) === "test"
+        ) {
+          return { framework: "@playwright/test", name: "test" };
+        }
+        if (
           (namespaceSource === "vitest" || namespaceSource === "@playwright/test") &&
           NAMES.has(importedName)
         ) {
+          if (namespace) return namespaceSource;
           return { framework: namespaceSource, name: importedName };
         }
       }
@@ -163,8 +143,13 @@ function testBinding(node, context, visited = new Set()) {
   if (node.type === "TaggedTemplateExpression") return testBinding(node.tag, context, visited);
   if (node.type !== "MemberExpression") return null;
   const name = memberName(node, context);
-  if (NAMES.has(name) && node.object.type === "Identifier") {
-    const framework = imported(node.object, context, true);
+  const object = unwrapExpression(node.object);
+  const requiredMember = node.computed
+    ? null
+    : requireMemberBinding(object, name, context, admit, testModulesFor(context));
+  if (requiredMember) return requiredMember;
+  if (NAMES.has(name) && object?.type === "Identifier") {
+    const framework = imported(object, context, true);
     if (framework && (framework !== CONFIGURED_NAMESPACE || name === "test"))
       return {
         framework: framework === CONFIGURED_NAMESPACE ? "@playwright/test" : framework,
@@ -178,8 +163,11 @@ function testBinding(node, context, visited = new Set()) {
   return name === "describe" ? { ...binding, name } : binding;
 }
 function contextParameter(callback, context) {
-  const call = isFunction(callback) ? callback.parent : null;
-  if (call?.type !== "CallExpression" || !call.arguments.includes(callback)) return null;
+  if (!isFunction(callback)) return null;
+  let current = callback;
+  while (isTransparentExpression(current.parent)) current = current.parent;
+  const call = current.parent;
+  if (call?.type !== "CallExpression" || !call.arguments.includes(current)) return null;
   const binding = testBinding(call.callee, context);
   if (binding?.framework !== "vitest" || binding.name === "describe" || binding.table === "each")
     return null;

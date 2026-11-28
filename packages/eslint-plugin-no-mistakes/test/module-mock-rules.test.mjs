@@ -26,16 +26,19 @@ function integrationPreserveFixture(name) {
 }
 
 function integrationPreserveRules() {
-  const options = {
-    integrationExports: {
-      specifiers: ["@app/**"],
-      sourcePathTemplates: [resolve(integrationPreserveFixtureRoot, "integration.ts")],
-    },
-    internalSpecifiers: ["@app/**"],
-  };
+  const internalSpecifiers = ["@app/**"];
   return {
-    "no-mistakes/module-mock-boundary": ["error", options],
-    "no-mistakes/module-mock-preserve-exports": ["error", options],
+    "no-mistakes/module-mock-boundary": [
+      "error",
+      {
+        integrationExports: {
+          specifiers: ["@app/**"],
+          sourcePathTemplates: [resolve(integrationPreserveFixtureRoot, "integration.ts")],
+        },
+        internalSpecifiers,
+      },
+    ],
+    "no-mistakes/module-mock-preserve-exports": ["error", { internalSpecifiers }],
   };
 }
 
@@ -45,17 +48,20 @@ const integrationBarrelFixtureRoot = resolve(
 );
 
 function barrelRules(sourceFile = "index.ts", overrides = {}) {
-  const options = {
-    integrationExports: {
-      specifiers: ["@app/**"],
-      sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, sourceFile)],
-      ...overrides,
-    },
-    internalSpecifiers: ["@app/**"],
-  };
+  const internalSpecifiers = ["@app/**"];
   return {
-    "no-mistakes/module-mock-boundary": ["error", options],
-    "no-mistakes/module-mock-preserve-exports": ["error", options],
+    "no-mistakes/module-mock-boundary": [
+      "error",
+      {
+        integrationExports: {
+          specifiers: ["@app/**"],
+          sourcePathTemplates: [resolve(integrationBarrelFixtureRoot, sourceFile)],
+          ...overrides,
+        },
+        internalSpecifiers,
+      },
+    ],
+    "no-mistakes/module-mock-preserve-exports": ["error", { internalSpecifiers }],
   };
 }
 

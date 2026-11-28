@@ -126,7 +126,19 @@
   },
   {
     "file": "static-runner-opaque.test.ts",
-    "findings": [],
+    "findings": [
+      {
+        "column": 52,
+        "endColumn": 71,
+        "endLine": 10,
+        "file": "static-runner-opaque.test.ts",
+        "line": 10,
+        "message": "Do not assert on err.message; check the error type or code instead.",
+        "messageId": "message",
+        "ruleId": "no-mistakes/test-no-error-message-matching",
+        "severity": 2
+      }
+    ],
     "name": "static-runner-opaque.test.ts",
     "options": null,
     "rule": "test-no-error-message-matching"

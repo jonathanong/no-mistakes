@@ -44,15 +44,10 @@ function isKnownTestCallee(callee, testCallees = TEST_CALLEES, namespaces = new 
   if (callee?.type === "SequenceExpression" && callee.expressions.length > 0) {
     return isKnownTestCallee(callee.expressions.at(-1), testCallees, namespaces);
   }
-  if (
-    callee?.type === "MemberExpression" &&
-    callee.computed &&
-    callee.property?.type === "Identifier"
-  ) {
-    return false;
-  }
   if (callee?.type === "MemberExpression") {
-    const forwarded = staticPropertyName(callee.property);
+    const property = unwrapExpression(callee.property);
+    if (callee.computed && property?.type === "Identifier") return false;
+    const forwarded = staticPropertyName(property);
     if (!callee.computed && (forwarded === "call" || forwarded === "apply"))
       return isKnownTestCallee(callee.object, testCallees, namespaces);
   }
@@ -62,10 +57,11 @@ function isKnownTestCallee(callee, testCallees = TEST_CALLEES, namespaces = new 
   if (callee?.type !== "MemberExpression") return false;
   const prop = propertyName(callee.property);
   if (!prop) return false;
+  const object = unwrapExpression(callee.object);
   if (
     TEST_CALLEES.has(prop) &&
-    callee.object?.type === "Identifier" &&
-    (testCallees.has(callee.object.name) || namespaces.has(callee.object.name))
+    object?.type === "Identifier" &&
+    (testCallees.has(object.name) || (!callee.computed && namespaces.has(object.name)))
   ) {
     return true;
   }

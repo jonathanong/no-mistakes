@@ -59,13 +59,75 @@ declare namespace plugin {
     sentinelTestIds?: string[];
   }
 
+  export interface NoVitestSequentialOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface VitestMockTestFileNamingOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface ModuleMockIntegrationExports {
+    specifiers?: string[];
+    sourcePathTemplates?: string[];
+    specifierPrefix?: string;
+    extensions?: string[];
+    reexportExtensions?: string[];
+    markerRegex?: string;
+  }
+
+  export interface ModuleMockBoundaryOptions {
+    internalSpecifiers?: string[];
+    includePathPatterns?: string[];
+    excludePathPatterns?: string[];
+    requireLiteralSpecifiers?: boolean;
+    baseline?: [string, string, number][];
+    integrationExports?: ModuleMockIntegrationExports;
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface ModuleMockPreserveExportsOptions {
+    internalSpecifiers?: string[];
+    includePathPatterns?: string[];
+    excludePathPatterns?: string[];
+    baseline?: [string, string][];
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface TestNoDelayedRejectsOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface TestNoErrorMessageMatchingOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface TestNoFixedTempPathsOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface TestNoSharedStateOptions {
+    allowBeforeAllAssignments?: boolean;
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export type TestNoSkipModifier = "skip" | "skipIf" | "runIf" | "only" | "todo" | "fixme";
+
+  export interface TestNoSkipsOptions {
+    allow?: TestNoSkipModifier[];
+    testModules?: string[];
+    unanalyzable?: RuleUnanalyzable;
+  }
+
   export interface TestNoWallTimeAssertionsOptions {
     allowedPaths?: string[];
+    unanalyzable?: RuleUnanalyzable;
   }
 
   export interface TestNoTypedEnqueueFakeOptions {
     singleExportPattern?: string;
     moduleGlobs?: string[];
+    unanalyzable?: RuleUnanalyzable;
   }
 
   export interface NoLocaleLessDateFormatOptions {

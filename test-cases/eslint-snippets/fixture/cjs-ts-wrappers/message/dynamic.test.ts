@@ -1,0 +1,22 @@
+const spec = "vitest";
+const vt = require(spec);
+const { expect: check } = require(spec);
+const { test } = require("vitest");
+test("reads", () => {
+  const err = new Error("boom");
+  const extra = [];
+  vt.expect(err.message).toBe("boom");
+  check.call(null, err.message).toBe("x");
+  check.apply(null, [err.message]).toBe("x");
+  check.apply(null, [err.message, ,]).toBe("x");
+  check.call(null, err.message, ...extra).toBe("x");
+  check.call(null, ...extra, err.message).toBe("x");
+  check.apply(null, [err.message], ...extra).toBe("x");
+  check(...[err.message]).toBe("x");
+  check(err.message, ...extra).toBe("x");
+  check(...extra).toBe("x");
+  vt.expect(...[err.message]).toBe("x");
+  check(err.message).toBe("x");
+  const other = (value) => value;
+  check.call.call(other, err.message, 42).toBe(42);
+});

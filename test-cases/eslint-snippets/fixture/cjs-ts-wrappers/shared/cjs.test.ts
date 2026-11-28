@@ -1,0 +1,12 @@
+const vt = require("vitest");
+const base = [];
+vt.test("creates", () => { base.push(1); });
+const { test: t } = require("vitest");
+const items = [];
+t("updates", () => { items.push(1); });
+import vt2 = require("vitest");
+const more = [];
+vt2.test("removes", () => { more.push(1); });
+const { test } = require("@playwright/test");
+const pages = [];
+test("opens", () => { pages.push(1); });

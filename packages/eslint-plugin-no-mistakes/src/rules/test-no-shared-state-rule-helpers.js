@@ -1,5 +1,6 @@
 "use strict";
 
+const { unwrapExpression, unwrapSequence } = require("./async-ast");
 const { literalString } = require("./module-mock-helpers");
 const {
   callbackCall,
@@ -35,10 +36,7 @@ function resolveFunctionCallback(context, node, callback) {
 }
 
 function calleeHasProperty(callee, name) {
-  while (callee?.type === "ChainExpression") callee = callee.expression;
-  if (callee?.type === "SequenceExpression" && callee.expressions.length > 0) {
-    return calleeHasProperty(callee.expressions.at(-1), name);
-  }
+  callee = unwrapSequence(callee);
   if (!callee) return false;
   if (callee.type === "Identifier") return callee.name === name;
   if (callee.type === "CallExpression") return calleeHasProperty(callee.callee, name);
@@ -54,10 +52,11 @@ function createRuleHelpers(context, testCalleeNames, namespaces, testAliases) {
   return {
     calleeHasProperty,
     isDescribeCall(node) {
+      const callee = unwrapExpression(node.callee);
       return (
-        (node.callee.type === "Identifier" && node.callee.name === "describe") ||
-        (isKnownTestCallee(node.callee, testCalleeNames, namespaces) &&
-          calleeHasProperty(node.callee, "describe"))
+        (callee?.type === "Identifier" && callee.name === "describe") ||
+        (isKnownTestCallee(callee, testCalleeNames, namespaces) &&
+          calleeHasProperty(callee, "describe"))
       );
     },
     isInlineCallback(node) {
@@ -73,15 +72,17 @@ function createRuleHelpers(context, testCalleeNames, namespaces, testAliases) {
       return resolveFunctionCallback(context, node, callback);
     },
     configureSerialMode(node) {
-      if (!calleeHasProperty(node.callee, "configure")) return false;
+      const callee = unwrapExpression(node.callee);
+      if (!calleeHasProperty(callee, "configure")) return false;
+      const object = callee?.type === "MemberExpression" ? unwrapExpression(callee.object) : null;
       if (
-        node.callee.type !== "MemberExpression" ||
-        !isKnownTestCallee(node.callee.object, testCalleeNames, namespaces) ||
-        !calleeHasProperty(node.callee.object, "describe")
+        !object ||
+        !isKnownTestCallee(object, testCalleeNames, namespaces) ||
+        !calleeHasProperty(object, "describe")
       ) {
         return false;
       }
-      const options = node.arguments[0];
+      const options = unwrapExpression(node.arguments[0]);
       if (options?.type !== "ObjectExpression") return false;
       return options.properties.some(
         (property) =>

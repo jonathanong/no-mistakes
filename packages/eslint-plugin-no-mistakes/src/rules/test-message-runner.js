@@ -1,5 +1,7 @@
 "use strict";
 
+const { staticImportSource } = require("./async-target-bindings");
+const { requireSource } = require("./async-target-sources");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { unwrap, memberName } = require("./test-message-expect");
 const RUNNERS = new Set(["test", "it"]);
@@ -7,25 +9,32 @@ const MODULES = new Set(["vitest", "@jest/globals", "@playwright/test"]);
 
 function namespace(node, context, seen) {
   node = unwrap(node);
+  if (MODULES.has(requireSource(node, context))) return true;
   if (node?.type !== "Identifier") return false;
   const variable = resolveVariable(node, context);
   if (!variable || seen.has(variable)) return false;
   seen.add(variable);
   const def = variable.defs.length === 1 ? variable.defs[0] : null;
-  if (def?.type === "ImportBinding")
+  if (def?.type === "ImportBinding") {
+    const source = staticImportSource(def);
     return (
-      MODULES.has(def.parent?.source?.value) &&
+      MODULES.has(source) &&
       (def.node.type === "ImportNamespaceSpecifier" ||
+        def.node.type === "TSImportEqualsDeclaration" ||
         (def.node.type === "ImportDefaultSpecifier" &&
-          def.parent.source.value === "@playwright/test"))
+          (source === "@playwright/test" || source === "vitest")))
     );
-  return (
-    def?.type === "Variable" &&
-    def.node?.parent?.kind === "const" &&
-    def.node.id.type === "Identifier" &&
-    !variable.references.some((ref) => ref.isWrite() && !ref.init) &&
-    namespace(def.node.init, context, seen)
-  );
+  }
+  if (
+    def?.type !== "Variable" ||
+    def.node?.parent?.kind !== "const" ||
+    def.node.id.type !== "Identifier" ||
+    variable.references.some((ref) => ref.isWrite() && !ref.init)
+  ) {
+    return false;
+  }
+  if (MODULES.has(requireSource(def.node.init, context))) return true;
+  return namespace(def.node.init, context, seen);
 }
 
 function bindingRunner(node, context, seen = new Set()) {
@@ -47,11 +56,11 @@ function bindingRunner(node, context, seen = new Set()) {
   const def = variable.defs[0];
   if (def.type === "Parameter") return false;
   if (def.type === "ImportBinding") {
-    if (def.node.type === "ImportDefaultSpecifier")
-      return def.parent.source.value === "@playwright/test";
+    const source = staticImportSource(def);
+    if (def.node.type === "ImportDefaultSpecifier") return source === "@playwright/test";
+    if (def.node.type === "TSImportEqualsDeclaration") return false;
     return (
-      (MODULES.has(def.parent?.source?.value) &&
-        RUNNERS.has(def.node.imported?.name || def.node.imported?.value)) ||
+      (MODULES.has(source) && RUNNERS.has(def.node.imported?.name || def.node.imported?.value)) ||
       RUNNERS.has(node.name)
     );
   }
@@ -71,8 +80,13 @@ function bindingRunner(node, context, seen = new Set()) {
   )
     return false;
   if (def.node.id.type === "Identifier") return bindingRunner(def.node.init, context, seen);
-  if (def.node.id.type !== "ObjectPattern" || !namespace(def.node.init, context, new Set()))
+  const init = unwrap(def.node.init);
+  if (
+    def.node.id.type !== "ObjectPattern" ||
+    !(namespace(init, context, new Set()) || MODULES.has(requireSource(init, context)))
+  ) {
     return false;
+  }
   return def.node.id.properties.some(
     (property) =>
       property.type === "Property" &&

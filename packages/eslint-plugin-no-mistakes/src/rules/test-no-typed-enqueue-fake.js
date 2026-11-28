@@ -3,8 +3,13 @@
 const { posix } = require("node:path");
 const { options, rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
-const { unwrapExpression } = require("./async-ast");
+const { isTransparentExpression, unwrapExpression } = require("./async-ast");
+const { isReassigned, resolveVariable } = require("./async-target-bindings");
+const { requireResolution } = require("./async-target-sources");
+const { isUnresolved, moduleLoad } = require("./module-load");
+const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
 const { memberPropertyName } = require("./logical-call");
+const { opaqueFrameworkReceiver } = require("./test-no-typed-enqueue-fake-opaque");
 const {
   isFrameworkMockType,
   isFrameworkReceiver,
@@ -14,6 +19,15 @@ const {
 } = require("./test-no-typed-enqueue-fake-helpers");
 
 const id = "test-no-typed-enqueue-fake";
+
+function stableLetLoad(node, context) {
+  const target = unwrapExpression(node);
+  if (target?.type !== "Identifier" || isReassigned(target, context)) return false;
+  const variable = resolveVariable(target, context);
+  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  if (def?.type !== "Variable" || def.parent?.kind === "const") return false;
+  return requireResolution(def.node?.init, context)?.source === null;
+}
 
 function exportPattern(pattern) {
   if (pattern === undefined) return null;
@@ -37,6 +51,7 @@ module.exports = rule(
         properties: {
           singleExportPattern: { type: "string", pattern: "\\S" },
           moduleGlobs: { type: "array", items: { type: "string", pattern: "\\S" } },
+          unanalyzable: UNANALYZABLE_SCHEMA,
         },
         additionalProperties: false,
       },
@@ -44,6 +59,8 @@ module.exports = rule(
     messages: {
       typedEnqueueFake:
         "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+      unanalyzable:
+        "Cannot tell whether {{subject}} is an enqueue export. Use a static import or require.",
     },
   },
   (context) => {
@@ -59,7 +76,8 @@ module.exports = rule(
         Boolean(target) &&
         (!exportMatcher || exportMatcher.test(target.name)) &&
         (moduleGlobs.length === 0 ||
-          moduleGlobs.some((glob) => posix.matchesGlob(target.module, glob)))
+          (typeof target.module === "string" &&
+            moduleGlobs.some((glob) => posix.matchesGlob(target.module, glob))))
       );
     }
 
@@ -76,6 +94,55 @@ module.exports = rule(
       return (
         args?.length === 1 && args[0]?.type === "TSTypeQuery" && matchesTarget(args[0].exprName)
       );
+    }
+
+    function unresolvedTypedTarget(params, lintContext) {
+      return Boolean(params?.some((param) => typeQueryUnresolved(param, lintContext)));
+    }
+
+    function typeQueryName(expr) {
+      let current = expr;
+      while (current?.type === "TSQualifiedName") current = current.left;
+      return current;
+    }
+
+    function knownExportName(expr) {
+      if (expr?.type === "TSQualifiedName") {
+        return expr.right?.type === "Identifier" ? expr.right.name : null;
+      }
+      return memberPropertyName(expr);
+    }
+
+    function excludedExport(expr) {
+      if (expr?.type === "MemberExpression" && expr.computed) return true;
+      if (expr?.type === "TSQualifiedName" && expr.left?.type !== "Identifier") return true;
+      const name = knownExportName(expr);
+      return Boolean(exportMatcher && name && !exportMatcher.test(name));
+    }
+
+    function typeQueryUnresolved(typeNode, lintContext) {
+      if (typeNode?.type === "TSFunctionType") {
+        return typeNode.params.some((arg) => {
+          const annotation = arg.typeAnnotation?.typeAnnotation;
+          return (
+            annotation?.type === "TSTypeReference" && typeQueryUnresolved(annotation, lintContext)
+          );
+        });
+      }
+      if (typeNode?.type === "TSTypeQuery") {
+        if (excludedExport(typeNode.exprName)) return false;
+        return isUnresolved(moduleLoad(typeQueryName(typeNode.exprName), lintContext));
+      }
+      if (typeNode?.type !== "TSTypeReference") return false;
+      const typeName = typeNode.typeName;
+      if (
+        typeName?.type !== "Identifier" ||
+        typeName.name !== "Parameters" ||
+        referenceBinding(typeName, sourceCode)?.defs.length
+      ) {
+        return false;
+      }
+      return unresolvedTypedTarget(typeArgParams(typeNode), lintContext);
     }
 
     function hasTypedEnqueueArg(params) {
@@ -96,15 +163,43 @@ module.exports = rule(
 
     return {
       CallExpression(node) {
-        const { callee } = node;
-        if (callee.type !== "MemberExpression" || !isFrameworkReceiver(callee.object, sourceCode)) {
+        let callee = node.callee;
+        let typeNode = node;
+        while (isTransparentExpression(callee)) {
+          if (callee.type === "TSInstantiationExpression") typeNode = callee;
+          callee = callee.expression;
+        }
+        if (callee?.type !== "MemberExpression" || callee.computed) return;
+        const method = memberPropertyName(callee);
+        const argument = unwrapExpression(node.arguments[0]);
+        if (!isFrameworkReceiver(callee.object, sourceCode)) {
+          const unresolved =
+            (method === "mocked" &&
+              (isUnresolved(moduleLoad(argument, context)) || stableLetLoad(argument, context))) ||
+            (method === "fn" && unresolvedTypedTarget(typeArgParams(typeNode), context));
+          if (
+            unresolved &&
+            opaqueFrameworkReceiver(callee.object, sourceCode) &&
+            !suppressed(node) &&
+            !(method === "mocked" && excludedExport(argument))
+          ) {
+            reportUnanalyzable(context, node, "this enqueue fake");
+          }
           return;
         }
-        const method = memberPropertyName(callee);
-        if (method === "fn" && hasTypedEnqueueArg(typeArgParams(node))) {
+        if (method === "fn" && hasTypedEnqueueArg(typeArgParams(typeNode))) {
           report(node);
-        } else if (method === "mocked" && matchesTarget(unwrapExpression(node.arguments[0]))) {
+        } else if (method === "mocked" && matchesTarget(argument)) {
           report(node);
+        } else if (
+          (method === "mocked" || method === "fn") &&
+          !suppressed(node) &&
+          !(method === "mocked" && excludedExport(argument)) &&
+          (isUnresolved(moduleLoad(method === "mocked" ? argument : callee, context)) ||
+            stableLetLoad(method === "mocked" ? argument : callee, context) ||
+            (method === "fn" && unresolvedTypedTarget(typeArgParams(typeNode), context)))
+        ) {
+          reportUnanalyzable(context, node, "this enqueue fake");
         }
       },
       TSTypeReference(node) {

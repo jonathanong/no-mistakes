@@ -2,25 +2,27 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
-const { unwrapExpression, unwrapSequence: unwrap } = require("./async-ast");
-const { literalString } = require("./module-mock-helpers");
-const { logicalCall } = require("./logical-call");
+const { unwrapSequence: unwrap } = require("./async-ast");
+const { requireResolution, requireSource } = require("./async-target-sources");
+const { literalString } = require("./logical-call");
+const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
+const {
+  destructuredFromNamespace,
+  hasSequentialOption,
+  isUnshadowedNamespace,
+  recordImportEquals,
+  recordRequire,
+  recordVitestImport,
+  staticName,
+  unresolvedSequential,
+} = require("./no-vitest-sequential-loads");
+const { forwardedCallee, rejectedRunner } = require("./no-vitest-sequential-require");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 const TEST_NAMES = new Set(["test", "it", "describe"]);
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/;
 
-function isTestFile(filename) {
-  return TEST_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
-}
-
-function staticName(node, computed) {
-  node = unwrapExpression(node);
-  if (!node) return null;
-  if (computed && node.type === "Identifier") return null;
-  if (!computed && typeof node.name === "string" && node.type !== "Literal") return node.name;
-  return literalString(node);
-}
+const isTestFile = (filename) => TEST_FILE_PATTERN.test(filename.replace(/\\/g, "/"));
 
 function constInit(node, context, seen) {
   if (!context || node?.type !== "Identifier" || seen.has(node.name)) return null;
@@ -45,8 +47,10 @@ function chainInfo(node, context, seen = new Set()) {
     }
   }
   const names = [];
+  let vitestRequire = false;
   while (current?.type === "MemberExpression" || current?.type === "CallExpression") {
     if (current.type === "CallExpression") {
+      if (context && requireResolution(current, context)?.source === "vitest") vitestRequire = true;
       current = unwrap(current.callee);
       continue;
     }
@@ -55,35 +59,20 @@ function chainInfo(node, context, seen = new Set()) {
     const init = constInit(current, context, seen);
     if (init) current = unwrap(init);
   }
-  return { names, root: current?.type === "Identifier" ? current : null };
+  return { names, root: current?.type === "Identifier" ? current : null, vitestRequire };
 }
 
-function hasSequentialMember(node) {
-  return chainInfo(node, null).names.includes("sequential");
-}
+const hasSequentialMember = (node) => chainInfo(node, null).names.includes("sequential");
 
-function hasSequentialOption(node) {
-  // Opaque forwarding must not erase options already visible to the legacy check.
-  const args =
-    node.type === "CallExpression"
-      ? (logicalCall(node)?.arguments ?? node.arguments)
-      : node.arguments;
-  return (args || []).slice(1).some((argument) => {
-    const value = unwrap(argument);
-    return (
-      value?.type === "ObjectExpression" &&
-      value.properties.some((property) => {
-        if (property.type !== "Property") return false;
-        const key = staticName(property.key, property.computed);
-        const option = unwrapExpression(property.value);
-        return key === "sequential" && option?.type === "Literal" && option.value === true;
-      })
-    );
-  });
+function unresolvedRegistration(node, context) {
+  const sequential =
+    hasSequentialMember(node.callee) ||
+    chainInfo(node.callee, context).names.includes("sequential") ||
+    hasSequentialOption(node);
+  return sequential && unresolvedSequential(forwardedCallee(node.callee), context);
 }
 
 function acceptsRunner(root, context, namespaces) {
-  if (!root || root.type !== "Identifier") return false;
   const variable = resolveVariable(root, context);
   if (!variable || variable.defs.length === 0) return true;
   if (variable.defs.length !== 1) return false;
@@ -97,36 +86,20 @@ function acceptsRunner(root, context, namespaces) {
     !(scopeType === "function" && scope.block?.type === "Program"),
   );
   if (def.type === "Parameter" || (nested && def.type !== "ImportBinding")) return false;
-  if (def.type !== "ImportBinding") return true;
+  if (def.type === "Variable" && requireResolution(def.node?.init, context)?.source === null) {
+    return false;
+  }
+  if (rejectedRunner(root, context)) return false;
+  if (def.parent?.importKind === "type" || def.node?.importKind === "type") return false;
+  if (def.type !== "ImportBinding") return !isUnshadowedNamespace(root, context, namespaces);
   if (def.node?.type === "ImportNamespaceSpecifier") return namespaces.has(root.name);
-  if (def.node?.type === "ImportDefaultSpecifier") return true;
+  if (def.node?.type === "ImportDefaultSpecifier") return def.parent?.source?.value !== "vitest";
   const imported = staticName(def.node?.imported, false);
   const source = def.parent?.source?.value;
+  if (source === "vitest" && !TEST_NAMES.has(imported)) return false;
   if (source && source !== "vitest" && TEST_NAMES.has(imported) && imported !== root.name)
     return false;
   return true;
-}
-
-function isUnshadowedNamespace(identifier, context, namespaces) {
-  if (!namespaces.has(identifier?.name)) return false;
-  const variable = resolveVariable(identifier, context);
-  if (!variable || variable.defs.length === 0) return true;
-  if (variable.defs.length !== 1) return false;
-  const def = variable.defs[0];
-  return def.type === "ImportBinding" && def.node?.type === "ImportNamespaceSpecifier";
-}
-
-function isVitestRequire(node) {
-  let call = node;
-  while (call?.type === "ChainExpression") call = call.expression;
-  if (call?.type !== "CallExpression") return false;
-  let callee = call.callee;
-  while (callee?.type === "ChainExpression") callee = callee.expression;
-  return (
-    callee?.type === "Identifier" &&
-    callee.name === "require" &&
-    literalString(call.arguments?.[0]) === "vitest"
-  );
 }
 
 function destructuredTest(node, context, namespaces) {
@@ -135,10 +108,8 @@ function destructuredTest(node, context, namespaces) {
   const def = variable?.defs.length === 1 ? variable.defs[0] : null;
   if (def?.type !== "Variable" || def.node?.parent?.kind !== "const") return false;
   if (def.node.id?.type !== "ObjectPattern") return false;
-  const fromNamespace =
-    def.node.init?.type === "Identifier" &&
-    isUnshadowedNamespace(def.node.init, context, namespaces);
-  if (!fromNamespace && !isVitestRequire(def.node.init)) return false;
+  const fromNamespace = destructuredFromNamespace(def.node.init, context, namespaces);
+  if (!fromNamespace && requireSource(def.node.init, context) !== "vitest") return false;
   return def.node.id.properties.some((property) => {
     if (property.type !== "Property") return false;
     let value = property.value;
@@ -152,12 +123,14 @@ function isSequentialCall(node, context, roots, namespaces) {
   const matches = (info) => {
     if (!info.root) return false;
     const accepted = acceptsRunner(info.root, context, namespaces);
+    const named = info.names.every((name) => name !== null);
     const known =
-      (accepted && roots.has(info.root.name)) ||
-      (accepted &&
-        namespaces.has(info.root.name) &&
+      (accepted && named && roots.has(info.root.name)) ||
+      (isUnshadowedNamespace(info.root, context, namespaces) &&
+        named &&
         info.names.some((name) => TEST_NAMES.has(name))) ||
-      destructuredTest(info.root, context, namespaces);
+      (named && destructuredTest(info.root, context, namespaces)) ||
+      (info.vitestRequire && named && info.names.some((name) => TEST_NAMES.has(name)));
     return known && (info.names.includes("sequential") || hasSequentialOption(node));
   };
   // A const alias of a non-runner still keeps the local runner name.
@@ -169,35 +142,67 @@ module.exports = Object.assign(
     {
       type: "problem",
       docs: { description: "disallow Vitest sequential test modifiers", recommended: false },
-      schema: [],
-      messages: { sequential: "Use parallel tests instead of .sequential." },
+      schema: [
+        {
+          type: "object",
+          additionalProperties: false,
+          properties: { unanalyzable: UNANALYZABLE_SCHEMA },
+        },
+      ],
+      messages: {
+        sequential: "Use parallel tests instead of .sequential.",
+        unanalyzable:
+          "Cannot tell whether {{subject}} runs tests sequentially. Use a static vitest import.",
+      },
     },
     (context) => {
       const suppressed = ruleSuppression(context, "no-vitest-sequential");
-      let usesVitestImport = false;
-      const roots = new Set(TEST_NAMES);
-      const namespaces = new Set();
+      const pending = [];
+      const state = {
+        namespaces: new Set(),
+        roots: new Set(TEST_NAMES),
+        usesVitest: false,
+      };
+      const visitCall = (node) => {
+        if (!isSequentialCall(node, context, state.roots, state.namespaces)) {
+          const inner = unwrap(node.callee);
+          if (inner?.type === "CallExpression" && unresolvedRegistration(inner, context)) return;
+          if (unresolvedRegistration(node, context) && !suppressed(node)) {
+            reportUnanalyzable(context, node.callee, "this call");
+          }
+          return;
+        }
+        if (suppressed(node)) return;
+        const inner = unwrap(node.callee);
+        if (
+          inner?.type === "CallExpression" &&
+          isSequentialCall(inner, context, state.roots, state.namespaces)
+        )
+          return;
+        context.report({ node: node.callee, messageId: "sequential" });
+      };
       return {
         ImportDeclaration(node) {
-          if (node.source.value !== "vitest") return;
-          usesVitestImport = true;
-          for (const specifier of node.specifiers) {
-            if (specifier.type === "ImportNamespaceSpecifier") namespaces.add(specifier.local.name);
-            if (specifier.type !== "ImportSpecifier") continue;
-            const imported = staticName(specifier.imported, false);
-            if (TEST_NAMES.has(imported)) roots.add(specifier.local.name);
-          }
+          recordVitestImport(node, state);
+        },
+        TSImportEqualsDeclaration(node) {
+          recordImportEquals(node, state);
+        },
+        VariableDeclarator(node) {
+          recordRequire(node, state, context);
         },
         CallExpression(node) {
-          if (!isTestFile(context.filename) && !usesVitestImport) return;
-          if (!isSequentialCall(node, context, roots, namespaces) || suppressed(node)) return;
-          const inner = unwrap(node.callee);
+          pending.push(node);
           if (
-            inner?.type === "CallExpression" &&
-            isSequentialCall(inner, context, roots, namespaces)
-          )
-            return;
-          context.report({ node: node.callee, messageId: "sequential" });
+            !state.usesVitest &&
+            (chainInfo(node.callee, context).vitestRequire || unresolvedRegistration(node, context))
+          ) {
+            state.usesVitest = true;
+          }
+        },
+        "Program:exit"() {
+          if (!isTestFile(context.filename) && !state.usesVitest) return;
+          for (const node of pending) visitCall(node);
         },
       };
     },

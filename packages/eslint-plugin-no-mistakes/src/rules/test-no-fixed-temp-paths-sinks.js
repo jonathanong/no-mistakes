@@ -112,4 +112,4 @@ function forEachPathArgument(args, binding, origin, visit) {
   }
 }
 
-module.exports = { forEachPathArgument };
+module.exports = { filesystemPathCount, forEachPathArgument };

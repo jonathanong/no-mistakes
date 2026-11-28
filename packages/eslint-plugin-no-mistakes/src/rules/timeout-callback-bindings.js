@@ -6,14 +6,15 @@ function createCallbackBindings(context) {
   function callback(node, seen = new Set(), allowPartial = false) {
     node = unwrapExpression(node);
     if (isFunction(node)) return node;
+    const callee = unwrapExpression(node?.callee);
     if (
       node?.type === "CallExpression" &&
-      node.callee.type === "MemberExpression" &&
-      member(node.callee) === "bind"
+      callee?.type === "MemberExpression" &&
+      member(callee) === "bind"
     ) {
       const partial =
         node.arguments.length > 1 || node.arguments.some((arg) => arg.type === "SpreadElement");
-      return partial && !allowPartial ? null : callback(node.callee.object, seen, allowPartial);
+      return partial && !allowPartial ? null : callback(callee.object, seen, allowPartial);
     }
     if (node?.type !== "Identifier") return null;
     const variable = resolveVariable(node, context),

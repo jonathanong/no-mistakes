@@ -29,7 +29,10 @@ the latter is treated as a context `skip()`.
 import { test } from "vitest";
 
 test("hidden", ({ skip: omit }) => omit()); // reported
-test("also hidden", (ctx) => { const omit = ctx.skip; omit(); }); // reported
+test("also hidden", (ctx) => {
+  const omit = ctx.skip;
+  omit();
+}); // reported
 test.each([{ skip() {} }])("row data", ({ skip }) => skip()); // allowed
 ```
 
@@ -72,7 +75,9 @@ are fixture options, not test details, so an annotation object there is not a
 declaration skip. Cross-file fixture modules are not
 inferred and have no hardcoded path conventions: list their import specifiers
 in `testModules`. Only the exported `test` from those modules is admitted as
-Playwright's `test`. For namespace bindings, only `fixtures.test` is admitted;
+Playwright's `test`. A nested key is not that export:
+`const { helpers: { test: check } } = require("./fixtures")` stays silent when
+`./fixtures` is listed in `testModules`. For namespace bindings, only `fixtures.test` is admitted;
 `fixtures.describe` and `fixtures.it` stay ordinary. This applies to ESM,
 CommonJS, and awaited dynamic imports. A named `describe` import from the same
 module also stays ordinary. A fixtures module re-exporting Playwright's
@@ -119,7 +124,11 @@ check.skipIf(!process.env.API_KEY)("requires API access", () => {});
 describe.only("temporary focus", () => {});
 pw.fixme("known issue", async ({ page }) => {});
 
-const browser = pw.extend({ account: async ({}, use) => { await use("owner"); } });
+const browser = pw.extend({
+  account: async ({}, use) => {
+    await use("owner");
+  },
+});
 browser.skip("same-file fixture skip", async () => {});
 ```
 
@@ -157,7 +166,18 @@ matching the specifier as written. It defaults to `[]`. List every specifier
 form the tests use: `./fixtures` and `../fixtures` are different entries, and
 the option applies to the whole config scope rather than one directory.
 A default import stays silent even when its specifier is listed, because only
-the exported `test` binding is admitted.
+the exported `test` binding is admitted. `@playwright/test`'s default import
+is Playwright `test` without `testModules`.
+
+`unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
+banned modifier whose receiver comes from a non-static `require` reports
+`unanalyzable`.
+
+A configured namespace and `const loaded = require("./custom-test")` both
+export `test`, so `const { test } = loaded; test.skip` reports. `describe`
+from that namespace is not that `test`. `ctx.skip`, `(ctx.skip as any)()`,
+a cast `skip` binding, a callback cast to `any`, and `(v as typeof v).test.skip`
+are skips. `const { test: check } = await require("vitest"); check.skip` is that same skip. `const { test: check } = await import("vitest" as string)` is too. `const check = require("vitest").test` and `require("vitest").test.skip` are too. A direct computed export off a `require` call such as `require("vitest")["test"].skip`, `const run = require("vitest")["test"]`, or `const runner = require(specifier); runner["test"].skip` stays silent. A static or immutable-const computed runner key on a namespace binding such as `import * as v from "vitest"; v["test"].skip` or `const vt = require("vitest"); vt["test"].skip` is still that skip. `const { ["test"]: check } = require("vitest"); check.skip` is still that skip. A computed destructure key that is not a string literal stays silent. A non-static specifier still reports `unanalyzable`. `const { test: check } = await import(moduleName)` reports `unanalyzable` when `moduleName` is not a static string. `const { test: check } = await require(specifier)` reports `unanalyzable` too. `require("vitest").expect` is not a runner. `const { test } = loaded; test.describe("suite", { annotation: { type: "skip" } })` reports that annotation. A namespace lookup of that destructured `test` is not itself a test binding. `import * as pw from "@playwright/test"; const { test: check } = pw; (check as typeof check).describe("suite", { annotation: { type: "skip" } })` still reports that annotation, and `check.skip` is still that skip.
 
 ```js
 "no-mistakes/test-no-skips": ["error", { testModules: ["./fixtures", "../fixtures", "@app/test"] }]
@@ -190,11 +210,13 @@ config `files` globs to select the test files that should be checked:
 ```js
 import noMistakes from "eslint-plugin-no-mistakes";
 
-export default [{
-  files: ["**/*.test.*", "tests/**"],
-  plugins: { "no-mistakes": noMistakes },
-  rules: { "no-mistakes/test-no-skips": "error" },
-}];
+export default [
+  {
+    files: ["**/*.test.*", "tests/**"],
+    plugins: { "no-mistakes": noMistakes },
+    rules: { "no-mistakes/test-no-skips": "error" },
+  },
+];
 ```
 
 Adjust the patterns to match the repository's test locations. Files outside
@@ -209,7 +231,7 @@ Replace timer-based waits with an explicit completion signal or test fixture
 barrier. For a known defect, keep an ordinary failing test that records the
 behavior to restore; use `todo` only when the team has explicitly allowed it.
 
-A same-file default import of `@playwright/test` is `test`. A string or expression-free template member, and `const { test } = namespace`, are the same binding. Vitest's default import is not a runner. Another file's re-export is not visible here: `import { check } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { test as check } from "vitest"` or `export * from "vitest"`. A parameter default such as `function run({ test } = vitest)` is not judged, because the caller can pass a different object.
+A same-file default import of `@playwright/test` is `test`. A string or expression-free template member, and `const { test } = namespace`, are the same binding. Vitest's default import is not a runner, and `import vt from "vitest"; vt.test.skip` is a skip. `import { default as vt } from "vitest"` is that same default: `vt.test.skip` reports and `vt.skip` stays silent. Another file's re-export is not visible here: `import { check } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { test as check } from "vitest"` or `export * from "vitest"`. A parameter default such as `function run({ test } = vitest)` is not judged, because the caller can pass a different object.
 
 ## Immutable computed keys
 

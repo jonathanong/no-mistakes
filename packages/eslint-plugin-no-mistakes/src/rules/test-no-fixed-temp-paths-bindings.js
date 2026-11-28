@@ -1,11 +1,32 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
+const { filesystemPathCount } = require("./test-no-fixed-temp-paths-sinks");
 const { literalString } = require("./logical-call");
 const { isReassigned, memberPropertyName, resolveVariable } = require("./async-target-bindings");
-const { importSpecifierName, requireSource } = require("./async-target-sources");
+const { importSpecifierName, requireResolution, requireSource } = require("./async-target-sources");
 
+const UNRESOLVED = Symbol("unresolved");
 const NODE_MODULES = new Set(["path", "os", "fs", "fs/promises", "child_process"]);
+const PATH_METHODS = new Set([
+  "appendFile",
+  "copyFile",
+  "cp",
+  "exists",
+  "existsSync",
+  "lstat",
+  "mkdir",
+  "open",
+  "readFile",
+  "realpath",
+  "rename",
+  "rm",
+  "rmdir",
+  "stat",
+  "unlink",
+  "writeFile",
+]);
+const PROCESS_METHODS = new Set(["exec", "execFile", "spawn"]);
 const FRAMEWORK_GLOBALS = new Map([
   ["vi", "vitest.vi"],
   ["jest", "@jest/globals.jest"],
@@ -23,14 +44,22 @@ function memberBinding(object, member) {
   return object && member && !member.includes(".") ? `${object}.${member}` : null;
 }
 
+function unresolvedMember(member) {
+  if (member === null || member === "promises") return UNRESOLVED;
+  const bare = member.replace(/Sync$/, "");
+  const candidate =
+    PATH_METHODS.has(bare) || PROCESS_METHODS.has(bare) || filesystemPathCount("fs", member) > 0;
+  return candidate ? UNRESOLVED : null;
+}
+
 function importedBinding(definition) {
   const { node, parent } = definition;
   if (node.importKind === "type" || parent.importKind === "type") return null;
   if (parent.type === "TSImportEqualsDeclaration") {
     const reference = parent.moduleReference;
-    return reference.type === "TSExternalModuleReference"
-      ? supportedModule(reference.expression.value)
-      : null;
+    if (reference.type !== "TSExternalModuleReference") return null;
+    const source = literalString(reference.expression);
+    return source === null ? UNRESOLVED : supportedModule(source);
   }
   const source = supportedModule(parent.source.value);
   if (!source || node.type !== "ImportSpecifier") return source;
@@ -64,10 +93,16 @@ function bindingResolver(context) {
   const globals = new Map();
   function resolve(input) {
     const node = unwrapExpression(input);
-    if (node?.type === "CallExpression") return supportedModule(requireSource(node, context));
+    if (node?.type === "CallExpression") {
+      const required = requireResolution(node, context);
+      if (required?.source === null) return UNRESOLVED;
+      return supportedModule(requireSource(node, context));
+    }
     if (node?.type === "MemberExpression") {
       const object = resolve(node.object);
       const member = memberPropertyName(node);
+      if (object === UNRESOLVED && node.computed && member == null) return null;
+      if (object === UNRESOLVED) return unresolvedMember(member);
       return memberBinding(object, member);
     }
     if (node?.type !== "Identifier") return null;
@@ -92,9 +127,18 @@ function bindingResolver(context) {
       const { id, init } = definition.node;
       const value = resolve(init);
       if (id.type === "Identifier") binding = value;
-      if (value && id.type === "ObjectPattern") {
-        binding = memberBinding(value, destructuredMember(id, node.name));
-      }
+      else if (id.type === "ObjectPattern") {
+        const member = destructuredMember(id, node.name);
+        const unknownKey = id.properties.some(
+          (item) =>
+            item.type === "Property" &&
+            item.computed &&
+            item.value?.name === node.name &&
+            literalString(item.key) == null,
+        );
+        if (value === UNRESOLVED) binding = unknownKey ? null : unresolvedMember(member);
+        else if (value) binding = member ? memberBinding(value, member) : null;
+      } else if (value === UNRESOLVED) binding = UNRESOLVED;
     }
     bindings.set(variable, binding);
     return binding;
@@ -108,4 +152,4 @@ function isFilesystemMock(node, binding) {
   return source === "fs" || source === "fs/promises";
 }
 
-module.exports = { bindingResolver, isFilesystemMock };
+module.exports = { UNRESOLVED, bindingResolver, isFilesystemMock };

@@ -21,7 +21,14 @@ vi.mock("@app/mail");
 
 ## Options
 
-This rule has no options.
+`unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
+module mock whose `vi` or `jest` binding comes from a non-static `require`
+reports `unanalyzable` in a test file instead of deciding the filename.
+
+`import vt = require("vitest"); vt.vi.mock`, a cast `(vi.mock as typeof vi.mock)`,
+`(vi as typeof vi).mock`, and `vi["mock" as const]` are module mocks.
+`const { expect } = require("vitest"); expect.mock` is not, and neither is `(require("vitest")).expect.mock`. `const { [name as string]: api } = vt` is not `vi`. `const { ["vi" as const]: api } = vt` is. A `*.mock.test.*`
+file may contain those mocks. Another file's re-export stays unreported.
 
 ## Fix
 
@@ -34,11 +41,11 @@ remove the `.mock.test` suffix when it no longer mocks a module. `vi.fn` and
 Immutable same-file aliases of `vi` or its runner namespace, and static `vi`
 destructuring (``const { [`vi`]: api } = runner``), retain module-mock identity. `const { mock } = runner.vi` also retains the mock method.
 Static `vi.mock["call"]` and literal-array ``vi.mock[`apply`]`` wrappers require
-the same `.mock.test` filename. Mutable aliases, shadowed parameters, and computed
+the same `.mock.test` filename. `.call` and `.apply` on a mock whose `vi` comes from a non-static `require` report `unanalyzable`. `const api = require(moduleName).vi` and `const { vi: renamed } = sdk` do too. `const mock = vt.vi.mock; mock("./dep")` reports `unanalyzable` in a `.mock.test` file when `vt` comes from a non-static `require`. `const { mock } = api` does too when `api` is `require(moduleName).vi`. `const { mock } = require(moduleName)` does not, and neither does a `let` destructure of that `api`. A `let` alias or a shadowed parameter does not. Mutable aliases, shadowed parameters, and computed
 identifier destructuring does not establish that identity. Rename the file or remove
 its module mocking; changing the spelling of the mock does not change isolation.
 
-`import * as v from "vitest"` followed by `v.vi.mock`, a string or expression-free template key, optional chaining, `const { mock } = v`, and one `const` alias are the same module mock. Vitest's default import is not `vi`. A computed identifier key is not a static method name.
+`import * as v from "vitest"` followed by `v.vi.mock`, a string or expression-free template key, optional chaining, `const { mock } = v.vi`, and one `const` alias are the same module mock. `require("vitest").vitest` and `import { vitest } from "vitest"` are that same utility. `expect` is not. Vitest's default import is not `vi`. `const api = vt` after `import vt from "vitest"` keeps `api.mock` on that exclusion, including `const { mock } = vt` and a nested `const vt = alias` that reuses the outer name. A computed identifier key is not a static method name.
 
 A mock helper imported from another file is not visible here.
 

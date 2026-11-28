@@ -6,6 +6,16 @@ const { memberName, pathStartsWith, wrappedCopyPath } = require("./vitest-timeou
 const { createOwnDataProperty } = require("./vitest-timeout-copy-properties");
 const { createCopySlotWrite } = require("./vitest-timeout-copy-slots");
 
+function patternOrLoopWrite(node) {
+  const parent = node.parent;
+  const type = parent?.type;
+  if (type === "ArrayPattern") return parent.elements.includes(node);
+  if (type === "AssignmentPattern") return parent.left === node;
+  if (type === "RestElement") return parent.argument === node;
+  if (type === "ForInStatement" || type === "ForOfStatement") return parent.left === node;
+  return type === "Property" && parent.value === node && parent.parent?.type === "ObjectPattern";
+}
+
 // Borrow ESLint's existing variable references; do not build another binding graph.
 function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
   const ownDataProperty = createOwnDataProperty(context);
@@ -106,11 +116,14 @@ function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
       );
     }
     const members = [];
+    let memberNode = null;
     while (node.parent?.type === "MemberExpression" && node.parent.object === node) {
       members.push(memberName(node.parent, context));
+      memberNode = node.parent;
       node = unwrapTransparentParent(node.parent);
     }
-    const memberRead = node.type === "MemberExpression" && primitiveMemberRead(node);
+    // `member as number` is still that member; a write through it is judged on the wrapper.
+    const memberRead = Boolean(memberNode) && primitiveMemberRead(memberNode);
     let parent = node.parent;
     if (
       (parent?.type === "AssignmentExpression" && parent.left === node) ||
@@ -130,9 +143,9 @@ function createValueStability(context, primitiveMemberRead, scalarCopyWrite) {
                 ["=", "&&=", "||=", "??="].includes(parent.operator)) ||
               scalarCopyWrite(node, (reference) => safeConsumer(reference, false)))))
       );
-    // A proven scalar read cannot expose the receiver, but writes above still
-    // invalidate it. Object-valued and unresolved properties remain conservative.
-    if (memberRead) return true;
+    // A proven scalar read cannot expose the receiver. Pattern and loop writes
+    // still invalidate it. Object-valued properties remain conservative.
+    if (memberRead && !patternOrLoopWrite(node)) return true;
     if (members.length && mode === "shallow") {
       if (members.length <= copyPath.length && pathStartsWith(copyPath, members))
         copyPath = copyPath.slice(members.length);

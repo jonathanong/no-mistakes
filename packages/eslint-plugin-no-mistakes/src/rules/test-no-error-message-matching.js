@@ -1,6 +1,8 @@
 "use strict";
 
 const { rule } = require("../helpers");
+const { isUnresolved, moduleLoad } = require("./module-load");
+const { reportUnanalyzable, UNANALYZABLE_SCHEMA } = require("./rule-unanalyzable");
 const { ruleSuppression } = require("../rule-suppression");
 const { isTestRunner } = require("./test-message-runner");
 const { capturedMessageOrigin } = require("./test-message-captured-value");
@@ -61,6 +63,55 @@ function isGeneratedTestPath(filename) {
   return filename.replace(/\\/g, "/").includes(".generated.");
 }
 
+function expandArguments(args) {
+  const forwarded = [];
+  for (const argument of args) {
+    if (!argument) return null;
+    if (argument.type !== "SpreadElement") {
+      forwarded.push(argument);
+      continue;
+    }
+    const list = unwrap(argument.argument);
+    if (list?.type !== "ArrayExpression") return forwarded.length > 0 ? forwarded : null;
+    for (const element of list.elements) {
+      if (!element) return null;
+      if (element.type === "SpreadElement") return forwarded.length > 0 ? forwarded : null;
+      forwarded.push(element);
+    }
+  }
+  return forwarded;
+}
+
+function forwardedArguments(node) {
+  const current = unwrap(node);
+  if (current?.type !== "CallExpression") return null;
+  const callee = unwrap(current.callee);
+  const args = current.arguments;
+  if (callee?.type !== "MemberExpression") return expandArguments(args);
+  const name = memberName(callee);
+  if (name === "call") {
+    const expanded = expandArguments(args);
+    return expanded ? expanded.slice(1) : null;
+  }
+  if (name === "apply") {
+    const expanded = expandArguments(args);
+    const list = unwrap(expanded?.[1]);
+    return list?.type === "ArrayExpression" ? expandArguments(list.elements) : null;
+  }
+  return expandArguments(args);
+}
+
+function opaqueExpect(node, context) {
+  const current = unwrap(node);
+  if (current?.type !== "CallExpression") return false;
+  const callee = unwrap(current.callee);
+  const name = memberName(callee);
+  const inner = name === "call" || name === "apply" ? memberName(unwrap(callee.object)) : null;
+  if (inner === "call" || inner === "apply") return false;
+  const target = name === "expect" ? callee.object : callee;
+  return isUnresolved(moduleLoad(target, context));
+}
+
 function unwrapMatcherObject(node) {
   let current = unwrap(node);
   while (current?.type === "MemberExpression") {
@@ -75,8 +126,18 @@ module.exports = rule(
   {
     type: "problem",
     docs: { description: "disallow asserting on error message strings", recommended: false },
-    schema: [],
-    messages: { message: "Do not assert on err.message; check the error type or code instead." },
+    schema: [
+      {
+        type: "object",
+        additionalProperties: false,
+        properties: { unanalyzable: UNANALYZABLE_SCHEMA },
+      },
+    ],
+    messages: {
+      message: "Do not assert on err.message; check the error type or code instead.",
+      unanalyzable:
+        "Cannot tell whether {{subject}} asserts on an error message. Use a static expect import.",
+    },
   },
   (context) => {
     if (isStaticAnalysisPath(context.filename) || isGeneratedTestPath(context.filename)) return {};
@@ -108,6 +169,16 @@ module.exports = rule(
         }
         if (
           callee?.type === "MemberExpression" &&
+          MATCHERS.has(memberName(callee)) &&
+          !isExpectCall(matcherObject, context) &&
+          opaqueExpect(matcherObject, context) &&
+          isMessageValue(forwardedArguments(matcherObject)?.[0], context) &&
+          !suppressed(node)
+        ) {
+          reportUnanalyzable(context, node, "this assertion");
+        }
+        if (
+          callee?.type === "MemberExpression" &&
           memberName(callee) === "includes" &&
           testDepth > 0 &&
           isMessageValue(callee.object, context) &&
@@ -122,9 +193,11 @@ module.exports = rule(
       BinaryExpression(node) {
         if (testDepth <= 0) return;
         if (!["!=", "==", "===", "!=="].includes(node.operator)) return;
+        const right = unwrap(node.right);
+        const left = unwrap(node.left);
         if (
-          (isMessageValue(node.left, context) && node.right.type === "Literal") ||
-          (isMessageValue(node.right, context) && node.left.type === "Literal")
+          (isMessageValue(node.left, context) && right?.type === "Literal") ||
+          (isMessageValue(node.right, context) && left?.type === "Literal")
         ) {
           if (!suppressed(node)) context.report({ node, messageId: "message" });
         }

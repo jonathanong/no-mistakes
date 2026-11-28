@@ -1,5 +1,9 @@
 "use strict";
 
+const { unwrapExpression } = require("./async-ast");
+const { resolveVariable } = require("./async-target-bindings");
+const { memberPropertyName } = require("./logical-call");
+const { frameworkBindingModule } = require("./module-mock-framework");
 const {
   childNodes,
   isCalledFunction,
@@ -8,7 +12,7 @@ const {
   isInlineTestCallback,
 } = require("./test-no-shared-state-helpers");
 
-function isInsideUncalledNestedFunction(node, testDepth, setupDepth, isInlineCallback) {
+function isInsideUncalledNestedFunction(node, testDepth, setupDepth, isInlineCallback, context) {
   if (testDepth === 0 && setupDepth === 0) return false;
   let current = node.parent;
   while (current) {
@@ -16,7 +20,7 @@ function isInsideUncalledNestedFunction(node, testDepth, setupDepth, isInlineCal
       isFunctionNode(current) &&
       !isInlineSetupCallback(current) &&
       !(isInlineCallback ? isInlineCallback(current) : isInlineTestCallback(current)) &&
-      !isCalledFunction(current);
+      !isCalledFunction(current, context);
     if (isUncalledFunction) return true;
     current = current.parent;
   }
@@ -58,7 +62,7 @@ function isResetAssignment(node, isMutableInitializer) {
 }
 
 function walkSharedMutations(node, handlers) {
-  if (isFunctionNode(node) && !isCalledFunction(node)) return;
+  if (isFunctionNode(node) && !isCalledFunction(node, handlers.context)) return;
   if (node.type === "AssignmentExpression") {
     handlers.onAssignment(node);
   } else if (node.type === "UpdateExpression") {
@@ -67,6 +71,25 @@ function walkSharedMutations(node, handlers) {
     handlers.onCall(node);
   }
   for (const child of childNodes(node)) walkSharedMutations(child, handlers);
+}
+
+function defaultVitestReceiver(node, context, seen = new Set()) {
+  const current = unwrapExpression(node);
+  if (current?.type !== "Identifier") return false;
+  const variable = resolveVariable(current, context);
+  if (!variable || variable.defs.length !== 1 || seen.has(variable)) return false;
+  const def = variable.defs[0];
+  if (def.node?.type === "ImportDefaultSpecifier") return def.parent?.source?.value === "vitest";
+  if (
+    def.type !== "Variable" ||
+    def.parent?.kind !== "const" ||
+    def.node?.id?.type !== "Identifier" ||
+    !def.node.init
+  ) {
+    return false;
+  }
+  seen.add(variable);
+  return defaultVitestReceiver(def.node.init, context, seen);
 }
 
 function createViMockTracker(context, mutableTopLevel) {
@@ -81,17 +104,17 @@ function createViMockTracker(context, mutableTopLevel) {
 
   return {
     collectFactoryReferences(node) {
+      const callee = unwrapExpression(node.callee);
+      if (memberPropertyName(callee) !== "mock") return;
+      const factory = node.arguments[1] && unwrapExpression(node.arguments[1]);
+      if (!isFunctionNode(factory)) return;
+      const object = unwrapExpression(callee.object);
       if (
-        node.callee.type !== "MemberExpression" ||
-        node.callee.object.type !== "Identifier" ||
-        node.callee.object.name !== "vi" ||
-        node.callee.property.type !== "Identifier" ||
-        node.callee.property.name !== "mock"
+        frameworkBindingModule(object, context) !== "vitest" ||
+        defaultVitestReceiver(object, context)
       ) {
         return;
       }
-      const factory = node.arguments[1];
-      if (!isFunctionNode(factory)) return;
       for (const { identifier } of context.sourceCode.getScope(factory).through) {
         factoryReferences.add(identifier.name);
         markIfCaptured(identifier.name);

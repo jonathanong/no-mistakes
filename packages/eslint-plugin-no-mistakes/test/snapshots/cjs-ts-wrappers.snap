@@ -1,0 +1,5585 @@
+{
+  "module-mock-boundary:boundary": [
+    {
+      "file": "type-only-equals.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "suppressed.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "static-member.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "resolved-computed.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "inline-other.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "let-alias.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "import-equals.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "nested-export-property.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "mocks.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 4,
+          "file": "mocks.test.ts",
+          "line": 4,
+          "message": "Module mock boundary does not allow mocking internal module \"./dep\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 6,
+          "file": "mocks.test.ts",
+          "line": 6,
+          "message": "Module mock boundary does not allow mocking internal module \"./other\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 3,
+          "file": "dynamic.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "shapes.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 2,
+          "file": "shapes.test.ts",
+          "line": 2,
+          "message": "Module mock boundary does not allow mocking internal module \"./dep\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 7,
+          "file": "shapes.test.ts",
+          "line": 7,
+          "message": "Module mock boundary does not allow mocking internal module \"./other\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 11,
+          "file": "shapes.test.ts",
+          "line": 11,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 15,
+          "file": "shapes.test.ts",
+          "line": 15,
+          "message": "Module mock boundary does not allow mocking internal module \"./from-namespace\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "opaque-method.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 11,
+          "file": "opaque-method.test.ts",
+          "line": 11,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 30,
+          "endLine": 12,
+          "file": "opaque-method.test.ts",
+          "line": 12,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "identifier-alias.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 4,
+          "file": "identifier-alias.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "call-apply.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 40,
+          "endLine": 3,
+          "file": "call-apply.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 45,
+          "endLine": 4,
+          "file": "call-apply.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 33,
+          "endLine": 5,
+          "file": "call-apply.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "inline-require.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 37,
+          "endLine": 2,
+          "file": "inline-require.test.ts",
+          "line": 2,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "inline-static.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 35,
+          "endLine": 1,
+          "file": "inline-static.test.ts",
+          "line": 1,
+          "message": "Module mock boundary does not allow mocking internal module \"./dep\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 2,
+          "file": "inline-static.test.ts",
+          "line": 2,
+          "message": "Module mock boundary does not allow mocking internal module \"./dep\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 39,
+          "endLine": 3,
+          "file": "inline-static.test.ts",
+          "line": 3,
+          "message": "Module mock boundary does not allow mocking internal module \"./dep\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 5,
+          "file": "inline-static.test.ts",
+          "line": 5,
+          "message": "Module mock boundary does not allow mocking internal module \"./member\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 7,
+          "file": "inline-static.test.ts",
+          "line": 7,
+          "message": "Module mock boundary does not allow mocking internal module \"./pattern\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 26,
+          "endLine": 9,
+          "file": "inline-static.test.ts",
+          "line": 9,
+          "message": "Module mock boundary does not allow mocking internal module \"./chain\".",
+          "messageId": "boundary",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "opaque-follow.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 4,
+          "file": "opaque-follow.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 20,
+          "endLine": 8,
+          "file": "opaque-follow.test.ts",
+          "line": 8,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 11,
+          "file": "opaque-follow.test.ts",
+          "line": 11,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 13,
+          "file": "opaque-follow.test.ts",
+          "line": 13,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-boundary",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "module-mock-boundary:boundary-ignore": [
+    {
+      "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "call-apply.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    }
+  ],
+  "module-mock-preserve-exports:preserve": [
+    {
+      "file": "suppressed.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "let-alias.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "mocks.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 45,
+          "endLine": 4,
+          "file": "mocks.test.ts",
+          "line": 4,
+          "message": "Module mock factory must spread the real module to preserve exports.",
+          "messageId": "preserve",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 45,
+          "endLine": 3,
+          "file": "dynamic.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "call-apply.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 53,
+          "endLine": 3,
+          "file": "call-apply.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 71,
+          "endLine": 4,
+          "file": "call-apply.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "opaque-follow.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 4,
+          "file": "opaque-follow.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 45,
+          "endLine": 8,
+          "file": "opaque-follow.test.ts",
+          "line": 8,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 11,
+          "file": "opaque-follow.test.ts",
+          "line": 11,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 47,
+          "endLine": 13,
+          "file": "opaque-follow.test.ts",
+          "line": 13,
+          "message": "Cannot tell whether this call is a framework mock. Use a static vitest or Jest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/module-mock-preserve-exports",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "module-mock-preserve-exports:preserve-ignore": [
+    {
+      "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "call-apply.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    }
+  ],
+  "no-vitest-sequential:sequential": [
+    {
+      "file": "not-a-runner.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "builtin-pattern.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "redeclare.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "two-defs.test.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "option-call.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "type-only.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-member.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "alias-plain.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "nested-name.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-destructure.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-registered.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "import-expect.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "inline-other.js",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-alias.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "namespace-local.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "call-callee.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "helper.js",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 2,
+          "file": "helper.js",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 13,
+          "endLine": 4,
+          "file": "helper.js",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 34,
+          "endLine": 7,
+          "file": "helper.js",
+          "line": 7,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 10,
+          "file": "helper.js",
+          "line": 10,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "default-import.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 2,
+          "file": "default-import.test.ts",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 6,
+          "file": "default-import.test.ts",
+          "line": 6,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "wrappers.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 25,
+          "endLine": 2,
+          "file": "wrappers.test.ts",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 4,
+          "file": "wrappers.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 6,
+          "file": "wrappers.test.ts",
+          "line": 6,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 8,
+          "file": "wrappers.test.ts",
+          "line": 8,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 3,
+          "file": "dynamic.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 5,
+          "file": "dynamic.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 12,
+          "file": "dynamic.test.ts",
+          "line": 12,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "shapes.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 2,
+          "file": "shapes.test.ts",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 13,
+          "file": "shapes.test.ts",
+          "line": 13,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 17,
+          "file": "shapes.test.ts",
+          "line": 17,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 20,
+          "file": "shapes.test.ts",
+          "line": 20,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 22,
+          "file": "shapes.test.ts",
+          "line": 22,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 24,
+          "file": "shapes.test.ts",
+          "line": 24,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 31,
+          "file": "shapes.test.ts",
+          "line": 31,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 33,
+          "file": "shapes.test.ts",
+          "line": 33,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 38,
+          "file": "shapes.test.ts",
+          "line": 38,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "shadow.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 3,
+          "file": "shadow.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "alias-member.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 7,
+          "endLine": 4,
+          "file": "alias-member.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "var-binding.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 2,
+          "file": "var-binding.test.ts",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 4,
+          "file": "var-binding.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 7,
+          "file": "var-binding.test.ts",
+          "line": 7,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "computed-chain.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 4,
+          "file": "computed-chain.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 6,
+          "file": "computed-chain.test.ts",
+          "line": 6,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "default-named.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 4,
+          "file": "default-named.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 5,
+          "file": "default-named.test.ts",
+          "line": 5,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "fixture-default.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 2,
+          "file": "fixture-default.test.ts",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "late-binding.js",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 2,
+          "file": "late-binding.js",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "nested-destructure.js",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 19,
+          "endLine": 3,
+          "file": "nested-destructure.js",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "let-dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 3,
+          "file": "let-dynamic.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 2,
+          "endColumn": 26,
+          "endLine": 5,
+          "file": "let-dynamic.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 32,
+          "endLine": 6,
+          "file": "let-dynamic.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "member-require.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 15,
+          "endLine": 2,
+          "file": "member-require.test.ts",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 4,
+          "file": "member-require.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 6,
+          "file": "member-require.test.ts",
+          "line": 6,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "reassigned-destructure.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 3,
+          "file": "reassigned-destructure.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 6,
+          "file": "reassigned-destructure.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 15,
+          "endLine": 9,
+          "file": "reassigned-destructure.test.ts",
+          "line": 9,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "alias-reassigned.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 4,
+          "file": "alias-reassigned.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 6,
+          "file": "alias-reassigned.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 9,
+          "file": "alias-reassigned.test.ts",
+          "line": 9,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "reassigned-test-name.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 3,
+          "file": "reassigned-test-name.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "each-static.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 2,
+          "file": "each-static.test.ts",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "each-dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 3,
+          "file": "each-dynamic.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "each-nested.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 4,
+          "file": "each-nested.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "pattern-shape.js",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 4,
+          "file": "pattern-shape.js",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "inline-dynamic.js",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 32,
+          "endLine": 2,
+          "file": "inline-dynamic.js",
+          "line": 2,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "import-static.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 2,
+          "file": "import-static.test.ts",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "namespace-name.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 3,
+          "file": "namespace-name.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "import-equals.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 3,
+          "file": "import-equals.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "import-equals-fixture.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 2,
+          "file": "import-equals-fixture.test.ts",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "namespace-alias.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 4,
+          "file": "namespace-alias.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 5,
+          "file": "namespace-alias.test.ts",
+          "line": 5,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "each-wrapper.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 3,
+          "file": "each-wrapper.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "default-alias.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 7,
+          "file": "default-alias.test.ts",
+          "line": 7,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 9,
+          "file": "default-alias.test.ts",
+          "line": 9,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "no-vitest-sequential:sequential-ignore": [
+    {
+      "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "let-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "reassigned-destructure.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "alias-reassigned.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "reassigned-test-name.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "each-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "each-nested.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "inline-dynamic.js",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "each-wrapper.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    }
+  ],
+  "test-no-delayed-rejects:delayed": [
+    {
+      "file": "caught.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-key.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "forward-other.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "cjs.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 32,
+          "endLine": 8,
+          "file": "cjs.test.ts",
+          "line": 8,
+          "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+          "messageId": "delayedReject",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 27,
+          "endLine": 13,
+          "file": "cjs.test.ts",
+          "line": 13,
+          "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+          "messageId": "delayedReject",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 35,
+          "endLine": 18,
+          "file": "cjs.test.ts",
+          "line": 18,
+          "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+          "messageId": "delayedReject",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 36,
+          "endLine": 23,
+          "file": "cjs.test.ts",
+          "line": 23,
+          "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+          "messageId": "delayedReject",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "cast.test.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 33,
+          "endLine": 5,
+          "file": "cast.test.ts",
+          "line": 5,
+          "message": "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
+          "messageId": "delayedReject",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "dynamic.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 35,
+          "endLine": 6,
+          "file": "dynamic.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this rejection matcher observes a rejection. Use a static expect from vitest.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 38,
+          "endLine": 9,
+          "file": "dynamic.test.ts",
+          "line": 9,
+          "message": "Cannot tell whether this rejection matcher observes a rejection. Use a static expect from vitest.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 38,
+          "endLine": 10,
+          "file": "dynamic.test.ts",
+          "line": 10,
+          "message": "Cannot tell whether this rejection matcher observes a rejection. Use a static expect from vitest.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "forward-call.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 31,
+          "endLine": 6,
+          "file": "forward-call.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this rejection matcher observes a rejection. Use a static expect from vitest.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 42,
+          "endLine": 7,
+          "file": "forward-call.test.ts",
+          "line": 7,
+          "message": "Cannot tell whether this rejection matcher observes a rejection. Use a static expect from vitest.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 45,
+          "endLine": 8,
+          "file": "forward-call.test.ts",
+          "line": 8,
+          "message": "Cannot tell whether this rejection matcher observes a rejection. Use a static expect from vitest.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "spread-call.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 44,
+          "endLine": 7,
+          "file": "spread-call.test.ts",
+          "line": 7,
+          "message": "Cannot tell whether this rejection matcher observes a rejection. Use a static expect from vitest.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "test-no-delayed-rejects:delayed-ignore": [
+    {
+      "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "forward-call.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "spread-call.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    }
+  ],
+  "test-no-error-message-matching:message": [
+    {
+      "file": "default-direct.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "spread-call.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "spread-apply-site.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "named-member.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "cjs.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 38,
+          "endLine": 6,
+          "file": "cjs.test.ts",
+          "line": 6,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 30,
+          "endLine": 7,
+          "file": "cjs.test.ts",
+          "line": 7,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 29,
+          "endLine": 8,
+          "file": "cjs.test.ts",
+          "line": 8,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "wrappers.test.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 41,
+          "endLine": 4,
+          "file": "wrappers.test.ts",
+          "line": 4,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 51,
+          "endLine": 5,
+          "file": "wrappers.test.ts",
+          "line": 5,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 60,
+          "endLine": 6,
+          "file": "wrappers.test.ts",
+          "line": 6,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 47,
+          "endLine": 7,
+          "file": "wrappers.test.ts",
+          "line": 7,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "dynamic.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 38,
+          "endLine": 8,
+          "file": "dynamic.test.ts",
+          "line": 8,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 42,
+          "endLine": 9,
+          "file": "dynamic.test.ts",
+          "line": 9,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 45,
+          "endLine": 10,
+          "file": "dynamic.test.ts",
+          "line": 10,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 52,
+          "endLine": 12,
+          "file": "dynamic.test.ts",
+          "line": 12,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 55,
+          "endLine": 14,
+          "file": "dynamic.test.ts",
+          "line": 14,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 36,
+          "endLine": 15,
+          "file": "dynamic.test.ts",
+          "line": 15,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 41,
+          "endLine": 16,
+          "file": "dynamic.test.ts",
+          "line": 16,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 40,
+          "endLine": 18,
+          "file": "dynamic.test.ts",
+          "line": 18,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 31,
+          "endLine": 19,
+          "file": "dynamic.test.ts",
+          "line": 19,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "require-expect.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 3,
+          "file": "require-expect.test.ts",
+          "line": 3,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "require-runner.test.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 29,
+          "endLine": 4,
+          "file": "require-runner.test.ts",
+          "line": 4,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "default-namespace.test.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 29,
+          "endLine": 4,
+          "file": "default-namespace.test.ts",
+          "line": 4,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "spread-apply.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 47,
+          "endLine": 10,
+          "file": "spread-apply.test.ts",
+          "line": 10,
+          "message": "Cannot tell whether this assertion asserts on an error message. Use a static expect import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "static-apply.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 44,
+          "endLine": 7,
+          "file": "static-apply.test.ts",
+          "line": 7,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 50,
+          "endLine": 8,
+          "file": "static-apply.test.ts",
+          "line": 8,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 53,
+          "endLine": 9,
+          "file": "static-apply.test.ts",
+          "line": 9,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 56,
+          "endLine": 10,
+          "file": "static-apply.test.ts",
+          "line": 10,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "default-expect.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 38,
+          "endLine": 4,
+          "file": "default-expect.test.ts",
+          "line": 4,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "nested-forward.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 46,
+          "endLine": 6,
+          "file": "nested-forward.test.ts",
+          "line": 6,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "test-no-error-message-matching:message-ignore": [
+    {
+      "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    }
+  ],
+  "test-no-fixed-temp-paths:temp": [
+    {
+      "file": "other-member.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-member.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-pattern.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-unresolved.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "mkdtemp-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "paths.test.ts",
+      "findings": [
+        {
+          "column": 18,
+          "endColumn": 30,
+          "endLine": 2,
+          "file": "paths.test.ts",
+          "line": 2,
+          "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+          "messageId": "fixedTempPath",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 7,
+          "endColumn": 19,
+          "endLine": 4,
+          "file": "paths.test.ts",
+          "line": 4,
+          "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+          "messageId": "fixedTempPath",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 34,
+          "endLine": 6,
+          "file": "paths.test.ts",
+          "line": 6,
+          "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+          "messageId": "fixedTempPath",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 40,
+          "endLine": 3,
+          "file": "dynamic.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 31,
+          "endLine": 4,
+          "file": "dynamic.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 38,
+          "endLine": 5,
+          "file": "dynamic.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 6,
+          "file": "dynamic.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 7,
+          "file": "dynamic.test.ts",
+          "line": 7,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 39,
+          "endLine": 8,
+          "file": "dynamic.test.ts",
+          "line": 8,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "promises.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 45,
+          "endLine": 3,
+          "file": "promises.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 38,
+          "endLine": 5,
+          "file": "promises.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 7,
+          "file": "promises.test.ts",
+          "line": 7,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "mock-after.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 40,
+          "endLine": 5,
+          "file": "mock-after.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 18,
+          "endColumn": 30,
+          "endLine": 7,
+          "file": "mock-after.test.ts",
+          "line": 7,
+          "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+          "messageId": "fixedTempPath",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "process.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 31,
+          "endLine": 3,
+          "file": "process.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 4,
+          "file": "process.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 5,
+          "file": "process.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 35,
+          "endLine": 6,
+          "file": "process.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "shadow-require.test.ts",
+      "findings": [
+        {
+          "column": 20,
+          "endColumn": 33,
+          "endLine": 8,
+          "file": "shadow-require.test.ts",
+          "line": 8,
+          "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+          "messageId": "fixedTempPath",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "import-equals.test.ts",
+      "findings": [
+        {
+          "column": 18,
+          "endColumn": 31,
+          "endLine": 5,
+          "file": "import-equals.test.ts",
+          "line": 5,
+          "message": "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",
+          "messageId": "fixedTempPath",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "test-no-fixed-temp-paths:temp-ignore": [
+    {
+      "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    }
+  ],
+  "test-no-shared-state:shared": [
+    {
+      "file": "computed-modifier.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-binding.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "wrapped-mock.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "type-import.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "not-a-callee.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "suppressed.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "reassign.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-key.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "reassigned-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "let-namespace-quiet.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "member-receiver.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "playwright-default.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "shadow-call.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "alias-let.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-method.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "let-member-quiet.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "type-default-specifier.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "reassigned-let-receiver.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "cjs.test.ts",
+      "findings": [
+        {
+          "column": 28,
+          "endColumn": 40,
+          "endLine": 3,
+          "file": "cjs.test.ts",
+          "line": 3,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 35,
+          "endLine": 6,
+          "file": "cjs.test.ts",
+          "line": 6,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 29,
+          "endColumn": 41,
+          "endLine": 9,
+          "file": "cjs.test.ts",
+          "line": 9,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 36,
+          "endLine": 12,
+          "file": "cjs.test.ts",
+          "line": 12,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "wrappers.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 18,
+          "endLine": 4,
+          "file": "wrappers.test.ts",
+          "line": 4,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 25,
+          "endLine": 15,
+          "file": "wrappers.test.ts",
+          "line": 15,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 15,
+          "endLine": 18,
+          "file": "wrappers.test.ts",
+          "line": 18,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 23,
+          "endLine": 21,
+          "file": "wrappers.test.ts",
+          "line": 21,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 25,
+          "file": "wrappers.test.ts",
+          "line": 25,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 45,
+          "endLine": 4,
+          "file": "dynamic.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 50,
+          "endLine": 5,
+          "file": "dynamic.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 51,
+          "endLine": 6,
+          "file": "dynamic.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "shapes.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 4,
+          "file": "shapes.test.ts",
+          "line": 4,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 14,
+          "endLine": 7,
+          "file": "shapes.test.ts",
+          "line": 7,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 21,
+          "endLine": 15,
+          "file": "shapes.test.ts",
+          "line": 15,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 16,
+          "endLine": 32,
+          "file": "shapes.test.ts",
+          "line": 32,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 19,
+          "endLine": 38,
+          "file": "shapes.test.ts",
+          "line": 38,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 18,
+          "endLine": 44,
+          "file": "shapes.test.ts",
+          "line": 44,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "shadow-cast.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 16,
+          "endLine": 5,
+          "file": "shadow-cast.test.ts",
+          "line": 5,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "named-callback.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 18,
+          "endLine": 4,
+          "file": "named-callback.test.ts",
+          "line": 4,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 18,
+          "endLine": 4,
+          "file": "named-callback.test.ts",
+          "line": 4,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "named-timeout.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 24,
+          "endLine": 4,
+          "file": "named-timeout.test.ts",
+          "line": 4,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 7,
+          "file": "named-timeout.test.ts",
+          "line": 7,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "default-mock.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 20,
+          "endLine": 13,
+          "file": "default-mock.test.ts",
+          "line": 13,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "member-require.test.ts",
+      "findings": [
+        {
+          "column": 23,
+          "endColumn": 34,
+          "endLine": 3,
+          "file": "member-require.test.ts",
+          "line": 3,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 35,
+          "endLine": 6,
+          "file": "member-require.test.ts",
+          "line": 6,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "destructured-dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 6,
+          "file": "destructured-dynamic.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 9,
+          "file": "destructured-dynamic.test.ts",
+          "line": 7,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 16,
+          "file": "destructured-dynamic.test.ts",
+          "line": 14,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 20,
+          "file": "destructured-dynamic.test.ts",
+          "line": 18,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 25,
+          "file": "destructured-dynamic.test.ts",
+          "line": 23,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 34,
+          "file": "destructured-dynamic.test.ts",
+          "line": 32,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "unaliased-dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 6,
+          "file": "unaliased-dynamic.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "member-dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 6,
+          "file": "member-dynamic.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 9,
+          "file": "member-dynamic.test.ts",
+          "line": 7,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 13,
+          "file": "member-dynamic.test.ts",
+          "line": 11,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 18,
+          "file": "member-dynamic.test.ts",
+          "line": 16,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 23,
+          "file": "member-dynamic.test.ts",
+          "line": 21,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "let-dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 6,
+          "file": "let-dynamic.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "let-namespace.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 3,
+          "endLine": 6,
+          "file": "let-namespace.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "nested-call.test.ts",
+      "findings": [
+        {
+          "column": 5,
+          "endColumn": 16,
+          "endLine": 6,
+          "file": "nested-call.test.ts",
+          "line": 6,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "named-default.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 16,
+          "endLine": 5,
+          "file": "named-default.test.ts",
+          "line": 5,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "cast-called.test.ts",
+      "findings": [
+        {
+          "column": 25,
+          "endColumn": 39,
+          "endLine": 5,
+          "file": "cast-called.test.ts",
+          "line": 5,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 11,
+          "endColumn": 25,
+          "endLine": 7,
+          "file": "cast-called.test.ts",
+          "line": 7,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "computed-runner.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 16,
+          "endLine": 9,
+          "file": "computed-runner.test.ts",
+          "line": 9,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 16,
+          "endLine": 12,
+          "file": "computed-runner.test.ts",
+          "line": 12,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "wrapped-describe.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 23,
+          "endLine": 15,
+          "file": "wrapped-describe.test.ts",
+          "line": 15,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "test-no-shared-state:shared-ignore": [
+    {
+      "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "destructured-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "unaliased-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "member-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "let-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "let-namespace.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    }
+  ],
+  "test-no-skips:skips": [
+    {
+      "file": "not-a-runner.js",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "computed-runner.js",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "computed-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "nested-configured.js",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "type-only-import.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "configured.test.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 11,
+          "endLine": 3,
+          "file": "configured.test.ts",
+          "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 14,
+          "endLine": 6,
+          "file": "configured.test.ts",
+          "line": 6,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 6,
+          "endColumn": 10,
+          "endLine": 8,
+          "file": "configured.test.ts",
+          "line": 8,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 56,
+          "endLine": 9,
+          "file": "configured.test.ts",
+          "line": 9,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 16,
+          "endColumn": 20,
+          "endLine": 11,
+          "file": "configured.test.ts",
+          "line": 11,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "default-import.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 3,
+          "file": "default-import.test.ts",
+          "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "wrappers.test.ts",
+      "findings": [
+        {
+          "column": 34,
+          "endColumn": 38,
+          "endLine": 2,
+          "file": "wrappers.test.ts",
+          "line": 2,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 39,
+          "endColumn": 43,
+          "endLine": 3,
+          "file": "wrappers.test.ts",
+          "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 41,
+          "endColumn": 45,
+          "endLine": 4,
+          "file": "wrappers.test.ts",
+          "line": 4,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 46,
+          "endColumn": 50,
+          "endLine": 5,
+          "file": "wrappers.test.ts",
+          "line": 5,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 26,
+          "endLine": 6,
+          "file": "wrappers.test.ts",
+          "line": 6,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "dynamic.test.ts",
+      "findings": [
+        {
+          "column": 13,
+          "endColumn": 17,
+          "endLine": 3,
+          "file": "dynamic.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this modifier skips a test. Use a static test, it, or describe binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "awaited.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 3,
+          "file": "awaited.test.ts",
+          "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "awaited-dynamic.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 4,
+          "file": "awaited-dynamic.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this modifier skips a test. Use a static test, it, or describe binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "named-default.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 2,
+          "file": "named-default.test.ts",
+          "line": 2,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "member-require.js",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 11,
+          "endLine": 2,
+          "file": "member-require.js",
+          "line": 2,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 24,
+          "endColumn": 28,
+          "endLine": 3,
+          "file": "member-require.js",
+          "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 32,
+          "endColumn": 36,
+          "endLine": 4,
+          "file": "member-require.js",
+          "line": 4,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "dynamic-import.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 4,
+          "file": "dynamic-import.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this modifier skips a test. Use a static test, it, or describe binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "wrapped-import.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 3,
+          "file": "wrapped-import.test.ts",
+          "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "namespace-describe.test.ts",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 11,
+          "endLine": 3,
+          "file": "namespace-describe.test.ts",
+          "line": 3,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 60,
+          "endLine": 6,
+          "file": "namespace-describe.test.ts",
+          "line": 6,
+          "message": "Playwright 'skip' declaration annotation skips this test or suite. Remove it or explicitly allow the annotation.",
+          "messageId": "annotation",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "computed-destructure.js",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 11,
+          "endLine": 2,
+          "file": "computed-destructure.js",
+          "line": 2,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "namespace-computed.js",
+      "findings": [
+        {
+          "column": 12,
+          "endColumn": 16,
+          "endLine": 2,
+          "file": "namespace-computed.js",
+          "line": 2,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "esm-namespace-computed.test.ts",
+      "findings": [
+        {
+          "column": 11,
+          "endColumn": 15,
+          "endLine": 4,
+          "file": "esm-namespace-computed.test.ts",
+          "line": 4,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        },
+        {
+          "column": 8,
+          "endColumn": 12,
+          "endLine": 5,
+          "file": "esm-namespace-computed.test.ts",
+          "line": 5,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    }
+  ],
+  "test-no-skips:skips-ignore": [
+    {
+      "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ],
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "dynamic-import.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ],
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "awaited-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ],
+          "unanalyzable": "ignore"
+        }
+      ]
+    }
+  ],
+  "test-no-typed-enqueue-fake:enqueue-exact": [
+    {
+      "file": "tuple.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "reassign.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "other-export.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "local-parameters.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "opaque-quiet.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "computed-member.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "computed-vi.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "other-require.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "computed-enqueue.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "computed-method.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "callback-type.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "nested-qualified.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "named-import.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "cjs.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 27,
+          "endLine": 3,
+          "file": "cjs.test.ts",
+          "line": 3,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 14,
+          "endLine": 6,
+          "file": "cjs.test.ts",
+          "line": 6,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 9,
+          "file": "cjs.test.ts",
+          "line": 9,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 4,
+          "file": "dynamic.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 5,
+          "file": "dynamic.test.ts",
+          "line": 5,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 6,
+          "file": "dynamic.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "type-namespace.test.ts",
+      "findings": [
+        {
+          "column": 13,
+          "endColumn": 45,
+          "endLine": 4,
+          "file": "type-namespace.test.ts",
+          "line": 4,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "type-qualified.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 3,
+          "file": "type-qualified.test.ts",
+          "line": 3,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "wrapped-fn.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 42,
+          "endLine": 3,
+          "file": "wrapped-fn.test.ts",
+          "line": 3,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "namespace-vi.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 4,
+          "file": "namespace-vi.test.ts",
+          "line": 4,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "function-type.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 60,
+          "endLine": 4,
+          "file": "function-type.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "member-vi.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 5,
+          "file": "member-vi.test.ts",
+          "line": 5,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 6,
+          "file": "member-vi.test.ts",
+          "line": 6,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "member-export.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 3,
+          "file": "member-export.test.ts",
+          "line": 3,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "opaque-receiver.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 4,
+          "file": "opaque-receiver.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 43,
+          "endLine": 5,
+          "file": "opaque-receiver.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "namespace-require.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 3,
+          "file": "namespace-require.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "inline-require.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 37,
+          "endLine": 3,
+          "file": "inline-require.test.ts",
+          "line": 3,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "let-binding.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 4,
+          "file": "let-binding.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "named-default.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 4,
+          "file": "named-default.test.ts",
+          "line": 4,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "namespace-alias.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 6,
+          "file": "namespace-alias.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    }
+  ],
+  "test-no-typed-enqueue-fake:enqueue-ignore": [
+    {
+      "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$",
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "opaque-receiver.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$",
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "namespace-require.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$",
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "let-binding.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$",
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "namespace-alias.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$",
+          "unanalyzable": "ignore"
+        }
+      ]
+    }
+  ],
+  "test-no-typed-enqueue-fake:enqueue-prefix": [
+    {
+      "file": "wrappers.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 3,
+          "file": "wrappers.test.ts",
+          "line": 3,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 37,
+          "endLine": 4,
+          "file": "wrappers.test.ts",
+          "line": 4,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 29,
+          "endLine": 5,
+          "file": "wrappers.test.ts",
+          "line": 5,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue"
+        }
+      ]
+    },
+    {
+      "file": "shapes.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 6,
+          "file": "shapes.test.ts",
+          "line": 6,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 24,
+          "endLine": 7,
+          "file": "shapes.test.ts",
+          "line": 7,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 20,
+          "file": "shapes.test.ts",
+          "line": 20,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 18,
+          "endLine": 24,
+          "file": "shapes.test.ts",
+          "line": 24,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue"
+        }
+      ]
+    }
+  ],
+  "test-no-wall-time-assertions:wall": [
+    {
+      "file": "fake-timers.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "local-fluent.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "late-fake-timers.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-now.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-not.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "default-timers.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "computed-receiver.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "clocks.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 54,
+          "endLine": 6,
+          "file": "clocks.test.ts",
+          "line": 6,
+          "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+          "messageId": "wallTime",
+          "ruleId": "no-mistakes/test-no-wall-time-assertions",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 60,
+          "endLine": 7,
+          "file": "clocks.test.ts",
+          "line": 7,
+          "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+          "messageId": "wallTime",
+          "ruleId": "no-mistakes/test-no-wall-time-assertions",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 8,
+          "file": "clocks.test.ts",
+          "line": 8,
+          "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+          "messageId": "wallTime",
+          "ruleId": "no-mistakes/test-no-wall-time-assertions",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "wrapped.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 61,
+          "endLine": 3,
+          "file": "wrapped.test.ts",
+          "line": 3,
+          "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+          "messageId": "wallTime",
+          "ruleId": "no-mistakes/test-no-wall-time-assertions",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 54,
+          "endLine": 5,
+          "file": "dynamic.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this elapsed-time assertion reads wall time. Use a static Date, performance, or perf_hooks binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-wall-time-assertions",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "shapes.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 70,
+          "endLine": 5,
+          "file": "shapes.test.ts",
+          "line": 5,
+          "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+          "messageId": "wallTime",
+          "ruleId": "no-mistakes/test-no-wall-time-assertions",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "decoy-timer.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 45,
+          "endLine": 6,
+          "file": "decoy-timer.test.ts",
+          "line": 6,
+          "message": "Avoid asserting on elapsed wall time. Assert on observable behavior or control time with fake timers.",
+          "messageId": "wallTime",
+          "ruleId": "no-mistakes/test-no-wall-time-assertions",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "test-no-wall-time-assertions:wall-ignore": [
+    {
+      "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    }
+  ],
+  "vitest-mock-test-file-naming:naming": [
+    {
+      "file": "foo.mock.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "expect-only.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "default-alias.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "pattern-quiet.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "foo.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 5,
+          "file": "foo.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "cast-method.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 3,
+          "file": "cast-method.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "cast-namespace.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 3,
+          "file": "cast-namespace.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "computed-key.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 7,
+          "file": "computed-key.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "import-equals.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 3,
+          "file": "import-equals.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 4,
+          "file": "dynamic.test.ts",
+          "line": 1,
+          "message": "Cannot tell whether a module mock mocks a module. Use a static vi.mock or jest.mock call.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "dynamic-forward.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 5,
+          "file": "dynamic-forward.test.ts",
+          "line": 1,
+          "message": "Cannot tell whether a module mock mocks a module. Use a static vi.mock or jest.mock call.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "shapes.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 12,
+          "file": "shapes.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "member-alias.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 7,
+          "file": "member-alias.test.ts",
+          "line": 1,
+          "message": "Cannot tell whether a module mock mocks a module. Use a static vi.mock or jest.mock call.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "alias.mock.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 5,
+          "file": "alias.mock.test.ts",
+          "line": 1,
+          "message": "Cannot tell whether a module mock mocks a module. Use a static vi.mock or jest.mock call.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "mutable-alias.mock.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 9,
+          "file": "mutable-alias.mock.test.ts",
+          "line": 1,
+          "message": "Tests without module mocking (vi.mock/vi.doMock) must not use a .mock.test.<ext> filename.",
+          "messageId": "unnecessaryMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "pattern-alias.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 5,
+          "file": "pattern-alias.test.ts",
+          "line": 1,
+          "message": "Cannot tell whether a module mock mocks a module. Use a static vi.mock or jest.mock call.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "utility.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 1,
+          "endLine": 5,
+          "file": "utility.test.ts",
+          "line": 1,
+          "message": "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",
+          "messageId": "needsMock",
+          "ruleId": "no-mistakes/vitest-mock-test-file-naming",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "vitest-mock-test-file-naming:naming-ignore": [
+    {
+      "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "pattern-alias.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    }
+  ],
+  "vitest-timeout-cap:timeout": [
+    {
+      "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "cjs.test.ts",
+      "findings": [
+        {
+          "column": 27,
+          "endColumn": 34,
+          "endLine": 2,
+          "file": "cjs.test.ts",
+          "line": 2,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 30,
+          "endLine": 4,
+          "file": "cjs.test.ts",
+          "line": 4,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "vitest.config.ts",
+      "findings": [
+        {
+          "column": 23,
+          "endColumn": 41,
+          "endLine": 2,
+          "file": "vitest.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout exceeds 5000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "apply.test.ts",
+      "findings": [
+        {
+          "column": 67,
+          "endColumn": 72,
+          "endLine": 2,
+          "file": "apply.test.ts",
+          "line": 2,
+          "message": "Vitest timeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "call-receiver.test.ts",
+      "findings": [
+        {
+          "column": 59,
+          "endColumn": 81,
+          "endLine": 1,
+          "file": "call-receiver.test.ts",
+          "line": 1,
+          "message": "Vitest testTimeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 61,
+          "endColumn": 83,
+          "endLine": 2,
+          "file": "call-receiver.test.ts",
+          "line": 2,
+          "message": "Vitest testTimeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "other-receiver.test.ts",
+      "findings": [
+        {
+          "column": 58,
+          "endColumn": 80,
+          "endLine": 1,
+          "file": "other-receiver.test.ts",
+          "line": 1,
+          "message": "Vitest testTimeout exceeds 30000 ms. Fix the slow wait or test setup rather than hiding hangs with a larger timeout.",
+          "messageId": "timeout",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    }
+  ],
+  "vitest-timeout-cap:timeout-finding": [
+    {
+      "file": "vitest.config.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "dynamic.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 35,
+          "endLine": 3,
+          "file": "dynamic.test.ts",
+          "line": 3,
+          "message": "Vitest framework API carrier cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 64,
+          "endLine": 5,
+          "file": "dynamic.test.ts",
+          "line": 5,
+          "message": "Vitest framework API carrier cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 36,
+          "endLine": 5,
+          "file": "dynamic.test.ts",
+          "line": 5,
+          "message": "Vitest framework API carrier cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "pattern.config.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "pattern.config.ts",
+          "line": 2,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "pattern.config.ts",
+          "line": 2,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "pattern.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "bare.config.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "bare.config.ts",
+          "line": 2,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "bare.config.ts",
+          "line": 2,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "bare.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "loop.config.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "loop.config.ts",
+          "line": 2,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "loop.config.ts",
+          "line": 2,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "loop.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "object.config.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "object.config.ts",
+          "line": 2,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "object.config.ts",
+          "line": 2,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "object.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "rest.config.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "rest.config.ts",
+          "line": 2,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "rest.config.ts",
+          "line": 2,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "rest.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "default.config.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "default.config.ts",
+          "line": 2,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "default.config.ts",
+          "line": 2,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "default.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "for-in.config.ts",
+      "findings": [
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "for-in.config.ts",
+          "line": 2,
+          "message": "Vitest projects carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 15,
+          "endColumn": 42,
+          "endLine": 2,
+          "file": "for-in.config.ts",
+          "line": 2,
+          "message": "Vitest test options carrier cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        },
+        {
+          "column": 23,
+          "endColumn": 40,
+          "endLine": 2,
+          "file": "for-in.config.ts",
+          "line": 2,
+          "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "spread-receiver.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 87,
+          "endLine": 3,
+          "file": "spread-receiver.test.ts",
+          "line": 3,
+          "message": "Vitest framework API carrier cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    }
+  ]
+}

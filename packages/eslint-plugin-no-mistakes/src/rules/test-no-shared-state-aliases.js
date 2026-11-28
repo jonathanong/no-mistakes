@@ -1,5 +1,6 @@
 "use strict";
 
+const { unwrapSequence } = require("./async-ast");
 const { importSpecifierName } = require("./test-no-shared-state-callees");
 
 function resolveVariable(node, context) {
@@ -12,11 +13,19 @@ function resolveVariable(node, context) {
   return null;
 }
 
+function hidesComputedKey(node, context) {
+  const variable = node?.type === "Identifier" ? resolveVariable(node, context) : null;
+  const id = variable?.defs.length === 1 ? variable.defs[0].node?.id : null;
+  if (id?.type !== "ObjectPattern") return false;
+  return id.properties.some((property) => {
+    const value =
+      property.value?.type === "AssignmentPattern" ? property.value.left : property.value;
+    return property.type === "Property" && property.computed && value?.name === node.name;
+  });
+}
+
 function baseIdentifier(callee) {
-  if (callee?.type === "ChainExpression") return baseIdentifier(callee.expression);
-  if (callee?.type === "SequenceExpression" && callee.expressions.length > 0) {
-    return baseIdentifier(callee.expressions.at(-1));
-  }
+  callee = unwrapSequence(callee);
   if (callee?.type === "Identifier") return callee;
   if (callee?.type === "CallExpression") return baseIdentifier(callee.callee);
   if (callee?.type === "MemberExpression") return baseIdentifier(callee.object);
@@ -63,10 +72,7 @@ function hasOwnProperty(callee, name) {
 // Recursively checks the whole callee chain (member accesses and call results) for a
 // non-computed property named `name`, e.g. `hasProperty(test.describe.only, "describe")`.
 function hasProperty(callee, name) {
-  if (callee?.type === "ChainExpression") return hasProperty(callee.expression, name);
-  if (callee?.type === "SequenceExpression" && callee.expressions.length > 0) {
-    return hasProperty(callee.expressions.at(-1), name);
-  }
+  callee = unwrapSequence(callee);
   if (hasOwnProperty(callee, name)) return true;
   if (callee?.type === "MemberExpression") return hasProperty(callee.object, name);
   if (callee?.type === "CallExpression") return hasProperty(callee.callee, name);
@@ -96,19 +102,25 @@ function isDescribeBinding(
 }
 
 function recordImportedTests(node, testCalleeNames, namespaces, testAliases) {
+  if (node.importKind === "type") return;
   if (node.source.value !== "vitest" && node.source.value !== "@playwright/test") return;
   for (const specifier of node.specifiers) {
+    if (specifier.importKind === "type") continue;
     if (specifier.type === "ImportNamespaceSpecifier" && specifier.local?.name) {
       namespaces.add(specifier.local.name);
       testAliases.add(specifier.local, "namespace");
     }
-    if (
-      specifier.type === "ImportDefaultSpecifier" &&
-      node.source.value === "@playwright/test" &&
-      specifier.local?.name
-    ) {
-      testCalleeNames.add(specifier.local.name);
-      testAliases.add(specifier.local, "test");
+    const isDefault =
+      specifier.type === "ImportDefaultSpecifier" ||
+      (specifier.type === "ImportSpecifier" && importSpecifierName(specifier) === "default");
+    if (isDefault && specifier.local?.name) {
+      if (node.source.value === "vitest") {
+        namespaces.add(specifier.local.name);
+        testAliases.add(specifier.local, "namespace");
+      } else if (node.source.value === "@playwright/test") {
+        testCalleeNames.add(specifier.local.name);
+        testAliases.add(specifier.local, "test");
+      }
     }
     if (specifier.type !== "ImportSpecifier") continue;
     const imported = importSpecifierName(specifier);
@@ -175,6 +187,7 @@ function recordTopLevelBindings(node, tools) {
 module.exports = {
   createImportedTestAliases,
   hasOwnProperty,
+  hidesComputedKey,
   hasProperty,
   isDescribeBinding,
   recordImportedTests,

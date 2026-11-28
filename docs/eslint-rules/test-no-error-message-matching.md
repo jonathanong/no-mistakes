@@ -20,7 +20,19 @@ expect(error.code).toBe("USER_NOT_FOUND");
 
 ## Options
 
-This rule has no options.
+`unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. An
+assertion whose `expect` comes from a non-static `require` reports
+`unanalyzable` when the compared value is an error message.
+`check.call(null, err.message)` and `check.apply(null, [err.message])` report
+that advisory when `check` is that unresolved expect. A `.call` spread that is not a literal array, and an `.apply` list that is not a literal array, are not that comparison. `check.call(null, ...[err.message])` still is. `require("vitest").expect.call(...[null, 42], err.message)` is not a message comparison. `check.apply(...[null, [42]], [err.message])` is not a message comparison. `check.apply(null, [...[err.message]])` still is. `check.call(null, err.message, ...extra)` and `check.apply(null, [err.message], ...extra)` still are, because the trailing spread does not replace the known message. A hole in that list, such as `check.apply(null, [err.message, ,])`, is not a message comparison. `require("vitest").expect.apply(err.message, values)` is not a message comparison. `require("vitest").expect.apply(null, [err.message])` still is. `check(...[err.message])` and `vt.expect(...[err.message])` report the advisory. `check(err.message, ...extra)` still does. `check(...extra, err.message)` and `check.call(null, ...extra, err.message)` do not.
+
+`import vt = require("vitest")`, `const { expect } = require("@playwright/test")`,
+`require("vitest").expect`, and a Vitest namespace are expect bindings.
+`require("vitest").test` is a runner, so a message comparison inside that
+callback is the same diagnostic. Inside a test,
+`err.message === ("boom" as string)`, `(v as typeof v).expect(err.message)`,
+`v.expect.apply(null, [err.message] as const)`, and `(v.expect<string>)(err.message)`
+are the same message comparison.
 
 ## Fix
 
@@ -65,11 +77,13 @@ and the code from that object. Do not call the receiver expression a second time
 Playwright namespace and default-runner `.expect` members retain assertion
 identity, including immutable namespace aliases. Vitest, Jest, and Playwright
 runner imports and immutable same-file aliases establish the test body for
-message equality and `.includes` checks. Nested parameters and mutable aliases
+message equality and `.includes` checks. A Vitest default import used as a
+namespace, such as `import vt from "vitest"; vt.test(...)`, establishes that
+body. Calling that default import directly does not. `import vt from "vitest"; vt.expect(err.message)` is an expect binding. `import { test } from "vitest"; test.expect(err.message)` is not. Nested parameters and mutable aliases
 do not establish runner identity. Assert the error type or code instead of its
 message, regardless of runner or assertion spelling.
 
-A renamed `expect`, a namespace member, a string or expression-free template key, optional chaining, a comma callee, and one `const` alias are the same assertion. `err.body.message` stays allowed. A computed identifier key is not a static name. A module-scope call named `expect` is checked whatever its source is, including `@playwright/test`, `./setup`, `bun:test`, `chai`, `const { expect } = require("vitest")`, and a local `const`, `let`, or `function` named `expect`. A parameter or other nested-scope binding named `expect` is not. A string key `["call"]` forwards like `.call`, including `expect(err.message).toMatch["call"](null, "x")`. A CommonJS program wrapper is still module scope.
+A renamed `expect`, a namespace member, a string or expression-free template key, optional chaining, a comma callee, and one `const` alias are the same assertion. `err.body.message` stays allowed. A computed identifier key is not a static name. A module-scope call named `expect` is checked whatever its source is, including `@playwright/test`, `./setup`, `bun:test`, `chai`, `const { expect } = require("vitest")`, and a local `const`, `let`, or `function` named `expect`. A parameter or other nested-scope binding named `expect` is not. A string key `["call"]` forwards like `.call`, including `expect(err.message).toMatch["call"](null, "x")`. A second `.call`, such as `vt.expect.call.call(other, err.message)`, is not that expect, while `vt.expect.call(null, err.message)` is. The same nested `.call` on an expect from a non-static `require` stays silent and does not report `unanalyzable`. A CommonJS program wrapper is still module scope.
 
 `expect` brought in through another file is not visible here.
 

@@ -41,10 +41,23 @@ The schema accepts an options object.
 `internalSpecifiers` identifies internal specifier patterns;
 `includePathPatterns` and `excludePathPatterns` scope files;
 `requireLiteralSpecifiers` defaults to `true`; and `baseline` records
-temporary `[file, specifier, count]` allowances. `integrationExports` permits
-tagged integration exports, with its `specifiers`, `sourcePathTemplates`,
-`reexportExtensions`, and `markerRegex` controls. See the exhaustive table in
+temporary `[file, specifier, count]` allowances. The file and specifier are
+strings, and the count is a number. `integrationExports` permits
+tagged integration exports, with its `specifiers`, `specifierPrefix`,
+`extensions`, `sourcePathTemplates`, `reexportExtensions`, and `markerRegex`
+controls.
+`unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
+mock whose `vitest` or `@jest/globals` binding comes from a non-static
+`require` reports `unanalyzable`. A type-only or non-external `import =` is
+not that binding. `import local = require("./dep")` is not a framework mock. An identifier alias of the non-static `require`, and `.call`
+or a literal-array `.apply` on its `mock` or `doMock`, report `unanalyzable`
+instead of a boundary finding. See the exhaustive table in
 [`eslint-plugin`](../eslint-plugin.md#rule-options).
+
+`const { expect } = require("vitest")` is not a framework mock.
+`import vt = require("vitest")` and `const vt = require("vitest")` followed by
+`vt.vi.mock` are the same framework binding as `import { vi } from "vitest"`.
+An inline `require("vitest").vi.mock("./dep")`, `require("vitest").vitest.mock("./dep")`, and `require("@jest/globals").jest.mock("./dep")` are that same binding. `const { vitest: api } = require("vitest")` and `import { vitest } from "vitest"` are too. `require("vitest").expect.mock` and `require("vitest").mock` are not.
 
 A default import of `vitest` or `@jest/globals`, a single `const` alias, a static `vi` or `jest` member including a string or expression-free template key, an optional call, and a comma callee are the same framework binding.
 
@@ -59,7 +72,7 @@ assertions, and `satisfies`, including wrappers around a comma expression.
 
 ## Limits
 
-A computed identifier key, such as `const { [key]: mocked } = ns`, is not the export spelled by that identifier. A string or expression-free template key is. The same holds for a method taken from a framework alias: `const { [name]: clear } = vi` is not `vi.mock`, while `const { ["mock"]: clear } = vi` is. `const mock = vi.mock as typeof vi.mock` is still `vi.mock`. `const mocking = vi as typeof vi` is still `vi`. `(vi.mock as typeof vi.mock).call` is still `vi.mock.call`.
+A computed identifier key, such as `const { [key]: mocked } = ns`, is not the export spelled by that identifier, including when a type wrapper hides the identifier (`const { [name as string]: api } = vt`). A string or expression-free template key is, including `["vi" as const]`. A member other than `vi` or `jest`, such as `(require("vitest")).expect.mock`, is not a framework mock. A computed key on a resolved `vi` or `jest` binding, such as `vi[key].mock`, stays silent. Opaque `unmock` and `doUnmock` stay quiet. `mock` and `doMock` on a non-static `require` still report `unanalyzable`, including an inline `require(moduleName).vi.mock(...)`, `const api = require(moduleName).vi`, `const { vi: api } = sdk`, a cast alias `const cast = sdk as any`, and a nested `const sdk = alias` that reuses the outer name. `let alias = sdk` does not follow that alias, while `const alias = sdk` does. `sdk.mock.call(sdk, ...["react"])` reports `unanalyzable` when `sdk` comes from a non-static `require`. A suppression on that call silences the advisory. A computed key on a resolved module, such as `const { [key]: api } = require("vitest")`, stays silent. The same holds for a method taken from a framework alias: `const { [name]: clear } = vi` is not `vi.mock`, while `const { ["mock"]: clear } = vi` is. `const mock = vi.mock as typeof vi.mock` is still `vi.mock`. `const mocking = vi as typeof vi` is still `vi`. `(vi.mock as typeof vi.mock).call` is still `vi.mock.call`.
 
 Another file's re-export is not visible here. `import { mock } from "./barrel.mjs"` stays unreported when `barrel.mjs` is `export { vi as mock } from "vitest"` or `export * from "vitest"`. `const { mock } = require("vitest")` is not a framework binding. A parameter default such as `function run({ vi } = vitest)` is not judged, because the caller can pass a different object. An `.apply` or `.call` whose argument list contains a spread is not rewritten. That includes a const alias of the method: `const mock = vi.mock; mock.apply(...[vi, ["react", factory]], ["./kept", factory])` is not a mock of `./kept`. A later write drops the alias: `let mock = vi.mock; mock = other; mock("./kept", factory)` is not `vi.mock`. `(0, mock)("./internal", factory)` is still that alias.
 

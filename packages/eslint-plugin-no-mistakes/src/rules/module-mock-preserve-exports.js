@@ -2,6 +2,8 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { preserveOptions } = require("./module-mock-schema");
+const { reportUnanalyzable } = require("./rule-unanalyzable");
 const { baselineKey, baselineSet } = require("./module-mock-baseline");
 const { matchDirectMockCallApply } = require("./module-mock-call-apply");
 const {
@@ -21,9 +23,11 @@ module.exports = rule(
       description: "require module mock factories to preserve real exports",
       recommended: false,
     },
-    schema: [{ type: "object" }],
+    schema: [preserveOptions],
     messages: {
       preserve: "Module mock factory must spread the real module to preserve exports.",
+      unanalyzable:
+        "Cannot tell whether {{subject}} is a framework mock. Use a static vitest or Jest import.",
     },
   },
   (context) => {
@@ -69,6 +73,10 @@ module.exports = rule(
       },
       CallExpression(node) {
         const direct = isPreserveMockCall(node, context);
+        if (direct?.unanalyzable) {
+          if (!suppressed(node)) reportUnanalyzable(context, node, "this call");
+          return;
+        }
         if (direct) {
           reportMockCall(node, direct);
           return;
@@ -78,6 +86,10 @@ module.exports = rule(
           context,
           new Set(["mock", "doMock", "unstable_mockModule"]),
         );
+        if (forwarded?.mock.unanalyzable) {
+          if (!suppressed(node)) reportUnanalyzable(context, node, "this call");
+          return;
+        }
         if (forwarded) {
           reportMockCall(
             node,

@@ -1,5 +1,7 @@
 "use strict";
 
+const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
+const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { collectPatternNames } = require("./ast-pattern-names");
 const { createCleanupTracker } = require("./test-no-shared-state-cleanup");
 const {
@@ -25,35 +27,43 @@ const FUNCTION_NODES = new Set([
 ]);
 
 function mutationRootName(node) {
-  if (node.type === "Identifier") return node.name;
-  if (node.type === "MemberExpression") return mutationRootName(node.object);
+  const current = unwrapExpression(node);
+  if (current.type === "Identifier") return current.name;
+  if (current.type === "MemberExpression") return mutationRootName(current.object);
   return null;
 }
 
 function mutationPath(node) {
-  if (node.type === "Identifier") return node.name;
-  if (node.type !== "MemberExpression") return null;
-  const objectPath = mutationPath(node.object);
+  const current = unwrapExpression(node);
+  if (current.type === "Identifier") return current.name;
+  if (current.type !== "MemberExpression") return null;
+  const objectPath = mutationPath(current.object);
   const property =
-    node.computed && node.property.type !== "Literal" ? null : propertyName(node.property);
+    current.computed && current.property.type !== "Literal" ? null : propertyName(current.property);
   return objectPath && property ? `${objectPath}.${property}` : null;
 }
 
+function mutatingMethodName(callee) {
+  if (callee?.type !== "MemberExpression") return null;
+  const property = unwrapExpression(callee.property);
+  if (callee.computed && property?.type !== "Literal") return null;
+  return propertyName(callee.property);
+}
+
 function mutatingCallTarget(node) {
-  if (
-    node.callee.type !== "MemberExpression" ||
-    !MUTATING_METHODS.has(propertyName(node.callee.property))
-  ) {
+  const callee = unwrapExpression(node.callee);
+  if (callee.type !== "MemberExpression" || !MUTATING_METHODS.has(mutatingMethodName(callee))) {
     return { name: null, path: null };
   }
+  const object = unwrapExpression(callee.object);
   return {
-    name: mutationRootName(node.callee.object),
-    path: mutationPath(node.callee.object),
+    name: mutationRootName(object),
+    path: mutationPath(object),
   };
 }
 
 function mutatingCallPropertyName(node) {
-  return node.callee.type === "MemberExpression" ? propertyName(node.callee.property) : null;
+  return mutatingMethodName(unwrapExpression(node.callee));
 }
 
 function isFunctionNode(node) {
@@ -70,34 +80,46 @@ function isInlineSetupCallback(node) {
   return Boolean(call && SETUP_CALLEES.has(calleeName(call.callee)));
 }
 
-function isCalledFunction(node) {
-  if (node.parent?.type === "CallExpression" && node.parent.callee === node) return true;
-  const declarator = node.parent?.type === "VariableDeclarator" ? node.parent : null;
-  const name =
+function isCalledFunction(node, context) {
+  const placed = unwrapTransparentParent(node);
+  if (placed.parent?.type === "CallExpression" && placed.parent.callee === placed) return true;
+  const declarator = placed.parent?.type === "VariableDeclarator" ? placed.parent : null;
+  const id =
     node.type === "FunctionDeclaration"
-      ? node.id?.name
+      ? node.id
       : declarator?.id?.type === "Identifier"
-        ? declarator.id.name
+        ? declarator.id
         : null;
-  const container = node.type === "FunctionDeclaration" ? node.parent : node.parent?.parent?.parent;
-  return Boolean(name && container && containsIdentifierCall(container, name));
+  const container =
+    node.type === "FunctionDeclaration" ? node.parent : placed.parent?.parent?.parent;
+  if (!id?.name || !container) return false;
+  return containsIdentifierCall(container, id.name, resolveVariable(id, context), context);
 }
 
-function containsIdentifierCall(node, name) {
-  if (node.type === "CallExpression" && node.callee.type === "Identifier")
-    return node.callee.name === name;
-  if (isFunctionNode(node)) return false;
-  return childNodes(node).some((child) => containsIdentifierCall(child, name));
+function containsIdentifierCall(node, name, target, context) {
+  const current = unwrapExpression(node);
+  if (current.type === "CallExpression") {
+    const callee = unwrapExpression(current.callee);
+    if (
+      callee.type === "Identifier" &&
+      callee.name === name &&
+      resolveVariable(callee, context) === target
+    ) {
+      return true;
+    }
+  }
+  if (isFunctionNode(current)) return false;
+  return childNodes(current).some((child) => containsIdentifierCall(child, name, target, context));
 }
 
 function isMutableInitializer(node) {
+  node = unwrapExpression(node);
+  const callee = node?.type === "NewExpression" ? unwrapExpression(node.callee) : null;
   return Boolean(
     node &&
     (node.type === "ArrayExpression" ||
       node.type === "ObjectExpression" ||
-      (node.type === "NewExpression" &&
-        node.callee.type === "Identifier" &&
-        MUTABLE_CONSTRUCTORS.has(node.callee.name))),
+      (callee?.type === "Identifier" && MUTABLE_CONSTRUCTORS.has(callee.name))),
   );
 }
 
@@ -130,14 +152,16 @@ function childNodes(node) {
   return children;
 }
 
-function namedCallbackArgument(args) {
+function namedCallbackArgument(args, isCallback) {
   for (let index = args.length - 1; index >= 0; index -= 1) {
-    if (args[index].type === "Identifier") return args[index];
+    const argument = unwrapExpression(args[index]);
+    if (argument?.type === "Identifier" && isCallback(argument)) return argument;
   }
 }
 
 function firstNamedCallbackArgument(args) {
-  return args[0]?.type === "Identifier" ? args[0] : undefined;
+  const argument = args[0] && unwrapExpression(args[0]);
+  return argument?.type === "Identifier" ? argument : undefined;
 }
 
 module.exports = {

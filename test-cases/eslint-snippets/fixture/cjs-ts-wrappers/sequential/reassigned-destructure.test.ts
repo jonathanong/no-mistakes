@@ -1,0 +1,9 @@
+let { test: suite } = require("vitest");
+suite = other;
+suite.sequential("reassigned", () => {});
+let { test } = require("vitest");
+test = other;
+test.sequential("reassigned name", () => {});
+let run = require("vitest").test;
+run = other;
+run.sequential("reassigned member", () => {});
