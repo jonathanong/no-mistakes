@@ -148,7 +148,7 @@ fn poetry_dependencies_table_keeps_the_package() {
         &packages,
         "sample-url",
         "0.2.0",
-        "",
+        "https://example.invalid/sample-url.tar.gz",
         ResolutionKind::Tarball,
     );
     expect(

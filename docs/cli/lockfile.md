@@ -46,14 +46,16 @@ for explicit binary lockfiles and returns an array for supported lockfiles.
 A `[package.dependencies]` table stays on that package. Cargo `registry+` and
 `sparse+` sources are registry and use `checksum`, including legacy
 checksums recorded in `[metadata]`. `git+` is git and uses
-`checksum` or the source string. `path+` is a directory. A package with no
+`checksum` or the source string. A git query is percent-decoded once, so an
+encoded branch matches the plain branch. A package version is `major.minor.patch`
+with an optional prerelease and build. `path+` is a directory. A package with no
 source is the workspace. Cargo also reads legacy `[root]` records. Poetry git uses `resolved_reference`, then
 `reference`. A Git subdirectory selector contributes to that fingerprint.
 Other Poetry packages use sorted file hashes, including legacy
 `[metadata.files]` and `[metadata.hashes]` representations. For a local file
 dependency, the legacy file list contributes only the matching archive hash. A Poetry directory uses its source path as the fingerprint.
-Poetry `url` and `file` sources are tarballs.
-uv requires a top-level `version` marker. A package name cannot contain spaces, and a present empty version is malformed. uv git uses the commit in the URL fragment after `#`, then `rev`, and
+Poetry `url` and `file` sources are tarballs. A tarball with no file hashes uses its source URL.
+uv requires a top-level `version` marker. A package name cannot contain spaces. A present version must be PEP 440, including an empty version. uv git uses the commit in the URL fragment after `#`, then `rev`, and
 includes the Git subdirectory selector. A git source with neither pin is malformed. uv
 `editable`, `directory`, and `virtual` sources use the directory path as
 their fingerprint and may omit `version`. uv combines sorted wheel and
@@ -68,7 +70,7 @@ may omit `version`. Their source URL, non-Git revision, and subdirectory
 selector contribute to the fingerprint. A registry entry
 requires `version` and uses all sorted hashes. `go.mod` requires exactly one
 module declaration and reads `require` lines, including `// indirect` and revision
-names written in place of canonical versions. An empty `require ()` block
+names written in place of canonical versions. Double-quoted requirement paths are accepted, and a backtick-quoted requirement is malformed. An empty `require ()` block
 contributes no packages.
 `replace`, `exclude`, `retract`, and `go.sum`
 are not packages. `Gemfile.lock` reads specs indented four spaces. A package-shaped line at another indent is malformed, and deeper

@@ -1,0 +1,7 @@
+[[package]]
+name = "sample"
+version = "1.0.0"
+
+[package.source]
+type = "url"
+url = "https://example.invalid/a.whl"

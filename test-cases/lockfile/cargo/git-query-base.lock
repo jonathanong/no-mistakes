@@ -1,0 +1,42 @@
+version = 3
+
+[[package]]
+name = "sample"
+version = "1.0.0"
+source = "git+https://example.invalid/sample.git?branch=feature%2Ffoo#abc123"
+
+[[package]]
+name = "sample-commit"
+version = "1.0.0"
+source = "git+https://example.invalid/sample.git?branch=feature%2ffoo#def456"
+
+[[package]]
+name = "sample-open"
+version = "1.0.0"
+source = "git+https://example.invalid/sample.git?branch=feature%2Ffoo"
+
+[[package]]
+name = "sample-rev"
+version = "1.0.0"
+source = "git+https://example.invalid/sample.git?rev=abc123#abc123"
+
+[[package]]
+name = "sample-other"
+version = "1.0.0"
+source = "git+https://example.invalid/other.git?branch=feature/foo#abc123"
+
+[[package]]
+name = "sample-sum"
+version = "1.0.0"
+source = "git+https://example.invalid/sample.git?branch=feature%2Ffoo#abc123"
+checksum = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+
+[[package]]
+name = "sample-bad"
+version = "1.0.0"
+source = "git+https://example.invalid/sample.git?branch=feature%ZZ#abc123"
+
+[[package]]
+name = "sample-utf"
+version = "1.0.0"
+source = "git+https://example.invalid/sample.git?branch=%FF#abc123"

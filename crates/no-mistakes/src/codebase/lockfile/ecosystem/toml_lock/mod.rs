@@ -1,6 +1,7 @@
 mod cargo;
 mod poetry;
 mod uv;
+mod uv_version;
 
 use super::super::ResolvedPackage;
 

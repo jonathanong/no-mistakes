@@ -84,6 +84,11 @@ fn package(pkg: PoetryPackage, metadata: Option<&PoetryMetadata>) -> ResolvedPac
             fingerprint = legacy_fingerprint(&pkg.name, source, metadata);
         }
     }
+    if fingerprint.is_empty() && kind == ResolutionKind::Tarball {
+        if let Some(url) = source.and_then(|source| nonempty(&source.url)) {
+            fingerprint = url;
+        }
+    }
     ResolvedPackage {
         name: pkg.name,
         version: pkg.version,

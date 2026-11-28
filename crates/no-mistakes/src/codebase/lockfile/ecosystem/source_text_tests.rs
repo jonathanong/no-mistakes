@@ -30,14 +30,8 @@ fn go_requirements_allow_tabs_and_quoted_tokens_but_reject_extra_tokens() {
         "",
         ResolutionKind::Registry,
     );
-    expect(
-        &packages,
-        "example.invalid/raw/v2",
-        "v2.3.4",
-        "",
-        ResolutionKind::Registry,
-    );
     assert!(packages_for_diff(PackageManager::Go, &fixture("gomod", "extra-token.mod")).is_err());
+    assert!(packages_for_diff(PackageManager::Go, &fixture("gomod", "backtick.mod")).is_err());
 }
 
 #[test]

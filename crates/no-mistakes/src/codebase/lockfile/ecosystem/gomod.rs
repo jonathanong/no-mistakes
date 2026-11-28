@@ -148,12 +148,8 @@ fn token(raw: &str) -> Result<String, GoModError> {
     if raw.starts_with('"') {
         return serde_json::from_str(raw).map_err(|_| GoModError);
     }
-    if let Some(rest) = raw.strip_prefix('`') {
-        return rest
-            .strip_suffix('`')
-            .filter(|body| !body.contains('`'))
-            .map(str::to_string)
-            .ok_or(GoModError);
+    if raw.starts_with('`') {
+        return Err(GoModError);
     }
     Ok(raw.to_string())
 }

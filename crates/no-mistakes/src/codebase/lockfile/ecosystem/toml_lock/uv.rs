@@ -1,4 +1,5 @@
 use super::super::super::{ResolutionKind, ResolvedPackage};
+use super::uv_version::pep440;
 use super::TomlError;
 use serde::Deserialize;
 use std::num::NonZeroU32;
@@ -73,7 +74,7 @@ fn package(pkg: UvPackage) -> Result<ResolvedPackage, TomlError> {
         return Err(TomlError);
     }
     let version = match pkg.version {
-        Some(version) if !version.is_empty() => version,
+        Some(version) if pep440(&version) => version,
         Some(_) => return Err(TomlError),
         None if kind == ResolutionKind::Directory => String::new(),
         None => return Err(TomlError),
