@@ -237,6 +237,16 @@ expression: snapshot
     {
       "kind": "missing-job-option",
       "file": "flow.ts",
+      "line": 32,
+      "queueFile": "queues.ts",
+      "queueName": "widgets",
+      "job": "mystery-child",
+      "message": "job options missing backoff",
+      "sourceLine": "children: [{ name: \"mystery-child\", queueName: \"widgets\", data: {} }],"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "flow.ts",
       "line": 64,
       "queueFile": "queues.ts",
       "queueName": "widgets",
@@ -253,6 +263,26 @@ expression: snapshot
       "job": "folded-child",
       "message": "job options missing backoff",
       "sourceLine": "children: [{ name: \"folded-child\", queueName: \"widgets\", data: {} }],"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "flow.ts",
+      "line": 90,
+      "queueFile": "queues.ts",
+      "queueName": "widgets",
+      "job": "hidden-child",
+      "message": "job options missing backoff",
+      "sourceLine": "children: [{ name: \"hidden-child\", queueName: \"widgets\", data: {} }],"
+    },
+    {
+      "kind": "missing-job-option",
+      "file": "flow.ts",
+      "line": 144,
+      "queueFile": "queues.ts",
+      "queueName": "widgets",
+      "job": "computed-child",
+      "message": "job options missing backoff",
+      "sourceLine": "children: [{ name: \"computed-child\", queueName: \"widgets\", data: {} }],"
     },
     {
       "kind": "missing-job-option",
@@ -537,18 +567,6 @@ expression: snapshot
       "line": 100,
       "message": "job options were not judged because the options object is not statically known",
       "sourceLine": "enqueueWidget(widgets, \"spread-opts\", ...rest);"
-    },
-    {
-      "file": "flow-cyclic-child.ts",
-      "line": 6,
-      "message": "job options were not judged because the options object is not statically known",
-      "sourceLine": "children: [{ ...cycle, name: \"cyclic-child\", opts: { priority: 1 } }],"
-    },
-    {
-      "file": "flow-mutual-child-cycle.ts",
-      "line": 6,
-      "message": "job options were not judged because the options object is not statically known",
-      "sourceLine": "children: [{ ...draw, name: \"draw-child\", opts: { priority: 1 } }],"
     },
     {
       "file": "flow-queue-spreads.ts",

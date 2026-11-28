@@ -90,20 +90,12 @@ fn note_flow_node<'a>(
     active: &mut FxHashSet<u32>,
 ) {
     let start = object.span().start;
-    let new_node = active.insert(start);
+    if !active.insert(start) {
+        return;
+    }
     let members = members::read(object, &visitor.object_bindings);
     let queue_name = members.queue_name();
-    let evidence = new_node
-        .then(|| flow_opts(object, &visitor.object_bindings))
-        .flatten();
-    let known_spreads = evidence.as_ref().is_some_and(|evidence| {
-        evidence.spreads.iter().all(|spread| {
-            visitor
-                .object_bindings
-                .lookup(&spread.name, spread.at)
-                .is_some_and(|binding| binding.value().is_some())
-        })
-    });
+    let evidence = flow_opts(object, &visitor.object_bindings);
     let job = members.job();
     crate::queue::extract_debounce::check_flow_node(visitor, object, job.clone());
     push_site(
@@ -114,14 +106,10 @@ fn note_flow_node<'a>(
         job,
         evidence.unwrap_or_else(JobOptionEvidence::open),
     );
-    if known_spreads {
-        if let Some(children) = members.children() {
-            note_children(visitor, children, queue_name, active);
-        }
+    if let Some(children) = members.children() {
+        note_children(visitor, children, queue_name, active);
     }
-    if new_node {
-        active.remove(&start);
-    }
+    active.remove(&start);
 }
 
 fn flow_opts(

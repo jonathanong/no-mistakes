@@ -72,3 +72,61 @@ fn candidate_targets_parse_failures_and_config_errors_are_covered() {
         .values()
         .any(|ev| ev.opaque_mutation));
 }
+
+#[test]
+fn instance_review_tracks_throws_opaque_writes_and_assign_bindings() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/queue-rate-limit-error-delay/instance-review.ts");
+    let map = collect_ts_facts(
+        std::slice::from_ref(&path),
+        TsFactPlan {
+            module_bindings: true,
+            call_arguments: true,
+            ..TsFactPlan::default()
+        },
+    );
+    let facts = map.get(&path).expect("instance review facts");
+    let evidence: Vec<_> = facts
+        .module_bindings
+        .as_deref()
+        .and_then(|module| module.path_provenance.as_deref())
+        .expect("path provenance")
+        .instance_properties
+        .values()
+        .collect();
+    assert!(
+        evidence
+            .iter()
+            .any(|ev| ev.properties.get("delayMs") == Some(&InstancePropertyValue::Invalid)),
+        "assign after Object.assign should replace the delay, {evidence:?}"
+    );
+    assert!(
+        evidence.iter().any(|ev| {
+            ev.throw_count > 0
+                && ev.properties.get("delayMs") == Some(&InstancePropertyValue::Positive)
+                && !ev.positive_through_throws.contains("delayMs")
+        }),
+        "a throw before the delay is assigned stays unproven, {evidence:?}"
+    );
+    assert!(
+        evidence.iter().any(|ev| {
+            ev.throw_count > 0
+                && !ev.opaque_mutation
+                && ev.positive_through_throws.contains("delayMs")
+        }),
+        "a delay assigned before every throw stays proven, {evidence:?}"
+    );
+    assert!(
+        evidence
+            .iter()
+            .any(|ev| ev.opaque_mutation && !ev.properties.contains_key("delayMs")),
+        "opaque writes and helper calls drop the delay, {evidence:?}"
+    );
+    assert!(
+        evidence.iter().any(|ev| {
+            ev.opaque_mutation
+                && ev.properties.get("delayMs") == Some(&InstancePropertyValue::Positive)
+        }),
+        "a later unconditional assignment restores a delay after a helper call, {evidence:?}"
+    );
+}

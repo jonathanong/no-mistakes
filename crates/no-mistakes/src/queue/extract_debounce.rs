@@ -1,13 +1,12 @@
 use crate::fx::FxHashSet;
-use crate::queue::extract_helpers::literal_expr;
 use crate::queue::extract_model::LocalCheck;
 use crate::queue::extract_visitor::QueueVisitor;
 use crate::queue::source::line_number;
-use oxc_ast::ast::{
-    Argument, ArrayExpressionElement, CallExpression, Expression, ObjectExpression,
-};
+use oxc_ast::ast::{CallExpression, Expression, ObjectExpression};
 use oxc_span::GetSpan;
 
+#[path = "extract_debounce_bulk.rs"]
+mod bulk;
 #[path = "extract_debounce_eval.rs"]
 mod eval;
 #[path = "extract_debounce_members.rs"]
@@ -47,32 +46,7 @@ pub(in crate::queue) fn check_bulk_call<'a>(
     visitor: &mut QueueVisitor<'a>,
     call: &CallExpression<'a>,
 ) {
-    let Some(Expression::ArrayExpression(array)) = call
-        .arguments
-        .first()
-        .and_then(Argument::as_expression)
-        .map(Expression::get_inner_expression)
-    else {
-        return;
-    };
-    for element in &array.elements {
-        let ArrayExpressionElement::ObjectExpression(object) = element else {
-            continue;
-        };
-        let job = members::extract_member(
-            object,
-            "name",
-            &visitor.object_bindings,
-            &mut FxHashSet::default(),
-        )
-        .and_then(|expr| literal_expr(expr.get_inner_expression(), &visitor.const_strings));
-        check_opts_member(
-            visitor,
-            object,
-            line_number(visitor.source, object.span.start),
-            job,
-        );
-    }
+    bulk::check(visitor, call);
 }
 
 pub(in crate::queue) fn check_flow_node<'a>(
@@ -93,22 +67,19 @@ pub(in crate::queue) fn check_queue_options<'a>(
     expr: &Expression<'a>,
     line: usize,
 ) {
-    let Some(defaults) = members::extract_member_from_expr(
-        expr,
-        expr.span().start,
-        "defaultJobOptions",
-        &visitor.object_bindings,
-        &mut FxHashSet::default(),
-    ) else {
-        return;
+    let verdict = {
+        let lookup = members::extract_member_from_expr(
+            expr,
+            expr.span().start,
+            "defaultJobOptions",
+            &visitor.object_bindings,
+            &mut FxHashSet::default(),
+        );
+        member_verdict(visitor, lookup)
     };
-    let verdict = eval::eval_options(
-        visitor,
-        defaults,
-        defaults.span().start,
-        &mut FxHashSet::default(),
-    );
-    emit_verdict(visitor, verdict, line, None);
+    if let Some(verdict) = verdict {
+        emit_verdict(visitor, verdict, line, None);
+    }
 }
 
 fn check_opts_member<'a>(
@@ -117,16 +88,34 @@ fn check_opts_member<'a>(
     line: usize,
     job: Option<String>,
 ) {
-    let Some(opts) = members::extract_member(
-        object,
-        "opts",
-        &visitor.object_bindings,
-        &mut FxHashSet::default(),
-    ) else {
-        return;
+    let verdict = {
+        let lookup = members::extract_member(
+            object,
+            "opts",
+            &visitor.object_bindings,
+            &mut FxHashSet::default(),
+        );
+        member_verdict(visitor, lookup)
     };
-    let verdict = eval::eval_options(visitor, opts, opts.span().start, &mut FxHashSet::default());
-    emit_verdict(visitor, verdict, line, job);
+    if let Some(verdict) = verdict {
+        emit_verdict(visitor, verdict, line, job);
+    }
+}
+
+fn member_verdict<'a>(
+    visitor: &QueueVisitor<'a>,
+    lookup: members::MemberLookup<'a, '_>,
+) -> Option<DebounceTtlVerdict> {
+    match lookup {
+        members::MemberLookup::Absent => None,
+        members::MemberLookup::Unknown => Some(DebounceTtlVerdict::Abstain),
+        members::MemberLookup::Found(expr) => Some(eval::eval_options(
+            visitor,
+            expr,
+            expr.span().start,
+            &mut FxHashSet::default(),
+        )),
+    }
 }
 
 pub(in crate::queue) fn emit_verdict(

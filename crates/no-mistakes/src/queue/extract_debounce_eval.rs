@@ -6,6 +6,9 @@ use crate::queue::extract_visitor::QueueVisitor;
 use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind, UnaryOperator};
 use oxc_span::GetSpan;
 
+#[path = "extract_debounce_eval_ttl.rs"]
+mod ttl;
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum ModeState {
     Absent,
@@ -27,17 +30,16 @@ pub(super) fn eval_options<'a>(
     at: u32,
     active: &mut FxHashSet<u32>,
 ) -> DebounceTtlVerdict {
-    let Some(dedup) =
-        extract_member_from_expr(expr, at, "deduplication", &visitor.object_bindings, active)
-    else {
-        return DebounceTtlVerdict::Clean;
-    };
-    eval_dedup_expr(
-        visitor,
-        dedup,
-        dedup.span().start,
-        &mut FxHashSet::default(),
-    )
+    match extract_member_from_expr(expr, at, "deduplication", &visitor.object_bindings, active) {
+        super::members::MemberLookup::Absent => DebounceTtlVerdict::Clean,
+        super::members::MemberLookup::Unknown => DebounceTtlVerdict::Abstain,
+        super::members::MemberLookup::Found(dedup) => eval_dedup_expr(
+            visitor,
+            dedup,
+            dedup.span().start,
+            &mut FxHashSet::default(),
+        ),
+    }
 }
 
 pub(super) fn eval_dedup_expr(
@@ -87,13 +89,7 @@ fn fold_dedup_object(
             ObjectPropertyKind::ObjectProperty(property) => {
                 match crate::ast::property_key_name(&property.key).as_deref() {
                     Some("mode") => *mode = eval_mode(visitor, &property.value),
-                    Some("ttl") => {
-                        *ttl = if is_undefined_expr(&property.value) {
-                            TtlState::Absent
-                        } else {
-                            TtlState::Present
-                        };
-                    }
+                    Some("ttl") => *ttl = ttl::classify(visitor, &property.value),
                     Some(_) => {}
                     None => {
                         *mode = ModeState::Dynamic;

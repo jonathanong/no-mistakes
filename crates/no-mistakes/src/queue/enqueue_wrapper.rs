@@ -67,7 +67,7 @@ pub(in crate::queue) fn note_call<'a>(
             .push((line, super::extract_debounce::DEBOUNCE_TTL_ABSTENTION));
     }
     let wrapper = visitor.facts.enqueue_wrappers.len();
-    let job_id = options::effective_property(visitor, &layers, "jobId");
+    let job_id = options::effective_property(visitor, &layers, "jobId").expr();
     visitor.facts.enqueue_wrappers.push(WrapperSite {
         target,
         options: JobOptionSite {

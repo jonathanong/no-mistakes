@@ -35,14 +35,19 @@ fn detector_gaps_report_renamed_jobs_member_waits_and_wrapper_options() {
         "wrapper options should see debounce ttl, check: {:?}",
         report.check
     );
-    assert!(
-        report.diagnostics.iter().any(|diagnostic| {
+    let wrapper_abstentions = report
+        .diagnostics
+        .iter()
+        .filter(|diagnostic| {
             diagnostic.file.ends_with("enqueues/wrapper-dedup.mts")
                 && diagnostic
                     .message
                     .contains("debounce-ttl was not judged because deduplication options")
-        }),
-        "a dynamic debounce mode should abstain, diagnostics: {:?}",
+        })
+        .count();
+    assert!(
+        wrapper_abstentions >= 2,
+        "dynamic mode and an unknown options spread should abstain, diagnostics: {:?}",
         report.diagnostics
     );
     assert_eq!(

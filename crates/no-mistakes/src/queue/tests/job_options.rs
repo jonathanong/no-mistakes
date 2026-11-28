@@ -47,9 +47,15 @@ fn required_job_options_are_reported() {
     assert!(findings
         .iter()
         .all(|finding| finding.job.as_deref() != Some("called-spread")));
-    assert!(findings
-        .iter()
-        .all(|finding| finding.job.as_deref() != Some("hidden-child")));
+    for job in ["hidden-child", "mystery-child", "computed-child"] {
+        assert!(
+            findings.iter().any(|finding| {
+                finding.job.as_deref() == Some(job)
+                    && finding.message == "job options missing backoff"
+            }),
+            "{job}"
+        );
+    }
     assert!(findings.iter().any(|finding| {
         finding.job.as_deref() == Some("folded-child")
             && finding.message == "job options missing backoff"
@@ -62,14 +68,12 @@ fn required_job_options_are_reported() {
         source_line(&root, &finding.file, finding.line) != "widgets.add(...head, \"shifted\", {});"
     }));
     for job in [
-        "mystery-child",
         "both-spreads",
         "aliased",
         "data-alias",
         "open-bag",
         "empty-bag",
         "computed-node",
-        "computed-child",
         "shifted",
     ] {
         assert!(

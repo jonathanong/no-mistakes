@@ -1,4 +1,4 @@
-use crate::fx::FxHashMap;
+use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::{ast::*, AstKind};
 use oxc_semantic::Semantic;
 use oxc_span::{GetSpan, Span};
@@ -15,18 +15,51 @@ pub enum InstancePropertyValue {
 pub struct InstancePropertyEvidence {
     pub properties: FxHashMap<String, InstancePropertyValue>,
     pub opaque_mutation: bool,
+    pub throw_count: u32,
+    pub positive_through_throws: FxHashSet<String>,
 }
 
 impl InstancePropertyEvidence {
     pub(super) fn opaque() -> Self {
         Self {
-            properties: FxHashMap::default(),
             opaque_mutation: true,
+            ..Self::default()
         }
     }
 
     pub(super) fn is_empty(&self) -> bool {
-        self.properties.is_empty() && !self.opaque_mutation
+        self.properties.is_empty() && !self.opaque_mutation && self.throw_count == 0
+    }
+
+    pub(super) fn note_throw(&mut self) {
+        let positive = self
+            .properties
+            .iter()
+            .filter(|(_, value)| **value == InstancePropertyValue::Positive)
+            .map(|(key, _)| key.clone())
+            .collect::<FxHashSet<_>>();
+        if self.throw_count == 0 {
+            self.positive_through_throws = positive;
+        } else {
+            self.positive_through_throws
+                .retain(|key| positive.contains(key));
+        }
+        self.throw_count += 1;
+    }
+
+    pub(super) fn invalidate_key(&mut self, key: Option<&str>) {
+        self.opaque_mutation = true;
+        match key {
+            Some(key) => {
+                self.properties.remove(key);
+            }
+            None => self.properties.clear(),
+        }
+    }
+
+    pub(super) fn escape(&mut self) {
+        self.opaque_mutation = true;
+        self.properties.clear();
     }
 }
 

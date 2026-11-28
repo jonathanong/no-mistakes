@@ -6,6 +6,9 @@ use oxc_syntax::operator::AssignmentOperator;
 #[path = "instance_properties_ast.rs"]
 mod ast;
 
+#[path = "instance_properties_sources.rs"]
+mod sources;
+
 pub(super) use ast::is_call_derived_construct;
 pub use ast::{InstancePropertyEvidence, InstancePropertyValue};
 
@@ -26,6 +29,7 @@ impl<'a> Projector<'a, '_> {
                 {
                     let mut ev = InstancePropertyEvidence::default();
                     self.fold_assign_sources(&call.arguments[1..], &mut ev);
+                    self.absorb_assigned_binding(parent_id, &mut ev);
                     (!ev.is_empty()).then_some(ev)
                 } else {
                     Some(InstancePropertyEvidence::opaque())
@@ -45,23 +49,55 @@ impl<'a> Projector<'a, '_> {
         decl: &VariableDeclarator<'a>,
         decl_id: NodeId,
     ) -> Option<InstancePropertyEvidence> {
-        let BindingPattern::BindingIdentifier(binding) = &decl.id else {
-            return Some(InstancePropertyEvidence::opaque());
+        let mut ev = InstancePropertyEvidence::default();
+        self.fold_bound_declarator(decl, decl_id, &mut ev);
+        (!ev.is_empty()).then_some(ev)
+    }
+
+    fn absorb_assigned_binding(
+        &mut self,
+        assign_call_id: NodeId,
+        ev: &mut InstancePropertyEvidence,
+    ) {
+        let (call_span, parent_id) = ast::non_transparent_parent(self.semantic, assign_call_id);
+        let AstKind::VariableDeclarator(decl) = self.semantic.nodes().kind(parent_id) else {
+            return;
         };
-        let symbol = binding.symbol_id.get()?;
+        if decl
+            .init
+            .as_ref()
+            .is_some_and(|init| init.span() == call_span)
+        {
+            self.fold_bound_declarator(decl, parent_id, ev);
+        }
+    }
+
+    fn fold_bound_declarator(
+        &mut self,
+        decl: &VariableDeclarator<'a>,
+        decl_id: NodeId,
+        ev: &mut InstancePropertyEvidence,
+    ) {
+        let BindingPattern::BindingIdentifier(binding) = &decl.id else {
+            ev.escape();
+            return;
+        };
+        let Some(symbol) = binding.symbol_id.get() else {
+            ev.escape();
+            return;
+        };
         if self.exported.contains(&symbol.index()) {
-            return Some(InstancePropertyEvidence::opaque());
+            ev.escape();
+            return;
         }
         let decl_block = ast::enclosing_block(self.semantic, decl_id);
-        let mut ev = InstancePropertyEvidence::default();
         for (ref_id, is_write) in ast::sorted_symbol_refs(self.semantic, symbol) {
             if is_write {
                 ev.opaque_mutation = true;
                 break;
             }
-            self.fold_binding_use(ref_id, decl_block, &mut ev);
+            self.fold_binding_use(ref_id, decl_block, ev);
         }
-        (!ev.is_empty()).then_some(ev)
     }
 
     fn fold_binding_use(
@@ -72,7 +108,7 @@ impl<'a> Projector<'a, '_> {
     ) {
         let (child_span, use_id) = ast::non_transparent_parent(self.semantic, ref_id);
         match self.semantic.nodes().kind(use_id) {
-            AstKind::ThrowStatement(_) => {}
+            AstKind::ThrowStatement(_) => ev.note_throw(),
             AstKind::StaticMemberExpression(member) if member.object.span() == child_span => {
                 self.fold_member_use(
                     use_id,
@@ -96,9 +132,10 @@ impl<'a> Projector<'a, '_> {
                 if ast::same_unconditional_block(self.semantic, use_id, decl_block) {
                     self.fold_assign_sources(&call.arguments[1..], ev);
                 } else {
-                    ev.opaque_mutation = true;
+                    ev.escape();
                 }
             }
+            AstKind::CallExpression(_) => ev.escape(),
             _ => ev.opaque_mutation = true,
         }
     }
@@ -111,83 +148,27 @@ impl<'a> Projector<'a, '_> {
         decl_block: Option<NodeId>,
         ev: &mut InstancePropertyEvidence,
     ) {
-        let AstKind::AssignmentExpression(assign) = self.semantic.nodes().parent_kind(member_id)
-        else {
-            return;
-        };
-        if assign.left.span() != member_span {
-            return;
-        }
-        if assign.operator != AssignmentOperator::Assign
-            || !ast::same_unconditional_block(self.semantic, member_id, decl_block)
-        {
-            ev.opaque_mutation = true;
-            return;
-        }
-        match key {
-            Some(key) => {
-                let state = self.classify_delay_value(&assign.right);
-                ev.properties.insert(key.to_string(), state);
+        match self.semantic.nodes().parent_kind(member_id) {
+            AstKind::UpdateExpression(_) => ev.invalidate_key(key),
+            AstKind::UnaryExpression(unary) if unary.operator == UnaryOperator::Delete => {
+                ev.invalidate_key(key);
             }
-            None => {
-                ev.opaque_mutation = true;
-                ev.properties.clear();
+            AstKind::AssignmentExpression(assign) if assign.left.span() == member_span => {
+                if assign.operator != AssignmentOperator::Assign
+                    || !ast::same_unconditional_block(self.semantic, member_id, decl_block)
+                {
+                    ev.invalidate_key(key);
+                    return;
+                }
+                match key {
+                    Some(key) => {
+                        let state = self.classify_delay_value(&assign.right);
+                        ev.properties.insert(key.to_string(), state);
+                    }
+                    None => ev.invalidate_key(None),
+                }
             }
-        }
-    }
-
-    fn fold_assign_sources(
-        &mut self,
-        sources: &'a [Argument<'a>],
-        ev: &mut InstancePropertyEvidence,
-    ) {
-        for source in sources {
-            let Some(entries) = source
-                .as_expression()
-                .and_then(|expr| self.closed_object_expr(expr, 0))
-                .and_then(|object| self.closed_object_delay_entries(object))
-            else {
-                ev.opaque_mutation = true;
-                ev.properties.clear();
-                continue;
-            };
-            for (key, value) in entries {
-                ev.properties.insert(key, value);
-            }
-        }
-    }
-
-    fn closed_object_delay_entries(
-        &mut self,
-        object: &'a ObjectExpression<'a>,
-    ) -> Option<Vec<(String, InstancePropertyValue)>> {
-        let mut entries = Vec::with_capacity(object.properties.len());
-        for property in &object.properties {
-            let ObjectPropertyKind::ObjectProperty(property) = property else {
-                return None;
-            };
-            let key =
-                (property.kind == PropertyKind::Init && !property.method && !property.computed)
-                    .then(|| crate::ast::property_key_name(&property.key))
-                    .flatten()
-                    .filter(|k| k != "__proto__" && k.len() <= 128)?;
-            entries.push((key.into_owned(), self.classify_delay_value(&property.value)));
-        }
-        Some(entries)
-    }
-
-    fn classify_delay_value(&mut self, expr: &Expression<'a>) -> InstancePropertyValue {
-        if self.is_absent_or_non_finite(expr, 0) {
-            return InstancePropertyValue::AbsentOrNonFinite;
-        }
-        match self.value(expr, 0) {
-            ArgumentValue::Scalar(Value::Number(num))
-                if num.as_f64().is_some_and(|n| n.is_finite() && n > 0.0) =>
-            {
-                InstancePropertyValue::Positive
-            }
-            ArgumentValue::Unknown => InstancePropertyValue::Positive,
-            _ => InstancePropertyValue::Invalid,
+            _ => {}
         }
     }
 }

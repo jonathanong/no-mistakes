@@ -48,25 +48,49 @@ pub(super) fn priority<'a>(visitor: &QueueVisitor<'a>, layers: &[Selected<'a>]) 
     priority
 }
 
+pub(super) enum ResolvedProperty<'a> {
+    Missing,
+    Unknown,
+    Value(&'a Expression<'a>),
+}
+
+impl<'a> ResolvedProperty<'a> {
+    pub(super) fn expr(self) -> Option<&'a Expression<'a>> {
+        match self {
+            Self::Value(expr) => Some(expr),
+            Self::Missing | Self::Unknown => None,
+        }
+    }
+}
+
 pub(super) fn effective_property<'a>(
     visitor: &QueueVisitor<'a>,
     layers: &[Selected<'a>],
     key: &str,
-) -> Option<&'a Expression<'a>> {
+) -> ResolvedProperty<'a> {
     for layer in layers.iter().rev() {
         let expr = match layer {
             Selected::Missing => continue,
-            Selected::Unknown => return None,
+            Selected::Unknown => return ResolvedProperty::Unknown,
             Selected::Value(expr) => *expr,
         };
-        let Expression::ObjectExpression(object) = local_value(visitor, expr)? else {
-            return None;
+        let Some(expr) = local_value(visitor, expr) else {
+            return ResolvedProperty::Unknown;
         };
-        if let Some(value) = closed_property(object, key)? {
-            return Some(crate::codebase::ts_source::unwrap_ts_wrappers(value));
+        let Expression::ObjectExpression(object) = expr else {
+            return ResolvedProperty::Unknown;
+        };
+        match closed_property(object, key) {
+            None => return ResolvedProperty::Unknown,
+            Some(Some(value)) => {
+                return ResolvedProperty::Value(crate::codebase::ts_source::unwrap_ts_wrappers(
+                    value,
+                ));
+            }
+            Some(None) => {}
         }
     }
-    None
+    ResolvedProperty::Missing
 }
 
 pub(super) fn dedup<'a>(
@@ -74,8 +98,10 @@ pub(super) fn dedup<'a>(
     layers: &[Selected<'a>],
     line: usize,
 ) -> (bool, Vec<LocalCheck>, bool) {
-    let Some(value) = effective_property(visitor, layers, "deduplication") else {
-        return (false, Vec::new(), false);
+    let value = match effective_property(visitor, layers, "deduplication") {
+        ResolvedProperty::Missing => return (false, Vec::new(), false),
+        ResolvedProperty::Unknown => return (false, Vec::new(), true),
+        ResolvedProperty::Value(value) => value,
     };
     let closed = closed_dedup(value);
     let (checks, abstained) = match check_dedup_value(visitor, value) {

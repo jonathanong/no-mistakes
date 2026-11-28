@@ -179,7 +179,7 @@ fn ev(key: &str, value: InstancePropertyValue) -> InstancePropertyEvidence {
     properties.insert(key.to_string(), value);
     InstancePropertyEvidence {
         properties,
-        opaque_mutation: false,
+        ..InstancePropertyEvidence::default()
     }
 }
 
@@ -295,9 +295,16 @@ fn judge_arguments_classifies_positional_object_and_instance_property_targets() 
     let abs_ev = ev("delayMs", InstancePropertyValue::AbsentOrNonFinite);
     let other_ev = ev("code", InstancePropertyValue::Invalid);
     let opaque_ev = InstancePropertyEvidence {
-        properties: FxHashMap::default(),
         opaque_mutation: true,
+        ..InstancePropertyEvidence::default()
     };
+    let mut thrown_without_delay = ev("delayMs", InstancePropertyValue::Positive);
+    thrown_without_delay.throw_count = 1;
+    let mut thrown_with_delay = ev("delayMs", InstancePropertyValue::Positive);
+    thrown_with_delay.throw_count = 1;
+    thrown_with_delay
+        .positive_through_throws
+        .insert("delayMs".to_string());
     assert!(matches!(
         judge_arguments(&call_args(None, None, None), &inst),
         DelayVerdict::Unanalyzable(_)
@@ -326,6 +333,20 @@ fn judge_arguments_classifies_positional_object_and_instance_property_targets() 
         judge_arguments(&call_args(Some(&empty), None, Some(&opaque_ev)), &inst),
         DelayVerdict::Unanalyzable(_)
     ));
+    assert!(matches!(
+        judge_arguments(
+            &call_args(Some(&empty), None, Some(&thrown_without_delay)),
+            &inst
+        ),
+        DelayVerdict::Missing(_)
+    ));
+    assert_eq!(
+        judge_arguments(
+            &call_args(Some(&empty), None, Some(&thrown_with_delay)),
+            &inst
+        ),
+        DelayVerdict::Valid
+    );
     assert!(matches!(
         judge_arguments(
             &CallDelayArgs {

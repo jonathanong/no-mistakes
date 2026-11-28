@@ -1,7 +1,7 @@
 use super::options::{DelaySpec, Target};
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_source::module_facts::arguments::{
-    ArgumentValue, ArgumentValues, InstancePropertyEvidence, InstancePropertyValue,
+    ArgumentValue, ArgumentValues, InstancePropertyEvidence,
 };
 use serde_json::Value;
 
@@ -64,40 +64,15 @@ pub(super) fn call_arguments(facts: &TsFileFacts, offset: u32) -> CallDelayArgs<
     }
 }
 
+#[path = "judge_instance.rs"]
+mod instance;
+
 pub(super) fn judge_arguments(args: &CallDelayArgs<'_>, target: &Target) -> DelayVerdict {
     match &target.delay {
         DelaySpec::Argument { index, property } => {
             judge_argument_delay(args.values, args.absent, *index, property.as_deref())
         }
-        DelaySpec::InstanceProperty(prop) => judge_instance_property(args, prop),
-    }
-}
-
-fn judge_instance_property(args: &CallDelayArgs<'_>, prop: &str) -> DelayVerdict {
-    if args.values.is_none() || args.dynamic_scope {
-        return DelayVerdict::Unanalyzable(
-            "call arguments and instance properties could not be statically analyzed".to_string(),
-        );
-    }
-    let Some(evidence) = args.instance else {
-        return DelayVerdict::Missing(format!(
-            "does not attach required `{prop}` delay property on the constructed instance"
-        ));
-    };
-    match evidence.properties.get(prop) {
-        Some(InstancePropertyValue::Positive) => DelayVerdict::Valid,
-        Some(InstancePropertyValue::Invalid) => DelayVerdict::Missing(format!(
-            "instance property `{prop}` must be a positive duration"
-        )),
-        Some(InstancePropertyValue::AbsentOrNonFinite) => DelayVerdict::Missing(format!(
-            "instance property `{prop}` is undefined or non-finite"
-        )),
-        None if evidence.opaque_mutation => DelayVerdict::Unanalyzable(format!(
-            "constructed instance escapes or is mutated opaquely, so `{prop}` could not be verified"
-        )),
-        None => DelayVerdict::Missing(format!(
-            "does not attach required `{prop}` delay property on the constructed instance"
-        )),
+        DelaySpec::InstanceProperty(prop) => instance::judge_instance_property(args, prop),
     }
 }
 
