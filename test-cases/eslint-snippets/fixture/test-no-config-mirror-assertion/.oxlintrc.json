@@ -1,0 +1,10 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "categories": { "correctness": "off" },
+  "rules": { "no-mistakes/test-no-config-mirror-assertion": "error" }
+}

@@ -13,6 +13,12 @@ const cases = [
   ],
   ["test-no-skips", "allow", { allow: ["skip"] }, { allow: "skip" }],
   [
+    "test-no-config-mirror-assertion",
+    "fixtureDirs",
+    { fixtureDirs: ["fixtures"], parsers: [{ module: "smol-toml", name: "parse" }] },
+    { fixtureDirs: "fixtures" },
+  ],
+  [
     "test-no-wall-time-assertions",
     "allowedPaths",
     { allowedPaths: ["bench/**"] },

@@ -78,6 +78,7 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 | [`react-no-iife-in-jsx`](react-no-iife-in-jsx.md)                     | Reject IIFEs in JSX.                                            |
 | [`react-no-nullish-react-node`](react-no-nullish-react-node.md)       | Preserve nullish ReactNode semantics.                           |
 | [`react-no-use-promise-resolve`](react-no-use-promise-resolve.md)     | Reject `React.use(Promise.resolve(...))`.                       |
+| [`test-no-config-mirror-assertion`](test-no-config-mirror-assertion.md) | Flag tests that read a tracked non-fixture file only to assert literals. |
 | [`test-no-error-message-matching`](test-no-error-message-matching.md) | Prefer stable error contracts over message text.                |
 | [`test-no-fixed-temp-paths`](test-no-fixed-temp-paths.md)             | Require unique temporary paths in test files.                   |
 | [`test-no-shared-state`](test-no-shared-state.md)                     | Reject mutable module-scope test state.                         |

@@ -56,6 +56,7 @@ const expectedLine = {
   "require-top-level-registration": 1,
   "restricted-api-usage": 4,
   "server-require-nullable-fetch-wrapper": 11,
+  "test-no-config-mirror-assertion": 17,
   "test-no-style-class-assertion": 1,
   "test-no-typed-enqueue-fake": 9,
   "test-no-wall-time-assertions": 1,

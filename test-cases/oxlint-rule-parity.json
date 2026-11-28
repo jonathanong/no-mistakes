@@ -496,6 +496,12 @@
       }
     },
     {
+      "files": ["eslint-snippets/fixture/test-no-config-mirror-assertion/sources.test.ts"],
+      "rules": {
+        "no-mistakes/test-no-config-mirror-assertion": "error"
+      }
+    },
+    {
       "files": ["eslint-snippets/fixture/test-no-style-class-assertion/forms.test.tsx"],
       "rules": {
         "no-mistakes/test-no-style-class-assertion": "error"

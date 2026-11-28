@@ -146,6 +146,23 @@
       ],
       "file": "correlated-global.js",
       "rule": "postgres-no-correlated-sql-builder"
+    },
+    {
+      "eslint": [
+        {
+          "column": 3,
+          "endColumn": 59,
+          "endLine": 9,
+          "file": "config-mirror-import-equals.test.ts",
+          "line": 9,
+          "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead.",
+          "messageId": "configMirror",
+          "ruleId": "no-mistakes/test-no-config-mirror-assertion",
+          "severity": 2
+        }
+      ],
+      "file": "config-mirror-import-equals.test.ts",
+      "rule": "test-no-config-mirror-assertion"
     }
   ],
   "oxlint": [
@@ -155,6 +172,13 @@
       "file": "async-import-equals-mock.ts",
       "line": 7,
       "message": "Handle this async promise explicitly with await, return, Promise.all(...), or void."
+    },
+    {
+      "code": "no-mistakes(test-no-config-mirror-assertion)",
+      "column": 3,
+      "file": "config-mirror-import-equals.test.ts",
+      "line": 9,
+      "message": "Avoid asserting literal values read from a tracked repository file. Delete this mirror test, enforce the invariant with a static rule, or assert a cross-file contract instead."
     },
     {
       "code": "no-mistakes(postgres-no-correlated-sql-builder)",
