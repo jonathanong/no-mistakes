@@ -1,0 +1,8 @@
+projects:
+  api:
+    root: .
+    postgres:
+      schemaCatalogPath: schema.json
+rules:
+  - rule: postgres-polymorphic-target
+    projects: [api]

@@ -66,6 +66,10 @@ const CHECKS: &[(&str, Check)] = &[
         rules::postgres_column_check_constraints::check_with_files,
     ),
     (
+        "postgres-polymorphic-target",
+        rules::postgres_polymorphic_target::check_with_files,
+    ),
+    (
         "postgres-sql-shape-policy",
         rules::postgres_sql_shape_policy::check_with_files,
     ),

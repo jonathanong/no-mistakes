@@ -8,16 +8,12 @@ use std::{
 mod duplicate_keyed_lookups;
 mod generated_predicates;
 mod grouping;
+mod lock_inventory;
 mod naming;
+mod no_offset;
 mod prepared_schema;
 mod schema;
 mod shapes;
-use schema::{
-    column_check_constraints, column_requires_trigger, conflict_ordering, duplicate_function_body,
-    lock_ordering, required_comments,
-};
-mod lock_inventory;
-mod no_offset;
 use naming::{
     array_columns, bounded_statements, column_naming, explicit_columns, finite_text, object_naming,
     required_predicates, status_lifecycle, table_shape,
@@ -30,7 +26,8 @@ pub(super) fn run(
     sources: &Arc<SourceStore>,
     facts: Option<&CheckFactMap>,
 ) -> Option<Result<Vec<RuleFinding>>> {
-    let result = run_schema_rules(rule_id, root, config, files, sources, facts)
+    let result = schema::run(rule_id, root, config, files, sources, facts)
+        .or_else(|| run_schema_rules(rule_id, root, config, files, sources, facts))
         .or_else(|| run_naming_and_query_rules(rule_id, root, config, files, sources, facts))?;
     Some(result.and_then(|mut findings| {
         // This advisory judges literal JSON writes only; opaque SQL is explicitly out of scope.
@@ -71,20 +68,6 @@ fn run_schema_rules(
                 root, config, files, sources,
             ),
         },
-        POSTGRES_DUPLICATE_FUNCTION_BODY => {
-            duplicate_function_body(root, config, files, sources, facts)
-        }
-        POSTGRES_COLUMN_CHECK_CONSTRAINTS => {
-            column_check_constraints(root, config, files, sources, facts)
-        }
-        POSTGRES_REQUIRED_COMMENTS => required_comments(root, config, files, sources, facts),
-        POSTGRES_MATERIALIZED_VIEW_SHAPE => {
-            schema::materialized_view_shape(root, config, files, sources, facts)
-        }
-        POSTGRES_COLUMN_REQUIRES_TRIGGER => {
-            column_requires_trigger(root, config, files, sources, facts)
-        }
-        POSTGRES_CONFLICT_ORDERING => conflict_ordering(root, config, files, sources, facts),
         POSTGRES_CONSTRAINT_VALIDATE => {
             prepared_schema::constraint_validate(root, config, files, sources, facts)
         }
@@ -104,7 +87,6 @@ fn run_schema_rules(
             ),
         },
         POSTGRES_LOCK_INVENTORY => lock_inventory::run(root, config, files, sources, facts),
-        POSTGRES_LOCK_ORDERING => lock_ordering(root, config, files, sources, facts),
         POSTGRES_IDENTIFIER_LENGTH => {
             prepared_schema::identifier_length(root, config, files, sources, facts)
         }

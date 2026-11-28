@@ -60,6 +60,8 @@ mod check_json_snapshot;
 mod cli_check_react_empty_components;
 #[path = "cli_postgres_snapshot_column_check_constraints.rs"]
 mod cli_postgres_snapshot_column_check_constraints;
+#[path = "cli_postgres_snapshot_polymorphic_target.rs"]
+mod cli_postgres_snapshot_polymorphic_target;
 #[path = "common/git_tracked_rule.rs"]
 mod git_tracked_rule;
 #[path = "common/gitignore_fixture.rs"]

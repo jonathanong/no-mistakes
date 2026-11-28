@@ -89,6 +89,7 @@ pub use super::postgres_no_test_state_mutation::RULE_ID as POSTGRES_NO_TEST_STAT
 pub use super::postgres_no_transformed_uuid_predicates::RULE_ID as POSTGRES_NO_TRANSFORMED_UUID_PREDICATES;
 pub use super::postgres_no_unbounded_sql_identifier::RULE_ID as POSTGRES_NO_UNBOUNDED_SQL_IDENTIFIER;
 pub use super::postgres_object_naming::RULE_ID as POSTGRES_OBJECT_NAMING;
+pub use super::postgres_polymorphic_target::RULE_ID as POSTGRES_POLYMORPHIC_TARGET;
 pub use super::postgres_redundant_index::RULE_ID as POSTGRES_REDUNDANT_INDEX;
 pub use super::postgres_require_fk_on_delete::RULE_ID as POSTGRES_REQUIRE_FK_ON_DELETE;
 pub use super::postgres_require_named_constraints::RULE_ID as POSTGRES_REQUIRE_NAMED_CONSTRAINTS;

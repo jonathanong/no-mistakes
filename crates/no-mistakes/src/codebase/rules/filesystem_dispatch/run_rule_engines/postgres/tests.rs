@@ -23,6 +23,7 @@ fn missing_facts_use_the_file_checkers() {
     let files: &[PathBuf] = &[];
     for rule_id in [
         POSTGRES_COLUMN_CHECK_CONSTRAINTS,
+        POSTGRES_POLYMORPHIC_TARGET,
         POSTGRES_JSON_RELATION_IDS,
         POSTGRES_MATERIALIZED_VIEW_SHAPE,
         POSTGRES_CONSTRAINT_VALIDATE,
@@ -63,6 +64,7 @@ fn prepared_facts_use_the_fact_checkers() {
     let facts = CheckFactMap::default();
     for rule_id in [
         POSTGRES_COLUMN_CHECK_CONSTRAINTS,
+        POSTGRES_POLYMORPHIC_TARGET,
         POSTGRES_JSON_RELATION_IDS,
         POSTGRES_MATERIALIZED_VIEW_SHAPE,
         POSTGRES_CONSTRAINT_VALIDATE,

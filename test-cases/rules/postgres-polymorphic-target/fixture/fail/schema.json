@@ -1,0 +1,118 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "comments": {
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "target_type": { "dataType": "text", "ordinalPosition": 2 },
+        "target_id": { "dataType": "uuid", "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] }
+    },
+    "bookmarks": {
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "item_type": { "dataType": "text", "ordinalPosition": 2 },
+        "item_id": { "dataType": "uuid", "ordinalPosition": 3 },
+        "owner_type": { "dataType": "text", "ordinalPosition": 4 },
+        "owner_id": { "dataType": "uuid", "ordinalPosition": 5 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "foreignKeys": {
+        "bookmarks_owner_id_fkey": {
+          "columns": ["owner_id"],
+          "referencedTable": "widgets",
+          "referencedColumns": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action",
+          "validated": true
+        }
+      }
+    },
+    "attachments": {
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "tenant_id": { "dataType": "uuid", "ordinalPosition": 2 },
+        "parent_type": { "dataType": "text", "ordinalPosition": 3 },
+        "parent_id": { "dataType": "uuid", "ordinalPosition": 4 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "foreignKeys": {
+        "attachments_tenant_parent_fkey": {
+          "columns": ["tenant_id", "parent_id"],
+          "referencedTable": "widgets",
+          "referencedColumns": ["tenant_id", "id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action",
+          "validated": true
+        }
+      }
+    },
+    "notes": {
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "source_type": { "dataType": "text", "ordinalPosition": 2 },
+        "source_id": { "dataType": "uuid", "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "foreignKeys": {
+        "notes_source_type_fkey": {
+          "columns": ["source_type"],
+          "referencedTable": "source_types",
+          "referencedColumns": ["code"],
+          "onDelete": "restrict",
+          "onUpdate": "no action",
+          "validated": true
+        }
+      }
+    },
+    "reminders": {
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "kind_type": { "dataType": "text", "ordinalPosition": 2 },
+        "widget_id": { "dataType": "uuid", "ordinalPosition": 3 },
+        "_type": { "dataType": "text", "ordinalPosition": 4 },
+        "_id": { "dataType": "uuid", "ordinalPosition": 5 }
+      },
+      "primaryKey": { "columns": ["id"] }
+    },
+    "audit_entries": {
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "subject_type": { "dataType": "text", "ordinalPosition": 2 },
+        "subject_id": { "dataType": "uuid", "ordinalPosition": 3 },
+        "actor_type": { "dataType": "text", "ordinalPosition": 4 },
+        "actor_id": { "dataType": "uuid", "ordinalPosition": 5 }
+      },
+      "primaryKey": { "columns": ["id"] }
+    },
+    "events_parent": {
+      "relationKind": "partitioned table",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "ref_type": { "dataType": "text", "ordinalPosition": 2 },
+        "ref_id": { "dataType": "uuid", "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] }
+    },
+    "events_leaf": {
+      "relationKind": "table",
+      "partitionOf": "events_parent",
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "ref_type": { "dataType": "text", "ordinalPosition": 2 },
+        "ref_id": { "dataType": "uuid", "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] }
+    },
+    "custom_links": {
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "target_kind": { "dataType": "text", "ordinalPosition": 2 },
+        "target_ref": { "dataType": "uuid", "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] }
+    }
+  }
+}

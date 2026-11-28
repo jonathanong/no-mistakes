@@ -120,4 +120,11 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
             rules::postgres_materialized_view_shape::compile(&rule.strict_rule_options()?).map(drop)
         },
     ),
+    (rules::postgres_polymorphic_target::RULE_ID, |rule, _| {
+        rules::postgres_polymorphic_target::compile::compile(
+            &rule.strict_rule_options()?,
+            rule.message.clone(),
+        )
+        .map(drop)
+    }),
 ];

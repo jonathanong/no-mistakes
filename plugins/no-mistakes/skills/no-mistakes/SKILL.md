@@ -439,6 +439,11 @@ severity enforces failures. Exceptions
 need an exact `table.column` and reason. See
 [the rule](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-column-check-constraints.md).
 
+Use `postgres-polymorphic-target` with a catalog path to flag `<x>_type` /
+`<x>_id` (or configured `typeSuffix` / `idSuffix`) column pairs whose id column
+lacks a foreign key. Exceptions need an exact `table.column` and reason. See
+[the rule](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-polymorphic-target.md).
+
 Use `postgres-materialized-view-shape` to require refresh and read indexes and
 bounded base-table reads. Adopt with application-level `severity: advisory`;
 the default severity is `error`. See the catalog configuration and examples in

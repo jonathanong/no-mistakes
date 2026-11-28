@@ -289,6 +289,11 @@ columns. Adopt with `severity: advisory`; the default severity is `error`.
 Exceptions name an exact `table.column` and a reason. See
 the [rule contract](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-column-check-constraints.md).
 
+For polymorphic type/id pairs, use `postgres-polymorphic-target` with
+`schemaCatalogPath` (and optional `typeSuffix` / `idSuffix`, defaulting to
+`_type` / `_id`). Exceptions name an exact `table.column` and a reason. See
+the [rule contract](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-polymorphic-target.md).
+
 For catalog review, opt into `postgres-materialized-view-shape` with
 `schemaCatalogPath`. The shared application `severity` defaults to `error`;
 set `severity: advisory` for non-failing findings. It checks for missing

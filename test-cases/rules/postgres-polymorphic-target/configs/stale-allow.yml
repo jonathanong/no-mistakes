@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-polymorphic-target
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allow:
+        - column: bookmarks.owner_id
+          reason: already backed by a foreign key

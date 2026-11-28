@@ -178,3 +178,7 @@ finding per unused entry:
 `postgres-column-check-constraints` uses integer column types and validated CHECK
 constraints to prove configured lower bounds. It shares the prepared catalog and
 does not load or parse schema source separately.
+
+`postgres-polymorphic-target` reads logical-table columns and foreign keys from
+the prepared complete catalog to flag `<x>_type`/`<x>_id` pairs lacking a
+foreign key on the id column.

@@ -15,6 +15,7 @@ pub use crate::config::v2::schema::postgres_executors::PREPARED_EMBEDDED_SQL_RUL
 pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
     "postgres-lock-written-rows-only",
     "postgres-column-check-constraints",
+    "postgres-polymorphic-target",
     "postgres-column-requires-trigger",
     "postgres-conflict-ordering",
     "postgres-lock-ordering",

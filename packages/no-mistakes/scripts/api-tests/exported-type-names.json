@@ -300,6 +300,8 @@
   "PostgresNoTransformedUuidPredicatesOptions",
   "PostgresNoUnboundedSqlIdentifierOptions",
   "PostgresOrderingCatalog",
+  "PostgresPolymorphicTargetAllowEntry",
+  "PostgresPolymorphicTargetOptions",
   "PostgresRawSqlTag",
   "PostgresRequireQueryAnnotationOptions",
   "PostgresSearchPathEvidence",

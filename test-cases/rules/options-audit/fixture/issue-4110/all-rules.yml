@@ -108,6 +108,7 @@ rules:
   - {rule: postgres-no-transformed-uuid-predicates, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-no-unbounded-sql-identifier, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-object-naming, scope: repository, options: {bogusOption: true}}
+  - {rule: postgres-polymorphic-target, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-redundant-index, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-require-fk-on-delete, scope: repository, options: {bogusOption: true}}
   - {rule: postgres-require-named-constraints, scope: repository, options: {bogusOption: true}}

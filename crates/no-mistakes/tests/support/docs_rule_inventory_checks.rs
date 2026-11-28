@@ -89,6 +89,37 @@ fn column_check_constraints_is_in_the_public_rule_inventory() {
 }
 
 #[test]
+fn postgres_polymorphic_target_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::POSTGRES_POLYMORPHIC_TARGET;
+    assert_eq!(rule, "postgres-polymorphic-target");
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    let body = read(&root.join(format!("docs/rules/{rule}.md")));
+    for phrase in [
+        "schemaCatalogPath",
+        "typeSuffix",
+        "idSuffix",
+        "allow",
+        "reason",
+        "no-mistakes-disable-file",
+        "no-mistakes-disable-line",
+        "no-mistakes-disable-next-line",
+        "CHECK",
+    ] {
+        assert!(body.contains(phrase), "missing {phrase}");
+    }
+    for path in [
+        "docs/rules/README.md",
+        "docs/configuration/rules.md",
+        "docs/node-api.md",
+        "docs/node-api/postgres-catalog.md",
+        "docs/feature-parity.md",
+    ] {
+        assert!(read(&root.join(path)).contains(rule), "{path}");
+    }
+}
+
+#[test]
 fn postgres_pool_error_listener_rule_has_public_documentation() {
     let page = "postgres-pool-requires-error-listener.md";
     let docs = repo_root().join("docs/eslint-rules");

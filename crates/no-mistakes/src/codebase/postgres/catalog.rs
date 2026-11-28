@@ -77,7 +77,7 @@ pub struct SchemaCatalog {
     enums: BTreeMap<String, CatalogEnum>,
     views: BTreeMap<String, CatalogView>,
     view_fallback: std::sync::OnceLock<fallback::RelationFallback>,
-    column_lines: BTreeMap<(String, String), usize>,
+    locations: locations::CatalogLocations,
 }
 
 impl SchemaCatalog {
@@ -112,17 +112,17 @@ impl SchemaCatalog {
             },
         )
         .with_context(|| format!("schemaCatalogPath {} is not valid JSONC", path.display()))?;
-        let column_lines = parsed
+        let locations = parsed
             .value
             .as_ref()
-            .map(|value| locations::column_lines(value, &source))
+            .map(|value| locations::catalog_locations(value, &source))
             .unwrap_or_default();
         let value = parsed
             .value
             .ok_or_else(|| anyhow::anyhow!("schemaCatalogPath {} is empty", path.display()))?;
         let snapshot = load::parse_snapshot(&path.display().to_string(), value.into())?;
         let mut catalog = Self::from_snapshot(&path.display().to_string(), snapshot)?;
-        catalog.set_column_lines(column_lines);
+        catalog.locations = locations;
         Ok(catalog)
     }
 
@@ -134,16 +134,16 @@ impl SchemaCatalog {
         self.model_tables.values()
     }
 
-    /// Line of the column declaration in the JSONC schema snapshot.
+    pub(crate) fn table_line(&self, table: &str) -> usize {
+        self.locations.tables.get(table).copied().unwrap_or(1)
+    }
+
     pub(crate) fn column_line(&self, table: &str, column: &str) -> usize {
-        self.column_lines
+        self.locations
+            .columns
             .get(&(table.to_string(), column.to_string()))
             .copied()
             .unwrap_or(1)
-    }
-
-    pub(crate) fn set_column_lines(&mut self, lines: BTreeMap<(String, String), usize>) {
-        self.column_lines = lines;
     }
 
     /// Tables are indexed by normalized name, so a quoted key such as `"Order Items"` is found

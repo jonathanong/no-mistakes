@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-polymorphic-target
+    scope: repository
+    exclude: [schema.json]
+    options:
+      schemaCatalogPath: schema.json

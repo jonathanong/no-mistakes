@@ -585,6 +585,27 @@ test("column CHECK options export named predicates, requirements and exceptions"
   );
 });
 
+test("polymorphic target options export named suffix and exception contracts", () => {
+  const declarations = readFileSync(
+    join(packageRoot, "postgres-polymorphic-target-types.d.ts"),
+    "utf8",
+  );
+  for (const name of ["PostgresPolymorphicTargetAllowEntry", "PostgresPolymorphicTargetOptions"]) {
+    assert.match(declarations, new RegExp(`export interface ${name}\\b`));
+  }
+  assert.match(declarations, /schemaCatalogPath: string;/);
+  assert.match(declarations, /typeSuffix\?: string;/);
+  assert.match(declarations, /idSuffix\?: string;/);
+  assert.match(declarations, /allow\?: PostgresPolymorphicTargetAllowEntry\[\];/);
+  assert.match(declarations, /column: string;/);
+  assert.match(declarations, /reason: string;/);
+  assert.ok(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8").includes(
+      'export type * from "./postgres-polymorphic-target-types";',
+    ),
+  );
+});
+
 test("materialized-view shape options export their named allowance contracts", () => {
   const types = readFileSync(
     join(packageRoot, "postgres-materialized-view-shape-types.d.ts"),

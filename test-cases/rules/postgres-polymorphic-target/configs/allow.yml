@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-polymorphic-target
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allow:
+        - column: audit_entries.subject_id
+          reason: immutable audit history preserves deleted subjects
+        - column: comments.target_type
+          reason: legacy polymorphic comments awaiting split migration
