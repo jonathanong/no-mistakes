@@ -149,11 +149,13 @@ export default [
 ];
 ```
 
-- `fixtureDirs?: string[]` replaces the default `["fixtures", "__fixtures__", "test-cases"]`
-  directory segment list exempted as test fixtures.
-- `parsers?: { module: string; name: string }[]` adds imported parser functions
-  treated like `JSON.parse` and `yaml.parse`. Use `name: "default"` for a
-  default-exported parser function.
+- `fixtureDirs` (`string[]`, optional) replaces the default
+  `["fixtures", "__fixtures__", "test-cases"]` directory segment list exempted
+  as test fixtures.
+- `parsers` (`{ module: string; name: string }[]`, optional) adds imported
+  parser functions treated like `JSON.parse` and `yaml.parse`. Each entry sets
+  `module` (the exact import specifier) and `name` (the imported export name,
+  or `"default"` for a default-exported parser function).
 
 ## Suppression
 

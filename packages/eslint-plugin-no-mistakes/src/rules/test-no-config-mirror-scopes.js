@@ -51,15 +51,14 @@ function effectiveExemptionScope(node, context) {
   return current;
 }
 
+const STATEMENT_PARENTS = new Set(["Program", "BlockStatement"]);
+
 function sourceDeclarationLineNode(node) {
   let current = node;
-  while (
-    current.parent.type !== "VariableDeclaration" &&
-    current.parent.type !== "ExpressionStatement"
-  ) {
+  while (current.parent && !STATEMENT_PARENTS.has(current.parent.type)) {
     current = current.parent;
   }
-  return current.parent;
+  return current;
 }
 
 function recordScopePath(map, scope, resolved, variable) {

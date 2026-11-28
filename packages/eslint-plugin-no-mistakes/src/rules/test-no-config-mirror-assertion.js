@@ -4,7 +4,7 @@ const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
 const { isFunction, unwrapExpression } = require("./async-ast");
 const { resolveVariable } = require("./async-target-bindings");
-const { createBindingResolver, isFilesystemMock } = require("./test-no-config-mirror-bindings");
+const { bindingResolver, isFilesystemMock } = require("./test-no-fixed-temp-paths-bindings");
 const {
   createPathResolver,
   normalizeFixtureDirs,
@@ -27,8 +27,11 @@ const { analyzeSourceUsage } = require("./test-no-config-mirror-flow");
 const RULE_NAME = "test-no-config-mirror-assertion";
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/;
 
+const EXTRA_MODULES = ["fs-extra", "yaml", "js-yaml", "url", "util"];
+const MOCK_EXTRA_MODULES = new Set(["fs-extra"]);
+
 function buildConfiguredParsers(parsers) {
-  const extraModules = new Set();
+  const extraModules = new Set(EXTRA_MODULES);
   const parserBindings = new Set();
   for (const item of parsers ?? []) {
     extraModules.add(item.module);
@@ -77,7 +80,7 @@ module.exports = rule(
     const fixtureDirs = normalizeFixtureDirs(option.fixtureDirs);
     const { extraModules, parserBindings } = buildConfiguredParsers(option.parsers);
     const suppressed = ruleSuppression(context, RULE_NAME, { requireReason: true });
-    const resolve = createBindingResolver(context, extraModules);
+    const resolve = bindingResolver(context, extraModules);
     const resolvePath = createPathResolver(context, resolve, fixtureDirs);
 
     let mocksFilesystem = false;
@@ -107,7 +110,7 @@ module.exports = rule(
       CallExpression(node) {
         if (mocksFilesystem) return;
         const binding = resolve(node.callee);
-        if (isFilesystemMock(node, binding)) {
+        if (isFilesystemMock(node, binding, MOCK_EXTRA_MODULES)) {
           mocksFilesystem = true;
           return;
         }

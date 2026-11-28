@@ -27,6 +27,12 @@ const cases = [
     { builderMethods: ["append"], tagNames: ["sql"] },
     ["correlated"],
   ],
+  [
+    "config-mirror-import-equals.test.ts",
+    "test-no-config-mirror-assertion",
+    undefined,
+    ["configMirror"],
+  ],
 ];
 
 it("reports rule diagnostics on import equals, absent values, and configured globals", async () => {

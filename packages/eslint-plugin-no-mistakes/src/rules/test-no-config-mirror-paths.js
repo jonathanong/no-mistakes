@@ -4,7 +4,7 @@ const { posix } = require("node:path");
 const { unwrapExpression } = require("./async-ast");
 const { memberPropertyName, resolveVariable } = require("./async-target-bindings");
 const { literalString } = require("./logical-call");
-const { isUnshadowedGlobal } = require("./test-no-config-mirror-bindings");
+const { isUnshadowedGlobal } = require("./test-no-fixed-temp-paths-bindings");
 
 const DEFAULT_FIXTURE_DIRS = ["fixtures", "__fixtures__", "test-cases"];
 const MKDTEMP_METHODS = new Set([

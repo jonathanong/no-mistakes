@@ -4,7 +4,7 @@ const { unwrapExpression } = require("./async-ast");
 const { memberPropertyName, stableConstInitializer } = require("./async-target-bindings");
 const { literalString } = require("./logical-call");
 const { expectArguments, isExpectCall, memberName, unwrap } = require("./test-message-expect");
-const { isUnshadowedGlobal } = require("./test-no-config-mirror-bindings");
+const { isUnshadowedGlobal } = require("./test-no-fixed-temp-paths-bindings");
 
 const SINK_MATCHERS = new Set(["toContain", "toMatch", "toEqual", "toBe", "toStrictEqual"]);
 const NEUTRAL_MATCHERS = new Set([

@@ -377,9 +377,11 @@ instead of passing silently. `require("react")` and
 
 ### `test-no-config-mirror-assertion`
 
-Opt-in. `fixtureDirs?: string[]` replaces the default `["fixtures", "__fixtures__", "test-cases"]`
-segment list treated as test fixtures. `parsers?: { module: string; name: string }[]`
-registers additional parser imports alongside `JSON.parse`, `yaml`, and `js-yaml`.
+Opt-in. `fixtureDirs` (`string[]`, optional) replaces the default
+`["fixtures", "__fixtures__", "test-cases"]` segment list treated as test
+fixtures. `parsers` (`{ module: string; name: string }[]`, optional) registers
+additional parser imports by `module` specifier and export `name` alongside
+`JSON.parse`, `yaml`, and `js-yaml`.
 Reports tests that read a static non-fixture file only to assert literals in its
 text or parsed fields; exempts cross-file invariants, executed scripts, fixtures,
 and files written by the test. `no-mistakes-disable-*` directives require a

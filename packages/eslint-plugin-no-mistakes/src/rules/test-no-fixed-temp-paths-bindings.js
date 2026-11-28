@@ -34,10 +34,11 @@ const FRAMEWORK_GLOBALS = new Map([
 const FRAMEWORK_MODULES = new Set(["vitest", "@jest/globals"]);
 const FRAMEWORK_MOCKS = new Set(["vitest.vi.mock", "@jest/globals.jest.mock"]);
 
-function supportedModule(source) {
-  if (FRAMEWORK_MODULES.has(source)) return source;
-  const name = source?.replace(/^node:/, "");
-  return NODE_MODULES.has(name) ? name : null;
+function supportedModule(source, extraModules) {
+  if (!source) return null;
+  if (FRAMEWORK_MODULES.has(source) || extraModules?.has(source)) return source;
+  const name = source.replace(/^node:/, "");
+  return NODE_MODULES.has(name) || extraModules?.has(name) ? name : null;
 }
 
 function memberBinding(object, member) {
@@ -52,16 +53,16 @@ function unresolvedMember(member) {
   return candidate ? UNRESOLVED : null;
 }
 
-function importedBinding(definition) {
+function importedBinding(definition, extraModules) {
   const { node, parent } = definition;
   if (node.importKind === "type" || parent.importKind === "type") return null;
   if (parent.type === "TSImportEqualsDeclaration") {
     const reference = parent.moduleReference;
     if (reference.type !== "TSExternalModuleReference") return null;
     const source = literalString(reference.expression);
-    return source === null ? UNRESOLVED : supportedModule(source);
+    return source === null ? UNRESOLVED : supportedModule(source, extraModules);
   }
-  const source = supportedModule(parent.source.value);
+  const source = supportedModule(parent.source.value, extraModules);
   if (!source || node.type !== "ImportSpecifier") return source;
   const name = importSpecifierName(node);
   return name === "default" ? source : memberBinding(source, name);
@@ -88,7 +89,7 @@ function isReassignedGlobal(node, context) {
   );
 }
 
-function bindingResolver(context) {
+function bindingResolver(context, extraModules) {
   const bindings = new WeakMap();
   const globals = new Map();
   function resolve(input) {
@@ -96,7 +97,7 @@ function bindingResolver(context) {
     if (node?.type === "CallExpression") {
       const required = requireResolution(node, context);
       if (required?.source === null) return UNRESOLVED;
-      return supportedModule(requireSource(node, context));
+      return supportedModule(requireSource(node, context), extraModules);
     }
     if (node?.type === "MemberExpression") {
       const object = resolve(node.object);
@@ -122,7 +123,7 @@ function bindingResolver(context) {
     const definition = variable.defs[0];
     let binding = null;
     if (definition.type === "ImportBinding") {
-      binding = importedBinding(definition);
+      binding = importedBinding(definition, extraModules);
     } else if (definition.type === "Variable" && definition.parent.kind === "const") {
       const { id, init } = definition.node;
       const value = resolve(init);
@@ -146,10 +147,21 @@ function bindingResolver(context) {
   return resolve;
 }
 
-function isFilesystemMock(node, binding) {
+function isFilesystemMock(node, binding, extraMockModules) {
   if (!FRAMEWORK_MOCKS.has(binding)) return false;
-  const source = supportedModule(literalString(unwrapExpression(node.arguments[0])));
-  return source === "fs" || source === "fs/promises";
+  const source = supportedModule(
+    literalString(unwrapExpression(node.arguments[0])),
+    extraMockModules,
+  );
+  return source === "fs" || source === "fs/promises" || Boolean(extraMockModules?.has(source));
 }
 
-module.exports = { UNRESOLVED, bindingResolver, isFilesystemMock };
+function isUnshadowedGlobal(node, name, context) {
+  return (
+    node?.type === "Identifier" &&
+    node.name === name &&
+    !resolveVariable(node, context)?.defs.length
+  );
+}
+
+module.exports = { UNRESOLVED, bindingResolver, isFilesystemMock, isUnshadowedGlobal };

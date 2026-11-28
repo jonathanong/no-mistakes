@@ -39,6 +39,10 @@
           { "builderMethods": ["append"], "tagNames": ["sql"] }
         ]
       }
+    },
+    {
+      "files": ["**/config-mirror-import-equals.test.ts"],
+      "rules": { "no-mistakes/test-no-config-mirror-assertion": "error" }
     }
   ]
 }

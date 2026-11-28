@@ -2,7 +2,7 @@
 
 const { isFunction, unwrapExpression, unwrapTransparentParent } = require("./async-ast");
 const { memberPropertyName, resolveVariable } = require("./async-target-bindings");
-const { isUnshadowedGlobal } = require("./test-no-config-mirror-bindings");
+const { isUnshadowedGlobal } = require("./test-no-fixed-temp-paths-bindings");
 const { enclosingTestBlock } = require("./test-no-config-mirror-scopes");
 const {
   isDerivedMethodCall,

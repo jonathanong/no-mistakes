@@ -14,6 +14,7 @@ const root = resolve(__dirname, "../../../test-cases/eslint-snippets/fixture", r
 const defaultFiles = [
   "sources.test.ts",
   "sources-cjs.spec.cjs",
+  "statements-and-import-equals.test.ts",
   "edge-cases.test.ts",
   "sinks.test.ts",
   "parsed.test.ts",
