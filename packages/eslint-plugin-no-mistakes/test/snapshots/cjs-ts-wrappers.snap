@@ -1492,6 +1492,35 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "default-alias.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 7,
+          "file": "default-alias.test.ts",
+          "line": 7,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 9,
+          "file": "default-alias.test.ts",
+          "line": 9,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "no-vitest-sequential:sequential-ignore": [
@@ -1753,6 +1782,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "spread-call.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 44,
+          "endLine": 7,
+          "file": "spread-call.test.ts",
+          "line": 7,
+          "message": "Cannot tell whether this rejection matcher observes a rejection. Use a static expect from vitest.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-delayed-rejects:delayed-ignore": [
@@ -1768,6 +1815,16 @@
     },
     {
       "file": "forward-call.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "spread-call.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -3123,6 +3180,35 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "computed-runner.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 16,
+          "endLine": 9,
+          "file": "computed-runner.test.ts",
+          "line": 9,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 16,
+          "endLine": 12,
+          "file": "computed-runner.test.ts",
+          "line": 12,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-shared-state:shared-ignore": [
@@ -3204,6 +3290,18 @@
     },
     {
       "file": "computed-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "namespace-computed.js",
       "findings": [],
       "kind": "valid",
       "options": [

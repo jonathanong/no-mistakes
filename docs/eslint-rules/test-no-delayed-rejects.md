@@ -152,7 +152,9 @@ later delayed `expect(promise).rejects` finding. The same call does not report
 `unanalyzable` when `expect` comes from a non-static `require`, and neither does
 a spread argument list such as `check.apply.call(other, null, [...items])`.
 `check(promise).rejects` and `check.call(null, promise).rejects` still report
-`unanalyzable`. An extracted intrinsic such as
+`unanalyzable`. A single `check.call(null, ...values)` does too, because the
+spread does not change the invoked function. Nested forwarding such as
+`check.call.call(other, ...values)` stays quiet when the receiver is not resolved. An extracted intrinsic such as
 `const invoke = expect.call` is not itself an expectation binding.
 
 A computed identifier key is not static. `expect.poll` receives a callback,

@@ -25,9 +25,10 @@ function forwardedInvocation(call) {
   const method = forwardedMethod(callee);
   if (!method) return { callee, args };
   let receiver = args[0];
-  args = shiftArguments(method, args);
-  if (!args) return null;
+  const shifted = shiftArguments(method, args);
   callee = unwrapSequence(callee.object);
+  if (!shifted) return forwardedMethod(callee) ? null : { callee, args: null };
+  args = shifted;
   // Invoking Function.prototype.call/apply invokes its this value, not the
   // function from which that intrinsic was read: expect.call.call(other, ...).
   let intrinsic;

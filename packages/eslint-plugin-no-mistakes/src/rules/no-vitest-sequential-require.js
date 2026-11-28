@@ -154,6 +154,9 @@ function recordNamespaceAlias(declaration, state, context, moduleScope, writtenL
 }
 
 function namespaceVariable(def, variable, context, namespaces, seen = new Set()) {
+  if (def?.type === "ImportBinding") {
+    return loads().isUnshadowedNamespace(def.node.local, context, namespaces);
+  }
   if (def?.type !== "Variable" || def.node?.id?.type !== "Identifier") return false;
   if (seen.has(variable) || loads().hasLaterWrite(variable)) return false;
   seen.add(variable);
