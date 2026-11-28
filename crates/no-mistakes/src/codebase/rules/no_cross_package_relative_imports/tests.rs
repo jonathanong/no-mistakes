@@ -32,6 +32,39 @@ fn workspace_relative_imports_reuse_the_rust_check_graph_and_existing_facts() {
 }
 
 #[test]
+fn workspace_package_import_actual_resolves_to_the_declared_export() {
+    use crate::codebase::dependencies::graph::{DepGraph, ImportTarget};
+    use crate::codebase::ts_resolver::{normalize_path, ImportResolver, TsConfig};
+
+    let root = normalize_path(&crate::test_support::rule_fixture_root(RULE_ID));
+    let importer = root.join("packages/app/compat/same-package.test.ts");
+    let tsconfig = TsConfig::default();
+    assert_eq!(
+        ImportResolver::new(&tsconfig).resolve("@sample/shared", &importer),
+        None
+    );
+
+    let graph = DepGraph::build(&root, &tsconfig).unwrap();
+    assert_eq!(
+        graph.import_target(&importer, "@sample/shared"),
+        Some(&ImportTarget::File(
+            root.join("packages/shared/src/status.mts")
+        ))
+    );
+}
+
+#[test]
+fn workspace_relative_imports_reject_unmatched_allow_targets_for_rust_callers() {
+    use crate::codebase::rules::run_check;
+    use crate::codebase::ts_resolver::normalize_path;
+
+    let root = normalize_path(&crate::test_support::rule_fixture_root(RULE_ID));
+    let config = root.join("allow-unknown-target.yml");
+    let error = run_check(&root, Some(&config), None).unwrap_err();
+    assert!(error.to_string().contains("options.allow[0].target"));
+}
+
+#[test]
 fn workspace_relative_imports_reports_malformed_selected_source_to_rust_callers() {
     use crate::codebase::rules::run_check;
 
@@ -47,6 +80,51 @@ fn workspace_relative_imports_reports_malformed_selected_source_to_rust_callers(
         .file
         .as_deref()
         .is_some_and(|file| file.ends_with("packages/app/src/gaps/broken.mts")));
+}
+
+#[test]
+fn workspace_relative_imports_reports_missing_prepared_import_facts() {
+    use super::{AnalysisSession, CheckFactMap, DepGraph, Inputs};
+    use crate::codebase::ts_resolver::{normalize_path, TsConfig};
+
+    let root = normalize_path(&crate::test_support::rule_fixture_root(RULE_ID));
+    let file = root.join("packages/app/src/accepted.mts");
+    let workspace = AnalysisSession::disabled().workspace(&root);
+    let graph = DepGraph::build(&root, &TsConfig::default()).unwrap();
+    let inputs = Inputs {
+        root: &root,
+        shared: &CheckFactMap::default(),
+        graph: &graph,
+        workspace: &workspace,
+    };
+    let error = inputs
+        .check_file(&file, "", &[], crate::config::v2::Unanalyzable::Report)
+        .err()
+        .unwrap();
+    assert_eq!(
+        error.to_string(),
+        "Unanalyzable source: prepared import facts are missing"
+    );
+}
+
+#[test]
+fn standard_resolver_resolves_dot_and_dotdot_as_directory_index_files() {
+    use crate::codebase::ts_resolver::{normalize_path, ImportResolver, TsConfig};
+
+    let root = normalize_path(&crate::test_support::rule_fixture_root(RULE_ID));
+    let tsconfig = TsConfig::default();
+    let resolver = ImportResolver::new(&tsconfig).without_cache();
+    let importer = root.join("packages/app/src/accepted.mts");
+    let src_index = root.join("packages/app/src/index.mts");
+    let app_index = root.join("packages/app/index.mts");
+    assert_eq!(resolver.resolve(".", &importer), Some(src_index.clone()));
+    assert_eq!(resolver.resolve("..", &importer), Some(app_index.clone()));
+    let dot_candidates = resolver.resolution_candidates(".", &importer);
+    assert!(dot_candidates.contains(&src_index));
+    assert!(!dot_candidates.contains(&root.join("packages/app/src.mts")));
+    let dotdot_candidates = resolver.resolution_candidates("..", &importer);
+    assert!(dotdot_candidates.contains(&app_index));
+    assert!(!dotdot_candidates.contains(&root.join("packages/app.mts")));
 }
 
 #[test]
@@ -217,10 +295,10 @@ fn vitest_helper_imports_follow_the_unanalyzable_policy() {
 
 #[test]
 fn direct_vitest_call_checks_prepared_crossing_before_lexical_same_package_return() {
-    use super::vitest::{record_direct_vitest_target, VitestSite};
+    use super::boundary::{check_resolved_or_relative_target, SpecifierCheck};
     use crate::codebase::dependencies::graph::ImportTarget;
     use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
-    use crate::codebase::workspaces::{IndexedWorkspaceMap, WorkspacePackage};
+    use crate::codebase::workspace_resolution::{IndexedWorkspaceMap, WorkspacePackage};
     use crate::config::v2::Unanalyzable;
 
     let root = crate::codebase::ts_resolver::normalize_path(
@@ -244,19 +322,20 @@ fn direct_vitest_call_checks_prepared_crossing_before_lexical_same_package_retur
     ]);
     let file = root.join("packages/app/compat/direct-vi.test.ts");
     let owner = workspace.nearest_package(&file).unwrap();
-    let site = VitestSite {
+    let ctx = SpecifierCheck {
         file: &file,
         relative_file: "packages/app/compat/direct-vi.test.ts",
         owner,
         message: "crossing",
+        allow: &[],
         policy: Unanalyzable::Report,
     };
     let mut diagnostics = AnalysisDiagnostics::default();
     let shared_target = ImportTarget::File(root.join("packages/shared/src/status.mts"));
-    record_direct_vitest_target(
+    check_resolved_or_relative_target(
         &root,
         &workspace,
-        &site,
+        &ctx,
         14,
         "./shared-link/status.mts",
         Some(&shared_target),
@@ -275,10 +354,10 @@ fn direct_vitest_call_checks_prepared_crossing_before_lexical_same_package_retur
 
     let local_target = ImportTarget::File(root.join("packages/app/compat/vi-helper.ts"));
     let mut local_diagnostics = AnalysisDiagnostics::default();
-    record_direct_vitest_target(
+    check_resolved_or_relative_target(
         &root,
         &workspace,
-        &site,
+        &ctx,
         15,
         "./vi-helper",
         Some(&local_target),
@@ -286,4 +365,37 @@ fn direct_vitest_call_checks_prepared_crossing_before_lexical_same_package_retur
     );
     assert!(local_diagnostics.findings.is_empty());
     assert!(local_diagnostics.advisories.is_empty());
+}
+
+#[test]
+fn unanalyzable_policy_defaults_to_advise_for_cross_package_relative_imports() {
+    use crate::config::v2::{load_v2_config, Unanalyzable};
+
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &crate::test_support::rule_fixture_root(RULE_ID),
+    );
+    let default_cfg = load_v2_config(&root, Some(&root.join("computed-default.yml"))).unwrap();
+    assert_eq!(
+        default_cfg
+            .effective_rule_analysis(&default_cfg.rules[0])
+            .unwrap()
+            .unanalyzable,
+        Unanalyzable::Advise
+    );
+    let repo_report = load_v2_config(&root, Some(&root.join("computed-repo-report.yml"))).unwrap();
+    assert_eq!(
+        repo_report
+            .effective_rule_analysis(&repo_report.rules[0])
+            .unwrap()
+            .unanalyzable,
+        Unanalyzable::Report
+    );
+    let rule_report = load_v2_config(&root, Some(&root.join("computed-rule-report.yml"))).unwrap();
+    assert_eq!(
+        rule_report
+            .effective_rule_analysis(&rule_report.rules[0])
+            .unwrap()
+            .unanalyzable,
+        Unanalyzable::Report
+    );
 }

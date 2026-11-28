@@ -26,6 +26,9 @@ mod standard;
 mod workflow;
 
 mod postgres_sql;
+mod session;
+
+pub use session::validate_rule_options_for_session;
 
 pub(super) type ValidationContext<'a> =
     no_mistakes_rule_kernel::validate_options::ValidationContext<'a, NoMistakesConfig>;

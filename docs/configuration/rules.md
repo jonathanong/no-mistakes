@@ -826,7 +826,11 @@ It supports the shared `options.unanalyzable` policy (`report` by default, `advi
 
 [`no-cross-package-relative-imports`](../rules/no-cross-package-relative-imports.md) uses declared workspace
 package ownership. Enable it with the normal rule scope and select the importing
-files with the shared `include` and `exclude` filters. No rule options are required.
+files with the shared `include` and `exclude` filters. To adopt it gradually,
+use `options.allow` entries with `importer` and `target` globs over
+declared package names, and `options.unanalyzable` (default `advise`, inheriting
+repository-level `unanalyzable`) to route computed or unresolved cross-package
+imports.
 
 ### Dependabot cooldown
 

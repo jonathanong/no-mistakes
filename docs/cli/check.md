@@ -377,8 +377,12 @@ statements. Findings point to the opening line of the `resources` attribute.
 
 Enable [`no-cross-package-relative-imports`](../rules/no-cross-package-relative-imports.md)
 to report relative imports whose resolved targets cross declared workspace
-package boundaries. Select the importing files with the rule's scope and path
-filters.
+package boundaries. Select importing files with the rule's scope and path
+filters and allow specific package pairs with `options.allow`. Invalid allow
+entries exit 2. Computed imports and cross-package relative imports without a
+unique file target follow the shared `unanalyzable` policy (`advise` by default,
+`report`, or `ignore`); same-package relative paths are accepted from their
+normalized path.
 
 Enable [`bash-empty-array-nounset`](../rules/bash-empty-array-nounset.md) for
 scripts targeting Bash before 4.4 and

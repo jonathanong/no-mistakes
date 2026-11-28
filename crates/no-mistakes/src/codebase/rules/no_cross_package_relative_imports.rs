@@ -1,16 +1,24 @@
+use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::check_outcome::CheckInputFailure;
-use crate::codebase::dependencies::extract::ImportKind;
-use crate::codebase::dependencies::graph::{DepGraph, ImportTarget, TsFactLookup};
+use crate::codebase::dependencies::extract::{is_indexable, ImportKind};
+use crate::codebase::dependencies::graph::{DepGraph, TsFactLookup};
 use crate::codebase::ts_source::relative_slash_path;
-use crate::codebase::workspace_resolution::{IndexedWorkspaceMap, WorkspacePackage};
-use crate::config::v2::NoMistakesConfig;
+use crate::codebase::workspace_resolution::IndexedWorkspaceMap;
+use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
-use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
-use no_mistakes_rule_kernel::finding::RuleFinding;
 use rayon::prelude::*;
 use std::path::Path;
+
+mod boundary;
+mod options;
+mod vitest;
+use boundary::{check_resolved_or_relative_target, is_relative, unanalyzable, SpecifierCheck};
+use options::PackagePair;
+
+pub(in crate::codebase::rules) use options::accept_declared_options;
+pub(super) use options::validate as validate_options;
 
 pub const RULE_ID: &str = "no-cross-package-relative-imports";
 const FIX: &str = "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.";
@@ -31,15 +39,17 @@ pub(super) fn check(
     };
     let mut diagnostics = AnalysisDiagnostics::default();
     for rule in config.rule_applications(RULE_ID) {
+        let allow = options::compile(rule, workspace)?;
+        let policy = config.effective_rule_analysis(rule)?.unanalyzable;
         let files = super::selected_rule_files(root, config, rule, shared.graph_file_universe())?;
         let message = rule
             .message
             .as_deref()
             .map_or_else(|| FIX.to_owned(), |prefix| format!("{prefix}: {FIX}"));
-        let policy = config.effective_rule_analysis(rule)?.unanalyzable;
         let results: Vec<_> = files
             .par_iter()
-            .map(|file| inputs.check_file(file, &message, policy))
+            .filter(|file| is_indexable(file))
+            .map(|file| inputs.check_file(file, &message, &allow, policy))
             .collect();
         for result in results {
             if let Some(output) = session.capture_check_result(RULE_ID, result)? {
@@ -64,84 +74,85 @@ impl Inputs<'_> {
         &self,
         file: &Path,
         message: &str,
-        policy: crate::config::v2::Unanalyzable,
+        allow: &[PackagePair],
+        policy: Unanalyzable,
     ) -> Result<AnalysisDiagnostics> {
-        let Some((owner, facts)) = self
-            .workspace
-            .nearest_package(file)
-            .zip(self.shared.get_ts_facts(file))
-        else {
+        let Some(owner) = self.workspace.nearest_package(file) else {
             return Ok(AnalysisDiagnostics::default());
         };
+        let relative_file = relative_slash_path(self.root, file);
+        let source_failure = |error: &str| {
+            CheckInputFailure::source(&relative_file, format!("Unanalyzable source: {error}"))
+        };
+        let facts = self
+            .shared
+            .get_ts_facts(file)
+            .ok_or_else(|| source_failure("prepared import facts are missing"))?;
         if let Some(error) = facts
             .parse_error
             .as_deref()
             .or(facts.operational_error.as_deref())
         {
-            return Err(
-                CheckInputFailure::source(relative_slash_path(self.root, file), error).into(),
+            return Err(source_failure(error).into());
+        }
+        let ctx = SpecifierCheck {
+            file,
+            relative_file: &relative_file,
+            owner,
+            message,
+            allow,
+            policy,
+        };
+        let mut diagnostics = AnalysisDiagnostics::default();
+        for import in facts
+            .imports
+            .iter()
+            .filter(|import| import.kind != ImportKind::RequireResolve)
+            .filter(|import| import.computed || is_relative(&import.specifier))
+        {
+            self.check_specifier(
+                &ctx,
+                import.line,
+                &import.specifier,
+                import.computed,
+                &mut diagnostics,
             );
         }
-
-        let relative_file = relative_slash_path(self.root, file);
-        let mut diagnostics = AnalysisDiagnostics::default();
-        diagnostics.findings.extend(
-            facts
-                .imports
-                .iter()
-                .filter(|import| {
-                    !import.computed
-                        && import.kind != ImportKind::RequireResolve
-                        && is_relative(&import.specifier)
-                })
-                .filter_map(|import| {
-                    let Some(ImportTarget::File(target)) =
-                        self.graph.import_target(file, &import.specifier)
-                    else {
-                        return None;
-                    };
-                    crosses_boundary(target, owner, self.workspace).then(|| RuleFinding {
-                        rule: RULE_ID.to_owned(),
-                        file: relative_file.clone(),
-                        line: import.line as usize,
-                        message: message.to_owned(),
-                        import: Some(import.specifier.clone()),
-                        target: Some(relative_slash_path(self.root, target)),
-                        causes: Vec::new(),
-                    })
-                }),
-        );
-        self.record_vitest_calls(
-            &vitest::VitestSite {
-                file,
-                relative_file: &relative_file,
-                owner,
-                message,
-                policy,
-            },
-            facts,
-            &mut diagnostics,
-        );
+        self.record_vitest_calls(&ctx, facts, &mut diagnostics);
         Ok(diagnostics)
     }
-}
 
-pub(super) fn crosses_boundary(
-    target: &Path,
-    owner: &WorkspacePackage,
-    workspace: &IndexedWorkspaceMap,
-) -> bool {
-    !target.starts_with(&owner.dir)
-        || workspace
-            .nearest_package(target)
-            .is_some_and(|target_owner| target_owner.dir != owner.dir)
+    pub(super) fn check_specifier(
+        &self,
+        ctx: &SpecifierCheck<'_>,
+        line: u32,
+        specifier: &str,
+        computed: bool,
+        diagnostics: &mut AnalysisDiagnostics,
+    ) {
+        if computed {
+            diagnostics.unanalyzable(
+                ctx.policy,
+                unanalyzable(
+                    ctx.relative_file,
+                    line,
+                    specifier,
+                    "the specifier is computed. Use a literal import specifier.",
+                ),
+            );
+            return;
+        }
+        check_resolved_or_relative_target(
+            self.root,
+            self.workspace,
+            ctx,
+            line,
+            specifier,
+            self.graph.import_target(ctx.file, specifier),
+            diagnostics,
+        );
+    }
 }
-
-fn is_relative(specifier: &str) -> bool {
-    matches!(specifier, "." | "..") || specifier.starts_with("./") || specifier.starts_with("../")
-}
-
-mod vitest;
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

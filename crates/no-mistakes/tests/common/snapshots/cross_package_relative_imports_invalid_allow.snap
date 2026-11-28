@@ -1,0 +1,10 @@
+---
+source: crates/no-mistakes/tests/cli_check_cross_package_relative_imports.rs
+---
+{
+  "allow-empty-glob.yml": "error: allow-empty-glob.yml: Rule `no-cross-package-relative-imports` has invalid value \" \" for `options.allow[0].importer`. Expected a nonempty workspace package name glob.\n",
+  "allow-invalid-glob.yml": "error: allow-invalid-glob.yml: Rule `no-cross-package-relative-imports` has invalid value \"[\" for `options.allow[0].target`. Expected a valid workspace package name glob.\n",
+  "allow-invalid-shape.yml": "error: allow-invalid-shape.yml: invalid options for rule `no-cross-package-relative-imports` at options.allow[0]: missing field `target`\n",
+  "allow-unknown-importer.yml": "error: allow-unknown-importer.yml: Rule `no-cross-package-relative-imports` has invalid value \"@sample/absent\" for `options.allow[0].importer`. Expected a glob matching at least one declared workspace package name.\n",
+  "allow-unknown-target.yml": "error: allow-unknown-target.yml: Rule `no-cross-package-relative-imports` has invalid value \"@sample/unknown-*\" for `options.allow[0].target`. Expected a glob matching at least one declared workspace package name.\n"
+}

@@ -477,6 +477,26 @@ test("CSP allowed origins exports its configuration type", () => {
   );
 });
 
+test("workspace-relative imports export their package pair configuration types", () => {
+  const types = readFileSync(
+    join(packageRoot, "cross-package-relative-imports-types.d.ts"),
+    "utf8",
+  );
+  assert.match(
+    types,
+    /export interface WorkspaceRelativeImportAllowEntry \{\s*\/\*\*.*\*\/\s*importer: string;\s*\/\*\*.*\*\/\s*target: string;/,
+  );
+  assert.match(
+    types,
+    /export interface NoCrossPackageRelativeImportsOptions \{\s*allow\?: WorkspaceRelativeImportAllowEntry\[\];/,
+  );
+  assert.match(types, /unanalyzable\?: Unanalyzable;/);
+  assert.match(
+    readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
+    /export type \* from "\.\/cross-package-relative-imports-types";/,
+  );
+});
+
 test("Vitest default excludes exports its configuration type", () => {
   const types = readFileSync(join(packageRoot, "vitest-default-excludes-types.d.ts"), "utf8");
   assert.match(types, /export interface VitestDefaultExcludesOptions/);

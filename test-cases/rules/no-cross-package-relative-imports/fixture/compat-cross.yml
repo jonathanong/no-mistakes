@@ -1,0 +1,4 @@
+rules:
+  - rule: no-cross-package-relative-imports
+    scope: repository
+    include: ["packages/app/compat/cross-package.test.ts"]

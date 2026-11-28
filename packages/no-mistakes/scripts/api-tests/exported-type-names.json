@@ -214,6 +214,7 @@
   "ModuleOutput",
   "ModuleOutputsResult",
   "NeedsEdge",
+  "NoCrossPackageRelativeImportsOptions",
   "NoSingleEnqueueInLoopOptions",
   "NoSingleEnqueueInLoopTarget",
   "OutputConsumer",
@@ -623,6 +624,7 @@
   "WorkflowTopologyIndex",
   "WorkflowTopologyPolicyOptions",
   "WorkflowTrigger",
+  "WorkspaceRelativeImportAllowEntry",
   "WritePlanningImpactArtifactsOptions",
   "ZshReadonlyParameterOptions"
 ]

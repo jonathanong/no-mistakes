@@ -240,8 +240,13 @@ a suppression beside the `resources` attribute.
 See the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/terraform-iam-no-undocumented-wildcards.md).
 
 For `no-cross-package-relative-imports`, scope the rule to the importing files
-that belong to declared workspace packages. Replace cross-package relative
-imports with a declared dependency and a public package specifier.
+that belong to declared workspace packages. Use `options.allow` to specify
+deliberate pairs of `importer` and `target` package name globs. Replace other
+cross-package relative imports with a declared dependency and a public package
+specifier. Same-package relative paths are decided from their normalized path
+before resolution. Computed and unresolved cross-package relative imports follow
+the shared `unanalyzable` policy (`advise` by default, `report`, or `ignore`);
+make the specifier literal or use `resolve-check` to diagnose resolution.
 See the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/no-cross-package-relative-imports.md).
 
 ## Fact extraction failures

@@ -17,10 +17,6 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
     (rules::NEXTJS_NO_API_ROUTES, decode::<NoOptions>),
     (rules::NEXTJS_NO_CACHING, decode::<NoOptions>),
     (
-        rules::NO_CROSS_PACKAGE_RELATIVE_IMPORTS,
-        decode::<NoOptions>,
-    ),
-    (
         rules::REACT_NO_NESTED_BUTTONS_AND_LINKS,
         decode::<NoOptions>,
     ),

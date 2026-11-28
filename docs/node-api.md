@@ -1117,8 +1117,13 @@ unreadable or malformed files appear in `CheckReport.incomplete`.
 
 The opt-in [`no-cross-package-relative-imports`](rules/no-cross-package-relative-imports.md) runs in
 async `check()` and `analyzeProject()` check reports. Select the rule through
-the YAML passed to `config`. Reports use the existing `RuleFinding` fields
-for the importing file, line, specifier, and resolved target.
+the YAML passed to `config`. The exported `NoCrossPackageRelativeImportsOptions`
+and `WorkspaceRelativeImportAllowEntry` types describe its package-pair allowlist
+and `unanalyzable` policy (`advise` by default, `report`, or `ignore`).
+Reports use the existing `RuleFinding` fields for the importing file, line,
+specifier, and resolved target when available; under the default `advise`,
+computed and unresolved cross-package imports appear in `advisories`. Invalid
+allow entries reject the request.
 
 The configured [`pnpm-release-age-policy`](rules/pnpm-release-age-policy.md)
 rule runs through async `check()` and `analyzeProject()` check reports.

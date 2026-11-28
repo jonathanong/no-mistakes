@@ -14,15 +14,22 @@ impl<'a> ImportResolver<'a> {
             return self.path_resolution_candidates(specifier_path);
         }
         let is_relative = match self.policy {
-            ImportResolutionPolicy::Standard => {
-                specifier.starts_with("./") || specifier.starts_with("../")
-            }
+            ImportResolutionPolicy::Standard => is_relative_specifier(specifier),
             ImportResolutionPolicy::QueueCompatibility { .. } => specifier.starts_with('.'),
         };
         if is_relative {
             return importing_file
                 .parent()
-                .map(|dir| self.path_resolution_candidates(&dir.join(specifier)))
+                .map(|dir| {
+                    let target = dir.join(specifier);
+                    if matches!(self.policy, ImportResolutionPolicy::Standard)
+                        && is_directory_relative_specifier(specifier)
+                    {
+                        self.directory_index_candidates(&target)
+                    } else {
+                        self.path_resolution_candidates(&target)
+                    }
+                })
                 .unwrap_or_default();
         }
 
@@ -51,6 +58,14 @@ impl<'a> ImportResolver<'a> {
             }
         }
         candidates
+    }
+
+    fn directory_index_candidates(&self, base: &Path) -> std::collections::BTreeSet<PathBuf> {
+        let base = normalize_path(base);
+        EXTENSIONS
+            .iter()
+            .map(|extension| base.join(format!("index{extension}")))
+            .collect()
     }
 
     fn path_resolution_candidates(&self, base: &Path) -> std::collections::BTreeSet<PathBuf> {

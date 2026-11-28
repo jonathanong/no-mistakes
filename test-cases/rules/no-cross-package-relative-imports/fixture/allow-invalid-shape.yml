@@ -1,0 +1,7 @@
+rules:
+  - rule: no-cross-package-relative-imports
+    scope: repository
+    include: ["packages/app/src/accepted.mts", "packages/app/src/crossings.mts", "packages/app/nested/crossings.mts"]
+    options:
+      allow:
+        - importer: "@sample/app"

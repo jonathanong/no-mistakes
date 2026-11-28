@@ -1,0 +1,5 @@
+unanalyzable: advise
+rules:
+  - rule: no-cross-package-relative-imports
+    scope: repository
+    include: ["packages/app/computed/locale.mts"]
