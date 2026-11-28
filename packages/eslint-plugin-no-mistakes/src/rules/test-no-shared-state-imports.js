@@ -130,8 +130,8 @@ function dynamicLetReceiver(node, context) {
   if (def?.type !== "Variable" || def.parent?.kind === "const") return false;
   if (requireResolution(def.node?.init, context)?.source !== null) return false;
   const id = def.node.id;
-  if (id?.type === "Identifier") return true;
   if (isReassigned(target, context)) return false;
+  if (id?.type === "Identifier") return true;
   return (id?.properties || []).some(
     (property) => !property.computed && property.value?.name === target.name,
   );

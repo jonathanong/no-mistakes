@@ -90,7 +90,9 @@ function opaqueNow(node, context) {
   const callee = unwrap(value.callee);
   if (callee?.type === "MemberExpression" && callee.computed) return false;
   if (memberName(callee) !== "now") return false;
-  return isUnresolved(moduleLoad(unwrap(callee.object), context));
+  const receiver = unwrap(callee.object);
+  if (receiver?.type === "MemberExpression" && receiver.computed) return false;
+  return isUnresolved(moduleLoad(receiver, context));
 }
 
 function withoutNot(assertion) {

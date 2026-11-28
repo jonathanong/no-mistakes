@@ -67,6 +67,7 @@ function imported(node, context, namespace = false, seen = new Set()) {
         source = equals.source;
         importedName = namespace ? "*" : equals.name;
       } else if (def.parent?.source) {
+        if (def.parent.importKind === "type" || def.node.importKind === "type") continue;
         source = def.parent.source.value;
         if (def.node.type === "ImportNamespaceSpecifier") importedName = "*";
         else if (def.node.type === "ImportDefaultSpecifier") {

@@ -174,6 +174,8 @@ function createBindingResolver(context) {
   function invocation(node) {
     const api = resolve(node.callee);
     if (api?.kind !== "invocation") return { api, args: node.arguments };
+    if (node.arguments[0]?.type === "SpreadElement")
+      return { api: { kind: "unknown", root: api.root }, args: [] };
     if (api.mode === "call")
       return node.arguments.slice(1).some((arg) => arg.type === "SpreadElement")
         ? { api: { kind: "unknown", root: api.root }, args: [] }

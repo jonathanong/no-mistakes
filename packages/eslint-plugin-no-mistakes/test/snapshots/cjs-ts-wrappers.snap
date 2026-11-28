@@ -43,6 +43,12 @@
       "options": null
     },
     {
+      "file": "nested-export-property.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "mocks.test.ts",
       "findings": [
         {
@@ -2633,6 +2639,18 @@
       "options": null
     },
     {
+      "file": "type-default-specifier.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "reassigned-let-receiver.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "cjs.test.ts",
       "findings": [
         {
@@ -3378,6 +3396,18 @@
     },
     {
       "file": "nested-configured.js",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "type-only-import.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -4563,6 +4593,12 @@
       "options": null
     },
     {
+      "file": "computed-receiver.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "clocks.test.ts",
       "findings": [
         {
@@ -5440,6 +5476,28 @@
           "file": "for-in.config.ts",
           "line": 2,
           "message": "Vitest testTimeout cannot be statically resolved against the 5000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
+          "messageId": "unknown",
+          "ruleId": "no-mistakes/vitest-timeout-cap",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "unknownValues": "finding"
+        }
+      ]
+    },
+    {
+      "file": "spread-receiver.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 87,
+          "endLine": 3,
+          "file": "spread-receiver.test.ts",
+          "line": 3,
+          "message": "Vitest framework API carrier cannot be statically resolved against the 30000 ms cap. Use a same-module numeric constant or explicitly ignore unknown values.",
           "messageId": "unknown",
           "ruleId": "no-mistakes/vitest-timeout-cap",
           "severity": 2

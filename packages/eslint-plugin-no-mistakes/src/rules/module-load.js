@@ -68,6 +68,7 @@ function moduleLoad(node, context, seen = new Set()) {
     const object = moduleLoad(node.object, context, seen);
     if (!object) return null;
     if (object.source === null) return object;
+    if (object.exportName !== "*" && object.exportName !== "default") return null;
     const exportName = memberPropertyName(node);
     return exportName ? { source: object.source, exportName } : null;
   }
@@ -91,6 +92,7 @@ function moduleLoad(node, context, seen = new Set()) {
   if (definition.node.id?.type === "Identifier") return init;
   if (definition.node.id?.type !== "ObjectPattern") return null;
   if (init.source === null) return init;
+  if (init.exportName !== "*" && init.exportName !== "default") return null;
   const exportName = patternExport(definition.node.id, node.name);
   // A computed key on a resolved module is a documented silent limit.
   // A non-static specifier already returned above.

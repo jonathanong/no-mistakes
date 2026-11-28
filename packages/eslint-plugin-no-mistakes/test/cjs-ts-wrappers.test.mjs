@@ -107,6 +107,7 @@ const groups = [
       "inline-other.test.ts",
       "let-alias.test.ts",
       "import-equals.test.ts",
+      "nested-export-property.test.ts",
     ],
   },
   {
@@ -198,6 +199,8 @@ const groups = [
       "alias-let.test.ts",
       "computed-method.test.ts",
       "let-member-quiet.test.ts",
+      "type-default-specifier.test.ts",
+      "reassigned-let-receiver.test.ts",
     ],
   },
   {
@@ -230,6 +233,7 @@ const groups = [
       "computed-now.test.ts",
       "computed-not.test.ts",
       "default-timers.test.ts",
+      "computed-receiver.test.ts",
     ],
   },
   {
@@ -364,6 +368,7 @@ const groups = [
       "rest.config.ts",
       "default.config.ts",
       "for-in.config.ts",
+      "spread-receiver.test.ts",
     ],
     valid: ["vitest.config.ts"],
   },
@@ -391,6 +396,7 @@ const groups = [
       "computed-dynamic.test.ts",
       "namespace-computed.js",
       "nested-configured.js",
+      "type-only-import.test.ts",
     ],
   },
   {

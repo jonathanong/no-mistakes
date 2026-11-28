@@ -112,6 +112,7 @@ function recordImportedTests(node, testCalleeNames, namespaces, testAliases) {
   if (node.importKind === "type") return;
   if (node.source.value !== "vitest" && node.source.value !== "@playwright/test") return;
   for (const specifier of node.specifiers) {
+    if (specifier.importKind === "type") continue;
     if (specifier.type === "ImportNamespaceSpecifier" && specifier.local?.name) {
       namespaces.add(specifier.local.name);
       testAliases.add(specifier.local, "namespace");
