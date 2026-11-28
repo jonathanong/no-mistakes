@@ -25,6 +25,8 @@ declare namespace plugin {
   /** @deprecated Use PlaywrightRuleUnanalyzable. Removed in 0.111.0. */
   export type PlaywrightNoBrowserNewPageUnanalyzable = PlaywrightRuleUnanalyzable;
 
+  export type RuleUnanalyzable = "finding" | "ignore";
+
   export interface PlaywrightNoBrowserNewPageOptions {
     fixtureName?: string;
     browserFixtureName?: string;
@@ -98,8 +100,6 @@ declare namespace plugin {
     unanalyzable?: PostgresUnanalyzable;
   }
 
-  export type RuleUnanalyzable = "finding" | "ignore";
-
   export interface TsNoConstAliasesOptions {
     unanalyzable?: RuleUnanalyzable;
   }
@@ -107,6 +107,33 @@ declare namespace plugin {
   export interface TsNoExportRenamingOptions {
     allowDefaultReExports?: boolean;
     includePathPatterns?: string[];
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface ReactNoNullishReactNodeOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface ReactNoUsePromiseResolveOptions {
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface NextjsNoManualScriptTagsOptions {
+    allowInlineScriptIds?: string[];
+    allowInlineScriptIdPatterns?: string[];
+    structuredDataComponent?: string;
+    structuredDataMessage?: string;
+    unanalyzable?: RuleUnanalyzable;
+  }
+
+  export interface ServerRequireNullableFetchWrapperOptions {
+    includePathPatterns?: string[];
+    excludePathPatterns?: string[];
+    getterCalleePatterns: string[];
+    requiredWrapperCallee: string;
+    nullableReturnTypeNames?: string[];
+    inferNullableFromTopLevelEntityPath?: boolean;
+    topLevelEntityPathPatterns?: string[];
     unanalyzable?: RuleUnanalyzable;
   }
 }

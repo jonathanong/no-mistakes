@@ -2,12 +2,21 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
-const { logicalCall, pathAllowed } = require("./module-mock-helpers");
-const { resolveVariable } = require("./async-target-bindings");
+const { logicalCall, memberPropertyName, pathAllowed } = require("./module-mock-helpers");
+const {
+  importFact,
+  importSpellings,
+  reportsUnanalyzable,
+  requireModule,
+  requiredMember,
+  rootIdentifier,
+} = require("./import-resolution");
 const helpers = require("./nullable-fetch-wrapper-helpers");
 
 const {
+  argumentContains,
   calleePath,
+  dynamicComputedMember,
   collectExportedNames,
   collectFunctionOverloadReturnTypes,
   collectFunctionTypeReturns,
@@ -19,70 +28,55 @@ const {
   typeMatchesNullableHint,
 } = helpers;
 
-function isFunctionBoundary(node) {
-  return (
-    node.type === "FunctionDeclaration" ||
-    node.type === "FunctionExpression" ||
-    node.type === "ArrowFunctionExpression"
-  );
-}
-
-function rootIdentifier(node) {
-  let current = node;
-  while (current?.type === "ChainExpression" || current?.type === "MemberExpression") {
-    current = current.type === "ChainExpression" ? current.expression : current.object;
-  }
-  return current?.type === "Identifier" ? current : null;
-}
-
-function spelledCallee(callee, context) {
+function calleeNames(callee, context) {
   const path = calleePath(callee);
-  if (!path) return null;
-  const root = rootIdentifier(callee);
-  if (!root) return path;
-  const variable = resolveVariable(root, context);
-  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
-  if (def?.type !== "ImportBinding" || def.node?.type !== "ImportSpecifier") return path;
-  const imported = def.node.imported;
-  const importedName = imported?.type === "Literal" ? String(imported.value) : imported?.name;
-  if (!importedName || importedName === root.name) return path;
-  return `${importedName}${path.slice(root.name.length)}`;
+  const spelled = importSpellings(rootIdentifier(callee), path, context);
+  const required = requiredMember(callee, context);
+  const dynamicBase = dynamicComputedMember(callee)
+    ? importFact(rootIdentifier(callee), context)
+    : null;
+  return {
+    names: [...new Set([path, ...spelled.names, required?.name].filter(Boolean))],
+    unresolved:
+      spelled.unresolved ||
+      required?.unresolved === true ||
+      requireModule(callee, context) === null ||
+      Boolean(dynamicBase && !dynamicBase.typeOnly),
+  };
 }
 
-function wrapperMatches(callee, wrapper, context) {
-  return calleePath(callee) === wrapper || spelledCallee(callee, context) === wrapper;
-}
-
-function argumentContains(argument, target) {
-  return (
-    argument?.range &&
-    target?.range &&
-    argument.range[0] <= target.range[0] &&
-    argument.range[1] >= target.range[1]
-  );
-}
-
-function insideWrapper(node, wrapper, context) {
+function wrapperState(node, wrapper, context) {
   let current = node.parent;
+  let unresolved = false;
   while (current) {
-    if (current.type !== "CallExpression") {
-      if (isFunctionBoundary(current)) return false;
-      current = current.parent;
-      continue;
+    if (current.type === "CallExpression") {
+      const info = calleeNames(current.callee, context);
+      const invoked = logicalCall(current);
+      const forwarded = invoked ? calleeNames(invoked.callee, context) : null;
+      const matched =
+        (info.names.includes(wrapper) && !info.unresolved) ||
+        (forwarded?.names.includes(wrapper) &&
+          !forwarded.unresolved &&
+          invoked.arguments.some((argument) => argumentContains(argument, node)));
+      if (matched) return "inside";
+      const heldArguments = invoked?.arguments ?? current.arguments;
+      const holdsArgument = (argument) => argumentContains(argument, node);
+      const rawHeld =
+        invoked &&
+        !forwarded?.names.includes(wrapper) &&
+        (current.arguments ?? []).some(holdsArgument);
+      const holds = (heldArguments ?? []).some(holdsArgument) || rawHeld;
+      if (holds && (info.unresolved || forwarded?.unresolved)) unresolved = true;
     }
-    if (wrapperMatches(current.callee, wrapper, context)) return true;
-    const invoked = logicalCall(current);
     if (
-      invoked &&
-      wrapperMatches(invoked.callee, wrapper, context) &&
-      invoked.arguments.some((argument) => argumentContains(argument, node))
-    ) {
-      return true;
-    }
-    if (isFunctionBoundary(current)) return false;
+      current.type === "FunctionDeclaration" ||
+      current.type === "FunctionExpression" ||
+      current.type === "ArrowFunctionExpression"
+    )
+      return unresolved ? "unresolved" : "outside";
     current = current.parent;
   }
-  return false;
+  return unresolved ? "unresolved" : "outside";
 }
 
 module.exports = Object.assign(
@@ -104,6 +98,7 @@ module.exports = Object.assign(
             nullableReturnTypeNames: { type: "array", items: { type: "string" } },
             inferNullableFromTopLevelEntityPath: { type: "boolean" },
             topLevelEntityPathPatterns: { type: "array", items: { type: "string" } },
+            unanalyzable: { enum: ["finding", "ignore"] },
           },
           required: ["getterCalleePatterns", "requiredWrapperCallee"],
           additionalProperties: false,
@@ -112,6 +107,8 @@ module.exports = Object.assign(
       messages: {
         wrapper:
           "Wrap nullable entity fetch '{{callee}}' in {{wrapper}} so missing entities map to null consistently.",
+        unanalyzable:
+          "Could not resolve whether '{{callee}}' is the configured getter or wrapper. Use a static import.",
       },
     },
     (context) => {
@@ -136,17 +133,10 @@ module.exports = Object.assign(
         );
       }
 
-      function enterFunction(node) {
+      const currentFunctionChecked = () => functionStack.at(-1) === true;
+      const enterFunction = (node) =>
         functionStack.push(currentFunctionChecked() || checkedFunction(node));
-      }
-
-      function exitFunction() {
-        functionStack.pop();
-      }
-
-      function currentFunctionChecked() {
-        return functionStack[functionStack.length - 1] === true;
-      }
+      const exitFunction = () => functionStack.pop();
 
       return {
         Program(node) {
@@ -170,22 +160,41 @@ module.exports = Object.assign(
         CallExpression(node) {
           if (!currentFunctionChecked()) return;
           const invoked = logicalCall(node);
-          const name = [
-            calleePath(node.callee),
-            spelledCallee(node.callee, context),
-            invoked ? calleePath(invoked.callee) : null,
-            invoked ? spelledCallee(invoked.callee, context) : null,
-          ].find(
-            (candidate) => candidate && getterPatterns.some((pattern) => pattern.test(candidate)),
+          const direct = calleeNames(node.callee, context);
+          const forwarded = invoked ? calleeNames(invoked.callee, context) : null;
+          const names = [...direct.names, ...(forwarded?.names ?? [])];
+          const unresolved = direct.unresolved || forwarded?.unresolved === true;
+          const name = names.find((candidate) =>
+            getterPatterns.some((pattern) => pattern.test(candidate)),
           );
-          if (!name) return;
-          if (insideWrapper(node, options.requiredWrapperCallee, context)) return;
+          const wrapped = wrapperState(node, options.requiredWrapperCallee, context);
+          if (wrapped === "inside") return;
           if (suppressed(node)) return;
-          context.report({
-            node,
-            messageId: "wrapper",
-            data: { callee: name, wrapper: options.requiredWrapperCallee },
-          });
+          const member = memberPropertyName(invoked ? invoked.callee : node.callee);
+          const knownOtherMember =
+            Boolean(member) &&
+            !getterPatterns.some((pattern) => pattern.test(member)) &&
+            !helpers.memberCouldBeQualifiedGetter(options.getterCalleePatterns, member, unresolved);
+          const uncertainGetter =
+            (Boolean(name) && (wrapped === "unresolved" || unresolved)) ||
+            (!name && unresolved && !knownOtherMember);
+          if (uncertainGetter) {
+            if (reportsUnanalyzable(context)) {
+              context.report({
+                node,
+                messageId: "unanalyzable",
+                data: { callee: name || "this call" },
+              });
+            }
+            return;
+          }
+          if (name) {
+            context.report({
+              node,
+              messageId: "wrapper",
+              data: { callee: name, wrapper: options.requiredWrapperCallee },
+            });
+          }
         },
       };
     },
@@ -193,7 +202,7 @@ module.exports = Object.assign(
   {
     __test: {
       ...helpers,
-      insideWrapper,
+      insideWrapper: (node, wrapper, context) => wrapperState(node, wrapper, context) === "inside",
     },
   },
 );

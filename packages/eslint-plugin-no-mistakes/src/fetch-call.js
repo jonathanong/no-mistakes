@@ -1,6 +1,7 @@
 "use strict";
 
 const { unwrapExpression } = require("./rules/async-ast");
+const { typeOnlyImport } = require("./rules/import-resolution");
 const { logicalCall, memberPropertyName, propertyName } = require("./rules/module-mock-helpers");
 
 const LOCAL_BINDING_TYPES = new Set([
@@ -13,14 +14,18 @@ const LOCAL_BINDING_TYPES = new Set([
 ]);
 const FETCH_ROOTS = new Set(["globalThis", "window", "self", "global"]);
 
+function shadowsFetch(def) {
+  return LOCAL_BINDING_TYPES.has(def?.type) && !typeOnlyImport(def);
+}
+
 function isFetchShadowed(scope) {
   while (scope) {
     const get = scope.set?.get;
     const variable = typeof get === "function" ? get.call(scope.set, "fetch") : null;
-    if (variable) return variable.defs.some((def) => LOCAL_BINDING_TYPES.has(def.type));
+    if (variable) return variable.defs.some(shadowsFetch);
     if (!scope.set || typeof get !== "function") {
       const fallback = scope.variables?.find((item) => item.name === "fetch");
-      if (fallback) return fallback.defs.some((def) => LOCAL_BINDING_TYPES.has(def.type));
+      if (fallback) return fallback.defs.some(shadowsFetch);
     }
     scope = scope.upper;
   }
@@ -32,7 +37,7 @@ function unboundRoot(node, context) {
   let scope = context.sourceCode.getScope(node);
   while (scope) {
     const variable = scope.variables?.find((item) => item.name === node.name);
-    if (variable) return !variable.defs?.some((def) => LOCAL_BINDING_TYPES.has(def.type));
+    if (variable) return !variable.defs?.some(shadowsFetch);
     scope = scope.upper;
   }
   return true;

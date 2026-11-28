@@ -251,26 +251,23 @@ describe("test and react helper fallbacks", () => {
       true,
     );
     assert.equal(iife.isIife({ type: "Identifier" }), false);
+    const useBinding = {
+      name: "use",
+      references: [],
+      defs: [
+        {
+          type: "Variable",
+          node: {
+            parent: { kind: "const" },
+            id: { type: "Identifier" },
+            init: { type: "Identifier", name: "use" },
+          },
+        },
+      ],
+    };
     const cycle = {
       sourceCode: {
-        getScope: () => ({
-          upper: null,
-          variables: [
-            {
-              name: "use",
-              defs: [
-                {
-                  type: "Variable",
-                  node: {
-                    parent: { kind: "const" },
-                    id: { type: "Identifier" },
-                    init: { type: "Identifier", name: "use" },
-                  },
-                },
-              ],
-            },
-          ],
-        }),
+        getScope: () => ({ upper: null, variables: [useBinding] }),
       },
     };
     assert.equal(reactUse.isReactUse({ type: "Identifier", name: "use" }, cycle, new Set()), false);

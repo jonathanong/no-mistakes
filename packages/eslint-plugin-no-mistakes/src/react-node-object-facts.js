@@ -1,0 +1,201 @@
+"use strict";
+
+const {
+  computedKey,
+  keyName,
+  reactTypeStatus,
+  typeAnnotation,
+  typeName,
+} = require("./react-node-type-query");
+
+function setChanged(previous, next) {
+  if (!previous || previous.size !== next.size) return true;
+  for (const value of next) if (!previous.has(value)) return true;
+  return false;
+}
+
+function absorb(target, source, skip) {
+  if (!source) return;
+  for (const value of source) if (!skip?.has(value)) target.add(value);
+}
+
+function heritageName(heritage) {
+  const expression = heritage && heritage.expression;
+  return expression && expression.type === "Identifier" ? expression.name : null;
+}
+
+function parameterNames(declaration) {
+  return new Set(
+    (declaration.typeParameters?.params ?? []).flatMap((param) =>
+      param.name?.name ? [param.name.name] : [],
+    ),
+  );
+}
+
+function namesParameter(annotation, params) {
+  return (
+    annotation?.type === "TSTypeReference" &&
+    annotation.typeName?.type === "Identifier" &&
+    params.has(annotation.typeName.name)
+  );
+}
+
+function collectMembers(members, facts, params) {
+  const props = new Set();
+  const unresolved = new Set();
+  const declared = new Set();
+  for (const member of members || []) {
+    const getter = member.type === "TSMethodSignature" && member.kind === "get";
+    if (member.type !== "TSPropertySignature" && !getter) continue;
+    const name = member.computed ? computedKey(member.key) : keyName(member.key);
+    if (name == null) continue;
+    declared.add(name);
+    const annotation = getter
+      ? typeAnnotation({ typeAnnotation: member.returnType })
+      : typeAnnotation(member);
+    const status = namesParameter(annotation, params)
+      ? "unresolved"
+      : reactTypeStatus(annotation, facts);
+    if (status === "yes") props.add(name);
+    else if (status === "unresolved") unresolved.add(name);
+  }
+  return { props, unresolved, declared };
+}
+
+function noteStatus(status, key, incoming) {
+  const previous = status.get(key);
+  status.set(key, previous && previous !== incoming ? "unresolved" : incoming);
+}
+
+function publish(map, name, next, changed) {
+  if (!setChanged(map.get(name), next)) return changed;
+  map.set(name, next);
+  return true;
+}
+
+function reconcile(published, name, props, unresolved, sticky) {
+  const prior = published.get(name) ?? new Map();
+  const next = new Map();
+  const keptProps = new Set();
+  const keptUnresolved = new Set();
+  for (const key of new Set([...props, ...unresolved, ...prior.keys()])) {
+    const incoming = props.has(key) ? "yes" : unresolved.has(key) ? "unresolved" : "absent";
+    const previous = prior.get(key);
+    const status =
+      !sticky && previous === "unresolved" && incoming === "yes"
+        ? "yes"
+        : previous && incoming !== previous
+          ? "unresolved"
+          : incoming;
+    if (status === "absent") continue;
+    next.set(key, status);
+    if (status === "yes") keptProps.add(key);
+    else keptUnresolved.add(key);
+  }
+  published.set(name, next);
+  return { props: keptProps, unresolved: keptUnresolved };
+}
+
+function declarationCount(program, topLevelDeclaration) {
+  let count = 0;
+  for (const statement of program.body || []) {
+    const declaration = topLevelDeclaration(statement);
+    if (
+      declaration.type === "TSInterfaceDeclaration" ||
+      declaration.type === "TSTypeAliasDeclaration"
+    )
+      count += 1;
+  }
+  return count;
+}
+
+function assignReactObjectFacts(
+  program,
+  topLevelDeclaration,
+  facts,
+  objectProps,
+  unresolvedObjectProps,
+) {
+  const limit = declarationCount(program, topLevelDeclaration);
+  const published = new Map();
+  let objectsChanged = true;
+  let passes = 0;
+  while (objectsChanged && passes <= limit * 2) {
+    passes += 1;
+    const sticky = passes > limit;
+    objectsChanged = false;
+    const grouped = new Map();
+    const aliases = new Map();
+    for (const statement of program.body || []) {
+      const declaration = topLevelDeclaration(statement);
+      const literal = declaration.typeAnnotation?.type === "TSTypeLiteral";
+      const objectLike =
+        declaration.type === "TSInterfaceDeclaration" ||
+        (declaration.type === "TSTypeAliasDeclaration" && literal);
+      if (objectLike) {
+        const group = grouped.get(declaration.id.name) ?? [];
+        group.push(declaration);
+        grouped.set(declaration.id.name, group);
+      }
+      const target =
+        declaration.type === "TSTypeAliasDeclaration" ? typeName(declaration.typeAnnotation) : null;
+      if (!target || target.includes(".") || target === declaration.id.name) continue;
+      if (declaration.typeParameters?.params?.some((param) => param.name?.name === target))
+        continue;
+      const list = aliases.get(declaration.id.name) ?? [];
+      list.push(target);
+      aliases.set(declaration.id.name, list);
+    }
+    const names = new Set([...grouped.keys(), ...aliases.keys()]);
+    for (const name of names) {
+      const status = new Map();
+      const inheritedProps = new Set();
+      const inheritedUnresolved = new Set();
+      for (const declaration of grouped.get(name) ?? []) {
+        const collected = collectMembers(
+          declaration.type === "TSTypeAliasDeclaration"
+            ? declaration.typeAnnotation.members
+            : declaration.body?.body,
+          facts,
+          parameterNames(declaration),
+        );
+        for (const key of collected.declared) {
+          const incoming = collected.props.has(key)
+            ? "yes"
+            : collected.unresolved.has(key)
+              ? "unresolved"
+              : "no";
+          noteStatus(status, key, incoming);
+        }
+        for (const heritage of declaration.extends || []) {
+          const inheritedName = heritageName(heritage);
+          absorb(inheritedProps, objectProps.get(inheritedName));
+          absorb(inheritedUnresolved, unresolvedObjectProps.get(inheritedName));
+        }
+      }
+      let sawAlias = false;
+      for (const target of aliases.get(name) ?? []) {
+        if (!objectProps.has(target) && !unresolvedObjectProps.has(target)) continue;
+        sawAlias = true;
+        for (const key of objectProps.get(target) ?? []) noteStatus(status, key, "yes");
+        for (const key of unresolvedObjectProps.get(target) ?? [])
+          noteStatus(status, key, "unresolved");
+      }
+      if (!grouped.has(name) && !sawAlias) continue;
+      const props = new Set();
+      const unresolved = new Set();
+      for (const [key, value] of status) {
+        if (value === "yes") props.add(key);
+        else if (value === "unresolved") unresolved.add(key);
+      }
+      for (const key of inheritedProps) if (!status.has(key)) props.add(key);
+      for (const key of inheritedUnresolved)
+        if (!status.has(key) && !props.has(key)) unresolved.add(key);
+      const kept = reconcile(published, name, props, unresolved, sticky);
+      objectsChanged = publish(objectProps, name, kept.props, objectsChanged);
+      objectsChanged = publish(unresolvedObjectProps, name, kept.unresolved, objectsChanged);
+    }
+  }
+}
+
+module.exports = { assignReactObjectFacts };

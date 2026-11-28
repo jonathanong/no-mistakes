@@ -2,20 +2,13 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { unwrapSequence } = require("./async-ast");
 const { literalString } = require("./module-mock-helpers");
 
 const SKIP_KEYS = new Set(["comments", "loc", "parent", "range", "tokens"]);
 
-function unwrap(node) {
-  while (node?.type === "ChainExpression") node = node.expression;
-  if (node?.type === "SequenceExpression" && node.expressions?.length) {
-    return unwrap(node.expressions.at(-1));
-  }
-  return node;
-}
-
 function isFunctionCallee(node) {
-  const current = unwrap(node);
+  const current = unwrapSequence(node);
   if (["ArrowFunctionExpression", "FunctionExpression"].includes(current?.type)) return true;
   if (current?.type !== "MemberExpression") return false;
   if (current.computed && current.property?.type === "Identifier") return false;
@@ -23,7 +16,7 @@ function isFunctionCallee(node) {
     !current.computed && current.property?.type === "Identifier"
       ? current.property.name
       : literalString(current.property);
-  return (name === "call" || name === "apply") && isFunctionCallee(current.object);
+  return (name === "call" || name === "apply") && isFunctionCallee(unwrapSequence(current.object));
 }
 
 function isIife(node) {

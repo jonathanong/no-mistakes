@@ -281,6 +281,17 @@
           "messageId": "resolve",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
           "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 36,
+          "endLine": 25,
+          "file": "recall.tsx",
+          "line": 25,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
         }
       ],
       "kind": "invalid",

@@ -75,10 +75,11 @@ function logicalCall(node, stopAt, preserveOpaqueArguments = false) {
 }
 
 function literalString(node) {
-  if (!node) return null;
-  if (node.type === "Literal" && typeof node.value === "string") return node.value;
-  if (node.type === "TemplateLiteral" && node.expressions.length === 0) {
-    return node.quasis.map((quasi) => quasi.value.cooked ?? quasi.value.raw).join("");
+  const current = unwrapExpression(node);
+  if (!current) return null;
+  if (current.type === "Literal" && typeof current.value === "string") return current.value;
+  if (current.type === "TemplateLiteral" && current.expressions.length === 0) {
+    return current.quasis.map((quasi) => quasi.value.cooked ?? quasi.value.raw).join("");
   }
   return null;
 }

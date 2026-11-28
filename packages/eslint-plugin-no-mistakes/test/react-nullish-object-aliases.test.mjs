@@ -26,14 +26,16 @@ const suite = {
     aliasCase("object-alias-file-suppressed"),
   ],
   invalid: [
+    // 1 nullish. A const alias inside a later parameter default reads the earlier parameter.
+    aliasCase("object-alias-controls"),
+    // 3 nullish, 2 unanalyzable.
+    aliasCase("object-alias-computed-keys"),
     // 5 nullish.
     aliasCase("object-aliases"),
     // 3 nullish.
     aliasCase("object-alias-loop-bindings"),
-    // 8 nullish.
+    // 6 nullish.
     aliasCase("object-alias-target-shadows"),
-    // 1 nullish.
-    aliasCase("object-alias-controls"),
   ],
 };
 

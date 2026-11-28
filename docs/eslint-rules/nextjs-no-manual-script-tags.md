@@ -36,6 +36,14 @@ export function Page() {
 
 Both inline-id options default to no exemptions.
 
+`unanalyzable` is `"finding"` or `"ignore"`. It defaults to `"finding"`.
+Outside `app` and `pages`, a non-static `require`, `import()`, or
+`import = require` reports `unanalyzable` on each raw `<script>` because the
+module might be `next/`. A namespace alias such as `import Svg = Icons.Svg` is not a module import. JSON-LD and an allowed inline id are checked first.
+JSON-LD still reports `unanalyzable` when a structured-data option is set.
+`"ignore"` drops only that uncertain report. A static
+`require("next/…")` or `import Name = require("next/…")` is a Next.js file. An expression-free template counts by its cooked text, so an escaped slash in a `next/script` template is still that module. A type-only import, including `import type Head = require("next/head")` and `import { type Script } from "next/script"`, does not.
+
 - `structuredDataComponent` is a nonempty component name to recommend instead
   of raw JSON-LD scripts, for example `"StructuredData"`. The name is used in
   the diagnostic; the rule does not resolve its import or validate the component.
@@ -43,7 +51,9 @@ Both inline-id options default to no exemptions.
   scripts. It overrides the generated component message when both are set.
 
 A raw `<script>` with `type="application/ld+json"` or
-`type={"application/ld+json"}` is allowed by default. Setting either structured
+`type={"application/ld+json"}` is allowed by default, including when that
+literal is wrapped in `as` or `satisfies`. A spread after that type is not exempt, because JSX applies later attributes last; the same type written after every spread still is. An allowed inline `id` accepts the
+same wrappers. Setting either structured
 data option opts in to reporting those tags. Inline-id exemptions do not
 bypass this opt-in. Dynamic type expressions and template literals retain the
 ordinary raw-script behavior.

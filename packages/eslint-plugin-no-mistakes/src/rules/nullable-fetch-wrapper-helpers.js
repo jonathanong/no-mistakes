@@ -1,6 +1,7 @@
 "use strict";
 
 const { typeAnnotation, typeName } = require("../react-node-types");
+const { isTransparentExpression, unwrapExpression } = require("./async-ast");
 const {
   memberPropertyName,
   repoRelativeFilename,
@@ -18,21 +19,31 @@ function compilePatterns(patterns = []) {
 }
 
 function calleePath(node) {
-  let current = node;
+  const current = unwrapExpression(node);
   if (!current) return null;
-  while (
-    current.type === "TSAsExpression" ||
-    current.type === "TSTypeAssertion" ||
-    current.type === "TSNonNullExpression"
-  ) {
-    current = current.expression;
-  }
-  if (current.type === "ChainExpression") current = current.expression;
   if (current.type === "Identifier") return current.name;
   if (current.type !== "MemberExpression") return null;
   const object = calleePath(current.object);
   const property = memberPropertyName(current);
   return object && property ? `${object}.${property}` : null;
+}
+
+function dynamicComputedMember(node) {
+  let current = unwrapExpression(node);
+  while (current?.type === "MemberExpression") {
+    if (current.computed && !memberPropertyName(current)) return true;
+    current = unwrapExpression(current.object);
+  }
+  return false;
+}
+
+function argumentContains(argument, target) {
+  return (
+    argument?.range &&
+    target?.range &&
+    argument.range[0] <= target.range[0] &&
+    argument.range[1] >= target.range[1]
+  );
 }
 
 function unwrapType(node) {
@@ -78,7 +89,9 @@ function returnTypeAnnotation(node) {
 }
 
 function variableDeclarator(node) {
-  return node.parent?.type === "VariableDeclarator" ? node.parent : null;
+  let parent = node?.parent;
+  while (isTransparentExpression(parent)) parent = parent.parent;
+  return parent?.type === "VariableDeclarator" ? parent : null;
 }
 
 function variableDeclaration(node) {
@@ -181,8 +194,19 @@ function collectFunctionOverloadReturnTypes(program, functionTypes = new Map()) 
   return types;
 }
 
+function memberCouldBeQualifiedGetter(patterns, member, unresolved) {
+  if (!unresolved || !member) return false;
+  return (patterns ?? []).some((pattern) => {
+    const match = /(?:^|\\.)([A-Za-z_$][\w$]*)\$$/.exec(pattern);
+    if (match) return match[1] === member;
+    return !/^\^?[A-Za-z_$][\w$]*\$$/.test(pattern);
+  });
+}
+
 module.exports = {
+  argumentContains,
   calleePath,
+  dynamicComputedMember,
   collectExportedNames,
   collectFunctionTypeReturns,
   collectFunctionOverloadReturnTypes,
@@ -192,5 +216,6 @@ module.exports = {
   functionTypeReturn,
   hasCheckedPath,
   isExportedFunction,
+  memberCouldBeQualifiedGetter,
   typeMatchesNullableHint,
 };

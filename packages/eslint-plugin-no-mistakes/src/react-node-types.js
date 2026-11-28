@@ -1,41 +1,42 @@
 "use strict";
 
-function keyName(node) {
-  if (!node) return null;
-  if (node.type === "Identifier") return node.name;
-  return node.type === "Literal" ? String(node.value) : null;
-}
+const { literalString } = require("./rules/module-mock-helpers");
+const { importFact } = require("./rules/import-resolution");
 
-function unwrapType(node) {
-  return node &&
-    (node.type === "TSParenthesizedType" ||
-      node.type === "TSOptionalType" ||
-      node.type === "TSRestType")
-    ? unwrapType(node.typeAnnotation)
-    : node;
+function syntacticRequire(init) {
+  if (init?.type !== "CallExpression" || init.optional || init.arguments?.length !== 1) return null;
+  if (init.callee?.type !== "Identifier" || init.callee.name !== "require") return null;
+  const moduleName = literalString(init.arguments[0]);
+  if (moduleName === null) return { unresolved: true };
+  return { module: moduleName, kind: "namespace", typeOnly: false };
 }
+const { assignReactObjectFacts } = require("./react-node-object-facts");
+const {
+  assertedType,
+  bindPatternNames,
+  computedKey,
+  definePattern,
+  keyName,
+  reactTypeStatus,
+  typeAnnotation,
+  typeName,
+} = require("./react-node-type-query");
 
-function typeName(node) {
-  const current = unwrapType(node);
-  if (!current) return null;
-  if (current.type !== "TSTypeReference") return null;
-  const name = current.typeName;
-  if (name.type === "Identifier") return name.name;
-  return name.type === "TSQualifiedName" &&
-    name.left.type === "Identifier" &&
-    name.right.type === "Identifier"
-    ? `${name.left.name}.${name.right.name}`
-    : null;
-}
-
-function typeAnnotation(node) {
-  return node && node.typeAnnotation ? unwrapType(node.typeAnnotation.typeAnnotation) : null;
-}
-
-function createReactNodeFacts(program) {
+function createReactNodeFacts(program, context) {
   const reactNodeNames = new Set(["React.ReactNode"]);
+  const unresolvedNamespaces = new Set();
+  const unresolvedTypes = new Set();
   const aliases = new Map();
   const objectProps = new Map();
+  const unresolvedObjectProps = new Map();
+  const typeFacts = () => ({
+    aliases,
+    context,
+    reactNodeNames,
+    unresolvedNamespaces,
+    unresolvedTypes,
+  });
+  let seededReact = true;
 
   function topLevelDeclaration(statement) {
     return (statement.type === "ExportNamedDeclaration" ||
@@ -43,36 +44,6 @@ function createReactNodeFacts(program) {
       statement.declaration
       ? statement.declaration
       : statement;
-  }
-
-  function setChanged(previous, next) {
-    if (!previous || previous.size !== next.size) return true;
-    for (const value of next) {
-      if (!previous.has(value)) return true;
-    }
-    return false;
-  }
-
-  function heritageName(heritage) {
-    const expression = heritage && heritage.expression;
-    return expression && expression.type === "Identifier" ? expression.name : null;
-  }
-
-  function isReactNodeType(type) {
-    const name = typeName(type);
-    return Boolean(name && (reactNodeNames.has(name) || aliases.get(name) === true));
-  }
-
-  function collectMembers(members) {
-    const props = new Set();
-    for (const member of members || []) {
-      if (member.type !== "TSPropertySignature" || !isReactNodeType(typeAnnotation(member))) {
-        continue;
-      }
-      const name = keyName(member.key);
-      if (name) props.add(name);
-    }
-    return props;
   }
 
   for (const statement of program.body || []) {
@@ -83,9 +54,48 @@ function createReactNodeFacts(program) {
       }
       if (
         specifier.type === "ImportNamespaceSpecifier" ||
-        specifier.type === "ImportDefaultSpecifier"
+        specifier.type === "ImportDefaultSpecifier" ||
+        (specifier.type === "ImportSpecifier" && keyName(specifier.imported) === "default")
       ) {
         reactNodeNames.add(`${specifier.local.name}.ReactNode`);
+        if (specifier.local.name === "React") seededReact = false;
+      }
+    }
+  }
+
+  for (const statement of program.body || []) {
+    const declaration = topLevelDeclaration(statement);
+    if (declaration.type !== "TSImportEqualsDeclaration" || declaration.id?.type !== "Identifier") {
+      continue;
+    }
+    const reference = declaration.moduleReference;
+    const moduleName =
+      reference?.type === "TSExternalModuleReference" ? literalString(reference.expression) : null;
+    if (moduleName === "react") {
+      reactNodeNames.add(`${declaration.id.name}.ReactNode`);
+      if (declaration.id.name === "React") seededReact = false;
+    } else if (moduleName === null) unresolvedNamespaces.add(declaration.id.name);
+    else if (seededReact && declaration.id.name === "React")
+      reactNodeNames.delete("React.ReactNode");
+  }
+
+  for (const statement of program.body || []) {
+    const declaration = topLevelDeclaration(statement);
+    if (declaration.type !== "VariableDeclaration") {
+      continue;
+    }
+    for (const declarator of declaration.declarations || []) {
+      if (declarator.id?.type !== "Identifier") continue;
+      const fact = context?.sourceCode?.getScope
+        ? importFact(declarator.id, context)
+        : syntacticRequire(declarator.init);
+      if (!fact || fact.typeOnly) continue;
+      if (fact.unresolved) unresolvedNamespaces.add(declarator.id.name);
+      else if (fact.module === "react" && (fact.kind === "namespace" || fact.kind === "default")) {
+        reactNodeNames.add(`${declarator.id.name}.ReactNode`);
+        if (declarator.id.name === "React") seededReact = false;
+      } else if (seededReact && declarator.id.name === "React" && fact.module) {
+        reactNodeNames.delete("React.ReactNode");
       }
     }
   }
@@ -97,50 +107,43 @@ function createReactNodeFacts(program) {
       const declaration = topLevelDeclaration(statement);
       if (declaration.type !== "TSTypeAliasDeclaration") continue;
       const name = declaration.id.name;
-      if (!aliases.has(name) && isReactNodeType(declaration.typeAnnotation)) {
+      const status = reactTypeStatus(declaration.typeAnnotation, typeFacts());
+      if (status === "yes" && !aliases.has(name)) {
         aliases.set(name, true);
+        changed = true;
+      } else if (status === "unresolved" && !unresolvedTypes.has(name)) {
+        unresolvedTypes.add(name);
         changed = true;
       }
     }
   }
 
-  let objectsChanged = true;
-  while (objectsChanged) {
-    objectsChanged = false;
-    for (const statement of program.body || []) {
-      const declaration = topLevelDeclaration(statement);
-      if (declaration.type === "TSInterfaceDeclaration") {
-        const props = collectMembers(declaration.body && declaration.body.body);
-        for (const heritage of declaration.extends || []) {
-          const inherited = objectProps.get(heritageName(heritage));
-          if (inherited) {
-            for (const prop of inherited) props.add(prop);
-          }
-        }
-        if (setChanged(objectProps.get(declaration.id.name), props)) {
-          objectProps.set(declaration.id.name, props);
-          objectsChanged = true;
-        }
-      }
-      if (
-        declaration.type === "TSTypeAliasDeclaration" &&
-        declaration.typeAnnotation.type === "TSTypeLiteral"
-      ) {
-        const props = collectMembers(declaration.typeAnnotation.members);
-        if (setChanged(objectProps.get(declaration.id.name), props)) {
-          objectProps.set(declaration.id.name, props);
-          objectsChanged = true;
-        }
-      }
-    }
-  }
+  assignReactObjectFacts(
+    program,
+    topLevelDeclaration,
+    typeFacts(),
+    objectProps,
+    unresolvedObjectProps,
+  );
 
-  return { aliases, objectProps, reactNodeNames };
+  return {
+    aliases,
+    objectProps,
+    reactNodeNames,
+    unresolvedNamespaces,
+    unresolvedObjectProps,
+    unresolvedTypes,
+  };
 }
 
 module.exports = {
+  assertedType,
+  bindPatternNames,
+  computedKey,
   createReactNodeFacts,
+  definePattern,
   keyName,
+  reactTypeStatus,
   typeAnnotation,
   typeName,
 };

@@ -1,0 +1,13 @@
+{
+  "jsPlugins": [
+    {
+      "name": "no-mistakes",
+      "specifier": "../../../../packages/eslint-plugin-no-mistakes/src/index.js"
+    }
+  ],
+  "rules": {
+    "eslint/no-unused-vars": "off",
+    "no-mistakes/nextjs-static-fetch-method": "error",
+    "no-mistakes/nextjs-static-fetch-url": "error"
+  }
+}

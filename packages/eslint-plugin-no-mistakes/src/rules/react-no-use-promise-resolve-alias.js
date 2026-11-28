@@ -1,12 +1,37 @@
 "use strict";
 
+const { isTransparentExpression, unwrapExpression } = require("./async-ast");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { literalString } = require("./module-mock-helpers");
 
+function inTypeQuery(node) {
+  let current = node.parent;
+  while (current) {
+    if (current.type === "TSTypeQuery") return true;
+    current = current.parent;
+  }
+  return false;
+}
+
+function logicalParent(node) {
+  let current = node.parent;
+  while (isTransparentExpression(current)) current = current.parent;
+  return current;
+}
+
+function sameReference(expression, identifier) {
+  return unwrapExpression(expression) === identifier;
+}
+
 function writesNamespaceMember(variable) {
   return variable.references.some((reference) => {
-    const member = reference.identifier.parent;
-    if (member?.type !== "MemberExpression" || member.object !== reference.identifier) return false;
+    const member = logicalParent(reference.identifier);
+    if (
+      member?.type !== "MemberExpression" ||
+      !sameReference(member.object, reference.identifier)
+    ) {
+      return false;
+    }
     const parent = member.parent;
     return (
       (parent.type === "AssignmentExpression" && parent.left === member) ||
@@ -25,21 +50,20 @@ function aliasUsesStayLocal(variable, context, seen = new Set()) {
     return false;
   seen.add(variable);
   return variable.references.every((reference) => {
-    if (reference.init) return true;
+    if (reference.init || inTypeQuery(reference.identifier)) return true;
     if (reference.isWrite() || crossesWith(reference.identifier, variable.scope, context))
       return false;
-    const parent = reference.identifier.parent;
-    if (parent?.type === "MemberExpression" && parent.object === reference.identifier) {
+    const parent = logicalParent(reference.identifier);
+    if (parent?.type === "MemberExpression" && sameReference(parent.object, reference.identifier)) {
       const name = parent.computed ? literalString(parent.property) : parent.property.name;
+      const call = logicalParent(parent);
       return (
-        name === "resolve" &&
-        parent.parent?.type === "CallExpression" &&
-        parent.parent.callee === parent
+        name === "resolve" && call?.type === "CallExpression" && sameReference(call.callee, parent)
       );
     }
     if (
       parent?.type !== "VariableDeclarator" ||
-      parent.init !== reference.identifier ||
+      !sameReference(parent.init, reference.identifier) ||
       parent.parent?.kind !== "const" ||
       parent.id.type !== "Identifier" ||
       parent.parent.parent?.type === "ExportNamedDeclaration" ||
@@ -54,20 +78,24 @@ function aliasUsesStayLocal(variable, context, seen = new Set()) {
 function globalUsesStayLocal(variable, context) {
   return variable.references.every((reference) => {
     if (reference.isTypeReference && !reference.isValueReference) return true;
+    if (inTypeQuery(reference.identifier)) return true;
     if (reference.isWrite()) return false;
-    const parent = reference.identifier.parent;
-    if (parent?.type === "MemberExpression" && parent.object === reference.identifier) {
+    const parent = logicalParent(reference.identifier);
+    if (parent?.type === "MemberExpression" && sameReference(parent.object, reference.identifier)) {
       const name = parent.computed ? literalString(parent.property) : parent.property.name;
+      const call = logicalParent(parent);
       return (
         ["resolve", "reject", "all", "allSettled", "any", "race"].includes(name) &&
-        parent.parent?.type === "CallExpression" &&
-        parent.parent.callee === parent
+        call?.type === "CallExpression" &&
+        sameReference(call.callee, parent)
       );
     }
-    if (parent?.type === "NewExpression" && parent.callee === reference.identifier) return true;
+    if (parent?.type === "NewExpression" && sameReference(parent.callee, reference.identifier)) {
+      return true;
+    }
     if (
       parent?.type !== "VariableDeclarator" ||
-      parent.init !== reference.identifier ||
+      !sameReference(parent.init, reference.identifier) ||
       parent.parent?.kind !== "const" ||
       parent.id.type !== "Identifier"
     )
@@ -89,17 +117,21 @@ function hasGlobalObjectPromiseAccess(context) {
           );
     if (
       references.some((reference) => {
-        const member = reference.identifier.parent;
-        if (member?.type !== "MemberExpression" || member.object !== reference.identifier)
+        if (inTypeQuery(reference.identifier)) return false;
+        const member = logicalParent(reference.identifier);
+        if (
+          member?.type !== "MemberExpression" ||
+          !sameReference(member.object, reference.identifier)
+        )
           return true; // The global object escaped or was used as a value.
         const property = member.computed ? literalString(member.property) : member.property.name;
         if (property === null || property === "Promise") return true;
-        const parent = member.parent;
+        const parent = logicalParent(member);
         return (
-          (parent.type === "CallExpression" && parent.callee === member) ||
-          (parent.type === "AssignmentExpression" && parent.left === member) ||
-          (parent.type === "UpdateExpression" && parent.argument === member) ||
-          (parent.type === "UnaryExpression" && parent.operator === "delete")
+          (parent?.type === "CallExpression" && sameReference(parent.callee, member)) ||
+          (parent?.type === "AssignmentExpression" && sameReference(parent.left, member)) ||
+          (parent?.type === "UpdateExpression" && sameReference(parent.argument, member)) ||
+          (parent?.type === "UnaryExpression" && parent.operator === "delete")
         );
       })
     )
@@ -129,7 +161,7 @@ function immutableAlias(identifier, context) {
     declarator?.parent?.kind !== "const" ||
     declarator.id.type !== "Identifier" ||
     declarator.id.name !== identifier.name ||
-    declarator.init?.type !== "Identifier" ||
+    unwrapExpression(declarator.init)?.type !== "Identifier" ||
     declarator.parent.parent?.type === "ExportNamedDeclaration" ||
     variable.references.some((reference) => reference.isWrite() && !reference.init) ||
     !aliasUsesStayLocal(variable, context) ||
@@ -145,7 +177,7 @@ function isGlobalPromiseAlias(identifier, context) {
   while (true) {
     const declarator = immutableAlias(current, context);
     if (!declarator) return false;
-    const next = declarator.init;
+    const next = unwrapExpression(declarator.init);
     const binding = resolveVariable(next, context);
     // A later const initializer is still in its TDZ at this read. This
     // decreasing source-order invariant also rules out alias cycles.

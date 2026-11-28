@@ -878,14 +878,76 @@
       "options": null
     },
     {
-      "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-controls.tsx",
+      "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-computed-keys.tsx",
       "findings": [
         {
           "column": 10,
           "endColumn": 22,
           "endLine": 7,
-          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-controls.tsx",
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-computed-keys.tsx",
           "line": 7,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 12,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-computed-keys.tsx",
+          "line": 12,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 19,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-computed-keys.tsx",
+          "line": 19,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 24,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-computed-keys.tsx",
+          "line": 24,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 29,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-computed-keys.tsx",
+          "line": 29,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-controls.tsx",
+      "findings": [
+        {
+          "column": 12,
+          "endColumn": 30,
+          "endLine": 90,
+          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-controls.tsx",
+          "line": 90,
           "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
           "messageId": "nullish",
           "ruleId": "no-mistakes/react-no-nullish-react-node",
@@ -985,31 +1047,9 @@
         {
           "column": 10,
           "endColumn": 28,
-          "endLine": 33,
+          "endLine": 45,
           "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-target-shadows.tsx",
-          "line": 33,
-          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
-          "messageId": "nullish",
-          "ruleId": "no-mistakes/react-no-nullish-react-node",
-          "severity": 2
-        },
-        {
-          "column": 10,
-          "endColumn": 28,
-          "endLine": 43,
-          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-target-shadows.tsx",
-          "line": 43,
-          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
-          "messageId": "nullish",
-          "ruleId": "no-mistakes/react-no-nullish-react-node",
-          "severity": 2
-        },
-        {
-          "column": 11,
-          "endColumn": 29,
-          "endLine": 50,
-          "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-target-shadows.tsx",
-          "line": 50,
+          "line": 45,
           "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
           "messageId": "nullish",
           "ruleId": "no-mistakes/react-no-nullish-react-node",
@@ -1018,9 +1058,9 @@
         {
           "column": 31,
           "endColumn": 47,
-          "endLine": 50,
+          "endLine": 55,
           "file": "test-cases/eslint-snippets/fixture/react-no-nullish-react-node/object-alias-target-shadows.tsx",
-          "line": 50,
+          "line": 55,
           "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
           "messageId": "nullish",
           "ruleId": "no-mistakes/react-no-nullish-react-node",

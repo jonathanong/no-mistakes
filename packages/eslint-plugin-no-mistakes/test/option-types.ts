@@ -10,6 +10,11 @@ import plugin, {
   type PlaywrightNoHoistedUniqueTokenOptions,
   type PlaywrightRequireInteractiveTestIdOptions,
   type PlaywrightRuleUnanalyzable,
+  type ReactNoNullishReactNodeOptions,
+  type ReactNoUsePromiseResolveOptions,
+  type NextjsNoManualScriptTagsOptions,
+  type ServerRequireNullableFetchWrapperOptions,
+  type RuleUnanalyzable,
   type PlaywrightNoRawScrollPaginationOptions,
   type PostgresNoExecutorAdapterMode,
   type PostgresNonWritingCallee,
@@ -184,6 +189,46 @@ export const interactiveTestIdOptions: PlaywrightRequireInteractiveTestIdOptions
 export const defaultInteractiveTestIdOptions: pluginRequire.PlaywrightRequireInteractiveTestIdOptions =
   {};
 export const invalidInteractiveTestIdOptions: PlaywrightRequireInteractiveTestIdOptions = {
+  // @ts-expect-error Unanalyzable policy must be finding or ignore.
+  unanalyzable: "warn",
+};
+
+export const unanalyzablePolicy: RuleUnanalyzable = "finding";
+export const nullishOptions: ReactNoNullishReactNodeOptions = {
+  unanalyzable: unanalyzablePolicy,
+};
+export const defaultNullishOptions: pluginRequire.ReactNoNullishReactNodeOptions = {};
+export const invalidNullishOptions: ReactNoNullishReactNodeOptions = {
+  // @ts-expect-error Unanalyzable policy must be finding or ignore.
+  unanalyzable: "warn",
+};
+
+export const useResolveOptions: ReactNoUsePromiseResolveOptions = { unanalyzable: "ignore" };
+export const invalidUseResolveOptions: ReactNoUsePromiseResolveOptions = {
+  // @ts-expect-error Unanalyzable policy must be finding or ignore.
+  unanalyzable: "warn",
+};
+
+export const scriptTagOptions: NextjsNoManualScriptTagsOptions = {
+  allowInlineScriptIds: ["theme"],
+  allowInlineScriptIdPatterns: ["^boot-"],
+  structuredDataComponent: "StructuredData",
+  unanalyzable: "finding",
+};
+export const invalidScriptTagOptions: NextjsNoManualScriptTagsOptions = {
+  // @ts-expect-error Unanalyzable policy must be finding or ignore.
+  unanalyzable: "warn",
+};
+
+export const nullableFetchOptions: ServerRequireNullableFetchWrapperOptions = {
+  getterCalleePatterns: ["^getWidget$"],
+  requiredWrapperCallee: "wrapNullable",
+  nullableReturnTypeNames: ["Widget"],
+  unanalyzable: "finding",
+};
+export const invalidNullableFetchOptions: ServerRequireNullableFetchWrapperOptions = {
+  getterCalleePatterns: ["^getWidget$"],
+  requiredWrapperCallee: "wrapNullable",
   // @ts-expect-error Unanalyzable policy must be finding or ignore.
   unanalyzable: "warn",
 };
