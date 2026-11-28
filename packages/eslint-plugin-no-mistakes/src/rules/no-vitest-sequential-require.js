@@ -12,15 +12,20 @@ function loads() {
   return require("./no-vitest-sequential-loads");
 }
 
-function reassignedVitestRequire(callee, context) {
+function reassignedVitestRequire(callee, context, seen = new Set()) {
   const { bindingRoot, hasLaterWrite, staticName } = loads();
   const root = bindingRoot(callee);
   if (!root) return false;
   const variable = resolveVariable(root, context);
-  if (!variable || variable.defs.length !== 1 || !hasLaterWrite(variable)) return false;
+  if (!variable || variable.defs.length !== 1 || seen.has(variable)) return false;
   const def = variable.defs[0];
   if (def.type !== "Variable" || def.node?.id?.type !== "Identifier") return false;
   const init = unwrapExpression(def.node.init);
+  if (def.node.parent?.kind === "const" && init?.type === "Identifier") {
+    seen.add(variable);
+    return reassignedVitestRequire(init, context, seen);
+  }
+  if (!hasLaterWrite(variable)) return false;
   const loaded = init?.type === "MemberExpression" ? unwrapExpression(init.object) : init;
   const member =
     init?.type === "MemberExpression" ? staticName(init.property, init.computed) : null;

@@ -11,7 +11,9 @@ function matchDirectMockCallApply(node, context, methods) {
   const direct = isModuleMockMemberCall({ callee: object }, context);
   if (!direct || !methods.has(direct.method)) return null;
   const args = node.arguments ?? [];
-  if (args.some((arg) => arg?.type === "SpreadElement")) return null;
+  if (args.some((arg) => arg?.type === "SpreadElement")) {
+    return direct.unanalyzable ? { mock: direct } : null;
+  }
   if (name === "call") {
     return { factory: args[2], mock: direct, specifierNode: args[1] };
   }
@@ -20,7 +22,7 @@ function matchDirectMockCallApply(node, context, methods) {
     list?.type === "ArrayExpression" &&
     list.elements.some((element) => !element || element.type === "SpreadElement")
   ) {
-    return null;
+    return direct.unanalyzable ? { mock: direct } : null;
   }
   return {
     factory: list?.type === "ArrayExpression" ? list.elements[1] : undefined,

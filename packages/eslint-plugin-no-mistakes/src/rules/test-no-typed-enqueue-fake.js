@@ -164,7 +164,7 @@ module.exports = rule(
           if (callee.type === "TSInstantiationExpression") typeNode = callee;
           callee = callee.expression;
         }
-        if (callee?.type !== "MemberExpression") return;
+        if (callee?.type !== "MemberExpression" || callee.computed) return;
         const method = memberPropertyName(callee);
         const argument = unwrapExpression(node.arguments[0]);
         if (!isFrameworkReceiver(callee.object, sourceCode)) {

@@ -179,6 +179,7 @@ const groups = [
       "member-receiver.test.ts",
       "playwright-default.test.ts",
       "alias-let.test.ts",
+      "computed-method.test.ts",
     ],
   },
   {
@@ -285,6 +286,7 @@ const groups = [
       "computed-vi.test.ts",
       "other-require.test.ts",
       "computed-enqueue.test.ts",
+      "computed-method.test.ts",
     ],
   },
   {
@@ -352,6 +354,7 @@ const groups = [
       "other-member.test.ts",
       "computed-member.test.ts",
       "computed-pattern.test.ts",
+      "computed-unresolved.test.ts",
     ],
   },
   {

@@ -45,7 +45,7 @@ the same `.mock.test` filename. `.call` and `.apply` on a mock whose `vi` comes 
 identifier destructuring does not establish that identity. Rename the file or remove
 its module mocking; changing the spelling of the mock does not change isolation.
 
-`import * as v from "vitest"` followed by `v.vi.mock`, a string or expression-free template key, optional chaining, `const { mock } = v.vi`, and one `const` alias are the same module mock. `require("vitest").vitest` and `import { vitest } from "vitest"` are that same utility. `expect` is not. Vitest's default import is not `vi`. `const api = vt` after `import vt from "vitest"` keeps `api.mock` on that exclusion. A computed identifier key is not a static method name.
+`import * as v from "vitest"` followed by `v.vi.mock`, a string or expression-free template key, optional chaining, `const { mock } = v.vi`, and one `const` alias are the same module mock. `require("vitest").vitest` and `import { vitest } from "vitest"` are that same utility. `expect` is not. Vitest's default import is not `vi`. `const api = vt` after `import vt from "vitest"` keeps `api.mock` on that exclusion, including `const { mock } = vt` and a nested `const vt = alias` that reuses the outer name. A computed identifier key is not a static method name.
 
 A mock helper imported from another file is not visible here.
 

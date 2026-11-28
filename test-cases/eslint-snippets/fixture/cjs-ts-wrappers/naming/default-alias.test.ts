@@ -1,3 +1,9 @@
 import vt from "vitest";
-const api = vt;
-api.mock("./dep");
+const alias = vt;
+alias.mock("./dep");
+const { mock } = vt;
+mock("./dep");
+function register() {
+  const vt = alias;
+  vt.mock("react");
+}

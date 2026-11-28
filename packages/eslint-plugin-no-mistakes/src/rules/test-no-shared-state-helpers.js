@@ -42,9 +42,16 @@ function mutationPath(node) {
   return objectPath && property ? `${objectPath}.${property}` : null;
 }
 
+function mutatingMethodName(callee) {
+  if (callee?.type !== "MemberExpression") return null;
+  const property = unwrapExpression(callee.property);
+  if (callee.computed && property?.type !== "Literal") return null;
+  return propertyName(callee.property);
+}
+
 function mutatingCallTarget(node) {
   const callee = unwrapExpression(node.callee);
-  if (callee.type !== "MemberExpression" || !MUTATING_METHODS.has(propertyName(callee.property))) {
+  if (callee.type !== "MemberExpression" || !MUTATING_METHODS.has(mutatingMethodName(callee))) {
     return { name: null, path: null };
   }
   const object = unwrapExpression(callee.object);
@@ -55,8 +62,7 @@ function mutatingCallTarget(node) {
 }
 
 function mutatingCallPropertyName(node) {
-  const callee = unwrapExpression(node.callee);
-  return callee.type === "MemberExpression" ? propertyName(callee.property) : null;
+  return mutatingMethodName(unwrapExpression(node.callee));
 }
 
 function isFunctionNode(node) {

@@ -18,9 +18,9 @@ const MOCK_METHODS = new Set(["mock", "doMock", "unmock", "doUnmock"]);
 function isDefaultImport(node, context, seen = new Set()) {
   let current = unwrapExpression(node);
   while (current?.type === "Identifier") {
-    if (seen.has(current.name)) return false;
     const variable = resolveVariable(current, context);
-    const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+    if (!variable || seen.has(variable)) return false;
+    const def = variable.defs.length === 1 ? variable.defs[0] : null;
     if (def?.node?.type === "ImportDefaultSpecifier") return true;
     if (
       def?.type !== "Variable" ||
@@ -30,7 +30,7 @@ function isDefaultImport(node, context, seen = new Set()) {
     ) {
       return false;
     }
-    seen.add(current.name);
+    seen.add(variable);
     current = unwrapExpression(def.node.init);
   }
   return false;
@@ -93,6 +93,7 @@ function mockMember(node, context, seen = new Set()) {
       return mockMember(def.node.init, context, seen);
     }
     if (def.node.id?.type !== "ObjectPattern" || !def.node.init) return false;
+    if (isDefaultImport(def.node.init, context)) return false;
     return patternMock(def.node.id, callee.name) && isFrameworkBinding(def.node.init, context);
   }
   if (callee?.type !== "MemberExpression") return false;

@@ -100,6 +100,7 @@ function bindingResolver(context) {
     if (node?.type === "MemberExpression") {
       const object = resolve(node.object);
       const member = memberPropertyName(node);
+      if (object === UNRESOLVED && node.computed && member == null) return null;
       if (object === UNRESOLVED) return unresolvedMember(member);
       return memberBinding(object, member);
     }
@@ -127,7 +128,14 @@ function bindingResolver(context) {
       if (id.type === "Identifier") binding = value;
       else if (id.type === "ObjectPattern") {
         const member = destructuredMember(id, node.name);
-        if (value === UNRESOLVED) binding = unresolvedMember(member);
+        const unknownKey = id.properties.some(
+          (item) =>
+            item.type === "Property" &&
+            item.computed &&
+            item.value?.name === node.name &&
+            literalString(item.key) == null,
+        );
+        if (value === UNRESOLVED) binding = unknownKey ? null : unresolvedMember(member);
         else if (value) binding = member ? memberBinding(value, member) : null;
       } else if (value === UNRESOLVED) binding = UNRESOLVED;
     }
