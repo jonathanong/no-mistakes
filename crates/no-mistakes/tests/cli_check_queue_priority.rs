@@ -26,7 +26,7 @@ fn queue_priority_mix_check_json_snapshot() {
     );
     assert_eq!(findings.len(), 19, "{findings:?}");
     let warnings = report["warnings"].as_array().unwrap();
-    assert_eq!(warnings.len(), 5, "{warnings:?}");
+    assert_eq!(warnings.len(), 6, "{warnings:?}");
     for location in [
         "abstain.ts:36",
         "bundles-far.ts:4",

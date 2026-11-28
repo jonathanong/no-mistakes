@@ -91,7 +91,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
           "line": 22,
-          "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
+          "message": "queue-rate-limit-error-delay could not verify delay (constructed instance was thrown before `delayMs` was a proven positive delay); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const conditional = new Worker.RateLimitError();",
           "target": "unanalyzable"
@@ -100,7 +100,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
           "line": 29,
-          "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
+          "message": "queue-rate-limit-error-delay could not verify delay (constructed instance was thrown before `delayMs` was a proven positive delay); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const escaped = new Worker.RateLimitError();",
           "target": "unanalyzable"
@@ -109,7 +109,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
           "line": 34,
-          "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
+          "message": "queue-rate-limit-error-delay could not verify delay (constructed instance was thrown before `delayMs` was a proven positive delay); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const computed = new Worker.RateLimitError();",
           "target": "unanalyzable"
@@ -322,7 +322,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/violations.ts",
           "import": "Worker.RateLimitError",
           "line": 21,
-          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) does not attach required `delayMs` delay property on the constructed instance; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) threw the constructed instance before `delayMs` was a positive delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const bare = new Worker.RateLimitError();",
           "target": "glide-mq#Worker.RateLimitError"
@@ -358,7 +358,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/violations.ts",
           "import": "Worker.RateLimitError",
           "line": 30,
-          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) instance property `delayMs` must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) threw the constructed instance before `delayMs` was a positive delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const neg = new Worker.RateLimitError();",
           "target": "glide-mq#Worker.RateLimitError"
@@ -367,7 +367,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/violations.ts",
           "import": "Worker.RateLimitError",
           "line": 34,
-          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) instance property `delayMs` is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) threw the constructed instance before `delayMs` was a positive delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const nanErr = new Worker.RateLimitError();",
           "target": "glide-mq#Worker.RateLimitError"
@@ -639,7 +639,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/violations.ts",
           "import": "Worker.RateLimitError",
           "line": 21,
-          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) does not attach required `delayMs` delay property on the constructed instance; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) threw the constructed instance before `delayMs` was a positive delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const bare = new Worker.RateLimitError();",
           "target": "glide-mq#Worker.RateLimitError"
@@ -675,7 +675,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/violations.ts",
           "import": "Worker.RateLimitError",
           "line": 30,
-          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) instance property `delayMs` must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) threw the constructed instance before `delayMs` was a positive delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const neg = new Worker.RateLimitError();",
           "target": "glide-mq#Worker.RateLimitError"
@@ -684,7 +684,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/violations.ts",
           "import": "Worker.RateLimitError",
           "line": 34,
-          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) instance property `delayMs` is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) threw the constructed instance before `delayMs` was a positive delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const nanErr = new Worker.RateLimitError();",
           "target": "glide-mq#Worker.RateLimitError"
@@ -805,7 +805,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
           "line": 22,
-          "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
+          "message": "queue-rate-limit-error-delay could not verify delay (constructed instance was thrown before `delayMs` was a proven positive delay); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const conditional = new Worker.RateLimitError();",
           "target": "unanalyzable"
@@ -814,7 +814,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
           "line": 29,
-          "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
+          "message": "queue-rate-limit-error-delay could not verify delay (constructed instance was thrown before `delayMs` was a proven positive delay); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const escaped = new Worker.RateLimitError();",
           "target": "unanalyzable"
@@ -823,7 +823,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/unanalyzable.ts",
           "import": "Worker.RateLimitError",
           "line": 34,
-          "message": "queue-rate-limit-error-delay could not verify delay (constructed instance escapes or is mutated opaquely, so `delayMs` could not be verified); pass a statically visible positive delay or suppress with a reason",
+          "message": "queue-rate-limit-error-delay could not verify delay (constructed instance was thrown before `delayMs` was a proven positive delay); pass a statically visible positive delay or suppress with a reason",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const computed = new Worker.RateLimitError();",
           "target": "unanalyzable"
@@ -1030,7 +1030,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/violations.ts",
           "import": "Worker.RateLimitError",
           "line": 21,
-          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) does not attach required `delayMs` delay property on the constructed instance; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) threw the constructed instance before `delayMs` was a positive delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const bare = new Worker.RateLimitError();",
           "target": "glide-mq#Worker.RateLimitError"
@@ -1066,7 +1066,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/violations.ts",
           "import": "Worker.RateLimitError",
           "line": 30,
-          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) instance property `delayMs` must be a positive duration; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) threw the constructed instance before `delayMs` was a positive delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const neg = new Worker.RateLimitError();",
           "target": "glide-mq#Worker.RateLimitError"
@@ -1075,7 +1075,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
           "file": "src/violations.ts",
           "import": "Worker.RateLimitError",
           "line": 34,
-          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) instance property `delayMs` is undefined or non-finite; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
+          "message": "`Worker.RateLimitError` (glide-mq#Worker.RateLimitError) threw the constructed instance before `delayMs` was a positive delay; throwing a rate-limit error with no delay drops the provider's Retry-After — pass the positive delay duration",
           "rule": "queue-rate-limit-error-delay",
           "sourceLine": "const nanErr = new Worker.RateLimitError();",
           "target": "glide-mq#Worker.RateLimitError"
