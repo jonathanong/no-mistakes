@@ -116,7 +116,10 @@ function recordImportedTests(node, testCalleeNames, namespaces, testAliases) {
       namespaces.add(specifier.local.name);
       testAliases.add(specifier.local, "namespace");
     }
-    if (specifier.type === "ImportDefaultSpecifier" && specifier.local?.name) {
+    const isDefault =
+      specifier.type === "ImportDefaultSpecifier" ||
+      (specifier.type === "ImportSpecifier" && importSpecifierName(specifier) === "default");
+    if (isDefault && specifier.local?.name) {
       if (node.source.value === "vitest") {
         namespaces.add(specifier.local.name);
         testAliases.add(specifier.local, "namespace");

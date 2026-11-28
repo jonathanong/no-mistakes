@@ -2877,6 +2877,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "named-default.test.ts",
+      "findings": [
+        {
+          "column": 3,
+          "endColumn": 16,
+          "endLine": 5,
+          "file": "named-default.test.ts",
+          "line": 5,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-shared-state:shared-ignore": [
@@ -2958,6 +2976,18 @@
     },
     {
       "file": "computed-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "computed-destructure.js",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -3187,6 +3217,30 @@
           "line": 4,
           "message": "Cannot tell whether this modifier skips a test. Use a static test, it, or describe binding.",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "named-default.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 2,
+          "file": "named-default.test.ts",
+          "line": 2,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
           "ruleId": "no-mistakes/test-no-skips",
           "severity": 2
         }
@@ -3769,6 +3823,28 @@
       ]
     },
     {
+      "file": "namespace-require.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 28,
+          "endLine": 3,
+          "file": "namespace-require.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
       "file": "inline-require.test.ts",
       "findings": [
         {
@@ -3827,6 +3903,17 @@
     },
     {
       "file": "opaque-receiver.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$",
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "namespace-require.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [

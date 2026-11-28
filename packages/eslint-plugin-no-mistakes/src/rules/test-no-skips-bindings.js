@@ -74,6 +74,7 @@ function imported(node, context, namespace = false, seen = new Set()) {
           if (source === "vitest" && namespace) importedName = "*";
         } else importedName = importSpecifierName(def.node);
         if (importedName === "default" && source === "@playwright/test") importedName = "test";
+        if (importedName === "default" && source === "vitest" && namespace) importedName = "*";
       }
     } else if (def.type === "Variable") {
       const declaration = def.node;
