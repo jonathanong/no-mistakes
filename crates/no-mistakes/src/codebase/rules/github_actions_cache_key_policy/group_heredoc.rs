@@ -2,7 +2,7 @@ use super::super::super::output_syntax::inline_assign;
 use super::super::{Event, Write};
 use super::emit::Pending;
 use super::stdout;
-use crate::codebase::shell_heredoc::{line_opener, trimmed_body_lines};
+use crate::codebase::command_lex::heredoc::{line_opener, trimmed_body_lines};
 use crate::fx::FxHashSet;
 
 pub(super) fn take(

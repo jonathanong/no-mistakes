@@ -1,6 +1,6 @@
 use super::commands;
 use super::Tok;
-use crate::codebase::shell_heredoc::{self, CarriageReturn, Document, Operator};
+use crate::codebase::command_lex::heredoc::{self as shell_heredoc, CarriageReturn, Document, Operator};
 
 impl<'a> Tok<'a> {
     pub(super) fn capture_backtick(&mut self) -> bool {

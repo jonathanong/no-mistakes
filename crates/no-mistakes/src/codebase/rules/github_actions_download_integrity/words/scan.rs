@@ -1,4 +1,4 @@
-use crate::codebase::shell_heredoc::Document;
+use crate::codebase::command_lex::heredoc::Document;
 use super::{flush_command, push_char, skip_arithmetic, Command, HeredocBody, Parse, Range};
 
 mod comment;

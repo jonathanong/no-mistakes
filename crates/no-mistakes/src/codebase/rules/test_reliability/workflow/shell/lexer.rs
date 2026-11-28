@@ -1,4 +1,4 @@
-use crate::codebase::shell_heredoc::{ascii_document, skip_body, CarriageReturn};
+use crate::codebase::command_lex::heredoc::{ascii_document, skip_body, CarriageReturn};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum Connector {

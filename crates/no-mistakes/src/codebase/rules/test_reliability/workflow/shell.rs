@@ -1,4 +1,4 @@
-use crate::codebase::shell_words::{split_quoted_words, Whitespace};
+use crate::codebase::command_lex::words::{split_quoted_words, Whitespace};
 
 mod lexer;
 mod words;

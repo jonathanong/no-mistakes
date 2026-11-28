@@ -1,5 +1,5 @@
 use super::{flush_command, HeredocBody, Scan};
-use crate::codebase::shell_heredoc::{self, CarriageReturn, Document, Operator};
+use crate::codebase::command_lex::heredoc::{self as shell_heredoc, CarriageReturn, Document, Operator};
 
 impl Scan<'_> {
     pub(super) fn redirection(&mut self) -> bool {

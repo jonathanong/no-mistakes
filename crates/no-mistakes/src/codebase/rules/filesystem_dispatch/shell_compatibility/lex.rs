@@ -2,7 +2,7 @@ mod nested;
 mod redirection;
 mod word;
 
-use crate::codebase::shell_heredoc::Document;
+use crate::codebase::command_lex::heredoc::Document;
 
 pub(super) use word::{assignment, identifier, Word};
 

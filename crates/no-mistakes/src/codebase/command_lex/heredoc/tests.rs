@@ -1,6 +1,6 @@
 use super::*;
 
-const EDGES: &str = include_str!("../../../fixtures/shell-heredoc/edges.sh");
+const EDGES: &str = include_str!("../../../../fixtures/shell-heredoc/edges.sh");
 
 #[test]
 fn shift_and_here_string_operators_do_not_open_documents() {
@@ -124,7 +124,7 @@ fn bare_opener_and_unterminated_body_keep_the_callers_recovery() {
 
 #[test]
 fn ascii_delimiters_keep_shell_word_and_recovery_rules() {
-    let source = include_str!("../../../fixtures/shell-heredoc/ascii-delimiters.sh");
+    let source = include_str!("../../../../fixtures/shell-heredoc/ascii-delimiters.sh");
     let mut openers = source.lines().map(|line| line.split_once(' ').unwrap().1);
     let escaped = ascii_document(openers.next().unwrap(), false).unwrap();
     assert_eq!(escaped.delimiter, "DOC");

@@ -2,7 +2,7 @@ use super::output_syntax::{
     brace_open, command_assign, inline_assign, shell_assignment, strip_subst, unquote, var_ref,
 };
 use super::text::{command_hashes_lockfile, shell_line};
-use crate::codebase::shell_heredoc::{line_opener, trimmed_body_lines};
+use crate::codebase::command_lex::heredoc::{line_opener, trimmed_body_lines};
 use crate::fx::{fx_set, FxHashSet};
 
 #[path = "group.rs"]

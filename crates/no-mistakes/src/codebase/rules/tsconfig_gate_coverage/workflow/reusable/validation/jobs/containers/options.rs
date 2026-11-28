@@ -47,9 +47,9 @@ fn unsupported_flag(token: &str, flag: &str) -> bool {
 }
 
 fn tokens(value: &str) -> Option<Vec<String>> {
-    crate::codebase::shell_words::split_quoted_words(
+    crate::codebase::command_lex::words::split_quoted_words(
         value,
-        crate::codebase::shell_words::Whitespace::Ascii,
+        crate::codebase::command_lex::words::Whitespace::Ascii,
     )
 }
 
