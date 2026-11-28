@@ -10,6 +10,7 @@ function syntacticRequire(init) {
   if (moduleName === null) return { unresolved: true };
   return { module: moduleName, kind: "namespace", typeOnly: false };
 }
+const { assignReactObjectFacts } = require("./react-node-object-facts");
 const {
   assertedType,
   bindPatternNames,
@@ -35,40 +36,6 @@ function createReactNodeFacts(program, context) {
       statement.declaration
       ? statement.declaration
       : statement;
-  }
-
-  function setChanged(previous, next) {
-    if (!previous || previous.size !== next.size) return true;
-    for (const value of next) {
-      if (!previous.has(value)) return true;
-    }
-    return false;
-  }
-
-  function heritageName(heritage) {
-    const expression = heritage && heritage.expression;
-    return expression && expression.type === "Identifier" ? expression.name : null;
-  }
-
-  function absorb(target, source, skip) {
-    if (!source) return;
-    for (const value of source) if (!skip?.has(value)) target.add(value);
-  }
-
-  function collectMembers(members) {
-    const props = new Set();
-    const unresolved = new Set();
-    const declared = new Set();
-    for (const member of members || []) {
-      if (member.type !== "TSPropertySignature") continue;
-      const name = member.computed ? literalString(member.key) : keyName(member.key);
-      if (!name) continue;
-      declared.add(name);
-      const status = reactTypeStatus(typeAnnotation(member), typeFacts());
-      if (status === "yes") props.add(name);
-      else if (status === "unresolved") unresolved.add(name);
-    }
-    return { props, unresolved, declared };
   }
 
   for (const statement of program.body || []) {
@@ -134,37 +101,13 @@ function createReactNodeFacts(program, context) {
     }
   }
 
-  let objectsChanged = true;
-  while (objectsChanged) {
-    objectsChanged = false;
-    for (const statement of program.body || []) {
-      const declaration = topLevelDeclaration(statement);
-      const literal =
-        declaration.type === "TSTypeAliasDeclaration" &&
-        declaration.typeAnnotation.type === "TSTypeLiteral";
-      if (declaration.type !== "TSInterfaceDeclaration" && !literal) continue;
-      const collected = collectMembers(
-        literal ? declaration.typeAnnotation.members : declaration.body && declaration.body.body,
-      );
-      const props = collected.props;
-      const unresolved = collected.unresolved;
-      absorb(props, objectProps.get(declaration.id.name), collected.declared);
-      absorb(unresolved, unresolvedObjectProps.get(declaration.id.name), collected.declared);
-      for (const heritage of declaration.extends || []) {
-        const inheritedName = heritageName(heritage);
-        absorb(props, objectProps.get(inheritedName), collected.declared);
-        absorb(unresolved, unresolvedObjectProps.get(inheritedName), collected.declared);
-      }
-      if (setChanged(objectProps.get(declaration.id.name), props)) {
-        objectProps.set(declaration.id.name, props);
-        objectsChanged = true;
-      }
-      if (setChanged(unresolvedObjectProps.get(declaration.id.name), unresolved)) {
-        unresolvedObjectProps.set(declaration.id.name, unresolved);
-        objectsChanged = true;
-      }
-    }
-  }
+  assignReactObjectFacts(
+    program,
+    topLevelDeclaration,
+    typeFacts(),
+    objectProps,
+    unresolvedObjectProps,
+  );
 
   return {
     aliases,

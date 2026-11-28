@@ -96,9 +96,7 @@ function createNullishState(context) {
     const alias = aliases.get(resolveVariable(identifier, context));
     const name = identifier.name;
     for (let index = scopes.length - 1; index >= 0; index -= 1) {
-      if (scopes[index].bindings.has(name) && !scopes[index][field].has(name)) {
-        return alias || null;
-      }
+      if (scopes[index].bindings.has(name) && !scopes[index][field].has(name)) return alias || null;
       const props = scopes[index][field].get(name);
       if (props) return alias ? new Set([...props, ...alias]) : props;
     }
@@ -151,6 +149,15 @@ function createNullishState(context) {
     }
   }
 
+  function noteObjectAlias(node) {
+    const alias = objectAliasProps(node);
+    const binding = resolveVariable(node.id, context);
+    if (alias?.props) objectBindings.set(binding, alias.props);
+    if (alias?.props) objectAliases.set(binding, alias.props);
+    if (alias?.unresolved) unresolvedBindings.set(binding, alias.unresolved);
+    if (alias?.unresolved) unresolvedAliases.set(binding, alias.unresolved);
+  }
+
   function defineVariable(node) {
     const scope = variableScope(node);
     const type = typeAnnotation(node.id);
@@ -161,18 +168,7 @@ function createNullishState(context) {
       if (!type && initStatus === "yes") defineNamed("reactNodes", node.id.name, scope);
       else if (!type && initStatus === "unresolved") defineUnresolved(node.id.name, scope);
       defineObjectType(node.id, type, scope);
-      if (!type) {
-        const alias = objectAliasProps(node);
-        const binding = resolveVariable(node.id, context);
-        if (alias?.props) {
-          objectAliases.set(binding, alias.props);
-          objectBindings.set(binding, alias.props);
-        }
-        if (alias?.unresolved) {
-          unresolvedAliases.set(binding, alias.unresolved);
-          unresolvedBindings.set(binding, alias.unresolved);
-        }
-      }
+      if (!type) noteObjectAlias(node);
       return;
     }
     if (node.id.type === "ArrayPattern")

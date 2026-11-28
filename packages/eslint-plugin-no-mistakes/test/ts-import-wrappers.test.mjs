@@ -187,6 +187,11 @@ describe("typescript import wrappers", () => {
         "react-no-use-promise-resolve",
       ),
       eslintCase(
+        "reassigned alias chain stays bounded",
+        "react-use-alias-chain.tsx",
+        "react-no-use-promise-resolve",
+      ),
+      eslintCase(
         "promise type query alias",
         "promise-type-query.tsx",
         "react-no-use-promise-resolve",
@@ -403,8 +408,23 @@ describe("typescript import wrappers", () => {
         "react-no-nullish-react-node",
       ),
       eslintCase(
+        "merged interfaces and nested extends",
+        "react-nullish-merged.tsx",
+        "react-no-nullish-react-node",
+      ),
+      eslintCase(
         "unresolved qualified getter terminal",
         "nullable-qualified-member.ts",
+        "server-require-nullable-fetch-wrapper",
+        {
+          getterCalleePatterns: ["^api\\.getWidget$", "^services\\.api\\.getWidget$"],
+          requiredWrapperCallee: "wrapNullable",
+          nullableReturnTypeNames: ["Widget"],
+        },
+      ),
+      eslintCase(
+        "named import member chain",
+        "nullable-named-chain.ts",
         "server-require-nullable-fetch-wrapper",
         {
           getterCalleePatterns: ["^api\\.getWidget$", "^services\\.api\\.getWidget$"],
@@ -532,8 +552,8 @@ describe("typescript import wrappers", () => {
       [22, "resolve"],
       [35, "resolve"],
       [43, "resolve"],
-      [48, "unanalyzable"],
-      [53, "unanalyzable"],
+      [48, "resolve"],
+      [53, "resolve"],
       [58, "resolve"],
       [64, "unanalyzable"],
       [76, "unanalyzable"],
@@ -545,6 +565,8 @@ describe("typescript import wrappers", () => {
       [122, "resolve"],
       [126, "resolve"],
       [132, "unanalyzable"],
+      [147, "resolve"],
+      [152, "unanalyzable"],
     ]);
     expect(
       cases.find((item) => item.name === "promise type query alias").findings.map((f) => f.line),
@@ -734,6 +756,30 @@ describe("typescript import wrappers", () => {
     ]);
     expect(
       cases
+        .find((item) => item.name === "merged interfaces and nested extends")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [14, "nullish"],
+      [24, "unanalyzable"],
+      [35, "nullish"],
+      [43, "unanalyzable"],
+      [46, "unanalyzable"],
+      [55, "nullish"],
+      [75, "nullish"],
+    ]);
+    expect(cases.find((item) => item.name === "reassigned alias chain stays bounded").findings).toEqual(
+      [],
+    );
+    expect(
+      cases
+        .find((item) => item.name === "named import member chain")
+        .findings.map((finding) => [finding.line, finding.messageId]),
+    ).toEqual([
+      [5, "wrapper"],
+      [10, "wrapper"],
+    ]);
+    expect(
+      cases
         .find((item) => item.name === "unresolved qualified getter terminal")
         .findings.map((finding) => [finding.line, finding.messageId]),
     ).toEqual([
@@ -789,6 +835,7 @@ describe("typescript import wrappers", () => {
         "react-use-wrappers.tsx",
         "react-use-unresolved.tsx",
         "react-use-bindings.tsx",
+        "react-use-alias-chain.tsx",
         "promise-type-query.tsx",
         "react-use-type-require.tsx",
         "react-use-value-require.tsx",
@@ -805,6 +852,7 @@ describe("typescript import wrappers", () => {
         "react-nullish-named-default.tsx",
         "react-nullish-let-require.tsx",
         "react-nullish-computed-props.tsx",
+        "react-nullish-merged.tsx",
       ]),
       "nullish-ignore": oxlintOn(".oxlintrc-nullish-ignore.json", ["react-nullish-unresolved.tsx"]),
       fetch: oxlintOn(".oxlintrc-fetch.json", [
@@ -844,6 +892,7 @@ describe("typescript import wrappers", () => {
       ]),
       "nullable-qualified": oxlintOn(".oxlintrc-nullable-qualified.json", [
         "nullable-qualified-member.ts",
+        "nullable-named-chain.ts",
       ]),
       "nullable-ignore": oxlintOn(".oxlintrc-nullable-ignore.json", [
         "nullable-relay-getter.ts",

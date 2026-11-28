@@ -142,3 +142,21 @@ var localMember;
 export function repeatedLocalMember() {
   return localMember(Promise.resolve(1));
 }
+let stable = use;
+export function stableLet() {
+  return stable(Promise.resolve(1));
+}
+let rewritten = use;
+rewritten = (value: unknown) => value;
+export function rewrittenLet() {
+  return rewritten(Promise.resolve(1));
+}
+export function localPromise(Promise: { resolve(value: unknown): unknown }) {
+  return use(Promise.resolve(1));
+}
+import type * as Types from "react";
+const typeKey = "use";
+const typedRead = Types[typeKey];
+export function typeOnlyDynamic() {
+  return typedRead(Promise.resolve(1));
+}

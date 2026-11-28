@@ -13,7 +13,7 @@ function namedFact(moduleName, names) {
   };
 }
 
-function memberFact(node, context, importFact, requireModule, namespaceMember, seen) {
+function memberFact(node, context, importFact, requireModule, namespaceMember, seen, memo) {
   const names = [];
   let dynamic = false;
   let current = unwrapExpression(node);
@@ -30,23 +30,27 @@ function memberFact(node, context, importFact, requireModule, namespaceMember, s
     return dynamic ? { unresolved: true } : namedFact(moduleName, names);
   }
   if (moduleName === null) return { unresolved: true };
-  const base = importFact(current, context, seen);
-  if (!base) return null;
+  const base = importFact(current, context, seen, memo);
+  if (!base || base.typeOnly) return null;
   if (dynamic || base.unresolved) return { unresolved: true };
   let fact = base;
-  let projected = false;
   for (const name of names) {
     const next = namespaceMember(fact, name);
-    if (next?.unresolved || (projected && !next)) return { unresolved: true };
+    if (next?.unresolved) return { unresolved: true };
     if (!next) {
       if (fact.kind !== "named" || !(fact.name || fact.imported)) return null;
       fact = { ...fact, name: `${fact.name || fact.imported}.${name}`, imported: name };
       continue;
     }
     fact = next;
-    projected = true;
   }
   return { ...fact, name: fact.name || names.join(".") };
 }
 
-module.exports = { memberFact };
+function rootIdentifier(node) {
+  let current = unwrapExpression(node);
+  while (current?.type === "MemberExpression") current = unwrapExpression(current.object);
+  return current?.type === "Identifier" ? current : null;
+}
+
+module.exports = { memberFact, rootIdentifier };

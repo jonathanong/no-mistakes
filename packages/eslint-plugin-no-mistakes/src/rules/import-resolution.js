@@ -1,7 +1,7 @@
 "use strict";
 
-const { unwrapExpression, unwrapSequence } = require("./async-ast");
-const { memberFact } = require("./import-member");
+const { unwrapSequence } = require("./async-ast");
+const { memberFact, rootIdentifier } = require("./import-member");
 const { literalString } = require("./logical-call");
 const { resolveVariable } = require("./async-target-bindings");
 
@@ -20,8 +20,8 @@ function isFreeRequire(node, context) {
   );
 }
 
-function requiredMember(callee, context, seen = new Set()) {
-  return memberFact(callee, context, importFact, requireModule, namespaceMember, seen);
+function requiredMember(callee, context, seen = new Set(), memo) {
+  return memberFact(callee, context, importFact, requireModule, namespaceMember, seen, memo);
 }
 
 // undefined: not a require. null: require whose module is not a static string.
@@ -104,8 +104,12 @@ function destructureFact(declarator, name, context, seen) {
   if (required === undefined) {
     const source = importFact(declarator.init, context, seen);
     if (!source) return null;
-    if (imported === undefined || source.unresolved) return { unresolved: true };
-    return namespaceMember(source, imported);
+    if (imported === undefined || source.unresolved || source.typeOnly)
+      return source.typeOnly ? null : { unresolved: true };
+    const member = namespaceMember(source, imported);
+    if (member) return member;
+    if (source.kind !== "named" || !(source.name || source.imported)) return null;
+    return { ...source, name: `${source.name || source.imported}.${imported}`, imported };
   }
   if (imported === undefined || required === null) return { unresolved: true };
   return namespaceMember({ module: required, kind: "namespace", typeOnly: false }, imported);
@@ -130,8 +134,8 @@ function defMayBeImport(def, context, seen) {
   return Boolean(variable?.defs.some((item) => defMayBeImport(item, context, seen)));
 }
 
-function reassignedFact(def, variable, context, seen) {
-  const fact = (node) => node && importFact(node, context, new Set(seen));
+function reassignedFact(def, variable, context, seen, memo) {
+  const fact = (node) => node && importFact(node, context, new Set(seen), memo);
   if (fact(def.node.init)) return { unresolved: true };
   for (const reference of variable.references ?? []) {
     if (!reference.isWrite() || reference.init) continue;
@@ -145,27 +149,32 @@ function reassignedFact(def, variable, context, seen) {
   return null;
 }
 
-function importFact(node, context, seen = new Set()) {
+function importFact(node, context, seen = new Set(), memo = new Map()) {
   const current = unwrapSequence(node);
   if (!current || !context?.sourceCode?.getScope) return null;
   const required = requireModule(current, context);
   if (required === null) return { unresolved: true };
-  if (typeof required === "string") {
+  if (typeof required === "string")
     return { module: required, kind: "namespace", imported: null, typeOnly: false };
-  }
-  const member = requiredMember(current, context, seen);
+  const member = requiredMember(current, context, seen, memo);
   if (member) return member.unresolved ? { unresolved: true } : member;
   if (current.type !== "Identifier") return null;
   const variable = resolveVariable(current, context);
   if (!variable || variable.defs.length === 0) return null;
+  if (memo.has(variable)) return memo.get(variable);
   if (seen.has(variable)) return { unresolved: true };
   seen.add(variable);
+  const result = readBinding(variable, current, context, seen, memo);
+  memo.set(variable, result);
+  return result;
+}
+
+function readBinding(variable, current, context, seen, memo) {
   if (
     variable.defs.length !== 1 &&
     !variable.defs.some((def) => defMayBeImport(def, context, new Set([current.name])))
-  ) {
+  )
     return null;
-  }
   if (variable.defs.length !== 1) return { unresolved: true };
   const def = variable.defs[0];
   const direct = factFromDef(def, current.name, context, seen);
@@ -173,18 +182,11 @@ function importFact(node, context, seen = new Set()) {
     (reference) => reference.isWrite() && !reference.init,
   );
   if (direct) return written && !direct.unresolved ? { unresolved: true } : direct;
-  const kind = def.parent?.kind;
-  if (def.type === "Variable" && def.node?.id?.type === "Identifier" && def.node.init) {
-    if (kind !== "const" && written) return reassignedFact(def, variable, context, seen);
-    return importFact(def.node.init, context, seen);
-  }
-  return null;
-}
-
-function rootIdentifier(node) {
-  let current = unwrapExpression(node);
-  while (current?.type === "MemberExpression") current = unwrapExpression(current.object);
-  return current?.type === "Identifier" ? current : null;
+  const init = def.type === "Variable" && def.node?.id?.type === "Identifier" && def.node.init;
+  if (!init) return null;
+  if (def.parent?.kind !== "const" && written)
+    return reassignedFact(def, variable, context, seen, memo);
+  return importFact(init, context, seen, memo);
 }
 
 function importSpellings(root, localPath, context) {
@@ -194,12 +196,9 @@ function importSpellings(root, localPath, context) {
   if (fact.unresolved) return { names: [], unresolved: true };
   if (fact.typeOnly) return { names: [], unresolved: false };
   if (fact.kind === "named" && fact.imported && (fact.name ?? fact.imported) !== root.name) {
+    const renamed = `${fact.name || fact.imported}${localPath.slice(root.name.length)}`;
     if (localPath === root.name) return { names: [fact.name || fact.imported], unresolved: false };
-    if (localPath.startsWith(`${root.name}.`))
-      return {
-        names: [`${fact.name || fact.imported}${localPath.slice(root.name.length)}`],
-        unresolved: false,
-      };
+    if (localPath.startsWith(`${root.name}.`)) return { names: [renamed], unresolved: false };
   }
   if (fact.kind === "namespace" && localPath.startsWith(`${root.name}.`))
     return { names: [localPath.slice(root.name.length + 1)], unresolved: false };

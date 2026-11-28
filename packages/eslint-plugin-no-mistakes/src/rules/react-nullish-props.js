@@ -42,19 +42,39 @@ function nearestNestedType(type, name) {
   return null;
 }
 
+function inheritedFacts(heritage, facts, seen) {
+  const expression = heritage?.expression;
+  if (expression?.type !== "Identifier") return null;
+  const nested = nearestNestedType(heritage, expression.name);
+  if (!nested)
+    return {
+      props: facts.objectProps.get(expression.name) || null,
+      unresolved: facts.unresolvedObjectProps?.get(expression.name) || null,
+    };
+  if (nested.type === "TSTypeAliasDeclaration")
+    return classifiedProps(nested.typeAnnotation, facts, seen);
+  return classifiedProps(
+    { type: "TSTypeReference", typeName: expression, parent: heritage },
+    facts,
+    seen,
+  );
+}
+
 function classifiedProps(type, facts, seen = new Set()) {
   if (type && type.type === "TSTypeLiteral") {
     const props = new Set();
     const unresolved = new Set();
+    const declared = new Set();
     for (const member of type.members) {
       if (member.type !== "TSPropertySignature") continue;
       const name = member.computed ? literalString(member.key) : keyName(member.key);
       if (!name) continue;
+      declared.add(name);
       const status = reactTypeStatus(typeAnnotation(member), facts);
       if (status === "yes") props.add(name);
       else if (status === "unresolved") unresolved.add(name);
     }
-    return { props, unresolved };
+    return { props, unresolved, declared };
   }
   const name = typeName(type);
   const local = name && !name.includes(".") ? nearestNestedType(type, name) : null;
@@ -65,7 +85,20 @@ function classifiedProps(type, facts, seen = new Set()) {
   }
   if (local?.type === "TSInterfaceDeclaration") {
     seen.add(local);
-    return classifiedProps({ type: "TSTypeLiteral", members: local.body?.body ?? [] }, facts, seen);
+    const own = classifiedProps(
+      { type: "TSTypeLiteral", members: local.body?.body ?? [] },
+      facts,
+      seen,
+    );
+    const props = new Set(own.props);
+    const unresolved = new Set(own.unresolved);
+    for (const heritage of local.extends || []) {
+      const inherited = inheritedFacts(heritage, facts, seen);
+      for (const key of inherited?.props || []) if (!own.declared.has(key)) props.add(key);
+      for (const key of inherited?.unresolved || [])
+        if (!own.declared.has(key) && !props.has(key)) unresolved.add(key);
+    }
+    return { props, unresolved, declared: own.declared };
   }
   return {
     props: name ? facts.objectProps.get(name) || null : null,

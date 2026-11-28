@@ -702,6 +702,91 @@
       "rule": "react-no-nullish-react-node"
     },
     {
+      "file": "react-nullish-merged.tsx",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 14,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-merged.tsx",
+          "line": 14,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 24,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-merged.tsx",
+          "line": 24,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 17,
+          "endColumn": 36,
+          "endLine": 35,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-merged.tsx",
+          "line": 35,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 43,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-merged.tsx",
+          "line": 43,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 29,
+          "endLine": 46,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-merged.tsx",
+          "line": 46,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 12,
+          "endColumn": 31,
+          "endLine": 55,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-merged.tsx",
+          "line": 55,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 19,
+          "endColumn": 34,
+          "endLine": 75,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-merged.tsx",
+          "line": 75,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        }
+      ],
+      "name": "merged interfaces and nested extends",
+      "options": null,
+      "rule": "react-no-nullish-react-node"
+    },
+    {
       "file": "react-nullish-named-default.tsx",
       "findings": [
         {
@@ -1036,8 +1121,8 @@
           "endLine": 48,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
           "line": 48,
-          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
-          "messageId": "unanalyzable",
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
           "severity": 2
         },
@@ -1047,8 +1132,8 @@
           "endLine": 53,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
           "line": 53,
-          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
-          "messageId": "unanalyzable",
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
           "severity": 2
         },
@@ -1172,9 +1257,38 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 36,
+          "endLine": 147,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 147,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 39,
+          "endLine": 152,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 152,
+          "message": "Could not resolve whether this call is React.use. Use a static import from \"react\".",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
         }
       ],
       "name": "react use binding shapes",
+      "options": null,
+      "rule": "react-no-use-promise-resolve"
+    },
+    {
+      "file": "react-use-alias-chain.tsx",
+      "findings": [],
+      "name": "reassigned alias chain stays bounded",
       "options": null,
       "rule": "react-no-use-promise-resolve"
     },
@@ -1717,6 +1831,45 @@
       "options": {
         "getterCalleePatterns": [
           "^getWidget$"
+        ],
+        "nullableReturnTypeNames": [
+          "Widget"
+        ],
+        "requiredWrapperCallee": "wrapNullable"
+      },
+      "rule": "server-require-nullable-fetch-wrapper"
+    },
+    {
+      "file": "nullable-named-chain.ts",
+      "findings": [
+        {
+          "column": 10,
+          "endColumn": 33,
+          "endLine": 5,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-named-chain.ts",
+          "line": 5,
+          "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 19,
+          "endLine": 10,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-named-chain.ts",
+          "line": 10,
+          "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        }
+      ],
+      "name": "named import member chain",
+      "options": {
+        "getterCalleePatterns": [
+          "^api\\.getWidget$",
+          "^services\\.api\\.getWidget$"
         ],
         "nullableReturnTypeNames": [
           "Widget"
@@ -2339,6 +2492,27 @@
     ],
     "nullable-qualified": [
       {
+        "file": "nullable-named-chain.ts",
+        "findings": [
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-named-chain.ts",
+            "line": 5,
+            "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-named-chain.ts",
+            "line": 10,
+            "message": "Wrap nullable entity fetch 'api.getWidget' in wrapNullable so missing entities map to null consistently."
+          }
+        ],
+        "name": "nullable-named-chain.ts",
+        "options": null
+      },
+      {
         "file": "nullable-qualified-member.ts",
         "findings": [
           {
@@ -2951,6 +3125,62 @@
         "options": null
       },
       {
+        "file": "react-nullish-merged.tsx",
+        "findings": [
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-merged.tsx",
+            "line": 14,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-merged.tsx",
+            "line": 24,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 17,
+            "file": "react-nullish-merged.tsx",
+            "line": 35,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-merged.tsx",
+            "line": 43,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-merged.tsx",
+            "line": 46,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 12,
+            "file": "react-nullish-merged.tsx",
+            "line": 55,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 19,
+            "file": "react-nullish-merged.tsx",
+            "line": 75,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          }
+        ],
+        "name": "react-nullish-merged.tsx",
+        "options": null
+      },
+      {
         "file": "react-nullish-named-default.tsx",
         "findings": [
           {
@@ -3108,6 +3338,12 @@
         "options": null
       },
       {
+        "file": "react-use-alias-chain.tsx",
+        "findings": [],
+        "name": "react-use-alias-chain.tsx",
+        "options": null
+      },
+      {
         "file": "react-use-bindings.tsx",
         "findings": [
           {
@@ -3150,14 +3386,14 @@
             "column": 10,
             "file": "react-use-bindings.tsx",
             "line": 48,
-            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
           },
           {
             "code": "no-mistakes(react-no-use-promise-resolve)",
             "column": 10,
             "file": "react-use-bindings.tsx",
             "line": 53,
-            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
           },
           {
             "code": "no-mistakes(react-no-use-promise-resolve)",
@@ -3234,6 +3470,20 @@
             "column": 10,
             "file": "react-use-bindings.tsx",
             "line": 132,
+            "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 147,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 152,
             "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
           }
         ],

@@ -84,7 +84,12 @@ function reactUseStatus(node, context, useNames, seen = new Set()) {
     const fact = importFact(callee, context);
     if (namedUse(fact)) {
       const kind = valueKind(callee, context);
-      return kind === "let" || kind === "var" ? "unresolved" : "yes";
+      if (kind !== "let" && kind !== "var") return "yes";
+      const variable = resolveVariable(callee, context);
+      const written = variable?.references?.some(
+        (reference) => reference.isWrite() && !reference.init,
+      );
+      return written ? "unresolved" : "yes";
     }
     if (fact?.unresolved) return "unresolved";
     if (fact) return "no";
@@ -125,7 +130,7 @@ function isReactUse(node, context, useNames, seen = new Set()) {
   return reactUseStatus(node, context, useNames, seen) === "yes";
 }
 
-function isPromiseResolve(node) {
+function isPromiseResolve(node, context) {
   const current = unwrapSequence(node);
   if (current?.type !== "CallExpression") return false;
   let callee = unwrapSequence(current.callee);
@@ -136,12 +141,17 @@ function isPromiseResolve(node) {
     callee = unwrapSequence(callee.object);
   }
   const object = unwrapSequence(callee?.object);
-  return (
-    callee?.type === "MemberExpression" &&
-    object?.type === "Identifier" &&
-    object.name === "Promise" &&
-    staticName(callee.property, callee.computed) === "resolve"
-  );
+  if (
+    callee?.type !== "MemberExpression" ||
+    object?.type !== "Identifier" ||
+    object.name !== "Promise" ||
+    staticName(callee.property, callee.computed) !== "resolve"
+  ) {
+    return false;
+  }
+  if (!context?.sourceCode?.getScope) return true;
+  const binding = resolveVariable(object, context);
+  return Boolean(binding && binding.defs.length === 0 && binding.scope.type === "global");
 }
 
 function isAliasedPromiseResolve(node, context) {
@@ -167,14 +177,8 @@ function isAliasedPromiseResolve(node, context) {
 
 function ordinaryUseCall(node, context) {
   const current = unwrapSequence(node);
-  if (
-    !current ||
-    current.optional ||
-    current.arguments.length !== 1 ||
-    current.arguments[0].type === "SpreadElement"
-  ) {
-    return false;
-  }
+  if (!current || current.optional || current.arguments.length !== 1) return false;
+  if (current.arguments[0].type === "SpreadElement") return false;
   const callee = unwrapSequence(current.callee);
   return (
     callee?.type === "Identifier" ||
