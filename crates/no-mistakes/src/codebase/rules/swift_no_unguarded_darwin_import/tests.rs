@@ -14,8 +14,8 @@ fn swift_darwin_imports_report_unreadable_selected_sources() {
             .join("../../test-cases/rules/swift-no-unguarded-darwin-import"),
     );
     let root = fixture.join("fixture");
-    let config = crate::config::v2::load_v2_config(&root, Some(&fixture.join("configs/check.yml")))
-        .unwrap();
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&fixture.join("configs/check.yml"))).unwrap();
     let files = [
         root.join("Package.swift"),
         root.join("Tests/ClockTests.swift"),
@@ -72,7 +72,10 @@ fn condition_parser_handles_apple_conjunctions_disjunctions_and_negations() {
         parse_condition(" canImport(Darwin) || canImport(Security)\n"),
         Proof::None
     );
-    assert_eq!(parse_condition(" canImport(Darwin) || DEBUG\n"), Proof::None);
+    assert_eq!(
+        parse_condition(" canImport(Darwin) || DEBUG\n"),
+        Proof::None
+    );
     assert_eq!(
         parse_condition(" !(os(iOS) && !targetEnvironment(macCatalyst))\n"),
         Proof::None
@@ -80,7 +83,10 @@ fn condition_parser_handles_apple_conjunctions_disjunctions_and_negations() {
     assert_eq!(parse_condition(" os(iOS) &&\n"), Proof::None);
     assert_eq!(parse_condition(" os(iOS) extra\n"), Proof::None);
     assert_eq!(parse_condition(" canImport(123)\n"), Proof::None);
-    assert_eq!(parse_condition(" canImport(Security, _version: 1)\n"), Proof::Modules(vec!["Security"]));
+    assert_eq!(
+        parse_condition(" canImport(Security, _version: 1)\n"),
+        Proof::Modules(vec!["Security"])
+    );
     assert_eq!(parse_condition(" `DEBUG`\n"), Proof::None);
     assert_eq!(parse_condition(" (os(iOS)\n"), Proof::None);
     assert_eq!(parse_condition(" 123\n"), Proof::None);
