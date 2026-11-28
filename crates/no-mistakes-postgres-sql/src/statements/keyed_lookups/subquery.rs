@@ -1,7 +1,7 @@
 use super::expr_norm::ExprNormalizer;
 use super::function_clauses::{
     coalesce_arguments, filter_skips_inputs, is_eager, literal_condition, split_coalesce_arguments,
-    visit_eager_functions, visit_function_inputs,
+    visit_eager_functions, visit_function_inputs, visit_ordered_set_arguments,
 };
 use super::join::record_lookup;
 use super::normalize::LookupKey;
@@ -78,10 +78,16 @@ fn inspect(
         }
         Expr::Function(function) if skip_eager && is_eager(function) => {}
         Expr::Function(function) => {
+            if function.over.is_some() && targets.skips_window_call(expr) {
+                return;
+            }
             if let Some(arguments) = coalesce_arguments(function) {
                 inspect_coalesce(expr, arguments, outer, targets, seen, out, skip_eager);
                 return;
             }
+            visit_ordered_set_arguments(function, &mut |expr| {
+                inspect(expr, outer, targets, seen, out, skip_eager);
+            });
             let input_scope = targets.function_input_scope(function, outer);
             if let Some(filter) = &function.filter {
                 inspect(filter, input_scope, targets, seen, out, skip_eager);

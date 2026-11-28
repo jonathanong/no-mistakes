@@ -1,16 +1,19 @@
 use super::select_exprs::identity::written_window_identity;
 use super::select_item_expr;
-use crate::fx::FxHashMap;
+use crate::fx::{FxHashMap, FxHashSet};
 use crate::idents::ident_key;
 use sqlparser::ast::{
-    Distinct, Expr, Function, FunctionArguments, NamedWindowExpr, Query, Select, Visit, Visitor,
-    WindowFrameBound, WindowSpec, WindowType,
+    Distinct, Expr, Function, FunctionArguments, NamedWindowExpr, Select, Spanned, Visit,
+    WindowFrameBound, WindowSpec,
 };
+use sqlparser::tokenizer::Location;
 use std::cell::RefCell;
-use std::ops::ControlFlow;
+mod references;
+use references::WindowReferences;
 
 pub(super) struct WindowPlan {
     named: FxHashMap<String, bool>,
+    inactive: FxHashSet<Location>,
     inline: RefCell<FxHashMap<WindowSpec, Option<bool>>>,
 }
 
@@ -61,6 +64,7 @@ impl WindowPlan {
         }
         Self {
             named: references.named,
+            inactive: references.inactive,
             inline: RefCell::new(references.inline),
         }
     }
@@ -80,6 +84,10 @@ impl WindowPlan {
                 Some((spec, *needs_frame))
             })
             .flat_map(|(spec, needs_frame)| window_expressions(spec, needs_frame))
+    }
+
+    pub(super) fn skips_call(&self, expr: &Expr) -> bool {
+        self.inactive.contains(&expr.span().start)
     }
 
     pub(super) fn take_inline_frame(&self, spec: &WindowSpec) -> Option<bool> {
@@ -130,54 +138,4 @@ fn needs_original_frame(function: &Function) -> bool {
             .as_ident()
             .is_some_and(|name| ident_key(name) == "row_number")
         && matches!(&function.args, FunctionArguments::List(args) if args.args.is_empty()))
-}
-
-#[derive(Default)]
-struct WindowReferences {
-    depth: usize,
-    named: FxHashMap<String, bool>,
-    inline: FxHashMap<WindowSpec, Option<bool>>,
-}
-
-impl Visitor for WindowReferences {
-    type Break = ();
-
-    fn pre_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
-        self.depth += 1;
-        ControlFlow::Continue(())
-    }
-
-    fn post_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
-        self.depth -= 1;
-        ControlFlow::Continue(())
-    }
-
-    fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
-        if self.depth == 0 {
-            if let Expr::Function(function) = expr {
-                match &function.over {
-                    Some(WindowType::NamedWindow(name)) => {
-                        *self.named.entry(ident_key(name)).or_default() |=
-                            needs_original_frame(function);
-                    }
-                    Some(WindowType::WindowSpec(spec)) => {
-                        if let Some(name) = &spec.window_name {
-                            self.named.entry(ident_key(name)).or_default();
-                        }
-                        if spec.window_frame.is_some() {
-                            let needs_frame = self
-                                .inline
-                                .entry(written_window_identity(spec))
-                                .or_default();
-                            *needs_frame = Some(
-                                needs_frame.unwrap_or_default() || needs_original_frame(function),
-                            );
-                        }
-                    }
-                    None => {}
-                }
-            }
-        }
-        ControlFlow::Continue(())
-    }
 }

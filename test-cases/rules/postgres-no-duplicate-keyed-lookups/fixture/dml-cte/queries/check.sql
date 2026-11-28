@@ -52,3 +52,11 @@ RETURNING
     (SELECT a.name FROM accounts a WHERE a.id = OLD.account_id),
     (SELECT b.email FROM accounts b WHERE b.id = OLD.account_id),
     (SELECT c.phone FROM accounts c WHERE c.id = NEW.account_id);
+
+MERGE INTO orders o USING incoming s ON o.id = s.id
+WHEN MATCHED AND FALSE THEN UPDATE SET
+    account_name = (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+    account_tier = (SELECT b.tier FROM accounts b WHERE b.id = o.account_id)
+WHEN MATCHED AND NULL THEN UPDATE SET
+    account_name = (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+    account_tier = (SELECT b.tier FROM accounts b WHERE b.id = o.account_id);

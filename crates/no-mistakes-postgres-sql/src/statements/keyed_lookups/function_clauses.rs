@@ -1,9 +1,12 @@
+mod eager;
+
 use super::select_exprs::target_identity;
 use crate::fx::FxHashSet;
 use crate::idents::{function_arg_expr, ident_key, unwrap_expr, visit_shallow_exprs};
+pub(super) use eager::visit_eager_functions;
 use sqlparser::ast::{
-    DuplicateTreatment, Expr, Function, FunctionArg, FunctionArgumentClause, FunctionArguments,
-    Value,
+    CaseWhen, DuplicateTreatment, Expr, Function, FunctionArg, FunctionArgumentClause,
+    FunctionArguments, Value,
 };
 
 pub(super) fn coalesce_arguments(function: &Function) -> Option<&[FunctionArg]> {
@@ -25,17 +28,23 @@ pub(super) fn coalesce_arguments(function: &Function) -> Option<&[FunctionArg]> 
 
 pub(super) fn visit_function_inputs(function: &Function, visit: &mut impl FnMut(&Expr)) {
     visit_arguments(&function.parameters, usize::MAX, visit);
+    if filter_skips_inputs(function) {
+        return;
+    }
     let argument_limit = if has_optional_window_default(function) {
         2
     } else {
         usize::MAX
     };
-    let skips_inputs = filter_skips_inputs(function);
-    if !skips_inputs || !function.within_group.is_empty() {
+    if function.within_group.is_empty() {
         visit_arguments(&function.args, argument_limit, visit);
     }
-    if !skips_inputs {
-        visit_shallow_exprs(&function.within_group, visit);
+    visit_shallow_exprs(&function.within_group, visit);
+}
+
+pub(super) fn visit_ordered_set_arguments(function: &Function, visit: &mut impl FnMut(&Expr)) {
+    if !function.within_group.is_empty() {
+        visit_arguments(&function.args, usize::MAX, visit);
     }
 }
 
@@ -64,7 +73,24 @@ pub(super) fn filter_skips_inputs(function: &Function) -> bool {
     function.filter.as_deref().and_then(literal_condition) == Some(false)
 }
 
-fn has_optional_window_default(function: &Function) -> bool {
+pub(super) fn visit_case_children(
+    conditions: &[CaseWhen],
+    else_result: Option<&Expr>,
+    mut visit: impl FnMut(&Expr, bool),
+) {
+    let mut reachable = true;
+    for branch in conditions {
+        let condition = literal_condition(&branch.condition);
+        visit(&branch.condition, reachable);
+        visit(&branch.result, reachable && condition != Some(false));
+        reachable &= condition != Some(true);
+    }
+    if let Some(else_result) = else_result {
+        visit(else_result, reachable);
+    }
+}
+
+pub(super) fn has_optional_window_default(function: &Function) -> bool {
     function.over.is_some()
         && match function.name.0.as_slice() {
             [name] => name.as_ident(),
@@ -151,47 +177,4 @@ pub(super) fn is_eager(function: &sqlparser::ast::Function) -> bool {
                     | "jsonb_agg"
             )
         })
-}
-
-pub(super) fn visit_eager_functions(expr: &Expr, visit: &mut impl FnMut(&Expr)) {
-    use sqlparser::ast::{Query, Visit, Visitor};
-    use std::ops::ControlFlow;
-
-    struct EagerFunctions<'a, F> {
-        visit: &'a mut F,
-        depth: usize,
-    }
-
-    impl<F: FnMut(&Expr)> Visitor for EagerFunctions<'_, F> {
-        type Break = ();
-
-        fn pre_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
-            self.depth += 1;
-            ControlFlow::Continue(())
-        }
-
-        fn post_visit_query(&mut self, _: &Query) -> ControlFlow<()> {
-            self.depth -= 1;
-            ControlFlow::Continue(())
-        }
-
-        fn pre_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
-            if matches!(expr, Expr::Function(function) if is_eager(function)) {
-                if self.depth == 0 {
-                    (self.visit)(expr);
-                }
-                self.depth += 1;
-            }
-            ControlFlow::Continue(())
-        }
-
-        fn post_visit_expr(&mut self, expr: &Expr) -> ControlFlow<()> {
-            if matches!(expr, Expr::Function(function) if is_eager(function)) {
-                self.depth -= 1;
-            }
-            ControlFlow::Continue(())
-        }
-    }
-
-    let _ = expr.visit(&mut EagerFunctions { visit, depth: 0 });
 }

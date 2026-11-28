@@ -262,3 +262,39 @@ SELECT CASE WHEN TRUE THEN 0 ELSE pg_catalog.sum((
          + (SELECT b.n FROM accounts b WHERE b.id = o.id)
 )) END
 FROM orders o;
+
+SELECT pg_catalog.percentile_cont(
+    (SELECT a.fraction FROM accounts a WHERE a.id = o.account_id)
+) WITHIN GROUP (ORDER BY o.amount)
+FROM orders o
+GROUP BY (SELECT a.fraction FROM accounts a WHERE a.id = o.account_id);
+
+SELECT pg_catalog.percentile_cont(0.5) WITHIN GROUP (ORDER BY
+    (SELECT a.amount FROM accounts a WHERE a.id = o.account_id)
+)
+FROM orders o
+GROUP BY (SELECT a.amount FROM accounts a WHERE a.id = o.account_id);
+
+SELECT x.*
+FROM orders o
+CROSS JOIN XMLTABLE(
+    XMLNAMESPACES(
+        (SELECT a.uri FROM documents a WHERE a.id = o.document_id) AS p,
+        (SELECT b.uri FROM documents b WHERE b.id = o.document_id) AS q
+    ),
+    '/r' PASSING '<r/>'::xml
+    COLUMNS id integer PATH '@id'
+) AS x;
+
+SELECT pg_catalog.corr(
+    (SELECT a.n FROM accounts a WHERE a.id = o.id),
+    (SELECT b.n FROM accounts b WHERE b.id = o.id)
+) FILTER (WHERE FALSE)
+FROM orders o;
+
+SELECT
+    (SELECT a.n FROM accounts a WHERE a.id = o.id LIMIT 0),
+    (SELECT b.n FROM accounts b WHERE b.id = o.id LIMIT (0)),
+    (SELECT c.n FROM accounts c WHERE c.id = o.id LIMIT 1),
+    (SELECT d.n FROM accounts d WHERE d.id = o.id LIMIT 1)
+FROM orders o;

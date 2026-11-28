@@ -67,6 +67,8 @@ The rule stays silent when the lookups are not proven to read the same row:
   inputs still follow their separate evaluation rules.
 - Results of searched `CASE` branches with literal false or null conditions,
   and branches after a literal true condition.
+- Window calls eliminated by literal `CASE` or `COALESCE` short-circuiting,
+  unreachable `MERGE` actions, and scalar lookups with a literal `LIMIT 0`.
 - Volatile key expressions (UUID generators such as `gen_random_uuid()`,
   `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined
   or unrecognized functions in keys or scalar projections, unresolved table
@@ -94,7 +96,8 @@ bounds when all calls sharing the window are
 also reuse an argument in its ordering clause. The
 rule counts an identical reused expression once. A matching grouping
 expression is also reused in projections, `HAVING`, `ORDER BY`, and window
-function arguments. Ordinary aggregate inputs are evaluated before grouping.
+function arguments and ordered-set direct arguments. Ordinary aggregate inputs
+and the ordered inputs in `WITHIN GROUP` are evaluated before grouping.
 Grouping sets can replace omitted keys with nulls, so the rule distinguishes
 lookups that use a source row from those that use grouped values.
 

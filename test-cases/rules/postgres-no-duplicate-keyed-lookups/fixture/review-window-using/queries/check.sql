@@ -160,3 +160,46 @@ SELECT (
     LIMIT 1
 )
 FROM orders o;
+
+SELECT pg_catalog.lag(o.n, 0, (
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+)) OVER (ORDER BY o.id)
+FROM orders o;
+
+SELECT pg_catalog.lag((
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+), 0, 0) OVER (ORDER BY o.id)
+FROM orders o;
+
+SELECT CASE WHEN FALSE THEN pg_catalog.row_number() OVER w ELSE 0 END
+FROM orders o
+WINDOW w AS (
+    PARTITION BY
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id),
+        (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+);
+
+SELECT CASE WHEN TRUE THEN 0 ELSE pg_catalog.row_number() OVER (
+    PARTITION BY
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id),
+        (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+) END
+FROM orders o;
+
+SELECT CASE WHEN o.enabled THEN pg_catalog.row_number() OVER w ELSE 0 END
+FROM orders o
+WINDOW w AS (
+    PARTITION BY
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id),
+        (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+);
+
+SELECT COALESCE(0, pg_catalog.row_number() OVER w)
+FROM orders o
+WINDOW w AS (
+    PARTITION BY
+        (SELECT a.n FROM accounts a WHERE a.id = o.account_id),
+        (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+);

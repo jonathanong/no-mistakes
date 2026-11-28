@@ -56,12 +56,16 @@ pub(super) fn register_factor(
             ))
         }
         TableFactor::XmlTable {
+            namespaces,
             row_expression,
             passing,
             alias,
             ..
         } => {
-            let inputs = std::iter::once(row_expression)
+            let inputs = namespaces
+                .iter()
+                .map(|namespace| &namespace.uri)
+                .chain(std::iter::once(row_expression))
                 .chain(passing.arguments.iter().map(|argument| &argument.expr));
             inspect_exprs(inputs, scopes, seen, out);
             Some(register_table_function_alias(

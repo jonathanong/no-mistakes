@@ -1,6 +1,7 @@
 use super::function_clauses::{
-    coalesce_arguments, filter_skips_inputs, literal_condition, split_coalesce_arguments,
-    visit_eager_functions, visit_function_inputs,
+    coalesce_arguments, filter_skips_inputs, has_optional_window_default, literal_condition,
+    split_coalesce_arguments, visit_case_children, visit_eager_functions, visit_function_inputs,
+    visit_ordered_set_arguments,
 };
 use super::{walk_query, ScopeStack};
 use crate::idents::function_arg_expr;
@@ -31,9 +32,14 @@ struct Nested<'a> {
 impl Nested<'_> {
     fn walk_conditional_children(&mut self, expr: &Expr) {
         match expr {
-            Expr::Function(function) if filter_skips_inputs(function) => {
+            Expr::Function(function)
+                if filter_skips_inputs(function) || has_optional_window_default(function) =>
+            {
                 self.blocked_expression_depth = 1;
                 walk_nested_queries(&function.filter, self.scopes, self.out);
+                visit_ordered_set_arguments(function, &mut |arg| {
+                    walk_nested_queries(arg, self.scopes, self.out)
+                });
                 visit_function_inputs(function, &mut |arg| {
                     walk_nested_queries(arg, self.scopes, self.out)
                 });
@@ -63,19 +69,9 @@ impl Nested<'_> {
                 .any(|branch| literal_condition(&branch.condition).is_some()) =>
             {
                 self.blocked_expression_depth = 1;
-                let mut reachable = true;
-                for branch in conditions {
-                    let condition = literal_condition(&branch.condition);
-                    self.walk_conditional_child(&branch.condition, reachable);
-                    self.walk_conditional_child(
-                        &branch.result,
-                        reachable && condition != Some(false),
-                    );
-                    reachable &= condition != Some(true);
-                }
-                if let Some(else_result) = else_result {
-                    self.walk_conditional_child(else_result, reachable);
-                }
+                visit_case_children(conditions, else_result.as_deref(), |expr, reachable| {
+                    self.walk_conditional_child(expr, reachable);
+                });
             }
             _ => {}
         }
@@ -91,7 +87,9 @@ impl Nested<'_> {
 
     fn walk_eager_children(&mut self, skipped: &Expr) {
         visit_eager_functions(skipped, &mut |eager| {
-            walk_nested_queries(eager, self.scopes, self.out);
+            if !matches!(eager, Expr::Function(function) if function.over.is_some()) {
+                walk_nested_queries(eager, self.scopes, self.out);
+            }
         });
     }
 }

@@ -1,3 +1,4 @@
+use super::function_clauses::literal_condition;
 use super::join::{register_table_factor, register_table_with_joins};
 use super::scope::ScopeStack;
 use super::{inspect_exprs, returning_exprs};
@@ -123,6 +124,9 @@ pub(super) fn walk_merge(
     inspect_exprs(std::iter::once(&*merge.on), scopes, &mut base_seen, out);
     let mut category_seen = BTreeMap::new();
     for clause in &merge.clauses {
+        if clause.predicate.as_ref().and_then(literal_condition) == Some(false) {
+            continue;
+        }
         let category = match clause.clause_kind {
             MergeClauseKind::NotMatchedByTarget => MergeClauseKind::NotMatched,
             kind => kind,

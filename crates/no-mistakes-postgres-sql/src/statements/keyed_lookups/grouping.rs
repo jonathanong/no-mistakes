@@ -135,9 +135,13 @@ impl VisitorMut for GroupedExpressions<'_> {
         {
             *expr = Expr::Value(Value::Null.with_empty_span());
         }
-        if matches!(expr, Expr::Function(function) if function.over.is_none() && is_eager(function))
-        {
-            self.depth += 1;
+        if let Expr::Function(function) = expr {
+            if function.over.is_none() && is_eager(function) {
+                if self.depth == 0 && !function.within_group.is_empty() {
+                    let _ = function.args.visit(self);
+                }
+                self.depth += 1;
+            }
         }
         ControlFlow::Continue(())
     }

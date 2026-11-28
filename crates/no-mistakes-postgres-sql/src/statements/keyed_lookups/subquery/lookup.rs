@@ -3,10 +3,10 @@ use super::super::expr_norm::ExprNormalizer;
 use super::super::normalize::{extract_lookup_key, LookupKey};
 use super::super::scope::ScopeSnapshot;
 use super::super::table::lookup_table;
-use crate::idents::{ident_key, object_name_identity, relation_suffix_name};
+use crate::idents::{ident_key, object_name_identity, relation_suffix_name, unwrap_expr};
 use sqlparser::ast::{
-    Distinct, Expr, GroupByExpr, LimitClause, OrderByKind, Query, Select, SetExpr, Spanned, Visit,
-    Visitor,
+    Distinct, Expr, GroupByExpr, LimitClause, OrderByKind, Query, Select, SetExpr, Spanned, Value,
+    Visit, Visitor,
 };
 use std::ops::ControlFlow;
 
@@ -74,9 +74,16 @@ fn normalize_limit(limit: Option<&LimitClause>, outer: &ScopeSnapshot) -> Option
             limit: Some(expr),
             offset: None,
             ..
-        }) => Some(Some(
-            ExprNormalizer::new(None, false, outer).normalize(expr)?,
-        )),
+        }) => {
+            if matches!(unwrap_expr(expr), Expr::Value(value)
+                if matches!(&value.value, Value::Number(number, _) if number.parse::<i64>() == Ok(0)))
+            {
+                return None;
+            }
+            Some(Some(
+                ExprNormalizer::new(None, false, outer).normalize(expr)?,
+            ))
+        }
         _ => None,
     }
 }

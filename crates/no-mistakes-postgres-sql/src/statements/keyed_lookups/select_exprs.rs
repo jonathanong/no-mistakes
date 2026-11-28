@@ -51,6 +51,10 @@ impl SelectTargets<'_> {
         self.filtered.borrow_mut().insert(filter, history);
     }
 
+    pub(super) fn skips_window_call(&self, expr: &Expr) -> bool {
+        self.windows.is_some_and(|windows| windows.skips_call(expr))
+    }
+
     pub(super) fn take_inline_frame(&self, spec: &WindowSpec) -> Option<bool> {
         self.windows
             .map_or(Some(true), |windows| windows.take_inline_frame(spec))
