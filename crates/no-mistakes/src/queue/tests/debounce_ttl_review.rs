@@ -39,13 +39,22 @@ fn review_cases_find_known_ttl_and_abstain_when_unknown() {
         "bulk-as",
         "bulk-rest",
         "flow-as",
+        "null-spread",
+        "bulk-push",
+        "flow-child",
     ] {
         assert!(
             findings.iter().any(|line| line.contains(marker)),
             "{marker} should be a finding, findings={findings:?} abstained={abstained:?}"
         );
     }
-    for marker in ["alias-absent", "bulk-clean", "\"plain\"", "void-ttl"] {
+    for marker in [
+        "alias-absent",
+        "bulk-clean",
+        "\"plain\"",
+        "void-ttl",
+        "mysteryChild",
+    ] {
         assert!(
             findings.iter().all(|line| !line.contains(marker))
                 && abstained.iter().all(|line| !line.contains(marker)),
@@ -61,6 +70,9 @@ fn review_cases_find_known_ttl_and_abstain_when_unknown() {
         "call-ttl",
         "computed-key",
         "bulk-spread-rest",
+        "spread-bomb",
+        "mutableJobs",
+        "spread-queue",
     ] {
         assert!(
             abstained.iter().any(|line| line.contains(marker)),

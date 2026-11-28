@@ -16,12 +16,19 @@ pub(in crate::queue) fn extract_member_from_expr<'ast, 'borrow>(
     key: &str,
     bindings: &'borrow ObjectBindings<'ast>,
     active: &mut FxHashSet<u32>,
+    budget: &mut u16,
 ) -> MemberLookup<'ast, 'borrow>
 where
     'ast: 'borrow,
 {
+    if *budget == 0 {
+        return MemberLookup::Unknown;
+    }
+    *budget -= 1;
     match expr.get_inner_expression() {
-        Expression::ObjectExpression(object) => extract_member(object, key, bindings, active),
+        Expression::ObjectExpression(object) => {
+            extract_member(object, key, bindings, active, budget)
+        }
         Expression::Identifier(id) => {
             let Some(binding) = bindings.lookup(id.name.as_str(), at) else {
                 return MemberLookup::Unknown;
@@ -32,7 +39,8 @@ where
             if !active.insert(binding.resolve_at) {
                 return MemberLookup::Unknown;
             }
-            let found = extract_member_from_expr(value, binding.resolve_at, key, bindings, active);
+            let found =
+                extract_member_from_expr(value, binding.resolve_at, key, bindings, active, budget);
             active.remove(&binding.resolve_at);
             found
         }
@@ -45,6 +53,7 @@ pub(in crate::queue) fn extract_member<'ast, 'borrow>(
     key: &str,
     bindings: &'borrow ObjectBindings<'ast>,
     active: &mut FxHashSet<u32>,
+    budget: &mut u16,
 ) -> MemberLookup<'ast, 'borrow>
 where
     'ast: 'borrow,
@@ -69,12 +78,14 @@ where
                     key,
                     bindings,
                     active,
+                    budget,
                 ) {
                     MemberLookup::Found(value) => {
                         found = Some(value);
                         unknown = false;
                     }
                     MemberLookup::Absent => {}
+                    MemberLookup::Unknown if *budget == 0 => return MemberLookup::Unknown,
                     MemberLookup::Unknown => unknown = true,
                 }
             }

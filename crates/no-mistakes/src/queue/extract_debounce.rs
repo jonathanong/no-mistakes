@@ -74,6 +74,7 @@ pub(in crate::queue) fn check_queue_options<'a>(
             "defaultJobOptions",
             &visitor.object_bindings,
             &mut FxHashSet::default(),
+            &mut 32,
         );
         member_verdict(visitor, lookup)
     };
@@ -94,6 +95,7 @@ fn check_opts_member<'a>(
             "opts",
             &visitor.object_bindings,
             &mut FxHashSet::default(),
+            &mut 32,
         );
         member_verdict(visitor, lookup)
     };

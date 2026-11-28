@@ -16,6 +16,20 @@ declare const ttlSource: { ttl: number };
 declare function getQueueOptions(): object;
 declare function readTtl(): number;
 declare function selectKey(): string;
+declare const queueOptions: object[];
+declare const mysteryChild: { name: string };
+const d0 = { mode: "debounce", ttl: 1000 };
+const d1 = { ...d0, ...d0 };
+const d2 = { ...d1, ...d1 };
+const d3 = { ...d2, ...d2 };
+const d4 = { ...d3, ...d3 };
+const d5 = { ...d4, ...d4 };
+const d6 = { ...d5, ...d5 };
+const mutableJobs = [
+  { name: "bulk-push", data: {}, opts: { deduplication: { id: "p", mode: "debounce", ttl: 9 } } },
+];
+mutableJobs.push({ name: "later-job", data: {}, opts: {} });
+const flowChild = { name: "flow-child", queueName: "events", data: {}, opts: { deduplication: { id: "fc", mode: "debounce", ttl: 100 } } };
 
 function scopeMarker(): never {
   throw new Error("scope");
@@ -73,4 +87,18 @@ export async function cases(): Promise<void> {
     ...dynamicJobs,
     { name: "bulk-rest", data: {}, opts: { deduplication: { id: "br", mode: "debounce", ttl: 3 } } },
   ]);
+  await queue.add("null-spread", {}, {
+    deduplication: { id: "ns", mode: "debounce", ttl: 1000, ...null },
+  });
+  await queue.add("spread-bomb", {}, { deduplication: { id: "sb", ...d6 } });
+  await queue.addBulk(mutableJobs);
+  const spreadQueue = new Queue("spread-queue", ...queueOptions);
+  void spreadQueue;
+  await flow.add({
+    name: "parent-id",
+    queueName: "events",
+    data: {},
+    opts: {},
+    children: [flowChild, mysteryChild],
+  });
 }

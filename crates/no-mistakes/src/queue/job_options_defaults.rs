@@ -86,6 +86,12 @@ fn note_options_argument<'a>(
 ) {
     let Some(expr) = arg.as_expression() else {
         recorded.evidence = JobOptionEvidence::open();
+        crate::queue::extract_debounce::emit_verdict(
+            visitor,
+            crate::queue::extract_debounce::DebounceTtlVerdict::Abstain,
+            line,
+            None,
+        );
         return;
     };
     if !matches!(expr.get_inner_expression(), Expression::StringLiteral(_)) {

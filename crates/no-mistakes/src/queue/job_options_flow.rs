@@ -172,6 +172,17 @@ fn note_children<'a>(
             .map(Expression::get_inner_expression)
         {
             note_flow_node(visitor, object, active);
+        } else if let Some(object) = element.as_expression().and_then(|expr| {
+            let Expression::Identifier(id) = expr.get_inner_expression() else {
+                return None;
+            };
+            let value = visitor
+                .object_bindings
+                .lookup(id.name.as_str(), id.span.start)?
+                .value()?;
+            members::bound_object(value, &visitor.object_bindings, 0)
+        }) {
+            note_flow_node(visitor, object, active);
         } else {
             push_site(
                 visitor,

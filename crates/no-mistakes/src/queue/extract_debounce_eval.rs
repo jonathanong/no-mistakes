@@ -3,9 +3,11 @@ use super::DebounceTtlVerdict;
 use crate::fx::FxHashSet;
 use crate::queue::extract_helpers::literal_expr;
 use crate::queue::extract_visitor::QueueVisitor;
-use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind, UnaryOperator};
+use oxc_ast::ast::{Expression, UnaryOperator};
 use oxc_span::GetSpan;
 
+#[path = "extract_debounce_eval_fold.rs"]
+mod fold;
 #[path = "extract_debounce_eval_ttl.rs"]
 mod ttl;
 
@@ -30,7 +32,14 @@ pub(super) fn eval_options<'a>(
     at: u32,
     active: &mut FxHashSet<u32>,
 ) -> DebounceTtlVerdict {
-    match extract_member_from_expr(expr, at, "deduplication", &visitor.object_bindings, active) {
+    match extract_member_from_expr(
+        expr,
+        at,
+        "deduplication",
+        &visitor.object_bindings,
+        active,
+        &mut 32,
+    ) {
         super::members::MemberLookup::Absent => DebounceTtlVerdict::Clean,
         super::members::MemberLookup::Unknown => DebounceTtlVerdict::Abstain,
         super::members::MemberLookup::Found(dedup) => eval_dedup_expr(
@@ -56,7 +65,8 @@ pub(super) fn eval_dedup_expr(
         Expression::ObjectExpression(object) => {
             let mut mode = ModeState::Absent;
             let mut ttl = TtlState::Absent;
-            fold_dedup_object(visitor, object, &mut mode, &mut ttl, active);
+            let mut budget = 32u16;
+            fold::fold_dedup_object(visitor, object, &mut mode, &mut ttl, active, &mut budget);
             verdict(mode, ttl)
         }
         Expression::Identifier(id) => {
@@ -74,78 +84,6 @@ pub(super) fn eval_dedup_expr(
             out
         }
         _ => DebounceTtlVerdict::Abstain,
-    }
-}
-
-fn fold_dedup_object(
-    visitor: &QueueVisitor<'_>,
-    object: &ObjectExpression<'_>,
-    mode: &mut ModeState,
-    ttl: &mut TtlState,
-    active: &mut FxHashSet<u32>,
-) {
-    for property in &object.properties {
-        match property {
-            ObjectPropertyKind::ObjectProperty(property) => {
-                match crate::ast::property_key_name(&property.key).as_deref() {
-                    Some("mode") => *mode = eval_mode(visitor, &property.value),
-                    Some("ttl") => *ttl = ttl::classify(visitor, &property.value),
-                    Some(_) => {}
-                    None => {
-                        *mode = ModeState::Dynamic;
-                        *ttl = TtlState::Dynamic;
-                    }
-                }
-            }
-            ObjectPropertyKind::SpreadProperty(spread) => {
-                fold_spread(
-                    visitor,
-                    &spread.argument,
-                    spread.argument.span().start,
-                    mode,
-                    ttl,
-                    active,
-                );
-            }
-        }
-    }
-}
-
-fn fold_spread(
-    visitor: &QueueVisitor<'_>,
-    expr: &Expression<'_>,
-    at: u32,
-    mode: &mut ModeState,
-    ttl: &mut TtlState,
-    active: &mut FxHashSet<u32>,
-) {
-    match expr.get_inner_expression() {
-        Expression::ObjectExpression(object) => {
-            fold_dedup_object(visitor, object, mode, ttl, active)
-        }
-        Expression::Identifier(id) => {
-            let Some(binding) = visitor.object_bindings.lookup(id.name.as_str(), at) else {
-                *mode = ModeState::Dynamic;
-                *ttl = TtlState::Dynamic;
-                return;
-            };
-            let Some(value) = binding.value() else {
-                *mode = ModeState::Dynamic;
-                *ttl = TtlState::Dynamic;
-                return;
-            };
-            if !active.insert(binding.resolve_at) {
-                *mode = ModeState::Dynamic;
-                *ttl = TtlState::Dynamic;
-                return;
-            }
-            fold_spread(visitor, value, binding.resolve_at, mode, ttl, active);
-            active.remove(&binding.resolve_at);
-        }
-        _ => {
-            *mode = ModeState::Dynamic;
-            *ttl = TtlState::Dynamic;
-        }
     }
 }
 

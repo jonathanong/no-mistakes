@@ -20,16 +20,19 @@ impl<'a> Projector<'a, '_> {
         let (child_span, parent_id) = ast::non_transparent_parent(self.semantic, call_id);
         match self.semantic.nodes().kind(parent_id) {
             AstKind::ThrowStatement(_) | AstKind::ExpressionStatement(_) => None,
-            AstKind::CallExpression(call) => {
-                if ast::is_unshadowed_object_assign(self.semantic, &call.callee)
-                    && call
-                        .arguments
-                        .first()
-                        .is_some_and(|arg| arg.span() == child_span)
-                {
+            AstKind::CallExpression(_) => {
+                let receives_assign = matches!(
+                    self.semantic.nodes().kind(parent_id),
+                    AstKind::CallExpression(call)
+                        if ast::is_unshadowed_object_assign(self.semantic, &call.callee)
+                            && call
+                                .arguments
+                                .first()
+                                .is_some_and(|arg| arg.span() == child_span)
+                );
+                if receives_assign {
                     let mut ev = InstancePropertyEvidence::default();
-                    self.fold_assign_sources(&call.arguments[1..], &mut ev);
-                    self.absorb_assigned_binding(parent_id, &mut ev);
+                    self.fold_assign_chain(parent_id, &mut ev);
                     (!ev.is_empty()).then_some(ev)
                 } else {
                     Some(InstancePropertyEvidence::opaque())
@@ -96,7 +99,7 @@ impl<'a> Projector<'a, '_> {
                 ev.opaque_mutation = true;
                 break;
             }
-            self.fold_binding_use(ref_id, decl_block, ev);
+            self.fold_binding_use(ref_id, decl_block, decl_id, ev);
         }
     }
 
@@ -104,11 +107,22 @@ impl<'a> Projector<'a, '_> {
         &mut self,
         ref_id: NodeId,
         decl_block: Option<NodeId>,
+        decl_id: NodeId,
         ev: &mut InstancePropertyEvidence,
     ) {
         let (child_span, use_id) = ast::non_transparent_parent(self.semantic, ref_id);
         match self.semantic.nodes().kind(use_id) {
-            AstKind::ThrowStatement(_) => ev.note_throw(),
+            AstKind::ThrowStatement(_) => {
+                if nearest_function(self.semantic, ref_id)
+                    == nearest_function(self.semantic, decl_id)
+                {
+                    ev.note_throw();
+                } else {
+                    ev.opaque_mutation = true;
+                    ev.positive_through_throws.clear();
+                    ev.throw_count = ev.throw_count.saturating_add(1);
+                }
+            }
             AstKind::StaticMemberExpression(member) if member.object.span() == child_span => {
                 self.fold_member_use(
                     use_id,
@@ -171,4 +185,14 @@ impl<'a> Projector<'a, '_> {
             _ => {}
         }
     }
+}
+
+fn nearest_function(semantic: &oxc_semantic::Semantic<'_>, node: NodeId) -> Option<NodeId> {
+    semantic.nodes().ancestors(node).find_map(|ancestor| {
+        matches!(
+            ancestor.kind(),
+            AstKind::Function(_) | AstKind::ArrowFunctionExpression(_)
+        )
+        .then_some(ancestor.id())
+    })
 }

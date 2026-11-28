@@ -129,4 +129,30 @@ fn instance_review_tracks_throws_opaque_writes_and_assign_bindings() {
         }),
         "a later unconditional assignment restores a delay after a helper call, {evidence:?}"
     );
+    assert!(
+        evidence.iter().any(|ev| {
+            ev.throw_count > 0
+                && ev.opaque_mutation
+                && ev.properties.get("delayMs") == Some(&InstancePropertyValue::Positive)
+                && !ev.positive_through_throws.contains("delayMs")
+        }),
+        "a throw in a nested function does not use source order, {evidence:?}"
+    );
+    let source = std::fs::read_to_string(&path).unwrap();
+    let nested_new = source
+        .find("Object.assign(new Error(), { delayMs: 1000 })")
+        .and_then(|at| source[at..].find("new Error()").map(|inner| at + inner))
+        .expect("nested assign");
+    let nested = facts
+        .module_bindings
+        .as_deref()
+        .and_then(|module| module.path_provenance.as_deref())
+        .expect("path provenance")
+        .instance_properties
+        .get(&(nested_new as u32));
+    assert_eq!(
+        nested.and_then(|ev| ev.properties.get("delayMs")),
+        Some(&InstancePropertyValue::Invalid),
+        "the outer Object.assign replaces the inner delay, {nested:?}"
+    );
 }

@@ -38,4 +38,17 @@ export function reviewFixes(flag: boolean): void {
   const held = new Error();
   held.delayMs = 5000;
   throw held;
+
+  const nestedThrow = new Error();
+  const failNested = () => {
+    throw nestedThrow;
+  };
+  nestedThrow.delayMs = 1000;
+  failNested();
+
+  const nestedAssign = Object.assign(
+    Object.assign(new Error(), { delayMs: 1000 }),
+    { delayMs: 0 },
+  );
+  if (flag) throw nestedAssign;
 }

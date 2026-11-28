@@ -51,7 +51,7 @@ fn walk_jobs<'a>(visitor: &mut QueueVisitor<'a>, expr: &Expression<'a>, depth: u
             true
         }
         Expression::Identifier(id) => match const_init(visitor, id) {
-            Some(init) => walk_jobs(visitor, init, depth + 1),
+            Some((init, stable)) => walk_jobs(visitor, init, depth + 1) && stable,
             None => false,
         },
         _ => false,
@@ -80,6 +80,7 @@ fn job_name<'a>(visitor: &QueueVisitor<'a>, object: &ObjectExpression<'a>) -> Op
         "name",
         &visitor.object_bindings,
         &mut crate::fx::FxHashSet::default(),
+        &mut 32,
     ) {
         MemberLookup::Found(expr) => {
             literal_expr(expr.get_inner_expression(), &visitor.const_strings)
@@ -91,7 +92,7 @@ fn job_name<'a>(visitor: &QueueVisitor<'a>, object: &ObjectExpression<'a>) -> Op
 fn const_init<'a>(
     visitor: &QueueVisitor<'a>,
     id: &IdentifierReference<'_>,
-) -> Option<&'a Expression<'a>> {
+) -> Option<(&'a Expression<'a>, bool)> {
     let symbol = referenced_symbol(visitor, id)?;
     let scoping = visitor.scoping?;
     if !scoping.symbol_flags(symbol).is_const_variable()
@@ -108,5 +109,36 @@ fn const_init<'a>(
     if init.span().end > id.span.start {
         return None;
     }
-    Some(init)
+    let stable = !mutated_before(
+        visitor.source,
+        id.name.as_str(),
+        init.span().end,
+        id.span.start,
+    );
+    Some((init, stable))
+}
+
+fn mutated_before(source: &str, name: &str, from: u32, to: u32) -> bool {
+    let Some(window) = source.get(from as usize..to as usize) else {
+        return true;
+    };
+    let name_bytes = name.as_bytes();
+    let bytes = window.as_bytes();
+    let mut index = 0;
+    while index + name_bytes.len() <= bytes.len() {
+        let matched = &bytes[index..index + name_bytes.len()] == name_bytes
+            && (index == 0 || !is_ident_byte(bytes[index - 1]));
+        if matched {
+            let after = window[index + name_bytes.len()..].trim_start();
+            if after.starts_with('.') || after.starts_with('[') || after.starts_with("?.") {
+                return true;
+            }
+        }
+        index += 1;
+    }
+    false
+}
+
+fn is_ident_byte(byte: u8) -> bool {
+    byte == b'_' || byte.is_ascii_alphanumeric()
 }

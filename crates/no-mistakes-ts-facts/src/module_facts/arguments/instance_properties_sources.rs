@@ -1,9 +1,37 @@
 use super::super::{ArgumentValue, Projector};
 use super::ast::{InstancePropertyEvidence, InstancePropertyValue};
 use oxc_ast::ast::{Argument, Expression, ObjectExpression, ObjectPropertyKind, PropertyKind};
+use oxc_ast::AstKind;
+use oxc_span::GetSpan;
+use oxc_syntax::node::NodeId;
 use serde_json::Value;
 
 impl<'a> Projector<'a, '_> {
+    pub(super) fn fold_assign_chain(
+        &mut self,
+        assign_call_id: NodeId,
+        ev: &mut InstancePropertyEvidence,
+    ) {
+        let AstKind::CallExpression(call) = self.semantic.nodes().kind(assign_call_id) else {
+            return;
+        };
+        self.fold_assign_sources(&call.arguments[1..], ev);
+        let (call_span, parent_id) =
+            super::ast::non_transparent_parent(self.semantic, assign_call_id);
+        if let AstKind::CallExpression(parent) = self.semantic.nodes().kind(parent_id) {
+            if super::ast::is_unshadowed_object_assign(self.semantic, &parent.callee)
+                && parent
+                    .arguments
+                    .first()
+                    .is_some_and(|arg| arg.span() == call_span)
+            {
+                self.fold_assign_chain(parent_id, ev);
+                return;
+            }
+        }
+        self.absorb_assigned_binding(assign_call_id, ev);
+    }
+
     pub(super) fn fold_assign_sources(
         &mut self,
         sources: &'a [Argument<'a>],
