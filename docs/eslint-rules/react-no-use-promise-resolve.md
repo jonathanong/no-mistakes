@@ -63,11 +63,11 @@ unknown constructor members, and reads intercepted by a script-mode `with`
 object. It also abstains when a global object escapes as a value, a method on
 it is called, or `Promise` is accessed through another global-object path in
 the same file. A static readonly global property read does not block analysis.
-This path handles only an ordinary `React.use(P.resolve(value))` call with one
-non-spread operand;
-detached `resolve`, `.call`/`.apply`, optional calls, and extra arguments do
-not gain new findings. The original direct-`Promise` syntax remains on its
-released path.
+This path handles an ordinary `React.use(P.resolve(value))` call and the same
+alias passed through `use.call` or a one-element `use.apply`. Optional calls,
+spreads, extra arguments, and a non-literal `.apply` list do not gain new
+findings. `require("react").Children.use` is not `use`. The original
+direct-`Promise` syntax remains on its released path.
 
 `use` brought in through another file is not visible here.
 

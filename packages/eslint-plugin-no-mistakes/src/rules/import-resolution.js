@@ -5,6 +5,7 @@ const { memberFact, rootIdentifier } = require("./import-member");
 const { hasImportWrite, laterFact } = require("./import-later-fact");
 const {
   factAtPath,
+  namespaceMember,
   patternDefault,
   patternPath,
   withPatternDefault,
@@ -81,14 +82,6 @@ function importBindingFact(def) {
     return { module: moduleName, kind: "named", imported, typeOnly };
   }
   return { unresolved: true };
-}
-
-function namespaceMember(base, imported) {
-  if (!base || base.typeOnly) return null;
-  if (base.unresolved) return { unresolved: true };
-  if (base.kind !== "namespace" && base.kind !== "default") return null;
-  if (imported === "default") return { ...base, kind: "default", imported: null };
-  return { module: base.module, kind: "named", imported, typeOnly: false };
 }
 
 function destructureFact(declarator, name, context, seen) {

@@ -14,7 +14,7 @@ function patternPropertyKey(pattern, name, context) {
       property.value?.type === "AssignmentPattern" ? property.value.left : property.value;
     if (value?.type !== "Identifier" || value.name !== name) continue;
     if (!property.computed) return keyName(property.key);
-    const key = computedKey(property.key) || constStringKey(property.key, context);
+    const key = computedKey(property.key) ?? constStringKey(property.key, context);
     return key == null ? undefined : key;
   }
   return null;
@@ -57,10 +57,21 @@ function laterBindingStatus(identifier, context, reactTypeStatus, expressionStat
   if (!defs.every((def) => def.node?.range?.[0] > identifier.range[0])) return null;
   seen.add(variable);
   try {
+    let annotated = false;
+    let unresolved = false;
+    for (const def of defs) {
+      if (def.type !== "Variable" || def.node?.id?.type !== "Identifier") continue;
+      const type = typeAnnotation(def.node.id);
+      if (!type) continue;
+      annotated = true;
+      const status = reactTypeStatus(type, facts);
+      if (status === "yes") return "yes";
+      if (status === "unresolved") unresolved = true;
+    }
+    if (annotated) return unresolved ? "unresolved" : "no";
     if ((variable.references ?? []).some((reference) => reference.isWrite() && !reference.init)) {
       return "unresolved";
     }
-    let unresolved = false;
     for (const def of defs) {
       if (def.type !== "Variable") continue;
       if (def.node?.id?.type === "ObjectPattern") {

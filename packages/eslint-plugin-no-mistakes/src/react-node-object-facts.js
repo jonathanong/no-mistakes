@@ -31,7 +31,7 @@ function collectMembers(members, facts) {
   for (const member of members || []) {
     if (member.type !== "TSPropertySignature") continue;
     const name = member.computed ? computedKey(member.key) : keyName(member.key);
-    if (!name) continue;
+    if (name == null) continue;
     declared.add(name);
     const status = reactTypeStatus(typeAnnotation(member), facts);
     if (status === "yes") props.add(name);
@@ -51,7 +51,7 @@ function publish(map, name, next, changed) {
   return true;
 }
 
-function reconcile(published, name, props, unresolved) {
+function reconcile(published, name, props, unresolved, sticky) {
   const prior = published.get(name) ?? new Map();
   const next = new Map();
   const keptProps = new Set();
@@ -59,7 +59,12 @@ function reconcile(published, name, props, unresolved) {
   for (const key of new Set([...props, ...unresolved, ...prior.keys()])) {
     const incoming = props.has(key) ? "yes" : unresolved.has(key) ? "unresolved" : "absent";
     const previous = prior.get(key);
-    const status = previous && incoming !== previous ? "unresolved" : incoming;
+    const status =
+      !sticky && previous === "unresolved" && incoming === "yes"
+        ? "yes"
+        : previous && incoming !== previous
+          ? "unresolved"
+          : incoming;
     if (status === "absent") continue;
     next.set(key, status);
     if (status === "yes") keptProps.add(key);
@@ -69,6 +74,19 @@ function reconcile(published, name, props, unresolved) {
   return { props: keptProps, unresolved: keptUnresolved };
 }
 
+function declarationCount(program, topLevelDeclaration) {
+  let count = 0;
+  for (const statement of program.body || []) {
+    const declaration = topLevelDeclaration(statement);
+    if (
+      declaration.type === "TSInterfaceDeclaration" ||
+      declaration.type === "TSTypeAliasDeclaration"
+    )
+      count += 1;
+  }
+  return count;
+}
+
 function assignReactObjectFacts(
   program,
   topLevelDeclaration,
@@ -76,9 +94,13 @@ function assignReactObjectFacts(
   objectProps,
   unresolvedObjectProps,
 ) {
+  const limit = declarationCount(program, topLevelDeclaration);
   const published = new Map();
   let objectsChanged = true;
-  while (objectsChanged) {
+  let passes = 0;
+  while (objectsChanged && passes <= limit * 2) {
+    passes += 1;
+    const sticky = passes > limit;
     objectsChanged = false;
     const grouped = new Map();
     const aliases = new Map();
@@ -96,6 +118,8 @@ function assignReactObjectFacts(
       const target =
         declaration.type === "TSTypeAliasDeclaration" ? typeName(declaration.typeAnnotation) : null;
       if (!target || target.includes(".") || target === declaration.id.name) continue;
+      if (declaration.typeParameters?.params?.some((param) => param.name?.name === target))
+        continue;
       const list = aliases.get(declaration.id.name) ?? [];
       list.push(target);
       aliases.set(declaration.id.name, list);
@@ -144,7 +168,7 @@ function assignReactObjectFacts(
       for (const key of inheritedProps) if (!status.has(key)) props.add(key);
       for (const key of inheritedUnresolved)
         if (!status.has(key) && !props.has(key)) unresolved.add(key);
-      const kept = reconcile(published, name, props, unresolved);
+      const kept = reconcile(published, name, props, unresolved, sticky);
       objectsChanged = publish(objectProps, name, kept.props, objectsChanged);
       objectsChanged = publish(unresolvedObjectProps, name, kept.unresolved, objectsChanged);
     }

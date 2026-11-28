@@ -39,7 +39,9 @@ function localTypeStatus(node, name, facts, seen, reactTypeStatus) {
       if (
         !typed ||
         declaration.id?.name !== name ||
-        (containsNode(declaration, node) && !selfAlias)
+        (containsNode(declaration, node) &&
+          !selfAlias &&
+          declaration.type !== "TSInterfaceDeclaration")
       )
         continue;
       const scope =

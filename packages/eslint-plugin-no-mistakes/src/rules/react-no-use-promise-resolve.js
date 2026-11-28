@@ -2,6 +2,7 @@
 
 const { rule } = require("../helpers");
 const { ruleSuppression } = require("../rule-suppression");
+const { unwrapSequence } = require("./async-ast");
 const { reportsUnanalyzable } = require("./import-resolution");
 const { staticName } = require("./react-use-callee");
 const callee = require("./react-use-callee");
@@ -16,6 +17,23 @@ const {
   patternKey,
   reactUseStatus,
 } = callee;
+
+function forwardedAliasCall(node) {
+  const current = unwrapSequence(node);
+  if (!current || current.optional || current.arguments.length !== 2) return false;
+  const target = unwrapSequence(current.callee);
+  if (target?.type !== "MemberExpression" || target.optional) return false;
+  const name = staticName(target.property, target.computed);
+  if (name === "call") return current.arguments[1]?.type !== "SpreadElement";
+  const list = unwrapSequence(current.arguments[1]);
+  return (
+    name === "apply" &&
+    list?.type === "ArrayExpression" &&
+    list.elements?.length === 1 &&
+    list.elements[0] != null &&
+    list.elements[0].type !== "SpreadElement"
+  );
+}
 
 module.exports = Object.assign(
   rule(
@@ -53,7 +71,9 @@ module.exports = Object.assign(
           const argument = forwardedArgument(node, context);
           const resolved =
             isPromiseResolve(argument) ||
-            (ordinaryUseCall(node, context) && isAliasedPromiseResolve(node.arguments[0], context));
+            (ordinaryUseCall(node, context) &&
+              isAliasedPromiseResolve(node.arguments[0], context)) ||
+            (forwardedAliasCall(node) && isAliasedPromiseResolve(argument, context));
           if (status === "yes" && resolved) {
             context.report({ node, messageId: "resolve" });
             return;

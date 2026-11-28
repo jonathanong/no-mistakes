@@ -173,14 +173,14 @@ function definePattern(
   for (const property of pattern.properties) {
     if (property.type !== "Property") continue;
     const name = property.computed
-      ? computedKey(property.key) || (context && constStringKey(property.key, context))
+      ? (computedKey(property.key) ?? (context ? constStringKey(property.key, context) : null))
       : keyName(property.key);
     const value =
       property.value?.type === "AssignmentPattern" ? property.value.left : property.value;
     if (value?.type !== "Identifier") continue;
-    if (name && props?.has(name)) defineReactNode(value.name);
-    else if (name && unresolved?.has(name)) defineUnresolved?.(value.name);
-    else if (!name && property.computed && (props?.size || unresolved?.size))
+    if (name != null && props?.has(name)) defineReactNode(value.name);
+    else if (name != null && unresolved?.has(name)) defineUnresolved?.(value.name);
+    else if (name == null && property.computed && (props?.size || unresolved?.size))
       defineUnresolved?.(value.name);
   }
 }

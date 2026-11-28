@@ -169,3 +169,30 @@ const [destructuredKey] = "use";
 export function arrayKey() {
   return React[destructuredKey](Promise.resolve(1));
 }
+const childUse = require("react").Children.use;
+export function childrenUse() {
+  return childUse(Promise.resolve(1));
+}
+export function forwardedCall() {
+  const { use } = require("react");
+  const P = Promise;
+  return use.call(null, P.resolve(1));
+}
+export function forwardedApply() {
+  const { use } = require("react");
+  const P = Promise;
+  return use.apply(null, [P.resolve(1)]);
+}
+export function optionalForward() {
+  const { use } = require("react");
+  const P = Promise;
+  return use.call?.(null, P.resolve(1));
+}
+export function spreadForward(xs: [Promise<number>]) {
+  const { use } = require("react");
+  return use.call(null, ...xs);
+}
+export function applyDynamic(xs: [Promise<number>]) {
+  const { use } = require("react");
+  return use.apply(null, xs);
+}

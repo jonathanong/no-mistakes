@@ -145,3 +145,74 @@ export function forwardPlain(props: { child: string }) {
   const { child } = props;
   return read();
 }
+
+import type { ReactNode as SlotFace } from "react";
+
+export function recursiveInterface() {
+  interface SlotFace {
+    child: SlotFace;
+  }
+  const read = (p: SlotFace) => p.child ?? null;
+  return read;
+}
+
+interface EmptyNamed {
+  "": ReactNode;
+}
+export function namedEmpty(p: EmptyNamed) {
+  return p[""] ?? null;
+}
+
+export function destructureEmpty({ [""]: child }: { "": ReactNode }) {
+  return child ?? null;
+}
+
+interface PendingOrder {
+  child: R.ReactNode;
+}
+interface KnownOrder extends BaseOrder {}
+interface BaseOrder {
+  child: ReactNode;
+}
+interface PropsOrder extends PendingOrder, KnownOrder {}
+export function inheritedOrder(p: PropsOrder) {
+  return p.child ?? null;
+}
+
+type BoxedProps<Props> = Props;
+export function boxedString(p: BoxedProps<{ child: string }>) {
+  return p.child ?? "";
+}
+type KeptProps<T> = Props;
+export function keptProps(p: KeptProps<string>) {
+  return p.child ?? null;
+}
+type SameProps = Props;
+export function samePropsAlias(p: SameProps) {
+  return p.child ?? null;
+}
+
+export import ReactReq = require("react");
+export function exportedRequire(x: ReactReq.ReactNode) {
+  return x ?? null;
+}
+
+export function annotatedForward() {
+  const read = () => child ?? null;
+  let child: ReactNode = null;
+  child = "text";
+  return read();
+}
+
+export function annotatedNumber() {
+  const read = () => child ?? null;
+  let child: number = 0;
+  child = 1;
+  return read();
+}
+
+export function localSelf() {
+  type Props = Props;
+  const read = (p: Props) => p.child ?? null;
+  return read;
+}

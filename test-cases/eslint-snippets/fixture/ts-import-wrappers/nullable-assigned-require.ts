@@ -75,3 +75,28 @@ export async function stagedTarget(): Promise<Widget | null> {
   read = target;
   return read();
 }
+
+export async function patternAssigned(): Promise<Widget | null> {
+  let read;
+  ({ getWidget: read } = require("./data"));
+  return read();
+}
+
+export async function patternDynamic(id: string): Promise<Widget | null> {
+  let read;
+  ({ [id]: read } = require("./data"));
+  return read();
+}
+
+export async function patternArray(): Promise<Widget | null> {
+  let read;
+  [read] = require("./data");
+  return read();
+}
+
+export async function patternLocal(): Promise<Widget | null> {
+  let read;
+  const local = { getWidget: () => null };
+  ({ getWidget: read } = local);
+  return read();
+}

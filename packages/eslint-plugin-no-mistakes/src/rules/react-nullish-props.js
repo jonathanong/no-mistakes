@@ -1,6 +1,7 @@
 "use strict";
 
 const { unwrapSequence } = require("./async-ast");
+const { nearestDeclarations } = require("./react-nullish-declarations");
 const {
   assertedType,
   computedKey,
@@ -9,17 +10,6 @@ const {
   typeAnnotation,
   typeName,
 } = require("../react-node-types");
-
-function containsNode(root, node) {
-  for (let current = node; current; current = current.parent) if (current === root) return true;
-  return false;
-}
-
-function bodyStatements(node) {
-  if (Array.isArray(node?.body)) return node.body;
-  if (Array.isArray(node?.body?.body)) return node.body.body;
-  return null;
-}
 
 function enclosingTypeParameter(type, name, local) {
   let current = type?.parent;
@@ -30,29 +20,6 @@ function enclosingTypeParameter(type, name, local) {
       !local?.some((item) => item.range[0] > current.range[0] && item.range[1] < current.range[1])
     )
       return param;
-    current = current.parent;
-  }
-  return null;
-}
-
-function nearestDeclarations(type, name) {
-  let current = type?.parent;
-  while (current && current.type !== "Program") {
-    const found = [];
-    for (const statement of bodyStatements(current) ?? []) {
-      const declaration = statement.declaration ?? statement;
-      const typed =
-        declaration.type === "TSTypeAliasDeclaration" ||
-        declaration.type === "TSInterfaceDeclaration";
-      if (
-        typed &&
-        declaration.id?.name === name &&
-        !containsNode(declaration, type) &&
-        containsNode(declaration.parent, type)
-      )
-        found.push(declaration);
-    }
-    if (found.length) return found;
     current = current.parent;
   }
   return null;

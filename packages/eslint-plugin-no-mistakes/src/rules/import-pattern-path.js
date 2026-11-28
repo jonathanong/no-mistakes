@@ -38,6 +38,14 @@ function patternPath(pattern, name, readKey, prefix = [], context) {
   return null;
 }
 
+function namespaceMember(base, imported) {
+  if (!base || base.typeOnly) return null;
+  if (base.unresolved) return { unresolved: true };
+  if (base.kind !== "namespace" && base.kind !== "default") return null;
+  if (imported === "default") return { ...base, kind: "default", imported: null };
+  return { module: base.module, kind: "named", imported, typeOnly: false };
+}
+
 function factAtPath(source, names, namespaceMember) {
   let fact = source;
   for (const name of names) {
@@ -117,4 +125,4 @@ function withPatternDefault(fact, alternate) {
   return alternate || fact ? { unresolved: true } : fact;
 }
 
-module.exports = { factAtPath, patternDefault, patternPath, withPatternDefault };
+module.exports = { factAtPath, namespaceMember, patternDefault, patternPath, withPatternDefault };

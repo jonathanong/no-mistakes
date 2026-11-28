@@ -650,6 +650,8 @@ describe("typescript import wrappers", () => {
       [155, "resolve"],
       [166, "unanalyzable"],
       [170, "unanalyzable"],
+      [179, "resolve"],
+      [184, "resolve"],
     ]);
     expect(
       cases.find((item) => item.name === "promise type query alias").findings.map((f) => f.line),
@@ -934,6 +936,13 @@ describe("typescript import wrappers", () => {
       [121, "nullish"],
       [134, "nullish"],
       [138, "nullish"],
+      [163, "nullish"],
+      [167, "nullish"],
+      [179, "nullish"],
+      [188, "nullish"],
+      [192, "nullish"],
+      [197, "nullish"],
+      [201, "nullish"],
     ]);
     expect(
       cases
@@ -961,6 +970,9 @@ describe("typescript import wrappers", () => {
       [55, "unanalyzable"],
       [61, "wrapper"],
       [76, "unanalyzable"],
+      [82, "wrapper"],
+      [88, "unanalyzable"],
+      [94, "unanalyzable"],
     ]);
     expect(
       cases.find((item) => item.name === "reassigned alias chain stays bounded").findings,

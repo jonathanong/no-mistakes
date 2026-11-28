@@ -67,7 +67,8 @@ function namedUse(fact) {
     !fact.typeOnly &&
     fact.module === "react" &&
     fact.kind === "named" &&
-    fact.imported === "use",
+    fact.imported === "use" &&
+    (!fact.name || fact.name === "use"),
   );
 }
 

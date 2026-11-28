@@ -56,14 +56,15 @@ function createReactNodeFacts(program, context) {
   }
 
   for (const statement of program.body || []) {
-    if (statement.type !== "TSImportEqualsDeclaration" || statement.id?.type !== "Identifier") {
+    const declaration = topLevelDeclaration(statement);
+    if (declaration.type !== "TSImportEqualsDeclaration" || declaration.id?.type !== "Identifier") {
       continue;
     }
-    const reference = statement.moduleReference;
+    const reference = declaration.moduleReference;
     const moduleName =
       reference?.type === "TSExternalModuleReference" ? literalString(reference.expression) : null;
-    if (moduleName === "react") reactNodeNames.add(`${statement.id.name}.ReactNode`);
-    else if (moduleName === null) unresolvedNamespaces.add(statement.id.name);
+    if (moduleName === "react") reactNodeNames.add(`${declaration.id.name}.ReactNode`);
+    else if (moduleName === null) unresolvedNamespaces.add(declaration.id.name);
   }
 
   for (const statement of program.body || []) {
