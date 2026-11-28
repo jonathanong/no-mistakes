@@ -2,6 +2,7 @@ use super::lex::{assignment, command_words, identifier, Word};
 
 pub(super) struct Targets {
     pub names: Vec<String>,
+    pub scalars: Vec<String>,
     pub keep: bool,
 }
 
@@ -37,11 +38,20 @@ pub(super) fn targets(words: &[Word<'_>]) -> Option<Targets> {
             names.extend(argument);
         }
     }
-    if mapfile {
+    let scalars = if mapfile {
         names = vec![positional.first().copied().unwrap_or("MAPFILE")];
-    }
+        Vec::new()
+    } else if positional.is_empty() && names.is_empty() {
+        vec!["REPLY".to_owned()]
+    } else {
+        positional.into_iter().filter_map(decode_target).collect()
+    };
     let names = names.into_iter().filter_map(decode_target).collect();
-    Some(Targets { names, keep })
+    Some(Targets {
+        names,
+        scalars,
+        keep,
+    })
 }
 
 #[derive(Clone, Copy)]
@@ -77,7 +87,14 @@ fn decode_target(raw: &str) -> Option<String> {
             _ => out.push(ch),
         }
     }
-    (quote.is_none() && identifier(&out)).then_some(out)
+    if quote.is_some() {
+        return None;
+    }
+    let base = out
+        .strip_suffix(']')
+        .and_then(|s| s.split_once('['))
+        .map_or(out.as_str(), |(n, _)| n);
+    identifier(base).then(|| base.to_owned())
 }
 
 #[cfg(test)]

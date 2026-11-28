@@ -256,12 +256,17 @@ test("Dependabot cooldown policy has exported option types", () => {
 
 test("shell compatibility rules expose optional path globs", () => {
   const declaration = readFileSync(join(packageRoot, "shell-compatibility-types.d.ts"), "utf8");
+  assert.match(declaration, /import type \{ Unanalyzable \} from "\.\/traversal-types";/);
   for (const name of ["BashEmptyArrayNounsetOptions", "ZshReadonlyParameterOptions"]) {
     assert.match(
       declaration,
       new RegExp(`export interface ${name} \\{[^}]*files\\?: string\\[\\];`),
     );
   }
+  assert.match(
+    declaration,
+    /export interface BashEmptyArrayNounsetOptions \{[^}]*unanalyzable\?: Unanalyzable;/s,
+  );
 });
 
 test("check rule options compile from the package root", () => {

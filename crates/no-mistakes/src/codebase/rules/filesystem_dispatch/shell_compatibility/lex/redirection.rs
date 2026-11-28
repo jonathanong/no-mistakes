@@ -63,6 +63,41 @@ impl<'a> Lexer<'a> {
         Some(word)
     }
 
+    pub(super) fn take_trailing_redirections(&mut self, words: &mut Vec<Word<'a>>) {
+        loop {
+            while matches!(self.current(), Some(b' ' | b'\t')) || self.continuation() {
+                if matches!(self.current(), Some(b' ' | b'\t')) {
+                    self.advance();
+                }
+            }
+            let Some(byte) = self.current() else {
+                return;
+            };
+            if matches!(byte, b'<' | b'>') || (byte == b'&' && self.rest().starts_with("&>")) {
+                let before = self.offset;
+                let taken = self.redirection();
+                if taken.is_none() && self.offset == before {
+                    return;
+                }
+                words.extend(taken);
+                continue;
+            }
+            if byte.is_ascii_digit() {
+                let start = self.offset;
+                let line = self.line;
+                let mut word = self.word();
+                if self.is_fd_prefix(word.raw) {
+                    word.redirect = true;
+                    words.push(word);
+                    continue;
+                }
+                self.offset = start;
+                self.line = line;
+            }
+            return;
+        }
+    }
+
     pub(super) fn skip_heredocs(&mut self) {
         let source = self.source.as_bytes();
         for document in self.heredocs.drain(..) {

@@ -1,151 +1,203 @@
-use super::lex::{assignment, command_words, identifier, Lexer, Shell, Word};
+use super::lex::{command_words, identifier, Boundary, Lexer, Shell, Word};
 use super::read_targets::targets;
-use crate::codebase::command_lex::words::{split_quoted_words, Whitespace};
-use crate::fx::FxHashMap;
+use assign::{array_assignment, forget_unset, remember_array};
+use case_unset::CaseUnsetCtx;
+use flow::Flow;
+use guard::{flag, nounset};
+use state::{ArrayState, State, UnanalyzableReason};
+
+mod assign;
+mod branch_frame;
+mod case_frame;
+mod case_unset;
+mod condition;
+mod flow;
+mod frames;
+mod guard;
+mod loop_frame;
+mod state;
+mod write_sets;
+
+#[cfg(test)]
+mod loop_tests;
+#[cfg(test)]
+mod tests;
 
 pub const RULE_ID: &str = "bash-empty-array-nounset";
 
-pub(super) fn scan(source: &str) -> Vec<(&str, usize)> {
-    let mut arrays = FxHashMap::default();
-    let mut active = false;
+#[derive(Default)]
+pub(super) struct ScanResult<'a> {
+    pub findings: Vec<(&'a str, usize)>,
+    pub unanalyzable: Vec<(usize, String)>,
+}
+
+pub(super) fn analyze(source: &str) -> ScanResult<'_> {
+    let mut flow = Flow::default();
     let mut hits = Vec::new();
-    Lexer::new(source, Shell::Bash).commands(|words, _| {
-        if active {
-            hits.extend(
-                words
-                    .iter()
-                    .flat_map(|word| word.refs.iter().copied())
-                    .filter(|(name, _)| arrays.get(*name) == Some(&false)),
-            );
-        }
-        if let Some(read) = targets(words) {
-            for name in read.names {
-                if read.keep {
-                    arrays.entry(name).or_insert(false);
-                } else {
-                    arrays.insert(name, false);
-                }
-            }
-            return;
-        }
-        let mut command = command_words(words).peekable();
-        let Some(first) = command.peek() else {
-            return;
-        };
-        match first.raw {
-            "set" => active = nounset(command.skip(1), active),
-            "unset" => forget_unset(command.skip(1), &mut arrays),
-            "declare" | "local" => {
-                command.next();
-                let mut array = false;
-                while let Some((enable, flags)) = command.peek().and_then(|word| flag(word.raw)) {
-                    if flags.contains('a') {
-                        array = enable;
-                    }
-                    command.next();
-                }
-                command.next_if(|word| word.raw == "--");
-                for word in command {
-                    if array && identifier(word.raw) {
-                        arrays.entry(word.raw.to_string()).or_insert(false);
-                    }
-                    if let Some(assignment) = array_assignment(word.raw) {
-                        remember_array(&mut arrays, word, assignment, array);
-                    }
-                }
-            }
-            _ => {
-                let assignments: Option<Vec<_>> = command
-                    .map(|word| array_assignment(word.raw).map(|assignment| (word, assignment)))
-                    .collect();
-                for (word, assignment) in assignments.into_iter().flatten() {
-                    remember_array(&mut arrays, word, assignment, false);
-                }
-            }
-        }
+    let mut commands = Vec::new();
+    Lexer::new(source, Shell::Bash).commands(|words, scope, boundary| {
+        commands.push(write_sets::Command {
+            words,
+            scope,
+            boundary,
+        });
     });
-    hits
-}
-
-fn remember_array<'a>(
-    arrays: &mut FxHashMap<String, bool>,
-    word: &Word<'a>,
-    (name, append): (&'a str, bool),
-    declared: bool,
-) {
-    if let Some(literal) = word.array_literal {
-        let nonempty = arrays.entry(name.to_string()).or_default();
-        *nonempty = literal || (append && *nonempty);
-    } else if declared {
-        arrays.insert(name.to_string(), true);
-    } else if let Some(nonempty) = arrays.get_mut(name) {
-        *nonempty = true;
+    let write_sets = write_sets::WriteSets::new(&commands);
+    let mut index = 0;
+    while index < commands.len() {
+        let command = &commands[index];
+        let mut ref_unanalyzable = Vec::new();
+        let restart = flow.command(index, command, &write_sets, hits.len(), |state, frames| {
+            let dead_arm = frames.iter().any(|frame| match frame {
+                frames::Frame::Case(case) => case.arm_is_dead(),
+                frames::Frame::If(branch) => branch.arm_is_dead(),
+                _ => false,
+            });
+            if state.active && !dead_arm {
+                for (name, line) in command.words.iter().flat_map(|w| w.refs.iter().copied()) {
+                    match state.arrays.get(name).copied() {
+                        Some(ArrayState::Empty) => hits.push((name, line)),
+                        Some(ArrayState::MaybeEmpty) if state.guarded_maybe.contains(name) => {
+                            ref_unanalyzable.push((
+                                line,
+                                format!(
+                                    "array `{name}` safety could not be proved under guarding condition; guard with ${{{name}[@]+...}}"
+                                ),
+                            ));
+                        }
+                        Some(ArrayState::MaybeEmpty) => hits.push((name, line)),
+                        _ => {
+                            if let Some(&reason) = state.unanalyzable.get(name) {
+                                let cause = match reason {
+                                    UnanalyzableReason::LoopWidening => "after loop widening",
+                                    UnanalyzableReason::DynamicUnset => "after dynamic `unset`",
+                                };
+                                ref_unanalyzable.push((
+                                    line,
+                                    format!(
+                                        "array `{name}` safety could not be proved {cause}; guard with ${{{name}[@]+...}}"
+                                    ),
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+            if command.boundary == Boundary::CasePattern {
+                condition::vars::collect_arithmetic_writes(&command.words, |name| {
+                    state.touch(name);
+                    if let Some(frames::Frame::Case(case)) = frames.last_mut() {
+                        case.touch_pattern_write(name);
+                    }
+                });
+            } else {
+                remember_command(&command.words, command.scope > 0, state, frames);
+            }
+        });
+        flow.unanalyzable.extend(ref_unanalyzable);
+        if let Some((next_index, truncate_hits, truncate_unanalyzable)) = restart {
+            hits.truncate(truncate_hits);
+            flow.unanalyzable.truncate(truncate_unanalyzable);
+            index = next_index;
+        } else {
+            index += 1;
+        }
+    }
+    ScanResult {
+        findings: hits,
+        unanalyzable: flow.unanalyzable,
     }
 }
 
-fn array_assignment(word: &str) -> Option<(&str, bool)> {
-    if let Some(assignment) = assignment(word) {
-        return Some(assignment);
-    }
-    let (lhs, _) = word.split_once('=')?;
-    let append = lhs.ends_with('+');
-    let lhs = lhs.strip_suffix('+').unwrap_or(lhs);
-    indexed_name(lhs).map(|name| (name, append))
-}
-
-fn indexed_name(word: &str) -> Option<&str> {
-    let (name, index) = word.strip_suffix(']')?.split_once('[')?;
-    (identifier(name) && !index.is_empty() && !index.contains(['[', ']'])).then_some(name)
-}
-
-fn forget_unset<'w, 'a: 'w>(
-    words: impl Iterator<Item = &'w Word<'a>>,
-    arrays: &mut FxHashMap<String, bool>,
+fn remember_command<'a>(
+    words: &[Word<'a>],
+    in_function: bool,
+    state: &mut State,
+    case_ctx: &mut dyn CaseUnsetCtx,
 ) {
-    let mut operands = words
-        .filter_map(|word| {
-            let mut parts = split_quoted_words(word.raw, Whitespace::Ascii)?;
-            let operand = parts.pop()?;
-            parts.is_empty().then_some(operand)
-        })
-        .peekable();
-    operands.next_if(|operand| operand == "-v");
-    operands.next_if(|operand| operand == "--");
-    if operands
-        .peek()
-        .is_some_and(|operand| operand.starts_with('-'))
-    {
+    condition::vars::collect_arithmetic_writes(words, |name| {
+        state.touch(name);
+        case_ctx.invalidate(name);
+    });
+    if let Some(read) = targets(words) {
+        for name in read.names {
+            let nonempty = read.keep && state.arrays.get(&name) == Some(&ArrayState::Nonempty);
+            state.write_array(&name, nonempty, false, read.keep);
+            if !nonempty {
+                state.set_known(&name, ArrayState::MaybeEmpty);
+            }
+            case_ctx.invalidate(&name);
+        }
+        for scalar in read.scalars {
+            state.touch(&scalar);
+            if state.arrays.get(&scalar) == Some(&ArrayState::Empty) {
+                state.set_known(&scalar, ArrayState::MaybeEmpty);
+            }
+            case_ctx.invalidate(&scalar);
+        }
         return;
     }
-    for operand in operands {
-        let name = indexed_name(&operand).unwrap_or(&operand);
-        if let Some(nonempty) = arrays.get_mut(name) {
-            *nonempty = false;
-        }
-    }
-}
-
-fn nounset<'w, 'a: 'w>(mut words: impl Iterator<Item = &'w Word<'a>>, mut active: bool) -> bool {
-    while let Some(word) = words.next() {
-        let Some((enable, flags)) = flag(word.raw) else {
-            break;
-        };
-        if flags.contains('u') {
-            active = enable;
-        }
-        if flags.contains('o') && words.next().is_some_and(|option| option.raw == "nounset") {
-            active = enable;
-        }
-    }
-    active
-}
-
-fn flag(word: &str) -> Option<(bool, &str)> {
-    let (enable, options) = if let Some(options) = word.strip_prefix('-') {
-        (true, options)
-    } else {
-        (false, word.strip_prefix('+')?)
+    let mut command = command_words(words).peekable();
+    let Some(first) = command.peek() else {
+        return;
     };
-    (!options.is_empty() && options.bytes().all(|byte| byte.is_ascii_alphabetic()))
-        .then_some((enable, options))
+    match first.raw {
+        "set" => {
+            if let Some(active) = nounset(command.skip(1)) {
+                state.set_nounset(active);
+            }
+        }
+        "shopt" => {
+            if command.skip(1).any(|word| {
+                flag(word.raw).is_some_and(|(on, f)| on && (f.contains('s') || f.contains('u')))
+            }) {
+                state.conditional.clear();
+            }
+        }
+        "unset" => forget_unset(command.skip(1), state, case_ctx),
+        "declare" | "local" => {
+            let mut array = false;
+            let mut global = false;
+            let mut display = false;
+            let local_kw = first.raw == "local";
+            command.next();
+            while let Some((enable, flags)) = command.peek().and_then(|word| flag(word.raw)) {
+                if flags.contains('a') {
+                    array = enable;
+                }
+                if flags.contains('g') {
+                    global = enable;
+                }
+                display |= enable && flags.contains(['p', 'f', 'F']);
+                command.next();
+            }
+            if display {
+                return;
+            }
+            let is_local = local_kw || (in_function && !global);
+            command.next_if(|word| word.raw == "--");
+            for word in command {
+                if identifier(word.raw) {
+                    if is_local {
+                        let empty = array || state.arrays.contains_key(word.raw);
+                        state.declare_local(word.raw, empty);
+                    } else if array && !state.arrays.contains_key(word.raw) {
+                        state.write_array(word.raw, false, false, true);
+                    }
+                    case_ctx.invalidate(word.raw);
+                }
+                if let Some(assignment) = array_assignment(word.raw) {
+                    remember_array(state, word, assignment, array, is_local, case_ctx);
+                }
+            }
+        }
+        _ => {
+            let assignments: Option<Vec<_>> = command
+                .map(|word| array_assignment(word.raw).map(|assignment| (word, assignment)))
+                .collect();
+            for (word, assignment) in assignments.into_iter().flatten() {
+                remember_array(state, word, assignment, false, false, case_ctx);
+            }
+        }
+    }
 }

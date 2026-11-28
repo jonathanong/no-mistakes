@@ -1,0 +1,7 @@
+rules:
+  - rule: bash-empty-array-nounset
+    scope: repository
+    message: Custom empty array message
+    options:
+      files:
+        - "*.sh"
