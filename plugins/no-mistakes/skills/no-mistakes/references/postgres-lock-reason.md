@@ -36,4 +36,4 @@ projection. Ordinary `check --format json`, `check()`, and
 `analyzeProject({ reports: [{ type: "check" }] })` expose findings and
 advisories.
 
-See the [rule contract](https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/postgres-lock-reason.md).
+See the [rule contract](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/postgres-lock-reason.md).
