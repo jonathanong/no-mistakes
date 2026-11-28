@@ -78,3 +78,42 @@ SELECT o.id
 FROM orders o
 JOIN accounts a ON a.id = o.account_id AND (1 = a.status OR a.status IS NULL)
 JOIN accounts b ON b.id = o.account_id AND (1 = b.status OR b.status IS NULL);
+
+SELECT
+    (SELECT a.x LIKE a.pattern FROM accounts a WHERE a.id = o.account_id),
+    (SELECT b.x ILIKE b.pattern FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT 'abc' LIKE 'a%' FROM accounts a WHERE a.id = o.account_id),
+    (SELECT 'abc' ILIKE 'A%' ESCAPE '#' FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    lag(o.id, 0, (SELECT a.n FROM accounts a WHERE a.id = o.account_id)) OVER (),
+    pg_catalog.lead(o.id, 0, (SELECT b.n FROM accounts b WHERE b.id = o.account_id)) OVER ()
+FROM orders o;
+
+SELECT
+    lag((SELECT a.n FROM accounts a WHERE a.id = o.account_id), 0, 0) OVER (),
+    lead((SELECT b.n FROM accounts b WHERE b.id = o.account_id), 0) OVER ()
+FROM orders o;
+
+SELECT first_value(
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+) OVER ()
+FROM orders o
+GROUP BY (SELECT a.n FROM accounts a WHERE a.id = o.account_id);
+
+SELECT
+    sum((SELECT a.n FROM accounts a WHERE a.id = o.account_id))
+        FILTER (WHERE nextval('lookup_seq') % 2 = 0),
+    max((SELECT b.n FROM accounts b WHERE b.id = o.account_id))
+        FILTER (WHERE nextval('lookup_seq') % 2 = 0)
+FROM orders o;
+
+SELECT sum(
+    (SELECT a.n FROM accounts a WHERE a.id = o.account_id) +
+    (SELECT b.m FROM accounts b WHERE b.id = o.account_id)
+) FILTER (WHERE nextval('lookup_seq') % 2 = 0)
+FROM orders o;

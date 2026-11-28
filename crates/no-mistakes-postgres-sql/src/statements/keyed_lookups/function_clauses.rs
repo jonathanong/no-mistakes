@@ -1,20 +1,49 @@
 use super::select_exprs::target_identity;
 use crate::fx::FxHashSet;
-use crate::idents::{function_arg_expr, visit_shallow_exprs};
+use crate::idents::{function_arg_expr, ident_key, visit_shallow_exprs};
 use sqlparser::ast::{Expr, Function, FunctionArgumentClause, FunctionArguments};
 
 pub(super) fn visit_function_inputs(function: &Function, visit: &mut impl FnMut(&Expr)) {
-    for arguments in [&function.parameters, &function.args] {
-        visit_arguments(arguments, visit);
-    }
+    visit_arguments(&function.parameters, usize::MAX, visit);
+    let argument_limit = if has_optional_window_default(function) {
+        2
+    } else {
+        usize::MAX
+    };
+    visit_arguments(&function.args, argument_limit, visit);
     visit_shallow_exprs(&function.within_group, visit);
 }
 
-fn visit_arguments(arguments: &FunctionArguments, visit: &mut impl FnMut(&Expr)) {
+fn has_optional_window_default(function: &Function) -> bool {
+    function.over.is_some()
+        && match function.name.0.as_slice() {
+            [name] => name.as_ident(),
+            [schema, name]
+                if schema
+                    .as_ident()
+                    .is_some_and(|s| ident_key(s) == "pg_catalog") =>
+            {
+                name.as_ident()
+            }
+            _ => None,
+        }
+        .is_some_and(|name| matches!(ident_key(name).as_str(), "lag" | "lead"))
+}
+
+fn visit_arguments(
+    arguments: &FunctionArguments,
+    argument_limit: usize,
+    visit: &mut impl FnMut(&Expr),
+) {
     let FunctionArguments::List(list) = arguments else {
         return;
     };
-    for arg in list.args.iter().filter_map(function_arg_expr) {
+    for arg in list
+        .args
+        .iter()
+        .take(argument_limit)
+        .filter_map(function_arg_expr)
+    {
         visit(arg);
     }
     for clause in &list.clauses {
@@ -37,7 +66,6 @@ fn visit_arguments(arguments: &FunctionArguments, visit: &mut impl FnMut(&Expr))
 }
 
 pub(super) fn is_eager(function: &sqlparser::ast::Function) -> bool {
-    use crate::idents::ident_key;
     if function.filter.is_some() || function.over.is_some() || !function.within_group.is_empty() {
         return true;
     }

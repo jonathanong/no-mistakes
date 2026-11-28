@@ -1,3 +1,4 @@
+use super::expr_norm::ExprNormalizer;
 use super::function_clauses::{is_eager, visit_eager_functions, visit_function_inputs};
 use super::join::record_lookup;
 use super::normalize::LookupKey;
@@ -66,12 +67,18 @@ fn inspect(
         Expr::Function(function) => {
             if let Some(filter) = &function.filter {
                 inspect(filter, outer, targets, seen, out, skip_eager);
-                let key = target_identity(filter);
-                let mut filtered = targets.take_filter_history(&key);
+                let key = ExprNormalizer::new(None, true, outer)
+                    .normalize(filter)
+                    .map(|_| target_identity(filter));
+                let mut filtered = key
+                    .as_ref()
+                    .map_or_else(BTreeMap::new, |key| targets.take_filter_history(key));
                 visit_function_inputs(function, &mut |expr| {
                     inspect(expr, outer, targets, &mut filtered, out, skip_eager);
                 });
-                targets.save_filter_history(key, filtered);
+                if let Some(key) = key {
+                    targets.save_filter_history(key, filtered);
+                }
             } else {
                 visit_function_inputs(function, &mut |expr| {
                     inspect(expr, outer, targets, seen, out, skip_eager);

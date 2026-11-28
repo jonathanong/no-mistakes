@@ -58,7 +58,10 @@ The rule stays silent when the lookups are not proven to read the same row:
   branches. A lookup in an arm can still repeat one in an independent
   expression. Inputs to recognized aggregates can repeat across arms because
   PostgreSQL evaluates the aggregates before choosing an arm. Aggregate
-  arguments with filters are compared within the same filter expression.
+  arguments share lookup history only when their filter expressions match and
+  the rule can prove the filter is repeatable.
+- Optional default expressions in `lag` and `lead` window calls. PostgreSQL
+  evaluates them only when the requested row falls outside the partition.
 - Volatile key expressions (UUID generators such as `gen_random_uuid()`,
   `random()`, `clock_timestamp()`, sequence-advancing functions), user-defined
   or unrecognized functions in keys or scalar projections, unresolved table
@@ -69,8 +72,8 @@ The rule stays silent when the lookups are not proven to read the same row:
   The rule skips function arguments and casts of columns or parameters whose
   types it cannot establish. It also skips operators in compound expressions
   when their signatures are unknown, including the comparisons used by
-  `IS DISTINCT FROM`, `IN`, and `BETWEEN`. Signature matching assumes
-  the standard PostgreSQL operator definitions.
+  `IS DISTINCT FROM`, `IN`, `BETWEEN`, and pattern matching. Signature matching
+  assumes the standard PostgreSQL operator definitions.
 - Sampled table scans, `ONLY` table scans, or scalar subqueries that lock rows.
 
 PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
@@ -78,9 +81,12 @@ PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
 clauses. Identical named and inline window specifications can share their
 frame bounds. An aggregate can also reuse an argument in its ordering clause. The
 rule counts an identical reused expression once. A matching grouping
-expression is also reused in projections, `HAVING`, and `ORDER BY`. The
-rule checks the inputs of recognized aggregates and window functions
-independently.
+expression is also reused in projections, `HAVING`, `ORDER BY`, and window
+function arguments. Ordinary aggregate inputs are evaluated before grouping.
+
+The rule recognizes PostgreSQL 18's default `OLD` and `NEW` qualifiers in
+`RETURNING`. It distinguishes pre-change and post-change rows and respects
+table aliases that mask the default qualifiers.
 
 Findings point at the duplicate join or scalar subquery and name the line of the
 first lookup.

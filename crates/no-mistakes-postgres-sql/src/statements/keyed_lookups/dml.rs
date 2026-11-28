@@ -43,6 +43,7 @@ pub(super) fn walk_insert(
         scopes.pop_frame();
     }
     if let Some(returning) = returning {
+        scopes.add_returning_aliases(Some("new"));
         inspect_exprs(
             returning_exprs(Some(returning)),
             scopes,
@@ -77,6 +78,7 @@ pub(super) fn walk_update(
         .chain(update.selection.iter());
     inspect_exprs(exprs, scopes, &mut seen, out);
     if let Some(returning) = update.returning.as_deref() {
+        scopes.add_returning_aliases(Some("new"));
         let mut returning_seen = BTreeMap::new();
         inspect_exprs(
             returning_exprs(Some(returning)),
@@ -101,11 +103,11 @@ pub(super) fn walk_delete(
     for table in from_tables.iter().chain(delete.using.iter().flatten()) {
         register_table_with_joins(table, scopes, &mut seen, out);
     }
-    let exprs = delete
-        .selection
-        .iter()
-        .chain(returning_exprs(delete.returning.as_deref()));
-    inspect_exprs(exprs, scopes, &mut seen, out);
+    inspect_exprs(delete.selection.iter(), scopes, &mut seen, out);
+    if let Some(returning) = delete.returning.as_deref() {
+        scopes.add_returning_aliases(Some("old"));
+        inspect_exprs(returning_exprs(Some(returning)), scopes, &mut seen, out);
+    }
     scopes.pop_frame();
 }
 
@@ -137,6 +139,7 @@ pub(super) fn walk_merge(
         inspect_exprs(exprs, scopes, &mut action_seen, out);
     }
     if let Some(OutputClause::Returning { select_items, .. }) = &merge.output {
+        scopes.add_returning_aliases(None);
         let mut returning_seen = BTreeMap::new();
         inspect_exprs(
             returning_exprs(Some(select_items)),

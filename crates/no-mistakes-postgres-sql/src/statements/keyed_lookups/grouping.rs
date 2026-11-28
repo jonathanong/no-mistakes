@@ -83,14 +83,16 @@ impl VisitorMut for GroupedExpressions<'_> {
         {
             *expr = Expr::Value(Value::Null.with_empty_span());
         }
-        if matches!(expr, Expr::Function(function) if is_eager(function)) {
+        if matches!(expr, Expr::Function(function) if function.over.is_none() && is_eager(function))
+        {
             self.depth += 1;
         }
         ControlFlow::Continue(())
     }
 
     fn post_visit_expr(&mut self, expr: &mut Expr) -> ControlFlow<()> {
-        if matches!(expr, Expr::Function(function) if is_eager(function)) {
+        if matches!(expr, Expr::Function(function) if function.over.is_none() && is_eager(function))
+        {
             self.depth -= 1;
         }
         ControlFlow::Continue(())

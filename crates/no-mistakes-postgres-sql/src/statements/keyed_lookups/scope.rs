@@ -44,6 +44,33 @@ impl ScopeStack {
         self.add_binding(qualifier, None)
     }
 
+    pub(super) fn add_returning_aliases(&mut self, current_row: Option<&str>) {
+        let frame = self.frames.last().expect("RETURNING requires a scope");
+        let target_id = frame.first().map(|binding| binding.id);
+        for qualifier in ["old", "new"] {
+            if self
+                .frames
+                .iter()
+                .flatten()
+                .any(|b| b.qualifier == qualifier)
+            {
+                continue;
+            }
+            if let Some(id) = target_id.filter(|_| current_row == Some(qualifier)) {
+                self.frames
+                    .last_mut()
+                    .expect("RETURNING requires a scope")
+                    .push(Binding {
+                        id,
+                        qualifier: qualifier.to_owned(),
+                        columns: None,
+                    });
+            } else {
+                self.add_named_alias(qualifier.to_owned());
+            }
+        }
+    }
+
     pub(super) fn add_using_alias(
         &mut self,
         qualifier: String,

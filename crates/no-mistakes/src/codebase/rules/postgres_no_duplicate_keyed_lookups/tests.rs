@@ -11,15 +11,16 @@ fn collect(sql: &str) -> Vec<SqlDuplicateKeyedLookupFact> {
         collect_duplicate_keyed_lookups: true,
         ..Default::default()
     };
-    extract_sql_statement_facts_with_policy(
+    let facts = extract_sql_statement_facts_with_policy(
         sql,
         false,
         None,
         SqlLocationDemand::None,
         policy,
         false,
-    )
-    .duplicate_keyed_lookups
+    );
+    assert!(!facts.parse_failed);
+    facts.duplicate_keyed_lookups
 }
 
 #[test]

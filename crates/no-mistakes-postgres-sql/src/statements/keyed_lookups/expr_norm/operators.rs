@@ -36,6 +36,13 @@ pub(super) fn list_operands_are_proven(expr: &Expr, items: &[Expr]) -> bool {
     operand_type(expr).is_some_and(|kind| items.iter().all(|item| operand_type(item) == Some(kind)))
 }
 
+pub(super) fn pattern_is_proven(expr: &Expr, pattern: &Expr, escape: Option<&Expr>) -> bool {
+    [Some(expr), Some(pattern), escape]
+        .into_iter()
+        .flatten()
+        .all(|expr| operand_type(expr) == Some(BuiltinType::Text))
+}
+
 fn operand_type(expr: &Expr) -> Option<BuiltinType> {
     match unwrap_expr(expr) {
         Expr::Value(value) => match &value.value {

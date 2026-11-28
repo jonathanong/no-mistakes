@@ -23,3 +23,32 @@ WHEN MATCHED THEN
   UPDATE SET
     cached_name = (SELECT a1.display_name FROM accounts a1 WHERE a1.id = s.account_id),
     cached_tier = (SELECT a2.tier FROM accounts a2 WHERE a2.id = s.account_id);
+
+UPDATE orders AS o SET account_id = 42
+RETURNING
+    (SELECT a.name FROM accounts a WHERE a.id = NEW.account_id),
+    (SELECT b.email FROM accounts b WHERE b.id = o.account_id),
+    (SELECT c.phone FROM accounts c WHERE c.id = OLD.account_id);
+
+UPDATE orders AS new SET account_id = 42
+RETURNING
+    (SELECT a.name FROM accounts a WHERE a.id = new.account_id),
+    (SELECT b.email FROM accounts b WHERE b.id = new.account_id);
+
+INSERT INTO orders AS o (account_id) VALUES (42)
+RETURNING
+    (SELECT a.name FROM accounts a WHERE a.id = NEW.account_id),
+    (SELECT b.email FROM accounts b WHERE b.id = o.account_id);
+
+DELETE FROM orders AS o
+WHERE o.id = 7
+RETURNING
+    (SELECT b.name FROM accounts b WHERE b.id = OLD.account_id),
+    (SELECT c.email FROM accounts c WHERE c.id = o.account_id);
+
+MERGE INTO orders AS o USING pending p ON o.id = p.order_id
+WHEN MATCHED THEN UPDATE SET account_id = p.account_id
+RETURNING
+    (SELECT a.name FROM accounts a WHERE a.id = OLD.account_id),
+    (SELECT b.email FROM accounts b WHERE b.id = OLD.account_id),
+    (SELECT c.phone FROM accounts c WHERE c.id = NEW.account_id);
