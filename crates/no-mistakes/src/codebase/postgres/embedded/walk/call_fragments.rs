@@ -9,6 +9,8 @@ mod collect;
 mod inline;
 mod inline_append;
 mod partial;
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod tests;
 mod trace;
 pub(crate) use inline_append::publish_call_fragments;
 use trace::BuilderTrace;

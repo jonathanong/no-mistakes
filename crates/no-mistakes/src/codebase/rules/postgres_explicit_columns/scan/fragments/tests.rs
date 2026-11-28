@@ -363,67 +363,54 @@ fn scan_fragments_respects_returning_option_cte_vs_target_and_per_occurrence_ded
         "",
         &EmbeddedSqlOptions::configured("@example/db", &[]),
     );
+    let mk = |sql: &str, line, span, ctx: Option<&str>, append_site| CallSqlFragment {
+        sql: sql.to_string(),
+        line,
+        span,
+        context_sql: ctx.map(str::to_string),
+        append_site,
+    };
     file.call_spans = vec![(0, 10), (11, 20), (21, 30), (31, 40), (41, 50), (51, 60)];
-    file.call_fragments.insert(
-        (51, 60),
-        vec![CallSqlFragment {
-            sql: "SELECT * FROM wide; UPDATE wide SET id = 1 RETURNING *".to_string(),
-            line: 5,
-            span: (51, 60),
-            context_sql: None,
-            append_site: None,
-        }],
-    );
-    file.call_fragments.insert(
-        (41, 50),
-        vec![CallSqlFragment {
-            sql: "wide SET a = 1 RETURNING *".to_string(),
-            line: 3,
-            span: (41, 50),
-            context_sql: Some("UPDATE ".to_string()),
-            append_site: None,
-        }],
-    );
-    file.call_fragments.insert(
-        (0, 10),
-        vec![CallSqlFragment {
-            sql: "RETURNING *".to_string(),
-            line: 1,
-            span: (0, 10),
-            context_sql: Some("WITH wide AS (SELECT 1) UPDATE wide SET a = 1".to_string()),
-            append_site: None,
-        }],
-    );
-    file.call_fragments.insert(
-        (11, 20),
-        vec![CallSqlFragment {
-            sql: "SELECT row_to_json(w.*) FROM wide w".to_string(),
-            line: 1,
-            span: (11, 20),
-            context_sql: None,
-            append_site: None,
-        }],
-    );
-    file.call_fragments.insert(
-        (21, 30),
-        vec![CallSqlFragment {
-            sql: "SELECT * FROM unknown_tbl".to_string(),
-            line: 1,
-            span: (21, 30),
-            context_sql: None,
-            append_site: None,
-        }],
-    );
-    file.call_fragments.insert(
-        (31, 40),
-        vec![CallSqlFragment {
-            sql: "SELECT q.*".to_string(),
-            line: 2,
-            span: (31, 40),
-            context_sql: Some("SELECT 1 FROM (SELECT 1) AS q".to_string()),
-            append_site: None,
-        }],
-    );
+    for (span, frag) in [
+        (
+            (51, 60),
+            mk(
+                "SELECT * FROM wide; UPDATE wide SET id = 1 RETURNING *",
+                5,
+                (51, 60),
+                None,
+                None,
+            ),
+        ),
+        (
+            (41, 50),
+            mk("wide SET a = 1 RETURNING *", 3, (41, 50), Some("UPDATE "), None),
+        ),
+        (
+            (0, 10),
+            mk(
+                "RETURNING *",
+                1,
+                (0, 10),
+                Some("WITH wide AS (SELECT 1) UPDATE wide SET a = 1"),
+                None,
+            ),
+        ),
+        (
+            (11, 20),
+            mk("SELECT row_to_json(w.*) FROM wide w", 1, (11, 20), None, None),
+        ),
+        (
+            (21, 30),
+            mk("SELECT * FROM unknown_tbl", 1, (21, 30), None, None),
+        ),
+        (
+            (31, 40),
+            mk("SELECT q.*", 2, (31, 40), Some("SELECT 1 FROM (SELECT 1) AS q"), None),
+        ),
+    ] {
+        file.call_fragments.insert(span, vec![frag]);
+    }
 
     let mut findings = PostgresFindings::default();
     scan_embedded_fragments(
@@ -457,4 +444,48 @@ fn scan_fragments_respects_returning_option_cte_vs_target_and_per_occurrence_ded
         &mut findings2,
     );
     assert_eq!(findings2.0.len(), 1);
+
+    let mut dedup_file = extract_embedded_sql_from_source(
+        Path::new("/repo/src/dedup.ts"),
+        r#"import { query } from "@example/db";
+import sql from "sql-template-strings";
+export function f(flag: boolean) {
+  const q = sql`SELECT 1`;
+  if (flag) q.append(sql` WHERE id = 1`);
+  query(q);
+}"#,
+        &EmbeddedSqlOptions::configured("@example/db", &[]),
+    );
+    let covered = dedup_file.calls[0]
+        .variants
+        .iter()
+        .flat_map(|v| v.append_sites.iter().copied())
+        .next()
+        .unwrap();
+    dedup_file.call_spans = vec![(0, 5)];
+    dedup_file.call_fragments.insert(
+        (0, 5),
+        vec![
+            mk("SELECT * FROM wide", 1, (0, 5), None, None),
+            mk("SELECT * FROM wide", 1, (0, 5), None, None),
+            mk("SELECT missing.*", 2, (6, 10), None, None),
+            mk("SELECT missing.*", 2, (6, 10), None, None),
+        ],
+    );
+    dedup_file.param_append_fragments = vec![
+        mk("SELECT * FROM wide", 3, (20, 30), None, Some(covered)),
+        mk("SELECT * FROM wide", 4, (31, 40), None, Some(covered + 999)),
+    ];
+    let (mut findings3, facts3) = (PostgresFindings::default(), CheckFactMap::default());
+    scan_embedded_fragments(
+        Path::new("/repo"),
+        &test_options(),
+        &[&dedup_file],
+        &catalog,
+        &sources,
+        &facts3,
+        &mut findings3,
+    );
+    assert_eq!(findings3.0.len(), 2);
+    assert_eq!(facts3.sql_verdicts().len(), 1);
 }

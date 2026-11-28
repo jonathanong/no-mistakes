@@ -95,6 +95,71 @@ fn dml_correlated_case_window_distinct_join_on_quoted_and_token_edges() {
             "SELECT v.* FROM (VALUES (1)) v WHERE",
             vec![],
         ),
+        (
+            "INSERT INTO wide SELECT * FROM wide; EXPLAIN SELECT * FROM wide; TABLE wide; TABLE public.wide; WITH c AS (SELECT id FROM wide) TABLE c",
+            vec![
+                (Some("wide"), None),
+                (Some("wide"), None),
+                (Some("wide"), None),
+                (Some("public.wide"), None),
+            ],
+        ),
+        (
+            "SELECT id FROM my_fn(1); SELECT id FROM wide, my_fn((SELECT * FROM wide)) AS f",
+            vec![(Some("wide"), None)],
+        ),
+        (
+            "SELECT id FROM narrow WHERE CASE a WHEN (SELECT * FROM wide) THEN (SELECT * FROM wide) ELSE (SELECT * FROM wide) END = 1",
+            vec![(Some("wide"), None), (Some("wide"), None), (Some("wide"), None)],
+        ),
+        (
+            "SELECT CASE WHEN true THEN id ELSE (SELECT * FROM wide LIMIT 1) END FROM narrow",
+            vec![(Some("wide"), None)],
+        ),
+        (
+            "SELECT id FROM narrow WHERE fn(1, (SELECT * FROM wide LIMIT 1)) = 1 AND sum(x) OVER (PARTITION BY (SELECT * FROM wide LIMIT 1) ORDER BY (SELECT * FROM wide LIMIT 1)) > 0",
+            vec![(Some("wide"), None), (Some("wide"), None), (Some("wide"), None)],
+        ),
+        (
+            "SELECT *; SELECT (*) FROM wide; SELECT public.missing.* FROM wide",
+            vec![(None, None), (Some("wide"), None), (None, None)],
+        ),
+        (
+            "WITH RECURSIVE c(id) AS (SELECT id FROM wide) SELECT * FROM c WHERE",
+            vec![],
+        ),
+        (
+            "SELECT * FROM public.wide AS w WHERE",
+            vec![(Some("public.wide"), None)],
+        ),
+        (
+            "SELECT * FROM wide; ",
+            vec![(Some("wide"), None)],
+        ),
+        (
+            "SELECT * FROM ONLY (public.wide) WHERE",
+            vec![(Some("public.wide"), None)],
+        ),
+        (
+            "INSERT INTO wide (id) SELECT wide.* WHERE",
+            vec![(Some("wide"), None)],
+        ),
+        (
+            "SELECT (SELECT * FROM wide WHERE",
+            vec![(Some("wide"), None)],
+        ),
+        (
+            "SELECT (1) * 2 FROM wide WHERE",
+            vec![],
+        ),
+        (
+            "SELECT (SELECT d.* FROM narrow) FROM (SELECT 1) d WHERE",
+            vec![],
+        ),
+        (
+            "SELECT * FROM pg_catalog.fn(1) WITH ORDINALITY f(a, b) WHERE",
+            vec![],
+        ),
     ];
     for (sql, expected) in cases {
         let stars = extract_fragment_stars(sql, None);
@@ -107,4 +172,8 @@ fn dml_correlated_case_window_distinct_join_on_quoted_and_token_edges() {
 
     assert!(extract_fragment_stars("SELECT * FROM wide", Some("SELECT EXISTS (")).is_empty());
     assert!(extract_fragment_stars("* 2 FROM wide", Some("SELECT quantity ")).is_empty());
+    assert_eq!(
+        extract_fragment_stars("* FROM wide", Some("SELECT (SELECT 1), ")).len(),
+        1
+    );
 }
