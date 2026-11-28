@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Deserialize, Default)]
 #[serde(default, deny_unknown_fields, rename_all = "camelCase")]
-pub(super) struct Options {
+pub(in crate::codebase::rules) struct Options {
     pub(super) include: Vec<String>,
     pub(super) max_minutes: Option<u64>,
     pub(super) allow: Vec<AllowEntry>,
