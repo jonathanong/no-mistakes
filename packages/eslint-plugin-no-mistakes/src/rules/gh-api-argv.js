@@ -58,19 +58,19 @@ function inspectArgv(array, includesApi) {
   let afterDashDash = false;
   for (let i = start; i < args.length; i += 1) {
     const text = token(args[i]);
-    if (text === null) {
-      uncertain = true;
-      continue;
-    }
-    if (!afterDashDash && text === "--") {
+    if (text === "--" && !afterDashDash) {
       afterDashDash = true;
       continue;
     }
     if (afterDashDash) {
       if (endpoint === null) {
-        if (uncertain) return null;
+        if (text === null || uncertain) return null;
         endpoint = { node: args[i], text };
       }
+      continue;
+    }
+    if (text === null) {
+      uncertain = true;
       continue;
     }
     if (text.startsWith("-") && text.includes("\0")) uncertain = true;

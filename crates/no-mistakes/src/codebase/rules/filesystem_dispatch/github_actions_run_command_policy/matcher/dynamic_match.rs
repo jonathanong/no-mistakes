@@ -96,6 +96,9 @@ fn dynamic_span_end(text: &str, start: usize) -> Option<usize> {
         }
         return Some(i);
     }
+    if next.is_ascii_digit() {
+        return Some(start + 2);
+    }
     if next.is_ascii_alphanumeric() || next == b'_' {
         let len = bytes[start + 2..]
             .iter()

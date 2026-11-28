@@ -365,3 +365,58 @@ commands:
         Some(HitKind::MissingRequired { .. })
     ));
 }
+
+#[test]
+fn value_flag_consumption_keeps_later_flags_and_rejects_positional_digits() {
+    let compiled = compile_yaml(
+        r#"
+commands:
+  - command: [tool, run]
+    valueFlags: [--label]
+    whenAnyArgs: [--write]
+    requireArgs: [--confirm]
+  - command: [tool, emit]
+    valueFlags: [--label]
+    requireArgs: [[-o, a, b]]
+  - command: [gh, api]
+    valueFlags: [-f, -F, --field, --raw-field, -X, --method]
+    unlessAnyArgs: [graphql]
+    requireAnyArgs: [--method, -X]
+"#,
+    );
+    let consumed_terminator = scan_script(r#"tool run --label "--" --write"#, &compiled);
+    assert!(
+        matches!(
+            consumed_terminator.first().map(|hit| &hit.kind),
+            Some(HitKind::MissingRequired { .. })
+        ),
+        "{consumed_terminator:?}"
+    );
+    assert!(scan_script(r#"tool run -- --write"#, &compiled).is_empty());
+    let consumed_flag = scan_script(r#"tool emit --label "-o" a b"#, &compiled);
+    assert!(
+        matches!(
+            consumed_flag.first().map(|hit| &hit.kind),
+            Some(HitKind::MissingRequired { .. })
+        ),
+        "{consumed_flag:?}"
+    );
+    assert!(scan_script("tool emit -o a b", &compiled).is_empty());
+
+    let positional_digit = scan_script(r#"gh api -f x=1 "$1zz""#, &compiled);
+    assert!(
+        matches!(
+            positional_digit.first().map(|hit| &hit.kind),
+            Some(HitKind::MissingAnyRequired { .. })
+        ),
+        "{positional_digit:?}"
+    );
+    let open_positional = scan_script(r#"gh api -f x=1 "$1""#, &compiled);
+    assert!(
+        matches!(
+            open_positional.first().map(|hit| &hit.kind),
+            Some(HitKind::Unanalyzable { .. })
+        ),
+        "{open_positional:?}"
+    );
+}

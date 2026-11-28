@@ -79,13 +79,15 @@ fn match_flag_slice(
     require_value: bool,
     command_dynamic: bool,
 ) -> ArgMatch {
-    let stop = args
-        .iter()
-        .position(|word| word.text == "--")
-        .unwrap_or(args.len());
+    let (stop, consumed) = option_terminator(args, value_flags);
     let region = &args[..stop];
     if matcher.tokens.len() > 2 {
-        return super::sequence::match_token_sequence(region, &matcher.tokens, command_dynamic);
+        return super::sequence::match_token_sequence_skipping(
+            region,
+            &matcher.tokens,
+            command_dynamic,
+            &consumed[..stop],
+        );
     }
     let mut index = 0;
     let mut dynamic_hit = None;
@@ -131,6 +133,29 @@ fn match_flag_slice(
         Some((token, line)) => ArgMatch::DynamicValue { token, line },
         None => ArgMatch::NotMatched,
     }
+}
+
+fn option_terminator(args: &[&Word], value_flags: &[String]) -> (usize, Vec<bool>) {
+    let mut consumed = vec![false; args.len()];
+    let mut index = 0;
+    while index < args.len() {
+        let word = args[index];
+        if word.text == "--" {
+            return (index, consumed);
+        }
+        if is_option_token(&word.text)
+            && !word.text.contains('=')
+            && takes_value(&word.text, value_flags)
+        {
+            if index + 1 < args.len() {
+                consumed[index + 1] = true;
+            }
+            index += 2;
+            continue;
+        }
+        index += 1;
+    }
+    (args.len(), consumed)
 }
 
 pub(super) fn extract_positionals<'a>(args: &[&'a Word], value_flags: &[String]) -> Vec<&'a Word> {

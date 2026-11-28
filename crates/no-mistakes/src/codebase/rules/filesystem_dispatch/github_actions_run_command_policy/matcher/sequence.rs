@@ -7,8 +7,20 @@ pub(super) fn match_token_sequence(
     tokens: &[String],
     command_dynamic: bool,
 ) -> ArgMatch {
+    match_token_sequence_skipping(words, tokens, command_dynamic, &[])
+}
+
+pub(super) fn match_token_sequence_skipping(
+    words: &[&Word],
+    tokens: &[String],
+    command_dynamic: bool,
+    consumed_starts: &[bool],
+) -> ArgMatch {
     let mut dynamic_hit = None;
-    for window in words.windows(tokens.len()) {
+    for (start, window) in words.windows(tokens.len()).enumerate() {
+        if consumed_starts.get(start).copied().unwrap_or(false) {
+            continue;
+        }
         match match_token_window(window, tokens, command_dynamic) {
             ArgMatch::Matched => return ArgMatch::Matched,
             ArgMatch::DynamicValue { token, line } => {

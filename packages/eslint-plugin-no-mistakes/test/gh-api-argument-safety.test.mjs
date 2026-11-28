@@ -62,6 +62,15 @@ describe(id, () => {
     );
     assert.deepEqual(check("suppression-file.mjs"), []);
   });
+  it("keeps a missing method when only positionals follow --", () => {
+    assert.deepEqual(
+      check("terminator.mjs").map((m) => [m.line, m.messageId]),
+      [
+        [3, "missingMethod"],
+        [4, "missingMethod"],
+      ],
+    );
+  });
   it("handles boundary flags, CommonJS provenance and conservative unknowns", () => {
     assert.deepEqual(
       check("boundaries.mjs").map((m) => [m.line, m.messageId]),
