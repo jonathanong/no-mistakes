@@ -1,0 +1,6 @@
+rules:
+  - rule: no-cross-package-relative-imports
+    scope: repository
+    include: ["packages/app/compat/helper-wrapped.test.ts"]
+    options:
+      unanalyzable: report

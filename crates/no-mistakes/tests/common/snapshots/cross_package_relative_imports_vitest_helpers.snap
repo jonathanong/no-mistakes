@@ -1,0 +1,107 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "default": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "packages/app/compat/helper-wrapped.test.ts",
+          "import": "../../shared/src/status.mts",
+          "line": 5,
+          "message": "Unanalyzable import: the receiver of importActual or importMock is unresolved. Import vi directly from Vitest.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const fromReexport = await mocks.importActual(\"../../shared/src/status.mts\");"
+        },
+        {
+          "file": "packages/app/compat/helper-wrapped.test.ts",
+          "import": "../../shared/src/status.mts",
+          "line": 6,
+          "message": "Unanalyzable import: the receiver of importActual or importMock is unresolved. Import vi directly from Vitest.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const fromFactory = await getMocks().importMock(\"../../shared/src/status.mts\");"
+        },
+        {
+          "file": "packages/app/compat/helper-wrapped.test.ts",
+          "import": "../../shared/src/status.mts",
+          "line": 8,
+          "message": "Unanalyzable import: the receiver of importActual or importMock is unresolved. Import vi directly from Vitest.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const fromLocal = await wrapped.importActual(\"../../shared/src/status.mts\");"
+        },
+        {
+          "file": "packages/app/compat/helper-wrapped.test.ts",
+          "import": "<computed>",
+          "line": 9,
+          "message": "Unanalyzable import: the receiver of importActual or importMock is unresolved. Import vi directly from Vitest.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const fromComputed = await wrapped.importMock(specifier);"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/compat/helper-wrapped.test.ts",
+          "import": "../../shared/src/status.mts",
+          "line": 5,
+          "message": "Unanalyzable import: the receiver of importActual or importMock is unresolved. Import vi directly from Vitest.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const fromReexport = await mocks.importActual(\"../../shared/src/status.mts\");"
+        },
+        {
+          "file": "packages/app/compat/helper-wrapped.test.ts",
+          "import": "../../shared/src/status.mts",
+          "line": 6,
+          "message": "Unanalyzable import: the receiver of importActual or importMock is unresolved. Import vi directly from Vitest.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const fromFactory = await getMocks().importMock(\"../../shared/src/status.mts\");"
+        },
+        {
+          "file": "packages/app/compat/helper-wrapped.test.ts",
+          "import": "../../shared/src/status.mts",
+          "line": 8,
+          "message": "Unanalyzable import: the receiver of importActual or importMock is unresolved. Import vi directly from Vitest.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const fromLocal = await wrapped.importActual(\"../../shared/src/status.mts\");"
+        },
+        {
+          "file": "packages/app/compat/helper-wrapped.test.ts",
+          "import": "<computed>",
+          "line": 9,
+          "message": "Unanalyzable import: the receiver of importActual or importMock is unresolved. Import vi directly from Vitest.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const fromComputed = await wrapped.importMock(specifier);"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

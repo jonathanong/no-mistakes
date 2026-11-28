@@ -1,13 +1,14 @@
-use no_mistakes_rule_kernel::finding::RuleFinding;
+use super::analysis_policy::AnalysisDiagnostics;
 use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::check_outcome::CheckInputFailure;
 use crate::codebase::dependencies::extract::ImportKind;
 use crate::codebase::dependencies::graph::{DepGraph, ImportTarget, TsFactLookup};
 use crate::codebase::ts_source::relative_slash_path;
-use crate::codebase::workspaces::IndexedWorkspaceMap;
+use crate::codebase::workspaces::{IndexedWorkspaceMap, WorkspacePackage};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
+use no_mistakes_rule_kernel::finding::RuleFinding;
 use rayon::prelude::*;
 use std::path::Path;
 
@@ -21,31 +22,34 @@ pub(super) fn check(
     graph: &DepGraph,
     workspace: &IndexedWorkspaceMap,
     session: &AnalysisSession,
-) -> Result<Vec<RuleFinding>> {
+) -> Result<AnalysisDiagnostics> {
     let inputs = Inputs {
         root,
         shared,
         graph,
         workspace,
     };
-    super::run_rule_applications(config, RULE_ID, |rule| {
+    let mut diagnostics = AnalysisDiagnostics::default();
+    for rule in config.rule_applications(RULE_ID) {
         let files = super::selected_rule_files(root, config, rule, shared.graph_file_universe())?;
         let message = rule
             .message
             .as_deref()
             .map_or_else(|| FIX.to_owned(), |prefix| format!("{prefix}: {FIX}"));
+        let policy = config.effective_rule_analysis(rule)?.unanalyzable;
         let results: Vec<_> = files
             .par_iter()
-            .map(|file| inputs.check_file(file, &message))
+            .map(|file| inputs.check_file(file, &message, policy))
             .collect();
-        let mut findings = Vec::new();
         for result in results {
             if let Some(output) = session.capture_check_result(RULE_ID, result)? {
-                findings.extend(output);
+                diagnostics.append(output);
             }
         }
-        Ok(findings)
-    })
+    }
+    super::sort_findings(&mut diagnostics.findings);
+    super::sort_findings(&mut diagnostics.advisories);
+    Ok(diagnostics)
 }
 
 struct Inputs<'a> {
@@ -56,13 +60,18 @@ struct Inputs<'a> {
 }
 
 impl Inputs<'_> {
-    fn check_file(&self, file: &Path, message: &str) -> Result<Vec<RuleFinding>> {
+    fn check_file(
+        &self,
+        file: &Path,
+        message: &str,
+        policy: crate::config::v2::Unanalyzable,
+    ) -> Result<AnalysisDiagnostics> {
         let Some((owner, facts)) = self
             .workspace
             .nearest_package(file)
             .zip(self.shared.get_ts_facts(file))
         else {
-            return Ok(Vec::new());
+            return Ok(AnalysisDiagnostics::default());
         };
         if let Some(error) = facts
             .parse_error
@@ -74,42 +83,65 @@ impl Inputs<'_> {
             );
         }
 
-        Ok(facts
-            .imports
-            .iter()
-            .filter(|import| {
-                !import.computed
-                    && import.kind != ImportKind::RequireResolve
-                    && is_relative(&import.specifier)
-            })
-            .filter_map(|import| {
-                let Some(ImportTarget::File(target)) =
-                    self.graph.import_target(file, &import.specifier)
-                else {
-                    return None;
-                };
-                let crosses_boundary = !target.starts_with(&owner.dir)
-                    || self
-                        .workspace
-                        .nearest_package(target)
-                        .is_some_and(|target_owner| target_owner.dir != owner.dir);
-                crosses_boundary.then(|| RuleFinding {
-                    rule: RULE_ID.to_owned(),
-                    file: relative_slash_path(self.root, file),
-                    line: import.line as usize,
-                    message: message.to_owned(),
-                    import: Some(import.specifier.clone()),
-                    target: Some(relative_slash_path(self.root, target)),
-                    causes: Vec::new(),
+        let relative_file = relative_slash_path(self.root, file);
+        let mut diagnostics = AnalysisDiagnostics::default();
+        diagnostics.findings.extend(
+            facts
+                .imports
+                .iter()
+                .filter(|import| {
+                    !import.computed
+                        && import.kind != ImportKind::RequireResolve
+                        && is_relative(&import.specifier)
                 })
-            })
-            .collect())
+                .filter_map(|import| {
+                    let Some(ImportTarget::File(target)) =
+                        self.graph.import_target(file, &import.specifier)
+                    else {
+                        return None;
+                    };
+                    crosses_boundary(target, owner, self.workspace).then(|| RuleFinding {
+                        rule: RULE_ID.to_owned(),
+                        file: relative_file.clone(),
+                        line: import.line as usize,
+                        message: message.to_owned(),
+                        import: Some(import.specifier.clone()),
+                        target: Some(relative_slash_path(self.root, target)),
+                        causes: Vec::new(),
+                    })
+                }),
+        );
+        self.record_vitest_calls(
+            &vitest::VitestSite {
+                file,
+                relative_file: &relative_file,
+                owner,
+                message,
+                policy,
+            },
+            facts,
+            &mut diagnostics,
+        );
+        Ok(diagnostics)
     }
+}
+
+pub(super) fn crosses_boundary(
+    target: &Path,
+    owner: &WorkspacePackage,
+    workspace: &IndexedWorkspaceMap,
+) -> bool {
+    !target.starts_with(&owner.dir)
+        || workspace
+            .nearest_package(target)
+            .is_some_and(|target_owner| target_owner.dir != owner.dir)
 }
 
 fn is_relative(specifier: &str) -> bool {
     matches!(specifier, "." | "..") || specifier.starts_with("./") || specifier.starts_with("../")
 }
+
+mod vitest;
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

@@ -63,3 +63,56 @@ fn cross_package_relative_imports_match_snapshot() {
     assert_eq!(findings[0]["file"], "packages/app/src/gaps/healthy.mts");
     assert_eq!(findings[0]["line"], 1);
 }
+
+#[test]
+fn cross_package_relative_imports_reports_opaque_vitest_helpers() {
+    let root = rules_path(RULE, "fixture", "");
+    let cases = ["default", "report", "ignore"].map(|policy| {
+        (
+            policy,
+            root.clone(),
+            root.join(format!("helper-vitest-{policy}.yml")),
+        )
+    });
+    let reports = assert_saved_fixture_report(
+        "cross_package_relative_imports_vitest_helpers",
+        &cases,
+        &[],
+        &[],
+    );
+
+    let advised = &reports["default"];
+    assert_eq!(advised["exitCode"], 0);
+    let findings = advised["report"]["advisories"].as_array().unwrap();
+    let calls: Vec<_> = findings
+        .iter()
+        .map(|finding| {
+            assert_eq!(finding["rule"], RULE);
+            assert!(finding.get("target").is_none());
+            (
+                finding["line"].as_u64().unwrap(),
+                finding["import"].as_str().unwrap(),
+            )
+        })
+        .collect();
+    let crossing = "../../shared/src/status.mts";
+    assert_eq!(
+        calls,
+        [
+            (5, crossing),
+            (6, crossing),
+            (8, crossing),
+            (9, "<computed>")
+        ]
+    );
+
+    let reported = &reports["report"];
+    assert_eq!(reported["exitCode"], 1);
+    assert_eq!(reported["report"]["rules"], advised["report"]["advisories"]);
+    assert_eq!(reported["report"]["advisories"], serde_json::json!([]));
+
+    let ignored = &reports["ignore"];
+    assert_eq!(ignored["exitCode"], 0);
+    assert_eq!(ignored["report"]["rules"], serde_json::json!([]));
+    assert_eq!(ignored["report"]["advisories"], serde_json::json!([]));
+}

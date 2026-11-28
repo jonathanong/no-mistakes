@@ -35,5 +35,18 @@ test(
     assert.equal(child.error, undefined);
     assert.equal(child.status, 1, child.stderr);
     assert.deepEqual(JSON.parse(child.stdout), report);
+
+    const helperConfig = join(root, "helper-vitest-default.yml");
+    const helperReport = await check({ root, config: helperConfig });
+    assert.deepEqual(
+      helperReport.advisories.map(({ line }) => line),
+      [5, 6, 8, 9],
+    );
+    const helperBatch = await analyzeProject({
+      root,
+      config: helperConfig,
+      reports: [{ type: "check" }],
+    });
+    assert.deepEqual(helperBatch.reports[0].result, helperReport);
   },
 );
