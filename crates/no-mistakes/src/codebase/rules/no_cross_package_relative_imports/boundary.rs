@@ -1,5 +1,6 @@
 use super::options::PackagePair;
 use super::RULE_ID;
+use crate::codebase::dependencies::graph::ImportTarget;
 use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
 use no_mistakes_rule_kernel::finding::RuleFinding;
 use crate::codebase::ts_resolver::normalize_path;
@@ -34,7 +35,34 @@ pub(super) fn stays_in_owner_package(
             .is_some_and(|pkg| pkg.dir == owner.dir)
 }
 
-pub(super) fn report_resolved_target(
+pub(super) fn check_resolved_or_relative_target(
+    root: &Path,
+    workspace: &IndexedWorkspaceMap,
+    ctx: &SpecifierCheck<'_>,
+    line: u32,
+    specifier: &str,
+    target: Option<&ImportTarget>,
+    diagnostics: &mut AnalysisDiagnostics,
+) {
+    if let Some(ImportTarget::File(target)) = target {
+        report_resolved_target(root, workspace, ctx, line, specifier, target, diagnostics);
+        return;
+    }
+    if stays_in_owner_package(ctx.file, specifier, ctx.owner, workspace) {
+        return;
+    }
+    diagnostics.unanalyzable(
+        ctx.policy,
+        unanalyzable(
+            ctx.relative_file,
+            line,
+            specifier,
+            "the relative specifier has no unique file target. Run resolve-check and fix resolution.",
+        ),
+    );
+}
+
+fn report_resolved_target(
     root: &Path,
     workspace: &IndexedWorkspaceMap,
     ctx: &SpecifierCheck<'_>,

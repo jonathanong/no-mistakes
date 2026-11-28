@@ -295,8 +295,7 @@ fn vitest_helper_imports_follow_the_unanalyzable_policy() {
 
 #[test]
 fn direct_vitest_call_checks_prepared_crossing_before_lexical_same_package_return() {
-    use super::boundary::SpecifierCheck;
-    use super::vitest::record_direct_vitest_target;
+    use super::boundary::{check_resolved_or_relative_target, SpecifierCheck};
     use crate::codebase::dependencies::graph::ImportTarget;
     use no_mistakes_rule_kernel::file_diagnostics::AnalysisDiagnostics;
     use crate::codebase::workspace_resolution::{IndexedWorkspaceMap, WorkspacePackage};
@@ -333,7 +332,7 @@ fn direct_vitest_call_checks_prepared_crossing_before_lexical_same_package_retur
     };
     let mut diagnostics = AnalysisDiagnostics::default();
     let shared_target = ImportTarget::File(root.join("packages/shared/src/status.mts"));
-    record_direct_vitest_target(
+    check_resolved_or_relative_target(
         &root,
         &workspace,
         &ctx,
@@ -355,7 +354,7 @@ fn direct_vitest_call_checks_prepared_crossing_before_lexical_same_package_retur
 
     let local_target = ImportTarget::File(root.join("packages/app/compat/vi-helper.ts"));
     let mut local_diagnostics = AnalysisDiagnostics::default();
-    record_direct_vitest_target(
+    check_resolved_or_relative_target(
         &root,
         &workspace,
         &ctx,

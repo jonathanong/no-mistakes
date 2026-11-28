@@ -4,7 +4,7 @@ use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::check_outcome::CheckInputFailure;
 use crate::codebase::dependencies::extract::{is_indexable, ImportKind};
-use crate::codebase::dependencies::graph::{DepGraph, ImportTarget, TsFactLookup};
+use crate::codebase::dependencies::graph::{DepGraph, TsFactLookup};
 use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::workspace_resolution::IndexedWorkspaceMap;
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
@@ -15,9 +15,7 @@ use std::path::Path;
 mod boundary;
 mod options;
 mod vitest;
-use boundary::{
-    is_relative, report_resolved_target, stays_in_owner_package, unanalyzable, SpecifierCheck,
-};
+use boundary::{check_resolved_or_relative_target, is_relative, unanalyzable, SpecifierCheck};
 use options::PackagePair;
 
 pub(in crate::codebase::rules) use options::accept_declared_options;
@@ -145,29 +143,14 @@ impl Inputs<'_> {
             );
             return;
         }
-        if let Some(ImportTarget::File(target)) = self.graph.import_target(ctx.file, specifier) {
-            report_resolved_target(
-                self.root,
-                self.workspace,
-                ctx,
-                line,
-                specifier,
-                target,
-                diagnostics,
-            );
-            return;
-        }
-        if stays_in_owner_package(ctx.file, specifier, ctx.owner, self.workspace) {
-            return;
-        }
-        diagnostics.unanalyzable(
-            ctx.policy,
-            unanalyzable(
-                ctx.relative_file,
-                line,
-                specifier,
-                "the relative specifier has no unique file target. Run resolve-check and fix resolution.",
-            ),
+        check_resolved_or_relative_target(
+            self.root,
+            self.workspace,
+            ctx,
+            line,
+            specifier,
+            self.graph.import_target(ctx.file, specifier),
+            diagnostics,
         );
     }
 }
