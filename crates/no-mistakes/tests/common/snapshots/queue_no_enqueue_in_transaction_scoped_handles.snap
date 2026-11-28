@@ -14,6 +14,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "file": "src/callback.ts",
           "import": "enqueue",
+          "line": 12,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId: \"async-callback\" });",
+          "target": "@sample/jobs#enqueue"
+        },
+        {
+          "file": "src/callback.ts",
+          "import": "enqueue",
           "line": 6,
           "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
           "rule": "queue-no-enqueue-in-transaction",
@@ -533,6 +542,15 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "queues": [],
       "react": [],
       "rules": [
+        {
+          "file": "src/callback.ts",
+          "import": "enqueue",
+          "line": 12,
+          "message": "Move this enqueue after the transaction commits. Return the job data from the callback and enqueue it after the transaction call resolves.",
+          "rule": "queue-no-enqueue-in-transaction",
+          "sourceLine": "await enqueue({ receiptId: \"async-callback\" });",
+          "target": "@sample/jobs#enqueue"
+        },
         {
           "file": "src/callback.ts",
           "import": "enqueue",

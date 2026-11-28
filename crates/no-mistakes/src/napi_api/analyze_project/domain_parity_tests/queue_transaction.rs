@@ -22,7 +22,7 @@ fn scoped_queue_transaction_advisories_match_in_batched_checks() {
     );
     assert_eq!(
         standalone["rules"].as_array().unwrap().len(),
-        9,
+        10,
         "{standalone:#}"
     );
     assert_eq!(

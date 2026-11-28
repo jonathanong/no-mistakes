@@ -10,6 +10,7 @@ use oxc_span::GetSpan;
 pub struct ScopedHandles {
     pub(super) enabled: bool,
     pub starts: FxHashMap<(u32, u32), ScopedHandle>,
+    pub first_await_ends: FxHashMap<CallableId, u32>,
     bindings: FxHashMap<usize, FxHashMap<String, (u32, u32)>>,
     pub(super) receiver: Option<u32>,
 }

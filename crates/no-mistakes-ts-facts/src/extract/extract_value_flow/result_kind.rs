@@ -21,7 +21,12 @@ impl ImportCollector {
     pub(in super::super) fn record_await_end(&mut self, end: u32) {
         if self.collect_value_flow {
             if let Some(owner) = self.current_function_id() {
-                let first = self.value_flow.first_await_ends.entry(owner).or_insert(end);
+                let first = self
+                    .value_flow
+                    .scoped_handles
+                    .first_await_ends
+                    .entry(owner)
+                    .or_insert(end);
                 *first = (*first).min(end);
             }
         }

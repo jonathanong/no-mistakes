@@ -10,12 +10,14 @@ impl CallbackWalk<'_> {
         site: &ResolvedCallSite,
         tx_owner: CallableId,
     ) -> bool {
-        site.caller_id.is_some_and(|caller| {
+        self.defer_async
+            && site.caller_id.is_some_and(|caller| {
             caller != tx_owner
                 && (self.deferred.contains(&caller)
                     || env
                         .file_facts
                         .value_flow
+                        .scoped_handles
                         .first_await_ends
                         .get(&caller)
                         .is_some_and(|end| *end <= site.offset))

@@ -14,6 +14,7 @@ pub(super) struct CallbackWalk<'a> {
     pub(super) visited: FxHashSet<(CallableId, CallableId)>,
     pub(super) reported: FxHashSet<(u32, String)>,
     pub(super) deferred: FxHashSet<CallableId>,
+    pub(super) defer_async: bool,
     pub(super) diagnostics: &'a mut AnalysisDiagnostics,
 }
 

@@ -392,9 +392,17 @@ fn queue_no_enqueue_in_transaction_scoped_handles_json_matches_snapshot() {
     let callback_only = &reports["callback_only"];
     assert_eq!(callback_only["exitCode"], 1);
     let callbacks = callback_only["report"]["rules"].as_array().unwrap();
-    assert_eq!(callbacks.len(), 1);
-    assert_eq!(callbacks[0]["file"], "src/callback.ts");
-    assert_eq!(callbacks[0]["target"], "@sample/jobs#enqueue");
+    assert_eq!(callbacks.len(), 2);
+    for callback in callbacks {
+        assert_eq!(callback["file"], "src/callback.ts");
+        assert_eq!(callback["target"], "@sample/jobs#enqueue");
+    }
+    let mut callback_lines: Vec<_> = callbacks
+        .iter()
+        .map(|c| c["line"].as_u64().unwrap())
+        .collect();
+    callback_lines.sort_unstable();
+    assert_eq!(callback_lines, [6, 12]);
 
     let mut expected: Vec<_> = findings
         .iter()

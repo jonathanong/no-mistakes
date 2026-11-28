@@ -161,6 +161,7 @@ pub(super) fn check_file(ctx: &Context<'_>, file: &Path, diagnostics: &mut Analy
         worklist: tx_callbacks.iter().map(|&cb| (cb, cb)).collect(),
         reported: FxHashSet::default(),
         deferred: FxHashSet::default(),
+        defer_async: false,
         diagnostics,
     };
     let mut cursors: FxHashMap<(CallableId, CallableId, u32, &str), usize> = FxHashMap::default();
