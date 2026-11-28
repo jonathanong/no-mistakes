@@ -35,3 +35,9 @@ jobs:
       - uses: ./.github/actions/opaque
       - uses: ./../outside-action
       - uses: ./.github/actions/pwsh
+  remote:
+    uses: octo/repo/.github/workflows/ci.yml@v1
+  numeric:
+    uses: 5
+  plain:
+    runs-on: ubuntu-latest

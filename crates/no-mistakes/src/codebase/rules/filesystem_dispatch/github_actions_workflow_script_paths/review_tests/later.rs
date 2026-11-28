@@ -153,6 +153,17 @@ fn local_reusable_workflows_and_outside_repo_actions_are_unanalyzable() {
 }
 
 #[test]
+fn reusable_job_line_handles_quotes_comments_siblings_and_misses() {
+    use super::super::reusable::job_uses_line;
+    let quoted = "jobs:\n\n  # note\n  'a':\n    runs-on: x\n  \"b\":\n    uses: ./w.yml\n";
+    assert_eq!(job_uses_line(quoted, "b"), 7);
+    let sibling = "jobs:\n  a:\n    runs-on: x\n  b:\n    uses: ./w.yml\n";
+    assert_eq!(job_uses_line(sibling, "a"), 1);
+    assert_eq!(job_uses_line(sibling, "missing"), 1);
+    assert_eq!(job_uses_line("name: x\n", "a"), 1);
+}
+
+#[test]
 fn reusable_job_line_ignores_env_keys_and_other_jobs() {
     let source = "env:\n  build: 1\njobs:\n  setup:\n    steps:\n      - uses: actions/checkout@v4\n  build:\n    uses: ./workflows/b.yml\n";
     assert_eq!(super::super::reusable::job_uses_line(source, "build"), 8);
