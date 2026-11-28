@@ -331,3 +331,104 @@ fn validates_invalid_options_early() {
         );
     }
 }
+
+#[test]
+fn covers_option_filters_error_paths_missing_sql_and_unprepared_dispatch() {
+    let base = crate::test_support::rule_fixture_root(RULE_ID);
+    let root = crate::codebase::ts_resolver::normalize_path(&base.join("scalar-subqueries"));
+    let config_path = base.parent().unwrap().join("configs/enabled-sql.yml");
+    let config: NoMistakesConfig =
+        serde_yaml::from_str(&std::fs::read_to_string(&config_path).unwrap()).unwrap();
+    let existing = root.join("queries/check.sql");
+    let missing = root.join("queries/missing.sql");
+    let existing_files = vec![existing.clone()];
+    let files = vec![existing, missing];
+
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_tracked_paths(
+        &root,
+        &existing_files,
+    );
+    let sources = snapshot.source_store_for(&root);
+    let findings =
+        crate::codebase::rules::filesystem_dispatch::run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
+            &root,
+            &config,
+            &existing_files,
+            crate::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
+                session: None,
+                snapshot: &snapshot,
+                next_config_resolver: None,
+                vitest_catalog: None,
+                sources: sources.clone(),
+                workflow_documents: None,
+                tsconfig_gate_project_inputs: None,
+                config_path: None,
+            },
+            None,
+        )
+        .unwrap();
+    assert_eq!(findings.len(), 2);
+
+    assert!(
+        crate::codebase::rules::filesystem_dispatch::run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
+            &root,
+            &config,
+            &files,
+            crate::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
+                session: None,
+                snapshot: &snapshot,
+                next_config_resolver: None,
+                vitest_catalog: None,
+                sources: sources.clone(),
+                workflow_documents: None,
+                tsconfig_gate_project_inputs: None,
+                config_path: None,
+            },
+            None,
+        )
+        .is_err()
+    );
+
+    let invalid_include = Options {
+        include: vec!["[".to_owned()],
+        ..Default::default()
+    };
+    assert!(compile_options(&invalid_include).is_err());
+
+    let invalid_exclude = Options {
+        exclude: vec!["[".to_owned()],
+        ..Default::default()
+    };
+    assert!(compile_options(&invalid_exclude).is_err());
+
+    let with_include = compile_options(&Options {
+        include: vec!["src/**/*.ts".to_owned()],
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(with_include.includes("src/db.ts", false));
+    assert!(!with_include.includes("other/db.ts", false));
+
+    let bad_config: NoMistakesConfig = serde_yaml::from_str(
+        "rules:\n  - rule: postgres-no-duplicate-keyed-lookups\n    scope: repository\n    options:\n      unknownFlag: true\n",
+    )
+    .unwrap();
+    let empty_facts = crate::codebase::check_facts::CheckFactMap::default();
+    assert!(
+        check_with_files_sources_and_facts(&root, &bad_config, &files, &sources, &empty_facts)
+            .is_err()
+    );
+
+    let bad_glob_config: NoMistakesConfig = serde_yaml::from_str(
+        "rules:\n  - rule: postgres-no-duplicate-keyed-lookups\n    scope: repository\n    options:\n      include: ['[']\n",
+    )
+    .unwrap();
+    assert!(check_with_files_sources_and_facts(
+        &root,
+        &bad_glob_config,
+        &files,
+        &sources,
+        &empty_facts
+    )
+    .is_err());
+}

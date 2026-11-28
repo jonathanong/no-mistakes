@@ -63,27 +63,19 @@ fn decimal_to_i64(number: &str) -> Option<i64> {
         Some((mantissa, exponent)) => (mantissa, decimal_integer(exponent)?),
         None => (number, 0),
     };
-    let (whole, fraction) = match mantissa.split_once('.') {
-        Some((whole, fraction)) if !fraction.contains('.') => (whole, fraction),
-        Some(_) => return None,
-        None => (mantissa, ""),
-    };
-    if !whole
+    if !mantissa
         .bytes()
-        .chain(fraction.bytes())
-        .all(|byte| byte.is_ascii_digit() || byte == b'_')
+        .all(|byte| byte.is_ascii_digit() || matches!(byte, b'.' | b'_'))
     {
         return None;
     }
+    let (whole, fraction) = mantissa.split_once('.').unwrap_or((mantissa, ""));
     let whole_digits = whole.bytes().filter(u8::is_ascii_digit).count();
     let digits: Vec<u8> = whole
         .bytes()
         .chain(fraction.bytes())
         .filter(u8::is_ascii_digit)
         .collect();
-    if digits.is_empty() {
-        return None;
-    }
     let Some(first_nonzero) = digits.iter().position(|&digit| digit != b'0') else {
         return Some(0);
     };
