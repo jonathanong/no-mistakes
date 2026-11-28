@@ -1,6 +1,6 @@
 use super::lex::{assignment, command_words, identifier, Lexer, Shell, Word};
 use super::read_targets::targets;
-use crate::codebase::shell_words::{split_quoted_words, Whitespace};
+use crate::codebase::command_lex::words::{split_quoted_words, Whitespace};
 use crate::fx::FxHashMap;
 
 pub const RULE_ID: &str = "bash-empty-array-nounset";

@@ -92,9 +92,9 @@ fn push_static_segment(segments: &mut Vec<Vec<String>>, segment: &str) -> bool {
 }
 
 fn shellish_literal_words(input: &str) -> Option<Vec<String>> {
-    crate::codebase::shell_words::split_quoted_words(
+    crate::codebase::command_lex::words::split_quoted_words(
         input,
-        crate::codebase::shell_words::Whitespace::Unicode,
+        crate::codebase::command_lex::words::Whitespace::Unicode,
     )
 }
 

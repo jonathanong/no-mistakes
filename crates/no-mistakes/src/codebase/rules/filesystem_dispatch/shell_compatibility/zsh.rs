@@ -1,5 +1,5 @@
 use super::lex::{assignment, command_words, Lexer, Shell};
-use crate::codebase::shell_words::{split_quoted_words, Whitespace};
+use crate::codebase::command_lex::words::{split_quoted_words, Whitespace};
 use std::path::Path;
 
 pub const RULE_ID: &str = "zsh-readonly-parameter";

@@ -1,5 +1,5 @@
+use super::super::words::{split_quoted_words, Whitespace};
 use super::{first_document, operator, Document, Operator};
-use crate::codebase::shell_words::{split_quoted_words, Whitespace};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum DelimiterStyle {

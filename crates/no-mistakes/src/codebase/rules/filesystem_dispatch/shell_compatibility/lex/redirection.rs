@@ -1,5 +1,7 @@
 use super::{Lexer, Shell, Word};
-use crate::codebase::shell_heredoc::{self, CarriageReturn, Document, Operator};
+use crate::codebase::command_lex::heredoc::{
+    self as shell_heredoc, CarriageReturn, Document, Operator,
+};
 
 impl<'a> Lexer<'a> {
     pub(super) fn is_fd_prefix(&self, word: &str) -> bool {
