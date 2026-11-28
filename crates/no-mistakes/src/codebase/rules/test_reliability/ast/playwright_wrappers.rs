@@ -1,5 +1,7 @@
 use super::bindings::Bindings;
-use crate::codebase::rules::test_reliability::playwright_provenance::{WrapperCall, WrapperSummary};
+use crate::codebase::rules::test_reliability::playwright_provenance::{
+    WrapperCall, WrapperSummary,
+};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::{FxHashMap, FxHashSet};
 use oxc_ast::ast::{CallExpression, Expression};
@@ -7,7 +9,9 @@ use oxc_semantic::SymbolId;
 
 mod body;
 mod provenance;
-use body::{collect_returns, WrapperBody};
+mod returns;
+use body::WrapperBody;
+use returns::collect_returns;
 
 const MAX_WRAPPER_DEPTH: usize = 8;
 
@@ -102,13 +106,9 @@ impl<'ast> Bindings<'_, 'ast> {
                 }
                 Expression::CallExpression(call) if !call.optional => {
                     let callee = unwrap_ts_wrappers(&call.callee);
-                    if let Some(next) = self.unwrap_local_call(
-                        call,
-                        callee,
-                        search,
-                        &mut wrappers,
-                        &mut derived_at,
-                    ) {
+                    if let Some(next) =
+                        self.unwrap_local_call(call, callee, search, &mut wrappers, &mut derived_at)
+                    {
                         value = next;
                         continue;
                     }

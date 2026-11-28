@@ -1,5 +1,6 @@
 use super::{
-    CheckFileFacts, EdgeIndex, EdgeKind, ExportKey, ExportLookup, FxHashSet, UNRESOLVED_EXPORT,
+    CheckFileFacts, EdgeIndex, EdgeKind, ExportKey, ExportLookup, ExportProof, FxHashSet,
+    WrapperProof, UNRESOLVED_EXPORT,
 };
 use std::path::Path;
 
@@ -15,6 +16,10 @@ impl ExportLookup<'_> {
         key: &ExportKey,
         facts: Option<&CheckFileFacts>,
     ) {
+        if facts.is_some_and(|file| file.parse_error.is_some()) {
+            self.malformed.insert(key.file.clone());
+            return;
+        }
         let Some((reason, refs)) = facts.and_then(|file| {
             let binding = file
                 .ts
@@ -32,21 +37,58 @@ impl ExportLookup<'_> {
         }) else {
             return;
         };
-        if refs
-            .iter()
-            .any(|import| import.is_playwright_test() || self.local(&key.file, import).is_none())
-        {
-            self.uncertain.insert(key.clone(), reason);
-            return;
-        }
         let deps: Vec<_> = refs
             .iter()
+            .filter(|import| !import.is_playwright_test())
             .filter_map(|import| self.local(&key.file, import))
             .collect();
+        if deps.len() < refs.len() {
+            self.uncertain.insert(key.clone(), reason);
+        }
         if !deps.is_empty() {
             next.extend(deps.iter().cloned());
             self.uncertain_deps.insert(key.clone(), (reason, deps));
         }
+    }
+
+    pub(in crate::codebase::check_facts::playwright_provenance) fn malformed_fixture<'a>(
+        &'a self,
+        relationships: &EdgeIndex<ExportKey, EdgeKind>,
+        root: &ExportKey,
+    ) -> Option<&'a Path> {
+        if self.malformed.is_empty() {
+            return None;
+        }
+        let mut seen = FxHashSet::default();
+        let mut stack = vec![root];
+        while let Some(key) = stack.pop() {
+            if !seen.insert(key) {
+                continue;
+            }
+            if let Some(path) = self.malformed.get(&key.file) {
+                return Some(path);
+            }
+            if let Some(ExportProof::Playwright(_, deps) | ExportProof::Alias(_, deps)) =
+                self.proof.get(key)
+            {
+                stack.extend(deps.iter().map(|(target, _)| target));
+            }
+            match self.wrappers.get(key) {
+                Some(WrapperProof::Direct { deps, .. }) => {
+                    stack.extend(deps.iter().map(|(target, _)| target));
+                }
+                Some(WrapperProof::Alias(target)) => stack.push(target),
+                Some(WrapperProof::Stars(targets)) => stack.extend(targets),
+                _ => {}
+            }
+            if let Some((_, deps)) = self.uncertain_deps.get(key) {
+                stack.extend(deps);
+            }
+            if let Some(neighbors) = relationships.forward().get(key) {
+                stack.extend(neighbors.iter().map(|(target, _)| target));
+            }
+        }
+        None
     }
 
     pub(in crate::codebase::check_facts::playwright_provenance) fn uncertainty_reason(

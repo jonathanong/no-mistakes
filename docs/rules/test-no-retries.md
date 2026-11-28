@@ -116,14 +116,14 @@ with an unknown count produce an `incomplete` entry naming the file, line,
 and binding. [Retry candidates and unresolved receivers](https://github.com/jongleberry/no-mistakes/blob/cc505a7c1e9c3cb6ad6d69cce53633b67d0c999e/crates/no-mistakes/src/codebase/rules/test_reliability/findings.rs#L141-L164). Add the
 export to `options.fixtures` if it is a Playwright fixture, or exclude/suppress
 the file if it is not. When provenance survives through a receiver that cannot
-be fully traced, such as a later assignment or a mixed factory return, the
-rule records `incomplete` even when the retry count is within the configured
-cap. This includes mixed factory returns reached through imports and
-re-exports and imported wrappers whose return could not be traced.
-A configured fixture establishes the identity of its imported export.
-Local choices, later assignments, and wrappers applied at the call site
-still need to preserve that identity.
-See [Playwright receiver limits](playwright-no-serial.md#limits).
+be fully traced, such as a later assignment, a mutable or destructured fixture
+export, or an untraceable factory argument or return, the rule records
+`incomplete` even when the retry count is within the configured cap. A
+configured fixture establishes the identity of its imported export. Local
+choices, later assignments, and wrappers applied at the call site still need
+to preserve that identity. The rule reports a malformed fixture module at
+the importing spec, including through re-exports, wrappers, and entries in
+`options.fixtures`. See [Playwright receiver limits](playwright-no-serial.md#limits).
 Bind the rule application to a Vitest project with
 `rules[].tests.vitest` to check global Vitest calls. Workflow discovery uses
 `ci.workflowDirs`. An unreadable or malformed input also appears in the JSON

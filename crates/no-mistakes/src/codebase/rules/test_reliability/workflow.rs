@@ -33,9 +33,10 @@ pub(super) fn collect(
                     project: None,
                     origin: Origin::Settings,
                     playwright_import: None,
-            playwright_candidates: Vec::new(),
+                    playwright_candidates: Vec::new(),
                     playwright_binding: None,
                     playwright_wrappers: Vec::new(),
+                    malformed_playwright_fixture: None,
                     resolved_playwright_exports: Vec::new(),
                     unresolved_reason: None,
                 });
@@ -51,9 +52,10 @@ pub(super) fn collect(
                         project: None,
                         origin: Origin::Settings,
                         playwright_import: None,
-            playwright_candidates: Vec::new(),
+                        playwright_candidates: Vec::new(),
                         playwright_binding: None,
                         playwright_wrappers: Vec::new(),
+                        malformed_playwright_fixture: None,
                         resolved_playwright_exports: Vec::new(),
                         unresolved_reason: None,
                     });

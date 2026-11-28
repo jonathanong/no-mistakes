@@ -1,0 +1,13 @@
+rules:
+  - rule: playwright-no-serial
+    scope: repository
+    options:
+      fixtures:
+        - module: fixtures/broken.ts
+          export: test
+  - rule: test-no-retries
+    scope: repository
+    options:
+      fixtures:
+        - module: fixtures/broken.ts
+          export: test

@@ -87,11 +87,14 @@ a call setting `mode: "serial"` or invoking `.describe.serial()` produces an
 if it is not. The rule also records `incomplete` when it can find Playwright
 provenance but cannot resolve the whole receiver, for example through later
 assignments, a loop binding, arguments to a local function, an initialized
-class field, or a factory with an untraceable return branch. A missing initializer or an unknown
+class field, a mutable or destructured fixture export, or a factory call with
+an untraceable argument or return branch. A missing initializer or unknown
 branch preserves provenance from another path, including through imports and
-re-exports. A configured fixture establishes the identity of its imported export.
-Local choices, later assignments, and wrappers applied at the call site
-still need to preserve that identity. Computed
+re-exports. A configured fixture establishes the identity of an imported
+export. Local choices, later assignments, and wrappers applied at the call
+site still need to preserve that identity. The rule reports a malformed
+fixture module at the importing spec, including through re-exports, wrappers,
+and entries in `options.fixtures`. Computed
 configuration, omitted options, and CLI worker flags
 need separate review. An unreadable or malformed selected test or config also
 appears in the JSON `incomplete` list.
