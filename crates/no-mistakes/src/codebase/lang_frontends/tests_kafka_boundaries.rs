@@ -25,6 +25,22 @@ fn kafka_operation_names_need_a_leading_identifier_boundary() {
 }
 
 #[test]
+fn shared_send_path_rejects_interpolated_topics() {
+    let rb = KafkaFile::from_path(Path::new("w.rb"));
+    let kt = KafkaFile::from_path(Path::new("w.kt"));
+    let dart = KafkaFile::from_path(Path::new("w.dart"));
+    assert!(extract_kafka_topics_for("bus.send(\"mail.#{env}\")", rb)
+        .0
+        .is_empty());
+    assert!(extract_kafka_topics_for("bus.send(\"mail.$env\")", kt)
+        .0
+        .is_empty());
+    assert!(extract_kafka_topics_for("bus.send('mail.$env')", dart)
+        .0
+        .is_empty());
+}
+
+#[test]
 fn ruby_block_comment_markers_need_a_trailing_boundary() {
     let source = "=begin\n=ending\nproducer.produce(payload, topic: \"ghost\")\n=end\n";
     let file = KafkaFile::from_path(Path::new("send.rb"));

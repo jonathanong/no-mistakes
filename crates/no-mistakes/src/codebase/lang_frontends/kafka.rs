@@ -112,7 +112,7 @@ pub(crate) fn extract_kafka_topics_for(
     file: KafkaFile,
 ) -> (Vec<String>, Vec<String>) {
     let source = file.strip(source);
-    let mut produces = extract_named(&source, kafka_produce_re());
+    let mut produces = extract_named(&source, kafka_produce_re(), file.dollar_scope());
     produces.extend(super::kafka_literals::extra_produces(&source, file));
     let mut consumes = extract_kafka_consumes(&source, file.dollar_scope());
     consumes.extend(super::kafka_literals::extra_consumes(&source, file));
@@ -140,17 +140,13 @@ fn dedup(values: &mut Vec<String>) {
     values.dedup();
 }
 
-fn extract_named(source: &str, re: &Regex) -> Vec<String> {
+fn extract_named(source: &str, re: &Regex, scope: DollarScope) -> Vec<String> {
     let mut values: Vec<String> = re
         .captures_iter(source)
         .filter_map(|cap| {
             let matched = cap.iter().skip(1).flatten().next()?;
-            super::kafka_topic_text::complete_topic(
-                source,
-                matched.start(),
-                matched.end(),
-                matched.as_str(),
-            )
+            let (start, end) = (matched.start(), matched.end());
+            super::kafka_topic_text::closed_literal(source, start, end, matched.as_str(), scope)
         })
         .collect();
     values.sort();
@@ -159,7 +155,7 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
 }
 
 fn extract_kafka_consumes(source: &str, dollar_scope: DollarScope) -> Vec<String> {
-    let mut values = extract_named(source, kafka_consume_re());
+    let mut values = extract_named(source, kafka_consume_re(), dollar_scope);
     for cap in kafka_consume_array_re().captures_iter(source) {
         let borrowed = cap.get(1).is_some();
         let block = cap.get(2).map(|m| m.as_str()).unwrap_or("");
