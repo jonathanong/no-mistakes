@@ -6,9 +6,7 @@ impl ScopeVisitor<'_> {
             .iter()
             .rposition(|scope| scope.contains_key(name))
         {
-            if let Some(frame) = self.literal_objects.closed.frames.get_mut(i) {
-                frame.remove(name);
-            }
+            self.literal_objects.closed.remove_at(i, name);
             self.frozen_aliases
                 .retain(|alias| alias.scope != i || alias.name != name);
         }
@@ -111,10 +109,12 @@ impl ScopeVisitor<'_> {
     }
     pub(in crate::codebase::postgres::embedded::walk) fn note_closed_const(
         &mut self,
+        type_annotation: Option<&TSTypeAnnotation<'_>>,
         init: &Expression<'_>,
         scope: usize,
         name: &str,
     ) {
+        super::relation::note_const_relation_and_array(self, type_annotation, init, scope, name);
         if let Expression::Identifier(id) = unwrap_ts_wrappers(init) {
             self.invalidate_record_object(id.name.as_str());
         }

@@ -108,6 +108,13 @@ fn push_pending(
         .insert(seq, (call.span.start, call.span.end));
     let mut recovered = executor_call(visitor, call, callee.to_string());
     super::super::transaction::annotate(visitor, call, &mut recovered);
+    let fragments = visitor.collect_call_fragments(call, &recovered);
+    if !fragments.is_empty() {
+        visitor
+            .call_fragment_state
+            .call_fragments
+            .insert((call.span.start, call.span.end), fragments);
+    }
     visitor.pending_calls.push(PendingRelativeCall {
         seq,
         owners,
@@ -128,6 +135,13 @@ fn push_confirmed(
     }
     let mut recovered = executor_call(visitor, call, callee);
     super::super::transaction::annotate(visitor, call, &mut recovered);
+    let fragments = visitor.collect_call_fragments(call, &recovered);
+    if !fragments.is_empty() {
+        visitor
+            .call_fragment_state
+            .call_fragments
+            .insert((call.span.start, call.span.end), fragments);
+    }
     visitor.calls.push(recovered);
     visitor.call_spans.push((call.span.start, call.span.end));
     visitor.note_executor_call(call);

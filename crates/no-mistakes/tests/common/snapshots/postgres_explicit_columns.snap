@@ -178,6 +178,237 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "fragment_checks_all": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/unresolved.ts",
+          "line": 13,
+          "message": "src/unresolved.ts:13: postgres-explicit-columns has unresolved SQL for select-star: unresolved relation `upserted` for SELECT * in SQL fragment",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "q.append(\" SELECT upserted.* FROM upserted\");",
+          "target": "select-star"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "line": 17,
+          "message": "src/unresolved.ts:17: postgres-explicit-columns has unresolved SQL for select-star: unresolved relation for SELECT * in SQL fragment",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "const q = sql`SELECT * FROM `;",
+          "target": "select-star"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "line": 24,
+          "message": "src/unresolved.ts:24: postgres-explicit-columns has unresolved SQL for select-star: unresolved interpolated relation for SELECT * in SQL fragment",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);",
+          "target": "select-star"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "line": 28,
+          "message": "src/unresolved.ts:28: postgres-explicit-columns has unresolved SQL for select-star: unresolved interpolated relation for SELECT * in SQL fragment",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);",
+          "target": "select-star"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "line": 32,
+          "message": "src/unresolved.ts:32: postgres-explicit-columns has unresolved SQL for returning-star: unresolved relation for RETURNING * in SQL fragment",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "return query(head + \" \" + RETURNING_ALL);",
+          "target": "returning-star"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "line": 9,
+          "message": "src/unresolved.ts:9: postgres-explicit-columns has unresolved SQL for returning-star: unresolved relation for RETURNING * in SQL fragment",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "q.append(sql` RETURNING *`);",
+          "target": "returning-star"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "src/appended-fragments.ts",
+          "line": 21,
+          "message": "src/appended-fragments.ts:21: RETURNING * returns all 14 columns of entries (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "q.append(sql` RETURNING *`);",
+          "target": "entries"
+        },
+        {
+          "file": "src/appended-fragments.ts",
+          "line": 31,
+          "message": "src/appended-fragments.ts:31: SELECT * reads all 14 columns of entries (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "q.append(\" UNION ALL SELECT entries.* FROM entries\");",
+          "target": "entries"
+        },
+        {
+          "file": "src/appended-fragments.ts",
+          "line": 38,
+          "message": "src/appended-fragments.ts:38: SELECT * reads all 14 columns of records (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "q.append(\" SELECT records.* FROM records\");",
+          "target": "records"
+        },
+        {
+          "file": "src/appended-fragments.ts",
+          "line": 9,
+          "message": "src/appended-fragments.ts:9: SELECT * reads all 14 columns of entries (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "const q = sql`SELECT e.* FROM entries e WHERE e.owner_id = ${ownerId}`;",
+          "target": "entries"
+        },
+        {
+          "file": "src/interpolated-table.ts",
+          "line": 10,
+          "message": "src/interpolated-table.ts:10: SELECT * reads all 14 columns of entries (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);",
+          "target": "entries"
+        },
+        {
+          "file": "src/interpolated-table.ts",
+          "line": 14,
+          "message": "src/interpolated-table.ts:14: SELECT * reads all 14 columns of entries (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "const q = sql`SELECT * FROM `;",
+          "target": "entries"
+        },
+        {
+          "file": "src/interpolated-table.ts",
+          "line": 32,
+          "message": "src/interpolated-table.ts:32: SELECT * reads all 14 columns of records (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);",
+          "target": "records"
+        },
+        {
+          "file": "src/interpolated-table.ts",
+          "line": 40,
+          "message": "src/interpolated-table.ts:40: SELECT * reads all 14 columns of records (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "return query(`SELECT * FROM ${relation} WHERE id = $1`, [id]);",
+          "target": "records"
+        },
+        {
+          "file": "src/shared-constant.ts",
+          "line": 14,
+          "message": "src/shared-constant.ts:14: RETURNING * returns all 14 columns of records (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "return query(`DELETE FROM records WHERE id = $1 ${RETURNING_ALL}`, [id]);",
+          "target": "records"
+        },
+        {
+          "file": "src/shared-constant.ts",
+          "line": 19,
+          "message": "src/shared-constant.ts:19: RETURNING * returns all 14 columns of entries (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "`UPDATE entries SET ${dynamicSet} WHERE id = $1 ${RETURNING_ALL}`,",
+          "target": "entries"
+        },
+        {
+          "file": "src/shared-constant.ts",
+          "line": 31,
+          "message": "src/shared-constant.ts:31: RETURNING * returns all 14 columns of records (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "q.append(` ${RETURNING_ALL}`);",
+          "target": "records"
+        },
+        {
+          "file": "src/shared-constant.ts",
+          "line": 4,
+          "message": "src/shared-constant.ts:4: RETURNING * returns all 14 columns of entries (limit 12); list the columns the caller uses",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "const RETURNING_ALL = \"RETURNING *\";",
+          "target": "entries"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "fragment_checks_unresolved_advisories": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "src/unresolved.ts",
+          "line": 13,
+          "message": "src/unresolved.ts:13: postgres-explicit-columns has unresolved SQL for select-star: unresolved relation `upserted` for SELECT * in SQL fragment",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "q.append(\" SELECT upserted.* FROM upserted\");",
+          "target": "select-star"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "line": 17,
+          "message": "src/unresolved.ts:17: postgres-explicit-columns has unresolved SQL for select-star: unresolved relation for SELECT * in SQL fragment",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "const q = sql`SELECT * FROM `;",
+          "target": "select-star"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "line": 24,
+          "message": "src/unresolved.ts:24: postgres-explicit-columns has unresolved SQL for select-star: unresolved interpolated relation for SELECT * in SQL fragment",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);",
+          "target": "select-star"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "line": 28,
+          "message": "src/unresolved.ts:28: postgres-explicit-columns has unresolved SQL for select-star: unresolved interpolated relation for SELECT * in SQL fragment",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "return query(`SELECT * FROM ${table} WHERE id = $1`, [id]);",
+          "target": "select-star"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "line": 32,
+          "message": "src/unresolved.ts:32: postgres-explicit-columns has unresolved SQL for returning-star: unresolved relation for RETURNING * in SQL fragment",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "return query(head + \" \" + RETURNING_ALL);",
+          "target": "returning-star"
+        },
+        {
+          "file": "src/unresolved.ts",
+          "line": 9,
+          "message": "src/unresolved.ts:9: postgres-explicit-columns has unresolved SQL for returning-star: unresolved relation for RETURNING * in SQL fragment",
+          "rule": "postgres-explicit-columns",
+          "sourceLine": "q.append(sql` RETURNING *`);",
+          "target": "returning-star"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fragment_checks_views_and_ctes": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
   "function_lines": {
     "exitCode": 1,
     "report": {

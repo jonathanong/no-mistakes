@@ -20,6 +20,7 @@ pub(super) fn visit_target<'a>(visitor: &mut ScopeVisitor<'a>, target: &Assignme
                             visitor.visit_expression(init);
                         }
                         visitor.mark_dynamic(property.binding.name.as_str());
+                        visitor.clear_builder_fragment_by_name(property.binding.name.as_str());
                     }
                     AssignmentTargetProperty::AssignmentTargetPropertyProperty(property) => {
                         visitor.visit_property_key(&property.name);
@@ -33,7 +34,10 @@ pub(super) fn visit_target<'a>(visitor: &mut ScopeVisitor<'a>, target: &Assignme
         }
         _ => {
             visitor.visit_assignment_target(target);
-            for_each_assigned_name(target, &mut |name| visitor.mark_dynamic(name));
+            for_each_assigned_name(target, &mut |name| {
+                visitor.mark_dynamic(name);
+                visitor.clear_builder_fragment_by_name(name);
+            });
         }
     }
 }

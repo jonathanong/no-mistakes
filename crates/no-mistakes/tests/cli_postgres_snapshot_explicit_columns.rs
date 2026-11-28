@@ -102,6 +102,21 @@ fn postgres_explicit_columns_check_json_snapshot() {
         ),
         ("span_suppress_ts", "suppress-ts-raw", "deferred-db.yml"),
         ("span_suppress_ts_hidden", "suppress-ts", "deferred-db.yml"),
+        (
+            "fragment_checks_all",
+            "fragment-checks",
+            "fragment-checks-ignore.yml",
+        ),
+        (
+            "fragment_checks_views_and_ctes",
+            "fragment-checks",
+            "fragment-checks-views-ctes.yml",
+        ),
+        (
+            "fragment_checks_unresolved_advisories",
+            "fragment-checks",
+            "fragment-checks-unresolved.yml",
+        ),
     ]
     .map(|(label, fixture, config)| {
         (

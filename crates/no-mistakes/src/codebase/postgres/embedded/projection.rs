@@ -47,6 +47,10 @@ pub(crate) fn extract_with_scopes(
             fragment.recovered_placeholder_positions = positions;
         }
     }
+    for fragments in collected.call_fragments.values_mut() {
+        walk::call_fragments::publish_call_fragments(fragments);
+    }
+    walk::call_fragments::publish_call_fragments(&mut collected.param_append_fragments);
     let (matched_factory_names, matched_type_names) =
         scoped_bindings::matched_names(program, options);
     EmbeddedSqlFileFacts {
@@ -72,6 +76,8 @@ pub(crate) fn extract_with_scopes(
         fragments,
         fragment_variants: collected.fragment_variants,
         fragment_sites: collected.fragment_sites,
+        call_fragments: collected.call_fragments,
+        param_append_fragments: collected.param_append_fragments,
         pending_relative: PendingRelativeScope {
             candidates: std::mem::take(&mut scoped.candidates),
             spans: std::mem::take(&mut scoped.spans),

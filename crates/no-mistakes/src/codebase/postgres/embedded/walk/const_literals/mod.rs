@@ -84,8 +84,8 @@ fn object_members(expr: &Expression<'_>) -> Option<Members> {
 
 #[rustfmt::skip]
 impl ScopeVisitor<'_> {
-    pub(super) fn note_const_object(&mut self, init: &Expression<'_>, scope_index: usize, name: &str) {
-        self.note_closed_const(init, scope_index, name);
+    pub(super) fn note_const_object(&mut self, type_annotation: Option<&oxc_ast::ast::TSTypeAnnotation<'_>>, init: &Expression<'_>, scope_index: usize, name: &str) {
+        self.note_closed_const(type_annotation, init, scope_index, name);
         self.note_stable_members(init, scope_index, name);
         let Some(members) = object_members(init) else { return };
         if let Some(frame) = self.literal_objects.frames.get_mut(scope_index) {

@@ -126,6 +126,7 @@ pub(crate) struct ScopeVisitor<'a> {
     pub(crate) exported_constants:
         crate::fx::FxHashMap<String, super::super::helpers::ExportedConstant>,
     pub(super) plain: super::plain_returns::PlainState,
+    pub(super) call_fragment_state: super::call_fragments::CallFragmentState,
     pub(super) frozen_aliases: Vec<FrozenAlias>,
     pub(super) site_groups: std::cell::RefCell<crate::fx::FxHashMap<usize, u32>>,
 }

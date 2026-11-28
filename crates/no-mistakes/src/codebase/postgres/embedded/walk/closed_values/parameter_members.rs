@@ -4,47 +4,6 @@ fn member_key(identity: u32) -> String {
     format!("\0parameter-member:{identity}")
 }
 
-fn strings(visitor: &ScopeVisitor<'_>, ty: &TSType<'_>, depth: u8) -> Option<Vec<String>> {
-    let depth = depth.checked_sub(1)?;
-    match ty {
-        TSType::TSLiteralType(literal) => match &literal.literal {
-            TSLiteral::StringLiteral(value) => {
-                Some(vec![crate::ast::js_literal(value).into_owned()])
-            }
-            _ => None,
-        },
-        TSType::TSUnionType(union) => {
-            let mut values = Vec::new();
-            for ty in &union.types {
-                for value in strings(visitor, ty, depth)? {
-                    if !values.contains(&value) {
-                        values.push(value);
-                    }
-                    if values.len() > MAX_EMBEDDED_SQL_VARIANTS {
-                        return None;
-                    }
-                }
-            }
-            Some(values)
-        }
-        TSType::TSTypeReference(reference) if reference.type_arguments.is_none() => {
-            let TSTypeName::IdentifierReference(name) = &reference.type_name else {
-                return None;
-            };
-            visitor
-                .literal_objects
-                .closed
-                .type_frames
-                .iter()
-                .rev()
-                .find_map(|frame| frame.get(name.name.as_str()))
-                .filter(|values| !values.is_empty())
-                .cloned()
-        }
-        _ => None,
-    }
-}
-
 fn arms(values: Vec<String>, identity: u32) -> Vec<Arm> {
     values
         .into_iter()
@@ -70,18 +29,30 @@ impl ScopeVisitor<'_> {
             .last_mut()
             .expect("closed type scope")
             .insert(name.to_string(), Vec::new());
+        self.literal_objects
+            .closed
+            .relation_type_frames
+            .last_mut()
+            .expect("closed relation type scope")
+            .insert(name.to_string(), Vec::new());
     }
 
     pub(in crate::codebase::postgres::embedded::walk) fn note_parameter_type_alias(
         &mut self,
         alias: &TSTypeAliasDeclaration<'_>,
     ) {
-        let values = alias
+        let inline = alias
             .type_parameters
             .is_none()
-            .then(|| super::types::strings(&alias.type_annotation))
-            .flatten();
-        let values = values.unwrap_or_default();
+            .then(|| super::types::inline_strings(&alias.type_annotation))
+            .flatten()
+            .unwrap_or_default();
+        let relation = alias
+            .type_parameters
+            .is_none()
+            .then(|| super::types::strings(self, &alias.type_annotation, 8, true))
+            .flatten()
+            .unwrap_or_default();
         self.literal_objects
             .closed
             .type_frames
@@ -89,7 +60,15 @@ impl ScopeVisitor<'_> {
             .expect("closed type scope")
             .entry(alias.id.name.to_string())
             .and_modify(Vec::clear)
-            .or_insert(values);
+            .or_insert(inline);
+        self.literal_objects
+            .closed
+            .relation_type_frames
+            .last_mut()
+            .expect("closed relation type scope")
+            .entry(alias.id.name.to_string())
+            .and_modify(Vec::clear)
+            .or_insert(relation);
     }
 
     pub(super) fn note_closed_parameter_members(&mut self, param: &FormalParameter<'_>) {
@@ -124,11 +103,9 @@ impl ScopeVisitor<'_> {
             let Some(identity) = stable.fields.get(key.as_ref()) else {
                 continue;
             };
-            let Some(values) = property
-                .type_annotation
-                .as_ref()
-                .and_then(|annotation| strings(self, &annotation.type_annotation, 8))
-            else {
+            let Some(values) = property.type_annotation.as_ref().and_then(|annotation| {
+                super::types::strings(self, &annotation.type_annotation, 8, false)
+            }) else {
                 continue;
             };
             fields.push((member_key(*identity), arms(values, *identity)));

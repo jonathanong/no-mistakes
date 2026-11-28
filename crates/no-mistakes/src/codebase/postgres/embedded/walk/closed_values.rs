@@ -33,6 +33,13 @@ mod parameter_members;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod parent_fields_tests;
 mod predicate;
+mod relation;
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod relation_append_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod relation_edge_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod relation_tests;
 mod state;
 use expression::expression;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
@@ -62,47 +69,38 @@ struct Arm {
 #[derive(Default)]
 pub(super) struct ClosedValues {
     frames: Vec<FxHashMap<String, Vec<Arm>>>,
+    relation_frames: Vec<FxHashMap<String, Vec<Arm>>>,
+    const_literal_arrays: Vec<FxHashMap<String, Vec<String>>>,
     type_frames: Vec<FxHashMap<String, Vec<String>>>,
+    relation_type_frames: Vec<FxHashMap<String, Vec<String>>>,
     namespace_shadows: FxHashMap<u32, std::sync::Arc<crate::fx::FxHashSet<String>>>,
     assertions: FxHashMap<String, crate::codebase::postgres::embedded::SqlIdentifierAssertion>,
 }
 impl ClosedValues {
-    pub(super) fn push(&mut self) {
+    pub(in crate::codebase::postgres::embedded::walk) fn push(&mut self) {
         self.frames.push(FxHashMap::default());
+        self.relation_frames.push(FxHashMap::default());
+        self.const_literal_arrays.push(FxHashMap::default());
         self.type_frames.push(FxHashMap::default());
+        self.relation_type_frames.push(FxHashMap::default());
     }
-    pub(super) fn pop(&mut self) {
+    pub(in crate::codebase::postgres::embedded::walk) fn pop(&mut self) {
         self.frames.pop();
+        self.relation_frames.pop();
+        self.const_literal_arrays.pop();
         self.type_frames.pop();
+        self.relation_type_frames.pop();
     }
-    pub(super) fn roots(
-        &self,
-        scopes: &[HashMap<String, super::BindingState>],
-        name: &str,
-    ) -> Vec<String> {
-        let Some(i) = scopes.iter().rposition(|scope| scope.contains_key(name)) else {
-            return Vec::new();
-        };
-        self.frames
-            .get(i)
-            .and_then(|frame| frame.get(name))
-            .into_iter()
-            .flatten()
-            .filter(|arm| !matches!(arm.node, Node::Text(_)))
-            .filter_map(|arm| arm.root.clone())
-            .collect()
-    }
-    pub(super) fn has(&self, scopes: &[HashMap<String, super::BindingState>], name: &str) -> bool {
-        scopes
-            .iter()
-            .enumerate()
-            .rev()
-            .find(|(_, scope)| scope.contains_key(name))
-            .is_some_and(|(i, _)| {
-                self.frames
-                    .get(i)
-                    .is_some_and(|frame| frame.contains_key(name))
-            })
+    pub(super) fn remove_at(&mut self, index: usize, name: &str) {
+        if let Some(frame) = self.frames.get_mut(index) {
+            frame.remove(name);
+        }
+        if let Some(frame) = self.relation_frames.get_mut(index) {
+            frame.remove(name);
+        }
+        if let Some(frame) = self.const_literal_arrays.get_mut(index) {
+            frame.remove(name);
+        }
     }
 }
 fn lookup(visitor: &ScopeVisitor<'_>, name: &str) -> Option<Vec<Arm>> {
@@ -118,6 +116,8 @@ fn lookup(visitor: &ScopeVisitor<'_>, name: &str) -> Option<Vec<Arm>> {
         .get(name)
         .cloned()
 }
+pub(super) use relation::recover_relation;
+
 pub(super) fn recover(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>) -> Option<Vec<Recovered>> {
     if matches!(
         unwrap_ts_wrappers(expr),
@@ -126,6 +126,14 @@ pub(super) fn recover(visitor: &ScopeVisitor<'_>, expr: &Expression<'_>) -> Opti
         return None;
     }
     let arms = expression(visitor, expr, 8)?;
+    materialize_arms(visitor, expr, arms)
+}
+
+fn materialize_arms(
+    visitor: &ScopeVisitor<'_>,
+    expr: &Expression<'_>,
+    arms: Vec<Arm>,
+) -> Option<Vec<Recovered>> {
     if arms
         .iter()
         .all(|arm| arm.choices.is_empty() && arm.root.is_none())

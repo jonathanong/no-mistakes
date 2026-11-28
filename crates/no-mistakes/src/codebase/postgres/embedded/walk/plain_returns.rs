@@ -142,6 +142,9 @@ impl ScopeVisitor<'_> {
     fn current_plain_name(&self) -> Option<&FunctionKey> {
         self.plain.names.last().and_then(Option::as_ref)
     }
+    pub(super) fn current_plain_function_key(&self) -> Option<FunctionKey> {
+        self.current_plain_name().cloned()
+    }
 
     pub(super) fn alias_plain_self(&mut self, name: &str) {
         if let Some(owner) = self.current_plain_name().cloned() {
@@ -153,7 +156,7 @@ impl ScopeVisitor<'_> {
         }
     }
 
-    fn plain_key(&self, name: &str) -> FunctionKey {
+    pub(super) fn plain_key(&self, name: &str) -> FunctionKey {
         let index = self
             .scopes
             .iter()

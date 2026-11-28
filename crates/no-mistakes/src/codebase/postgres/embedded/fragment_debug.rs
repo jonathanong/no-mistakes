@@ -15,6 +15,16 @@ pub struct EmbeddedSqlFragment {
     pub recovered_placeholder_positions: Vec<(u32, u32)>,
 }
 
+/// Fragment contributing to an unanalyzable executor call or builder parameter.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct CallSqlFragment {
+    pub(crate) sql: String,
+    pub(crate) line: u32,
+    pub(crate) span: (u32, u32),
+    pub(crate) context_sql: Option<String>,
+    pub(crate) append_site: Option<u32>,
+}
+
 /// Embedded-SQL facts for one TypeScript/JavaScript file.
 #[derive(Clone, PartialEq, Eq)]
 pub struct EmbeddedSqlFileFacts {
@@ -44,6 +54,10 @@ pub struct EmbeddedSqlFileFacts {
     /// Private complete alternatives, parallel to the legacy fragment records.
     pub(crate) fragment_sites: Vec<Option<u32>>,
     pub(crate) fragment_variants: Vec<Vec<EmbeddedSqlVariant>>,
+    /// Fragments attached to unanalyzable executor calls, keyed by call span.
+    pub(crate) call_fragments: crate::fx::FxHashMap<(u32, u32), Vec<CallSqlFragment>>,
+    /// Appended SQL fragments on builder parameters (e.g. `q: SQLStatement`).
+    pub(crate) param_append_fragments: Vec<CallSqlFragment>,
     /// Configured `executor_factory_names` this file imports from the configured module.
     pub matched_factory_names: Vec<String>,
     /// Configured `executor_type_names` this file imports from the configured module.
@@ -96,8 +110,12 @@ impl EmbeddedSqlFileFacts {
         };
         let call = &self.calls[index];
         if call.kind == super::EmbeddedSqlKind::Dynamic && call.variants.is_empty() {
+            let completed_unanalyzable = completed.is_unanalyzable();
             self.calls[index] = completed;
             self.imported_call_lines.insert(span, lines);
+            if !completed_unanalyzable {
+                self.call_fragments.remove(&span);
+            }
         }
     }
 }

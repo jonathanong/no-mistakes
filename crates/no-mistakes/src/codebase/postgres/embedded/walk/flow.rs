@@ -85,6 +85,7 @@ pub(super) fn returned<'a>(visitor: &mut ScopeVisitor<'a>, statement: &ReturnSta
     if let Some(argument) = &statement.argument {
         // A returned executor can be mutated outside this lexical scope.
         visitor.revoke_query_receiver(argument);
+        visitor.note_returned_builder_fragments(argument);
     }
     // Returning a builder is treated as an escape below; an IIFE's result
     // needs the state it had just before that.

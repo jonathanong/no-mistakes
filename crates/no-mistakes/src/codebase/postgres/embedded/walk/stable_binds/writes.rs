@@ -104,33 +104,26 @@ impl<'a> Visit<'a> for Writes {
     }
 }
 
-fn primitive(ty: &TSType<'_>) -> bool {
-    if let TSType::TSUnionType(union) = ty {
-        return union.types.iter().all(primitive);
-    }
-    if let TSType::TSLiteralType(literal) = ty {
-        return matches!(literal.literal, TSLiteral::StringLiteral(_));
-    }
-    matches!(
-        ty,
+fn primitive(ty: &TSType<'_>, extra_ok: &impl Fn(&TSType<'_>) -> bool) -> bool {
+    match ty {
+        TSType::TSParenthesizedType(inner) => primitive(&inner.type_annotation, extra_ok),
+        TSType::TSUnionType(union) => union.types.iter().all(|t| primitive(t, extra_ok)),
+        TSType::TSLiteralType(literal) => matches!(literal.literal, TSLiteral::StringLiteral(_)),
         TSType::TSStringKeyword(_)
-            | TSType::TSNumberKeyword(_)
-            | TSType::TSBigIntKeyword(_)
-            | TSType::TSBooleanKeyword(_)
-    )
+        | TSType::TSNumberKeyword(_)
+        | TSType::TSBigIntKeyword(_)
+        | TSType::TSBooleanKeyword(_) => true,
+        other => extra_ok(other),
+    }
 }
 
 impl Writes {
     fn write_expression(&mut self, expression: &Expression<'_>) {
-        match unwrap_ts_wrappers(expression) {
-            Expression::Identifier(root) => {
-                self.names.insert(root.name.to_string());
-            }
-            expression => {
-                if let Some(member) = expression.as_member_expression() {
-                    self.write_member(member);
-                }
-            }
+        let expression = unwrap_ts_wrappers(expression);
+        if let Expression::Identifier(root) = expression {
+            self.names.insert(root.name.to_string());
+        } else if let Some(member) = expression.as_member_expression() {
+            self.write_member(member);
         }
     }
     fn write_member(&mut self, member: &MemberExpression<'_>) {
@@ -180,6 +173,7 @@ impl Writes {
     pub(in crate::codebase::postgres::embedded::walk) fn parameters(
         &self,
         params: &FormalParameters<'_>,
+        extra_ok: impl Fn(&TSType<'_>) -> bool,
     ) -> Vec<u32> {
         params
             .items
@@ -191,7 +185,7 @@ impl Writes {
                 let primitive = param
                     .type_annotation
                     .as_ref()
-                    .is_some_and(|ty| primitive(&ty.type_annotation));
+                    .is_some_and(|ty| primitive(&ty.type_annotation, &extra_ok));
                 (primitive && !self.opaque && !self.names.contains(id.name.as_str()))
                     .then_some(id.span.start)
             })

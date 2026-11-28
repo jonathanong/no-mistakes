@@ -43,7 +43,7 @@ impl<'a> ScopeVisitor<'a> {
             oxc_ast_visit::Visit::visit_function_body(&mut writes, body);
         }
         self.stable_primitives
-            .extend(writes.parameters(&function.params));
+            .extend(writes.parameters(&function.params, |ty| self.is_closed_relation_type(ty)));
         self.stable_parameter_fields
             .extend(writes.fields(&function.params));
         self.enter_plain_function(declaration_name, function.span.start);
@@ -124,7 +124,7 @@ impl<'a> ScopeVisitor<'a> {
         super::stable_binds::parameter_effects(&mut writes, &arrow.params);
         oxc_ast_visit::Visit::visit_arrow_function_body(&mut writes, &arrow.body);
         self.stable_primitives
-            .extend(writes.parameters(&arrow.params));
+            .extend(writes.parameters(&arrow.params, |ty| self.is_closed_relation_type(ty)));
         self.stable_parameter_fields
             .extend(writes.fields(&arrow.params));
         self.push_scope();
@@ -137,6 +137,9 @@ impl<'a> ScopeVisitor<'a> {
             self.revoke_query_receiver(result);
         }
         walk::walk_arrow_function_expression(self, arrow);
+        if let Some(result) = arrow.body.as_expression() {
+            self.note_returned_builder_fragments(result);
+        }
         self.leave_plain_function();
         self.leave_function();
         self.pop_scope();

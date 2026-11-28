@@ -95,6 +95,7 @@ pub(super) fn record_declarator(
     } else {
         visitor.scopes.len().saturating_sub(1)
     };
+    let init_sql = sql.clone();
     if let Some(scope) = visitor.scopes.get_mut(scope_index) {
         if is_var
             && scope
@@ -104,6 +105,7 @@ pub(super) fn record_declarator(
             // Conflicting initializer sites do not identify one statement.
             let binding = scope.get_mut(ident.name.as_str()).unwrap();
             clear_binding(binding);
+            visitor.clear_builder_fragment(scope_index, ident.name.as_str());
             return;
         }
         scope.insert(
@@ -141,20 +143,23 @@ pub(super) fn record_declarator(
             },
         );
     }
+    let init_name = ident.name.as_str();
+    visitor.note_builder_init(scope_index, init_name, init, init_sql.as_deref(), line);
     if let Some(index) = relative_executor_proof {
-        visitor.relative_proofs[scope_index].insert(ident.name.to_string(), index);
+        visitor.relative_proofs[scope_index].insert(init_name.to_string(), index);
     }
     if namespace_executor {
-        visitor.namespace_proofs[scope_index].insert(ident.name.to_string());
+        visitor.namespace_proofs[scope_index].insert(init_name.to_string());
     }
     if is_const {
-        visitor.note_const_object(init, scope_index, ident.name.as_str());
-        visitor.note_text_const(init, scope_index, ident.name.as_str());
+        let ann = declarator.type_annotation.as_deref();
+        visitor.note_const_object(ann, init, scope_index, init_name);
+        visitor.note_text_const(init, scope_index, init_name);
         super::super::imported::constants::note_fragment_const(
             visitor,
             init,
             scope_index,
-            ident.name.as_str(),
+            init_name,
         );
     }
 }
@@ -165,6 +170,7 @@ pub(super) fn invalidate_vars(pattern: &BindingPattern<'_>, visitor: &mut ScopeV
         if let Some(binding) = visitor.scopes[index].get_mut(name) {
             clear_binding(binding);
         }
+        visitor.clear_builder_fragment(index, name);
     });
 }
 

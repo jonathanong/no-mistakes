@@ -74,6 +74,8 @@ fn facts(path: &Path, profile: &EmbeddedSqlOptions, calls: Vec<EmbeddedSqlCall>)
             fragments: Vec::new(),
             fragment_sites: Vec::new(),
             fragment_variants: Vec::new(),
+            call_fragments: Default::default(),
+            param_append_fragments: Vec::new(),
             matched_factory_names: Vec::new(),
             matched_type_names: Vec::new(),
             pending_relative: Default::default(),
