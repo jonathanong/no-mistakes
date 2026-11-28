@@ -18,3 +18,6 @@ pub mod github_actions_step_timeouts;
 pub mod github_actions_test_timeout_literals;
 pub mod github_actions_vitest_project_selection;
 mod github_actions_workflow_files;
+pub mod tsconfig_gate_coverage;
+pub mod vitest_ci_path_coverage;
+pub mod workflow_topology_policy;

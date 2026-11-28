@@ -2,7 +2,7 @@ mod merge;
 mod named;
 
 use super::Options;
-pub(super) use crate::codebase::test_discovery::{
+pub(super) use crate::codebase::testing_analysis::project_patterns::{
     normalize_project_glob_part, project_dependency_patterns, project_relative_pattern,
 };
 use crate::config::v2::schema::NoMistakesConfig;
@@ -93,8 +93,11 @@ fn vitest_projects(
         return Ok(projects);
     }
 
-    let mut projects =
-        if super::super::vitest_project_catalog::config_projects_required(root, config) {
+    let mut projects = if super::super::runner_project_catalog::config_projects_required(
+        root,
+        config.tests.vitest.configs.as_ref(),
+        &config.tests.vitest.projects,
+    ) {
             match catalog {
                 Some(catalog) => catalog.config_projects()?,
                 None => project_config::load_projects(

@@ -1,5 +1,5 @@
 use super::{frameworks, path_kind, push, Field, Ref};
-use crate::codebase::workflow_topology::posix_path::normalize;
+use crate::codebase::posix_path::normalize;
 use crate::config::v2::{schema::TestPlanProjectDependency, NoMistakesConfig};
 
 pub(super) fn collect(config: &NoMistakesConfig, refs: &mut Vec<Ref>, origins: bool) {

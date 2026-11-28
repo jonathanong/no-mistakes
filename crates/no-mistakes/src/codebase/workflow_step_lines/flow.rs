@@ -123,7 +123,7 @@ pub(super) fn leading(raw: &str) -> usize {
     raw.chars().take_while(|c| *c == ' ').count()
 }
 
-pub(in super::super::super) fn yaml_plain(value: &str) -> String {
+pub(crate) fn yaml_plain(value: &str) -> String {
     let text = value.trim();
     if text.contains('\n') {
         return text.to_string();

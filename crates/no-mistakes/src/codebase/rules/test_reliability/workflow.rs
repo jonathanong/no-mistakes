@@ -1,5 +1,5 @@
 use super::{Location, Origin, Shape};
-use crate::codebase::rules::github_actions_workflow_files::step_lines::{walk_steps, Job};
+use crate::codebase::workflow_step_lines::{walk_steps, Job};
 use crate::codebase::ts_source::SourceStore;
 use serde_yaml::Value;
 use std::path::Path;
