@@ -18,7 +18,7 @@ test("local staging consumes the Cargo metadata release-directory resolver", () 
   });
 
   assert.equal(basename(artifacts.binary), "no-mistakes");
-  assert.equal(basename(artifacts.addon), "libno_mistakes.so");
+  assert.equal(basename(artifacts.addon), "libno_mistakes_napi.so");
   assert.equal(dirname(artifacts.binary), normalize("/configured/cargo-target/release"));
   assert.equal(dirname(artifacts.addon), normalize("/configured/cargo-target/release"));
 });

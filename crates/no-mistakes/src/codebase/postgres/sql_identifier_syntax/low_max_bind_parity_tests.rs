@@ -6,9 +6,9 @@ fn parameterized_low_results_do_not_borrow_max_sql_or_source_positions() {
         crate::test_support::rule_fixture_root("postgres-no-offset").join("low-max-bind-parity");
     let run = |config: &str| {
         serde_json::from_str::<Value>(
-            &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(json!({
+            &crate::test_support::check_json(json!({
                 "root": root, "config": root.join(config), "includeSqlVerdicts": true
-            })))
+            }))
             .unwrap(),
         )
         .unwrap()

@@ -26,13 +26,13 @@ pub enum RelatedDirection {
 /// Request-scoped server analysis inputs shared by route and contract reports.
 #[doc(hidden)]
 pub struct PreparedServerAnalysis {
-    pub(crate) root: PathBuf,
-    pub(crate) source_files: std::sync::Arc<Vec<PathBuf>>,
-    pub(crate) tsconfig: TsConfig,
-    pub(crate) config: Option<crate::config::v2::NoMistakesConfig>,
-    pub(crate) facts: crate::codebase::ts_source::facts::TsFactMap,
-    pub(crate) client_relationships: PreparedClientRelationships,
-    pub(crate) session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+    pub root: PathBuf,
+    pub source_files: std::sync::Arc<Vec<PathBuf>>,
+    pub tsconfig: TsConfig,
+    pub config: Option<crate::config::v2::NoMistakesConfig>,
+    pub facts: crate::codebase::ts_source::facts::TsFactMap,
+    pub client_relationships: PreparedClientRelationships,
+    pub session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
 }
 
 include!("graph_prepare.rs");
@@ -122,7 +122,7 @@ include!("graph_route_defs.rs");
 
 include!("graph_report.rs");
 
-pub(crate) fn configure_fact_context(
+pub fn configure_fact_context(
     context: &mut crate::codebase::ts_source::facts::TsFactContext,
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,

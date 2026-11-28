@@ -33,7 +33,7 @@ pub struct TargetWarning {
     pub file: String,
 }
 
-pub(crate) fn run(args: TargetsArgs) -> Result<ExitCode> {
+pub fn run(args: TargetsArgs) -> Result<ExitCode> {
     let report = generate_targets(&args)?;
     let format = if args.json {
         TargetsFormat::Json
@@ -57,7 +57,7 @@ pub(crate) fn run(args: TargetsArgs) -> Result<ExitCode> {
     Ok(ExitCode::SUCCESS)
 }
 
-pub(crate) fn generate_targets(args: &TargetsArgs) -> Result<TestsTargetsReport> {
+pub fn generate_targets(args: &TargetsArgs) -> Result<TestsTargetsReport> {
     let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = no_mistakes::cli::resolve_optional_root(Some(&args.root), &cwd);
     let root = no_mistakes::codebase::ts_resolver::normalize_path(&root);
@@ -105,7 +105,7 @@ pub(crate) fn generate_targets(args: &TargetsArgs) -> Result<TestsTargetsReport>
     })
 }
 
-pub(crate) fn commands_for_plan(plan: &TestPlan) -> Vec<String> {
+pub fn commands_for_plan(plan: &TestPlan) -> Vec<String> {
     let mut commands = Vec::new();
     for test in &plan.selected_tests {
         for target in &test.targets {
@@ -117,7 +117,7 @@ pub(crate) fn commands_for_plan(plan: &TestPlan) -> Vec<String> {
     commands
 }
 
-pub(crate) fn ensure_plan_commands_available(plan: &TestPlan, command: &str) -> Result<()> {
+pub fn ensure_plan_commands_available(plan: &TestPlan, command: &str) -> Result<()> {
     if plan
         .selected_tests
         .iter()
@@ -174,7 +174,7 @@ fn target_command(target: &TestExecutionTarget) -> Vec<String> {
     command
 }
 
-pub(crate) fn shell_join(command: &[String]) -> String {
+pub fn shell_join(command: &[String]) -> String {
     command
         .iter()
         .map(|token| shell_quote(token))

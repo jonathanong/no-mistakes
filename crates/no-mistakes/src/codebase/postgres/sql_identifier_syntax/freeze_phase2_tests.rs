@@ -45,10 +45,10 @@ fn proven_freeze_preserves_actual_executor_consumers_and_factory_metadata() {
         ("ignore", ".no-mistakes-low-ignore.yml"),
     ] {
         let report: serde_json::Value = serde_json::from_str(
-            &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            &crate::test_support::check_json(
                 serde_json::json!({ "root": root, "config": root.join(config),
                     "includeSqlVerdicts": true }),
-            ))
+            )
             .unwrap(),
         )
         .unwrap();

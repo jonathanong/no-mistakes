@@ -106,7 +106,7 @@ impl Default for TraverseArgs {
 }
 
 impl TraverseArgs {
-    pub(crate) fn has_candidate_bounds(&self) -> bool {
+    pub fn has_candidate_bounds(&self) -> bool {
         !self.candidate_include.is_empty() || !self.candidate_exclude.is_empty()
     }
 }

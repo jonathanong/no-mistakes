@@ -18,7 +18,7 @@ pub fn json_string<T: Serialize + ?Sized>(value: &T) -> String {
     serde_json::to_string(value).expect("JSON serialization of Rust structs never fails")
 }
 
-pub(crate) fn json_value<T: Serialize + ?Sized>(value: &T) -> serde_json::Value {
+pub fn json_value<T: Serialize + ?Sized>(value: &T) -> serde_json::Value {
     serde_json::to_value(value).expect("JSON serialization of Rust structs never fails")
 }
 

@@ -1,8 +1,8 @@
 mod json_write;
 pub mod output_format;
-pub(crate) mod traversal;
+pub mod traversal;
 
-pub(crate) use json_write::json_value;
+pub use json_write::json_value;
 pub use json_write::{json_pretty, json_string, print_json, yaml_string};
 pub use output_format::{resolve_format, Format};
 pub use traversal::{edge_view, TraversableEdge};
@@ -70,7 +70,7 @@ pub fn init_rayon_threads_if_requested(jobs: Option<usize>) -> Option<JobsPoolWa
     })
 }
 
-pub(crate) fn rayon_thread_count(args: JobsArg, raw_threads: Option<&str>) -> usize {
+pub fn rayon_thread_count(args: JobsArg, raw_threads: Option<&str>) -> usize {
     if args.jobs > 0 {
         return args.jobs;
     }
@@ -81,10 +81,7 @@ pub(crate) fn rayon_thread_count(args: JobsArg, raw_threads: Option<&str>) -> us
 }
 
 /// `None` means this resolution is the initializing call, which does not warn.
-pub(crate) fn jobs_pool_mismatch(
-    requested: usize,
-    recorded: Option<usize>,
-) -> Option<JobsPoolWarning> {
+pub fn jobs_pool_mismatch(requested: usize, recorded: Option<usize>) -> Option<JobsPoolWarning> {
     let effective = recorded.filter(|effective| *effective != requested)?;
     Some(JobsPoolWarning {
         code: "rayon-pool-size",
@@ -96,7 +93,7 @@ pub(crate) fn jobs_pool_mismatch(
     })
 }
 
-pub(crate) fn attach_jobs_pool_warning(json: String, warning: Option<JobsPoolWarning>) -> String {
+pub fn attach_jobs_pool_warning(json: String, warning: Option<JobsPoolWarning>) -> String {
     let Some(warning) = warning else {
         return json;
     };

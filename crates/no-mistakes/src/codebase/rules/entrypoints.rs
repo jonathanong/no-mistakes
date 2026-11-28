@@ -25,7 +25,7 @@ pub(crate) use prepared_rule_entrypoints;
 /// The language rules share the same source-owned and deferred-suppression entry points.
 macro_rules! borrowed_source_rule_entrypoints {
     () => {
-        pub(crate) fn check_with_files(
+        pub fn check_with_files(
             root: &std::path::Path,
             config: &crate::config::v2::NoMistakesConfig,
             all_files: &[std::path::PathBuf],

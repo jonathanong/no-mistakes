@@ -730,8 +730,8 @@ jobs:
         if: ${{ (matrix.role == 'addon') && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 25
         run: |
-          NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib
-          cp target/debug/libno_mistakes.so target/debug/no-mistakes.node
+          cargo build --locked -p no-mistakes-napi
+          cp target/debug/libno_mistakes_napi.so target/debug/no-mistakes.node
       - name: Record verified Linux compiler inputs
         if: ${{ env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.linux-workspace-cache.outputs.cache-hit != 'true' && steps.build-artifact-source.outputs.reuse != 'true' }}
         timeout-minutes: 2
@@ -1155,7 +1155,6 @@ jobs:
     permissions:
       contents: read
     env:
-      NO_MISTAKES_BUILD_NAPI: "1"
       CARGO_BUILD_JOBS: "3"
     steps:
       - name: Checkout
@@ -1422,8 +1421,6 @@ jobs:
     if: ${{ needs.changes.outputs.windows == 'true' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 65
-    env:
-      NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
       contents: read
       actions: read
@@ -1436,7 +1433,7 @@ jobs:
             shard: 1
             total: 1
             binary: ./target/debug/no-mistakes.exe
-            addon: target/debug/no_mistakes.dll
+            addon: target/debug/no_mistakes_napi.dll
     outputs:
       built: ${{ steps.native-build-artifact.outcome == 'success' }}
     steps:
@@ -1536,9 +1533,8 @@ jobs:
 
       # Linux `tests` owns the full suite. Native jobs only compile/run the
       # OS-specific invocation tests (Job Objects, process groups, signals).
-      # Rewrite crate-type in this job only so one rustc emits the CLI rlib
-      # and Node cdylib. Do not commit that crate-type: Linux coverage should
-      # not also link a cdylib.
+      # One Cargo build compiles no-mistakes rlib once for both the CLI binary
+      # and the no-mistakes-napi cdylib.
       # no-mistakes-disable-next-line github-actions-step-timeouts -- #3514 measured cold compilation reserve; bounded by rust-build-deadlines.test.cjs.
       - name: Build native CLI and N-API addon
         if: ${{ steps.build-artifact-source.outputs.reuse != 'true' }}
@@ -1549,23 +1545,12 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf target/native-build-diagnostics target/native-test-build-diagnostics
-          python - <<'PY'
-          from pathlib import Path
-          path = Path("crates/no-mistakes/Cargo.toml")
-          text = path.read_text()
-          old = 'crate-type = ["rlib"]'
-          new = 'crate-type = ["rlib", "cdylib"]'
-          if old not in text:
-              raise SystemExit(f"expected {old!r} in {path}")
-          path.write_text(text.replace(old, new, 1))
-          PY
           node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
           node .github/scripts/build-native.cjs
           if [[ "$COLD_BUILD" != true && "$GITHUB_REF" == refs/heads/main && "$NATIVE_RUST_CACHE_HIT" != true ]]; then
             node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
           fi
           cp "${{ matrix.addon }}" target/debug/no-mistakes.node
-          git restore --source=HEAD --worktree -- crates/no-mistakes/Cargo.toml
 
       - name: Save verified workspace artifacts
         if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.native-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
@@ -1691,8 +1676,6 @@ jobs:
       cancel-in-progress: false
     runs-on: ${{ matrix.os }}
     timeout-minutes: 65
-    env:
-      NO_MISTAKES_BUILD_NAPI: "1"
     permissions:
       contents: read
       actions: read
@@ -1705,7 +1688,7 @@ jobs:
             shard: 1
             total: 1
             binary: ./target/debug/no-mistakes
-            addon: target/debug/libno_mistakes.dylib
+            addon: target/debug/libno_mistakes_napi.dylib
     outputs:
       built: ${{ steps.native-build-artifact.outcome == 'success' }}
     steps:
@@ -1798,23 +1781,12 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf target/native-build-diagnostics target/native-test-build-diagnostics
-          python - <<'PY'
-          from pathlib import Path
-          path = Path("crates/no-mistakes/Cargo.toml")
-          text = path.read_text()
-          old = 'crate-type = ["rlib"]'
-          new = 'crate-type = ["rlib", "cdylib"]'
-          if old not in text:
-              raise SystemExit(f"expected {old!r} in {path}")
-          path.write_text(text.replace(old, new, 1))
-          PY
           node .github/scripts/cargo-cache-inputs.cjs restore "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
           node .github/scripts/build-native.cjs
           if [[ "$COLD_BUILD" != true && "$GITHUB_REF" == refs/heads/main && "$NATIVE_RUST_CACHE_HIT" != true ]]; then
             node .github/scripts/cargo-cache-inputs.cjs capture "$GITHUB_WORKSPACE" "$RUNNER_TEMP/nm-cargo-inputs"
           fi
           cp "${{ matrix.addon }}" target/debug/no-mistakes.node
-          git restore --source=HEAD --worktree -- crates/no-mistakes/Cargo.toml
 
       - name: Save verified workspace artifacts
         if: ${{ (success() && env.COLD_BUILD != 'true' && github.ref == 'refs/heads/main' && steps.native-workspace-cache.outputs.cache-hit != 'true') && steps.build-artifact-source.outputs.reuse != 'true' }}
@@ -2048,7 +2020,7 @@ jobs:
     needs: changes
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 25
     env: *standalone-env
     strategy:
       fail-fast: false
@@ -2088,7 +2060,7 @@ jobs:
         timeout-minutes: 5
         uses: ./.github/actions/start-test-postgres
       - name: Build and test standalone Rust library without a CLI
-        timeout-minutes: 15
+        timeout-minutes: 20
         run: bash .github/scripts/with-resource-samples.sh node .github/scripts/standalone-shards.cjs local ${{ matrix.shard }}
 
   standalone-shards:

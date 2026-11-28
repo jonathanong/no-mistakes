@@ -196,3 +196,27 @@ fn every_relevant_partner_suppression_form_disables_the_low_assumption() {
         assert_eq!(sources.physical_read_count(), 1);
     }
 }
+
+#[test]
+fn rejects_invalid_analysis_and_filter_options() {
+    let root = fixture();
+    let files = [root.join("src/covered.ts")];
+    let sources = super::super::source_store_for_files(&files);
+
+    for yaml in [
+        "rules:\n  - rule: test-effort-adopter\n    options:\n      effort: bogus\n",
+        "rules:\n  - rule: test-effort-adopter\n    include: ['[']\n    options:\n      effort: low\n",
+        "rules:\n  - rule: test-effort-adopter\n    options:\n      effort: low\n      include: 42\n",
+        "rules:\n  - rule: test-effort-adopter\n    options:\n      effort: low\n      include: ['[']\n",
+        "rules:\n  - rule: test-effort-adopter\n    options:\n      effort: low\n      exclude: 42\n",
+        "rules:\n  - rule: test-effort-adopter\n    options:\n      effort: low\n      exclude: ['[']\n",
+        "rules:\n  - rule: test-effort-adopter\n    scope: repository\n    options:\n      effort: low\n  - rule: test-partner\n    scope: repository\n    options:\n      include: 42\n",
+    ] {
+        let mut config: NoMistakesConfig = serde_yaml::from_str(yaml).unwrap();
+        assert!(
+            prepare_rule_analysis_with_support(&root, &mut config, &files, &sources, ADOPTERS)
+                .is_err(),
+            "{yaml}"
+        );
+    }
+}

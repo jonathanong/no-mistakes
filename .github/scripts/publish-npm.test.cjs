@@ -135,7 +135,10 @@ test("Windows keeps optimized CLI and addon builds in the release workflow", () 
   assert.equal(jobs["build-native-darwin"].env.CARGO_PROFILE_RELEASE_LTO, "thin");
   assert.ok(windows.steps.some(({ run }) => run?.includes("cargo-release-build.sh")));
   const buildScript = readFileSync(path.join(root, ".github/scripts/cargo-release-build.sh"), "utf8");
-  assert.match(buildScript, /NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked/);
+  assert.match(
+    buildScript,
+    /cargo build --release --locked --target "\$target" -p no-mistakes -p no-mistakes-napi --timings/,
+  );
 });
 
 for (const { name, publishStatus, verifyStatus, attempts, status } of [

@@ -1,0 +1,143 @@
+#[path = "core_analysis/aggregate.rs"]
+mod aggregate;
+#[path = "core_analysis/annotation_call_values.rs"]
+mod annotation_call_values;
+#[path = "core_analysis/annotation_modules.rs"]
+mod annotation_modules;
+#[path = "core_analysis/ast_grep_sources.rs"]
+mod ast_grep_sources;
+#[path = "core_analysis/call_index.rs"]
+mod call_index;
+#[path = "core_analysis/companion_imports.rs"]
+mod companion_imports;
+#[path = "core_analysis/dependency_checks.rs"]
+mod dependency_checks;
+#[path = "core_analysis/extract.rs"]
+mod extract;
+#[path = "core_analysis/fixtures.rs"]
+mod fixtures;
+#[path = "core_analysis/frontend_lifecycle.rs"]
+mod frontend_lifecycle;
+#[path = "core_analysis/graph.rs"]
+mod graph;
+#[path = "core_analysis/graph_gates.rs"]
+mod graph_gates;
+#[path = "core_analysis/language_frontends.rs"]
+mod language_frontends;
+#[path = "core_analysis/observer.rs"]
+mod observer;
+#[path = "core_analysis/postgres_annotations.rs"]
+mod postgres_annotations;
+#[path = "core_analysis/postgres_bounds.rs"]
+mod postgres_bounds;
+#[path = "../../no-mistakes/benches/core_analysis/postgres_scopes.rs"]
+mod postgres_scopes;
+// Moving a bench between QUERY and QUERY_INDEXES requires updating the shard
+// constant and the CodSpeed matrix in .github/workflows/benchmarks.yml.
+#[path = "core_analysis/query_indexes.rs"]
+mod query_indexes;
+#[path = "core_analysis/react_traits.rs"]
+mod react_traits;
+#[path = "core_analysis/relationships.rs"]
+mod relationships;
+#[path = "core_analysis/reports.rs"]
+mod reports;
+#[path = "core_analysis/resolver_catalog.rs"]
+mod resolver_catalog;
+#[path = "core_analysis/shard.rs"]
+mod shard;
+#[path = "core_analysis/sql_fetch.rs"]
+mod sql_fetch;
+#[path = "../../no-mistakes/benches/core_analysis/sql_source_positions.rs"]
+mod sql_source_positions;
+#[path = "core_analysis/stage_imports.rs"]
+mod stage_imports;
+#[path = "core_analysis/suppression.rs"]
+mod suppression;
+#[path = "core_analysis/workflow_artifact_values.rs"]
+mod workflow_artifact_values;
+
+use aggregate::{
+    bench_aggregate_and_multi_report, bench_finite_set_membership, bench_impacted_checks,
+};
+use call_index::{bench_call_site_membership, bench_callable_file_index_construction};
+use criterion::{criterion_group, criterion_main};
+use extract::bench_extract_import_facts;
+use graph::{
+    bench_facts_graph_and_query, bench_high_fanout_finalization,
+    bench_import_only_vs_workspace_relationships, bench_lazy_traversal,
+};
+use graph_gates::bench_graph_gates;
+use language_frontends::bench_language_frontends;
+use observer::bench_observer_overhead;
+use query_indexes::{
+    bench_scoped_resolver_selection, bench_symbol_index_build_and_lookup,
+    bench_symbol_index_distinct_target_build,
+};
+use react_traits::bench_react_traits;
+use relationships::bench_relationship_projection;
+use reports::{bench_symbols, bench_unique_exports, bench_workspace};
+fn bench_sql_source_positions(c: &mut criterion::Criterion) {
+    if shard::should_run(shard::QUERY) {
+        sql_source_positions::bench_sql_source_positions(c);
+    }
+}
+
+fn bench_sql_fetch_fast_path(c: &mut criterion::Criterion) {
+    if shard::should_run(shard::QUERY) {
+        sql_fetch::bench_sql_fetch_fast_path(c);
+    }
+}
+
+fn bench_postgres_scopes(c: &mut criterion::Criterion) {
+    if shard::should_run(shard::QUERY) {
+        postgres_scopes::bench_scopes(c);
+    }
+}
+
+fn bench_workflow_artifact_values(c: &mut criterion::Criterion) {
+    if shard::should_run(shard::QUERY) {
+        workflow_artifact_values::bench_artifact_values(c);
+    }
+}
+
+criterion_group!(
+    benches,
+    frontend_lifecycle::validate_selection,
+    resolver_catalog::bench_resolver_catalog,
+    bench_sql_source_positions,
+    bench_lazy_traversal,
+    dependency_checks::bench_dependency_checks,
+    companion_imports::bench_companion_imports,
+    postgres_bounds::bench_postgres_bounds,
+    postgres_annotations::bench_postgres_annotations,
+    annotation_call_values::bench_annotation_call_values,
+    annotation_modules::bench_annotation_module_indexes,
+    bench_import_only_vs_workspace_relationships,
+    bench_callable_file_index_construction,
+    bench_call_site_membership,
+    bench_extract_import_facts,
+    bench_facts_graph_and_query,
+    bench_graph_gates,
+    bench_language_frontends,
+    bench_high_fanout_finalization,
+    bench_symbol_index_build_and_lookup,
+    bench_symbol_index_distinct_target_build,
+    bench_scoped_resolver_selection,
+    bench_symbols,
+    bench_unique_exports,
+    bench_workspace,
+    bench_react_traits,
+    bench_aggregate_and_multi_report,
+    bench_finite_set_membership,
+    bench_impacted_checks,
+    bench_observer_overhead,
+    bench_postgres_scopes,
+    bench_relationship_projection,
+    stage_imports::bench_stage_imports,
+    bench_sql_fetch_fast_path,
+    bench_workflow_artifact_values,
+    suppression::bench_suppression_index,
+    ast_grep_sources::bench_ast_grep_source_reuse,
+);
+criterion_main!(benches);

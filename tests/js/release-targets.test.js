@@ -66,22 +66,22 @@ test("release jobs declare pinned action uses outside shared steps", () => {
   }
 });
 
-test("release native builds emit CLI and N-API from one rustc without waiting for Validate", () => {
+test("release native builds emit CLI and N-API from one Cargo invocation without waiting for Validate", () => {
   const { jobs } = readWorkflow(join(repoRoot, ".github/workflows/release.yml"));
   const script = readFileSync(join(repoRoot, ".github/scripts/cargo-release-build.sh"), "utf8");
-  assert.match(script, /crate-type = \["rlib", "cdylib"\]/);
+  assert.doesNotMatch(script, /crate-type = \["rlib", "cdylib"\]/);
   assert.match(
     script,
-    /cargo build --release --locked --target "\$target" -p no-mistakes --timings/,
+    /cargo build --release --locked --target "\$target" -p no-mistakes -p no-mistakes-napi --timings/,
   );
   assert.doesNotMatch(script, /--crate-type cdylib/);
   assert.match(script, /target\/cargo-timings\/cargo-timing-\*\.html/);
 
   for (const [target, jobTimeout, buildTimeout, addon] of [
-    ["linux-x64", 100, "65", "libno_mistakes.so"],
-    ["linux-arm", 100, "65", "libno_mistakes.so"],
-    ["darwin", 120, "90", "libno_mistakes.dylib"],
-    ["windows", 120, "90", "no_mistakes.dll"],
+    ["linux-x64", 100, "65", "libno_mistakes_napi.so"],
+    ["linux-arm", 100, "65", "libno_mistakes_napi.so"],
+    ["darwin", 120, "90", "libno_mistakes_napi.dylib"],
+    ["windows", 120, "90", "no_mistakes_napi.dll"],
   ]) {
     const { needs, env, steps, "timeout-minutes": timeout } = jobs[`build-native-${target}`];
     assert.deepEqual(needs, ["prepare"]);
@@ -403,15 +403,15 @@ test("native CI jobs run only platform-specific Rust tests", () => {
       "packages/no-mistakes/scripts/real-napi-api.test.js",
     ),
   );
-  assert.match(
+  assert.doesNotMatch(
     body,
     /crate-type = \["rlib", "cdylib"\]/,
-    "native jobs must emit rlib and cdylib from one rustc",
+    "native jobs must not mutate crates/no-mistakes/Cargo.toml now that no-mistakes-napi owns the cdylib",
   );
   assert.doesNotMatch(
     body,
     /cargo rustc --locked -p no-mistakes --lib --crate-type cdylib/,
-    "native jobs must not compile the crate a second time as cdylib-only",
+    "native jobs must not compile no-mistakes as cdylib",
   );
   assert.match(
     workflow,

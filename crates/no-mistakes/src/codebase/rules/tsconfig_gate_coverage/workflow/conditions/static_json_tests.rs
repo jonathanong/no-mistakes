@@ -36,3 +36,32 @@ fn static_json_values_cover_scalars_sequences_and_conservative_states() {
         Err(())
     );
 }
+
+#[test]
+fn format_string_covers_zero_negative_zero_fixed_and_scientific_numbers() {
+    assert_eq!(
+        StaticValue::Number("0".into()).format_string().as_deref(),
+        Some("0")
+    );
+    assert_eq!(
+        StaticValue::Number("-0.0".into()).format_string().as_deref(),
+        Some("-0")
+    );
+    assert_eq!(
+        StaticValue::Number("42.50".into())
+            .format_string()
+            .as_deref(),
+        Some("42.5")
+    );
+    assert_eq!(
+        StaticValue::Number("1e20".into()).format_string().as_deref(),
+        Some("1E+20")
+    );
+    assert_eq!(
+        StaticValue::Number("1e-6".into())
+            .format_string()
+            .as_deref(),
+        Some("1E-06")
+    );
+    assert_eq!(StaticValue::Number("1e309".into()).format_string(), None);
+}

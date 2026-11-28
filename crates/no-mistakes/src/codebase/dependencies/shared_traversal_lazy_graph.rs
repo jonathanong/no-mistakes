@@ -1,11 +1,11 @@
 impl SharedTraversalContext {
-    pub(crate) fn lazy_import_graph(&self) -> Option<&graph::DepGraph> {
+    pub fn lazy_import_graph(&self) -> Option<&graph::DepGraph> {
         self.lazy_import_graph.as_deref()
     }
 
     /// One lazy walk of `args` roots builds the reachable import graph. Later
     /// import-only reports project from that graph instead of walking again.
-    pub(crate) fn seed_lazy_import_graph_from_args(
+    pub fn seed_lazy_import_graph_from_args(
         &mut self,
         args: &TraverseArgs,
         cwd: &Path,

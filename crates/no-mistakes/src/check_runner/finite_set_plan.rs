@@ -3,7 +3,7 @@ use no_mistakes::codebase::check_facts::CheckFactPlan;
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
 
-pub(crate) struct PreparedFactDemand {
+pub struct PreparedFactDemand {
     companion_import_files: Vec<PathBuf>,
     has_companion_plan: bool,
     call_site_files: Vec<PathBuf>,
@@ -18,7 +18,7 @@ pub(crate) struct PreparedFactDemand {
 }
 
 impl PreparedFactDemand {
-    pub(crate) fn include_companion_plan(&mut self, plan: &CheckFactPlan) {
+    pub fn include_companion_plan(&mut self, plan: &CheckFactPlan) {
         self.has_companion_plan = !plan.companion_import_plans.is_empty();
         self.companion_import_files.clear();
         // Only a companion-only primary scope consumes this membership list.
@@ -30,7 +30,7 @@ impl PreparedFactDemand {
         }
     }
 
-    pub(crate) fn include_discovered_files(
+    pub fn include_discovered_files(
         &mut self,
         root: &Path,
         config: &NoMistakesConfig,
@@ -75,7 +75,7 @@ impl PreparedFactDemand {
         self.csp_allowed_origins_files = plan.csp_allowed_origins_paths.iter().cloned().collect();
         Ok(())
     }
-    pub(crate) fn needs_shared_facts(&self) -> bool {
+    pub fn needs_shared_facts(&self) -> bool {
         self.needs_other_facts
             || self.has_companion_plan
             || !self.call_site_files.is_empty()
@@ -93,7 +93,7 @@ impl PreparedFactDemand {
     /// Configured finite-set call sources are deliberately excluded here. A
     /// call source can be under `filesystem.skipDirectories`; retain only
     /// call sources that discovery already admitted to the primary scope.
-    pub(crate) fn primary_files(&self, discovered: Vec<PathBuf>) -> Vec<PathBuf> {
+    pub fn primary_files(&self, discovered: Vec<PathBuf>) -> Vec<PathBuf> {
         use no_mistakes::codebase::check_facts::ordered_path_intersection;
         if self.needs_other_facts {
             return discovered;
@@ -115,7 +115,7 @@ impl PreparedFactDemand {
     /// A graph-only source has richer graph facts (for example, imports) than
     /// the call-site-only supplemental variant. Recollecting it here would
     /// sparsely overwrite that entry when the fact maps are combined.
-    pub(crate) fn supplemental_call_site_files(
+    pub fn supplemental_call_site_files(
         &self,
         primary_files: &[PathBuf],
         graph_files: &[PathBuf],
@@ -128,7 +128,7 @@ impl PreparedFactDemand {
     }
 }
 
-pub(crate) fn prepare(
+pub fn prepare(
     root: &Path,
     config: &NoMistakesConfig,
     plan: &mut CheckFactPlan,
@@ -174,7 +174,7 @@ pub(crate) fn prepare(
 #[path = "tests/finite_set_plan.rs"]
 mod tests;
 
-pub(crate) fn no_analysis_requested(
+pub fn no_analysis_requested(
     needs_shared_facts: bool,
     filesystem_rules_configured: bool,
     playwright_rules_configured: bool,

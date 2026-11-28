@@ -12,10 +12,10 @@ fn declaration_ancestry_audit_preserves_suppressed_channel() {
         "advise.yml",
         "ignore.yml",
     ] {
-        let json = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        let json = crate::test_support::check_json(
             serde_json::json!({"root":root,"config":root.join(config),"includeSuppressed":true})
                 .to_string(),
-        ))
+        )
         .unwrap();
         let report: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
             serde_json::from_str(&json).unwrap(),

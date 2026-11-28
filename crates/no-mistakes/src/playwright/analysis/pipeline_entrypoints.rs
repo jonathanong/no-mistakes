@@ -32,7 +32,7 @@ pub(crate) fn analyze_with_policy_from_snapshot(
     )
 }
 
-pub(crate) fn analyze_with_policy_and_facts_from_snapshot(
+pub fn analyze_with_policy_and_facts_from_snapshot(
     root: &Path,
     settings: &config::Settings,
     test_policy: playwright_tests::TestPolicy,

@@ -2,13 +2,14 @@ use std::any::Any;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::Path;
 
-#[cfg(not(test))]
+#[cfg(not(any(test, feature = "test-support")))]
 macro_rules! inject_fact_panic {
     ($path:expr) => {};
 }
-#[cfg(test)]
+#[cfg(any(test, feature = "test-support"))]
 #[macro_use]
-pub(crate) mod tests;
+#[doc(hidden)]
+pub mod tests;
 
 pub(crate) fn isolate<T>(
     session: &super::analysis_session::AnalysisSession,

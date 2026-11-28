@@ -11,7 +11,7 @@ thread_local! {
     static YIELDS: Cell<usize> = const { Cell::new(0) };
 }
 
-pub(crate) fn with_one_yield<T>(run: impl FnOnce() -> T) -> (T, usize) {
+pub fn with_one_yield<T>(run: impl FnOnce() -> T) -> (T, usize) {
     struct Restore(bool, usize);
     impl Drop for Restore {
         fn drop(&mut self) {

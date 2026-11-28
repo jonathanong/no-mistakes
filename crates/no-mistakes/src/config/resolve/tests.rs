@@ -5,7 +5,6 @@ use crate::config::v2::schema::{
     TestPlanProjectDependency, TestPlanTargetedProjectDependency,
 };
 use crate::config::v2::FrontendApp;
-use serde_json::json;
 use std::path::PathBuf;
 
 fn named_triggers_fixture() -> PathBuf {
@@ -56,31 +55,6 @@ fn resolve_config_reports_named_triggers_and_coverage_gates() {
     }));
     assert!(report.playwright.coverage_routes);
     assert!(report.playwright.coverage_selectors);
-}
-
-#[test]
-fn resolve_config_json_impl_returns_the_same_named_triggers() {
-    let root = named_triggers_fixture();
-    let output = crate::napi_api::resolve_config_json_impl(
-        crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string()),
-    )
-    .unwrap();
-    let report: serde_json::Value = serde_json::from_str(&output).unwrap();
-    let names: Vec<&str> = report["vitestFullSuiteTriggers"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .filter_map(|trigger| trigger["name"].as_str())
-        .collect();
-    assert!(names.contains(&"postgres-resources"));
-    assert_eq!(
-        report["fullSuiteTriggers"][0]["framework"].as_str(),
-        Some("vitest")
-    );
-    assert_eq!(
-        report["fullSuiteTriggers"][0]["triggers"][0]["name"].as_str(),
-        Some("postgres-resources")
-    );
 }
 
 #[test]

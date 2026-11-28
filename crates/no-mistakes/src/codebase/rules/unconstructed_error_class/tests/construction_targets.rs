@@ -19,9 +19,9 @@ fn report(config: &str, effort: Option<&str>) -> serde_json::Value {
     }
     crate::test_support::without_hygiene_advisory_json(
         serde_json::from_str(
-            &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            &crate::test_support::check_json(
                 options.to_string(),
-            ))
+            )
             .unwrap(),
         )
         .unwrap(),

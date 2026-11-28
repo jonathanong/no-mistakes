@@ -1,4 +1,4 @@
-pub(crate) fn explicit_existing_entry_files(
+pub fn explicit_existing_entry_files(
     args: &TraverseArgs,
     root: &Path,
     cwd: &Path,

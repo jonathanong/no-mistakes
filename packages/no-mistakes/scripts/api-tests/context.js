@@ -20,17 +20,17 @@ const planningFixturePath = join(
 );
 
 const RUST_NAPI_BINDING_FILES = [
-  "crates/no-mistakes/src/napi_api.rs",
-  "crates/no-mistakes/src/napi_api/diagnostics.rs",
-  "crates/no-mistakes/src/napi_api/postgres_source.rs",
-  "crates/no-mistakes/src/napi_api/postgres_bindings.rs",
-  "crates/no-mistakes/src/napi_api/typescript_modules.rs",
-  "crates/no-mistakes/src/napi_api/codebase_bindings.rs",
-  "crates/no-mistakes/src/napi_api/planning_bindings.rs",
-  "crates/no-mistakes/src/napi_api/wrappers_query.rs",
-  "crates/no-mistakes/src/napi_api/ci_bindings.rs",
-  "crates/no-mistakes/src/napi_api/queries.rs",
-  "crates/no-mistakes/src/napi_api/infra_swift.rs",
+  "crates/no-mistakes-napi/src/lib.rs",
+  "crates/no-mistakes-napi/src/diagnostics.rs",
+  "crates/no-mistakes-napi/src/postgres_source.rs",
+  "crates/no-mistakes-napi/src/postgres_bindings.rs",
+  "crates/no-mistakes-napi/src/typescript_modules.rs",
+  "crates/no-mistakes-napi/src/codebase_bindings.rs",
+  "crates/no-mistakes-napi/src/planning_bindings.rs",
+  "crates/no-mistakes-napi/src/wrappers_query.rs",
+  "crates/no-mistakes-napi/src/ci_bindings.rs",
+  "crates/no-mistakes-napi/src/queries.rs",
+  "crates/no-mistakes-napi/src/infra_swift.rs",
 ];
 
 const RAW_NATIVE_EXPORTS = {

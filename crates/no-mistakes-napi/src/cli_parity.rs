@@ -1,0 +1,177 @@
+use std::path::{Path, PathBuf};
+
+use super::options::{
+    parse_options_value, resolve_project_root, to_napi_error, CiEnvOptions, CiImpactOptions,
+    CiTopologyImpactOptions, ConfigResolveOptions, ConfigResolveView, FetchesOptions,
+    ImpactedChecksOptions, ProjectOptions, TestsAuditOptions, TestsImpactOptions,
+    TestsPlanDocumentOptions, TestsPlanOptions, TestsTargetsOptions, TestsWhyOptions,
+};
+use anyhow::{bail, Context, Result as AnyhowResult};
+
+include!("cli_parity_builders.rs");
+include!("cli_parity_check.rs");
+
+mod playwright_wrappers;
+mod topology;
+pub(crate) use topology::ci_topology_json_impl;
+
+pub(crate) use playwright_wrappers::{
+    playwright_check_json_impl, playwright_edges_json_impl, playwright_related_json_impl,
+    playwright_tests_json_impl,
+};
+
+pub(crate) fn fetches_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<FetchesOptions>(options)?;
+    let base_root = std::env::current_dir()
+        .map_err(anyhow::Error::from)
+        .map_err(to_napi_error)?;
+    let args = no_mistakes::fetches::FetchesArgs {
+        root: options
+            .root
+            .map(PathBuf::from)
+            .unwrap_or(PathBuf::from(".")),
+        config: options.config.map(PathBuf::from),
+        format: no_mistakes::cli::Format::Json,
+        json: true,
+        targets: options.targets,
+    };
+    let report =
+        no_mistakes::fetches::analyze_with_base_root(&base_root, &args).map_err(to_napi_error)?;
+    to_pretty_json(&report)
+}
+
+pub(crate) fn resolve_config_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<ConfigResolveOptions>(options)?;
+    let root = resolve_project_root(options.project.root.as_deref()).map_err(to_napi_error)?;
+    let config = options.project.config.map(PathBuf::from);
+    match options.view {
+        ConfigResolveView::Resolved => to_pretty_json(
+            &no_mistakes::config::resolved::resolve_config(&root, config.as_deref())
+                .map_err(to_napi_error)?,
+        ),
+        ConfigResolveView::Declared => to_pretty_json(
+            &no_mistakes::config::v2::declared_config(&root, config.as_deref())
+                .map_err(to_napi_error)?,
+        ),
+    }
+}
+
+pub(crate) fn tests_plan_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<TestsPlanOptions>(options)?;
+    let args = build_plan_args(options).map_err(to_napi_error)?;
+    let plan = no_mistakes::tests::plan::generate_plan(&args).map_err(to_napi_error)?;
+    to_pretty_json(&plan)
+}
+
+pub(crate) fn tests_impact_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<TestsImpactOptions>(options)?;
+    let args = build_impact_args(options).map_err(to_napi_error)?;
+    let plan = no_mistakes::tests::impact::generate_impact_plan(&args).map_err(to_napi_error)?;
+    to_pretty_json(&plan)
+}
+
+pub(crate) fn tests_targets_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<TestsTargetsOptions>(options)?;
+    let framework = options
+        .framework
+        .as_deref()
+        .map(parse_test_framework)
+        .transpose()
+        .map_err(to_napi_error)?
+        .context("framework is required")
+        .map_err(to_napi_error)?;
+    if options.files.is_empty() {
+        return Err(to_napi_error(anyhow::anyhow!("files is required")));
+    }
+    let args = no_mistakes::tests::TargetsArgs {
+        framework,
+        files: options.files.into_iter().map(PathBuf::from).collect(),
+        root: options
+            .root
+            .map(PathBuf::from)
+            .unwrap_or(PathBuf::from(".")),
+        config: options.config.map(PathBuf::from),
+        format: None,
+        json: true,
+    };
+    let report = no_mistakes::tests::targets::generate_targets(&args).map_err(to_napi_error)?;
+    to_pretty_json(&report)
+}
+
+pub(crate) fn ci_impact_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<CiImpactOptions>(options)?;
+    let root = options.root.unwrap_or(String::from("."));
+    let files: Vec<PathBuf> = options.files.into_iter().map(PathBuf::from).collect();
+    let report = no_mistakes::ci::impact_report(
+        Path::new(&root),
+        options.config.as_deref().map(Path::new),
+        &files,
+    )
+    .map_err(to_napi_error)?;
+    to_pretty_json(&report)
+}
+
+pub(crate) fn ci_env_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<CiEnvOptions>(options)?;
+    let var = options
+        .var
+        .context("var is required")
+        .map_err(to_napi_error)?;
+    let root = options.root.unwrap_or(String::from("."));
+    let report = no_mistakes::ci::env_report(
+        Path::new(&root),
+        options.config.as_deref().map(Path::new),
+        &var,
+    )
+    .map_err(to_napi_error)?;
+    to_pretty_json(&report)
+}
+
+pub(crate) fn ci_topology_impact_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<CiTopologyImpactOptions>(options)?;
+    let root = options.root.unwrap_or_else(|| ".".to_string());
+    let base = options
+        .base
+        .context("base is required")
+        .map_err(to_napi_error)?;
+    let head = options
+        .head
+        .context("head is required")
+        .map_err(to_napi_error)?;
+    let entry_workflow = options
+        .entry_workflow
+        .context("entryWorkflow is required")
+        .map_err(to_napi_error)?;
+    let report =
+        no_mistakes::ci::topology_impact_report(Path::new(&root), &base, &head, &entry_workflow)
+            .map_err(to_napi_error)?;
+    to_pretty_json(&report)
+}
+
+pub(crate) fn impacted_checks_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<ImpactedChecksOptions>(options)?;
+    let collect_timings = options.timings;
+    let args = build_impacted_checks_args(options).map_err(to_napi_error)?;
+    let mut timing =
+        no_mistakes::impacted_checks::timing::TimingTracker::new(false, collect_timings);
+    let (report, _) =
+        no_mistakes::impacted_checks::generate_impacted_checks_with_timing(&args, &mut timing)
+            .map_err(to_napi_error)?;
+    timing.finish_total();
+    let Some(timings) = timing.into_timings() else {
+        return to_pretty_json(&report);
+    };
+    let mut value = no_mistakes::cli::json_value(&report);
+    value["timings"] = no_mistakes::cli::json_value(&timings);
+    to_pretty_json(&value)
+}
+
+include!("cli_parity_test_documents.rs");
+
+fn to_pretty_json<T: serde::Serialize>(value: &T) -> napi::Result<String> {
+    Ok(no_mistakes::cli::json_string(value))
+}
+
+#[cfg(test)]
+#[path = "audit_document_tests.rs"]
+mod audit_document_tests;

@@ -2,11 +2,11 @@
 fn runtime_data_spans_clear_only_at_proven_data_locations() {
     let root =
         crate::test_support::rule_fixture_root("postgres-no-offset").join("bind-runtime-spans");
-    let options = crate::napi_api::options::test_json_arg(serde_json::json!({
+    let options = serde_json::json!({
         "root": root, "config": root.join(".no-mistakes-low.yml")
-    }));
+    });
     let report: serde_json::Value =
-        serde_json::from_str(&crate::napi_api::check_json_impl(options).unwrap()).unwrap();
+        serde_json::from_str(&crate::test_support::check_json(options).unwrap()).unwrap();
     assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
     let rows = report["advisories"].as_array().unwrap();
     let source = std::fs::read_to_string(root.join("src/query.mts")).unwrap();

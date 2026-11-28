@@ -117,7 +117,7 @@ pub(super) fn batch_report(results: Vec<ResolveCheckReport>) -> BatchResolveChec
 
 #[path = "batch_prepared.rs"]
 mod prepared;
-pub(crate) use prepared::{batch_report_from_prepared_facts, PreparedResolveCheckResolution};
+pub use prepared::{batch_report_from_prepared_facts, PreparedResolveCheckResolution};
 
 impl BatchResolveCheckReport {
     pub(super) fn exit_code(&self) -> ExitCode {

@@ -6,7 +6,7 @@ use no_mistakes::codebase::ts_source::SourceStore;
 use no_mistakes::config::v2::NoMistakesConfig;
 use no_mistakes::queue::{format_aggregate_warning, is_check_warning, CheckFinding};
 
-pub(crate) fn run_queue_check(
+pub fn run_queue_check(
     root: &std::path::Path,
     prepared_tsconfig_catalog: &std::sync::Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
     enabled: bool,

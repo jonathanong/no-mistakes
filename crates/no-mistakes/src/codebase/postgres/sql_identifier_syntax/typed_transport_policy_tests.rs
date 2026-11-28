@@ -5,9 +5,9 @@ fn typed_handoffs_clear_only_exact_receivers_and_keep_independent_sql_obligation
     let root = crate::test_support::rule_fixture_root("postgres-no-unbounded-sql-identifier")
         .join("low-typed-transports");
     let report: Value = serde_json::from_str(
-        &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(json!({
+        &crate::test_support::check_json(json!({
             "root": root, "config": root.join(".no-mistakes-low.yml")
-        })))
+        }))
         .unwrap(),
     )
     .unwrap();

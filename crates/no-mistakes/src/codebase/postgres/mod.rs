@@ -100,7 +100,7 @@ pub use executed_source::{
     extract_executed_postgres_sql_with_imports, ExecutedPostgresResolvedImport,
     ExecutedPostgresSource, ExecutedPostgresSql, ExecutedPostgresSqlReport,
 };
-pub(crate) use executed_source::{
+pub use executed_source::{
     extract_executed_postgres_sql_with_imports_and_session,
     extract_executed_postgres_sql_with_session,
 };

@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use std::fs;
 use std::process::ExitCode;
 
-pub(crate) fn run(args: CommentArgs) -> Result<ExitCode> {
+pub fn run(args: CommentArgs) -> Result<ExitCode> {
     let content = fs::read_to_string(&args.plan)
         .with_context(|| format!("Failed to read plan from {}", args.plan.display()))?;
     let plan: TestPlan = serde_json::from_str(&content)

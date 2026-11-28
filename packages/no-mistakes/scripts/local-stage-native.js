@@ -30,10 +30,10 @@ function localNativeArtifacts({
   const releaseDirectory = resolveReleaseDirectory({ root, env });
   const names =
     platform === "darwin"
-      ? ["libno_mistakes.dylib"]
+      ? ["libno_mistakes_napi.dylib"]
       : platform === "win32"
-        ? ["no_mistakes.dll"]
-        : ["libno_mistakes.so"];
+        ? ["no_mistakes_napi.dll"]
+        : ["libno_mistakes_napi.so"];
   const paths = names.map((name) => join(releaseDirectory, name));
   return {
     addon: paths.find(addonExists) || paths[0],
@@ -44,13 +44,7 @@ function localNativeArtifacts({
 async function main() {
   const packageName = nativePackageName();
   if (!packageName) throw new Error(`Unsupported platform ${process.platform}/${process.arch}`);
-  runCargo(["build", "--release", "--locked", "-p", "no-mistakes"]);
-  runCargo(
-    ["rustc", "--release", "--locked", "-p", "no-mistakes", "--lib", "--crate-type", "cdylib"],
-    {
-      NO_MISTAKES_BUILD_NAPI: "1",
-    },
-  );
+  runCargo(["build", "--release", "--locked", "-p", "no-mistakes", "-p", "no-mistakes-napi"]);
   const artifacts = localNativeArtifacts({ root });
   await stageNative({
     packageName,

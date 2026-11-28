@@ -3,14 +3,14 @@ use rayon::prelude::*;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-pub(crate) struct BatchCheckFactRequest {
-    pub(crate) root: PathBuf,
-    pub(crate) files: Vec<PathBuf>,
-    pub(crate) graph_files: Vec<PathBuf>,
-    pub(crate) plan: CheckFactPlan,
-    pub(crate) integration_discovery: super::FamilyPathScope,
-    pub(crate) playwright: Option<PlaywrightFactPlan>,
-    pub(crate) sources: Arc<crate::codebase::ts_source::SourceStore>,
+pub struct BatchCheckFactRequest {
+    pub root: PathBuf,
+    pub files: Vec<PathBuf>,
+    pub graph_files: Vec<PathBuf>,
+    pub plan: CheckFactPlan,
+    pub integration_discovery: super::FamilyPathScope,
+    pub playwright: Option<PlaywrightFactPlan>,
+    pub sources: Arc<crate::codebase::ts_source::SourceStore>,
 }
 
 pub(super) struct FactDemand {
@@ -20,7 +20,7 @@ pub(super) struct FactDemand {
 
 pub(super) type CollectedDemand = (PathBuf, Vec<FactDemand>, Vec<Option<super::CheckFileFacts>>);
 
-pub(crate) fn collect_check_fact_batch_with_session(
+pub fn collect_check_fact_batch_with_session(
     session: &crate::codebase::analysis_session::AnalysisSession,
     requests: Vec<BatchCheckFactRequest>,
 ) -> Vec<CheckFactMap> {

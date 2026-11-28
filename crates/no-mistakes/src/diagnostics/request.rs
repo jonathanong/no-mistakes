@@ -71,7 +71,7 @@ impl DiagnosticRequestGuard {
             _scope: scope,
         }))
     }
-    pub(crate) fn report(&self, success: bool) -> Option<super::VerboseDiagnostics> {
+    pub fn report(&self, success: bool) -> Option<super::VerboseDiagnostics> {
         if self.collect {
             self.observer.increment(
                 if success {

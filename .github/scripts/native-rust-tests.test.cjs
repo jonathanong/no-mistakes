@@ -22,6 +22,8 @@ for (const platform of ["Windows", "macOS"]) {
       "--locked",
       "-p",
       "no-mistakes",
+      "-p",
+      "no-mistakes-napi",
       "--timings",
       "--verbose",
       "--message-format=json-render-diagnostics",
@@ -130,12 +132,12 @@ test("native workflow keeps independent runtime and Rust archive builds", () => 
   const runtime = job("native-api-tests");
   const archive = job("native-test-build");
   assert.match(runtime, /node \.github\/scripts\/build-native.cjs/);
-  assert.match(runtime, /crate-type = \["rlib", "cdylib"\]/);
+  assert.doesNotMatch(runtime, /crate-type = \["rlib", "cdylib"\]/);
   assert.match(runtime, /name: native-runtime-\$\{\{ matrix.target \}\}/);
   assert.match(archive, /node \.github\/scripts\/native-test-archive.cjs build/);
   assert.doesNotMatch(archive, /crate-type = \["rlib", "cdylib"\]/);
   for (const producer of [runtime]) {
-    assert.match(producer, /NO_MISTAKES_BUILD_NAPI: "1"/);
+    assert.doesNotMatch(producer, /NO_MISTAKES_BUILD_NAPI/);
     assert.match(producer, /uses: actions\/cache\/restore@/);
     assert.match(producer, /shared-key: cargo-registry-v1/);
     assert.match(producer, /cache-targets: false/);

@@ -19,63 +19,63 @@ use std::process::ExitCode;
 
 mod frameworks;
 mod generate;
-pub(crate) mod timing;
+pub mod timing;
 pub use generate::generate_impacted_checks;
-pub(crate) use generate::generate_impacted_checks_with_timing;
+pub use generate::generate_impacted_checks_with_timing;
 
 #[derive(Args)]
 pub struct ImpactedChecksArgs {
     /// Changed file path(s), relative to `--root` (or absolute).
     #[arg(value_name = "FILE")]
-    pub(crate) files: Vec<PathBuf>,
+    pub files: Vec<PathBuf>,
     /// Project root directory.
     #[arg(long, default_value = ".")]
-    pub(crate) root: PathBuf,
+    pub root: PathBuf,
     /// Path to config file.
     #[arg(long)]
-    pub(crate) config: Option<PathBuf>,
+    pub config: Option<PathBuf>,
     /// Path to tsconfig.json for alias resolution.
     #[arg(long)]
-    pub(crate) tsconfig: Option<PathBuf>,
+    pub tsconfig: Option<PathBuf>,
     /// Git base commit/branch to diff against.
     #[arg(long)]
-    pub(crate) base: Option<String>,
+    pub base: Option<String>,
     /// Git head commit/branch (defaults to HEAD).
     #[arg(long, requires = "base")]
-    pub(crate) head: Option<String>,
+    pub head: Option<String>,
     /// Specific changed file path. Can be repeated.
     #[arg(long = "changed-file")]
-    pub(crate) changed_file: Vec<PathBuf>,
+    pub changed_file: Vec<PathBuf>,
     /// Path to a file listing changed files (one per line).
     #[arg(long = "changed-files")]
-    pub(crate) changed_files: Option<PathBuf>,
+    pub changed_files: Option<PathBuf>,
     /// Path to a unified diff file.
     #[arg(long, conflicts_with_all = ["diff_stdin", "diff_command"])]
-    pub(crate) diff: Option<PathBuf>,
+    pub diff: Option<PathBuf>,
     /// Read unified diff from stdin.
     #[arg(long, default_value_t = false, conflicts_with_all = ["diff", "diff_command"])]
-    pub(crate) diff_stdin: bool,
+    pub diff_stdin: bool,
     /// Run a command and parse its stdout as a unified diff.
     #[arg(long = "diff-command", conflicts_with_all = ["diff", "diff_stdin"])]
-    pub(crate) diff_command: Option<String>,
+    pub diff_command: Option<String>,
     /// Inline unified diff content (programmatic/N-API only).
     #[arg(skip)]
-    pub(crate) diff_content: Option<String>,
+    pub diff_content: Option<String>,
     /// Output format: json, md, yml, paths, human.
     #[arg(long, value_enum, conflicts_with = "json")]
-    pub(crate) format: Option<Format>,
+    pub format: Option<Format>,
     /// Shorthand for --format json.
     #[arg(long, default_value_t = false, conflicts_with = "format")]
-    pub(crate) json: bool,
+    pub json: bool,
     /// Return configured generic commands only; skip test-framework discovery and selection.
     #[arg(long, default_value_t = false)]
-    pub(crate) generic_only: bool,
+    pub generic_only: bool,
     /// Legacy programmatic timing switch. CLI timing flags are root-global.
     #[arg(skip)]
-    pub(crate) timings: bool,
+    pub timings: bool,
     /// Explain a successful empty result on stderr.
     #[arg(long, default_value_t = false)]
-    pub(crate) diagnose_empty: bool,
+    pub diagnose_empty: bool,
 }
 
 /// The elapsed time for one `impacted-checks` analysis phase.
@@ -203,7 +203,7 @@ fn shell_join(command: &[String]) -> String {
         .join(" ")
 }
 
-pub(crate) fn shell_quote(token: &str) -> String {
+pub fn shell_quote(token: &str) -> String {
     let safe = !token.is_empty()
         && token.chars().all(|c| {
             c.is_ascii_alphanumeric()

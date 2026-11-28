@@ -29,7 +29,7 @@ fn validate_direction(
     Ok(())
 }
 
-pub(crate) fn traversal_needs_symbol_facts(args: &TraverseArgs) -> bool {
+pub fn traversal_needs_symbol_facts(args: &TraverseArgs) -> bool {
     args.include_symbols
         || args.file_symbols.iter().any(Option::is_some)
         || args.files.iter().enumerate().any(|(index, file)| {

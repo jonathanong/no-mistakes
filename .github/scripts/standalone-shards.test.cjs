@@ -14,11 +14,25 @@ const { tmpdir } = require("node:os");
 const { test } = require("node:test");
 const { commands } = require("./standalone-shards.cjs");
 
+const SHARD_SCOPES = [
+  [
+    "--workspace",
+    "--exclude",
+    "no-mistakes-napi",
+    "--exclude",
+    "no-mistakes-ts-facts",
+    "--exclude",
+    "no-mistakes-postgres-sql",
+  ],
+  ["-p", "no-mistakes", "-p", "no-mistakes-napi"],
+  ["-p", "no-mistakes", "-p", "no-mistakes-ts-facts", "-p", "no-mistakes-postgres-sql"],
+];
+
 test("standalone build retains the default-feature library-only scope", () => {
   const built = commands("build", "target/bundle");
   assert.equal(built.length, 3);
   built.forEach((command, shard) => {
-    const scope = shard === 0 ? ["--workspace"] : ["-p", "no-mistakes"];
+    const scope = SHARD_SCOPES[shard];
     const expectedPrefix = ["nextest", "archive", "--locked", ...scope, "--lib", "--archive-file"];
     assert.deepEqual(command.slice(0, expectedPrefix.length), expectedPrefix);
     assert.equal(
@@ -203,7 +217,7 @@ test("PR jobs build and run exactly one library slice without an archive", () =>
   scenario(({ bundle, invoke }) => {
     for (const index of [1, 2, 3]) {
       const shard = index - 1;
-      const scope = shard === 0 ? "--workspace" : "-p no-mistakes";
+      const scope = SHARD_SCOPES[shard].join(" ");
       const wrapper = path.join(__dirname, `standalone-shard-rustc-${shard}.sh`);
       const result = invoke(["local", String(index)]);
       assert.equal(result.status, 0, result.stderr);

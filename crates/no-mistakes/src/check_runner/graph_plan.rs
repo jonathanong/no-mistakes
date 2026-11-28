@@ -6,17 +6,17 @@ use no_mistakes::codebase::ts_source::VisiblePathSnapshot;
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::Path;
 
-pub(crate) struct PreparedInputs<'a> {
-    pub(crate) session: &'a no_mistakes::codebase::analysis_session::AnalysisSession,
-    pub(crate) codebase_config: &'a no_mistakes::codebase::config::Config,
-    pub(crate) tsconfig: &'a TsConfig,
-    pub(crate) visible_paths: &'a VisiblePathSnapshot,
-    pub(crate) workflow_documents: Option<
+pub struct PreparedInputs<'a> {
+    pub session: &'a no_mistakes::codebase::analysis_session::AnalysisSession,
+    pub codebase_config: &'a no_mistakes::codebase::config::Config,
+    pub tsconfig: &'a TsConfig,
+    pub visible_paths: &'a VisiblePathSnapshot,
+    pub workflow_documents: Option<
         &'a std::sync::Arc<no_mistakes::codebase::ci_workflows::PreparedWorkflowTopologyInputs>,
     >,
 }
 
-pub(crate) fn prepare(
+pub fn prepare(
     root: &Path,
     config: &NoMistakesConfig,
     inputs: PreparedInputs<'_>,
@@ -102,4 +102,4 @@ pub(crate) fn prepare(
     Ok(prepared_graph)
 }
 
-pub(crate) mod failures;
+pub mod failures;

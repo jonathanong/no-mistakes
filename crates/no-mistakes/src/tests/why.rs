@@ -19,7 +19,7 @@ pub struct WhyStep {
 
 type WhyStepsByChangedFile = BTreeMap<String, Vec<WhyStep>>;
 
-pub(crate) fn run(args: WhyArgs) -> Result<ExitCode> {
+pub fn run(args: WhyArgs) -> Result<ExitCode> {
     let context = why_context(&args)?;
     let path_steps = why_steps_with_context(&args, &context)?;
     let mut output = String::new();
@@ -71,7 +71,7 @@ fn display_via(via: &str, detail: Option<&ImpactEdgeDetail>) -> String {
 
 const _: fn(WhyArgs) -> Result<ExitCode> = run;
 
-pub(crate) fn why_steps(args: &WhyArgs) -> Result<WhyStepsByChangedFile> {
+pub fn why_steps(args: &WhyArgs) -> Result<WhyStepsByChangedFile> {
     let context = why_context(args)?;
     why_steps_with_context(args, &context)
 }

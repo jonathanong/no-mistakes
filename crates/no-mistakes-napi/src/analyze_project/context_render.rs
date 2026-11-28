@@ -1,0 +1,99 @@
+fn server_filters(report_type: &str, options: &ProjectOptions) -> Vec<String> {
+    let mut filters = options.filters.clone();
+    if report_type == "serverContracts" {
+        filters.extend(crate::options::project_roots(options));
+    }
+    filters
+}
+
+fn render_server_report(
+    report_type: &str,
+    options: &ProjectOptions,
+    prepared: &no_mistakes::server_routes::PreparedServerAnalysis,
+    report: &no_mistakes::server_routes::ProjectReport,
+    indexed: Option<&no_mistakes::server_routes::PreparedProjectReport>,
+    filters: &[String],
+) -> Result<Box<RawValue>> {
+    match report_type {
+        "serverRoutes" => Ok(json_raw(report)),
+        "serverRouteList" => {
+            let routes = report
+                .routes
+                .iter()
+                .filter(|route| {
+                    options.files.is_empty()
+                        || options
+                            .files
+                            .iter()
+                            .any(|file| file == &route.file || file == &route.route)
+                })
+                .collect::<Vec<_>>();
+            Ok(json_raw(&routes))
+        }
+        "serverRouteEdges" => {
+            let roots = crate::options::project_roots(options);
+            let depth = no_mistakes::cli::root_scoped_edge_depth(&roots, options.depth);
+            Ok(json_raw(
+                &indexed
+                    .expect("typed server traversal is prepared")
+                    .edge_view(&roots, depth),
+            ))
+        }
+        "serverRouteRelated" => {
+            let roots = crate::options::project_roots(options);
+            if roots.is_empty() {
+                bail!("files or roots must contain at least one entry");
+            }
+            let direction =
+                crate::options::parse_server_direction(options.direction.as_deref())?;
+            Ok(json_raw(
+                &indexed
+                    .expect("typed server traversal is prepared")
+                    .related(&roots, direction),
+            ))
+        }
+        "serverContracts" => {
+            let contracts =
+                no_mistakes::server_routes::analyze_contracts_with_prepared(prepared, report, filters)?;
+            Ok(json_raw(&contracts))
+        }
+        _ => bail!("unknown server report type: {report_type}"),
+    }
+}
+
+fn render_playwright_report(
+    report_type: &str,
+    options: &PlaywrightOptions,
+    root: &Path,
+    analysis: &no_mistakes::playwright::analysis::types::Analysis,
+) -> Result<Box<RawValue>> {
+    let files = options.files.iter().map(PathBuf::from).collect::<Vec<_>>();
+    match report_type {
+        "playwrightCheck" => Ok(json_raw(&analysis.coverage)),
+        "playwrightEdges" => Ok(json_raw(&analysis.edges)),
+        "playwrightRelated" => {
+            if files.is_empty() {
+                bail!("files must contain at least one file");
+            }
+            Ok(json_raw(
+                &no_mistakes::playwright::analysis::output::build_related_report(
+                    root,
+                    &analysis.edges.edges,
+                    &files,
+                ),
+            ))
+        }
+        "playwrightTests" => Ok(json_raw(
+            &no_mistakes::playwright::analysis::tests_report::build_tests_report(
+                &analysis.edges.edges,
+                &files,
+                root,
+            ),
+        )),
+        _ => bail!("unknown Playwright report type: {report_type}"),
+    }
+}
+
+fn json_raw<T: serde::Serialize + ?Sized>(value: &T) -> Box<RawValue> {
+    json_raw_report(value)
+}

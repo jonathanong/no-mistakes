@@ -22,7 +22,7 @@ pub struct TestFacts {
     pub dynamic_imports: Vec<DynamicImport>,
     pub mock_specifiers: Vec<String>,
     /// Low-effort setup shapes recorded during the shared program walk.
-    pub setup_reachability: SetupReachability,
+    pub(crate) setup_reachability: SetupReachability,
 }
 
 pub(crate) struct Collector<'s> {

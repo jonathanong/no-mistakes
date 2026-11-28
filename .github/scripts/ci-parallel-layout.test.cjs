@@ -247,9 +247,9 @@ test("Linux CLI and addon producers preserve their commands and publish separate
   );
   assert.match(
     addon,
-    /NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib\s+cp target\/debug\/libno_mistakes\.so target\/debug\/no-mistakes\.node/,
+    /cargo build --locked -p no-mistakes-napi\s+cp target\/debug\/libno_mistakes_napi\.so target\/debug\/no-mistakes\.node/,
   );
-  assert.equal([...body.matchAll(/NO_MISTAKES_BUILD_NAPI/g)].length, 1);
+  assert.doesNotMatch(body, /NO_MISTAKES_BUILD_NAPI/);
   assert.doesNotMatch(body, /--all-features|--no-default-features|--release|crate-type =/);
   assert.match(body, /name: linux-runtime-\$\{\{ matrix.role \}\}/);
   assert.match(body, /path: \$\{\{ matrix.binary \}\}/);

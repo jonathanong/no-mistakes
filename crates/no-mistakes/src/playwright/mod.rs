@@ -1,26 +1,26 @@
-pub(crate) mod analysis;
+pub mod analysis;
 mod ast;
 mod cli;
-pub(crate) mod config;
-pub(crate) mod fsutil;
-pub(crate) mod graph;
-pub(crate) mod integration_routes;
-pub(crate) mod matcher;
+pub mod config;
+pub mod fsutil;
+pub mod graph;
+pub mod integration_routes;
+pub mod matcher;
 pub mod playwright_config;
 pub mod playwright_tests;
 pub mod playwright_urls;
-pub(crate) mod prepared_facts;
+pub mod prepared_facts;
 mod routes;
 mod rule_findings;
 pub mod rules;
 pub mod selectors;
 pub(crate) use crate::codebase::playwright_facts::test_file_occurrences;
-pub(crate) mod test_patterns;
+pub mod test_patterns;
 #[cfg(test)]
-pub(crate) mod test_support;
+pub mod test_support;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests;
-pub(crate) mod url;
+pub mod url;
 
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
@@ -29,34 +29,31 @@ pub use analysis::cli_run::run;
 pub use cli::PlaywrightArgs;
 
 #[derive(Clone, Copy)]
-pub(crate) enum PlaywrightReportKind {
+pub enum PlaywrightReportKind {
     Check,
     Edges,
     Related,
     Tests,
 }
 
-pub(crate) struct PlaywrightReportOptions {
-    pub(crate) root: PathBuf,
-    pub(crate) config: Option<PathBuf>,
-    pub(crate) playwright_config: Vec<PathBuf>,
-    pub(crate) project: Option<String>,
+pub struct PlaywrightReportOptions {
+    pub root: PathBuf,
+    pub config: Option<PathBuf>,
+    pub playwright_config: Vec<PathBuf>,
+    pub project: Option<String>,
     /// The `.no-mistakes.yml` `projects:` key of the frontend app to analyze.
     /// Only needed when the repository configures more than one
     /// `type: nextjs` project and `tests.playwright.apps.<project>.project`
     /// is not set; otherwise leave unset.
-    pub(crate) app: Option<String>,
-    pub(crate) files: Vec<PathBuf>,
-    pub(crate) assert_conditional_tests: bool,
-    pub(crate) allow_skipped_tests: bool,
-    pub(crate) assert_unique_test_ids: bool,
-    pub(crate) assert_unique_html_ids: bool,
+    pub app: Option<String>,
+    pub files: Vec<PathBuf>,
+    pub assert_conditional_tests: bool,
+    pub allow_skipped_tests: bool,
+    pub assert_unique_test_ids: bool,
+    pub assert_unique_html_ids: bool,
 }
 
-pub(crate) fn report_json(
-    kind: PlaywrightReportKind,
-    options: PlaywrightReportOptions,
-) -> Result<String> {
+pub fn report_json(kind: PlaywrightReportKind, options: PlaywrightReportOptions) -> Result<String> {
     crate::ast::with_request_parse_cache(|| report_json_with_cache(kind, options))
 }
 
@@ -116,7 +113,7 @@ fn report_json_with_cache(
     }
 }
 
-pub(crate) fn report_settings(
+pub fn report_settings(
     root: &Path,
     config_path: Option<&std::path::Path>,
     playwright_configs: &[PathBuf],

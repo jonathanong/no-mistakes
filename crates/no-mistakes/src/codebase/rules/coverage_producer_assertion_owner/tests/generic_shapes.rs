@@ -6,11 +6,11 @@ fn fixture() -> std::path::PathBuf {
 
 fn report(config: &str) -> Value {
     let root = fixture();
-    let input = crate::napi_api::options::test_json_arg(serde_json::json!({
+    let input = serde_json::json!({
         "root": root,
         "config": root.join(config)
-    }));
-    serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap()
+    });
+    serde_json::from_str(&crate::test_support::check_json(input).unwrap()).unwrap()
 }
 
 fn finding<'a>(findings: &'a [Value], target: &str) -> &'a Value {

@@ -1,5 +1,5 @@
 impl SharedTraversalContext {
-    pub(crate) fn use_check_facts(&mut self, shared: &crate::codebase::check_facts::CheckFactMap) {
+    pub fn use_check_facts(&mut self, shared: &crate::codebase::check_facts::CheckFactMap) {
         self.facts = Some(
             crate::codebase::ts_source::facts::TsFactMap::from_shared_iter_with_plan(
                 shared
@@ -13,7 +13,7 @@ impl SharedTraversalContext {
         self.invalidate_analysis_caches();
     }
 
-    pub(crate) fn seed_cached_program_facts(&mut self, paths: &std::collections::HashSet<PathBuf>) {
+    pub fn seed_cached_program_facts(&mut self, paths: &std::collections::HashSet<PathBuf>) {
         let context = self.fact_context.clone();
         let sources = self.dataset.sources_for(&self.root);
         let session = self.session.clone();
@@ -59,7 +59,7 @@ impl SharedTraversalContext {
         self.invalidate_analysis_caches();
     }
 
-    pub(crate) fn extend_lazy_facts(
+    pub fn extend_lazy_facts(
         &mut self,
         collected: crate::codebase::ts_source::facts::TsFactMap,
     ) {
@@ -84,7 +84,7 @@ impl SharedTraversalContext {
         self.symbol_index_builds = self.symbol_index_cache.build_count();
     }
 
-    pub(crate) fn publish_lazy_facts(
+    pub fn publish_lazy_facts(
         &self,
         collected: Vec<(PathBuf, crate::codebase::ts_source::facts::TsFileFacts)>,
     ) {
@@ -105,7 +105,7 @@ impl SharedTraversalContext {
         }
     }
 
-    pub(crate) fn add_explicit_roots(&mut self, paths: &[PathBuf]) {
+    pub fn add_explicit_roots(&mut self, paths: &[PathBuf]) {
         let added = paths
             .iter()
             .filter(|path| self.graph_files.add_explicit_root(path))

@@ -6,9 +6,9 @@ fn namespace_keyof_helpers_keep_uncertainty_at_each_import_site() {
         ("report.yml", "rules", 2),
         ("ignore.yml", "advisories", 0),
     ] {
-        let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        let report = crate::test_support::check_json(
             serde_json::json!({"root": root, "config": root.join(config)}).to_string(),
-        ))
+        )
         .unwrap();
         let report: serde_json::Value = serde_json::from_str(&report).unwrap();
         let definite: Vec<_> = report["rules"]

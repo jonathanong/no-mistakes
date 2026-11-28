@@ -76,7 +76,7 @@ impl<'a, T> IntoIterator for &'a mut FileIdMap<T> {
     }
 }
 
-pub(crate) struct FileIdMapIter<'a, T> {
+pub struct FileIdMapIter<'a, T> {
     paths: &'a [PathBuf],
     slots: std::slice::Iter<'a, Option<T>>,
     overflow: std::collections::hash_map::Iter<'a, PathBuf, T>,
@@ -109,7 +109,7 @@ impl<'a, T> Iterator for FileIdMapIter<'a, T> {
     }
 }
 
-pub(crate) struct FileIdMapIterMut<'a, T> {
+pub struct FileIdMapIterMut<'a, T> {
     paths: &'a [PathBuf],
     slots: std::slice::IterMut<'a, Option<T>>,
     overflow: std::collections::hash_map::IterMut<'a, PathBuf, T>,

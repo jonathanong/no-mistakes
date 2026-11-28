@@ -118,12 +118,12 @@ fn external_chain_unknown_policy_has_node_api_parity() {
     let fixture = crate::test_support::rule_fixture_root("forbidden-calls");
     let base = fixture.parent().unwrap();
     for (policy, expected) in [("unknown", 4), ("configured", 5), ("ignore", 4)] {
-        let input = crate::napi_api::options::test_json_arg(serde_json::json!({
+        let input = serde_json::json!({
             "root": base.join("external-chains/fixture"),
             "config": base.join(format!("configs/external-chains-{policy}.yml")),
-        }));
+        });
         let report: serde_json::Value =
-            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
+            serde_json::from_str(&crate::test_support::check_json(input).unwrap()).unwrap();
         assert_eq!(
             report["rules"].as_array().unwrap().len(),
             expected,

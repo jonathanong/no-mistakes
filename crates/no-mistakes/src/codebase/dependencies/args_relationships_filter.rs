@@ -4,7 +4,7 @@ include!("args_relationships_filter_lang.rs");
 /// Empty input and `all` expand to the standard public edge set; the
 /// conservative `route-import` relationship remains explicit opt-in.
 #[inline(never)]
-pub(crate) fn relationship_filter(
+pub fn relationship_filter(
     relationships: &[RelationshipArg],
 ) -> Option<std::collections::HashSet<EdgeKind>> {
     if relationships.is_empty() {

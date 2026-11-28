@@ -1,0 +1,63 @@
+use super::*;
+
+#[test]
+fn appended_view_probe_matches_literal_through_public_check_and_project() {
+    let root =
+        no_mistakes::test_support::rule_fixture_root("postgres-no-transformed-uuid-predicates");
+    for shape in ["append", "object", "text", "literal"] {
+        for status in ["pass", "positive"] {
+            let name = format!("append-view-{shape}-{status}");
+            let config = root
+                .parent()
+                .unwrap()
+                .join("configs")
+                .join(format!("{name}-max.yml"));
+            let check: serde_json::Value = no_mistakes::test_support::without_hygiene_advisory_json(
+                serde_json::from_str(
+                    &check_json_impl(crate::options::test_json_arg(
+                        json!({"root": root, "config": config}).to_string(),
+                    ))
+                    .unwrap(),
+                )
+                .unwrap(),
+            );
+            assert_eq!(check["warnings"], json!([]), "{name}: {check}");
+            assert_eq!(check["advisories"], json!([]), "{name}: {check}");
+            let findings = check["rules"].as_array().unwrap();
+            assert_eq!(
+                findings.len(),
+                usize::from(status == "positive"),
+                "{name}: {check}"
+            );
+            for finding in findings {
+                assert_eq!(finding["rule"], "postgres-no-transformed-uuid-predicates");
+                assert_eq!(finding["file"], format!("{name}.ts"));
+                let targets = if matches!(shape, "object" | "text") {
+                    "plain_view.id, plain_view.parent_id"
+                } else {
+                    "view_posts.id, view_posts.root_id"
+                };
+                assert_eq!(finding["target"], targets);
+                assert_eq!(finding["line"], if shape == "literal" { 5 } else { 6 });
+            }
+            let project: serde_json::Value =
+                no_mistakes::test_support::without_hygiene_advisory_json(
+                    serde_json::from_str(
+                        &crate::analyze_project::analyze_project_json_impl(
+                            crate::options::test_json_arg(
+                                json!({
+                                    "root": root,
+                                    "config": config,
+                                    "reports": [{"type": "check"}],
+                                })
+                                .to_string(),
+                            ),
+                        )
+                        .unwrap(),
+                    )
+                    .unwrap(),
+                );
+            assert_eq!(project["reports"][0]["result"], check, "{name}");
+        }
+    }
+}

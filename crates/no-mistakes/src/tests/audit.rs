@@ -99,14 +99,14 @@ pub fn audit_test_selection(
     Ok(report)
 }
 
-pub(crate) fn read_artifact<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T> {
+pub fn read_artifact<T: serde::de::DeserializeOwned>(path: &Path) -> Result<T> {
     let content = std::fs::read_to_string(path)
         .with_context(|| format!("Failed to read audit artifact {}", path.display()))?;
     serde_json::from_str(&content)
         .with_context(|| format!("Invalid audit artifact {}", path.display()))
 }
 
-pub(crate) fn render(report: &TestAuditReport, format: AuditFormat) -> String {
+pub fn render(report: &TestAuditReport, format: AuditFormat) -> String {
     if format == AuditFormat::Json {
         return crate::cli::json_string(report);
     }
@@ -124,7 +124,7 @@ pub(crate) fn render(report: &TestAuditReport, format: AuditFormat) -> String {
     output
 }
 
-pub(crate) fn run(args: AuditArgs) -> Result<ExitCode> {
+pub fn run(args: AuditArgs) -> Result<ExitCode> {
     let plan = read_artifact(&args.plan)?;
     let observations = read_artifact(&args.observations)?;
     let report = audit_test_selection(&plan, &observations)?;

@@ -112,11 +112,9 @@ fn unknowns_limits_and_policy_never_become_assertion_proof() {
         .as_ref()
         .unwrap()
         .ends_with("src/broken.mts"));
-    let options = crate::napi_api::options::test_json_arg(
-        serde_json::json!({"root": root, "config": root.join("advise.yml")}),
-    );
+    let options = serde_json::json!({"root": root, "config": root.join("advise.yml")});
     let report: serde_json::Value =
-        serde_json::from_str(&crate::napi_api::check_json_impl(options).unwrap()).unwrap();
+        serde_json::from_str(&crate::test_support::check_json(options).unwrap()).unwrap();
     assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
     assert!(
         !report["advisories"].as_array().unwrap().is_empty(),
@@ -151,27 +149,6 @@ fn invalid_configuration_is_actionable() {
         );
     }
 }
-#[cfg(feature = "test-instrumentation")]
-#[test]
-fn existing_graph_projection_is_unchanged_when_the_rule_is_enabled() {
-    let root = fixture();
-    let query = |config: &str, relationships: &[&str]| {
-        let input = serde_json::json!({"root":root,"config":root.join(config),"reports":[
-            {"type":"dependents","files":["src/production.mts"],"relationships":relationships},
-            {"type":"check"}
-        ]});
-        let result: serde_json::Value =
-            serde_json::from_str(&crate::napi_api::analyze_project_json_impl(input).unwrap())
-                .unwrap();
-        result["reports"][0]["result"].clone()
-    };
-    for relationships in [&["call", "import"][..], &["call"][..], &[][..]] {
-        assert_eq!(
-            query("disabled.yml", relationships),
-            query(".no-mistakes.yml", relationships)
-        );
-    }
-}
 
 #[test]
 fn all_standard_suppressions_and_custom_messages_work() {
@@ -203,8 +180,6 @@ fn mixed_known_unknown_assertion_target_cannot_pass() {
 
 #[cfg(feature = "test-instrumentation")]
 mod source_failures;
-
-mod public_query;
 
 mod execution;
 

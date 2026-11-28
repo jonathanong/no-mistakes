@@ -1,11 +1,11 @@
 #[test]
 fn untyped_known_method_leaves_preserve_typed_and_callback_uncertainty() {
     let root = crate::test_support::rule_fixture_root("coverage-producer-assertion-owner-builtins");
-    let input = crate::napi_api::options::test_json_arg(serde_json::json!({
+    let input = serde_json::json!({
         "root": root, "config": root.join("consumer-shapes.yml")
-    }));
+    });
     let report: serde_json::Value =
-        serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
+        serde_json::from_str(&crate::test_support::check_json(input).unwrap()).unwrap();
     let findings = report["rules"].as_array().unwrap();
     assert!(
         !findings

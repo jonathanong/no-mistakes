@@ -1,6 +1,6 @@
 use super::CheckResults;
 
-pub(crate) fn json_value(results: &CheckResults) -> serde_json::Value {
+pub fn json_value(results: &CheckResults) -> serde_json::Value {
     let CheckResults {
         incomplete,
         react,

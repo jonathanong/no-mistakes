@@ -4,7 +4,7 @@ use tempfile::TempDir;
 
 /// Materializes the checked-in base/head trees as adjacent commits for public
 /// CLI and N-API topology-impact contract tests.
-pub(crate) fn materialize_workflow_topology_impact_fixture(name: &str) -> TempDir {
+pub fn materialize_workflow_topology_impact_fixture(name: &str) -> TempDir {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/workflow-topology-impact")
         .join(name);

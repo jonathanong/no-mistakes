@@ -274,9 +274,9 @@ fn actual_check_json_preparation_activates_scoping_and_preserves_full_report() {
         let _restore = Restore;
         let observer = crate::diagnostics::InvocationObserver::new(true);
         let report = crate::diagnostics::with_observer(Some(observer.clone()), || {
-            crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            crate::test_support::check_json(
                 serde_json::json!({ "root": root, "config": ".no-mistakes.yml" }),
-            ))
+            )
             .unwrap()
         });
         assert_eq!(

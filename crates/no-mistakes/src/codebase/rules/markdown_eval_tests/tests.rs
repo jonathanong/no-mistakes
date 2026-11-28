@@ -54,3 +54,40 @@ fn unselected_and_unreadable_allow_entries_are_not_stale() {
     let findings = check_with_files(&root, &config, &[root.join("missing.test.mts")]).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
 }
+
+#[test]
+fn scan_reports_eval_findings_suppresses_allowed_and_flags_stale_allow_entries() {
+    let fail_root = fixture("fail");
+    let eval_file = crate::codebase::ts_source::discover_files(&fail_root, &[])
+        .into_iter()
+        .find(|p| p.to_string_lossy().ends_with(".test.mts"))
+        .unwrap();
+    let rel = relative_slash_path(&fail_root, &eval_file);
+    let findings =
+        check_with_files(&fail_root, &config(), std::slice::from_ref(&eval_file)).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+
+    let mut allowed = config();
+    allowed.rules[0].options =
+        serde_yaml::from_str(&format!("include: ['**/*.test.mts']\nallow: ['{rel}']")).unwrap();
+    assert!(check_with_files(&fail_root, &allowed, &[eval_file])
+        .unwrap()
+        .is_empty());
+
+    let pass_root = fixture("pass");
+    let pass_file = crate::codebase::ts_source::discover_files(&pass_root, &[])
+        .into_iter()
+        .find(|p| p.to_string_lossy().ends_with(".test.mts"))
+        .unwrap();
+    let pass_rel = relative_slash_path(&pass_root, &pass_file);
+    let mut stale = config();
+    stale.rules[0].options = serde_yaml::from_str(&format!(
+        "include: ['**/*.test.mts']\nallow: ['{pass_rel}']"
+    ))
+    .unwrap();
+    let stale_findings = check_with_files(&pass_root, &stale, &[pass_file]).unwrap();
+    assert_eq!(stale_findings.len(), 1, "{stale_findings:?}");
+    assert!(stale_findings[0]
+        .message
+        .contains("stale markdown-eval-tests allowlist entry"));
+}

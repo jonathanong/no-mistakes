@@ -80,9 +80,9 @@ fn invalid_encoded_story_reports_repo_relative_parse_error_through_public_checks
         .unwrap();
     assert!(source.file.as_ref().unwrap().ends_with("Card.stories.tsx"));
     assert!(crate::codebase::rules::run_check(&root, None, None).is_err());
-    let json = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+    let json = crate::test_support::check_json(
         serde_json::json!({ "root": root }).to_string(),
-    ))
+    )
     .unwrap();
     let report: serde_json::Value = serde_json::from_str(&json).unwrap();
     let diagnostics = report["rules"].as_array().unwrap();

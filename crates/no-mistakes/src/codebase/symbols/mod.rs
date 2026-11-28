@@ -33,22 +33,21 @@ mod impact {
     include!("impact.rs");
 }
 
-pub(crate) fn signature_impact_graph_plan() -> crate::codebase::dependencies::graph::GraphBuildPlan
-{
+pub fn signature_impact_graph_plan() -> crate::codebase::dependencies::graph::GraphBuildPlan {
     impact::signature_impact_graph_plan()
 }
 
-pub(crate) struct PreparedSignatureImpact<'a> {
-    pub(crate) session: &'a crate::codebase::analysis_session::AnalysisSession,
-    pub(crate) tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
-    pub(crate) graph_files: &'a crate::codebase::dependencies::graph::GraphFiles,
-    pub(crate) test_filter: &'a crate::codebase::testing_analysis::test_filter::TestFileFilter,
-    pub(crate) workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
-    pub(crate) graph: &'a crate::codebase::dependencies::graph::DepGraph,
-    pub(crate) facts: &'a crate::codebase::ts_source::facts::TsFactMap,
+pub struct PreparedSignatureImpact<'a> {
+    pub session: &'a crate::codebase::analysis_session::AnalysisSession,
+    pub tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
+    pub graph_files: &'a crate::codebase::dependencies::graph::GraphFiles,
+    pub test_filter: &'a crate::codebase::testing_analysis::test_filter::TestFileFilter,
+    pub workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
+    pub graph: &'a crate::codebase::dependencies::graph::DepGraph,
+    pub facts: &'a crate::codebase::ts_source::facts::TsFactMap,
 }
 
-pub(crate) fn signature_impact_json_with_prepared(
+pub fn signature_impact_json_with_prepared(
     args: &SymbolsArgs,
     root: &Path,
     prepared: PreparedSignatureImpact<'_>,

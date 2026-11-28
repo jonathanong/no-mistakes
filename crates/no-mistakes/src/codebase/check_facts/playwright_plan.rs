@@ -30,21 +30,21 @@ pub struct PlaywrightFactPlan {
 }
 
 #[derive(Clone)]
-pub(crate) struct PlaywrightSourceFactPlan {
-    pub(crate) app_source_files: Arc<crate::fx::PathSet>,
-    pub(crate) selector_regexes: Arc<SelectorRegexes>,
-    pub(crate) settings: Arc<crate::codebase::playwright_facts::Settings>,
-    pub(crate) visible_files: Arc<crate::fx::PathSet>,
-    pub(crate) scan_html_ids: bool,
-    pub(crate) settings_key: PlaywrightSettingsKey,
-    pub(crate) integration_sources: Vec<(
+pub struct PlaywrightSourceFactPlan {
+    pub app_source_files: Arc<crate::fx::PathSet>,
+    pub selector_regexes: Arc<SelectorRegexes>,
+    pub settings: Arc<crate::codebase::playwright_facts::Settings>,
+    pub visible_files: Arc<crate::fx::PathSet>,
+    pub scan_html_ids: bool,
+    pub settings_key: PlaywrightSettingsKey,
+    pub integration_sources: Vec<(
         crate::config::v2::schema::RouteCoverageSource,
         globset::GlobSet,
     )>,
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub(crate) struct PlaywrightSettingsKey {
+pub struct PlaywrightSettingsKey {
     frontend_root: String,
     playwright_configs: Vec<PathBuf>,
     project: Option<String>,
@@ -64,7 +64,7 @@ pub(crate) struct PlaywrightSettingsKey {
 }
 
 impl PlaywrightSettingsKey {
-    pub(crate) fn new(settings: &crate::codebase::playwright_facts::Settings) -> Self {
+    pub fn new(settings: &crate::codebase::playwright_facts::Settings) -> Self {
         fn normalized<T: Clone + Ord>(values: &[T]) -> Vec<T> {
             let mut values = values.to_vec();
             values.sort();
@@ -101,36 +101,36 @@ impl PlaywrightSettingsKey {
     }
 }
 
-pub(crate) struct PlaywrightFactSelection<'a> {
-    pub(crate) path: PathBuf,
-    pub(crate) navigation_helpers: &'a [String],
-    pub(crate) selector_wrappers: &'a [crate::config::v2::schema::PlaywrightSelectorWrapper],
-    pub(crate) selector_attributes: &'a [String],
-    pub(crate) component_selector_attributes: &'a BTreeMap<String, String>,
-    pub(crate) html_ids: bool,
-    pub(crate) test_id_attributes: &'a [String],
-    pub(crate) policy: TestPolicy,
-    pub(crate) demands_text_imports: bool,
+pub struct PlaywrightFactSelection<'a> {
+    pub path: PathBuf,
+    pub navigation_helpers: &'a [String],
+    pub selector_wrappers: &'a [crate::config::v2::schema::PlaywrightSelectorWrapper],
+    pub selector_attributes: &'a [String],
+    pub component_selector_attributes: &'a BTreeMap<String, String>,
+    pub html_ids: bool,
+    pub test_id_attributes: &'a [String],
+    pub policy: TestPolicy,
+    pub demands_text_imports: bool,
 }
 
 #[derive(Clone)]
-pub(crate) struct PlaywrightFileFactPlan {
+pub struct PlaywrightFileFactPlan {
     variants: BTreeMap<PlaywrightOccurrenceKey, VariantPlan>,
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd)]
-pub(crate) struct PlaywrightOccurrenceKey {
-    pub(crate) navigation_helpers: Vec<String>,
-    pub(crate) selector_wrappers: Vec<crate::config::v2::schema::PlaywrightSelectorWrapper>,
-    pub(crate) selector_attributes: Vec<String>,
-    pub(crate) component_selector_attributes: BTreeMap<String, String>,
-    pub(crate) html_ids: bool,
-    pub(crate) test_id_attributes: Vec<String>,
+pub struct PlaywrightOccurrenceKey {
+    pub navigation_helpers: Vec<String>,
+    pub selector_wrappers: Vec<crate::config::v2::schema::PlaywrightSelectorWrapper>,
+    pub selector_attributes: Vec<String>,
+    pub component_selector_attributes: BTreeMap<String, String>,
+    pub html_ids: bool,
+    pub test_id_attributes: Vec<String>,
 }
 
 #[derive(Clone)]
-pub(crate) struct VariantPlan {
-    pub(crate) selector_regexes: Arc<SelectorRegexes>,
+pub struct VariantPlan {
+    pub selector_regexes: Arc<SelectorRegexes>,
     policies: Vec<TestPolicy>,
 }
 

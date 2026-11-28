@@ -102,7 +102,7 @@ fn playwright_fact_analysis_forwards_prepared_graph_files() {
         ),
         (
             include_str!("../../../../playwright/analysis/pipeline_entrypoints.rs"),
-            "pub(crate) fn analyze_with_policy_and_facts_from_snapshot(",
+            "pub fn analyze_with_policy_and_facts_from_snapshot(",
         ),
         (
             include_str!("../../../../playwright/analysis/pipeline_selectors.rs"),

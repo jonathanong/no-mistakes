@@ -7,7 +7,7 @@ use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
 use std::path::{Path, PathBuf};
 
-pub(crate) type DomainResults = (
+pub type DomainResults = (
     anyhow::Result<CheckTask<Vec<react_traits::Violation>>>,
     anyhow::Result<CheckTask<Vec<CheckFinding>>>,
     anyhow::Result<CheckTask<Vec<RuleFinding>>>,
@@ -16,40 +16,37 @@ pub(crate) type DomainResults = (
     anyhow::Result<CheckTask<Vec<RuleFinding>>>,
 );
 
-pub(crate) struct DomainCheckInputs<'a> {
-    pub(crate) session: std::sync::Arc<no_mistakes::codebase::analysis_session::AnalysisSession>,
-    pub(crate) root: &'a Path,
-    pub(crate) config_path: &'a Option<PathBuf>,
-    pub(crate) tsconfig_path: &'a Option<PathBuf>,
-    pub(crate) react_enabled: bool,
-    pub(crate) queues_enabled: bool,
-    pub(crate) integration_enabled: bool,
-    pub(crate) unique_exports_enabled: bool,
-    pub(crate) filesystem_rules_enabled: bool,
-    pub(crate) discovered_files: &'a [PathBuf],
-    pub(crate) facts: &'a CheckFactMap,
-    pub(crate) prepared_playwright:
-        Option<&'a no_mistakes::playwright::rules::PreparedPlaywrightRules>,
-    pub(crate) prepared_react: &'a no_mistakes::react_traits::PreparedReactCheck,
-    pub(crate) prepared_graph:
-        Option<&'a no_mistakes::codebase::dependencies::graph::PreparedGraphConfig>,
-    pub(crate) dependency_graph:
+pub struct DomainCheckInputs<'a> {
+    pub session: std::sync::Arc<no_mistakes::codebase::analysis_session::AnalysisSession>,
+    pub root: &'a Path,
+    pub config_path: &'a Option<PathBuf>,
+    pub tsconfig_path: &'a Option<PathBuf>,
+    pub react_enabled: bool,
+    pub queues_enabled: bool,
+    pub integration_enabled: bool,
+    pub unique_exports_enabled: bool,
+    pub filesystem_rules_enabled: bool,
+    pub discovered_files: &'a [PathBuf],
+    pub facts: &'a CheckFactMap,
+    pub prepared_playwright: Option<&'a no_mistakes::playwright::rules::PreparedPlaywrightRules>,
+    pub prepared_react: &'a no_mistakes::react_traits::PreparedReactCheck,
+    pub prepared_graph: Option<&'a no_mistakes::codebase::dependencies::graph::PreparedGraphConfig>,
+    pub dependency_graph:
         Option<std::sync::Arc<no_mistakes::codebase::dependencies::graph::DepGraph>>,
-    pub(crate) prepared_tsconfig: &'a no_mistakes::codebase::ts_resolver::TsConfig,
-    pub(crate) prepared_tsconfig_catalog:
+    pub prepared_tsconfig: &'a no_mistakes::codebase::ts_resolver::TsConfig,
+    pub prepared_tsconfig_catalog:
         &'a std::sync::Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
-    pub(crate) visible_paths: &'a no_mistakes::codebase::ts_source::VisiblePathSnapshot,
-    pub(crate) sources: std::sync::Arc<no_mistakes::codebase::ts_source::SourceStore>,
-    pub(crate) inferred_roots: &'a no_mistakes::codebase::config::InferredRoots,
-    pub(crate) config: &'a no_mistakes::config::v2::NoMistakesConfig,
-    pub(crate) codebase_config: &'a no_mistakes::codebase::config::Config,
-    pub(crate) vitest_projects:
-        Option<&'a no_mistakes::codebase::rules::PreparedVitestProjectCatalog>,
-    pub(crate) playwright_projects:
+    pub visible_paths: &'a no_mistakes::codebase::ts_source::VisiblePathSnapshot,
+    pub sources: std::sync::Arc<no_mistakes::codebase::ts_source::SourceStore>,
+    pub inferred_roots: &'a no_mistakes::codebase::config::InferredRoots,
+    pub config: &'a no_mistakes::config::v2::NoMistakesConfig,
+    pub codebase_config: &'a no_mistakes::codebase::config::Config,
+    pub vitest_projects: Option<&'a no_mistakes::codebase::rules::PreparedVitestProjectCatalog>,
+    pub playwright_projects:
         Option<&'a no_mistakes::codebase::rules::PreparedPlaywrightProjectCatalog>,
-    pub(crate) workflow_documents:
+    pub workflow_documents:
         Option<&'a no_mistakes::codebase::ci_workflows::PreparedWorkflowTopologyInputs>,
-    pub(crate) tsconfig_gate_project_inputs:
+    pub tsconfig_gate_project_inputs:
         Option<&'a no_mistakes::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs>,
-    pub(crate) defer_suppression: bool,
+    pub defer_suppression: bool,
 }

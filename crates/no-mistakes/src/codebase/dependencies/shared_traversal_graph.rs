@@ -1,10 +1,10 @@
 impl SharedTraversalContext {
-    pub(crate) fn use_graph_build_plan(&mut self, plan: graph::GraphBuildPlan) {
+    pub fn use_graph_build_plan(&mut self, plan: graph::GraphBuildPlan) {
         self.build_plan = plan;
         self.invalidate_analysis_caches();
     }
 
-    pub(crate) fn ensure_facts(&mut self) {
+    pub fn ensure_facts(&mut self) {
         if crate::codebase::playwright_facts::integration::configured(&self.config)
             && self.facts.as_ref().is_none_or(|facts| facts.integration_route_links.is_empty())
         {
@@ -61,7 +61,7 @@ impl SharedTraversalContext {
             .extend(collected);
     }
 
-    pub(crate) fn prepare_canonical_graph_with_check_facts(
+    pub fn prepare_canonical_graph_with_check_facts(
         &mut self,
         facts: &crate::codebase::check_facts::CheckFactMap,
     ) -> Result<()> {

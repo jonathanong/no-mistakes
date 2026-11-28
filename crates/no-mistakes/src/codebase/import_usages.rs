@@ -15,13 +15,13 @@ mod model;
 mod output;
 mod paths;
 
-pub(crate) struct PreparedImportUsages {
+pub struct PreparedImportUsages {
     graph_files: GraphFiles,
     roots: Vec<String>,
 }
 
 impl PreparedImportUsages {
-    pub(crate) fn files(&self) -> &[PathBuf] {
+    pub fn files(&self) -> &[PathBuf] {
         self.graph_files.all()
     }
 }
@@ -79,7 +79,7 @@ pub fn collect(args: &ImportUsagesArgs) -> Result<ImportUsagesReport> {
     collect_with_timings(args, None)
 }
 
-pub(crate) fn prepare_file_universe(
+pub fn prepare_file_universe(
     args: &ImportUsagesArgs,
     root: &Path,
     cwd: &Path,
@@ -92,7 +92,7 @@ pub(crate) fn prepare_file_universe(
     })
 }
 
-pub(crate) fn collect_with_facts(
+pub fn collect_with_facts(
     root: &Path,
     prepared: &PreparedImportUsages,
     facts: &dyn TsFactLookup,
@@ -130,7 +130,7 @@ fn collect_with_timings(
     Ok(report)
 }
 
-pub(crate) fn collect_from_facts(
+pub fn collect_from_facts(
     root: &Path,
     roots: Vec<String>,
     graph_files: &GraphFiles,

@@ -3,7 +3,7 @@ use anyhow::Result;
 use no_mistakes::codebase::check_facts::CheckFactMap;
 use no_mistakes::react_traits;
 
-pub(crate) fn run_react_check_with_session(
+pub fn run_react_check_with_session(
     root: &std::path::Path,
     enabled: bool,
     facts: &CheckFactMap,

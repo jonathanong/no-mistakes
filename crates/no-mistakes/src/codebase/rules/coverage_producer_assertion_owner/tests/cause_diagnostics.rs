@@ -17,11 +17,11 @@ fn node_check_returns_the_same_cause_details_for_findings_advisories_and_failure
         ),
         ("source", "incomplete", "source failure in src/broken.mts"),
     ] {
-        let input = crate::napi_api::options::test_json_arg(serde_json::json!({
+        let input = serde_json::json!({
             "root": root, "config": root.join(format!("{config}.yml"))
-        }));
+        });
         let report: serde_json::Value =
-            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
+            serde_json::from_str(&crate::test_support::check_json(input).unwrap()).unwrap();
         let message = report[field][0]["message"].as_str().unwrap();
         assert!(message.contains(expected), "{config}: {report}");
     }

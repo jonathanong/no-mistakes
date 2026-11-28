@@ -2,7 +2,7 @@ use super::{rule_scans::merge_embedded_sql_rule_ids, CheckFactPlan};
 use std::sync::Arc;
 
 impl CheckFactPlan {
-    pub(crate) fn include(&mut self, other: Self) {
+    pub fn include(&mut self, other: Self) {
         self.forbidden_call_arguments =
             crate::codebase::rules::call_policy::ArgumentFactScope::merge(
                 self.forbidden_call_arguments.as_ref(),

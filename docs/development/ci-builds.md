@@ -958,8 +958,8 @@ compiles precisely the platform test targets with `cargo test --no-run`, one
 target at a time.
 [The shared target list](../../.github/scripts/native-rust-tests.cjs) supplies both
 compilation selectors and every existing execution filter. All phases keep the
-same default features, manifest rewrite, flags, target directory, and
-`NO_MISTAKES_BUILD_NAPI=1`. Test execution remains in the following step. Separate
+same default features, flags, and target directory, building
+`-p no-mistakes -p no-mistakes-napi` together. Test execution remains in the following step. Separate
 per-target diagnostics retain each Cargo command, `Finished` timing, verbose
 output, process samples, and Cargo timing report, including partial failed builds.
 

@@ -3,7 +3,7 @@ use crate::playwright::fsutil::relative_string;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-pub(crate) fn print_coverage_text(report: &CoverageReport) {
+pub fn print_coverage_text(report: &CoverageReport) {
     for warning in &report.warnings {
         println!("Warning: {warning}");
     }
@@ -71,7 +71,7 @@ pub(crate) fn print_coverage_text(report: &CoverageReport) {
     }
 }
 
-pub(crate) fn print_edges_text(report: &EdgeReport) {
+pub fn print_edges_text(report: &EdgeReport) {
     for edge in &report.edges {
         match edge {
             Edge::Route {
@@ -108,11 +108,7 @@ pub(crate) fn print_edges_text(report: &EdgeReport) {
     }
 }
 
-pub(crate) fn build_related_report(
-    root: &Path,
-    edges: &[Edge],
-    files: &[PathBuf],
-) -> RelatedReport {
+pub fn build_related_report(root: &Path, edges: &[Edge], files: &[PathBuf]) -> RelatedReport {
     let related_files: BTreeSet<String> = files
         .iter()
         .map(|file| related_input_file(root, file))
@@ -163,7 +159,7 @@ pub(crate) fn build_related_report(
     }
 }
 
-pub(crate) fn print_related_text(report: &RelatedReport) {
+pub fn print_related_text(report: &RelatedReport) {
     for test in &report.tests {
         println!("{test}");
     }

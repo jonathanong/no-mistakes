@@ -2,15 +2,15 @@ use super::run_all_with_session_options;
 use no_mistakes::config::v2::Effort;
 
 #[derive(Default)]
-pub(crate) struct AnalysisOptions {
-    pub(crate) effort: Option<Effort>,
-    pub(crate) include_sql_verdicts: bool,
+pub struct AnalysisOptions {
+    pub effort: Option<Effort>,
+    pub include_sql_verdicts: bool,
 }
 use crate::check_runner::CheckResults;
 use anyhow::Result;
 use std::path::PathBuf;
 
-pub(crate) fn run_all_with_evidence(
+pub fn run_all_with_evidence(
     root: PathBuf,
     config_path: Option<PathBuf>,
     tsconfig_path: Option<PathBuf>,
@@ -27,7 +27,7 @@ pub(crate) fn run_all_with_evidence(
     )
 }
 
-pub(crate) fn run_all_with_sql_verdicts(
+pub fn run_all_with_sql_verdicts(
     root: PathBuf,
     config_path: Option<PathBuf>,
     tsconfig_path: Option<PathBuf>,
@@ -48,7 +48,7 @@ pub(crate) fn run_all_with_sql_verdicts(
     )
 }
 
-pub(crate) fn run_all_with_options(
+pub fn run_all_with_options(
     root: PathBuf,
     config_path: Option<PathBuf>,
     tsconfig_path: Option<PathBuf>,

@@ -10,7 +10,7 @@ pub enum TraverseProjection {
 }
 
 impl TraverseProjection {
-    pub(crate) fn is_paths(self) -> bool {
+    pub fn is_paths(self) -> bool {
         matches!(self, Self::Paths)
     }
 }

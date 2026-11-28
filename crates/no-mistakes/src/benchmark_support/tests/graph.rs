@@ -12,26 +12,6 @@ fn benchmark_adapters_preserve_output_with_and_without_observers() {
     assert_eq!(check_diagnostics.work["manifest.parses"], 4);
     assert_eq!(check_diagnostics.work["manifest.requests"], 10);
     assert_eq!(check_diagnostics.work["manifest.cache_hits"], 6);
-
-    let options = json!({
-        "root": root,
-        "tsconfig": fixture_root().join("tsconfig.json"),
-        "reports": [
-            {
-                "id": "dependencies",
-                "type": "dependencies",
-                "files": ["src/app.tsx"],
-                "relationships": ["all"]
-            }
-        ]
-    })
-    .to_string();
-    let plain_project =
-        analyze_project_json(options.clone()).expect("plain project analysis should succeed");
-    let (observed_project, project_diagnostics) =
-        analyze_project_json_observed(options).expect("observed project analysis should succeed");
-    assert_eq!(observed_project, plain_project);
-    assert!(!project_diagnostics.work.is_empty());
 }
 
 #[test]

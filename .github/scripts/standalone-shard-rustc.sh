@@ -17,7 +17,7 @@ if [[ "$shard" == "0" || "$shard" == "1" || "$shard" == "2" || "$shard" == "post
     fi
     previous="$arg"
   done
-  if [[ "$crate" == "no_mistakes" || "$crate" == "no_mistakes_invocation" || "$crate" == "no_mistakes_postgres_sql" || "$crate" == "no_mistakes_ts_facts" || "$crate" == "no_mistakes_ts_analysis" ]]; then
+  if [[ "$crate" == "no_mistakes" || "$crate" == "no_mistakes_napi" || "$crate" == "no_mistakes_invocation" || "$crate" == "no_mistakes_postgres_sql" || "$crate" == "no_mistakes_ts_facts" || "$crate" == "no_mistakes_ts_analysis" ]]; then
     args+=("-A" "dead_code" "-A" "unused_imports")
   fi
 fi

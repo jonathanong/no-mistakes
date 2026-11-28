@@ -25,10 +25,10 @@ jobs:
         include:
           - target: aarch64-apple-darwin
             os: macos-15
-            addon: libno_mistakes.dylib
+            addon: libno_mistakes_napi.dylib
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-22.04
-            addon: libno_mistakes.so
+            addon: libno_mistakes_napi.so
     env:
       NM_TARGET: ${{ matrix.target }}
       NM_ADDON: ${{ matrix.addon }}

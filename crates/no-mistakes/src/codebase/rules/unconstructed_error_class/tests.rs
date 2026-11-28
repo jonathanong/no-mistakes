@@ -31,9 +31,9 @@ fn reported(findings: &[RuleFinding]) -> Vec<String> {
 }
 
 fn diagnostic_report(root: &std::path::Path) -> serde_json::Value {
-    let output = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+    let output = crate::test_support::check_json(
         serde_json::json!({"root":root}).to_string(),
-    ))
+    )
     .unwrap();
     serde_json::from_str(&output).unwrap()
 }

@@ -1,7 +1,7 @@
 pub mod extract;
 pub mod graph;
 pub mod output;
-pub(crate) mod query;
+pub mod query;
 
 use anyhow::{bail, Context, Result};
 use globset::{Glob, GlobSetBuilder};
@@ -58,7 +58,7 @@ mod shared_traversal_collect_diagnostics_tests;
 mod shared_traversal_facts_tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod shared_traversal_lazy_graph_tests;
-#[cfg(test)]
+#[cfg(any(test, feature = "test-support"))]
 mod shared_traversal_test_api;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod traversal;
@@ -70,7 +70,7 @@ mod tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod traversal_entrypoint_test_helpers;
 
-pub(crate) struct TraversalResult {
+pub struct TraversalResult {
     entries: Vec<graph::NodeEntry>,
     root: PathBuf,
     diagnostics: Vec<crate::codebase::ts_resolver::TsConfigDiagnostic>,
@@ -81,7 +81,7 @@ pub(crate) struct TraversalResult {
 impl TraversalResult {
     /// File nodes in a traversal result. Derived reports use this projection
     /// instead of re-running source discovery or graph traversal.
-    pub(crate) fn file_paths(&self) -> impl Iterator<Item = &std::path::Path> {
+    pub fn file_paths(&self) -> impl Iterator<Item = &std::path::Path> {
         self.entries.iter().filter_map(|entry| entry.node.as_file())
     }
 }

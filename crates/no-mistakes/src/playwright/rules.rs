@@ -14,7 +14,7 @@ use policy::unique_policy;
 use selection::rule_selections;
 use std::path::Path;
 
-pub(crate) mod effort;
+pub mod effort;
 mod fact_plan;
 mod filter;
 mod policy;
@@ -36,15 +36,15 @@ pub const PLAYWRIGHT_UNIQUE_TEST_IDS: &str = "playwright-unique-test-ids";
 pub const PLAYWRIGHT_UNIQUE_HTML_IDS: &str = "playwright-unique-html-ids";
 pub const PLAYWRIGHT_PREFER_TEST_ID_LOCATORS: &str = "playwright-prefer-test-id-locators";
 
-pub(crate) struct PlaywrightCheckOutput {
+pub struct PlaywrightCheckOutput {
     pub findings: Vec<RuleFinding>,
     pub advisories: Vec<RuleFinding>,
 }
 
 #[cfg(test)]
-pub(crate) mod test_api;
+pub mod test_api;
 
-pub(crate) fn check_with_facts_outcome(
+pub fn check_with_facts_outcome(
     root: &Path,
     config_path: Option<&Path>,
     config: &NoMistakesConfig,
@@ -54,7 +54,7 @@ pub(crate) fn check_with_facts_outcome(
     check_with_facts_from_snapshot(root, config_path, config, facts, &snapshot)
 }
 
-pub(crate) fn check_with_prepared_facts_outcome(
+pub fn check_with_prepared_facts_outcome(
     root: &Path,
     _config_path: Option<&Path>,
     config: &NoMistakesConfig,

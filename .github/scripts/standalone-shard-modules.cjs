@@ -326,6 +326,11 @@ function libraryShardCoverage(root, options = {}) {
           srcDir: join(root, "crates/no-mistakes-ts-analysis/src"),
           entries: [join(root, "crates/no-mistakes-ts-analysis/src/lib.rs")],
         },
+        {
+          crateName: "no-mistakes-napi",
+          srcDir: join(root, "crates/no-mistakes-napi/src"),
+          entries: [join(root, "crates/no-mistakes-napi/src/lib.rs")],
+        },
       ];
   let currentCrate = "no-mistakes";
   let currentSrcDir = roots[0].srcDir;

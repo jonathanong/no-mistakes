@@ -2,11 +2,11 @@ use serde_json::Value;
 
 fn report() -> Value {
     let root = crate::test_support::rule_fixture_root("coverage-producer-assertion-owner-builtins");
-    let input = crate::napi_api::options::test_json_arg(serde_json::json!({
+    let input = serde_json::json!({
         "root": root,
         "config": root.join("review-receiver-results.yml")
-    }));
-    serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap()
+    });
+    serde_json::from_str(&crate::test_support::check_json(input).unwrap()).unwrap()
 }
 
 fn finding<'a>(findings: &'a [Value], target: &str) -> &'a Value {

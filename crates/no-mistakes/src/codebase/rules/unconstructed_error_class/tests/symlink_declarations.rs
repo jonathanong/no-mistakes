@@ -11,10 +11,10 @@ fn pnpm_declaration_context_cannot_prove_a_hoisted_non_error_base() {
         ("advise.yml", 1, 2, 1),
         ("ignore.yml", 1, 0, 0),
     ] {
-        let json = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        let json = crate::test_support::check_json(
             serde_json::json!({"root":root,"config":root.join(config),"includeSuppressed":true})
                 .to_string(),
-        ))
+        )
         .unwrap();
         let report: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
             serde_json::from_str(&json).unwrap(),

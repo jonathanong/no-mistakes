@@ -28,7 +28,7 @@ test("native workflow retains failure artifacts, literal deadlines and shared bu
     /NATIVE_RUST_CACHE_HIT: \$\{\{ steps.native-workspace-cache.outputs.cache-hit == 'true' && 'true' \|\| 'false' \}\}/,
   );
   assert.match(native, /node \.github\/scripts\/build-native.cjs/);
-  assert.match(native, /crate-type = \["rlib", "cdylib"\]/);
+  assert.doesNotMatch(native, /crate-type = \["rlib", "cdylib"\]/);
   assert.match(native, /cp "\$\{\{ matrix.addon \}\}" target\/debug\/no-mistakes.node/);
   assert.match(workflow, /node --test[^\n]*\.github\/scripts\/build-native.test.cjs/);
 });
@@ -150,6 +150,8 @@ for (const scenario of ["success", "interleaved"])
           "--locked",
           "-p",
           "no-mistakes",
+          "-p",
+          "no-mistakes-napi",
           "--timings",
           "--verbose",
           "--message-format=json-render-diagnostics",

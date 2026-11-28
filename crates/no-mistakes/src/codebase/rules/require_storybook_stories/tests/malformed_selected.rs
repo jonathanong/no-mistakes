@@ -4,12 +4,12 @@ use super::*;
 
 fn report(name: &str, audit: bool) -> serde_json::Value {
     let root = fixture("malformed-selected");
-    let result = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+    let result = crate::test_support::check_json(
         serde_json::json!({
             "root": root, "config": root.join(name), "includeSuppressed": audit,
         })
         .to_string(),
-    ))
+    )
     .unwrap();
     crate::test_support::without_hygiene_advisory_json(serde_json::from_str(&result).unwrap())
 }
@@ -20,9 +20,9 @@ fn malformed_selected_direct_matches_aggregate() {
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
     assert!(check(&root, &config, None).is_err());
     assert!(crate::codebase::rules::run_check(&root, None, None).is_err());
-    let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+    let report = crate::test_support::check_json(
         serde_json::json!({"root": root}).to_string(),
-    ))
+    )
     .unwrap();
     let report: serde_json::Value = serde_json::from_str(&report).unwrap();
     assert!(report["incomplete"]

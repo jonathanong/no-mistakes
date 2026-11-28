@@ -31,11 +31,9 @@
       "target": {
         "name": "no_mistakes",
         "kind": [
-          "cdylib",
           "rlib"
         ],
         "crate_types": [
-          "cdylib",
           "rlib"
         ]
       },

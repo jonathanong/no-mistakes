@@ -121,3 +121,12 @@ fn check_discovers_absolute_roots_and_skips_unconfigured_rules() {
         .unwrap()
         .is_empty());
 }
+
+#[test]
+fn check_file_covers_disabled_plain_and_unparseable_inputs() {
+    let root = fixture("unit");
+    assert!(check_file(&root.join("disable_file.rs"), &root).is_empty());
+    assert!(check_file(&root.join("clean.rs"), &root).is_empty());
+    let unparseable = check_file(&root.join("invalid.rs"), &root);
+    assert_eq!(unparseable[0].target.as_deref(), Some("unanalyzable"));
+}

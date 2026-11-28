@@ -1,5 +1,5 @@
-pub(crate) struct SharedWorkspace {
-    pub(crate) map: Option<Arc<no_mistakes::codebase::workspaces::IndexedWorkspaceMap>>,
-    pub(crate) deadlines: bool,
+pub struct SharedWorkspace {
+    pub map: Option<Arc<no_mistakes::codebase::workspaces::IndexedWorkspaceMap>>,
+    pub deadlines: bool,
 }
 

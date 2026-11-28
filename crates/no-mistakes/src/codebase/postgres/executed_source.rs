@@ -40,7 +40,7 @@ pub fn extract_executed_postgres_sql_with_imports(
     .map(|report| report.statements)
 }
 
-pub(crate) fn extract_executed_postgres_sql_with_session(
+pub fn extract_executed_postgres_sql_with_session(
     sources: &[ExecutedPostgresSource],
     options: &EmbeddedSqlOptions,
     session: &AnalysisSession,
@@ -73,7 +73,7 @@ pub(crate) fn extract_executed_postgres_sql_with_session(
     Ok(report)
 }
 
-pub(crate) fn extract_executed_postgres_sql_with_imports_and_session(
+pub fn extract_executed_postgres_sql_with_imports_and_session(
     sources: &[ExecutedPostgresSource],
     options: &EmbeddedSqlOptions,
     imports: &[ExecutedPostgresResolvedImport],

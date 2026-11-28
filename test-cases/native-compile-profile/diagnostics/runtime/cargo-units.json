@@ -24,8 +24,8 @@
       "package_id": "path+file:///workspace/crates/no-mistakes#no-mistakes@0.1.0",
       "target": {
         "name": "no_mistakes",
-        "kind": ["cdylib", "rlib"],
-        "crate_types": ["cdylib", "rlib"]
+        "kind": ["rlib"],
+        "crate_types": ["rlib"]
       },
       "features": ["default", "mermaid"],
       "profile": {

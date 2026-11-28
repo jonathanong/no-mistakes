@@ -1,5 +1,5 @@
 pub mod advisory_rules;
-pub(crate) mod allow_audit;
+pub mod allow_audit;
 mod byte_prefilter;
 pub(crate) mod call_policy;
 mod catalog_rule;
@@ -19,7 +19,7 @@ mod lexical_mask;
 mod manifest_analysis;
 mod masked_source;
 mod native_sql_advice;
-pub(crate) mod path_filter;
+pub mod path_filter;
 mod playwright_project_catalog;
 mod prepared_facts;
 mod prepared_postgres_scan;

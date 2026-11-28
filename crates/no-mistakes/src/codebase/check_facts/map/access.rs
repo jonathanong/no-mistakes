@@ -6,7 +6,7 @@ impl CheckFactMap {
         &self.files
     }
 
-    pub(crate) fn graph_file_universe(&self) -> &[PathBuf] {
+    pub fn graph_file_universe(&self) -> &[PathBuf] {
         if self.graph_files_complete {
             self.graph_files.as_slice()
         } else {
@@ -14,11 +14,11 @@ impl CheckFactMap {
         }
     }
 
-    pub(crate) fn graph_plan(&self) -> crate::codebase::ts_source::facts::TsFactPlan {
+    pub fn graph_plan(&self) -> crate::codebase::ts_source::facts::TsFactPlan {
         self.graph_plan
     }
 
-    pub(crate) fn graph_view_with_supplemental(&self, supplemental: &Self) -> Self {
+    pub fn graph_view_with_supplemental(&self, supplemental: &Self) -> Self {
         let mut graph_files = self.graph_files.clone();
         graph_files.extend(supplemental.ts.keys().cloned());
         graph_files.sort();
@@ -36,7 +36,7 @@ impl CheckFactMap {
     pub fn fact_view_with_supplemental(&self, supplemental: &Self) -> Self {
         self.view_with_supplemental(supplemental, self.graph_files.clone())
     }
-    pub(crate) fn with_graph_file_universe(&self, graph_files: Vec<PathBuf>) -> Self {
+    pub fn with_graph_file_universe(&self, graph_files: Vec<PathBuf>) -> Self {
         self.view_with_supplemental(&Self::default(), graph_files)
     }
 }

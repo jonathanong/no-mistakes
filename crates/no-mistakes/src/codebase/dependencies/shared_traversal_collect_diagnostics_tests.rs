@@ -67,3 +67,16 @@ fn ordinary_diagnostics_exclude_portable_path_aliases_only() {
         );
     }
 }
+
+#[test]
+fn prepared_traversal_isolates_provenance_with_compute() {
+    let collect = include_str!("shared_traversal_collect.rs");
+    let compute = collect
+        .split("cached_traversal_entries(")
+        .nth(1)
+        .expect("prepared collect caches traversal entries");
+    assert!(
+        compute.contains("provenance_for"),
+        "provenance selection must run inside the isolated cache compute"
+    );
+}

@@ -371,3 +371,16 @@ jobs:
     expected.sort_unstable();
     assert_eq!(got, expected);
 }
+
+#[test]
+fn checkout_uses_parser_handles_quotes_comments_and_unversioned_refs() {
+    use super::uses::is_checkout_uses;
+    assert!(is_checkout_uses("actions/checkout@v4"));
+    assert!(is_checkout_uses("\"actions/checkout@v4\""));
+    assert!(is_checkout_uses("'actions/checkout@v4'"));
+    assert!(is_checkout_uses("actions/checkout@v4 # pinned"));
+    assert!(is_checkout_uses("\"actions/checkout\" # comment"));
+    assert!(is_checkout_uses("ACTIONS/CHECKOUT/"));
+    assert!(!is_checkout_uses("\"actions/checkout#other@v4\""));
+    assert!(!is_checkout_uses("actions/setup-node@v4"));
+}

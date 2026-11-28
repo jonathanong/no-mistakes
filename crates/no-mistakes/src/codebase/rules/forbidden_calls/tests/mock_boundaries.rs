@@ -75,54 +75,6 @@ fn full_mock_factory_is_walked_instead_of_the_real_module() {
 }
 
 #[test]
-fn root_mock_boundaries_have_node_api_parity() {
-    let fixture = crate::test_support::rule_fixture_root("forbidden-calls");
-    let base = fixture.parent().unwrap();
-    for (name, expected) in [
-        ("full", 0),
-        ("dynamic-bypass", 1),
-        ("real", 1),
-        ("factory", 1),
-        ("root-isolation", 1),
-        ("initializer", 1),
-        ("initializer-dependency", 1),
-        ("manual", 3),
-    ] {
-        let fixture = if name == "manual" {
-            "mock-manual/fixture"
-        } else {
-            "mock-boundaries/fixture"
-        };
-        let input = crate::napi_api::options::test_json_arg(serde_json::json!({
-            "root": base.join(fixture),
-            "config": base.join(format!("configs/mock-boundaries-{name}.yml")),
-        }));
-        let report: serde_json::Value =
-            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
-        #[cfg(feature = "test-instrumentation")]
-        {
-            let aggregate: serde_json::Value = serde_json::from_str(
-                &crate::napi_api::analyze_project_json_impl(
-                    crate::napi_api::options::test_json_arg(serde_json::json!({
-                        "root": base.join(fixture),
-                        "config": base.join(format!("configs/mock-boundaries-{name}.yml")),
-                        "reports": [{"type": "check"}],
-                    })),
-                )
-                .unwrap(),
-            )
-            .unwrap();
-            assert_eq!(aggregate["reports"][0]["result"], report, "{name}");
-        }
-        assert_eq!(
-            report["rules"].as_array().unwrap().len(),
-            expected,
-            "{name}: {report}"
-        );
-    }
-}
-
-#[test]
 fn self_mock_does_not_remove_the_declaring_root() {
     let findings = run_mock_case("self");
     assert_eq!(findings.len(), 1, "{findings:#?}");

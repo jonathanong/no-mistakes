@@ -5,7 +5,7 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::{bail, Result};
 use std::path::Path;
 
-pub(crate) fn eligible_partial_graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
+pub fn eligible_partial_graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     super::try_graph_plan(config)
         .ok()
         .flatten()
@@ -41,12 +41,12 @@ pub(super) fn validate_shared_graph_plan(
     Ok(())
 }
 
-pub(crate) struct PreparedConfig<'a> {
-    pub(crate) path: Option<&'a Path>,
-    pub(crate) sources: Option<&'a crate::codebase::ts_source::SourceStore>,
+pub struct PreparedConfig<'a> {
+    pub path: Option<&'a Path>,
+    pub sources: Option<&'a crate::codebase::ts_source::SourceStore>,
 }
 
-pub(crate) fn check_with_prepared_facts_and_graph(
+pub fn check_with_prepared_facts_and_graph(
     root: &Path,
     config: &NoMistakesConfig,
     prepared: PreparedConfig<'_>,

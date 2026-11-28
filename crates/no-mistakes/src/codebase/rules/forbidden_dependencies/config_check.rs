@@ -9,7 +9,7 @@ use std::path::Path;
 /// Same as [`super::check`], but resolves the `DepGraph`'s
 /// `GraphConfigOptions` from an explicit `--config` path instead of always
 /// falling back to default discovery.
-pub(crate) fn check_with_config(
+pub fn check_with_config(
     root: &Path,
     config: &NoMistakesConfig,
     config_path: Option<&Path>,

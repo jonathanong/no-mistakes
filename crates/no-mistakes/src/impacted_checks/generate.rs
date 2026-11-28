@@ -16,9 +16,9 @@ pub(super) use generic::{dedupe_checks, dedupe_warnings, generic_checks};
 use prepare::prepare_impacted_checks;
 
 #[derive(Debug, Default, PartialEq, Eq)]
-pub(crate) struct PlanStats {
-    pub(crate) framework_discoveries: usize,
-    pub(crate) graph_builds: usize,
+pub struct PlanStats {
+    pub framework_discoveries: usize,
+    pub graph_builds: usize,
 }
 
 /// Compute the impacted-checks report (shared by the CLI and N-API).
@@ -26,14 +26,14 @@ pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChe
     Ok(generate_impacted_checks_with_stats(args)?.0)
 }
 
-pub(crate) fn generate_impacted_checks_with_stats(
+pub fn generate_impacted_checks_with_stats(
     args: &ImpactedChecksArgs,
 ) -> Result<(ImpactedChecksReport, PlanStats)> {
     let mut timing = super::timing::TimingTracker::new(false, false);
     generate_impacted_checks_with_timing(args, &mut timing)
 }
 
-pub(crate) fn generate_impacted_checks_with_timing(
+pub fn generate_impacted_checks_with_timing(
     args: &ImpactedChecksArgs,
     timing: &mut super::timing::TimingTracker,
 ) -> Result<(ImpactedChecksReport, PlanStats)> {

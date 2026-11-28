@@ -476,3 +476,16 @@ fn custom_test_roots_replace_defaults() {
         .iter()
         .all(|finding| finding.file != "tests/LongTest.cs"));
 }
+
+#[test]
+fn check_file_reports_unreadable_and_checks_saved_source() {
+    let root = fixture("test");
+    assert_eq!(
+        check_file(&root.join("Missing.cs"), &root, 3, false)
+            .unwrap()
+            .target
+            .as_deref(),
+        Some("unanalyzable")
+    );
+    assert!(check_file(&root.join("MyApp.Tests/ServiceTests.cs"), &root, 3, false).is_some());
+}

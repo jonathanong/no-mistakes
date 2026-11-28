@@ -305,7 +305,7 @@ fn assert_flow_query_uses_one_shared_graph_file_discovery() {
     }
 
     let prepare_source = include_str!("../../dependencies/shared_traversal_prepare.rs");
-    let prepare = function_body(prepare_source, "pub(crate) fn prepare_with_framework_plan(");
+    let prepare = function_body(prepare_source, "pub fn prepare_with_framework_plan(");
     assert_eq!(
         prepare
             .matches("Self::prepare_with_session_and_framework_plan")

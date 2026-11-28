@@ -188,3 +188,16 @@ fn reports_read_failures_instead_of_a_stale_deleted_baseline() {
     assert!(error.to_string().contains(RULE_ID));
     assert!(error.to_string().contains("could not read Markdown file"));
 }
+
+#[test]
+fn rejects_invalid_options_globs_and_unreadable_baseline() {
+    let root = fixture("invalid-baseline");
+    assert!(run(&root, &config("maxLines: bad", &[], &[]), &["doc.md"]).is_err());
+    assert!(run(&root, &config("", &["["], &[]), &["doc.md"]).is_err());
+    assert!(run(
+        &root,
+        &config("baselineFile: missing.json", &["**/*.md"], &[]),
+        &["doc.md", "missing.json"],
+    )
+    .is_err());
+}

@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone)]
-pub(crate) struct ParsedFileFacts {
+pub struct ParsedFileFacts {
     pub(crate) has_use_client_directive: bool,
     pub(crate) has_use_server_directive: bool,
     pub(crate) fetches: Vec<FetchOccurrence>,

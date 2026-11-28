@@ -4,7 +4,7 @@ use serde::de::DeserializeOwned;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-pub(crate) const CONFIG_EXTENSIONS: &[&str] = &["yaml", "yml", "json", "jsonc"];
+pub const CONFIG_EXTENSIONS: &[&str] = &["yaml", "yml", "json", "jsonc"];
 
 pub fn load_config<T: DeserializeOwned + Default>(
     root: &Path,
@@ -61,7 +61,7 @@ fn find_config_path(
     find_automatic_config_path(root, stems)
 }
 
-pub(crate) fn find_automatic_config_path(root: &Path, stems: &[&str]) -> Result<Option<PathBuf>> {
+pub fn find_automatic_config_path(root: &Path, stems: &[&str]) -> Result<Option<PathBuf>> {
     if !stems.iter().any(|stem| {
         CONFIG_EXTENSIONS
             .iter()
@@ -73,7 +73,7 @@ pub(crate) fn find_automatic_config_path(root: &Path, stems: &[&str]) -> Result<
     find_automatic_config_path_from_visible(root, stems, &visible_paths)
 }
 
-pub(crate) fn find_automatic_config_path_from_visible(
+pub fn find_automatic_config_path_from_visible(
     root: &Path,
     stems: &[&str],
     visible_paths: &[PathBuf],
@@ -131,7 +131,7 @@ pub fn parse_config<T: DeserializeOwned>(source: &str, path: &Path) -> Result<T>
     }
 }
 
-pub(crate) fn jsonc_parse_options() -> ParseOptions {
+pub fn jsonc_parse_options() -> ParseOptions {
     ParseOptions {
         allow_comments: true,
         allow_loose_object_property_names: false,
@@ -156,7 +156,7 @@ pub fn resolve(root: &Path, path: &Path) -> PathBuf {
 
 #[path = "config/resolve.rs"]
 pub mod resolved;
-pub(crate) mod source_locations;
+pub mod source_locations;
 pub mod v2;
 pub use resolved::resolve_config;
 

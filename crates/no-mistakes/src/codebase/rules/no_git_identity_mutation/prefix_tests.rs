@@ -57,7 +57,7 @@ fn literal_prefix_controls_remain_clear() {
 fn napi_check_reports_the_same_literal_prefix_findings() {
     let root = fixture();
     let report: serde_json::Value = serde_json::from_str(
-        &crate::napi_api::check_json_impl(serde_json::json!({"root": root})).unwrap(),
+        &crate::test_support::check_json(serde_json::json!({"root": root})).unwrap(),
     )
     .unwrap();
     let findings = super::super::run_filesystem_rules(&root, None).unwrap();

@@ -4,7 +4,7 @@
 /// `playwright` rule and `forbidden-dependencies`'s `DepGraph` build each
 /// analyze the whole app). See `crates/AGENTS.md`'s "Duplicate full-repo work
 /// across independent call paths" section for the pattern this backs.
-pub(crate) trait TsFactLookup: Sync {
+pub trait TsFactLookup: Sync {
     fn companion_import_plans(
         &self,
     ) -> &[Arc<crate::codebase::rules::required_companion_imports::PreparedCompanionImportPlan>]

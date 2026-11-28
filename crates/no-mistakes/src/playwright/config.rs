@@ -5,9 +5,9 @@ use std::path::{Path, PathBuf};
 #[path = "config/load.rs"]
 mod load;
 #[cfg(test)]
-pub(crate) mod test_support;
+pub mod test_support;
 
-pub(crate) fn load_settings_from_visible(
+pub fn load_settings_from_visible(
     root: &Path,
     cli_config: Option<&Path>,
     cli_playwright_configs: &[PathBuf],
@@ -25,7 +25,7 @@ pub(crate) fn load_settings_from_visible(
     )
 }
 
-pub(crate) fn settings_from_loaded_v2(
+pub fn settings_from_loaded_v2(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
     cli_playwright_configs: &[PathBuf],
@@ -49,11 +49,11 @@ pub(crate) fn settings_from_loaded_v2(
 /// the same bare-defaults fallback regardless of which frontend app (if any)
 /// a caller names, so resolving that app first is wasted work — callers that
 /// fan out over multiple frontend apps should check this before doing so.
-pub(crate) fn has_v2_playwright_settings(config: &crate::config::v2::NoMistakesConfig) -> bool {
+pub fn has_v2_playwright_settings(config: &crate::config::v2::NoMistakesConfig) -> bool {
     load::has_v2_playwright_settings(config)
 }
 
-pub(crate) fn has_configured_html_id_selector(settings: &Settings) -> bool {
+pub fn has_configured_html_id_selector(settings: &Settings) -> bool {
     use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
     settings
         .selector_attributes

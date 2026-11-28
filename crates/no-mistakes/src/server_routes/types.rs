@@ -46,13 +46,13 @@ pub struct Edge {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub(crate) enum RelationshipNode {
+pub enum RelationshipNode {
     File(PathBuf),
     Route(String),
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-pub(crate) struct RelationshipEdge {
+pub struct RelationshipEdge {
     pub from: RelationshipNode,
     pub to: RelationshipNode,
     pub kind: EdgeKind,

@@ -54,6 +54,8 @@ function buildInvocation(argv = process.argv, env = process.env) {
         "--locked",
         "-p",
         "no-mistakes",
+        "-p",
+        "no-mistakes-napi",
         "--timings",
         "--verbose",
         "--message-format=json-render-diagnostics",

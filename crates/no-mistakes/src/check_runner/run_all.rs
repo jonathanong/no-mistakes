@@ -7,7 +7,7 @@ mod entry;
 mod playwright;
 mod setup;
 
-pub(crate) use entry::{
+pub use entry::{
     run_all_with_evidence, run_all_with_options, run_all_with_sql_verdicts, AnalysisOptions,
 };
 pub(super) fn run_all_with_session_options(

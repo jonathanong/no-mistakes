@@ -1,17 +1,17 @@
 use no_mistakes::codebase::check_facts::CheckFactPlan;
 
 #[derive(Default)]
-pub(crate) struct ConfiguredChecks {
-    pub(crate) dynamic_import_rules: bool,
-    pub(crate) boundary_rules: bool,
-    pub(crate) nextjs_api_routes: bool,
-    pub(crate) nextjs_caching: bool,
-    pub(crate) storybook_stories: bool,
-    pub(crate) embedded_sql: bool,
+pub struct ConfiguredChecks {
+    pub dynamic_import_rules: bool,
+    pub boundary_rules: bool,
+    pub nextjs_api_routes: bool,
+    pub nextjs_caching: bool,
+    pub storybook_stories: bool,
+    pub embedded_sql: bool,
 }
 
 impl ConfiguredChecks {
-    pub(crate) fn from_config(config: &no_mistakes::config::v2::NoMistakesConfig) -> Self {
+    pub fn from_config(config: &no_mistakes::config::v2::NoMistakesConfig) -> Self {
         Self {
             dynamic_import_rules: rule_configured(
                 config,
@@ -39,22 +39,22 @@ impl ConfiguredChecks {
 }
 
 #[derive(Default)]
-pub(crate) struct EnabledChecks {
-    pub(crate) react: bool,
-    pub(crate) queue: bool,
-    pub(crate) queue_factory_names: Vec<String>,
-    pub(crate) queue_factory_roles: no_mistakes::config::v2::schema::QueueFactoryRoles,
-    pub(crate) dynamic_import_rules: bool,
-    pub(crate) boundary_rules: bool,
-    pub(crate) nextjs_api_routes: bool,
-    pub(crate) nextjs_caching: bool,
-    pub(crate) storybook_stories: bool,
-    pub(crate) integration: bool,
-    pub(crate) unique_exports: bool,
-    pub(crate) embedded_sql: bool,
+pub struct EnabledChecks {
+    pub react: bool,
+    pub queue: bool,
+    pub queue_factory_names: Vec<String>,
+    pub queue_factory_roles: no_mistakes::config::v2::schema::QueueFactoryRoles,
+    pub dynamic_import_rules: bool,
+    pub boundary_rules: bool,
+    pub nextjs_api_routes: bool,
+    pub nextjs_caching: bool,
+    pub storybook_stories: bool,
+    pub integration: bool,
+    pub unique_exports: bool,
+    pub embedded_sql: bool,
 }
 
-pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
+pub fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
     CheckFactPlan {
         postgres_executor_warning_scans: Default::default(),
         forbidden_call_arguments: None,
@@ -135,7 +135,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
     }
 }
 
-pub(crate) fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
+pub fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
     !plan.postgres_executor_warning_scans.is_empty()
         || !plan.production_import_paths.is_empty()
         || plan.postgres_dml
@@ -161,7 +161,7 @@ pub(crate) fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
         || !plan.graph.is_empty()
 }
 
-pub(crate) fn integration_configured(config: &no_mistakes::config::v2::NoMistakesConfig) -> bool {
+pub fn integration_configured(config: &no_mistakes::config::v2::NoMistakesConfig) -> bool {
     let vitest_configured = config
         .tests
         .vitest

@@ -1,6 +1,7 @@
 <!-- cspell:ignore rustc -->
 ## Workspace crates
-- `crates/no-mistakes` — CLI, N-API, graph, and rules (`invocation`, `codebase::postgres`, `ts_resolver`, etc. re-export the extracted crates).
+- `crates/no-mistakes` — CLI, graph, and rules (`invocation`, `codebase::postgres`, `ts_resolver`, etc. re-export the extracted crates).
+- `crates/no-mistakes-napi` — Node/N-API `cdylib` addon (`publish = false`, depends on `no-mistakes`; CLI-only builds skip it).
 - `crates/no-mistakes-invocation` — invocation locking, deadlines, watchdogs, process trees, and `macos_invocation` (`hooks.rs`).
 - `crates/no-mistakes-postgres-sql` — pure PostgreSQL SQL parsing, statement/DML/lock/bound facts, and identifiers (no `no-mistakes` dep).
 - `crates/no-mistakes-rule-kernel` — shared rule findings, contexts, suppression, source access, diagnostics, path matching, and validator types.
@@ -196,5 +197,4 @@ once, memoize per `(base, pattern)`, and early-return when nothing to expand.
 `.gitignore`-blind walk and a git-aware one disagree (gitignored nested match).
 
 ### Pre-compute BFS before per-entity loops
-
 Cache shared BFS results up front in one `par_iter()` before per-entity work.

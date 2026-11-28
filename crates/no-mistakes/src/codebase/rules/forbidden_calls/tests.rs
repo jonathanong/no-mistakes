@@ -291,6 +291,61 @@ fn invalid_configuration_is_not_suppressed() {
     );
 }
 
+#[test]
+fn shared_expand_roots_supports_exclude_roots_and_rejects_invalid_roots() {
+    let (root, graph) = call_graph();
+    let files = vec![root.join("src/entry.mts")];
+    let exclude_all = crate::config::v2::schema::StringOrList::One("src/entry.mts".to_string());
+    let valid_roots: serde_yaml::Value = serde_yaml::from_str("[{ file: src/entry.mts }]").unwrap();
+    let excluded_err = crate::codebase::rules::call_policy::expand_roots(
+        crate::codebase::rules::call_policy::SharedRoots {
+            rule: RULE_ID,
+            root: &root,
+            roots: Some(&valid_roots),
+            exclude_roots: Some(&exclude_all),
+            graph: &graph,
+            vitest: None,
+            graph_files: &files,
+            target_roots: &[],
+        },
+    )
+    .unwrap_err();
+    assert!(format!("{excluded_err:#}").contains("excludeRoots excluded all configured roots"));
+
+    let exclude_other = crate::config::v2::schema::StringOrList::One("src/other.mts".to_string());
+    let (nodes, selected) = crate::codebase::rules::call_policy::expand_roots(
+        crate::codebase::rules::call_policy::SharedRoots {
+            rule: RULE_ID,
+            root: &root,
+            roots: Some(&valid_roots),
+            exclude_roots: Some(&exclude_other),
+            graph: &graph,
+            vitest: None,
+            graph_files: &files,
+            target_roots: &[],
+        },
+    )
+    .unwrap();
+    assert!(!nodes.is_empty());
+    assert!(!selected.is_empty());
+
+    let bad_roots: serde_yaml::Value = serde_yaml::from_str("42").unwrap();
+    let err = crate::codebase::rules::call_policy::expand_roots(
+        crate::codebase::rules::call_policy::SharedRoots {
+            rule: RULE_ID,
+            root: &root,
+            roots: Some(&bad_roots),
+            exclude_roots: None,
+            graph: &graph,
+            vitest: None,
+            graph_files: &files,
+            target_roots: &[],
+        },
+    )
+    .unwrap_err();
+    assert!(format!("{err:#}").contains("invalid roots"));
+}
+
 mod explicit_playwright;
 mod explicit_vitest;
 mod external_chains;

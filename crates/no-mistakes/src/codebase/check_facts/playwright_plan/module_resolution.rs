@@ -134,7 +134,7 @@ impl PlaywrightFactPlan {
         )));
     }
 
-    pub(crate) fn configure_module_resolution_with_catalog(
+    pub fn configure_module_resolution_with_catalog(
         &mut self,
         tsconfig_catalog: Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
         workspace: Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap>,

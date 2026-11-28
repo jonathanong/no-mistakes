@@ -15,7 +15,7 @@ impl AnalysisSession {
         });
     }
 
-    pub(crate) fn integration_fact_discovery(&self) -> &FamilyPathScope {
+    pub fn integration_fact_discovery(&self) -> &FamilyPathScope {
         self.check_outcomes
             .integration_discovery
             .get()

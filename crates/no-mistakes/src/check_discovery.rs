@@ -7,7 +7,7 @@ mod views;
 
 use project_reopen::{explicit_reopened_roots, unresolved_typed_reopen_suffixes};
 
-pub(crate) fn discover_check_file_views_from_snapshot(
+pub fn discover_check_file_views_from_snapshot(
     root: &Path,
     config: &NoMistakesConfig,
     skip_directories: &[String],
@@ -25,7 +25,7 @@ pub(crate) fn discover_check_file_views_from_snapshot(
     )
 }
 
-pub(crate) fn select_graph_files(
+pub fn select_graph_files(
     views: views::CheckFileViews,
     needs_shared_facts: bool,
     graph_requires_full_file_universe: bool,

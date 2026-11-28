@@ -1,7 +1,7 @@
-pub(crate) mod analyze;
-pub(crate) mod pipeline;
-pub(crate) mod report;
-pub(crate) mod traits;
+pub mod analyze;
+pub mod pipeline;
+pub mod report;
+pub mod traits;
 
 pub use pipeline::check::check_enabled;
 pub use pipeline::check::run_check_with_facts;

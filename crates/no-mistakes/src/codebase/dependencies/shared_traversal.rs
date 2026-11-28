@@ -1,4 +1,4 @@
-pub(crate) struct SharedTraversalContext {
+pub struct SharedTraversalContext {
     session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     root: PathBuf,
     tsconfig: TsConfig,
@@ -33,8 +33,8 @@ pub(crate) struct SharedTraversalContext {
         dashmap::DashMap<PathBuf, std::sync::Arc<crate::codebase::ts_source::facts::TsFileFacts>>,
     provenance_by_canonical: std::sync::OnceLock<HashMap<PathBuf, PathBuf>>,
     analysis_generation: u64,
-    pub(crate) graph_builds: usize,
-    pub(crate) symbol_index_builds: usize,
+    pub graph_builds: usize,
+    pub symbol_index_builds: usize,
 }
 
 type TraversalResultSlot =
@@ -65,13 +65,13 @@ struct CachedTraversal {
 }
 
 impl SharedTraversalContext {
-    pub(crate) fn session_arc(
+    pub fn session_arc(
         &self,
     ) -> std::sync::Arc<crate::codebase::analysis_session::AnalysisSession> {
         self.session.clone()
     }
 
-    pub(crate) fn workspace(&self) -> &crate::codebase::workspace_resolution::IndexedWorkspaceMap {
+    pub fn workspace(&self) -> &crate::codebase::workspace_resolution::IndexedWorkspaceMap {
         self.prepared_graph.workspace()
     }
 }

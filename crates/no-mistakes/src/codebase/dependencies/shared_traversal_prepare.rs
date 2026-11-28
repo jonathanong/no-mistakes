@@ -1,10 +1,10 @@
-pub(crate) struct SnapshotTraversalPreparation {
-    pub(crate) config: Option<std::sync::Arc<crate::config::v2::NoMistakesConfig>>,
-    pub(crate) visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
-    pub(crate) session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
-    pub(crate) include_check_plan: bool,
-    pub(crate) needs_reverse_graph: bool,
-    pub(crate) framework_plan: crate::codebase::testing_analysis::plan::FrameworkPreparationPlan,
+pub struct SnapshotTraversalPreparation {
+    pub config: Option<std::sync::Arc<crate::config::v2::NoMistakesConfig>>,
+    pub visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
+    pub session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+    pub include_check_plan: bool,
+    pub needs_reverse_graph: bool,
+    pub framework_plan: crate::codebase::testing_analysis::plan::FrameworkPreparationPlan,
 }
 
 struct TraversalPreparationContext {
@@ -17,7 +17,7 @@ struct TraversalPreparationContext {
 }
 
 impl SharedTraversalContext {
-    pub(crate) fn prepare_with_framework_plan(
+    pub fn prepare_with_framework_plan(
         root: PathBuf,
         tsconfig_path: Option<&Path>,
         config_path: Option<&Path>,
@@ -37,7 +37,7 @@ impl SharedTraversalContext {
         )
     }
 
-    pub(crate) fn prepare_with_framework_plan_for_direction(
+    pub fn prepare_with_framework_plan_for_direction(
         root: PathBuf,
         tsconfig_path: Option<&Path>,
         config_path: Option<&Path>,
@@ -84,7 +84,7 @@ impl SharedTraversalContext {
         )
     }
 
-    pub(crate) fn prepare_with_snapshot_session_check_and_framework_plan(
+    pub fn prepare_with_snapshot_session_check_and_framework_plan(
         root: PathBuf,
         tsconfig_path: Option<&Path>,
         config_path: Option<&Path>,

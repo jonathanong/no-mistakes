@@ -6,35 +6,35 @@ use std::collections::HashSet;
 use std::path::Path;
 use std::process::ExitCode;
 
-pub(crate) mod args;
-pub(crate) mod audit;
-pub(crate) mod changed_files;
-pub(crate) mod comment;
-pub(crate) mod config_invalidation;
-pub(crate) mod configured_plan;
-pub(crate) mod configured_plan_candidates;
-pub(crate) mod diff_parser;
-pub(crate) mod dotnet_dependency_changes;
-pub(crate) mod git_diff;
-pub(crate) mod graph;
-pub(crate) mod impact;
+pub mod args;
+pub mod audit;
+pub mod changed_files;
+pub mod comment;
+pub mod config_invalidation;
+pub mod configured_plan;
+pub mod configured_plan_candidates;
+pub mod diff_parser;
+pub mod dotnet_dependency_changes;
+pub mod git_diff;
+pub mod graph;
+pub mod impact;
 mod impact_graph;
-pub(crate) mod lockfile_changes;
-pub(crate) mod package_manifest_changes;
-pub(crate) mod plan;
-pub(crate) mod plan_output;
-pub(crate) mod prepared_plan;
-pub(crate) mod swift_manifest_changes;
-pub(crate) mod swift_resolved_changes;
-pub(crate) mod targets;
-pub(crate) mod why;
+pub mod lockfile_changes;
+pub mod package_manifest_changes;
+pub mod plan;
+pub mod plan_output;
+pub mod prepared_plan;
+pub mod swift_manifest_changes;
+pub mod swift_resolved_changes;
+pub mod targets;
+pub mod why;
 
 mod plan_finish;
 mod plan_incompleteness;
 pub use plan_incompleteness::{PlanIncompleteness, PlanIncompletenessKind};
 
 pub use args::TestsArgs;
-pub(crate) use args::*;
+pub use args::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Default)]
 pub struct TestPlan {
@@ -169,15 +169,15 @@ pub struct Warning {
 
 /// The stable identity of a plan warning. Resource diagnostics are line-aware,
 /// so two dynamic calls in the same consumer must remain distinct.
-pub(crate) type WarningKey = (String, String, Option<u32>);
+pub type WarningKey = (String, String, Option<u32>);
 
-pub(crate) fn warning_key(warning: &Warning) -> WarningKey {
+pub fn warning_key(warning: &Warning) -> WarningKey {
     (warning.r#type.clone(), warning.file.clone(), warning.line)
 }
 
 /// Add the stable warning projection for graph edges whose targets may be
 /// unresolved at analysis time.
-pub(crate) fn push_edge_warning(
+pub fn push_edge_warning(
     root: &Path,
     curr: &no_mistakes::codebase::dependencies::graph::NodeId,
     parent: &no_mistakes::codebase::dependencies::graph::NodeId,
@@ -232,7 +232,7 @@ pub(crate) fn push_edge_warning(
 /// Surface only resource diagnostics that belong to a changed file or an
 /// already-selected graph path. Dynamic calls deliberately have no graph edge,
 /// so they are warnings rather than a fallback signal.
-pub(crate) fn push_resource_diagnostics(
+pub fn push_resource_diagnostics(
     graph: &DepGraph,
     root: &Path,
     file: &Path,
@@ -276,7 +276,7 @@ pub(crate) fn push_resource_diagnostics(
 
 /// Keep optional edge provenance aligned with the public `via` path.  Omit
 /// the field completely for ordinary paths so saved plan JSON remains stable.
-pub(crate) fn via_details_from_edges(
+pub fn via_details_from_edges(
     edges: &[no_mistakes::codebase::dependencies::graph::EdgeKind],
 ) -> Vec<Option<ImpactEdgeDetail>> {
     edges

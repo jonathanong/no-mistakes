@@ -21,7 +21,7 @@ test("shared compilation profiling is an explicit cold experiment, without cache
     job,
     /name: Measure separate Cargo invocations with shared target artifacts\n        timeout-minutes: 25/,
   );
-  assert.match(job, /NO_MISTAKES_BUILD_NAPI: "1"/);
+  assert.doesNotMatch(job, /NO_MISTAKES_BUILD_NAPI/);
   assert.match(job, /CARGO_BUILD_JOBS: "3"/);
   assert.match(job, /node \.github\/scripts\/native-compile-profile.cjs/);
   assert.doesNotMatch(

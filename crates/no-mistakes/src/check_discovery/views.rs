@@ -17,9 +17,9 @@ pub(super) use fallback_walk::walk_ignore_aware_universe;
 use filter::filter_filesystem_view;
 pub(super) use inferred_roots::infer_project_roots_from_files;
 
-pub(crate) struct CheckFileViews {
-    pub(crate) filesystem: Vec<PathBuf>,
-    pub(crate) graph: Vec<PathBuf>,
+pub struct CheckFileViews {
+    pub filesystem: Vec<PathBuf>,
+    pub graph: Vec<PathBuf>,
 }
 
 pub(super) fn discover_check_file_views_with_absolute_lookup(

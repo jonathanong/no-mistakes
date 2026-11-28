@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 mod ids;
 pub(super) use ids::FILESYSTEM_RULE_IDS;
 
-pub(crate) fn run_filesystem_rules_check_with_facts(
+pub fn run_filesystem_rules_check_with_facts(
     root: &Path,
     config: &NoMistakesConfig,
     enabled: bool,
@@ -92,7 +92,7 @@ fn run_remaining_filesystem_rules(
         defer_suppression,
     )
 }
-pub(crate) fn filesystem_rules_configured(config: &NoMistakesConfig) -> bool {
+pub fn filesystem_rules_configured(config: &NoMistakesConfig) -> bool {
     FILESYSTEM_RULE_IDS
         .iter()
         .any(|rule_id| rule_configured(config, rule_id))

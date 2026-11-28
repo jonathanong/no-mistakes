@@ -8,7 +8,7 @@ use std::sync::Arc;
 /// Hot lookups go through FileId slots. Paths that are not in the inventory
 /// (tests and late inserts) land in a small overflow map.
 #[derive(Clone)]
-pub(crate) struct FileIdMap<T> {
+pub struct FileIdMap<T> {
     inventory: Arc<FileInventory>,
     slots: Vec<Option<T>>,
     overflow: FxHashMap<PathBuf, T>,
@@ -62,7 +62,7 @@ impl<T> FileIdMap<T> {
         (self.inventory.path(id)? == path).then_some(id.index())
     }
 
-    pub(crate) fn get(&self, path: &Path) -> Option<&T> {
+    pub fn get(&self, path: &Path) -> Option<&T> {
         if let Some(index) = self.slot_index(path) {
             if let Some(value) = self.slots.get(index).and_then(Option::as_ref) {
                 return Some(value);

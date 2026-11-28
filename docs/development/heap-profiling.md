@@ -17,7 +17,7 @@ The release profile strips symbols, so also turn stripping off:
 ```sh
 rustup update stable
 rustc --version
-NO_MISTAKES_BUILD_NAPI=1 CARGO_PROFILE_RELEASE_DEBUG=1 CARGO_PROFILE_RELEASE_STRIP=none \
+CARGO_PROFILE_RELEASE_DEBUG=1 CARGO_PROFILE_RELEASE_STRIP=none \
   cargo build --release --locked -p no-mistakes --bin no-mistakes
 ```
 

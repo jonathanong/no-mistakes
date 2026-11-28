@@ -87,12 +87,10 @@ const CASES: &[Case] = &[
 ];
 
 #[test]
-fn language_symbols_call_sites_and_dead_exports_match_cli_and_napi() {
+fn language_symbols_call_sites_and_dead_exports_match_cli() {
     let root = fixture_root();
     for case in CASES {
         let symbols = symbols_value(&root, case.file, Vec::new());
-        let napi_symbols = napi_symbols(&root, case.file);
-        assert_eq!(symbols, napi_symbols, "{}", case.file);
         let export = symbols["files"][0]["exports"]
             .as_array()
             .expect("exports")
@@ -105,12 +103,6 @@ fn language_symbols_call_sites_and_dead_exports_match_cli_and_napi() {
         assert!(source_line(&root, case.file, line).contains(last_segment(case.live)));
 
         let dead = dead_value(&root, case.file, &[case.dead, case.live]);
-        assert_eq!(
-            dead,
-            napi_dead(&root, case.file, &[case.dead, case.live]),
-            "{}",
-            case.file
-        );
         assert_eq!(dead["partial"], false);
         assert_eq!(dead["anyDead"], true);
         let names: Vec<&str> = dead["results"]
@@ -130,12 +122,6 @@ fn language_symbols_call_sites_and_dead_exports_match_cli_and_napi() {
         assert_eq!(dead_row["importerCount"], 0);
 
         let calls = call_value(&root, case.file, case.live);
-        assert_eq!(
-            calls,
-            napi_calls(&root, case.file, case.live),
-            "{}",
-            case.file
-        );
         assert_eq!(calls["partial"], false);
         let sites = calls["callSites"].as_array().expect("sites");
         assert_eq!(sites.len(), 1, "{}", case.file);
@@ -223,38 +209,6 @@ fn call_args(root: &Path, file: &str, name: &str) -> CallSitesArgs {
         format: Some(Format::Json),
         json: true,
     }
-}
-
-fn napi_symbols(root: &Path, file: &str) -> Value {
-    parse(
-        crate::napi_api::codebase::symbols_json_impl(json!({
-            "root": root.display().to_string(),
-            "files": [file],
-        }))
-        .unwrap(),
-    )
-}
-
-fn napi_dead(root: &Path, file: &str, names: &[&str]) -> Value {
-    parse(
-        crate::napi_api::queries::dead_exports_json_impl(json!({
-            "root": root.display().to_string(),
-            "file": file,
-            "names": names,
-        }))
-        .unwrap(),
-    )
-}
-
-fn napi_calls(root: &Path, file: &str, name: &str) -> Value {
-    parse(
-        crate::napi_api::queries::call_sites_json_impl(json!({
-            "root": root.display().to_string(),
-            "file": file,
-            "exportName": name,
-        }))
-        .unwrap(),
-    )
 }
 
 fn result_named<'a>(report: &'a Value, name: &str) -> &'a Value {

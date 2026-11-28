@@ -122,7 +122,7 @@ impl RelationshipArg {
 
 include!("args_relationships_filter.rs");
 
-pub(crate) fn relationships_are_import_only(relationships: &[RelationshipArg]) -> bool {
+pub fn relationships_are_import_only(relationships: &[RelationshipArg]) -> bool {
     !relationships.is_empty()
         && relationships.iter().all(|relationship| {
             matches!(

@@ -166,7 +166,3 @@ fn resolved_playwright_app(
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "resolve/tests.rs"]
 mod tests;
-
-#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
-#[path = "resolve/declared_tests.rs"]
-mod declared_tests;

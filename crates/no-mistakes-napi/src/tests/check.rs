@@ -1,0 +1,464 @@
+use super::*;
+use serde_json::json;
+
+#[path = "check_csp_allowed_origins.rs"]
+mod check_csp_allowed_origins;
+
+#[path = "check_partial.rs"]
+mod check_partial;
+
+#[path = "check_swift_darwin_imports.rs"]
+mod check_swift_darwin_imports;
+
+#[path = "check_workflow_merge.rs"]
+mod check_workflow_merge;
+
+#[path = "check_job_permissions.rs"]
+mod check_job_permissions;
+
+#[path = "check_workflow_invalid_yaml.rs"]
+mod check_workflow_invalid_yaml;
+
+#[path = "check_insta_snapshot_updates.rs"]
+mod check_insta_snapshot_updates;
+#[path = "check_test_reliability.rs"]
+mod check_test_reliability;
+#[path = "check_test_state.rs"]
+mod check_test_state;
+
+#[path = "check_config_locations.rs"]
+mod check_config_locations;
+#[path = "check_parse_failure_locations.rs"]
+mod check_parse_failure_locations;
+#[path = "check_tsconfig_alias_locations.rs"]
+mod check_tsconfig_alias_locations;
+#[path = "config_diagnostic_locations.rs"]
+mod config_diagnostic_locations;
+
+#[path = "check_playwright_patterns.rs"]
+mod check_playwright_patterns;
+
+#[path = "check_recall_audit.rs"]
+mod check_recall_audit;
+
+#[path = "check_nested_controls.rs"]
+mod check_nested_controls;
+#[path = "check_react_consumed_directives.rs"]
+mod check_react_consumed_directives;
+#[path = "check_redirect_suppression.rs"]
+mod check_redirect_suppression;
+#[path = "check_suppression.rs"]
+mod check_suppression;
+#[path = "check_suppression_audit.rs"]
+mod check_suppression_audit;
+#[path = "check_unused_allow_entries.rs"]
+mod check_unused_allow_entries;
+#[path = "check_unused_disable_directives.rs"]
+mod check_unused_disable_directives;
+
+fn static_check_fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check")
+        .join(name)
+}
+
+fn baseline_and_audit(name: &str) -> (serde_json::Value, serde_json::Value) {
+    let root = static_check_fixture(name);
+    let baseline: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::options::test_json_arg(
+            json!({ "root": root }).to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    let audit: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::options::test_json_arg(
+            json!({ "root": root, "includeSuppressed": true }).to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    let mut comparable = audit.clone();
+    comparable
+        .as_object_mut()
+        .expect("check report is an object")
+        .remove("suppressed");
+    assert_eq!(baseline, comparable, "audit changed a visible report field");
+    (baseline, audit)
+}
+
+fn assert_suppression(audit: &serde_json::Value, expected: &serde_json::Value) {
+    let domain = expected["domain"].as_str().unwrap();
+    let rule = expected["rule"].as_str().unwrap();
+    let file = expected["file"].as_str().unwrap();
+    let line = expected["line"].as_u64().unwrap();
+    let finding = audit["suppressed"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|finding| {
+            finding["domain"] == domain
+                && finding["rule"] == rule
+                && finding["file"] == file
+                && finding["line"] == line
+        })
+        .unwrap_or_else(|| panic!("missing suppression {domain}/{rule} {file}:{line}: {audit}"));
+    assert_eq!(finding["reason"], expected["reason"]);
+    assert_eq!(finding["directive"]["kind"], expected["directiveKind"]);
+    assert_eq!(finding["directive"]["line"], expected["directiveLine"]);
+}
+
+#[test]
+fn check_json_reports_tracked_artifacts_below_source_skip_directories() {
+    let fixture =
+        no_mistakes::test_support::materialize_gitignore_fixture("banned-paths-source-skips");
+    no_mistakes::test_support::git_init(fixture.path());
+    no_mistakes::test_support::git_add_all(fixture.path());
+    let output = check_json_impl(crate::options::test_json_arg(
+        json!({ "root": fixture.path() }).to_string(),
+    ))
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let files = value["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|finding| finding["rule"] == "banned-paths")
+        .map(|finding| finding["file"].as_str().unwrap())
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        files,
+        vec![
+            "build/blocked.patch",
+            "dist/blocked.patch",
+            "fixtures/blocked.patch",
+            "nested/blocked.patch",
+            "target/blocked.patch",
+        ]
+    );
+}
+
+#[test]
+fn check_json_returns_global_check_report() {
+    let options = json!({
+        "root": fixture_root("unique-exports-basic"),
+        "config": ".no-mistakes.yml",
+        "tsconfig": "tsconfig.json"
+    })
+    .to_string();
+    let output = check_json_impl(crate::options::test_json_arg(options)).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert!(value["codebase"].as_array().unwrap().iter().any(|finding| {
+        finding["rule"] == "unique-exports" && finding["exportName"] == "shared"
+    }));
+    assert!(value["warnings"].as_array().unwrap().is_empty());
+}
+
+#[test]
+fn check_json_optionally_accounts_for_suppressed_ordinary_rule_findings() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/suppression-accounting");
+    let baseline = check_json_impl(crate::options::test_json_arg(
+        json!({ "root": root }).to_string(),
+    ))
+    .unwrap();
+    let baseline: serde_json::Value = serde_json::from_str(&baseline).unwrap();
+    assert!(baseline.get("suppressed").is_none());
+    assert!(baseline["codebase"].as_array().is_some_and(Vec::is_empty));
+
+    let audit = check_json_impl(crate::options::test_json_arg(
+        json!({
+            "root": root,
+            "includeSuppressed": true,
+        })
+        .to_string(),
+    ))
+    .unwrap();
+    let audit: serde_json::Value = serde_json::from_str(&audit).unwrap();
+    assert_eq!(audit["codebase"], json!([]));
+    assert_eq!(audit["suppressed"].as_array().unwrap().len(), 2);
+    assert_eq!(audit["suppressed"][0]["domain"], "codebase");
+    assert_eq!(audit["suppressed"][0]["rule"], "unique-exports");
+    assert_eq!(audit["suppressed"][0]["line"], 2);
+    assert_eq!(audit["suppressed"][0]["directive"]["kind"], "nextLine");
+    assert_eq!(audit["suppressed"][0]["directive"]["line"], 1);
+    assert_eq!(audit["suppressed"][1]["file"], "src/c.ts");
+    assert_eq!(audit["suppressed"][1]["line"], 1);
+    assert_eq!(audit["suppressed"][1]["directive"]["kind"], "line");
+    assert_eq!(audit["suppressed"][1]["directive"]["line"], 1);
+}
+
+#[test]
+fn check_json_returns_incompleteness_for_skipped_configured_check() {
+    let options = json!({
+        "root": fixture_root("test-no-unmocked-dynamic-imports-unknown-vitest-project"),
+    })
+    .to_string();
+    let output = check_json_impl(crate::options::test_json_arg(options)).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert!(value["incomplete"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|failure| {
+            failure["consumer"] == "test-no-unmocked-dynamic-imports"
+                && failure["message"]
+                    .as_str()
+                    .unwrap()
+                    .contains("unknown vitest project web")
+        }));
+    assert_eq!(value["rules"].as_array().map(Vec::len), Some(0));
+}
+
+#[test]
+fn check_json_returns_non_blocking_agent_doc_advisories() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/agents-md-max-size/fixture/advisory");
+    let options = json!({
+        "root": root,
+        "config": ".no-mistakes.yml"
+    })
+    .to_string();
+    let output = check_json_impl(crate::options::test_json_arg(options)).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(value["rules"].as_array().map(Vec::len), Some(0));
+    assert!(value["advisories"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|advisory| {
+            advisory["rule"] == "agents-md-max-size"
+                && advisory["file"] == "CLAUDE.md"
+                && advisory["message"]
+                    .as_str()
+                    .is_some_and(|message| message.contains("8 remaining"))
+        }));
+}
+
+#[test]
+fn check_json_rejects_invalid_rule_option_types_with_the_cli_diagnostic() {
+    let root = static_check_fixture("invalid-rule-options");
+    let error = check_json_impl(crate::options::test_json_arg(
+        json!({ "root": root }).to_string(),
+    ))
+    .expect_err("invalid configured rule options must reject the N-API check");
+    let message = error.reason;
+
+    assert!(message.contains(
+        "invalid options for rule `postgres-no-add-column` application `strict SQL migrations`"
+    ));
+    assert!(message.contains("options.sqlInclude"));
+    assert!(message.contains("boolean"));
+    assert!(message.contains("expected a sequence"));
+}
+
+#[test]
+fn check_json_returns_migrated_filesystem_rules() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/markdown-link-display-text/fixture");
+    let options = json!({
+        "root": root,
+        "config": ".no-mistakes.yml"
+    })
+    .to_string();
+    let output = check_json_impl(crate::options::test_json_arg(options)).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert!(value["rules"].as_array().unwrap().iter().any(|finding| {
+        finding["rule"] == "markdown-link-display-text"
+            && finding["file"] == "docs/bad.md"
+            && finding["target"] == "news-story-clusters.md"
+    }));
+}
+
+#[test]
+fn check_json_honors_release_age_group_validation_suppression() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/pnpm-release-age-policy/fixture/suppression");
+    let output = check_json_impl(crate::options::test_json_arg(
+        json!({ "root": root, "includeSuppressed": true }).to_string(),
+    ))
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert!(value["rules"].as_array().unwrap().is_empty(), "{value}");
+    assert!(value["suppressed"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|finding| {
+            finding["rule"] == "pnpm-release-age-policy" && finding["file"] == "pnpm-workspace.yaml"
+        }));
+}
+
+#[test]
+fn check_json_enforces_exact_postgres_add_column_migration_allowlist() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-no-add-column/fixture/mismatch");
+    let output = check_json_impl(crate::options::test_json_arg(
+        json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),
+    ))
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let findings = value["rules"].as_array().unwrap();
+
+    assert_eq!(findings.len(), 2, "{value:#?}");
+    assert!(findings.iter().any(|finding| {
+        finding["rule"] == "postgres-no-add-column"
+            && finding["target"] == "posts.status"
+            && finding["message"].as_str().is_some_and(|message| {
+                message.contains("does not match an allowedMigrations entry")
+            })
+    }));
+    assert!(findings.iter().any(|finding| {
+        finding["rule"] == "postgres-no-add-column"
+            && finding["message"].as_str().is_some_and(|message| {
+                message.contains("stale postgres-no-add-column allowedMigrations entry")
+            })
+    }));
+}
+
+#[test]
+fn check_json_tolerates_json_imports_reached_through_a_vitest_setup_file() {
+    // A downstream monorepo's vitest setup file transitively imports a JSON
+    // catalog via `with { type: 'json' }`. The setup-dependency walk must
+    // keep that JSON path as a trigger candidate without ever handing it to
+    // the TS/JS parser, so the aggregate check must not abort.
+    let root = static_check_fixture("integration-setup-json-import");
+    let result = check_json_impl(crate::options::test_json_arg(
+        json!({ "root": root }).to_string(),
+    ));
+    if let Err(error) = result {
+        panic!("{error:#}");
+    }
+}
+
+#[test]
+fn check_json_reports_both_markdown_rule_ids() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/markdown-report/fixture");
+    let fixture = no_mistakes::test_support::materialize_saved_fixture(&source);
+    no_mistakes::test_support::git_init(fixture.path());
+    no_mistakes::test_support::git_add_all(fixture.path());
+    let output = check_json_impl(crate::options::test_json_arg(
+        json!({ "root": fixture.path(), "config": ".no-mistakes.yml" }).to_string(),
+    ))
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let findings = value["rules"].as_array().unwrap();
+    let rule_ids = findings
+        .iter()
+        .filter_map(|finding| finding["rule"].as_str())
+        .collect::<Vec<_>>();
+
+    assert!(rule_ids.contains(&"markdown-reachability"), "{value:#?}");
+    assert!(
+        rule_ids.contains(&"markdown-structure-budget"),
+        "{value:#?}"
+    );
+    for rule_id in ["markdown-reachability", "markdown-structure-budget"] {
+        let finding = findings
+            .iter()
+            .find(|finding| finding["rule"] == rule_id)
+            .unwrap_or_else(|| panic!("missing {rule_id}: {value:#?}"));
+        assert!(finding["file"].is_string(), "{finding:#?}");
+        assert!(finding["line"].is_u64(), "{finding:#?}");
+        assert!(finding["message"].is_string(), "{finding:#?}");
+    }
+}
+
+#[path = "check_deadline_evidence.rs"]
+mod check_deadline_evidence;
+
+#[test]
+fn check_json_reads_job_step_sum_option_from_config() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/github-actions-job-timeouts/fixture/step-sum");
+    let report: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::options::test_json_arg(
+            json!({ "root": root, "config": root.join(".no-mistakes.yml") }).to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    let findings = report["rules"].as_array().unwrap();
+    assert_eq!(findings.len(), 3, "{report}");
+    let mut targets: Vec<_> = findings
+        .iter()
+        .map(|finding| {
+            assert_eq!(finding["rule"], "github-actions-job-timeouts");
+            finding["target"].as_str().unwrap()
+        })
+        .collect();
+    targets.sort_unstable();
+    assert_eq!(targets, ["above", "conditional-matrix-composite", "equal"]);
+}
+
+#[test]
+fn check_json_reports_unproven_member_query_sql_without_warnings() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-required-predicates/fixture/unproven-two-rules");
+    let report: serde_json::Value = serde_json::from_str(
+        &check_json_impl(crate::options::test_json_arg(
+            json!({ "root": root, "config": root.join(".no-mistakes.yml") }).to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(report["unprovenMemberQuerySql"], 1, "{report}");
+    assert_eq!(report["warnings"], json!([]), "{report}");
+    assert!(
+        report["rules"].as_array().is_some_and(Vec::is_empty),
+        "{report}"
+    );
+}
+
+#[path = "check_analysis_policy.rs"]
+mod check_analysis_policy;
+
+#[path = "check_caching_effort.rs"]
+mod check_caching_effort;
+
+#[path = "check_download_effort.rs"]
+mod check_download_effort;
+
+#[path = "check_literal_helpers.rs"]
+mod check_literal_helpers;
+
+#[path = "check_redirect_effort.rs"]
+mod check_redirect_effort;
+
+#[path = "check_storybook_effort.rs"]
+mod check_storybook_effort;
+
+#[path = "check_unconstructed_error.rs"]
+mod check_unconstructed_error;
+
+#[path = "check_json_relation_ids.rs"]
+mod check_json_relation_ids;
+#[path = "check_offset_effort.rs"]
+mod check_offset_effort;
+
+#[path = "check_payload_effort.rs"]
+mod check_payload_effort;
+
+#[path = "check_finite_set_effort.rs"]
+mod check_finite_set_effort;
+#[path = "check_transformed_uuid_predicates.rs"]
+mod check_transformed_uuid_predicates;
+
+#[path = "check_postgres_utility.rs"]
+mod check_postgres_utility;
+
+#[path = "check_vitest_default_excludes.rs"]
+mod check_vitest_default_excludes;
+
+#[path = "check_vitest_project_policy.rs"]
+mod check_vitest_project_policy;
+
+#[path = "check_grouping_not_aggregation.rs"]
+mod check_grouping_not_aggregation;

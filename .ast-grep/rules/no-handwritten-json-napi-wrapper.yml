@@ -17,15 +17,15 @@ rule:
         kind: function_item
         stopBy: end
 files:
-  - "crates/no-mistakes/src/napi_api.rs"
-  - "crates/no-mistakes/src/napi_api/codebase_bindings.rs"
-  - "crates/no-mistakes/src/napi_api/planning_bindings.rs"
-  - "crates/no-mistakes/src/napi_api/wrappers_query.rs"
-  - "crates/no-mistakes/src/napi_api/ci_bindings.rs"
-  - "crates/no-mistakes/src/napi_api/queries.rs"
-  - "crates/no-mistakes/src/napi_api/infra_swift.rs"
+  - "crates/no-mistakes-napi/src/lib.rs"
+  - "crates/no-mistakes-napi/src/codebase_bindings.rs"
+  - "crates/no-mistakes-napi/src/planning_bindings.rs"
+  - "crates/no-mistakes-napi/src/wrappers_query.rs"
+  - "crates/no-mistakes-napi/src/ci_bindings.rs"
+  - "crates/no-mistakes-napi/src/queries.rs"
+  - "crates/no-mistakes-napi/src/infra_swift.rs"
 ignores:
-  - "crates/no-mistakes/src/**/tests/**"
-  - "crates/no-mistakes/src/**/*_tests.rs"
-  - "crates/no-mistakes/src/**/tests.rs"
-  - "crates/no-mistakes/src/**/test_support.rs"
+  - "crates/no-mistakes-napi/src/**/tests/**"
+  - "crates/no-mistakes-napi/src/**/*_tests.rs"
+  - "crates/no-mistakes-napi/src/**/tests.rs"
+  - "crates/no-mistakes-napi/src/**/test_support.rs"

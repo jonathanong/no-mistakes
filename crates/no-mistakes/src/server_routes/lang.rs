@@ -8,7 +8,7 @@ use globset::GlobSet;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-pub(crate) fn merge_language_route_facts(
+pub fn merge_language_route_facts(
     prepared: &PreparedServerAnalysis,
     facts: &mut HashMap<PathBuf, FileFacts>,
     cli_filter: Option<&GlobSet>,

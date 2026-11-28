@@ -11,7 +11,7 @@ pub(crate) struct TestProjectContext {
 }
 
 #[derive(Clone)]
-pub(crate) struct DiscoveredTestFile {
+pub struct DiscoveredTestFile {
     pub(crate) path: PathBuf,
     pub(crate) contexts: Vec<TestProjectContext>,
 }

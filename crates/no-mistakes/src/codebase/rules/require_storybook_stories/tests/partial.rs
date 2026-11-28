@@ -2,9 +2,9 @@ use super::*;
 use std::collections::BTreeSet;
 
 fn report(root: &std::path::Path, config: &std::path::Path) -> serde_json::Value {
-    let json = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+    let json = crate::test_support::check_json(
         serde_json::json!({"root": root, "config": config}).to_string(),
-    ))
+    )
     .unwrap();
     serde_json::from_str(&json).unwrap()
 }

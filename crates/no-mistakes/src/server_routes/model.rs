@@ -1,4 +1,4 @@
-pub(crate) use crate::codebase::ts_source::facts::react_analysis::server::{
+pub use crate::codebase::ts_source::facts::react_analysis::server::{
     FileFacts, ImportBinding, RouteSite,
 };
 use crate::edge_index::PreparedRelationshipIndex;
@@ -8,7 +8,7 @@ use serde::Serialize;
 #[doc(hidden)]
 #[derive(Debug, Clone)]
 pub struct PreparedProjectReport {
-    pub(crate) report: ProjectReport,
+    pub report: ProjectReport,
     pub(crate) relationships: PreparedRelationshipIndex<RelationshipNode, EdgeKind>,
 }
 

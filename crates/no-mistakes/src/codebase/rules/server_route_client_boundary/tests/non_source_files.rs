@@ -37,9 +37,9 @@ fn metadata_import_placeholders_do_not_abort_source_boundary_checks() {
 #[test]
 fn aggregate_report_keeps_source_violation_with_project_metadata() {
     let root = fixture("non-source-project-files");
-    let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+    let report = crate::test_support::check_json(
         serde_json::json!({"root": root}).to_string(),
-    ))
+    )
     .unwrap();
     let report: serde_json::Value = serde_json::from_str(&report).unwrap();
     let findings = report["rules"].as_array().unwrap();

@@ -13,6 +13,7 @@ rule:
   any:
     - pattern: discover_visible_paths($$$)
     - pattern: crate::codebase::ts_source::discover_visible_paths($$$)
+    - pattern: no_mistakes::codebase::ts_source::discover_visible_paths($$$)
     - pattern: ImportResolver::new($$$)
     - pattern: DepGraph::build($$$)
     - pattern: DepGraph::build_with_plan($$$)
@@ -23,6 +24,9 @@ rule:
     - pattern: crate::codebase::dependencies::graph::DepGraph::build($$$)
     - pattern: crate::codebase::dependencies::graph::DepGraph::build_with_plan($$$)
     - pattern: crate::codebase::dependencies::graph::DepGraph::build_with_plan_and_config($$$)
+    - pattern: no_mistakes::codebase::dependencies::graph::DepGraph::build($$$)
+    - pattern: no_mistakes::codebase::dependencies::graph::DepGraph::build_with_plan($$$)
+    - pattern: no_mistakes::codebase::dependencies::graph::DepGraph::build_with_plan_and_config($$$)
     - pattern: collect_ts_facts($$$)
     - pattern: extract_symbols($$$)
     - pattern: extract_http_calls($$$)
@@ -32,10 +36,14 @@ files:
   - "crates/no-mistakes/src/check_runner/forbidden_plan.rs"
   - "crates/no-mistakes/src/check_tasks.rs"
   - "crates/no-mistakes/src/check_tasks/**"
-  - "crates/no-mistakes/src/napi_api/analyze_project/**"
+  - "crates/no-mistakes-napi/src/analyze_project/**"
   - "crates/no-mistakes/src/impacted_checks/**"
 ignores:
   - "crates/no-mistakes/src/**/tests/**"
   - "crates/no-mistakes/src/**/*_tests.rs"
   - "crates/no-mistakes/src/**/tests.rs"
   - "crates/no-mistakes/src/**/test_support.rs"
+  - "crates/no-mistakes-napi/src/**/tests/**"
+  - "crates/no-mistakes-napi/src/**/*_tests.rs"
+  - "crates/no-mistakes-napi/src/**/tests.rs"
+  - "crates/no-mistakes-napi/src/**/test_support.rs"

@@ -4,14 +4,14 @@ use std::sync::Arc;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct CoverageReport {
+pub struct CoverageReport {
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub(crate) warnings: Vec<String>,
-    pub(crate) summary: Summary,
-    pub(crate) routes: Vec<CoverageRoute>,
-    pub(crate) selectors: Vec<CoverageSelector>,
-    pub(crate) duplicate_selectors: Vec<DuplicateSelector>,
-    pub(crate) fetch_apis: Vec<CoverageFetch>,
+    pub warnings: Vec<String>,
+    pub summary: Summary,
+    pub routes: Vec<CoverageRoute>,
+    pub selectors: Vec<CoverageSelector>,
+    pub duplicate_selectors: Vec<DuplicateSelector>,
+    pub fetch_apis: Vec<CoverageFetch>,
 }
 
 pub(super) fn is_arc_empty<T>(arc: &Arc<Vec<T>>) -> bool {

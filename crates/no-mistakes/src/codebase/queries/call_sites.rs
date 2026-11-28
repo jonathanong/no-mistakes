@@ -69,10 +69,10 @@ pub struct CallSitesReport {
 }
 
 mod language;
-pub(crate) mod prepared;
+pub mod prepared;
 mod sites;
 
-pub(crate) use sites::PreparedCallSitesProjection;
+pub use sites::PreparedCallSitesProjection;
 
 fn compute(args: &CallSitesArgs) -> Result<CallSitesReport> {
     if let Some(report) = language::from_args(args)? {
@@ -95,7 +95,7 @@ fn compute(args: &CallSitesArgs) -> Result<CallSitesReport> {
     )
 }
 
-pub(crate) fn project_report(
+pub fn project_report(
     root: &Path,
     file: &Path,
     export_name: &str,

@@ -34,11 +34,11 @@ fn native_check_resolves_plain_external_stars_and_keeps_controls_unknown() {
     let root =
         crate::test_support::rule_fixture_root("coverage-producer-assertion-owner-external-stars");
     for (config, count) in [(".no-mistakes.yml", 12), ("disabled.yml", 0)] {
-        let input = crate::napi_api::options::test_json_arg(serde_json::json!({
+        let input = serde_json::json!({
             "root": root, "config": root.join(config)
-        }));
+        });
         let report: serde_json::Value =
-            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
+            serde_json::from_str(&crate::test_support::check_json(input).unwrap()).unwrap();
         let findings = report["rules"].as_array().unwrap();
         assert_eq!(findings.len(), count, "{report}");
         if count > 0 {

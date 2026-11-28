@@ -12,7 +12,7 @@ pub(crate) struct RouteReport {
 
 #[derive(Serialize, Default)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct FinalReport {
+pub struct FinalReport {
     pub(crate) summary: Summary,
     pub(crate) routes: Vec<RouteReport>,
     pub(crate) duplicates: Vec<DuplicateApiCall>,

@@ -2,7 +2,7 @@ pub fn collect_entries(args: &SymbolsArgs) -> Result<(Vec<FileEntry>, Vec<String
     collect_entries_with_timings(args, None)
 }
 
-pub(crate) fn collect_entries_with_prepared_facts(
+pub fn collect_entries_with_prepared_facts(
     args: &SymbolsArgs,
     root: &Path,
     catalog: &crate::codebase::ts_resolver::TsConfigCatalog,

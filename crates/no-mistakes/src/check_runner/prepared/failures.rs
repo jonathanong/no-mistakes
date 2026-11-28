@@ -1,6 +1,6 @@
 use super::PreparedCheckInputs;
 use no_mistakes::codebase::analysis_session::AnalysisSession;
-pub(crate) fn record(session: &AnalysisSession, prepared: &PreparedCheckInputs) {
+pub fn record(session: &AnalysisSession, prepared: &PreparedCheckInputs) {
     if let Some(playwright) = &prepared.playwright {
         for failure in playwright.failures() {
             session.record_check_failure(failure.clone());

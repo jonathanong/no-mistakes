@@ -17,8 +17,8 @@ pub struct TsFactContext {
     pub effect_functions: HashMap<String, Option<String>>,
     pub visible_files: Option<Arc<crate::fx::PathSet>>,
     pub(crate) server_route_filter: Option<ServerRouteFactFilter>,
-    pub(crate) trpc_router_glob: Option<GlobSet>,
-    pub(crate) fixture_reads: Option<Arc<FixtureReadIndex>>,
+    pub trpc_router_glob: Option<GlobSet>,
+    pub fixture_reads: Option<Arc<FixtureReadIndex>>,
 }
 
 #[derive(Debug, Clone)]
@@ -60,7 +60,7 @@ impl TsFactContext {
         }
     }
 
-    pub(crate) fn set_server_route_filter(
+    pub fn set_server_route_filter(
         &mut self,
         glob: GlobSet,
         test_filter: Option<crate::codebase::testing_analysis::test_filter::TestFileFilter>,
@@ -86,7 +86,7 @@ impl TsFactContext {
         });
     }
 
-    pub(crate) fn include(&mut self, other: Self) {
+    pub fn include(&mut self, other: Self) {
         for extractor in other.backend_route_extractors {
             self.add_backend_route_extractor(
                 extractor.register_object,
@@ -136,7 +136,7 @@ impl TsFactContext {
         }
     }
 
-    pub(crate) fn matches_server_route(&self, path: &Path) -> bool {
+    pub fn matches_server_route(&self, path: &Path) -> bool {
         self.server_route_filter
             .as_ref()
             .is_none_or(|filter| filter.is_match(&self.root, path))

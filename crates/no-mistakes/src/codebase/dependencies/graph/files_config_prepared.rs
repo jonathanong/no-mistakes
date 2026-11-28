@@ -55,7 +55,7 @@ impl PreparedGraphConfig {
         self.workspace.as_ref()
     }
 
-    pub(crate) fn workflow_documents(
+    pub fn workflow_documents(
         &self,
     ) -> Option<crate::codebase::ci_workflows::PreparedWorkflowDocuments<'_>> {
         use crate::codebase::ci_workflows::PreparedWorkflowDocuments;

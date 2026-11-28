@@ -24,11 +24,11 @@ fn low_transport_shapes_preserve_unknowns_and_ignore_unrelated_writes() {
             }
         }));
     }
-    let options = crate::napi_api::options::test_json_arg(serde_json::json!({
+    let options = serde_json::json!({
         "root": root, "config": root.join(".no-mistakes-low.yml")
-    }));
+    });
     let report: serde_json::Value =
-        serde_json::from_str(&crate::napi_api::check_json_impl(options).unwrap()).unwrap();
+        serde_json::from_str(&crate::test_support::check_json(options).unwrap()).unwrap();
     assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
     assert!(
         report["warnings"].as_array().unwrap().is_empty(),
