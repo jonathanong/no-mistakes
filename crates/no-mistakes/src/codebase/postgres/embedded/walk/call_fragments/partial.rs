@@ -10,7 +10,6 @@ mod relations;
 pub(super) use concat::self_addition_parts;
 use concat::{collect_addition, partial_atom, partial_parameterized_template, push_clean};
 use relations::partial_templates;
-pub(crate) use relations::publish_call_fragments;
 pub(super) use relations::{extend_prefix, try_relation_append};
 
 pub(super) fn expr_fragments(

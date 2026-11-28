@@ -137,6 +137,9 @@ impl<'a> ScopeVisitor<'a> {
             self.revoke_query_receiver(result);
         }
         walk::walk_arrow_function_expression(self, arrow);
+        if let Some(result) = arrow.body.as_expression() {
+            self.note_returned_builder_fragments(result);
+        }
         self.leave_plain_function();
         self.leave_function();
         self.pop_scope();

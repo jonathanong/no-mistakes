@@ -1,12 +1,12 @@
 use super::exprs::walk_expr_stars;
-use super::{FragmentStar, Rel, SYNTHETIC_TARGET};
+use super::{FragmentStar, Rel, Scope, SYNTHETIC_TARGET};
 use no_mistakes_postgres_sql::idents::object_name_key;
 use sqlparser::ast::{ObjectName, SelectItem, SelectItemQualifiedWildcardKind, Spanned};
 
 pub(super) fn collect_items(
     items: &[SelectItem],
     rels: &[Rel],
-    ctes: &[String],
+    scope: Scope<'_>,
     returning: bool,
     out: &mut Vec<FragmentStar>,
 ) {
@@ -15,12 +15,12 @@ pub(super) fn collect_items(
         match item {
             SelectItem::Wildcard(_) => emit_bare(rels, returning, None, line, out),
             SelectItem::QualifiedWildcard(SelectItemQualifiedWildcardKind::ObjectName(name), _) => {
-                emit_qualified(rels, name, returning, None, line, out);
+                emit_qualified(rels, scope.outer_rels, name, returning, None, line, out);
             }
             SelectItem::UnnamedExpr(expr)
             | SelectItem::ExprWithAlias { expr, .. }
             | SelectItem::ExprWithAliases { expr, .. } => {
-                walk_expr_stars(expr, rels, ctes, returning, None, line, out);
+                walk_expr_stars(expr, rels, scope, returning, None, line, out);
             }
             _ => {}
         }
@@ -59,6 +59,7 @@ pub(super) fn emit_bare(
 
 pub(super) fn emit_qualified(
     rels: &[Rel],
+    outer_rels: &[Rel],
     name: &ObjectName,
     returning: bool,
     func: Option<String>,
@@ -69,43 +70,9 @@ pub(super) fn emit_qualified(
     if ident.is_empty() {
         return;
     }
-    let found = rels
-        .iter()
-        .find(|rel| rel.alias.as_deref() == Some(ident.as_str()))
-        .or_else(|| {
-            rels.iter().find(|rel| {
-                rel.alias.is_none()
-                    && (rel.table == ident || rel.table.rsplit('.').next() == Some(ident.as_str()))
-            })
-        });
-    if let Some(rel) = found {
-        if !rel.is_local_derived {
-            out.push(FragmentStar {
-                returning,
-                qualifier: Some(ident),
-                relation: (rel.table != SYNTHETIC_TARGET).then(|| rel.table.clone()),
-                within_function: func,
-                line,
-            });
-        }
-        return;
-    }
-    let joined: Vec<_> = rels
-        .iter()
-        .filter(|rel| rel.join_aliases.iter().any(|a| a == &ident))
-        .collect();
-    if !joined.is_empty() {
-        for rel in joined {
-            if !rel.is_local_derived {
-                out.push(FragmentStar {
-                    returning,
-                    qualifier: Some(ident.clone()),
-                    relation: (rel.table != SYNTHETIC_TARGET).then(|| rel.table.clone()),
-                    within_function: func.clone(),
-                    line,
-                });
-            }
-        }
+    if resolve_in(rels, &ident, returning, &func, line, out)
+        || resolve_in(outer_rels, &ident, returning, &func, line, out)
+    {
         return;
     }
     out.push(FragmentStar {
@@ -117,10 +84,60 @@ pub(super) fn emit_qualified(
     });
 }
 
+fn resolve_in(
+    rels: &[Rel],
+    ident: &str,
+    returning: bool,
+    func: &Option<String>,
+    line: usize,
+    out: &mut Vec<FragmentStar>,
+) -> bool {
+    let found = rels
+        .iter()
+        .find(|rel| rel.alias.as_deref() == Some(ident))
+        .or_else(|| {
+            rels.iter().find(|rel| {
+                rel.alias.is_none()
+                    && (rel.table == ident || rel.table.rsplit('.').next() == Some(ident))
+            })
+        });
+    if let Some(rel) = found {
+        if !rel.is_local_derived {
+            out.push(FragmentStar {
+                returning,
+                qualifier: Some(ident.to_string()),
+                relation: (rel.table != SYNTHETIC_TARGET).then(|| rel.table.clone()),
+                within_function: func.clone(),
+                line,
+            });
+        }
+        return true;
+    }
+    let joined: Vec<_> = rels
+        .iter()
+        .filter(|rel| rel.join_aliases.iter().any(|a| a == ident))
+        .collect();
+    if !joined.is_empty() {
+        for rel in joined {
+            if !rel.is_local_derived {
+                out.push(FragmentStar {
+                    returning,
+                    qualifier: Some(ident.to_string()),
+                    relation: (rel.table != SYNTHETIC_TARGET).then(|| rel.table.clone()),
+                    within_function: func.clone(),
+                    line,
+                });
+            }
+        }
+        return true;
+    }
+    false
+}
+
 pub(super) fn collect_returning(
     target: &Rel,
     peers: &[Rel],
-    ctes: &[String],
+    scope: Scope<'_>,
     items: Option<&[SelectItem]>,
     out: &mut Vec<FragmentStar>,
 ) {
@@ -132,6 +149,6 @@ pub(super) fn collect_returning(
         } else {
             &all
         };
-        collect_items(std::slice::from_ref(item), visible, ctes, true, out);
+        collect_items(std::slice::from_ref(item), visible, scope, true, out);
     }
 }

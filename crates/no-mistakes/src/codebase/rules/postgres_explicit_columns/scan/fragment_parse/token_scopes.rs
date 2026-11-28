@@ -57,61 +57,6 @@ fn prev_code_index(tokens: &[TokenWithSpan], before: usize) -> Option<usize> {
         .find(|&j| !matches!(tokens[j].token, Token::Whitespace(_)))
 }
 
-pub(super) fn open_clause_at_end(tokens: &[TokenWithSpan]) -> (bool, bool, bool) {
-    let mut stack: Vec<(bool, bool, bool)> = Vec::new();
-    let mut select = false;
-    let mut returning = false;
-    let mut in_exists = false;
-    let mut prev_exists = false;
-    for token in tokens {
-        if matches!(token.token, Token::Whitespace(_)) {
-            continue;
-        }
-        match &token.token {
-            Token::LParen => {
-                stack.push((select, returning, in_exists));
-                select = false;
-                returning = false;
-                in_exists = prev_exists;
-            }
-            Token::RParen => {
-                if let Some((ps, pr, pe)) = stack.pop() {
-                    select = ps;
-                    returning = pr;
-                    in_exists = pe;
-                }
-            }
-            _ if is_kw(token, Keyword::SELECT) => {
-                select = true;
-                returning = false;
-            }
-            _ if is_kw(token, Keyword::RETURNING) => {
-                returning = true;
-                select = false;
-            }
-            _ if is_kw(token, Keyword::FROM)
-                || is_kw(token, Keyword::WHERE)
-                || is_kw(token, Keyword::INTO)
-                || is_kw(token, Keyword::SET)
-                || is_kw(token, Keyword::VALUES)
-                || is_kw(token, Keyword::GROUP)
-                || is_kw(token, Keyword::ORDER)
-                || is_kw(token, Keyword::LIMIT)
-                || is_kw(token, Keyword::HAVING)
-                || is_kw(token, Keyword::UNION)
-                || is_kw(token, Keyword::INTERSECT)
-                || is_kw(token, Keyword::EXCEPT) =>
-            {
-                select = false;
-                returning = false;
-            }
-            _ => {}
-        }
-        prev_exists = is_kw(token, Keyword::EXISTS);
-    }
-    (select, returning, in_exists)
-}
-
 fn starts_with_query(tokens: &[TokenWithSpan]) -> bool {
     tokens
         .iter()
@@ -171,10 +116,33 @@ pub(super) fn enclosing_function(tokens: &[TokenWithSpan], star_index: usize) ->
                         | sqlparser::keywords::Keyword::RETURNING
                 ) =>
             {
-                return word_value(&tokens[prev]);
+                return read_qualified_name_backwards(tokens, prev);
             }
             _ => return None,
         }
     }
     None
+}
+
+pub(super) fn read_qualified_name_backwards(
+    tokens: &[TokenWithSpan],
+    end_idx: usize,
+) -> Option<String> {
+    let mut parts = vec![word_value(&tokens[end_idx])?];
+    let mut cursor = end_idx;
+    while let Some(dot_idx) = prev_code_index(tokens, cursor) {
+        if !matches!(tokens[dot_idx].token, Token::Period) {
+            break;
+        }
+        let Some(prev_idx) = prev_code_index(tokens, dot_idx) else {
+            break;
+        };
+        let Some(part) = word_value(&tokens[prev_idx]) else {
+            break;
+        };
+        parts.push(part);
+        cursor = prev_idx;
+    }
+    parts.reverse();
+    Some(parts.join("."))
 }

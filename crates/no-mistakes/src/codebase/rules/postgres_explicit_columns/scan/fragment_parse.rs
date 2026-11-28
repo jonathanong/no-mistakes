@@ -4,6 +4,7 @@ use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan, Tokenizer};
 
+mod clauses;
 mod context;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
@@ -14,6 +15,7 @@ use context::extract_context_from_tokens;
 #[derive(Debug, Default)]
 pub(super) struct FragmentContext {
     pub(super) ctes: Vec<String>,
+    pub(super) derived_aliases: Vec<String>,
     pub(super) mutation_target: Option<(String, Option<String>)>,
     pub(super) from_relations: Vec<(String, Option<String>)>,
 }
@@ -42,7 +44,7 @@ pub(super) fn extract_fragment_stars(sql: &str, context_sql: Option<&str>) -> Ve
         }
     }
     let (ctx_select, ctx_returning, ctx_exists) = context_sql
-        .map(|prefix| token_scopes::open_clause_at_end(&tokenize(prefix)))
+        .map(|prefix| clauses::open_clause_at_end(&tokenize(prefix)))
         .unwrap_or((false, false, false));
     let toks = tokenize(sql);
     if let Some((_, token)) = next_code(&toks, 0) {
@@ -123,7 +125,7 @@ pub(super) fn read_cte_name(tokens: &[TokenWithSpan], index: usize) -> Option<(u
     is_kw(as_tok, Keyword::AS).then_some((as_idx + 1, name))
 }
 
-fn skip_paren_group(tokens: &[TokenWithSpan], start: usize) -> usize {
+pub(super) fn skip_paren_group(tokens: &[TokenWithSpan], start: usize) -> usize {
     let mut depth = 1usize;
     let mut cursor = start + 1;
     while let Some(tok) = tokens.get(cursor) {
@@ -140,4 +142,51 @@ fn skip_paren_group(tokens: &[TokenWithSpan], start: usize) -> usize {
         cursor += 1;
     }
     cursor
+}
+
+pub(super) fn read_table_and_alias(
+    tokens: &[TokenWithSpan],
+    index: usize,
+) -> Option<(usize, (String, Option<String>))> {
+    let (mut i, mut tok) = next_code(tokens, index)?;
+    if is_kw(tok, Keyword::ONLY) {
+        let next = next_code(tokens, i + 1)?;
+        i = next.0;
+        tok = next.1;
+    }
+    let mut name = word_value(tok)?;
+    let mut next_i = i + 1;
+    if let Some((dot_i, dot)) = next_code(tokens, next_i) {
+        if matches!(dot.token, Token::Period) {
+            if let Some((part_i, part)) = next_code(tokens, dot_i + 1) {
+                if let Some(second) = word_value(part) {
+                    name = format!("{name}.{second}");
+                    next_i = part_i + 1;
+                }
+            }
+        }
+    }
+    let (end, alias) = read_optional_alias(tokens, next_i);
+    Some((end, (name, alias)))
+}
+
+pub(super) fn read_optional_alias(
+    tokens: &[TokenWithSpan],
+    next_i: usize,
+) -> (usize, Option<String>) {
+    let Some((alias_i, alias_tok)) = next_code(tokens, next_i) else {
+        return (next_i, None);
+    };
+    if is_kw(alias_tok, Keyword::AS) {
+        if let Some((id_i, id_tok)) = next_code(tokens, alias_i + 1) {
+            if let Some(alias) = word_value(id_tok) {
+                return (id_i + 1, Some(alias));
+            }
+        }
+    } else if let Token::Word(word) = &alias_tok.token {
+        if word.keyword == Keyword::NoKeyword {
+            return (alias_i + 1, word_value(alias_tok));
+        }
+    }
+    (next_i, None)
 }

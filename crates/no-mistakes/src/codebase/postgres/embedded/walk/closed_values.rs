@@ -35,6 +35,8 @@ mod parent_fields_tests;
 mod predicate;
 mod relation;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod relation_append_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod relation_tests;
 mod state;
 use expression::expression;

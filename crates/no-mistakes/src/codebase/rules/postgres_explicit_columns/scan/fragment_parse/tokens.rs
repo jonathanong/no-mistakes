@@ -1,7 +1,9 @@
 use super::super::fragment_ast::FragmentStar;
 use super::context::extract_context_from_tokens;
-use super::token_scopes::{enclosing_function, is_distinct_on_rparen, scope_context};
-use super::{is_kw, word_value, FragmentContext};
+use super::token_scopes::{
+    enclosing_function, is_distinct_on_rparen, read_qualified_name_backwards, scope_context,
+};
+use super::{is_kw, FragmentContext};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
@@ -19,7 +21,7 @@ pub(super) fn extract_stars(
     let mut in_exists = initial_exists;
     let mut clause_stack: Vec<(bool, bool, bool)> = Vec::new();
     let mut prev_code: Option<(usize, &TokenWithSpan)> = None;
-    let mut prev_prev: Option<&TokenWithSpan> = None;
+    let mut prev_prev_idx: Option<usize> = None;
     for (i, token) in tokens.iter().enumerate() {
         if matches!(token.token, Token::Whitespace(_)) {
             continue;
@@ -41,7 +43,15 @@ pub(super) fn extract_stars(
                 let scoped = scope_context(tokens, i, &ctx);
                 let active = scoped.as_ref().unwrap_or(&ctx);
                 if prev_code.is_some_and(|(_, t)| matches!(t.token, Token::Period)) {
-                    push_qualified(tokens, i, prev_prev, active, clause_returning, line, out);
+                    push_qualified(
+                        tokens,
+                        i,
+                        prev_prev_idx,
+                        active,
+                        clause_returning,
+                        line,
+                        out,
+                    );
                 } else if prev_code.is_none()
                     || prev_code.is_some_and(|(pi, t)| {
                         matches!(t.token, Token::Comma | Token::LParen)
@@ -72,7 +82,7 @@ pub(super) fn extract_stars(
                 }
             }
         }
-        prev_prev = prev_code.map(|(_, t)| t);
+        prev_prev_idx = prev_code.map(|(idx, _)| idx);
         prev_code = Some((i, token));
     }
 }
@@ -80,13 +90,13 @@ pub(super) fn extract_stars(
 fn push_qualified(
     tokens: &[TokenWithSpan],
     index: usize,
-    prev_prev: Option<&TokenWithSpan>,
+    prev_prev_idx: Option<usize>,
     ctx: &FragmentContext,
     returning: bool,
     line: usize,
     out: &mut Vec<FragmentStar>,
 ) {
-    let qualifier = prev_prev.and_then(word_value);
+    let qualifier = prev_prev_idx.and_then(|idx| read_qualified_name_backwards(tokens, idx));
     let relation = qualifier.as_deref().and_then(|q| {
         ctx.from_relations
             .iter()
@@ -97,7 +107,8 @@ fn push_qualified(
                     .iter()
                     .chain(ctx.mutation_target.iter())
                     .find(|(t, a)| {
-                        a.is_none() && (t == q || t.rsplit('.').next() == Some(q))
+                        a.is_none()
+                            && (t == q || (!q.contains('.') && t.rsplit('.').next() == Some(q)))
                     })
             })
             .map(|(t, _)| t.clone())
@@ -108,7 +119,7 @@ fn push_qualified(
         }
     } else if qualifier
         .as_deref()
-        .is_some_and(|q| ctx.ctes.iter().any(|c| c == q))
+        .is_some_and(|q| ctx.ctes.iter().any(|c| c == q) || ctx.derived_aliases.iter().any(|a| a == q))
     {
         return;
     }

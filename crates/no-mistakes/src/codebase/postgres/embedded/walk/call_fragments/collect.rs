@@ -2,7 +2,7 @@ use super::super::resolve::compose;
 use super::super::ScopeVisitor;
 use super::partial;
 use crate::codebase::postgres::embedded::{
-    first_call_argument, tags, CallSqlFragment, EmbeddedSqlCall,
+    first_call_argument, placeholders, tags, CallSqlFragment, EmbeddedSqlCall,
 };
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use crate::fx::FxHashSet;
@@ -34,24 +34,26 @@ impl ScopeVisitor<'_> {
         let Some(owner) = self.current_plain_function_key() else {
             return;
         };
-        let Expression::Identifier(id) = unwrap_ts_wrappers(expr) else {
-            return;
+        let fragments = if let Expression::Identifier(id) = unwrap_ts_wrappers(expr) {
+            let Some(scope_index) = self.lookup_scope(id.name.as_str()) else {
+                return;
+            };
+            self.call_fragment_state
+                .builders
+                .get(&(scope_index, id.name.to_string()))
+                .map(|trace| trace.fragments.clone())
+                .unwrap_or_default()
+        } else if partial::is_sql_like_init(self, expr) {
+            partial::expr_fragments(self, expr, None, None)
+        } else {
+            Vec::new()
         };
-        let Some(scope_index) = self.lookup_scope(id.name.as_str()) else {
-            return;
-        };
-        if let Some(trace) = self
-            .call_fragment_state
-            .builders
-            .get(&(scope_index, id.name.to_string()))
-        {
-            if !trace.fragments.is_empty() {
-                self.call_fragment_state
-                    .function_returns
-                    .entry(owner)
-                    .or_default()
-                    .extend(trace.fragments.iter().cloned());
-            }
+        if !fragments.is_empty() {
+            self.call_fragment_state
+                .function_returns
+                .entry(owner)
+                .or_default()
+                .extend(fragments);
         }
     }
 
@@ -147,5 +149,14 @@ impl ScopeVisitor<'_> {
             &mut |name| compose::tag_shadowed(name, self),
             self.functions.imported_sql_tags(),
         )
+    }
+}
+
+pub(crate) fn publish_call_fragments(fragments: &mut [CallSqlFragment]) {
+    for fragment in fragments {
+        fragment.sql = placeholders::publish_placeholders(std::mem::take(&mut fragment.sql));
+        if let Some(context) = fragment.context_sql.take() {
+            fragment.context_sql = Some(placeholders::publish_placeholders(context));
+        }
     }
 }

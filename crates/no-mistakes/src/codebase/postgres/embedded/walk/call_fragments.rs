@@ -9,7 +9,7 @@ use oxc_span::GetSpan;
 mod collect;
 mod inline;
 mod partial;
-pub(crate) use partial::publish_call_fragments;
+pub(crate) use collect::publish_call_fragments;
 
 const MAX_PREFIX_BYTES: usize = 4096;
 

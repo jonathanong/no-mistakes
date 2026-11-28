@@ -78,36 +78,44 @@ pub(in super::super) fn check_executed_unresolved_star(
     }
 }
 
-pub(super) fn resolved_relations(star: &FragmentStar, ctx: &FragmentContext) -> Vec<String> {
+pub(super) fn resolved_relations(star: &FragmentStar, ctx: &FragmentContext) -> Vec<(String, bool)> {
     if let Some(rel) = &star.relation {
-        return vec![rel.clone()];
+        return vec![(rel.clone(), star.returning)];
     }
     if star.returning {
         if let Some(q) = &star.qualifier {
-            let candidates: Vec<_> = ctx
-                .mutation_target
-                .iter()
-                .chain(ctx.from_relations.iter())
-                .cloned()
-                .collect();
-            return find_qualified(&candidates, q).into_iter().collect();
+            if let Some(target) = &ctx.mutation_target {
+                if let Some(table) = find_qualified(std::slice::from_ref(target), q) {
+                    return vec![(table, true)];
+                }
+            }
+            if let Some(table) = find_qualified(&ctx.from_relations, q) {
+                return vec![(table, false)];
+            }
+            if ctx.ctes.iter().any(|cte| cte == q) || ctx.derived_aliases.iter().any(|a| a == q) {
+                return vec![(q.clone(), false)];
+            }
+            return Vec::new();
         }
         return ctx
             .mutation_target
             .as_ref()
-            .map(|(t, _)| vec![t.clone()])
+            .map(|(t, _)| vec![(t.clone(), true)])
             .unwrap_or_default();
     }
     if let Some(q) = &star.qualifier {
         if let Some(table) = find_qualified(&ctx.from_relations, q) {
-            return vec![table];
+            return vec![(table, false)];
         }
-        if ctx.ctes.iter().any(|cte| cte == q) {
-            return vec![q.clone()];
+        if ctx.ctes.iter().any(|cte| cte == q) || ctx.derived_aliases.iter().any(|a| a == q) {
+            return vec![(q.clone(), false)];
         }
         return Vec::new();
     }
-    ctx.from_relations.iter().map(|(t, _)| t.clone()).collect()
+    ctx.from_relations
+        .iter()
+        .map(|(t, _)| (t.clone(), false))
+        .collect()
 }
 
 fn find_qualified(relations: &[(String, Option<String>)], q: &str) -> Option<String> {

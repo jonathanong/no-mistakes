@@ -1,13 +1,13 @@
 use super::exprs::{arg_expr, walk_subqueries};
 use super::items::collect_returning;
-use super::{collect_query, collect_rels, push_factor, FragmentStar, Rel};
+use super::{collect_query, collect_rels, push_factor, FragmentStar, Rel, Scope};
 use no_mistakes_postgres_sql::idents::{ident_key, object_name_key};
 use sqlparser::ast::{
     Delete, FromTable, FunctionArgExpr, Insert, JoinConstraint, JoinOperator, OnConflictAction,
     OnInsert, Table, TableFactor, TableFunctionArgs, TableObject, Update, UpdateTableFromKind,
 };
 
-pub(super) fn collect_insert(insert: &Insert, ctes: &[String], out: &mut Vec<FragmentStar>) {
+pub(super) fn collect_insert(insert: &Insert, scope: Scope<'_>, out: &mut Vec<FragmentStar>) {
     if let TableObject::TableName(name) = &insert.table {
         let target = Rel {
             table: object_name_key(name),
@@ -15,24 +15,24 @@ pub(super) fn collect_insert(insert: &Insert, ctes: &[String], out: &mut Vec<Fra
             join_aliases: Vec::new(),
             is_local_derived: false,
         };
-        collect_returning(&target, &[], ctes, insert.returning.as_deref(), out);
+        collect_returning(&target, &[], scope, insert.returning.as_deref(), out);
     }
     if let Some(source) = insert.source.as_deref() {
-        collect_query(source, ctes, false, out);
+        collect_query(source, scope, false, out);
     }
     if let Some(OnInsert::OnConflict(conflict)) = &insert.on {
         if let OnConflictAction::DoUpdate(update) = &conflict.action {
             for assignment in &update.assignments {
-                walk_subqueries(&assignment.value, ctes, out);
+                walk_subqueries(&assignment.value, scope, out);
             }
             if let Some(selection) = &update.selection {
-                walk_subqueries(selection, ctes, out);
+                walk_subqueries(selection, scope, out);
             }
         }
     }
 }
 
-pub(super) fn collect_update(update: &Update, ctes: &[String], out: &mut Vec<FragmentStar>) {
+pub(super) fn collect_update(update: &Update, scope: Scope<'_>, out: &mut Vec<FragmentStar>) {
     let Some(target) = target_rel(&update.table.relation) else {
         return;
     };
@@ -42,33 +42,33 @@ pub(super) fn collect_update(update: &Update, ctes: &[String], out: &mut Vec<Fra
         }
         None => &[],
     };
-    let mut peers = collect_rels(from, ctes, out);
+    let mut peers = collect_rels(from, scope, out);
     for join in &update.table.joins {
-        push_factor(&join.relation, ctes, &mut peers, out);
-        visit_join_constraint(&join.join_operator, ctes, out);
+        push_factor(&join.relation, scope, &mut peers, out);
+        visit_join_constraint(&join.join_operator, scope, out);
     }
     for assignment in &update.assignments {
-        walk_subqueries(&assignment.value, ctes, out);
+        walk_subqueries(&assignment.value, scope, out);
     }
     if let Some(selection) = &update.selection {
-        walk_subqueries(selection, ctes, out);
+        walk_subqueries(selection, scope, out);
     }
-    collect_returning(&target, &peers, ctes, update.returning.as_deref(), out);
+    collect_returning(&target, &peers, scope, update.returning.as_deref(), out);
 }
 
-pub(super) fn collect_delete(delete: &Delete, ctes: &[String], out: &mut Vec<FragmentStar>) {
+pub(super) fn collect_delete(delete: &Delete, scope: Scope<'_>, out: &mut Vec<FragmentStar>) {
     let tables = match &delete.from {
         FromTable::WithFromKeyword(t) | FromTable::WithoutKeyword(t) => t,
     };
     let Some(target) = tables.first().and_then(|table| target_rel(&table.relation)) else {
         return;
     };
-    let peers = collect_rels(delete.using.as_deref().unwrap_or_default(), ctes, out);
+    let peers = collect_rels(delete.using.as_deref().unwrap_or_default(), scope, out);
     delete
         .selection
         .iter()
-        .for_each(|s| walk_subqueries(s, ctes, out));
-    collect_returning(&target, &peers, ctes, delete.returning.as_deref(), out);
+        .for_each(|s| walk_subqueries(s, scope, out));
+    collect_returning(&target, &peers, scope, delete.returning.as_deref(), out);
 }
 
 pub(super) fn collect_table_expr(table: &Table, ctes: &[String], out: &mut Vec<FragmentStar>) {
@@ -110,7 +110,7 @@ pub(super) fn target_rel(factor: &TableFactor) -> Option<Rel> {
 
 pub(super) fn visit_join_constraint(
     op: &JoinOperator,
-    ctes: &[String],
+    scope: Scope<'_>,
     out: &mut Vec<FragmentStar>,
 ) {
     let (JoinOperator::Join(JoinConstraint::On(expr))
@@ -123,17 +123,17 @@ pub(super) fn visit_join_constraint(
     else {
         return;
     };
-    walk_subqueries(expr, ctes, out);
+    walk_subqueries(expr, scope, out);
 }
 
 pub(super) fn visit_table_args(
     args: &TableFunctionArgs,
-    ctes: &[String],
+    scope: Scope<'_>,
     out: &mut Vec<FragmentStar>,
 ) {
     for arg in &args.args {
         if let FunctionArgExpr::Expr(e) = arg_expr(arg) {
-            walk_subqueries(e, ctes, out);
+            walk_subqueries(e, scope, out);
         }
     }
 }

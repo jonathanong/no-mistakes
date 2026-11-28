@@ -104,8 +104,8 @@ individual SQL fragments for `*`, `alias.*`, and `RETURNING *`:
   star whose relation cannot be resolved (an open `string` table name, a
   parameter builder with no known target table, or a relation absent from both
   the schema catalog and visible CTEs), the rule emits a non-failing advisory
-  in `advisories` rather than skipping it silently. Views and CTEs remain
-  allowed.
+  in `advisories` rather than skipping it silently. Catalog views not listed in
+  `relations` and CTEs remain allowed.
 
 ## Options and defaults
 

@@ -99,6 +99,14 @@ fn ast_covers_dml_set_ops_table_and_nested_subqueries() {
             vec![(false, Some("wide"))],
         ),
         (
+            "SELECT (SELECT row_to_json(w.*)) FROM wide w",
+            vec![(false, Some("wide"))],
+        ),
+        (
+            "SELECT (SELECT w.* FROM narrow w) FROM wide w",
+            vec![(false, Some("narrow"))],
+        ),
+        (
             "SELECT * FROM narrow LEFT JOIN wide w ON w.id = (SELECT * FROM extra LIMIT 1) RIGHT JOIN a ON a.id = narrow.id FULL OUTER JOIN b ON b.id = a.id INNER JOIN c ON c.id = b.id CROSS JOIN d JOIN e USING (id)",
             vec![
                 (false, Some("extra")),
@@ -343,4 +351,14 @@ fn context_and_token_fallback_handle_prefixes_ctes_commas_and_subqueries() {
     assert!(extract_fragment_stars(", w.*", Some("SELECT id FROM wide EXCEPT")).is_empty());
     assert!(extract_fragment_stars(", w.*", Some("UPDATE wide SET a = 1")).is_empty());
     assert!(extract_fragment_stars(", w.*", Some("INSERT INTO wide VALUES (1)")).is_empty());
+
+    assert!(extract_fragment_stars("SELECT q.* FROM (SELECT id FROM wide) AS q WHERE", None).is_empty());
+
+    let schema_fn = extract_fragment_stars("SELECT app.render(w.*) FROM wide w WHERE", None);
+    assert_eq!(schema_fn.len(), 1);
+    assert_eq!(schema_fn[0].within_function.as_deref(), Some("app.render"));
+
+    let schema_qual = extract_fragment_stars("SELECT b.wide.* FROM a.wide, b.wide WHERE", None);
+    assert_eq!(schema_qual.len(), 1);
+    assert_eq!(schema_qual[0].relation.as_deref(), Some("b.wide"));
 }

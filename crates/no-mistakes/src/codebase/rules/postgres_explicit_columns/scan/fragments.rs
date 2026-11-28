@@ -24,11 +24,6 @@ pub(super) fn scan_embedded_fragments(
     prepared: &dyn SqlFactContext,
     findings: &mut crate::codebase::rules::PostgresFindings,
 ) {
-    let complete_lines: FxHashSet<(String, usize)> = findings
-        .0
-        .iter()
-        .map(|item| (item.finding.file.clone(), item.finding.line))
-        .collect();
     for file in embedded {
         if file.call_fragments.is_empty() && file.param_append_fragments.is_empty() {
             continue;
@@ -49,7 +44,6 @@ pub(super) fn scan_embedded_fragments(
             opts,
             catalog,
             prepared,
-            complete_lines: &complete_lines,
             seen: FxHashSet::default(),
             findings,
         };
@@ -77,7 +71,6 @@ struct FileScanner<'a> {
     opts: &'a CompiledOptions,
     catalog: &'a SchemaCatalog,
     prepared: &'a dyn SqlFactContext,
-    complete_lines: &'a FxHashSet<(String, usize)>,
     seen: FxHashSet<(u32, usize, String)>,
     findings: &'a mut crate::codebase::rules::PostgresFindings,
 }
@@ -130,8 +123,12 @@ impl FileScanner<'_> {
             self.emit_advisory(origin, line, &format!("unresolved:{kind}"), star.returning, detail);
             return;
         }
-        for relation in candidates {
-            if !relation.contains('.') && ctx.ctes.iter().any(|cte| cte == &relation) {
+        for (relation, is_physical_target) in candidates {
+            if !is_physical_target
+                && !relation.contains('.')
+                && (ctx.ctes.iter().any(|cte| cte == &relation)
+                    || ctx.derived_aliases.iter().any(|a| a == &relation))
+            {
                 continue;
             }
             if is_placeholder_relation(&relation) {
@@ -163,9 +160,7 @@ impl FileScanner<'_> {
     }
 
     fn emit_advisory(&mut self, origin: u32, line: usize, key: &str, returning: bool, detail: String) {
-        if !self.complete_lines.contains(&(self.rel.to_string(), line))
-            && self.seen.insert((origin, line, key.to_string()))
-        {
+        if self.seen.insert((origin, line, key.to_string())) {
             record_advisory(self.prepared, self.opts, self.rel, self.source, line, returning, detail);
         }
     }

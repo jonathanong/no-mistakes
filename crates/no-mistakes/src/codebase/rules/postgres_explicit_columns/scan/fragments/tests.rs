@@ -46,7 +46,8 @@ fn placeholder_and_resolved_relations_cover_all_branches() {
     assert!(!is_placeholder_relation("wide"));
 
     let ctx = FragmentContext {
-        ctes: vec!["recent".to_string()],
+        ctes: vec!["recent".to_string(), "wide".to_string()],
+        derived_aliases: vec!["q".to_string()],
         mutation_target: Some(("public.orders".to_string(), Some("o".to_string()))),
         from_relations: vec![
             ("public.items".to_string(), None),
@@ -61,7 +62,7 @@ fn placeholder_and_resolved_relations_cover_all_branches() {
         within_function: None,
         line: 1,
     };
-    assert_eq!(resolved_relations(&direct, &ctx), vec!["wide"]);
+    assert_eq!(resolved_relations(&direct, &ctx), vec![("wide".to_string(), false)]);
 
     let ret_qualified = FragmentStar {
         returning: true,
@@ -70,7 +71,10 @@ fn placeholder_and_resolved_relations_cover_all_branches() {
         within_function: None,
         line: 1,
     };
-    assert_eq!(resolved_relations(&ret_qualified, &ctx), vec!["public.items"]);
+    assert_eq!(
+        resolved_relations(&ret_qualified, &ctx),
+        vec![("public.items".to_string(), false)]
+    );
 
     let ret_target = FragmentStar {
         returning: true,
@@ -79,7 +83,10 @@ fn placeholder_and_resolved_relations_cover_all_branches() {
         within_function: None,
         line: 1,
     };
-    assert_eq!(resolved_relations(&ret_target, &ctx), vec!["public.orders"]);
+    assert_eq!(
+        resolved_relations(&ret_target, &ctx),
+        vec![("public.orders".to_string(), true)]
+    );
 
     let ret_bare = FragmentStar {
         returning: true,
@@ -88,7 +95,10 @@ fn placeholder_and_resolved_relations_cover_all_branches() {
         within_function: None,
         line: 1,
     };
-    assert_eq!(resolved_relations(&ret_bare, &ctx), vec!["public.orders"]);
+    assert_eq!(
+        resolved_relations(&ret_bare, &ctx),
+        vec![("public.orders".to_string(), true)]
+    );
 
     let sel_qualified = FragmentStar {
         returning: false,
@@ -97,7 +107,10 @@ fn placeholder_and_resolved_relations_cover_all_branches() {
         within_function: None,
         line: 1,
     };
-    assert_eq!(resolved_relations(&sel_qualified, &ctx), vec!["accounts"]);
+    assert_eq!(
+        resolved_relations(&sel_qualified, &ctx),
+        vec![("accounts".to_string(), false)]
+    );
 
     let sel_cte = FragmentStar {
         returning: false,
@@ -106,7 +119,22 @@ fn placeholder_and_resolved_relations_cover_all_branches() {
         within_function: None,
         line: 1,
     };
-    assert_eq!(resolved_relations(&sel_cte, &ctx), vec!["recent"]);
+    assert_eq!(
+        resolved_relations(&sel_cte, &ctx),
+        vec![("recent".to_string(), false)]
+    );
+
+    let sel_derived = FragmentStar {
+        returning: false,
+        qualifier: Some("q".to_string()),
+        relation: None,
+        within_function: None,
+        line: 1,
+    };
+    assert_eq!(
+        resolved_relations(&sel_derived, &ctx),
+        vec![("q".to_string(), false)]
+    );
 
     let sel_unknown = FragmentStar {
         returning: false,
@@ -126,7 +154,10 @@ fn placeholder_and_resolved_relations_cover_all_branches() {
     };
     assert_eq!(
         resolved_relations(&sel_bare, &ctx),
-        vec!["public.items", "accounts"]
+        vec![
+            ("public.items".to_string(), false),
+            ("accounts".to_string(), false),
+        ]
     );
 }
 

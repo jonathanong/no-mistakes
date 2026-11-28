@@ -1,4 +1,7 @@
-use super::{is_kw, next_code, read_cte_name, word_value, FragmentContext};
+use super::{
+    is_kw, next_code, read_cte_name, read_optional_alias, read_table_and_alias, skip_paren_group,
+    FragmentContext,
+};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
@@ -51,12 +54,35 @@ fn step_top_level(
         }
     }
     if *in_from && matches!(token.token, Token::Comma) {
-        if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
-            ctx.from_relations.push(rel);
+        if let Some(next_i) = consume_from_factor(tokens, index, false, i, ctx) {
             return next_i;
         }
     }
     consume_clause_relation(tokens, i, token, index, in_with, in_from, ctx)
+}
+
+fn consume_from_factor(
+    tokens: &[TokenWithSpan],
+    index: usize,
+    is_into: bool,
+    kw_i: usize,
+    ctx: &mut FragmentContext,
+) -> Option<usize> {
+    if !is_into {
+        if let Some((paren_i, tok)) = next_code(tokens, index) {
+            if matches!(tok.token, Token::LParen) {
+                let after = skip_paren_group(tokens, paren_i);
+                let (end, alias) = read_optional_alias(tokens, after);
+                if let Some(name) = alias {
+                    ctx.derived_aliases.push(name);
+                }
+                return Some(end);
+            }
+        }
+    }
+    let (next_i, rel) = read_table_and_alias(tokens, index)?;
+    record_from_or_into(tokens, kw_i, is_into, rel, ctx);
+    Some(next_i)
 }
 
 fn consume_with_head(tokens: &[TokenWithSpan], mut index: usize, ctx: &mut FragmentContext) -> usize {
@@ -98,14 +124,12 @@ fn consume_clause_relation(
         let is_into = is_kw(token, Keyword::INTO);
         *in_with = false;
         *in_from = !is_into;
-        if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
-            record_from_or_into(tokens, i, is_into, rel, ctx);
+        if let Some(next_i) = consume_from_factor(tokens, index, is_into, i, ctx) {
             return next_i;
         }
     } else if is_kw(token, Keyword::JOIN) {
         *in_from = true;
-        if let Some((next_i, rel)) = read_table_and_alias(tokens, index) {
-            ctx.from_relations.push(rel);
+        if let Some(next_i) = consume_from_factor(tokens, index, false, i, ctx) {
             return next_i;
         }
     } else if ends_from_list(token) {
@@ -157,43 +181,4 @@ fn ends_from_list(token: &TokenWithSpan) -> bool {
                 | Keyword::WINDOW
         )
     )
-}
-
-fn read_table_and_alias(
-    tokens: &[TokenWithSpan],
-    index: usize,
-) -> Option<(usize, (String, Option<String>))> {
-    let (mut i, mut tok) = next_code(tokens, index)?;
-    if is_kw(tok, Keyword::ONLY) {
-        let next = next_code(tokens, i + 1)?;
-        i = next.0;
-        tok = next.1;
-    }
-    let mut name = word_value(tok)?;
-    let mut next_i = i + 1;
-    if let Some((dot_i, dot)) = next_code(tokens, next_i) {
-        if matches!(dot.token, Token::Period) {
-            if let Some((part_i, part)) = next_code(tokens, dot_i + 1) {
-                if let Some(second) = word_value(part) {
-                    name = format!("{name}.{second}");
-                    next_i = part_i + 1;
-                }
-            }
-        }
-    }
-    let Some((alias_i, alias_tok)) = next_code(tokens, next_i) else {
-        return Some((next_i, (name, None)));
-    };
-    if is_kw(alias_tok, Keyword::AS) {
-        if let Some((id_i, id_tok)) = next_code(tokens, alias_i + 1) {
-            if let Some(alias) = word_value(id_tok) {
-                return Some((id_i + 1, (name, Some(alias))));
-            }
-        }
-    } else if let Token::Word(word) = &alias_tok.token {
-        if word.keyword == Keyword::NoKeyword {
-            return Some((alias_i + 1, (name, word_value(alias_tok))));
-        }
-    }
-    Some((next_i, (name, None)))
 }

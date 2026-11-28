@@ -174,21 +174,24 @@ pub(in super::super) fn extend_prefix(
     added: &[CallSqlFragment],
     straight_line: bool,
 ) {
-    if !straight_line || added.len() != 1 {
+    if !straight_line || added.is_empty() {
         return;
     }
-    if let Some(prefix) = &mut trace.prefix {
-        if prefix.len() + added[0].sql.len() <= super::super::MAX_PREFIX_BYTES {
-            prefix.push_str(&added[0].sql);
+    let cap = super::super::MAX_PREFIX_BYTES;
+    if added.len() == 1 {
+        if let Some(p) = trace
+            .prefix
+            .as_mut()
+            .filter(|p| p.len() + added[0].sql.len() <= cap)
+        {
+            p.push_str(&added[0].sql);
         }
     }
-}
-
-pub(crate) fn publish_call_fragments(fragments: &mut [CallSqlFragment]) {
-    for fragment in fragments {
-        fragment.sql = placeholders::publish_placeholders(std::mem::take(&mut fragment.sql));
-        if let Some(context) = fragment.context_sql.take() {
-            fragment.context_sql = Some(placeholders::publish_placeholders(context));
+    if added.len() == trace.alt_prefixes.len() {
+        for (p, frag) in trace.alt_prefixes.iter_mut().zip(added) {
+            if p.len() + frag.sql.len() <= cap {
+                p.push_str(&frag.sql);
+            }
         }
     }
 }
