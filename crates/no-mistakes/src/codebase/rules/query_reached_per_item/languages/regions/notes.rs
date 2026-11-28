@@ -1,5 +1,6 @@
 use super::calls::{
-    calls, initializer_callees, is_callee_byte, is_keyword, per_item_callees, split_separator,
+    calls, enclosing_loop_line_callees, is_callee_byte, is_keyword, per_item_callees,
+    split_separator,
 };
 use super::carry::Carry;
 use super::params::signature_body;
@@ -27,32 +28,40 @@ pub(super) fn record(
 pub(super) fn record_loop_line(
     scan: &mut Scan,
     stack: &[Frame],
+    construct: &'static str,
     line: &str,
     line_no: u32,
     carry: &mut Carry,
 ) {
-    let construct = match stack.last() {
-        Some(Frame::Loop { construct, .. }) => *construct,
-        _ => return,
-    };
     let callees = per_item_callees(line, construct)
         .into_iter()
         .map(|callee| (line_no, callee))
         .collect::<Vec<_>>();
     carry.note(line, line_no);
     record_callees(scan, stack, &callees);
-    let initializer = initializer_callees(line, construct)
+    let enclosing = enclosing_loop_line_callees(line, construct)
         .into_iter()
         .map(|callee| (line_no, callee))
         .collect::<Vec<_>>();
-    if initializer.is_empty() {
+    if enclosing.is_empty() {
         return;
     }
     let mut outer = stack.to_vec();
     if matches!(outer.last(), Some(Frame::Loop { .. })) {
         outer.pop();
     }
-    record_callees(scan, &outer, &initializer);
+    record_callees(scan, &outer, &enclosing);
+}
+
+pub(super) fn record_after_brace(scan: &mut Scan, stack: &[Frame], line: &str, line_no: u32) {
+    let Some((_, tail)) = line.split_once('{') else {
+        return;
+    };
+    let callees = calls(tail)
+        .into_iter()
+        .map(|callee| (line_no, callee))
+        .collect::<Vec<_>>();
+    record_callees(scan, stack, &callees);
 }
 
 pub(super) fn record_saved(scan: &mut Scan, stack: &[Frame], line_no: u32, callees: &[String]) {

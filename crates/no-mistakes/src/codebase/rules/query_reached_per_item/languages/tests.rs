@@ -8,6 +8,7 @@ use crate::config::v2::schema::{
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use std::path::{Path, PathBuf};
 
+mod regressions;
 mod shapes;
 
 fn sinks() -> Vec<Sink> {
@@ -108,7 +109,7 @@ fn direct_sink_clean_call_unresolved_body_and_duplicate_name() {
     );
     assert!(same_module.is_empty());
     let unresolved = project_ext(
-        "fn fetch(item: &str) {\n    example.store.read_row(item);\n    item.other();\n}\nfn load(items: &[&str]) {\n    for item in items {\n        fetch(item);\n    }\n}\n",
+        "fn fetch(item: &str) {\n    item.other();\n}\nfn load(items: &[&str]) {\n    for item in items {\n        fetch(item);\n    }\n}\n",
         "rs",
     );
     assert!(unresolved.iter().any(|finding| !finding.causes.is_empty()));
@@ -287,7 +288,9 @@ fn module_loops_clean_helpers_and_bare_receivers_stay_distinct() {
         "fn fetch(item: &str) {\n    example.store.read_row(item);\n    self.db.query(item);\n}\nfn load(items: &[&str]) {\n    for item in items {\n        fetch(item);\n    }\n}\n",
         "rs",
     );
-    assert!(mixed.iter().any(|finding| !finding.causes.is_empty()));
+    assert_eq!(mixed.len(), 1);
+    assert!(mixed[0].causes.is_empty());
+    assert!(mixed[0].message.contains("load → fetch → read_row"));
     let ruby = project_ext(
         "def load(items)\n  for item in items do\n    example.store.read_row(item)\n  end\n  def (\n  items.each {\n    item.fetch()\n  }\nend\n",
         "rb",

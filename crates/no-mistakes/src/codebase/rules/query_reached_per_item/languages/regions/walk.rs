@@ -1,6 +1,9 @@
-use super::calls::per_item_callees;
+use super::calls::{enclosing_loop_line_callees, per_item_callees};
 use super::carry::Carry;
-use super::notes::{record, record_inline_body, record_loop_line, record_saved};
+use super::notes::{
+    record, record_after_brace, record_inline_body, record_loop_line, record_saved,
+};
+use super::params::parameter_names;
 use super::statement::{close_unbraced, params_of, params_of_loop, release_armed, Unbraced};
 use super::syntax::{
     bare_header, block_header, brace_block, brace_header, end_count, opener_count,
@@ -13,7 +16,7 @@ struct Pending {
     header: Header,
     calls: Vec<String>,
     line: u32,
-    params: Vec<String>,
+    signature: String,
 }
 
 pub(super) fn scan_brace(source: &str) -> Scan {
@@ -33,53 +36,61 @@ pub(super) fn scan_brace(source: &str) -> Scan {
         release_armed(&mut stack, &mut unbraced, trimmed);
         if trimmed.starts_with('{') {
             if let Some(waiting) = pending.take() {
-                push(
-                    &mut stack,
-                    &mut scan,
-                    waiting.header,
-                    depth,
-                    false,
-                    waiting.params,
-                );
+                let params = pending_params(&waiting);
+                push(&mut stack, &mut scan, waiting.header, depth, false, params);
                 record_saved(&mut scan, &stack, waiting.line, &waiting.calls);
             }
             record(&mut scan, &stack, line, line_no, &mut carry, false);
+        } else if matches!(pending, Some(Pending { header: Header::Function(_), .. }))
+            && (trimmed.starts_with(')') || brace_header(line).is_none())
+        {
+            if let Some((before, _)) = line.split_once('{') {
+                if let Some(mut waiting) = pending.take() {
+                    waiting.signature.push(' ');
+                    waiting.signature.push_str(before.trim());
+                    let params = pending_params(&waiting);
+                    push(&mut stack, &mut scan, waiting.header, depth, false, params);
+                    record_after_brace(&mut scan, &stack, line, line_no);
+                    carry.note(line, line_no);
+                }
+            } else if trimmed.ends_with(';') || trimmed.starts_with('}') {
+                pending = None;
+            } else if let Some(waiting) = pending.as_mut() {
+                waiting.signature.push(' ');
+                waiting.signature.push_str(trimmed);
+            }
         } else if let Some(header) = brace_header(line) {
             pending = None;
-            let is_loop = matches!(header, Header::Loop(_));
+            let loop_construct = match header {
+                Header::Loop(construct) => Some(construct),
+                Header::Function(_) => None,
+            };
             let params = params_of(&header, line);
             push(&mut stack, &mut scan, header, depth, false, params);
-            if is_loop {
-                record_loop_line(&mut scan, &stack, line, line_no, &mut carry);
+            if let Some(construct) = loop_construct {
+                record_loop_line(&mut scan, &stack, construct, line, line_no, &mut carry);
             } else {
                 record_inline_body(&mut scan, &stack, line, line_no, false);
                 carry.note(line, line_no);
             }
         } else if let Some(header) = bare_header(line) {
-            let calls = match &header {
-                Header::Loop(construct) => per_item_callees(line, construct),
-                Header::Function(_) => Vec::new(),
+            let (calls, signature) = match &header {
+                Header::Loop(construct) => {
+                    let enclosing = enclosing_loop_line_callees(line, construct);
+                    record_saved(&mut scan, &stack, line_no, &enclosing);
+                    (per_item_callees(line, construct), String::new())
+                }
+                Header::Function(_) => (Vec::new(), line.to_string()),
             };
-            let params = params_of(&header, line);
             pending = Some(Pending {
-                params,
                 header,
                 calls,
                 line: line_no,
+                signature,
             });
             carry.note(line, line_no);
-        } else if let Some(waiting) = pending
-            .take()
-            .filter(|waiting| matches!(waiting.header, Header::Loop(_)))
-        {
-            push(
-                &mut stack,
-                &mut scan,
-                waiting.header,
-                depth,
-                false,
-                waiting.params,
-            );
+        } else if let Some(waiting) = pending.take() {
+            push(&mut stack, &mut scan, waiting.header, depth, false, Vec::new());
             record_saved(&mut scan, &stack, waiting.line, &waiting.calls);
             record(&mut scan, &stack, line, line_no, &mut carry, false);
             unbraced = Some(Unbraced::at(depth));
@@ -101,6 +112,13 @@ pub(super) fn scan_brace(source: &str) -> Scan {
     scan
 }
 
+fn pending_params(waiting: &Pending) -> Vec<String> {
+    match waiting.header {
+        Header::Function(_) => parameter_names(&waiting.signature),
+        Header::Loop(_) => Vec::new(),
+    }
+}
+
 pub(super) fn scan_block(source: &str) -> Scan {
     let mut scan = Scan::default();
     let mut stack: Vec<super::Frame> = Vec::new();
@@ -115,18 +133,21 @@ pub(super) fn scan_block(source: &str) -> Scan {
         let mut opened_brace = false;
         if let Some(header) = block_header(line) {
             let brace = brace_block(line);
-            let is_loop = matches!(header, Header::Loop(_));
+            let loop_construct = match header {
+                Header::Loop(construct) => Some(construct),
+                Header::Function(_) => None,
+            };
             push(
                 &mut stack,
                 &mut scan,
                 header,
                 depth,
                 brace,
-                params_of_loop(is_loop, line),
+                params_of_loop(loop_construct.is_some(), line),
             );
-            opened_brace = brace && is_loop;
-            if is_loop {
-                record_loop_line(&mut scan, &stack, line, line_no, &mut carry);
+            opened_brace = brace && loop_construct.is_some();
+            if let Some(construct) = loop_construct {
+                record_loop_line(&mut scan, &stack, construct, line, line_no, &mut carry);
             } else {
                 record_inline_body(&mut scan, &stack, line, line_no, true);
                 carry.note(line, line_no);

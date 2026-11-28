@@ -1,3 +1,5 @@
+use super::lex::{matching_brace_close, top_level_colon};
+
 pub(super) fn calls(line: &str) -> Vec<String> {
     call_spans(line)
         .into_iter()
@@ -7,28 +9,39 @@ pub(super) fn calls(line: &str) -> Vec<String> {
 
 pub(super) fn per_item_callees(line: &str, construct: &str) -> Vec<String> {
     let body_at = body_offset(line);
-    let iterable = construct == "foreach"
-        || construct == "each"
-        || is_for_in(line)
-        || (construct == "for" && line.contains(" : ") && !line.contains(';'));
+    let body_close = body_at.and_then(|at| matching_brace_close(line, at));
+    let iterable = is_iterable_loop(line, construct);
     let init_end = c_style_init_end(line, construct);
     call_spans(line)
         .into_iter()
         .filter(|(index, _)| init_end.is_none_or(|end| *index >= end))
         .filter(|(index, _)| body_at.is_some_and(|at| *index > at) || !iterable)
+        .filter(|(index, _)| body_close.is_none_or(|close| *index < close))
         .map(|(_, callee)| callee)
         .collect()
 }
 
-pub(super) fn initializer_callees(line: &str, construct: &str) -> Vec<String> {
-    let Some(end) = c_style_init_end(line, construct) else {
-        return Vec::new();
-    };
+pub(super) fn enclosing_loop_line_callees(line: &str, construct: &str) -> Vec<String> {
+    let body_at = body_offset(line);
+    let body_close = body_at.and_then(|at| matching_brace_close(line, at));
+    let iterable = is_iterable_loop(line, construct);
+    let init_end = c_style_init_end(line, construct);
     call_spans(line)
         .into_iter()
-        .filter(|(index, _)| *index < end)
+        .filter(|(index, _)| {
+            init_end.is_some_and(|end| *index < end)
+                || (iterable && body_at.is_none_or(|at| *index < at))
+                || body_close.is_some_and(|close| *index > close)
+        })
         .map(|(_, callee)| callee)
         .collect()
+}
+
+fn is_iterable_loop(line: &str, construct: &str) -> bool {
+    construct == "foreach"
+        || construct == "each"
+        || is_for_in(line)
+        || (construct == "for" && line.contains(" : ") && !line.contains(';'))
 }
 
 pub(super) fn carried_calls(
@@ -62,8 +75,7 @@ fn body_offset(line: &str) -> Option<usize> {
     if let Some(at) = line.find(" do") {
         return Some(at);
     }
-    line.rfind(':')
-        .filter(|at| line[*at + 1..].trim().is_empty())
+    top_level_colon(line)
 }
 
 fn is_for_in(line: &str) -> bool {
@@ -108,7 +120,7 @@ pub(crate) fn split_separator(callee: &str) -> Option<(&str, &str)> {
 }
 
 pub(super) fn trailing_callee(line: &str) -> Option<&str> {
-    let trimmed = line.trim_end();
+    let trimmed = line.trim_end().trim_end_matches('\\').trim_end();
     let bytes = trimmed.as_bytes();
     if bytes
         .last()

@@ -143,19 +143,23 @@ enum Reach {
 }
 
 fn function_reach(calls: &[String], sinks: &[Sink]) -> Reach {
-    let mut found = None;
+    let mut unproven = false;
     for callee in calls {
         match kind_of(callee, sinks) {
-            Kind::Sink { kind, export } if found.is_none() => {
-                found = Some((kind.to_string(), export.to_string()));
+            Kind::Sink { kind, export } => {
+                return Reach::Sink {
+                    kind: kind.to_string(),
+                    export: export.to_string(),
+                };
             }
-            Kind::Sink { .. } | Kind::Clean => {}
-            Kind::Bare | Kind::Receiver => return Reach::Unproven,
+            Kind::Clean => {}
+            Kind::Bare | Kind::Receiver => unproven = true,
         }
     }
-    match found {
-        Some((kind, export)) => Reach::Sink { kind, export },
-        None => Reach::Clean,
+    if unproven {
+        Reach::Unproven
+    } else {
+        Reach::Clean
     }
 }
 

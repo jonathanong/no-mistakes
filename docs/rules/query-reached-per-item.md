@@ -421,8 +421,9 @@ qualified call whose head, after normalizing `::`, `\`, and `/` to `.`, equals
 the target `module`, and whose tail after the last `.`, `::`, or `->` equals
 the target `export`. The finding names the callsite callee, the effect family,
 and the path `enclosing → export`. One bare local call is also proven when that
-function reaches a sink and every other call in its body is a different export
-of a configured sink module. A call on the same line as its function header
+function reaches a sink, even if its body also makes other unresolved calls;
+when it reaches no sink, any other unresolved call in its body makes it
+unproven. A call on the same line as its function header
 counts in that body. A bare name that appears in the enclosing function's
 parameter list is unproven. An unclosed parameter list makes every bare
 call in that function unproven. A qualified head that is not that module

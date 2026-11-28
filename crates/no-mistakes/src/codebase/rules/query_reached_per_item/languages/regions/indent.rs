@@ -15,12 +15,13 @@ pub(super) fn scan_indent(source: &str) -> Scan {
             continue;
         }
         let line_no = index as u32 + 1;
-        let opened_for = if hold.open() {
+        let opened_for = if hold.continued() {
             with_loop_held(&mut stack, hold.for_iterable(), |stack| {
                 record(&mut scan, stack, line, line_no, &mut carry, false);
             });
             false
         } else {
+            carry.clear();
             indent_at_column(&mut scan, &mut stack, &mut carry, line, line_no)
         };
         hold.advance(line, opened_for);
@@ -46,18 +47,21 @@ fn indent_at_column(
         record(scan, stack, line, line_no, carry, false);
         return false;
     };
-    let is_loop = matches!(header, Header::Loop(_));
-    let opened_for = matches!(header, Header::Loop("for"));
+    let loop_construct = match header {
+        Header::Loop(construct) => Some(construct),
+        Header::Function(_) => None,
+    };
+    let opened_for = loop_construct == Some("for");
     push(
         stack,
         scan,
         header,
         indent,
         false,
-        params_of_loop(is_loop, line),
+        params_of_loop(loop_construct.is_some(), line),
     );
-    if is_loop {
-        record_loop_line(scan, stack, line, line_no, carry);
+    if let Some(construct) = loop_construct {
+        record_loop_line(scan, stack, construct, line, line_no, carry);
     } else {
         record_inline_body(scan, stack, line, line_no, false);
         carry.note(line, line_no);

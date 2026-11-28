@@ -1,4 +1,4 @@
-use super::lex::{first_word, last_ident, leading_ident, words};
+use super::lex::{first_word, last_ident, leading_ident, standalone_words, words};
 use super::Header;
 
 pub(super) fn brace_header(line: &str) -> Option<Header> {
@@ -87,13 +87,13 @@ pub(super) fn block_header(line: &str) -> Option<Header> {
 }
 
 pub(super) fn opener_count(line: &str) -> usize {
-    let mut primary = conditional_openers(line);
+    let mut primary = conditional_openers(line) + usize::from(each_line(line.trim()));
     let mut dos = 0usize;
-    for word in words(line) {
+    for word in standalone_words(line) {
         match word {
             "do" => dos += 1,
             "defmodule" | "class" | "module" | "case" | "cond" | "fn" | "begin" | "def" | "fun"
-            | "for" | "while" | "each" => primary += 1,
+            | "for" | "while" => primary += 1,
             _ => {}
         }
     }
@@ -124,7 +124,10 @@ fn conditional_openers(line: &str) -> usize {
 }
 
 pub(super) fn end_count(line: &str) -> usize {
-    words(line).iter().filter(|word| **word == "end").count()
+    standalone_words(line)
+        .iter()
+        .filter(|word| **word == "end")
+        .count()
 }
 
 pub(super) fn brace_block(line: &str) -> bool {

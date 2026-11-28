@@ -144,11 +144,12 @@ pub(super) fn delimiter_delta(line: &str) -> i32 {
 pub(super) struct IndentHold {
     delimiters: i32,
     for_header: bool,
+    backslash: bool,
 }
 
 impl IndentHold {
-    pub(super) fn open(&self) -> bool {
-        self.delimiters != 0
+    pub(super) fn continued(&self) -> bool {
+        self.delimiters != 0 || self.backslash
     }
 
     pub(super) fn for_iterable(&self) -> bool {
@@ -164,5 +165,6 @@ impl IndentHold {
             self.for_header = false;
         }
         self.delimiters = next;
+        self.backslash = line.trim_end().ends_with('\\');
     }
 }
