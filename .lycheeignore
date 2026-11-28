@@ -14,3 +14,7 @@
 # Historical Actions measurement: CI returned HTTP 502 after gateway retries
 # in run 44004134708; verified HTTP 200 and a successful run via API on 2026-11-17.
 ^https://github\.com/jonathanong/no-mistakes/actions/runs/43349743109$
+
+# AWS documentation answers automated clients with 403 Forbidden (run
+# 46086187267, 2026-11-28), so lychee cannot check it. Keep the links.
+^https://docs\.aws\.amazon\.com/
