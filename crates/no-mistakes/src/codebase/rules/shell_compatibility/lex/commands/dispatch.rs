@@ -1,19 +1,20 @@
 use super::{
-    closes, function_keyword, group_start, Boundary, Function, Group, Lexer, ScanState, Word,
+    closes, function_keyword, group_start, is_coproc_prefix, Boundary, Function, Group, Lexer,
+    ScanState, Word,
 };
 
 impl<'a> Lexer<'a> {
     pub(super) fn can_open_group(&self, byte: u8, st: &ScanState<'a>) -> bool {
         (byte == b'{' || st.is_bash)
             && !(st.is_bash && st.cases.in_pattern())
-            && group_start(&st.words)
+            && group_start(&st.words, st.is_bash)
             && (byte == b'(' || self.brace_boundary())
     }
 
     pub(super) fn can_close_group(&self, byte: u8, st: &ScanState<'a>) -> bool {
         closes(st.groups.last(), byte)
             && !(st.is_bash && st.cases.in_pattern())
-            && (byte == b')' || (group_start(&st.words) && self.brace_boundary()))
+            && (byte == b')' || (group_start(&st.words, false) && self.brace_boundary()))
     }
 
     pub(super) fn open_group(
@@ -22,14 +23,19 @@ impl<'a> Lexer<'a> {
         st: &mut ScanState<'a>,
         visit: &mut impl FnMut(Vec<Word<'a>>, usize, Boundary<'a>),
     ) {
-        let function = st
-            .pending_function
-            .take()
-            .or_else(|| function_keyword(&st.words));
-        let group = match (function.is_some(), byte) {
-            (true, _) => Group::Function(byte == b'{'),
-            (false, b'{') => Group::Brace,
-            (false, _) => Group::Subshell,
+        let coproc = st.is_bash && is_coproc_prefix(&st.words);
+        let function = (!coproc)
+            .then(|| {
+                st.pending_function
+                    .take()
+                    .or_else(|| function_keyword(&st.words))
+            })
+            .flatten();
+        let group = match (function.is_some(), coproc, byte) {
+            (true, _, _) => Group::Function(byte == b'{'),
+            (false, true, b'{') => Group::CoprocBrace,
+            (false, false, b'{') => Group::Brace,
+            (false, _, _) => Group::Subshell,
         };
         let line = self.line;
         visit(std::mem::take(&mut st.words), st.scope, Boundary::End);

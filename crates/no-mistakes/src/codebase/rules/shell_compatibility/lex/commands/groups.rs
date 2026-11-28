@@ -32,9 +32,26 @@ impl CompoundBody {
 #[derive(Clone, Copy)]
 pub(super) enum Group {
     Brace,
+    CoprocBrace,
     Subshell,
     Function(bool),
-    CompoundFunction { body: CompoundBody, depth: usize },
+    Compound {
+        body: CompoundBody,
+        depth: usize,
+        is_function: bool,
+    },
+}
+
+pub(super) fn is_coproc_prefix(words: &[Word<'_>]) -> bool {
+    let mut cmd = command_words(words);
+    if cmd.next().is_none_or(|word| word.raw != "coproc") {
+        return false;
+    }
+    match (cmd.next(), cmd.next()) {
+        (None, _) => true,
+        (Some(name), None) => identifier(name.raw),
+        _ => false,
+    }
 }
 
 pub(super) fn at_keyword_position(words: &[Word<'_>]) -> bool {
@@ -53,15 +70,18 @@ pub(super) fn function_keyword_named<'a>(words: &[Word<'a>]) -> Option<Function<
 pub(super) fn closes(group: Option<&Group>, byte: u8) -> bool {
     matches!(
         (group, byte),
-        (Some(Group::Brace | Group::Function(true)), b'}')
-            | (Some(Group::Subshell | Group::Function(false)), b')')
+        (
+            Some(Group::Brace | Group::CoprocBrace | Group::Function(true)),
+            b'}'
+        ) | (Some(Group::Subshell | Group::Function(false)), b')')
     )
 }
 
-pub(super) fn group_start(words: &[Word<'_>]) -> bool {
+pub(super) fn group_start(words: &[Word<'_>], is_bash: bool) -> bool {
     command_words(words)
         .next()
         .is_none_or(|word| word.raw == "function")
+        || (is_bash && is_coproc_prefix(words))
 }
 
 #[derive(Clone, Copy)]

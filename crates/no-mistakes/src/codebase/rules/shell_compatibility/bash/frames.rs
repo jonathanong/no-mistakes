@@ -28,6 +28,7 @@ pub(super) struct Group<'a> {
     pub saved_fns: Option<super::flow::FnSummaries<'a>>,
     pub unset_fns: FxHashMap<String, bool>,
     pub dynamic_fn_unset: bool,
+    pub pending_calls: Vec<(String, bool)>,
 }
 
 pub(super) fn merge_nounset_effect(a: Option<bool>, b: Option<bool>) -> Option<bool> {

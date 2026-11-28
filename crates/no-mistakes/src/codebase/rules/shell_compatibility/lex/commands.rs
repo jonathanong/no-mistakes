@@ -2,7 +2,7 @@ use super::{command_words, identifier, Lexer, Shell, Word};
 use cases::Cases;
 use groups::{
     at_keyword_position, closes, function_keyword, function_keyword_named, function_parentheses,
-    group_start, CompoundBody, Function, Group,
+    group_start, is_coproc_prefix, CompoundBody, Function, Group,
 };
 
 mod cases;
@@ -107,12 +107,16 @@ impl<'a> Lexer<'a> {
             };
             if let Some(word) = self.arithmetic_word(for_arith) {
                 if !for_arith {
-                    let pending = st
-                        .pending_function
-                        .take()
-                        .or_else(|| function_keyword_named(&st.words));
-                    if let Some(func) = pending {
-                        self.emit_arith_function(func, word, st, visit);
+                    let coproc = is_coproc_prefix(&st.words);
+                    let pending = (!coproc)
+                        .then(|| {
+                            st.pending_function
+                                .take()
+                                .or_else(|| function_keyword_named(&st.words))
+                        })
+                        .flatten();
+                    if coproc || pending.is_some() {
+                        self.emit_isolated_arith(pending, word, st, visit);
                         return true;
                     }
                 }

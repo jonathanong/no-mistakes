@@ -13,6 +13,7 @@ impl Default for Flow<'_> {
             pending: None,
             pending_cond: None,
             seen_functions: FxHashMap::default(),
+            active_functions: FxHashMap::default(),
             redefined_functions: FxHashSet::default(),
             fn_exits: FxHashSet::default(),
             fn_nonempty: FxHashMap::default(),
@@ -20,6 +21,7 @@ impl Default for Flow<'_> {
             fn_redirected: FxHashSet::default(),
             fn_unsets: FxHashMap::default(),
             fn_dynamic_unsets: FxHashSet::default(),
+            fn_pending_calls: FxHashMap::default(),
             restart: None,
         }
     }

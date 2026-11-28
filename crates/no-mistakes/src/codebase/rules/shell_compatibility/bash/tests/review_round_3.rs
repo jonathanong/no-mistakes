@@ -191,3 +191,93 @@ fn nested_multiline_double_parens_stay_linear() {
     }
     let _ = analyze(&script);
 }
+
+#[test]
+fn untracked_copy_source_stays_uncertain_not_empty() {
+    reports(
+        "set -u\nsource[0]=x\ngate=(\"${source[@]}\")\nbad=()\nif [[ ${#gate[@]} -gt 0 ]]; then : \"${bad[@]}\"; fi\n",
+        "bad",
+        5,
+    );
+}
+
+#[test]
+fn forward_referenced_function_effects_resolve_at_call_site() {
+    reports(
+        "outer() { turn_on_nounset; }\nturn_on_nounset() { set -u; }\na=()\nouter\nprintf '%s\\n' \"${a[@]}\"\n",
+        "a",
+        5,
+    );
+    quiet(
+        "outer() { turn_on_nounset; }\na=()\nouter\nturn_on_nounset() { set -u; }\nprintf '%s\\n' \"${a[@]}\"\n",
+    );
+    reports(
+        "set -u\nitems=(x)\nouter() { wipe; }\nwipe() { items=(); }\nouter\n: \"${items[@]}\"\n",
+        "items",
+        6,
+    );
+    reports(
+        "turn_on_nounset() { deep; }\nouter() { turn_on_nounset; }\ndeep() { set -u; }\na=()\nouter\n: \"${a[@]}\"\n",
+        "a",
+        6,
+    );
+}
+
+#[test]
+fn builtin_unset_removes_function_exit_summary() {
+    reports(
+        "set -u\nstop_here() { exit 1; }\na=()\nbuiltin unset -f stop_here\n[[ ${#a[@]} -eq 0 ]] && stop_here\n: \"${a[@]}\"\n",
+        "a",
+        6,
+    );
+}
+
+#[test]
+fn brace_group_on_left_of_and_or_keeps_writes() {
+    quiet("set -u\na=()\n{ a=(ready); } && :\nprintf '%s\\n' \"${a[@]}\"\n");
+    quiet("set -u\na=()\n{ a=(ready); } || :\nprintf '%s\\n' \"${a[@]}\"\n");
+    reports(
+        "set -u\na=()\n{ a=(ready); } | cat\nprintf '%s\\n' \"${a[@]}\"\n",
+        "a",
+        4,
+    );
+}
+
+#[test]
+fn quoted_zero_in_numeric_length_guard_protects_expansion() {
+    quiet("set -u\na=()\n[ \"${#a[@]}\" -eq '0' ] && exit\nprintf '%s\\n' \"${a[@]}\"\n");
+    quiet("set -u\na=()\n[[ \"${#a[@]}\" -gt \"0\" ]] || exit\nprintf '%s\\n' \"${a[@]}\"\n");
+    reports(
+        "set -u\na=()\n[ \"${#a[@]}\" -eq \"$z\" ] && exit\nprintf '%s\\n' \"${a[@]}\"\n",
+        "a",
+        4,
+    );
+}
+
+#[test]
+fn case_insensitive_unset_keeps_other_case_live() {
+    reports(
+        "set -u\nITEMS=(x)\nbad=()\nnormalized=\"${target,,}\"\ncase \"$normalized\" in\n  items) unset \"$target\" ;;\nesac\nif [[ ${#ITEMS[@]} -gt 0 ]]; then\n  : \"${bad[@]}\"\nfi\n",
+        "bad",
+        9,
+    );
+}
+
+#[test]
+fn coproc_bodies_do_not_promote_parent_facts() {
+    reports(
+        "set -u\nitems=()\ncoproc {\n  [[ ${#items[@]} -gt 0 ]] || exit 1\n}\nprintf '%s\\n' \"${items[@]}\"\n",
+        "items",
+        6,
+    );
+    reports(
+        "set -u\nitems=()\ncoproc MYPROC {\n  [[ ${#items[@]} -gt 0 ]] || exit 1\n}\nprintf '%s\\n' \"${items[@]}\"\n",
+        "items",
+        6,
+    );
+    reports(
+        "set -u\nitems=()\ncoproc if true; then\n  [[ ${#items[@]} -gt 0 ]] || exit 1\nfi\nprintf '%s\\n' \"${items[@]}\"\n",
+        "items",
+        6,
+    );
+}

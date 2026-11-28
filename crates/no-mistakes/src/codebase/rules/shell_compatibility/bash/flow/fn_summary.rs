@@ -1,7 +1,6 @@
 use super::{
     super::{
         frames::{Frame, Group},
-        state::ArrayState,
         write_sets::WriteSets,
     },
     Flow,
@@ -10,33 +9,39 @@ use crate::fx::{FxHashMap, FxHashSet};
 
 #[derive(Clone)]
 pub(in super::super) struct FnSummaries<'a> {
+    pub(super) active: FxHashMap<&'a str, usize>,
     pub(super) exits: FxHashSet<&'a str>,
     pub(super) nonempty: FxHashMap<&'a str, FxHashSet<String>>,
     pub(super) nounset: FxHashMap<&'a str, bool>,
     pub(super) redirected: FxHashSet<&'a str>,
     pub(super) unsets: FxHashMap<&'a str, FxHashMap<String, bool>>,
     pub(super) dynamic_unsets: FxHashSet<&'a str>,
+    pub(super) pending_calls: FxHashMap<&'a str, Vec<(String, bool)>>,
 }
 
 impl<'a> Flow<'a> {
     pub(super) fn snapshot_fns(&self) -> FnSummaries<'a> {
         FnSummaries {
+            active: self.active_functions.clone(),
             exits: self.fn_exits.clone(),
             nonempty: self.fn_nonempty.clone(),
             nounset: self.fn_nounset.clone(),
             redirected: self.fn_redirected.clone(),
             unsets: self.fn_unsets.clone(),
             dynamic_unsets: self.fn_dynamic_unsets.clone(),
+            pending_calls: self.fn_pending_calls.clone(),
         }
     }
 
     pub(super) fn restore_fns(&mut self, saved: FnSummaries<'a>) {
+        self.active_functions = saved.active;
         self.fn_exits = saved.exits;
         self.fn_nonempty = saved.nonempty;
         self.fn_nounset = saved.nounset;
         self.fn_redirected = saved.redirected;
         self.fn_unsets = saved.unsets;
         self.fn_dynamic_unsets = saved.dynamic_unsets;
+        self.fn_pending_calls = saved.pending_calls;
     }
 
     pub(super) fn in_conditional_frame(&self) -> bool {
@@ -54,6 +59,7 @@ impl<'a> Flow<'a> {
         def_redirected: bool,
         write_sets: &WriteSets,
     ) {
+        self.active_functions.insert(name, group.open_index);
         let (exits, nonempty, nounset) = group.function_summary(
             &self.state,
             write_sets.touches(group.open_index),
@@ -91,26 +97,11 @@ impl<'a> Flow<'a> {
         } else {
             self.fn_dynamic_unsets.remove(name);
         }
-    }
-
-    pub(super) fn apply_function_call(&mut self, called: &str, conditional: bool) {
-        if let Some(nonempty) = self.fn_nonempty.get(called) {
-            for name in nonempty {
-                self.state.set_known(name, ArrayState::Nonempty);
-            }
-        }
-        if let Some(&active) = self.fn_nounset.get(called) {
-            self.state.set_nounset(active);
-        }
-        if self.fn_dynamic_unsets.contains(called) {
-            self.unset_dynamic_functions();
-        }
-        let Some(unsets) = self.fn_unsets.get(called).cloned() else {
-            return;
-        };
-        let call_cond = conditional || self.in_conditional_frame();
-        for (name, must_unset) in unsets {
-            self.unset_function_name(&name, call_cond || !must_unset);
+        if group.pending_calls.is_empty() {
+            self.fn_pending_calls.remove(name);
+        } else {
+            self.fn_pending_calls
+                .insert(name, group.pending_calls.clone());
         }
     }
 }

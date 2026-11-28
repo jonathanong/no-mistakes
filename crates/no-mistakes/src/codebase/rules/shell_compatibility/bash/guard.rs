@@ -1,5 +1,6 @@
 use super::{
     super::lex::{identifier, Word},
+    assign::{has_expansion, single_word},
     frames::Frame,
 };
 use crate::fx::{FxHashMap, FxHashSet};
@@ -41,7 +42,11 @@ impl<'a> Guard<'a> {
             [open, length, op, value, close]
                 if matches!((open.raw, close.raw), ("[[", "]]") | ("[", "]")) =>
             {
-                comparison(length.raw, op.raw, value.raw)?
+                if value.dynamic || has_expansion(value.raw) {
+                    return None;
+                }
+                let val = single_word(value.raw)?;
+                comparison(length.raw, op.raw, &val)?
             }
             [arithmetic] => parse_arithmetic(arithmetic.raw)?,
             _ => return None,

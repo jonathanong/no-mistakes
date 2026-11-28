@@ -120,13 +120,13 @@ impl<'a> Lexer<'a> {
     }
 
     pub(super) fn completes_list(&self) -> bool {
-        matches!(
-            self.rest()
-                .trim_start_matches([' ', '\t', '\r'])
-                .as_bytes()
-                .first(),
-            None | Some(b'\n' | b';' | b'#' | b')' | b'}')
-        )
+        let rest = self.rest().trim_start_matches([' ', '\t', '\r']);
+        rest.starts_with("&&")
+            || rest.starts_with("||")
+            || matches!(
+                rest.as_bytes().first(),
+                None | Some(b'\n' | b';' | b'#' | b')' | b'}')
+            )
     }
 
     pub(super) fn brace_boundary(&self) -> bool {

@@ -81,6 +81,7 @@ impl<'a> Flow<'a> {
                     saved_fns: None,
                     unset_fns: FxHashMap::default(),
                     dynamic_fn_unset: false,
+                    pending_calls: Vec::new(),
                 })));
                 self.reset_list();
             }

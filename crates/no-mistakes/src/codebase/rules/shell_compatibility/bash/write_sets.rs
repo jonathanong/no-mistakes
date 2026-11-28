@@ -28,6 +28,8 @@ pub(super) struct WriteSets {
     ci_empties_by_scope: FxHashMap<usize, FxHashSet<String>>,
     locals_by_scope: FxHashMap<usize, FxHashSet<String>>,
     dynamic_unset_scopes: FxHashSet<usize>,
+    all_functions: FxHashSet<String>,
+    forward_called: FxHashSet<String>,
     calls: FxHashMap<usize, (usize, String, bool)>,
     last_call_by_fn: FxHashMap<usize, usize>,
     empty_positions: FxHashMap<String, Vec<usize>>,
@@ -42,6 +44,15 @@ pub(super) struct WriteSets {
 impl WriteSets {
     pub fn new(commands: &[Command<'_>]) -> Self {
         let mut summary = Self::default();
+        for command in commands {
+            if let Boundary::Open {
+                function: Some((name, true)),
+                ..
+            } = command.boundary
+            {
+                summary.all_functions.insert(name.to_owned());
+            }
+        }
         let mut stack = Vec::new();
         let mut functions = FxHashMap::default();
         let mut cases = WriteCaseStack::default();
@@ -61,7 +72,13 @@ impl WriteSets {
                     if let Some(Some(cb)) = read_target.as_ref().and_then(|t| t.callback.as_ref()) {
                         return functions
                             .get(cb.as_str())
-                            .map(|&fn_idx| (fn_idx, cb.clone(), true));
+                            .map(|&fn_idx| (fn_idx, cb.clone(), true))
+                            .or_else(|| {
+                                if summary.all_functions.contains(cb.as_str()) {
+                                    summary.forward_called.insert(cb.clone());
+                                }
+                                None
+                            });
                     }
                     command_words(&command.words)
                         .find(|word| assignment(word.raw).is_none())
@@ -69,6 +86,12 @@ impl WriteSets {
                             functions
                                 .get(word.raw)
                                 .map(|&fn_idx| (fn_idx, word.raw.to_owned(), false))
+                                .or_else(|| {
+                                    if summary.all_functions.contains(word.raw) {
+                                        summary.forward_called.insert(word.raw.to_owned());
+                                    }
+                                    None
+                                })
                         })
                 })
                 .flatten();
@@ -152,6 +175,9 @@ impl WriteSets {
                         cases.close_function();
                         if brace_body {
                             functions.insert(name, writes.index);
+                            if self.forward_called.contains(name) {
+                                self.last_call_by_fn.insert(writes.index, usize::MAX);
+                            }
                         } else {
                             functions.remove(name);
                         }

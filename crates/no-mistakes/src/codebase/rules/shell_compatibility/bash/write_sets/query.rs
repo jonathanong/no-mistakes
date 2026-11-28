@@ -57,6 +57,14 @@ impl WriteSets {
         self.calls.get(&index).is_some_and(|(_, _, is_cb)| *is_cb)
     }
 
+    pub fn is_known_function(&self, name: &str) -> bool {
+        self.all_functions.contains(name)
+    }
+
+    pub fn has_dynamic_unset(&self, fn_index: usize) -> bool {
+        self.dynamic_unset_scopes.contains(&fn_index)
+    }
+
     fn last_call(&self, fn_index: usize) -> usize {
         self.last_call_by_fn
             .get(&fn_index)

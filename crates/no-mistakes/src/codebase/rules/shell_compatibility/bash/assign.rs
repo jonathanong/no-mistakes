@@ -38,11 +38,11 @@ pub(super) fn remember_array<'a>(
                 .any(|copy| state.arrays.get(*copy) == Some(&ArrayState::Nonempty))
             || (append && previous == Some(ArrayState::Nonempty));
         let maybe_empty = !nonempty
-            && ((append && previous == Some(ArrayState::MaybeEmpty))
+            && ((append && previous != Some(ArrayState::Empty))
                 || word
                     .array_copies
                     .iter()
-                    .any(|copy| state.arrays.get(*copy) == Some(&ArrayState::MaybeEmpty)));
+                    .any(|copy| state.arrays.get(*copy) != Some(&ArrayState::Empty)));
         state.write_array(name, nonempty, is_local, append);
         if maybe_empty {
             state.set_known(name, ArrayState::MaybeEmpty);
@@ -104,7 +104,7 @@ pub(super) fn forget_unset<'w, 'a: 'w>(
                     if let Some(resolved) =
                         extract_single_var(word.raw).and_then(|var| case_ctx.resolve(var))
                     {
-                        let single = resolved.names.len() == 1;
+                        let single = resolved.names.len() == 1 && !resolved.case_insensitive;
                         for name in resolved.names {
                             if resolved.case_insensitive {
                                 state.touch_ci_empty(&name);
@@ -135,7 +135,11 @@ pub(super) fn single_word(raw: &str) -> Option<String> {
 
 fn unset_element(state: &mut State, name: &str, case_ctx: &mut dyn CaseUnsetCtx) {
     state.touch(name);
-    if state.arrays.contains_key(name) {
+    if state
+        .arrays
+        .get(name)
+        .is_some_and(|s| *s != ArrayState::Empty)
+    {
         state.set_known(name, ArrayState::MaybeEmpty);
     }
     case_ctx.invalidate(name);

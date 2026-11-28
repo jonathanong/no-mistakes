@@ -15,7 +15,10 @@ fn static_word(word: &Word<'_>) -> Option<String> {
 
 impl<'a> Flow<'a> {
     pub(super) fn forget_function_unset(&mut self, words: &[&Word<'_>], conditional: bool) {
-        let mut iter = words.iter().copied().filter(|word| !word.redirect);
+        let mut iter = words.iter().copied().filter(|word| !word.redirect).peekable();
+        while iter.next_if(|word| word.raw == "builtin").is_some() {
+            iter.next_if(|word| word.raw == "--");
+        }
         if iter.next().is_none_or(|word| word.raw != "unset") {
             return;
         }
@@ -114,6 +117,7 @@ impl<'a> Flow<'a> {
     }
 
     fn clear_function_inner(&mut self, name: &str, keep_nounset: bool) {
+        self.active_functions.remove(name);
         self.fn_exits.remove(name);
         self.fn_nonempty.remove(name);
         if !keep_nounset {
@@ -122,5 +126,6 @@ impl<'a> Flow<'a> {
         self.fn_redirected.remove(name);
         self.fn_unsets.remove(name);
         self.fn_dynamic_unsets.remove(name);
+        self.fn_pending_calls.remove(name);
     }
 }

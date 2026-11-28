@@ -59,7 +59,11 @@ impl State {
             .cloned()
             .collect();
         for key in matched {
-            self.write(&key, false);
+            self.touch(&key);
+            self.conditional.remove(&key);
+            if self.arrays.get(&key) != Some(&ArrayState::Empty) {
+                self.set_known(&key, ArrayState::MaybeEmpty);
+            }
         }
         self.derived_from.retain(|k, (src, _)| {
             !k.eq_ignore_ascii_case(&lower) && !src.eq_ignore_ascii_case(&lower)
@@ -81,7 +85,9 @@ impl State {
             .cloned()
             .collect();
         for key in matched {
-            self.arrays.insert(key.clone(), ArrayState::Empty);
+            if self.arrays.get(&key) != Some(&ArrayState::Empty) {
+                self.arrays.insert(key.clone(), ArrayState::MaybeEmpty);
+            }
             self.unanalyzable.remove(&key);
             self.guarded_maybe.remove(&key);
             self.conditional.remove(&key);
