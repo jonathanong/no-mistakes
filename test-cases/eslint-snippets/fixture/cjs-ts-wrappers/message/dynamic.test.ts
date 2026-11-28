@@ -7,4 +7,5 @@ test("reads", () => {
   vt.expect(err.message).toBe("boom");
   check.call(null, err.message).toBe("x");
   check.apply(null, [err.message]).toBe("x");
+  check.apply(null, [err.message, ,]).toBe("x");
 });

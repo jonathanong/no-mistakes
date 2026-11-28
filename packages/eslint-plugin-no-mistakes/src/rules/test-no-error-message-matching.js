@@ -66,6 +66,7 @@ function isGeneratedTestPath(filename) {
 function expandArguments(args) {
   const forwarded = [];
   for (const argument of args) {
+    if (!argument) return null;
     if (argument.type !== "SpreadElement") {
       forwarded.push(argument);
       continue;
