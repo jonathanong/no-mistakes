@@ -54,7 +54,7 @@ struct UvDistribution {
 
 pub(super) fn parse(content: &str) -> Result<Vec<ResolvedPackage>, TomlError> {
     let lock: UvLock = toml::from_str(content).map_err(|_| TomlError)?;
-    if lock.version.is_none() && lock.package.is_empty() {
+    if lock.version.is_none() {
         return Err(TomlError);
     }
     lock.package.into_iter().map(package).collect()
@@ -127,7 +127,9 @@ fn git_pin(url: &str, rev: Option<&str>) -> Result<String, TomlError> {
     let pin = url
         .fragment()
         .filter(|fragment| !fragment.is_empty())
-        .unwrap_or_else(|| rev.unwrap_or_default());
+        .or(rev)
+        .filter(|pin| !pin.is_empty())
+        .ok_or(TomlError)?;
     let subdirectory = url
         .query_pairs()
         .find(|(key, _)| key == "subdirectory")

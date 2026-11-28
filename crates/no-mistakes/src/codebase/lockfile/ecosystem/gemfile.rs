@@ -92,7 +92,7 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
                 else {
                     continue;
                 };
-                pkg.fingerprint = digest.to_string();
+                pkg.fingerprint = digest;
             }
             continue;
         }
@@ -100,6 +100,9 @@ pub(crate) fn parse_checked(content: &str) -> Result<Vec<ResolvedPackage>, Gemfi
             continue;
         };
         if indent != 4 {
+            if indent < 6 && spec(trimmed).is_some() {
+                return Err(GemfileError);
+            }
             continue;
         }
         let Some((name, version, _)) = spec(trimmed) else {
@@ -126,7 +129,7 @@ fn is_header(line: &str) -> bool {
     line.chars().all(|ch| ch.is_ascii_uppercase() || ch == ' ')
 }
 
-fn spec(trimmed: &str) -> Option<(&str, &str, Option<&str>)> {
+fn spec(trimmed: &str) -> Option<(&str, &str, Option<String>)> {
     let open = trimmed.find(" (")?;
     let name = trimmed[..open].trim();
     if name.is_empty() || name.contains(' ') {
@@ -136,6 +139,39 @@ fn spec(trimmed: &str) -> Option<(&str, &str, Option<&str>)> {
     let close = after.find(')')?;
     let version = &after[..close];
     let extra = after[close + 1..].trim();
-    let digest = extra.strip_prefix("sha256=");
-    Some((name, version, digest.filter(|value| !value.is_empty())))
+    Some((name, version, checksum_fingerprint(extra)))
+}
+
+fn checksum_fingerprint(extra: &str) -> Option<String> {
+    let mut parts = Vec::new();
+    for token in extra.split(',') {
+        let Some((algo, digest)) = token.trim().split_once('=') else {
+            continue;
+        };
+        if algo.is_empty()
+            || digest.is_empty()
+            || !algo.chars().all(|ch| ch.is_ascii_alphanumeric())
+            || !digest.chars().all(|ch| ch.is_ascii_hexdigit())
+        {
+            continue;
+        }
+        parts.push((algo, digest));
+    }
+    if parts.is_empty() {
+        return None;
+    }
+    if parts.len() == 1 && parts[0].0 == "sha256" {
+        return Some(parts[0].1.to_string());
+    }
+    parts.sort_unstable();
+    let mut fingerprint = String::new();
+    for (algo, digest) in parts {
+        if !fingerprint.is_empty() {
+            fingerprint.push(',');
+        }
+        fingerprint.push_str(algo);
+        fingerprint.push('=');
+        fingerprint.push_str(digest);
+    }
+    Some(fingerprint)
 }

@@ -79,3 +79,59 @@ fn cargo_and_uv_reject_nonpositive_lockfile_format_markers() {
         }
     }
 }
+
+#[test]
+fn gemfile_rejects_a_misindented_spec_and_reads_algorithm_checksums() {
+    assert!(packages_for_diff(
+        PackageManager::Gemfile,
+        &fixture("gemfile", "bad-indent.lock")
+    )
+    .is_err());
+    let base = packages_for_diff(
+        PackageManager::Gemfile,
+        &fixture("gemfile", "checksum-algo-base.lock"),
+    )
+    .unwrap();
+    expect(
+        &base,
+        "sample-sha",
+        "1.0.0",
+        "sha512=abcd",
+        ResolutionKind::Registry,
+    );
+    expect(
+        &base,
+        "sample-list",
+        "1.0.0",
+        "sha256=2222,sha512=1111",
+        ResolutionKind::Registry,
+    );
+    assert!(base.iter().all(|package| package.name != "sample-dep"));
+    let reordered = packages_for_diff(
+        PackageManager::Gemfile,
+        &fixture("gemfile", "checksum-algo-reordered.lock"),
+    )
+    .unwrap();
+    assert_eq!(base, reordered);
+    let head = packages_for_diff(
+        PackageManager::Gemfile,
+        &fixture("gemfile", "checksum-algo-head.lock"),
+    )
+    .unwrap();
+    assert_eq!(diff(&base, &head).changed, ["sample-sha"]);
+}
+
+#[test]
+fn uv_requires_a_format_marker_and_a_git_pin() {
+    for name in [
+        "missing-format-version.lock",
+        "unpinned-git.lock",
+        "empty-rev.lock",
+    ] {
+        assert!(packages_for_diff(PackageManager::Uv, &fixture("uv", name)).is_err());
+    }
+    assert!(packages_for_diff(PackageManager::Uv, &fixture("uv", "empty.lock")).is_ok());
+    let packages =
+        packages_for_diff(PackageManager::Uv, &fixture("uv", "empty-fragment.lock")).unwrap();
+    expect(&packages, "sample", "1.0.0", "abc123", ResolutionKind::Git);
+}

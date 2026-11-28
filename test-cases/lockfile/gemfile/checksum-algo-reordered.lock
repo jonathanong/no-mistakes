@@ -1,0 +1,13 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    sample-sha (1.0.0)
+      sample-dep (~> 1.0)
+    sample-list (1.0.0)
+
+CHECKSUMS
+  sample-sha (1.0.0) sha512=abcd
+  sample-list (1.0.0) sha256=2222, sha512=1111
+
+BUNDLED WITH
+   2.5.0

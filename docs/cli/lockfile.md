@@ -53,8 +53,8 @@ Other Poetry packages use sorted file hashes, including legacy
 `[metadata.files]` and `[metadata.hashes]` representations. For a local file
 dependency, the legacy file list contributes only the matching archive hash. A Poetry directory uses its source path as the fingerprint.
 Poetry `url` and `file` sources are tarballs.
-uv git uses the commit in the URL fragment after `#`, then `rev`, and
-includes the Git subdirectory selector. uv
+uv requires a top-level `version` marker. uv git uses the commit in the URL fragment after `#`, then `rev`, and
+includes the Git subdirectory selector. A git source with neither pin is malformed. uv
 `editable`, `directory`, and `virtual` sources use the directory path as
 their fingerprint and may omit `version`. uv combines sorted wheel and
 source-distribution hashes. Direct URLs and local archives
@@ -71,10 +71,10 @@ module declaration and reads `require` lines, including `// indirect` and revisi
 names written in place of canonical versions. An empty `require ()` block
 contributes no packages.
 `replace`, `exclude`, `retract`, and `go.sum`
-are not packages. `Gemfile.lock` reads specs indented four spaces; deeper
+are not packages. `Gemfile.lock` reads specs indented four spaces. A package-shaped line at another indent is malformed, and deeper
 lines are dependencies. A `GIT` revision contributes to its fingerprint along with any `glob`
-selector and enabled submodules. A matching `CHECKSUMS` entry supplies its `sha256`
-fingerprint. A `PATH` entry uses its `remote` value and any `glob` selector as the
+selector and enabled submodules. A matching `CHECKSUMS` entry supplies its fingerprint. A lone `sha256`
+digest stays bare, and any other algorithm-tagged list is stored as sorted `algo=digest` pairs. A `PATH` entry uses its `remote` value and any `glob` selector as the
 directory fingerprint. `PLUGIN SOURCE` specs use the plugin remote as their
 fingerprint. `composer.lock` reads `packages` and `packages-dev`. A null development section contributes no packages.
 Distribution references take precedence over checksums. An unpinned archive
