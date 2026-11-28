@@ -48,6 +48,39 @@ fn ddl_expands_exactly_supported_kinds_and_unknown_values_error() {
 }
 
 #[test]
+fn transaction_control_group_expands_all_kinds_without_widening_ddl() {
+    let compiled = compile_options(&Options {
+        banned_statements: vec!["Transaction-Control".into()],
+        ..Default::default()
+    })
+    .unwrap();
+    assert_eq!(compiled.banned.len(), 8);
+    for kind in crate::codebase::postgres::TRANSACTION_CONTROL_KINDS {
+        assert!(compiled.banned.contains(*kind), "missing {kind}");
+    }
+    let ddl = compile_options(&Options {
+        banned_statements: vec!["ddl".into()],
+        ..Default::default()
+    })
+    .unwrap();
+    for kind in crate::codebase::postgres::TRANSACTION_CONTROL_KINDS {
+        assert!(!ddl.banned.contains(*kind), "ddl must not include {kind}");
+    }
+    let normalized = compile_options(&Options {
+        banned_statements: vec![
+            " start   transaction ".into(),
+            " rollback  to  savepoint ".into(),
+            " release   savepoint ".into(),
+        ],
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(normalized.banned.contains("START TRANSACTION"));
+    assert!(normalized.banned.contains("ROLLBACK TO SAVEPOINT"));
+    assert!(normalized.banned.contains("RELEASE SAVEPOINT"));
+}
+
+#[test]
 fn new_findings_honor_existing_sql_suppression() {
     let root = fixture("expanded");
     let files = [root.join("disabled.sql")];

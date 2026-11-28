@@ -27,7 +27,12 @@ pub(super) fn collect(
                             .unwrap_or_else(|| prepared_sql.tokens())
                     })
                     .collect();
-                let facts = crate::migration::policy_facts(sql, statements, &tokens);
+                let facts = crate::migration::policy_facts_with_locations(
+                    sql,
+                    statements,
+                    &tokens,
+                    policy.statement_locations,
+                );
                 (
                     facts.statement_kinds,
                     facts.setting_uses,

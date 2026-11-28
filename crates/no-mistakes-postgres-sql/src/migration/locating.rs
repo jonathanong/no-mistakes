@@ -13,7 +13,11 @@ impl<'a> Locations<'a> {
         Self { tokens }
     }
 
-    pub(super) fn statement_line(&self, statement: &sqlparser::ast::Statement) -> usize {
+    pub(super) fn statement_line(
+        &self,
+        statement: &sqlparser::ast::Statement,
+        fallback_start: Option<sqlparser::tokenizer::Location>,
+    ) -> usize {
         let anchor = match statement {
             sqlparser::ast::Statement::Drop { names, .. } => {
                 names
@@ -22,14 +26,40 @@ impl<'a> Locations<'a> {
                     .unwrap_or_else(sqlparser::tokenizer::Span::empty)
                     .start
             }
+            sqlparser::ast::Statement::Savepoint { name }
+            | sqlparser::ast::Statement::ReleaseSavepoint { name }
+            | sqlparser::ast::Statement::Rollback {
+                savepoint: Some(name),
+                ..
+            } => name.span.start,
             _ => statement.span().start,
         };
         let keyword = match statement {
             sqlparser::ast::Statement::Drop { .. } => "DROP",
             sqlparser::ast::Statement::AlterTable(_) => "ALTER",
             sqlparser::ast::Statement::Truncate(_) => "TRUNCATE",
+            sqlparser::ast::Statement::StartTransaction { begin: true, .. } => "BEGIN",
+            sqlparser::ast::Statement::StartTransaction { begin: false, .. } => "START",
+            sqlparser::ast::Statement::Commit { end: false, .. } => "COMMIT",
+            sqlparser::ast::Statement::Commit { end: true, .. } => "END",
+            sqlparser::ast::Statement::Rollback { .. } => "ROLLBACK",
+            sqlparser::ast::Statement::Savepoint { .. } => "SAVEPOINT",
+            sqlparser::ast::Statement::ReleaseSavepoint { .. } => "RELEASE",
             _ => "CREATE",
         };
+        if anchor == sqlparser::tokenizer::Location::empty() {
+            if let Some(start) = fallback_start.filter(|loc| loc.line > 0) {
+                return start.line as usize;
+            }
+            return self
+                .tokens
+                .iter()
+                .find(|token| {
+                    matches!(&token.token, Token::Word(word)
+                        if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(keyword))
+                })
+                .map_or(1, |token| token.span.start.line.max(1) as usize);
+        }
         statement_keyword_line(self.tokens, keyword, anchor)
     }
 }

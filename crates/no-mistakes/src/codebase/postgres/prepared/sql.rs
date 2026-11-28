@@ -49,9 +49,9 @@ pub(super) fn collect(
             if explain_absent && !schema_selected && !dml_selected {
                 return (path.clone(), None, None, Some(Ok(Arc::default())));
             }
-            let mut write_plan_locations = (explain_selected && !explain_absent).then(Vec::new);
+            let mut statement_locations = Vec::new();
             let parsed = prepared.map(|(source, prepared)| {
-                let parsed = prepared.parse_policy_with_locations(write_plan_locations.as_mut());
+                let parsed = prepared.parse_policy_with_locations(Some(&mut statement_locations));
                 let failed = parsed.is_err();
                 let (statements, functions, failures, statement_sources, statement_complete) = match parsed {
                     Ok(statements) => (statements, Vec::new(), Vec::new(), Vec::new(), None),
@@ -59,6 +59,7 @@ pub(super) fn collect(
                         (Vec::new(), Vec::new(), Vec::new(), Vec::new(), None)
                     }
                     Err(_) => {
+                        statement_locations.clear();
                         let recovered = crate::codebase::postgres::parse::parse_postgres_sql_lenient_with_sources(
                             source,
                             prepared.normalized(),
@@ -75,21 +76,22 @@ pub(super) fn collect(
                 };
                 (statements, functions, failures, failed, prepared, statement_sources, statement_complete)
             });
-            let write_plans = write_plan_locations.map(|locations| {
+            let write_plans = (explain_selected && !explain_absent).then(|| {
                 parsed
                     .as_ref()
                     .map(|(statements, _, _, failed, _, _, _)| {
                         let plans = if *failed {
                             explain_write_rollback::unparseable()
-                        } else if locations.len() != statements.len() {
+                        } else if statement_locations.len() != statements.len() {
                             explain_write_rollback::partial_program()
                         } else {
-                            explain_write_rollback::collect(statements, &locations)
+                            explain_write_rollback::collect(statements, &statement_locations)
                         };
                         Arc::new(plans)
                     })
                     .map_err(|error| Arc::clone(*error))
             }).or_else(|| explain_absent.then(|| Ok(Arc::default())));
+            let locs = (!statement_locations.is_empty()).then_some(statement_locations.as_slice());
             let schema = schema_selected.then(|| {
                 parsed
                     .as_ref()
@@ -103,6 +105,7 @@ pub(super) fn collect(
                             &functions,
                             failures,
                             &tokens,
+                            locs,
                         );
                         value.set_path(path.clone());
                         Arc::new(value)
@@ -123,6 +126,7 @@ pub(super) fn collect(
                             crate::codebase::postgres::statements::StatementPolicySources {
                                 bind_values: Default::default(),
                                 tokens: Some(statement_sources),
+                                statement_locations: locs,
                                 schema: schema.as_ref().and_then(|entry| entry.as_ref().ok()).map(std::sync::Arc::as_ref),
                                 functions,
                                 collect_lock_inventory: plan.postgres_lock_inventory,

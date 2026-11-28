@@ -33,18 +33,23 @@ pub(super) fn split_statement_tokens(tokens: Vec<Token>) -> Vec<Vec<Token>> {
     statements
 }
 
-/// Only a CREATE RULE action list owns unquoted, parenthesized semicolons.
-/// Ordinary malformed parentheses must not swallow later migration statements.
+/// Only a CREATE RULE action list or a CREATE FUNCTION/PROCEDURE BEGIN ATOMIC
+/// body owns unquoted semicolons. Ordinary malformed parentheses must not
+/// swallow later migration statements.
 #[derive(Default)]
 pub(super) struct StatementBoundary {
     prefix: u8,
     rule: bool,
+    routine: bool,
+    saw_begin: bool,
+    atomic: bool,
+    atomic_cases: usize,
     depth: usize,
 }
 
 impl StatementBoundary {
     pub(super) fn terminator(&mut self, token: &Token) -> bool {
-        if matches!(token, Token::SemiColon) && (!self.rule || self.depth == 0) {
+        if matches!(token, Token::SemiColon) && (!self.rule || self.depth == 0) && !self.atomic {
             *self = Self::default();
             return true;
         }
@@ -55,6 +60,18 @@ impl StatementBoundary {
             matches!(token, Token::Word(word)
             if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(expected))
         };
+        if self.atomic {
+            if word("CASE") {
+                self.atomic_cases += 1;
+            } else if word("END") {
+                if self.atomic_cases > 0 {
+                    self.atomic_cases -= 1;
+                } else {
+                    self.atomic = false;
+                }
+            }
+            return false;
+        }
         self.prefix = match self.prefix {
             0 if word("CREATE") => 1,
             1 if word("OR") => 2,
@@ -63,8 +80,20 @@ impl StatementBoundary {
                 self.rule = true;
                 4
             }
+            1 | 3 if word("FUNCTION") || word("PROCEDURE") => {
+                self.routine = true;
+                4
+            }
             _ => 4,
         };
+        if self.routine {
+            if self.saw_begin && word("ATOMIC") {
+                self.atomic = true;
+                self.saw_begin = false;
+                return false;
+            }
+            self.saw_begin = word("BEGIN");
+        }
         if self.rule {
             match token {
                 Token::LParen => self.depth += 1,

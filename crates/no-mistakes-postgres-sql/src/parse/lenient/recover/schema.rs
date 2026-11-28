@@ -28,6 +28,11 @@ fn ddl_start_at(tokens: &[Token], index: usize) -> Option<usize> {
             | Keyword::DELETE
             | Keyword::MERGE,
         ) => Some(index),
+        Some(Keyword::COMMIT | Keyword::ROLLBACK)
+            if index > 0 && guarded_prefix(&tokens[..index]) =>
+        {
+            Some(index)
+        }
         _ => None,
     }
 }
@@ -176,7 +181,12 @@ pub(super) fn recover(
     {
         return None;
     }
-    let utility = utility_start(tokens, start);
+    let utility = utility_start(tokens, start)
+        || procedural_body
+            && matches!(
+                keyword_of(&tokens[start]),
+                Some(Keyword::COMMIT | Keyword::ROLLBACK)
+            );
     if (utility || action.is_some()) && parser.peek_token().token != Token::EOF {
         return None;
     }

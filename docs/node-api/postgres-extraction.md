@@ -224,8 +224,9 @@ Node export or declaration.
 configuration preserves SQL-file-only behavior. Rule application `include` and
 `exclude` scope executor files; `sqlInclude` still selects SQL files. See the
 [statement policy](../rules/postgres-sql-statement-policy.md) for test-helper DDL
-and `unanalyzableSql` examples. Its `bannedStatements` accepts the `ddl` group
-and the rule's documented statement kinds; `bannedSettings` checks configured
+and `unanalyzableSql` examples. Its `bannedStatements` accepts the `ddl` and
+`transaction-control` groups and the rule's documented statement kinds;
+`bannedSettings` checks configured
 static PostgreSQL setting names in `SET`, `set_config()`, and database/system
 `SET` statements. These options use the same asynchronous `check()` API and
 rule configuration, with no additional Node export.

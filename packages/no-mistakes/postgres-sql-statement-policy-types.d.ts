@@ -7,7 +7,7 @@ export interface PostgresSqlStatementPolicyOptions {
   include?: string[];
   exclude?: string[];
   sqlInclude?: string[];
-  /** Omit for the default statement kinds, or pass [] to disable statement-kind checks. */
+  /** Omit for the default statement kinds, pass [] to disable, or list kinds / `ddl` / `transaction-control`. */
   bannedStatements?: string[];
   bannedSettings?: string[];
   /** Exact clause names to ban. Defaults to []. */

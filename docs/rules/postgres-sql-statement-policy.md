@@ -17,18 +17,25 @@ A `projects: [<name>]` entry inherits [`projects.<name>.postgres`](../configurat
 Flags configured PostgreSQL statement kinds, settings, and clauses in matching
 SQL files and configured JavaScript/TypeScript executor calls. Use this to keep tests,
 helpers, or seed files from changing shared database state or bypassing
-constraints. The rule recognizes 29 statement kinds: `CREATE TABLE`,
+constraints, or to stop migrations from adding explicit transaction-control
+statements when the migration runner already owns the transaction. The rule
+recognizes 37 statement kinds: 29 DDL/truncate kinds (`CREATE TABLE`,
 `ALTER TABLE`, `CREATE INDEX`, `CREATE VIEW`, `TRUNCATE`, `DROP INDEX`,
 `DROP VIEW`, `CREATE DATABASE`, `DROP DATABASE`, `ALTER DATABASE`,
 `ALTER SYSTEM`, `CREATE SCHEMA`, `ALTER SCHEMA`, `DROP SCHEMA`,
 `CREATE TRIGGER`, `DROP TRIGGER`, `CREATE FUNCTION`, `CREATE PROCEDURE`,
 `DROP FUNCTION`, `DROP PROCEDURE`, `DROP TABLE`, `CREATE TYPE`, `DROP TYPE`,
 `ALTER VIEW`, `ALTER TRIGGER`, `ALTER FUNCTION`, `ALTER PROCEDURE`,
-`ALTER INDEX`, and `ALTER TYPE`. `CREATE UNIQUE INDEX` counts as `CREATE INDEX`; materialized views
+`ALTER INDEX`, and `ALTER TYPE`) and 8 transaction-control kinds (`BEGIN`,
+`START TRANSACTION`, `COMMIT`, `END`, `ROLLBACK`, `SAVEPOINT`,
+`RELEASE SAVEPOINT`, and `ROLLBACK TO SAVEPOINT`). `CREATE UNIQUE INDEX` counts as `CREATE INDEX`; materialized views
 count as `CREATE VIEW` / `DROP VIEW`; and `CREATE TEMP TABLE` counts as
 `CREATE TABLE`. `ALTER TABLE` also covers `ENABLE` and `DISABLE TRIGGER`.
 `CREATE OR REPLACE FUNCTION` and `CREATE OR REPLACE PROCEDURE` map to their
-respective `CREATE` kinds.
+respective `CREATE` kinds. PL/pgSQL `BEGIN` and `END` block delimiters inside
+`DO`, function, and procedure bodies are not reported as transaction-control
+statements, while explicit `COMMIT` or `ROLLBACK` statements inside routine
+bodies are still reported.
 
 The rule uses shared schema facts (`extract_migration_facts`,
 `collect_postgres_facts`) including direct statements peeled out of executable
@@ -89,10 +96,12 @@ configured named factory imports, and `executorTypeNames` enables parameters
 annotated with configured imported executor types. `trustedSqlTags` accepts
 `{ module, name }` entries, as in `postgres-sql-shape-policy`.
 
-When supplied, `bannedStatements` accepts any recognized statement kind or the
-case-insensitive `ddl` group, which expands to all 29 kinds listed above. An
-explicit empty list disables all statement-kind checks. Kind names ignore case
-and repeated whitespace. An unknown kind or group is a configuration error.
+When supplied, `bannedStatements` accepts any recognized statement kind, the
+case-insensitive `ddl` group (which expands to all 29 DDL/truncate kinds), or
+the case-insensitive `transaction-control` group (which expands to all 8
+transaction-control kinds). An explicit empty list disables all statement-kind
+checks. Kind names ignore case and repeated whitespace. An unknown kind or
+group is a configuration error.
 
 `include` and `exclude` may be set on the rule entry or under `options`.
 Both placements narrow SQL files and JavaScript/TypeScript executor sources.
@@ -238,6 +247,57 @@ DROP VIEW widget_summary CASCADE; -- no-mistakes-disable-line postgres-sql-state
 DROP VIEW widget_summary CASCADE;
 ```
 
+## Transaction-control policy example
+
+When a migration runner already wraps each migration file in a transaction,
+adding `BEGIN`, `COMMIT`, `ROLLBACK`, or savepoints inside a migration breaks
+transactional guarantees or conflicts with the runner. Scope the ban to
+migration files so standalone scripts outside that glob remain unaffected.
+
+```yaml
+rules:
+  - rule: postgres-sql-statement-policy
+    scope: repository
+    options:
+      sqlInclude: ['migrations/**/*.sql']
+      bannedStatements: [transaction-control]
+```
+
+Counterexample: explicit transaction control in a runner-managed migration.
+
+```sql
+-- migrations/001_create_widgets.sql
+BEGIN;
+CREATE TABLE widgets (id uuid PRIMARY KEY);
+COMMIT;
+```
+
+Fix: remove explicit transaction-control statements so the migration runner
+owns the transaction.
+
+```sql
+-- migrations/001_create_widgets.sql
+CREATE TABLE widgets (id uuid PRIMARY KEY);
+```
+
+For an intentional exception (such as a migration configured to run outside a
+transaction), suppress the statement or file:
+
+```sql
+-- no-mistakes-disable-next-line postgres-sql-statement-policy
+BEGIN;
+```
+
+```sql
+COMMIT; -- no-mistakes-disable-line postgres-sql-statement-policy
+```
+
+```sql
+-- no-mistakes-disable-file postgres-sql-statement-policy
+BEGIN;
+COMMIT;
+```
+
 ## Why and when
 
 Statement kinds come from SQL statements, not comment banners or identifiers
@@ -261,8 +321,10 @@ statements inside supported PL/pgSQL bodies and static `EXECUTE` strings.
 TABLE`, `ALTER TABLE`, `CREATE INDEX`, `CREATE VIEW`, `TRUNCATE`, `DROP INDEX`,
 and `DROP VIEW`; `CREATE UNIQUE INDEX` and materialized views map to those
 categories.
-`ddl` expands to all 29 recognized kinds. `bannedStatements: []` disables
-statement-kind checks; `bannedSettings` defaults to `[]`
+`ddl` expands to all 29 DDL/truncate kinds; `transaction-control` expands to
+all 8 transaction-control kinds (`BEGIN`, `START TRANSACTION`, `COMMIT`, `END`,
+`ROLLBACK`, `SAVEPOINT`, `RELEASE SAVEPOINT`, and `ROLLBACK TO SAVEPOINT`).
+`bannedStatements: []` disables statement-kind checks; `bannedSettings` defaults to `[]`
 and matches literal setting names in `SET`, `SET LOCAL`, `SET SESSION`,
 supported `set_config()` calls, and database/system `SET` statements. Kind and
 group names are case-insensitive and ignore repeated whitespace; unknown kinds

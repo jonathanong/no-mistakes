@@ -109,7 +109,7 @@ pub use locking::{
     JoinEquality, LockingSelectMetadata,
 };
 pub use migration::extract_migration_facts;
-pub(crate) use migration::SUPPORTED_KINDS;
+pub(crate) use migration::{SUPPORTED_KINDS, TRANSACTION_CONTROL_KINDS};
 pub use offset::{
     sql_file_offset_uses, sql_has_offset_clause, sql_offset_uses, OffsetUse, SqlOffsetFact,
 };

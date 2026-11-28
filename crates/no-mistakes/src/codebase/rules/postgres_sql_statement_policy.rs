@@ -116,7 +116,15 @@ pub(in crate::codebase::rules) fn compile_options(opts: &Options) -> Result<Comp
                     .iter()
                     .map(|kind| (*kind).to_string()),
             );
-        } else if crate::codebase::postgres::SUPPORTED_KINDS.contains(&kind.as_str()) {
+        } else if kind == "TRANSACTION-CONTROL" {
+            banned.extend(
+                crate::codebase::postgres::TRANSACTION_CONTROL_KINDS
+                    .iter()
+                    .map(|kind| (*kind).to_string()),
+            );
+        } else if crate::codebase::postgres::SUPPORTED_KINDS.contains(&kind.as_str())
+            || crate::codebase::postgres::TRANSACTION_CONTROL_KINDS.contains(&kind.as_str())
+        {
             banned.insert(kind);
         } else {
             anyhow::bail!("{RULE_ID}: unknown bannedStatements kind or group `{value}`");

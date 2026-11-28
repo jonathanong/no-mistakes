@@ -18,44 +18,40 @@ pub use recovery::recovery_failures;
 
 pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
     let parsed = super::parse::parse_postgres_sql_with_function_sources(sql);
-    extract_located_migration_facts(sql, parsed)
+    extract_located_migration_facts(sql, parsed, false)
 }
 
 pub(super) fn extract_migration_body_facts(sql: &str) -> SqlSchemaFileFacts {
     let parsed = super::parse::parse_postgres_body_with_function_sources(sql);
-    extract_located_migration_facts(sql, parsed)
+    extract_located_migration_facts(sql, parsed, true)
 }
 
 fn extract_located_migration_facts(
     sql: &str,
     parsed: Vec<super::parse::LocatedStatement>,
+    procedural_body: bool,
 ) -> SqlSchemaFileFacts {
     let unanalyzable_statements = recovery_failures(&parsed);
     let (located, functions) = super::parse::partition_function_sources(parsed);
     let sources: Vec<_> = located
         .iter()
-        .map(|located| {
-            located
-                .source
-                .clone()
-                .or_else(|| located.chunk_tokens.clone())
-        })
+        .map(|item| item.source.clone().or_else(|| item.chunk_tokens.clone()))
         .collect();
     let tokens: Vec<_> = sources
         .iter()
         .map(|source| source.as_deref().unwrap_or_default())
         .collect();
-    let statements: Vec<_> = located
-        .into_iter()
-        .map(|located| located.statement)
-        .collect();
-    extract_from_parsed_with_failures(
+    let statements: Vec<_> = located.into_iter().map(|item| item.statement).collect();
+    let mut facts = extract_parsed_migration_facts(
         sql,
         &statements,
-        &functions,
         &unanalyzable_statements,
         &tokens,
-    )
+        None,
+        procedural_body,
+    );
+    facts.function_calls.extend_from_slice(&functions);
+    facts
 }
 
 #[doc(hidden)]
@@ -65,20 +61,31 @@ pub fn extract_from_parsed_with_failures(
     functions: &[super::SqlFunctionCallFact],
     failures: &[super::types::SqlUnanalyzableStatement],
     tokens: &[&[sqlparser::tokenizer::TokenWithSpan]],
+    statement_locations: Option<&[sqlparser::tokenizer::Location]>,
 ) -> SqlSchemaFileFacts {
-    let mut facts = extract_parsed_migration_facts(sql, statements, failures, tokens);
+    let mut facts = extract_parsed_migration_facts(
+        sql,
+        statements,
+        failures,
+        tokens,
+        statement_locations,
+        false,
+    );
     facts.function_calls.extend_from_slice(functions);
     facts
 }
 
+pub(crate) use statements::policy_facts_with_locations;
 #[doc(hidden)]
-pub use statements::{policy_facts, SUPPORTED_KINDS};
+pub use statements::{policy_facts, SUPPORTED_KINDS, TRANSACTION_CONTROL_KINDS};
 
 fn extract_parsed_migration_facts(
     sql: &str,
     statements: &[Statement],
     failures: &[super::types::SqlUnanalyzableStatement],
     tokens: &[&[sqlparser::tokenizer::TokenWithSpan]],
+    statement_locations: Option<&[sqlparser::tokenizer::Location]>,
+    procedural_body: bool,
 ) -> SqlSchemaFileFacts {
     let mut facts = SqlSchemaFileFacts {
         unanalyzable_statements: failures
@@ -108,8 +115,13 @@ fn extract_parsed_migration_facts(
         facts
             .declared_identifiers
             .extend(identifiers::collect(&mut identifier_locations, statement));
-        let line = locations.statement_line(statement);
-        statements::record(line, statement, tokens, &mut facts);
+        let line = locations.statement_line(
+            statement,
+            statement_locations
+                .and_then(|locs| locs.get(ordinal))
+                .copied(),
+        );
+        statements::record(line, statement, tokens, procedural_body, &mut facts);
         table_events::record(statement, &mut table_positions, &mut facts.table_events);
         match statement {
             Statement::CreateIndex(index) => {

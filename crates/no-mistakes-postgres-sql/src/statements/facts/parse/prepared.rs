@@ -24,7 +24,8 @@ pub(super) fn extract(
     );
     super::super::locations::work::statement_extraction();
     let prepared = PreparedSql::new(sql);
-    let parsed = prepared.parse_policy();
+    let mut statement_locations = Vec::new();
+    let parsed = prepared.parse_policy_with_locations(Some(&mut statement_locations));
     let parse_failed = parsed.is_err();
     match parsed {
         Ok(statements) => super::super::projection::extract(
@@ -34,7 +35,10 @@ pub(super) fn extract(
             super::super::StatementSources {
                 projection,
                 locations,
-                policy,
+                policy: super::super::StatementPolicySources {
+                    statement_locations: Some(&statement_locations),
+                    ..policy
+                },
                 ..Default::default()
             },
             false,

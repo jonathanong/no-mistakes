@@ -37,11 +37,7 @@ pub(super) fn scan(
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
                 line: statement.line.max(1),
-                message: format!(
-                    "{rel}:{}: SQL files matching this rule must not use {}",
-                    statement.line.max(1),
-                    statement.kind
-                ),
+                message: statement_message(&rel, statement.line.max(1), &statement.kind, false),
                 import: None,
                 target: Some(statement.kind.clone()),
             });
@@ -129,10 +125,11 @@ pub(super) fn scan(
                             rule: RULE_ID.into(),
                             file: rel.clone(),
                             line: statement.line.max(1),
-                            message: format!(
-                                "{rel}:{}: executed SQL must not use {}",
+                            message: statement_message(
+                                &rel,
                                 statement.line.max(1),
-                                statement.kind
+                                &statement.kind,
+                                true,
                             ),
                             import: None,
                             target: Some(statement.kind.clone()),
@@ -144,6 +141,19 @@ pub(super) fn scan(
     }
     findings.sort();
     Ok(findings)
+}
+
+fn statement_message(file: &str, line: usize, kind: &str, embedded: bool) -> String {
+    let subject = if embedded {
+        "executed SQL"
+    } else {
+        "SQL files matching this rule"
+    };
+    if crate::codebase::postgres::TRANSACTION_CONTROL_KINDS.contains(&kind) {
+        format!("{file}:{line}: {subject} must not use {kind}; the migration runner already owns the transaction")
+    } else {
+        format!("{file}:{line}: {subject} must not use {kind}")
+    }
 }
 
 fn unanalyzable(file: &str, line: usize) -> RuleFinding {
