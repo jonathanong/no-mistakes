@@ -8,6 +8,8 @@ use crate::config::v2::schema::{
 use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use std::path::{Path, PathBuf};
 
+mod shapes;
+
 fn sinks() -> Vec<Sink> {
     vec![Sink {
         kind: "store".to_string(),
@@ -114,7 +116,10 @@ fn direct_sink_clean_call_unresolved_body_and_duplicate_name() {
         "fn fetch(item: &str) { example.store.read_row(item); }\nfn fetch(item: &str) { example.store.read_row(item); }\nfn load(items: &[&str]) {\n    for item in items {\n        fetch(item);\n    }\n}\n",
         "rs",
     );
-    assert!(duplicate.iter().any(|finding| !finding.causes.is_empty()));
+    assert_eq!(duplicate.len(), 1);
+    assert_eq!(duplicate[0].causes[0].kind, "unresolved-dispatch");
+    assert!(duplicate[0].target.is_none());
+    assert!(!duplicate[0].message.contains("read_row"));
 }
 
 #[test]

@@ -1,8 +1,10 @@
-use crate::codebase::lang_frontends::{mask_strings, strip_comments_keep_strings};
-
+mod calls;
+mod prepare;
 mod syntax;
-pub(super) use syntax::split_separator;
-use syntax::{block_header, brace_header, calls, end_count, indent_header, opener_count};
+mod walk;
+
+pub(super) use calls::split_separator;
+use calls::{calls, per_item_callees, trailing_callee};
 
 #[derive(Default)]
 pub(super) struct Scan {
@@ -31,7 +33,7 @@ enum Header {
 
 enum Frame {
     Function { name: String, open: usize },
-    Loop { construct: &'static str, open: usize },
+    Loop { construct: &'static str, open: usize, brace: bool },
 }
 
 impl Frame {
@@ -52,88 +54,54 @@ pub(super) fn style_for(extension: &str) -> Option<Style> {
 }
 
 pub(super) fn scan(source: &str, style: Style) -> Scan {
-    let prepared = mask_strings(&strip_comments_keep_strings(source));
+    let prepared = prepare::prepare(source, matches!(style, Style::Indent));
     match style {
-        Style::Brace => scan_brace(&prepared),
-        Style::Indent => scan_indent(&prepared),
-        Style::Block => scan_block(&prepared),
+        Style::Brace => walk::scan_brace(&prepared),
+        Style::Indent => walk::scan_indent(&prepared),
+        Style::Block => walk::scan_block(&prepared),
     }
 }
 
-fn scan_brace(source: &str) -> Scan {
-    let mut scan = Scan::default();
-    let mut stack = Vec::new();
-    let mut depth = 0usize;
-    for (index, line) in source.lines().enumerate() {
-        let line_no = index as u32 + 1;
-        if let Some(header) = brace_header(line) {
-            push(&mut stack, &mut scan, header, depth);
+#[derive(Default)]
+struct Carry {
+    name: String,
+}
+
+impl Carry {
+    fn clear(&mut self) {
+        self.name.clear();
+    }
+
+    fn note(&mut self, line: &str) {
+        self.name = if line.trim().is_empty() || line.contains('(') {
+            String::new()
         } else {
-            record(&mut scan, &stack, line, line_no);
-        }
-        for ch in line.chars() {
-            match ch {
-                '{' => depth += 1,
-                '}' => {
-                    depth = depth.saturating_sub(1);
-                    pop_to(&mut stack, depth);
-                }
-                _ => {}
-            }
-        }
+            trailing_callee(line).unwrap_or("").to_string()
+        };
     }
-    scan
-}
 
-fn scan_indent(source: &str) -> Scan {
-    let mut scan = Scan::default();
-    let mut stack: Vec<Frame> = Vec::new();
-    for (index, line) in source.lines().enumerate() {
+    fn calls_on(&mut self, line: &str) -> Vec<String> {
         if line.trim().is_empty() {
-            continue;
+            self.clear();
+            return Vec::new();
         }
-        let indent = line.chars().take_while(|ch| *ch == ' ' || *ch == '\t').count();
-        while stack.last().is_some_and(|frame| indent <= frame.open()) {
-            stack.pop();
-        }
-        if let Some(header) = indent_header(line) {
-            push(&mut stack, &mut scan, header, indent);
-            continue;
-        }
-        record(&mut scan, &stack, line, index as u32 + 1);
-    }
-    scan
-}
-
-fn scan_block(source: &str) -> Scan {
-    let mut scan = Scan::default();
-    let mut stack = Vec::new();
-    let mut depth = 0usize;
-    for (index, line) in source.lines().enumerate() {
-        if line.trim().is_empty() {
-            continue;
-        }
-        if let Some(header) = block_header(line) {
-            push(&mut stack, &mut scan, header, depth);
+        let found = if line.trim_start().starts_with('(') && !self.name.is_empty() {
+            calls(&format!("{}{}", self.name, line))
         } else {
-            record(&mut scan, &stack, line, index as u32 + 1);
-        }
-        depth += opener_count(line);
-        for _ in 0..end_count(line) {
-            depth = depth.saturating_sub(1);
-            pop_to(&mut stack, depth);
-        }
+            calls(line)
+        };
+        self.note(line);
+        found
     }
-    scan
 }
 
-fn push(stack: &mut Vec<Frame>, scan: &mut Scan, header: Header, open: usize) {
+fn push(stack: &mut Vec<Frame>, scan: &mut Scan, header: Header, open: usize, brace: bool) {
     match header {
         Header::Function(name) => {
             scan.functions.push(name.clone());
             stack.push(Frame::Function { name, open });
         }
-        Header::Loop(construct) => stack.push(Frame::Loop { construct, open }),
+        Header::Loop(construct) => stack.push(Frame::Loop { construct, open, brace }),
     }
 }
 
@@ -143,25 +111,69 @@ fn pop_to(stack: &mut Vec<Frame>, depth: usize) {
     }
 }
 
-fn record(scan: &mut Scan, stack: &[Frame], line: &str, line_no: u32) {
-    let function = stack.iter().rev().find_map(|frame| match frame {
-        Frame::Function { name, .. } => Some(name.clone()),
-        Frame::Loop { .. } => None,
-    });
-    let construct = stack.iter().rev().find_map(|frame| match frame {
-        Frame::Loop { construct, .. } => Some(*construct),
-        Frame::Function { .. } => None,
-    });
-    for callee in calls(line) {
+fn close_brace_loops(stack: &mut Vec<Frame>, depth: &mut usize, line: &str, opened_brace: bool) {
+    let mut closers = line.matches('}').count().saturating_sub(line.matches('{').count());
+    if opened_brace && line.contains('}') && closers == 0 {
+        closers = 1;
+    }
+    while closers > 0 {
+        let open = match stack.last() {
+            Some(Frame::Loop { brace: true, open, .. }) => *open,
+            _ => break,
+        };
+        *depth = open;
+        stack.pop();
+        closers -= 1;
+    }
+}
+
+fn record(scan: &mut Scan, stack: &[Frame], line: &str, line_no: u32, carry: &mut Carry) {
+    let callees = carry.calls_on(line);
+    record_callees(scan, stack, line_no, &callees);
+}
+
+fn record_loop_line(scan: &mut Scan, stack: &[Frame], line: &str, line_no: u32, carry: &mut Carry) {
+    let construct = match stack.last() {
+        Some(Frame::Loop { construct, .. }) => *construct,
+        _ => return,
+    };
+    let callees = per_item_callees(line, construct);
+    carry.note(line);
+    record_callees(scan, stack, line_no, &callees);
+}
+
+fn record_callees(scan: &mut Scan, stack: &[Frame], line_no: u32, callees: &[String]) {
+    let (function, construct) = enclosing(stack);
+    for callee in callees {
+        if let Some(function) = &function {
+            scan.body_calls.push((function.clone(), callee.clone()));
+        }
         if let Some(construct) = construct {
             scan.loops.push(LoopCall {
                 line: line_no,
-                callee,
+                callee: callee.clone(),
                 construct,
                 function: function.clone().unwrap_or_else(|| "<module>".to_string()),
             });
-        } else if let Some(function) = &function {
-            scan.body_calls.push((function.clone(), callee));
         }
     }
+}
+
+fn enclosing(stack: &[Frame]) -> (Option<String>, Option<&'static str>) {
+    let mut function = None;
+    let mut construct = None;
+    for frame in stack.iter().rev() {
+        match frame {
+            Frame::Function { name, .. } => {
+                function = Some(name.clone());
+                break;
+            }
+            Frame::Loop { construct: label, .. } => {
+                if construct.is_none() {
+                    construct = Some(*label);
+                }
+            }
+        }
+    }
+    (function, construct)
 }

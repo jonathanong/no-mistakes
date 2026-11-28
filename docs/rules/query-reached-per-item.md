@@ -426,16 +426,23 @@ of a configured sink module. A qualified head that is not that module
 (`other.module.lookup`, `self.db.query`, `crate::db::query`) is unproven. The
 path is then `enclosing → local → export`.
 The enclosing name is the nearest function, or `<module>` at file scope. A Go
-method `func (s *Server) load` uses `load`. The `{` of a brace header must be
-on the header line. Python uses indentation. Ruby and Elixir use
-`def`/`fun`/`end` and `for`/`while`/`do`/`end`. `else`, `elsif`, `elseif`,
-`elif`, and a postfix `if` or `unless` do not open a block. `begin`/`end` and
-`value = if` do. A nested `if`/`else`/`end` stays inside the loop, and the loop
-closes on its own `end`. `each` is a loop when the line also has
-` do`, ends with `do`, or contains `{`. `forEach` and `ForEach` are loops when
-the header line contains `{`. A member call on a receiver that is not a
-configured module (`item.fetch`, `$item->fetch`), a second hop, a duplicate
-function name, or a file that cannot be read is unproven. A call on a
+method `func (s *Server) load` uses `load`. A brace header's `{` may be on that
+line or on the next non-empty line. Python uses indentation, including
+`async for`, and ignores indentation inside `()`, `[]`, and `{}`. `//` in
+Python is floor division, not a comment. Ruby and Elixir use `def`/`fun`/`end`
+and `for`/`while`/`do`/`end`. `else`, `elsif`, `elseif`, `elif`, and a postfix
+`if` or `unless` do not open a block. `begin`/`end` and `value = if` do. A
+nested `if`/`else`/`end` stays inside the loop, and the loop closes on its own
+`end`. An `each` block written with `{` closes on `}`. `each` is a loop when
+the line also has ` do`, ends with `do`, or contains `{`. `forEach` and
+`ForEach` are loops when the header line contains `{`, or when that `{` is on
+the next non-empty line. A `while` condition is per-item. The iterable of `for`
+or `foreach` is not. A function nested in a loop is a boundary, so a call
+inside that function is not a call of the outer loop. A call inside a helper's
+own loop still counts as a call in that helper, including one bare hop from an
+outer loop. A space before `(` is still a call. A member call on a receiver
+that is not a configured module (`item.fetch`, `$item->fetch`), a second hop, a
+duplicate function name, or a file that cannot be read is unproven. A call on a
 configured module whose export does not match is silent. The `call-sites`
 query stays TypeScript-only. No shipped language frontend is declined.
 

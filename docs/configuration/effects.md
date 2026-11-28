@@ -31,13 +31,15 @@ client-member spellings, such as `sessionValkeyClient.scan`, also follow proven
 receiver bindings through aliases, parameters, and defaults.
 
 `targets` adds binding-aware matching for the `effects` query and the per-item
-rule. When that rule sets `options.languages`, the same `targets` identify a
-proven per-item call in the named language. `returnedExecutors`,
+rule. When that rule sets `options.languages`, a proven call is an explicit
+qualified `module.export` in the named language; named imports, namespace calls,
+and lexical aliases are not resolved there. `returnedExecutors`,
 `typedExecutors`, and `returnedMembers` stay on the TypeScript path. Each selector
 requires a nonempty `module` import specifier and an `export` member path
 (`query`, `default`, or `client.query`); `category` is optional. Unknown selector
-fields are rejected. Named/default imports, namespace calls, and static lexical
-aliases resolve to the same selector; shadowed local bindings are excluded.
+fields are rejected. On the TypeScript path, named/default imports, namespace
+calls, and static lexical aliases resolve to the same selector; shadowed local
+bindings are excluded.
 Repository selectors retain their direct import-specifier boundary for imported
 calls; local references to the selected canonical callable also match. Explicit re-exports of external
 modules resolve to that external module/export selector. Categories filter these

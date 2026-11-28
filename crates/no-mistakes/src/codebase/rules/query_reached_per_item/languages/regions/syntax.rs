@@ -1,38 +1,61 @@
 use super::Header;
 
 pub(super) fn brace_header(line: &str) -> Option<Header> {
-    if !line.contains('{') {
+    if line.contains('{') { bare_header(line) } else { None }
+}
+
+pub(super) fn bare_header(line: &str) -> Option<Header> {
+    let trimmed = line.trim();
+    if trimmed.is_empty() || trimmed.starts_with('{') {
         return None;
     }
-    let trimmed = line.trim();
     let word = first_word(trimmed);
     if matches!(word, "for" | "foreach" | "while") || each_line(trimmed) {
         return Some(Header::Loop(construct_label(trimmed)));
     }
-    let paren = header_paren(line)?;
-    let name = last_ident(&line[..paren]);
-    if name.is_empty()
-        || matches!(
-            name.as_str(),
-            "if" | "for" | "while" | "switch" | "catch" | "foreach"
-        )
-    {
+    if opens_control(trimmed) || trimmed.ends_with(';') {
         return None;
     }
-    Some(Header::Function(name))
+    let paren = header_paren(line)?;
+    let name = last_ident(&line[..paren]);
+    if name.is_empty() || !function_declarator(line, paren, &name) {
+        None
+    } else {
+        Some(Header::Function(name))
+    }
+}
+
+fn function_declarator(line: &str, paren: usize, name: &str) -> bool {
+    let before = &line[..paren];
+    if words(before).iter().any(|word| matches!(*word, "fn" | "func" | "function" | "fun" | "def")) {
+        return true;
+    }
+    let Some(name_at) = before.rfind(name) else {
+        return false;
+    };
+    name_at > 0
+        && before.as_bytes()[name_at - 1].is_ascii_whitespace()
+        && !words(&before[..name_at]).is_empty()
 }
 
 pub(super) fn indent_header(line: &str) -> Option<Header> {
     let trimmed = line.trim();
-    if let Some(rest) = trimmed
-        .strip_prefix("async def ")
-        .or_else(|| trimmed.strip_prefix("def "))
+    if let Some(rest) = trimmed.strip_prefix("async def ").or_else(|| trimmed.strip_prefix("def "))
     {
         let name = leading_ident(rest);
         return (!name.is_empty()).then(|| Header::Function(name.to_string()));
     }
-    let word = first_word(trimmed);
-    matches!(word, "for" | "while").then(|| Header::Loop(construct_label(trimmed)))
+    let logical = async_for(trimmed);
+    let word = first_word(logical);
+    matches!(word, "for" | "while").then(|| Header::Loop(construct_label(logical)))
+}
+
+fn async_for(trimmed: &str) -> &str {
+    if trimmed.starts_with("async for") {
+        trimmed["async ".len()..].trim_start()
+    } else {
+        trimmed
+    }
 }
 
 pub(super) fn block_header(line: &str) -> Option<Header> {
@@ -85,33 +108,17 @@ pub(super) fn end_count(line: &str) -> usize {
     words(line).iter().filter(|word| **word == "end").count()
 }
 
-pub(super) fn calls(line: &str) -> Vec<String> {
-    let bytes = line.as_bytes();
-    let mut found = Vec::new();
-    for (index, byte) in bytes.iter().enumerate() {
-        if *byte != b'(' {
-            continue;
-        }
-        let callee = callee_before(line, index);
-        if callee.is_empty() || is_keyword(&callee) {
-            continue;
-        }
-        found.push(callee);
-    }
-    found
+pub(super) fn brace_block(line: &str) -> bool {
+    line.contains('{') && words(line).iter().all(|word| *word != "do")
 }
 
-pub(crate) fn split_separator(callee: &str) -> Option<(&str, &str)> {
-    let mut best = None;
-    for (index, _) in callee.char_indices() {
-        if callee[index..].starts_with('.') {
-            best = Some((index, 1));
-        } else if callee[index..].starts_with("::") || callee[index..].starts_with("->") {
-            best = Some((index, 2));
-        }
-    }
-    let (at, len) = best?;
-    Some((&callee[..at], &callee[at + len..]))
+fn opens_control(trimmed: &str) -> bool {
+    let word = first_word(trimmed.trim_start_matches(['}', '{']).trim_start());
+    matches!(
+        word,
+        "if" | "else" | "elif" | "elsif" | "elseif" | "switch" | "catch" | "for" | "while"
+            | "foreach" | "return" | "do"
+    )
 }
 
 fn construct_label(trimmed: &str) -> &'static str {
@@ -137,33 +144,6 @@ fn header_paren(line: &str) -> Option<usize> {
     Some(close + 1 + line[close + 1..].find('(')?)
 }
 
-fn callee_before(line: &str, paren: usize) -> String {
-    let bytes = line.as_bytes();
-    let mut start = paren;
-    while start > 0 {
-        let ch = bytes[start - 1];
-        if ch.is_ascii_alphanumeric()
-            || matches!(ch, b'_' | b'.' | b':' | b'\\' | b'$' | b'>' | b'-')
-        {
-            start -= 1;
-        } else {
-            break;
-        }
-    }
-    line[start..paren]
-        .trim_start_matches(['.', ':', '\\', '>', '-'])
-        .to_string()
-}
-
-fn is_keyword(callee: &str) -> bool {
-    const KEYWORDS: &[&str] = &[
-        "for", "foreach", "while", "if", "switch", "catch", "func", "fn", "function", "def",
-        "fun", "return", "elif", "else", "do", "end", "class", "new",
-    ];
-    let tail = split_separator(callee).map(|(_, tail)| tail).unwrap_or(callee);
-    KEYWORDS.contains(&callee) || KEYWORDS.contains(&tail)
-}
-
 fn words(line: &str) -> Vec<&str> {
     line.split(|ch: char| !ch.is_ascii_alphanumeric() && ch != '_')
         .filter(|word| !word.is_empty())
@@ -171,10 +151,7 @@ fn words(line: &str) -> Vec<&str> {
 }
 
 fn first_word(trimmed: &str) -> &str {
-    trimmed
-        .split(|ch: char| ch.is_whitespace() || ch == '(' || ch == '{')
-        .next()
-        .unwrap_or("")
+    trimmed.split(|ch: char| ch.is_whitespace() || ch == '(' || ch == '{').next().unwrap_or("")
 }
 
 fn leading_ident(rest: &str) -> &str {
