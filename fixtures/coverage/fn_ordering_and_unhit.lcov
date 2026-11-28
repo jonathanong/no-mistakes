@@ -1,0 +1,10 @@
+SF:src/fn_edges.ts
+FN:1,unhitOnly
+FN:10,dupHits
+FNDA:4,dupHits
+FNDA:2,dupHits
+FNDA:5,fnAfterFnda
+FN:20,25,fnAfterFnda
+FN:99,120,fnAfterFnda
+FNDA:3,orphanFnda
+end_of_record

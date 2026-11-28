@@ -1,0 +1,7 @@
+TN:e2e
+SF:src/a.ts
+FN:1,foo
+FNDA:3,foo
+BRDA:3,0,0,4
+DA:1,3
+end_of_record

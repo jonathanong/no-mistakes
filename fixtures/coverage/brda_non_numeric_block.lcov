@@ -1,0 +1,7 @@
+SF:src/non_numeric_brda.ts
+BRDA:99,blockA,10,1
+BRDA:99,blockA,2,7
+BRDA:99,blockA,branchX,3
+BRDA:10,2,0,4
+BRDA:10,10,0,5
+end_of_record

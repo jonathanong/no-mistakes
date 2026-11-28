@@ -1,0 +1,12 @@
+
+VER:2
+
+SF:src/a.ts
+ZZZ:ignored
+CUSTOM:foo,bar
+
+DA:1,1
+
+end_of_record
+
+ZZZ:outside

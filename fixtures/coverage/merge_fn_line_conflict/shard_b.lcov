@@ -1,0 +1,8 @@
+TN:unit
+SF:src/conflict.ts
+FN:9,15,foo
+FNDA:3,foo
+FN:20,30,lateDef
+FNDA:1,lateDef
+DA:1,3
+end_of_record

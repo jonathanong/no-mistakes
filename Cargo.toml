@@ -6,6 +6,7 @@ members = [
     "crates/no-mistakes-ts-facts",
     "crates/no-mistakes-ts-analysis",
     "crates/no-mistakes-rule-kernel",
+    "crates/no-mistakes-coverage",
 ]
 resolver = "2"
 

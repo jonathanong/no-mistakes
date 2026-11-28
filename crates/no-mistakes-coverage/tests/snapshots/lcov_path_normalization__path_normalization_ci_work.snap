@@ -1,0 +1,39 @@
+---
+source: crates/no-mistakes-coverage/tests/lcov_path_normalization.rs
+expression: pretty_parsed(&parsed)
+---
+{
+  "report": {
+    "files": {
+      "/usr/local/lib/external.mts": {
+        "functions": {},
+        "branches": {},
+        "lines": {
+          "1": 4
+        }
+      },
+      "src/api.mts": {
+        "functions": {},
+        "branches": {},
+        "lines": {
+          "1": 1
+        }
+      },
+      "src/index.mts": {
+        "functions": {},
+        "branches": {},
+        "lines": {
+          "1": 2
+        }
+      },
+      "src/win_api.mts": {
+        "functions": {},
+        "branches": {},
+        "lines": {
+          "1": 3
+        }
+      }
+    }
+  },
+  "diagnostics": []
+}

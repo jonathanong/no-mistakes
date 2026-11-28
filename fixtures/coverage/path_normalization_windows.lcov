@@ -1,0 +1,15 @@
+SF:.\backend\services\foo.mts
+DA:1,1
+end_of_record
+SF:C:\repo\backend\services\foo.mts
+DA:1,2
+end_of_record
+SF:c:\repo\backend\services\foo.mts
+DA:1,3
+end_of_record
+SF:file:///C:/repo/backend/services/url_win.mts
+DA:1,4
+end_of_record
+SF:\\fileserver\share\repo\backend\unc.mts
+DA:1,5
+end_of_record
