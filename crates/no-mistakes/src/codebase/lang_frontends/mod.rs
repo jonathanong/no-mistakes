@@ -28,6 +28,8 @@ mod tests_extra;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests_kafka;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
+mod tests_kafka_boundaries;
+#[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests_kafka_edge_cases;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod tests_more;
