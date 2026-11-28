@@ -1,0 +1,14 @@
+name: GraphQL and REST
+on: push
+jobs:
+  query:
+    runs-on: ubuntu-latest
+    steps:
+      - name: GraphQL is exempt from method requirement
+        run: gh api graphql -f query='query { viewer { login } }'
+      - name: GraphQL query string is still forbidden
+        run: gh api "graphql?foo=bar"
+      - name: Dynamic endpoint with field flag abstains
+        run: gh api -f x=1 "$ENDPOINT"
+      - name: REST endpoint with interpolated owner is still reported
+        run: gh api -f x=1 "repos/${OWNER}/${REPO}/labels"

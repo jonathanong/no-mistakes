@@ -1,9 +1,16 @@
-use super::judge::{Hit, HitKind};
-use super::options::{ArgScope, CompiledPolicy};
+use super::options::{ArgMatcher, CompiledPolicy};
 use crate::codebase::rules::github_actions_download_integrity::words::{self, Word};
 
 mod args;
-use args::{extract_positionals, is_option_token, matches_invocation, takes_value, unwrap_group};
+mod dynamic_match;
+mod evaluate;
+mod flag_match;
+mod positional;
+mod sequence;
+
+use args::{is_option_token, takes_value, unwrap_group};
+pub(super) use evaluate::evaluate_policy;
+use positional::extract_positionals;
 
 pub(super) enum MatchOutcome<'a> {
     NoMatch,
@@ -13,10 +20,12 @@ pub(super) enum MatchOutcome<'a> {
 
 pub(super) struct ParsedInvocation<'a> {
     pub(super) cmd_line: usize,
+    pub(super) command_dynamic: bool,
     pub(super) global_args: Vec<&'a Word>,
     pub(super) subcommand_args: Vec<&'a Word>,
     pub(super) positionals: Vec<&'a Word>,
     pub(super) splitting_word: Option<(String, usize)>,
+    pub(super) flag_splitting_word: Option<(String, usize)>,
 }
 
 pub(super) fn match_command<'a>(
@@ -66,108 +75,44 @@ pub(super) fn match_command<'a>(
     }
     let subcommand_args: Vec<&Word> = words[idx..].iter().collect();
     let positionals = extract_positionals(&subcommand_args, &policy.value_flags);
-    let splitting_word = global_args
-        .iter()
-        .chain(subcommand_args.iter())
-        .copied()
-        .find(|word| is_word_splitting_expansion(word))
-        .map(|word| (word.text.clone(), word.line));
+    let splitting_word = splitting_at(global_args.iter().chain(subcommand_args.iter()).copied());
+    let flag_stop = option_end(&subcommand_args, &policy.value_flags);
+    let flag_splitting_word = splitting_at(
+        global_args
+            .iter()
+            .copied()
+            .chain(subcommand_args[..flag_stop].iter().copied()),
+    );
     MatchOutcome::Matched(ParsedInvocation {
         cmd_line: words[cmd_at].line,
+        command_dynamic,
         global_args,
         subcommand_args,
         positionals,
         splitting_word,
+        flag_splitting_word,
     })
 }
 
-pub(super) fn evaluate_policy(inv: &ParsedInvocation<'_>, policy: &CompiledPolicy) -> Vec<Hit> {
-    let mut hits = Vec::new();
-    if !policy.when_any_args.is_empty() {
-        let triggered = policy
-            .when_any_args
-            .iter()
-            .any(|matcher| matches_invocation(inv, matcher, &policy.value_flags));
-        if !triggered {
-            if let Some((token, line)) = &inv.splitting_word {
-                hits.push(splitting_abstention(*line, token, &policy.label));
-            }
-            return hits;
+fn splitting_at<'a>(mut words: impl Iterator<Item = &'a Word>) -> Option<(String, usize)> {
+    words
+        .find(|word| is_word_splitting_expansion(word))
+        .map(|word| (word.text.clone(), word.line))
+}
+
+fn option_end(args: &[&Word], value_flags: &[String]) -> usize {
+    let mut index = 0;
+    while index < args.len() {
+        let word = args[index];
+        if word.text == "--" {
+            return index;
         }
+        let takes = is_option_token(&word.text)
+            && !word.text.contains('=')
+            && takes_value(&word.text, value_flags);
+        index += 1 + usize::from(takes);
     }
-    let mut deferred_split = false;
-    for required in &policy.require_args {
-        if !matches_invocation(inv, required, &policy.value_flags) {
-            if inv.splitting_word.is_some() {
-                deferred_split = true;
-            } else {
-                hits.push(Hit {
-                    line: inv.cmd_line,
-                    kind: HitKind::MissingRequired {
-                        command: policy.label.clone(),
-                        required: required.label.clone(),
-                        policy_message: policy.message.clone(),
-                    },
-                });
-            }
-        }
-    }
-    if !policy.require_any_args.is_empty()
-        && !policy
-            .require_any_args
-            .iter()
-            .any(|alt| matches_invocation(inv, alt, &policy.value_flags))
-    {
-        if inv.splitting_word.is_some() {
-            deferred_split = true;
-        } else {
-            hits.push(Hit {
-                line: inv.cmd_line,
-                kind: HitKind::MissingAnyRequired {
-                    command: policy.label.clone(),
-                    alternatives: policy
-                        .require_any_args
-                        .iter()
-                        .map(|alt| alt.label.clone())
-                        .collect(),
-                    policy_message: policy.message.clone(),
-                },
-            });
-        }
-    }
-    if deferred_split {
-        if let Some((token, line)) = &inv.splitting_word {
-            hits.push(splitting_abstention(*line, token, &policy.label));
-        }
-    }
-    for forbidden in &policy.forbid_arg_patterns {
-        let targets: Vec<&Word> = match forbidden.scope {
-            ArgScope::Any => inv
-                .global_args
-                .iter()
-                .chain(inv.subcommand_args.iter())
-                .copied()
-                .collect(),
-            ArgScope::Positional => inv.positionals.clone(),
-        };
-        for word in targets {
-            if forbidden.regex.is_match(&word.text) {
-                hits.push(Hit {
-                    line: word.line,
-                    kind: HitKind::ForbiddenArg {
-                        command: policy.label.clone(),
-                        argument: word.text.clone(),
-                        pattern: forbidden.raw.clone(),
-                        policy_message: forbidden
-                            .message
-                            .clone()
-                            .or_else(|| policy.message.clone()),
-                    },
-                });
-            }
-        }
-    }
-    hits
+    args.len()
 }
 
 pub(super) fn is_dynamic_word(word: &Word, command_dynamic: bool) -> bool {
@@ -178,22 +123,28 @@ pub(super) fn is_dynamic_word(word: &Word, command_dynamic: bool) -> bool {
         || (command_dynamic && (word.text.contains('$') || word.text.contains('`')))
 }
 
+pub(super) fn flags_only(matchers: &[ArgMatcher]) -> bool {
+    !matchers.is_empty()
+        && matchers.iter().all(|matcher| {
+            matcher
+                .tokens
+                .first()
+                .is_some_and(|token| is_option_token(token))
+        })
+}
+
+pub(super) fn split_hit(inv: &ParsedInvocation<'_>, flags: bool) -> Option<(String, usize)> {
+    if flags {
+        inv.flag_splitting_word.clone()
+    } else {
+        inv.splitting_word.clone()
+    }
+}
+
 fn is_word_splitting_expansion(word: &Word) -> bool {
     word.expansion_may_split
         || word.text.contains("$@")
         || word.text.contains("$*")
         || word.text.contains("[@]}")
         || word.text.contains("[*]}")
-}
-
-fn splitting_abstention(line: usize, token: &str, command: &str) -> Hit {
-    Hit {
-        line,
-        kind: HitKind::Unanalyzable {
-            token: token.to_string(),
-            detail: format!(
-                "passes dynamic expansion `{token}` to `{command}`, so required arguments cannot be verified statically. Pass literal arguments or quote scalar values."
-            ),
-        },
-    }
 }

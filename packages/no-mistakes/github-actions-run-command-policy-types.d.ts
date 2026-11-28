@@ -20,6 +20,8 @@ export interface GithubActionsRunCommandPolicy {
   valueFlags?: string[];
   /** Optional trigger arguments; when non-empty, apply this policy only if one matches. */
   whenAnyArgs?: GithubActionsRunCommandArg[];
+  /** Optional exemption arguments; when any matches, skip this policy. */
+  unlessAnyArgs?: GithubActionsRunCommandArg[];
   /** Arguments or adjacent token pairs that must all be present. */
   requireArgs?: GithubActionsRunCommandArg[];
   /** Alternative arguments or adjacent token pairs; at least one must be present. */
@@ -35,6 +37,8 @@ export interface GithubActionsRunCommandPolicyOptions {
   commands?: GithubActionsRunCommandPolicy[];
   /** Optional repo-relative globs narrowing checked workflow and composite-action files. */
   include?: string[];
+  /** Optional repo-relative globs selecting standalone shell scripts to check. */
+  shellFiles?: string[];
   /** Policy for unparsable commands (default: "advise"). */
   unanalyzable?: Unanalyzable;
 }

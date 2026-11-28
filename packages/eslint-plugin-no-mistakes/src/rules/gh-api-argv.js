@@ -55,8 +55,20 @@ function inspectArgv(array, includesApi) {
   let hasFields = false;
   let hasMethod = false;
   let uncertain = false;
+  let afterDashDash = false;
   for (let i = start; i < args.length; i += 1) {
     const text = token(args[i]);
+    if (text === "--" && !afterDashDash) {
+      afterDashDash = true;
+      continue;
+    }
+    if (afterDashDash) {
+      if (endpoint === null) {
+        if (text === null || uncertain) return null;
+        endpoint = { node: args[i], text };
+      }
+      continue;
+    }
     if (text === null) {
       uncertain = true;
       continue;
@@ -65,7 +77,9 @@ function inspectArgv(array, includesApi) {
     if (fieldFlags.has(text)) hasFields = true;
     if (fields.test(text)) hasFields = true;
     if (text === "-X" || text === "--method") hasMethod = method(token(args[i + 1]));
-    if (text.startsWith("-X") && text !== "-X") hasMethod = method(text.slice(2));
+    if (text.startsWith("-X") && text !== "-X") {
+      hasMethod = method(text.startsWith("-X=") ? text.slice(3) : text.slice(2));
+    }
     if (text.startsWith("--method=")) hasMethod = method(text.slice(9));
     if (valueFlags.has(text)) {
       const value = args[i + 1];
@@ -92,7 +106,7 @@ function inspectArgv(array, includesApi) {
   // the exact GraphQL endpoint, even when another segment is interpolated.
   const knownRest = !endpoint.text.startsWith("\0") && endpoint.text.includes("/");
   return {
-    endpoint: /\/[^?]*\?/.test(endpoint.text) ? endpoint.node : null,
+    endpoint: endpoint.text.includes("?") ? endpoint.node : null,
     missingMethod:
       hasFields &&
       !hasMethod &&

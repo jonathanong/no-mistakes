@@ -116,6 +116,92 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
       "warnings": []
     }
   },
+  "shell-scripts": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/graphql.yml",
+          "line": 12,
+          "message": ".github/workflows/graphql.yml:12: job `query` step 3 passes dynamic expansion `$ENDPOINT` to `gh api`, so required arguments cannot be verified statically. Pass literal arguments or quote scalar values.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: gh api -f x=1 \"$ENDPOINT\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "scripts/api.sh",
+          "line": 10,
+          "message": "scripts/api.sh:10: passes dynamic expansion `$ENDPOINT` to `gh api`, so required arguments cannot be verified statically. Pass literal arguments or quote scalar values.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "gh api -f x=1 \"$ENDPOINT\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "scripts/api.sh",
+          "line": 11,
+          "message": "scripts/api.sh:11: passes dynamic expansion `$METHOD` to `gh api`, so required arguments cannot be verified statically. Pass literal arguments or quote scalar values.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "gh api --method \"$METHOD\" -f x=1 repos/my-org/my-repo/labels",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/graphql.yml",
+          "line": 10,
+          "message": ".github/workflows/graphql.yml:10: job `query` step 2 passes forbidden argument `graphql?foo=bar` to `gh api` (matched `/[?]/`). Pass query parameters with -f/-F and --method GET instead of a query string in the endpoint.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: gh api \"graphql?foo=bar\"",
+          "target": "gh api"
+        },
+        {
+          "file": ".github/workflows/graphql.yml",
+          "line": 14,
+          "message": ".github/workflows/graphql.yml:14: job `query` step 4 runs `gh api` without any of `--method` or `-X`. gh api with -f/-F defaults to POST; pass --method (or -X) explicitly.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "run: gh api -f x=1 \"repos/${OWNER}/${REPO}/labels\"",
+          "target": "gh api"
+        },
+        {
+          "file": "scripts/api.sh",
+          "line": 4,
+          "message": "scripts/api.sh:4: runs `gh api` without any of `--method` or `-X`. gh api with -f/-F defaults to POST; pass --method (or -X) explicitly.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "gh api -f per_page=100 repos/my-org/my-repo/labels",
+          "target": "gh api"
+        },
+        {
+          "file": "scripts/api.sh",
+          "line": 5,
+          "message": "scripts/api.sh:5: passes forbidden argument `repos/my-org/my-repo/labels?per_page=100` to `gh api` (matched `/[?]/`). Pass query parameters with -f/-F and --method GET instead of a query string in the endpoint.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "gh api \"repos/my-org/my-repo/labels?per_page=100\"",
+          "target": "gh api"
+        },
+        {
+          "file": "scripts/api.sh",
+          "line": 6,
+          "message": "scripts/api.sh:6: runs `gh api` without any of `--method` or `-X`. gh api with -f/-F defaults to POST; pass --method (or -X) explicitly.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "gh api -f x=1 -H \"-X: custom\" repos/my-org/my-repo/labels",
+          "target": "gh api"
+        },
+        {
+          "file": "scripts/api.sh",
+          "line": 7,
+          "message": "scripts/api.sh:7: runs `gh api` without any of `--method` or `-X`. gh api with -f/-F defaults to POST; pass --method (or -X) explicitly.",
+          "rule": "github-actions-run-command-policy",
+          "sourceLine": "gh api --method= -f x=1 repos/my-org/my-repo/labels",
+          "target": "gh api"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "unparsable": {
     "exitCode": 0,
     "report": {

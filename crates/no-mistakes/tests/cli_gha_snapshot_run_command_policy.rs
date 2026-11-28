@@ -1,11 +1,13 @@
 use super::check_json_snapshot::{assert_saved_fixture, rules_path};
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 const RULE: &str = "github-actions-run-command-policy";
 
 #[test]
 fn github_actions_run_command_policy_json_matches_snapshot() {
     let policy = rules_path(RULE, "configs", "policy.yml");
+    let policy_shell = rules_path(RULE, "configs", "policy-shell.yml");
     let empty = rules_path(RULE, "configs", "empty.yml");
     let report = rules_path(RULE, "configs", "unanalyzable-report.yml");
     let ignore = rules_path(RULE, "configs", "unanalyzable-ignore.yml");
@@ -33,6 +35,11 @@ fn github_actions_run_command_policy_json_matches_snapshot() {
                 policy,
             ),
             (
+                "shell-scripts",
+                rules_path(RULE, "fixture", "shell-scripts"),
+                policy_shell,
+            ),
+            (
                 "empty-opt-in",
                 rules_path(RULE, "fixture", "reported"),
                 empty,
@@ -49,6 +56,24 @@ fn github_actions_run_command_policy_json_matches_snapshot() {
             ),
         ],
     );
+}
+
+#[test]
+fn github_actions_run_command_policy_invalid_options_fail_early_with_exit_2() {
+    let root = rules_path(RULE, "fixture", "shell-scripts");
+    let config = rules_path(RULE, "configs", "invalid-shell-glob.yml");
+    let output = Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
+        .args(["--lock-timeout", "0", "--jobs", "1", "check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(&config)
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(2));
+    assert!(output.stdout.is_empty(), "stdout must be empty on exit 2");
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(stderr.contains("options.shellFiles"), "{stderr}");
 }
 
 #[test]

@@ -705,10 +705,12 @@ test("GitHub Actions run command policy exports named option types", () => {
     "command: string[];",
     "valueFlags?: string[];",
     "whenAnyArgs?: GithubActionsRunCommandArg[];",
+    "unlessAnyArgs?: GithubActionsRunCommandArg[];",
     "requireArgs?: GithubActionsRunCommandArg[];",
     "requireAnyArgs?: GithubActionsRunCommandArg[];",
     "forbidArgPatterns?: GithubActionsRunCommandForbiddenPattern[];",
     "commands?: GithubActionsRunCommandPolicy[];",
+    "shellFiles?: string[];",
     "unanalyzable?: Unanalyzable;",
   ]) {
     assert.ok(declarations.includes(field), `missing ${field}`);

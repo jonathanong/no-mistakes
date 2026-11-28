@@ -361,7 +361,8 @@ for sparse checkout coverage and suppression.
 Enable [`github-actions-run-command-policy`](../rules/github-actions-run-command-policy.md)
 with `options.commands` to require arguments or argument pairs and forbid
 argument patterns on configured commands inside workflow and composite-action
-`run` scripts. Unparsable commands (`eval`, dynamic command names, or
+`run` scripts and opt-in `shellFiles` standalone shell scripts. Unparsable
+commands (`eval`, dynamic command names, dynamic required flag values, or
 unterminated shell syntax) abstain with an advisory diagnostic by default.
 
 Enable [`dependabot-cooldown-policy`](../rules/dependabot-cooldown-policy.md)

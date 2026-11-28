@@ -5,6 +5,9 @@ use crate::codebase::ts_source::discover_files;
 use crate::config::v2::{load_v2_config, NoMistakesConfig};
 use std::path::PathBuf;
 
+mod extended;
+mod flag_edges;
+
 fn compile_yaml(yaml: &str) -> options::CompiledOptions {
     let opts: Options = serde_yaml::from_str(yaml).expect("valid options yaml");
     options::compile(opts).expect("valid compiled options")
@@ -128,6 +131,71 @@ fn abstains_on_dynamic_commands_eval_and_unterminated_syntax() {
             "expected abstention for `{script}`"
         );
     }
+}
+
+#[test]
+fn apostrophes_in_heredocs_comments_and_ansi_c_strings_do_not_open_quotes() {
+    let compiled = default_policy();
+    for script in [
+        "body=$(cat <<'EOF'\ndon't merge\nEOF\n)\ngit commit -m hi\n",
+        "body=$(cat <<-EOF\n\tit's\n\tEOF\n)\ngit commit -m hi\n",
+        "body=$(\n  # user's name\n  printf hello\n)\ngit commit -m hi\n",
+        "body=$(printf '%s' $'it\\'s')\ngit commit -m hi\n",
+        "body=$(printf '%s' $'A\\'s')\ngit commit -m hi\n",
+        "body=$(cat <<<EOF\n)\ngit commit -m hi\n",
+    ] {
+        let hits = scan_script(script, &compiled);
+        assert_eq!(hits.len(), 1, "{script:?}: {hits:?}");
+        assert!(
+            matches!(hits[0].kind, HitKind::MissingRequired { .. }),
+            "{script:?}: {hits:?}"
+        );
+        assert_eq!(hits[0].line, script.lines().count(), "{script:?}");
+    }
+}
+
+#[test]
+fn quoted_parenthesis_in_substitution_stays_unanalyzable() {
+    let compiled = default_policy();
+    let hits = scan_script(
+        r#"gh api --method="$( : ')' )" -f x=1 repos/my-org/my-repo/labels"#,
+        &compiled,
+    );
+    assert!(
+        matches!(
+            hits.first().map(|hit| &hit.kind),
+            Some(HitKind::Unanalyzable { .. })
+        ),
+        "{hits:?}"
+    );
+}
+
+#[test]
+fn dynamic_option_terminator_hides_a_later_required_flag() {
+    let compiled = compile_yaml(
+        r#"
+commands:
+  - command: [tool, run]
+    requireArgs: [--strict]
+"#,
+    );
+    let hidden = scan_script(r#"tool run "$STOP" --strict"#, &compiled);
+    assert!(
+        matches!(
+            hidden.first().map(|hit| &hit.kind),
+            Some(HitKind::Unanalyzable { .. })
+        ),
+        "{hidden:?}"
+    );
+    assert!(scan_script("tool run --strict", &compiled).is_empty());
+    let missing = scan_script("tool run --loose", &compiled);
+    assert!(
+        matches!(
+            missing.first().map(|hit| &hit.kind),
+            Some(HitKind::MissingRequired { .. })
+        ),
+        "{missing:?}"
+    );
 }
 
 #[test]

@@ -515,10 +515,15 @@ For [`github-actions-run-command-policy`](../rules/github-actions-run-command-po
 `options.commands` defaults to `[]`, which reports nothing until a repository
 declares command policies. Each entry names `command` tokens (such as `[gh, api]`
 or `[git, commit]`), optional `valueFlags`, optional `whenAnyArgs` trigger
-arguments, `requireArgs` / `requireAnyArgs`, `forbidArgPatterns` (`scope: any`
-or `positional`), and an optional `message`. Unparsable commands (`eval`,
-dynamic command names, dynamic `sh -c`, or unterminated shell syntax) abstain
-with a diagnostic governed by `options.unanalyzable` (default `advise`). See
+arguments, optional `unlessAnyArgs` exemptions (such as `[graphql]`),
+`requireArgs` / `requireAnyArgs`, `forbidArgPatterns` (`scope: any`
+or `positional`), and an optional `message`. Optional `options.shellFiles`
+selects standalone shell scripts to check alongside workflow and composite-action
+`run` scripts. Unparsable commands (`eval`,
+dynamic command names, dynamic `sh -c`, dynamic required flag values, or
+unterminated shell syntax) abstain
+with a diagnostic governed by `options.unanalyzable` (default `advise`). Invalid
+options fail early at config load with exit code 2. See
 the [run command policy](../rules/github-actions-run-command-policy.md#options-and-defaults).
 
 For [`github-actions-action-input-policy`](../rules/github-actions-action-input-policy.md),
