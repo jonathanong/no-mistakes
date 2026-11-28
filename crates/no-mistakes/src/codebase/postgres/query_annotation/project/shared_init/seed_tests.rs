@@ -63,7 +63,7 @@ fn second_seed_picks_root_reaching_uncaptured_module_and_skips_unrelated_roots()
     let resolve = |specifier: &str, _: &std::path::Path| {
         (specifier == "./helper.mts").then(|| helper.clone())
     };
-    let mut roots = vec![r_a, r_b.clone(), r_c];
+    let mut roots = vec![r_a, r_b.clone(), r_c.clone()];
     let status = super::build(
         &files,
         &roots,
@@ -85,11 +85,13 @@ fn second_seed_picks_root_reaching_uncaptured_module_and_skips_unrelated_roots()
     // Only unrelated root-b remains; no second/further seed reaches uncaptured helper.
     assert_eq!(status.next_seed_root(&roots), None);
 
+    // Control: root-c still covers the uncaptured helper before it is recorded.
+    assert_eq!(status.next_seed_root(std::slice::from_ref(&r_c)), Some(0));
     // Once all eligible modules are recorded, even a covering root returns None.
     status
         .shared()
         .unwrap()
         .entries
         .insert(ids.id(&helper), SharedEntry::Impure);
-    assert_eq!(status.next_seed_root(&[r_b]), None);
+    assert_eq!(status.next_seed_root(std::slice::from_ref(&r_c)), None);
 }

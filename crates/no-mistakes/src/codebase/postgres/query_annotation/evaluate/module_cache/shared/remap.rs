@@ -90,6 +90,9 @@ fn remap_values(items: &Values, remap: &impl Fn(Environment) -> Environment) -> 
 }
 
 fn remap_value(value: &Value, remap: &impl Fn(Environment) -> Environment) -> Value {
+    if !needs_remap(value, remap) {
+        return value.clone();
+    }
     match value {
         Value::Function(function, path, env) => {
             Value::Function(Arc::clone(function), Arc::clone(path), remap(*env))

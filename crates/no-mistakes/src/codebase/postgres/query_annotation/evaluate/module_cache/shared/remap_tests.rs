@@ -110,3 +110,25 @@ fn remap_captured_scope_remaps_own_env_keeps_prefix_and_rejects_foreign() {
     strict_map.remove(&1);
     assert!(remap_scope_strict(&scope, &strict_map).is_none());
 }
+
+#[test]
+fn remap_preserves_shared_arc_for_unchanged_containers() {
+    let shared_items = Values::from(vec![Value::Number(1)]);
+    let original_id = shared_items.identity();
+    let mut values = FxHashMap::default();
+    values.insert("fn".into(), dummy_fn(0));
+    values.insert("a".into(), Value::Object(shared_items.clone()));
+    values.insert("b".into(), Value::Object(shared_items));
+    let scope = Scope::from(values);
+
+    let remapped = remap_scope(&scope, &[5]);
+    assert!(remapped["fn"] == dummy_fn(5));
+    let Value::Object(ref a_items) = remapped["a"] else {
+        panic!("expected object for a");
+    };
+    let Value::Object(ref b_items) = remapped["b"] else {
+        panic!("expected object for b");
+    };
+    assert_eq!(a_items.identity(), original_id);
+    assert_eq!(b_items.identity(), original_id);
+}
