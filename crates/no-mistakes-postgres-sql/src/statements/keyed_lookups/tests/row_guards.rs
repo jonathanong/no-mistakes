@@ -143,33 +143,39 @@ fn covers_edge_sql_normalizer_and_clause_paths() {
         "SELECT EXISTS (SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id) FROM orders o LIMIT 1e-2);",
         "SELECT EXISTS (SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id) FROM orders o LIMIT 0x10);",
         "SELECT EXISTS (SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id) FROM orders o LIMIT 1e999999999999999999999);",
-        "SELECT o.id FROM orders o
-        LEFT JOIN accounts a1 ON a1.id = o.account_id
-            AND (pg_catalog.abs(1, 2) = 1)
-            AND (pg_catalog.abs(ALL 1) = 1)
-            AND (pg_catalog.abs(x => 1) = 1)
-            AND (pg_catalog.lower('a', 'b') = 'a')
-            AND (pg_catalog.lower(ALL 'a') = 'a')
-            AND (pg_catalog.lower(x => 'a') = 'a')
-            AND (pg_catalog.lower(DISTINCT 'a') = 'a')
-            AND (pg_catalog.substr('a') = 'a')
-            AND (pg_catalog.substr(ALL 'a', 1) = 'a')
-            AND (pg_catalog.substr(x => 'a', 1) = 'a')
-            AND (pg_catalog.substr('a', x => 1) = 'a')
-            AND (pg_catalog.substr('a', 1, x => 2) = 'a')
-            AND (pg_catalog.substr('a', 1, 2, 3) = 'a')
-            AND (nullif('a') = 'a')
-            AND (nullif(x => 'a', 'b') = 'a')
-            AND (nullif('a', x => 'b') = 'a')
-            AND (pg_catalog.lower(CAST(missing.col IS NULL AS text)) = 'a')
-            AND (CAST(missing.col IS NULL AS text) = 'a')
-            AND (NOT (missing.col IS NULL))
-            AND ((missing.col IS NULL) AND true)
-            AND (true AND (missing.col IS NULL))
-            AND ((missing.col IS NULL) IS DISTINCT FROM true)
-            AND (true IS DISTINCT FROM (missing.col IS NULL))
-            AND ((missing.col IS NULL) IS TRUE)
-            AND ((missing.col IS NULL) IN (true, false));",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.abs(1, 2) = 1);",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.abs(ALL 1) = 1);",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.abs(x => 1) = 1);",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.lower('a', 'b') = 'a');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.lower(ALL 'a') = 'a');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.lower(x => 'a') = 'a');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.md5(DISTINCT 'a') = 'a');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.substr('a') = 'a');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.substr(ALL 'a', 1) = 'a');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.substr(x => 'a', 1) = 'a');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.substr('a', x => 1) = 'a');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.substr('a', 1, x => 2) = 'a');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.substr('a', 1, 2, 3) = 'a');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.substring('abc', 'a') = 'a');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (pg_catalog.substr('abc', 'a') = 'a');",
+        "SELECT (SELECT ARRAY[] FROM accounts a WHERE a.id = o.id) FROM orders o;",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND nullif('a');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND nullif(x => 'a', 'b');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND nullif('a', x => 'b');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND pg_catalog.lower(DISTINCT 'a');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND pg_catalog.lower(CAST(missing.col IS NULL AS text));",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (CAST(missing.col IS NULL AS text) = 'a');",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (NOT (missing.col IS NULL));",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND ((missing.col IS NULL) AND true);",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (true AND (missing.col IS NULL));",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND ((missing.col IS NULL) IS DISTINCT FROM true);",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (true IS DISTINCT FROM (missing.col IS NULL));",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND ((missing.col IS NULL) IS TRUE);",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND ((missing.col IS NULL) IN (true, false));",
+        "SELECT o.id FROM orders o LEFT JOIN accounts a1 ON a1.id = o.account_id AND (-NULL = 1);",
+        "SELECT (SELECT 1 FROM UNNEST(ARRAY[1])) FROM orders o ORDER BY (SELECT 1 FROM UNNEST(ARRAY[1]));",
+        "SELECT (SELECT a.id FROM accounts a WHERE a.id = o.id ORDER BY a.id USING <) FROM orders o ORDER BY (SELECT a.id FROM accounts a WHERE a.id = o.id ORDER BY a.id USING <);",
+        "SELECT o.id FROM orders o GROUP BY -1;",
         "SELECT
             pg_catalog.replace(ALL 'a', 'b', 'c'),
             pg_catalog.replace('a', 'b'),
@@ -189,9 +195,9 @@ fn covers_edge_sql_normalizer_and_clause_paths() {
         "SELECT pg_catalog.count(o.id) FROM orders o WHERE false GROUP BY ROLLUP (o.id);",
         "SELECT pg_catalog.count(o.id) FROM orders o WHERE false GROUP BY GROUPING SETS (((o.id, o.account_id)), (o.id));",
         "SELECT EXISTS (SELECT (SELECT pg_catalog.count(1) FROM accounts a) FROM orders o);",
-        "MERGE INTO orders o USING incoming s ON o.id = s.id
+        "MERGE INTO orders o USING incoming s ON o.id = s.id AND o.enabled
         WHEN MATCHED AND o.enabled THEN DELETE
-        WHEN MATCHED AND o.enabled THEN UPDATE SET account_name = '';",
+        WHEN MATCHED AND o.ready THEN UPDATE SET account_name = '';",
         "SELECT o.id FROM orders o GROUP BY ALL;",
         "SELECT o.id FROM orders o GROUP BY 0, 1.5;",
         "SELECT o.id FROM orders o GROUP BY GROUPING SETS (());",

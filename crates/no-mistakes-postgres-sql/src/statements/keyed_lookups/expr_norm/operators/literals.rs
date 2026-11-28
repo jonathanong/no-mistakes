@@ -3,18 +3,15 @@ use crate::idents::unwrap_expr;
 use sqlparser::ast::{Expr, UnaryOperator, Value};
 
 pub(super) fn number_type(number: &str, negate: bool) -> BuiltinType {
-    let (digits, negative) = number
-        .strip_prefix('-')
-        .map_or((number, negate), |digits| (digits, !negate));
-    let magnitude = if digits.contains('_') {
-        digits.replace('_', "").parse::<u64>()
+    let magnitude = if number.contains('_') {
+        number.replace('_', "").parse::<u64>()
     } else {
-        digits.parse()
+        number.parse()
     };
     let Ok(magnitude) = magnitude else {
         return BuiltinType::Numeric;
     };
-    let signed_headroom = u64::from(negative);
+    let signed_headroom = u64::from(negate);
     if magnitude <= i32::MAX as u64 + signed_headroom {
         BuiltinType::Integer
     } else if magnitude <= i64::MAX as u64 + signed_headroom {
