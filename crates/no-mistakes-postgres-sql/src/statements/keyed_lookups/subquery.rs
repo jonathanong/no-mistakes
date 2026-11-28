@@ -108,6 +108,14 @@ fn inspect(
                 let key = ExprNormalizer::new(None, true, input_scope)
                     .normalize(filter)
                     .map(|_| target_identity(filter));
+                let window_filter = function.over.is_some();
+                if window_filter {
+                    visit_function_inputs(function, &mut |arg| {
+                        visit_eager_functions(arg, &mut |eager| {
+                            inspect(eager, input_scope, targets, seen, out, false);
+                        });
+                    });
+                }
                 let mut filtered = seen.clone();
                 filtered.mark_filtered(key);
                 filtered.restrict(filter, input_scope, true);
@@ -117,7 +125,7 @@ fn inspect(
                     targets,
                     &mut filtered,
                     out,
-                    skip_eager,
+                    skip_eager || window_filter,
                 );
                 seen.merge(filtered);
             } else {
@@ -153,9 +161,11 @@ fn inspect_function_inputs(
     let selected = row_window_value(function);
     visit_function_inputs(function, &mut |expr| {
         if selected.is_some_and(|value| std::ptr::eq(expr, value)) {
-            visit_eager_functions(expr, &mut |eager| {
-                inspect(eager, scope, targets, seen, out, false);
-            });
+            if !skip_eager {
+                visit_eager_functions(expr, &mut |eager| {
+                    inspect(eager, scope, targets, seen, out, false);
+                });
+            }
             inspect(expr, scope, targets, &mut LookupHistory::new(), out, true);
         } else {
             inspect(expr, scope, targets, seen, out, skip_eager);

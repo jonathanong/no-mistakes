@@ -1,3 +1,4 @@
+use super::super::conditions::decimal_integer;
 use super::super::{select_exprs::target_identity, select_item_expr};
 use crate::fx::FxHashSet;
 use crate::idents::{ident_key, unwrap_expr};
@@ -88,7 +89,9 @@ fn resolve_target<'a>(
 ) -> Option<&'a Expr> {
     if let Expr::Value(value) = expr {
         if let Value::Number(number, _) = &value.value {
-            let index = number.parse::<usize>().ok()?.checked_sub(1)?;
+            let index = usize::try_from(decimal_integer(number)?)
+                .ok()?
+                .checked_sub(1)?;
             return outputs.get(index).copied();
         }
     }

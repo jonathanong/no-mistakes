@@ -88,19 +88,13 @@ impl Nested<'_> {
                     conditions,
                     else_result.as_deref(),
                     |expr, reachable| {
-                        self.walk_conditional_child(expr, reachable);
+                        if reachable {
+                            walk_nested_queries(expr, self.scopes, self.out);
+                        }
                     },
                 );
             }
             _ => {}
-        }
-    }
-
-    fn walk_conditional_child(&mut self, expr: &Expr, reachable: bool) {
-        if reachable {
-            walk_nested_queries(expr, self.scopes, self.out);
-        } else {
-            self.walk_eager_children(expr);
         }
     }
 

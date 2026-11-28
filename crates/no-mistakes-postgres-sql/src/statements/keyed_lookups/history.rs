@@ -16,7 +16,8 @@ type Site = (usize, usize);
 const TRUE: u8 = 1;
 const FALSE: u8 = 2;
 const NULL: u8 = 4;
-const ANY: u8 = TRUE | FALSE | NULL;
+const MIXED_ROW: u8 = 8;
+const ANY: u8 = TRUE | FALSE | NULL | MIXED_ROW;
 
 #[derive(Clone, Default)]
 enum Filter {
@@ -86,8 +87,12 @@ impl LookupHistory {
         );
     }
 
+    pub(super) fn is_reachable(&self) -> bool {
+        self.active.columns.values().all(|allowed| *allowed != 0)
+    }
+
     pub(super) fn observe(&mut self, key: &LookupKey, site: Site) -> Option<Site> {
-        if self.active.columns.values().any(|allowed| *allowed == 0) {
+        if !self.is_reachable() {
             return None;
         }
         let sites = self.sites.entry(key.clone()).or_default();
@@ -125,10 +130,10 @@ fn boolean_test(expr: &Expr) -> (&Expr, u8) {
         }
         | Expr::IsFalse(expr) => (expr, FALSE),
         Expr::IsTrue(expr) => (expr, TRUE),
-        Expr::IsUnknown(expr) => (expr, NULL),
+        Expr::IsUnknown(expr) | Expr::IsNull(expr) => (expr, NULL),
         Expr::IsNotFalse(expr) => (expr, TRUE | NULL),
         Expr::IsNotTrue(expr) => (expr, FALSE | NULL),
-        Expr::IsNotUnknown(expr) => (expr, TRUE | FALSE),
+        Expr::IsNotUnknown(expr) | Expr::IsNotNull(expr) => (expr, TRUE | FALSE),
         operand => (operand, TRUE),
     }
 }

@@ -237,3 +237,23 @@ WITH unused_wrapper AS (
     FROM orders o CROSS JOIN local_value
 )
 SELECT * FROM public.unused_wrapper;
+
+MERGE INTO orders o USING incoming s ON o.id = s.id
+WHEN MATCHED AND o.enabled THEN UPDATE SET account_name =
+    CASE WHEN o.enabled THEN 'active' ELSE
+        (SELECT a.name FROM accounts a WHERE a.id = o.account_id)
+        || (SELECT b.name FROM accounts b WHERE b.id = o.account_id)
+    END
+WHEN MATCHED AND o.enabled IS FALSE THEN UPDATE SET account_name =
+    CASE WHEN o.enabled IS FALSE THEN
+        (SELECT a.name FROM accounts a WHERE a.id = o.account_id)
+        || (SELECT b.name FROM accounts b WHERE b.id = o.account_id)
+    END;
+
+MERGE INTO orders o USING incoming s ON o.id = s.id
+WHEN MATCHED AND o.enabled THEN DO NOTHING
+WHEN MATCHED AND o.enabled THEN UPDATE SET
+    account_name = (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+    account_tier = (SELECT b.tier FROM accounts b WHERE b.id = o.account_id)
+RETURNING (SELECT a.name FROM accounts a WHERE a.id = o.account_id),
+          (SELECT b.tier FROM accounts b WHERE b.id = o.account_id);

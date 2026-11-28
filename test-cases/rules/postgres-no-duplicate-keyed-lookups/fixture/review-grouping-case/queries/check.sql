@@ -358,3 +358,13 @@ GROUP BY probe;
 SELECT o.id, o.enabled, pg_catalog.count(*)
 FROM orders o
 GROUP BY (o.id, o.enabled);
+
+SELECT (SELECT a.n FROM accounts a WHERE a.id = o.account_id)
+FROM orders o
+GROUP BY 0_1
+HAVING (SELECT a.n FROM accounts a WHERE a.id = o.account_id) > 0;
+
+SELECT (SELECT a.n FROM accounts a WHERE a.id = o.account_id),
+       (SELECT b.n FROM accounts b WHERE b.id = o.account_id)
+FROM orders o
+GROUP BY 0_1, o.account_id;

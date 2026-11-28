@@ -1,6 +1,6 @@
 use super::super::conditions::{decimal_integer, literal};
 use crate::idents::{function_arg_expr, ident_key, unwrap_expr};
-use sqlparser::ast::{DataType, Expr, Function, FunctionArg, FunctionArguments, Value};
+use sqlparser::ast::{CastKind, DataType, Expr, Function, FunctionArg, FunctionArguments, Value};
 
 fn window_name(function: &Function) -> Option<String> {
     function.over.as_ref()?;
@@ -58,14 +58,16 @@ pub(in crate::statements::keyed_lookups) fn null_position_inputs(
     let [_, position, ..] = args else {
         return None;
     };
-    let position = unwrap_expr(function_arg_expr(position)?);
-    let position = match position {
-        Expr::Cast {
-            expr,
-            data_type: DataType::Int(None) | DataType::Int4(None) | DataType::Integer(None),
-            ..
-        } => expr.as_ref(),
-        other => other,
-    };
+    let mut position = unwrap_expr(function_arg_expr(position)?);
+    while let Expr::Cast {
+        kind: CastKind::Cast | CastKind::DoubleColon,
+        expr,
+        data_type: DataType::Int(None) | DataType::Int4(None) | DataType::Integer(None),
+        format: None,
+        ..
+    } = position
+    {
+        position = unwrap_expr(expr);
+    }
     matches!(literal(position), Some(Value::Null)).then_some(args)
 }

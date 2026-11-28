@@ -835,3 +835,61 @@ SELECT EXISTS (
 
 SELECT NULL AND (pg_catalog.row_number() OVER () > 0)
 FROM orders o;
+
+SELECT pg_catalog.lag((
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+), NULL::integer::integer) OVER ()
+FROM orders o;
+
+SELECT pg_catalog.lag((
+    SELECT (SELECT a.n FROM accounts a WHERE a.id = o.id)
+         + (SELECT b.n FROM accounts b WHERE b.id = o.id)
+), 1::integer::integer) OVER ()
+FROM orders o;
+
+SELECT CASE WHEN o.enabled IS NULL THEN (SELECT a.n FROM accounts a WHERE a.id = o.id) END,
+       CASE WHEN o.enabled IS NOT NULL THEN (SELECT b.n FROM accounts b WHERE b.id = o.id) END
+FROM orders o;
+
+SELECT CASE WHEN o.enabled IS NOT NULL THEN (SELECT a.n FROM accounts a WHERE a.id = o.id) END,
+       CASE WHEN o.enabled IS TRUE THEN (SELECT b.n FROM accounts b WHERE b.id = o.id) END
+FROM orders o;
+
+SELECT CASE WHEN o.composite_key IS NULL THEN 0
+            ELSE (SELECT a.n FROM accounts a WHERE a.id = o.id) END,
+       CASE WHEN o.composite_key IS NOT NULL THEN 0
+            ELSE (SELECT b.n FROM accounts b WHERE b.id = o.id) END
+FROM orders o;
+
+SELECT CASE WHEN FALSE THEN pg_catalog.sum((SELECT a.n FROM accounts a WHERE a.id = o.account_id))
+            ELSE 0 END,
+       pg_catalog.max((SELECT b.n FROM accounts b WHERE b.id = o.account_id))
+FROM orders o;
+
+SELECT CASE WHEN o.enabled THEN pg_catalog.sum((SELECT a.n FROM accounts a WHERE a.id = o.account_id))
+            ELSE 0 END,
+       pg_catalog.max((SELECT b.n FROM accounts b WHERE b.id = o.account_id))
+FROM orders o GROUP BY o.enabled;
+
+SELECT
+    pg_catalog.sum(pg_catalog.min((SELECT a.n FROM accounts a WHERE a.id = o.account_id)))
+        FILTER (WHERE o.keep_group) OVER (),
+    pg_catalog.max((SELECT b.n FROM accounts b WHERE b.id = o.account_id))
+        FILTER (WHERE o.keep_row)
+FROM orders o GROUP BY o.keep_group;
+
+SELECT
+    (SELECT a.n FROM accounts a WHERE a.id = o.id AND FALSE),
+    (SELECT b.n FROM accounts b WHERE b.id = o.id AND FALSE)
+FROM orders o;
+
+SELECT
+    (SELECT a.n FROM accounts a WHERE a.id = o.id AND (TRUE OR FALSE)),
+    (SELECT b.n FROM accounts b WHERE b.id = o.id AND (TRUE OR FALSE))
+FROM orders o;
+
+SELECT
+    (SELECT a.n FROM accounts a WHERE a.id = o.id AND (NULL OR FALSE)),
+    (SELECT b.n FROM accounts b WHERE b.id = o.id AND (NULL OR FALSE))
+FROM orders o;

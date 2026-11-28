@@ -1,3 +1,4 @@
+use super::conditions::cannot_match;
 use super::expr_norm::ExprNormalizer;
 use super::scope::ScopeSnapshot;
 use crate::idents::{ident_key, unwrap_expr};
@@ -21,6 +22,9 @@ pub(super) fn extract_lookup_key(
     order_by: &[OrderByExpr],
     limit: Option<String>,
 ) -> Option<(LookupKey, String)> {
+    if cannot_match(predicate) {
+        return None;
+    }
     let mut normalizer = ExprNormalizer::new(Some(self_qualifier), single_table_subquery, outer);
     let mut conjuncts = Vec::new();
     flatten_and(predicate, &mut conjuncts);

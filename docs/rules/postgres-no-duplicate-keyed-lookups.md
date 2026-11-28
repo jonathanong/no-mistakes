@@ -58,11 +58,13 @@ The rule stays silent when the lookups are not proven to read the same row:
 - Mutually exclusive `CASE WHEN ... THEN (SELECT ...) ELSE (SELECT ...) END`
   branches. A lookup in an arm can still repeat one in an independent
   expression. Inputs to recognized aggregates can repeat across arms because
-  PostgreSQL evaluates the aggregates before choosing an arm. Aggregate
+  PostgreSQL evaluates aggregates before choosing an arm at runtime.
+  Constant arms removed during planning contribute no inputs. Aggregate
   arguments share lookup history only when their filter expressions match and
   the rule can prove the filter is repeatable. An unfiltered input can
   repeat a filtered input in either order. Transition inputs are skipped
-  when the filter is a literal false or null.
+  when the filter is a literal false or null. A window filter does not
+  suppress earlier ordinary aggregates.
 - Optional default expressions in `lag` and `lead` window calls. PostgreSQL
   evaluates them only when the requested row falls outside the partition.
   The rule also skips value arguments of `pg_catalog.lag`, `pg_catalog.lead`,

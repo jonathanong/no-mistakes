@@ -1,6 +1,6 @@
 pub(super) mod identity;
 
-use super::conditions::literal_condition;
+use super::conditions::cannot_match;
 use super::function_clauses::is_eager;
 use super::grouping;
 use super::join::register_table_with_joins;
@@ -74,7 +74,7 @@ pub(super) fn walk_select(
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) -> LookupHistory {
-    if select.selection.as_ref().and_then(literal_condition) == Some(false)
+    if select.selection.as_ref().is_some_and(cannot_match)
         && select_has_plain_outputs(select)
         && order_by.iter().all(|expr| plain_output(expr))
     {

@@ -67,3 +67,19 @@ pub(super) fn boolean_result_is_fixed(left: &Expr, op: &BinaryOperator, right: &
         .into_iter()
         .any(|expr| matches!(literal(expr), Some(Value::Boolean(value)) if *value == annihilator))
 }
+
+pub(super) fn cannot_match(expr: &Expr) -> bool {
+    match unwrap_expr(expr) {
+        Expr::BinaryOp {
+            left,
+            op: BinaryOperator::And,
+            right,
+        } => cannot_match(left) || cannot_match(right),
+        Expr::BinaryOp {
+            left,
+            op: BinaryOperator::Or,
+            right,
+        } => cannot_match(left) && cannot_match(right),
+        _ => literal_condition(expr) == Some(false),
+    }
+}

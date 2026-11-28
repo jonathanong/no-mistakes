@@ -6,7 +6,7 @@ use crate::statements::{
 fn fixture_facts(fixture: &str) -> SqlStatementFileFacts {
     let root = crate::test_support::rule_fixture_root("postgres-no-duplicate-keyed-lookups");
     let sql = std::fs::read_to_string(root.join(fixture).join("queries/check.sql")).unwrap();
-    extract_sql_statement_facts_with_policy(
+    let facts = extract_sql_statement_facts_with_policy(
         &sql,
         false,
         None,
@@ -16,7 +16,9 @@ fn fixture_facts(fixture: &str) -> SqlStatementFileFacts {
             ..Default::default()
         },
         false,
-    )
+    );
+    assert!(!facts.parse_failed, "fixture {fixture} should parse");
+    facts
 }
 
 #[test]
@@ -305,16 +307,15 @@ fn separates_grouped_reuse_from_independent_expressions_and_case_arms() {
             (192, 193),
             (198, 200),
             (219, 221),
-            (225, 226),
             (233, 234),
-            (261, 262),
             (273, 276),
             (282, 283),
             (298, 299),
             (303, 304),
             (309, 311),
             (331, 332),
-            (348, 350)
+            (348, 350),
+            (368, 367)
         ]
     );
 }
@@ -471,7 +472,13 @@ fn checks_operator_signatures_and_shares_only_compatible_lookup_history() {
             (778, 779),
             (783, 784),
             (800, 801),
-            (817, 818)
+            (817, 818),
+            (846, 847),
+            (855, 856),
+            (860, 862),
+            (870, 872),
+            (876, 878),
+            (888, 889)
         ]
     );
 }
