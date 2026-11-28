@@ -66,6 +66,7 @@ function parseAssertion(node, context) {
   }
   const actual = current.arguments[0];
   if (!actual || actual.type === "SpreadElement") return null;
+  if (current.arguments.slice(1).some((arg) => arg.type !== "Literal")) return null;
   return {
     expectCall: current,
     actual,

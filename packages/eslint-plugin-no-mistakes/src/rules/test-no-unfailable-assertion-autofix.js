@@ -1,6 +1,6 @@
 "use strict";
 
-const { existsSync, readFileSync } = require("node:fs");
+const { existsSync, readFileSync, statSync } = require("node:fs");
 const { dirname, join, resolve } = require("node:path");
 const { memberName, unwrap } = require("./test-message-expect");
 const { immutableConstDef } = require("./test-no-unfailable-assertion-assertions");
@@ -76,7 +76,7 @@ function resolveSetupFile(configDir, entry) {
   const cleaned = entry.replace(/^<rootDir>[\\/]/, "");
   for (const ext of SETUP_EXTENSIONS) {
     const candidate = resolve(configDir, `${cleaned}${ext}`);
-    if (existsSync(candidate)) return candidate;
+    if (existsSync(candidate) && statSync(candidate).isFile()) return candidate;
   }
   return null;
 }
@@ -205,7 +205,9 @@ function createThrowingQueryFix(node, assertion, query, context, typeCtx, cache)
     if (!outerAwait && !inAsync) return null;
     return (fixer) => fixer.replaceText(outerExpr, `await ${awaitedActual}`);
   }
-  return (fixer) => fixer.replaceText(outerExpr, awaitedActual);
+  const keepAwait = outerAwait && !directAwait;
+  return (fixer) =>
+    fixer.replaceText(outerExpr, keepAwait ? `await ${awaitedActual}` : awaitedActual);
 }
 
 module.exports = { createThrowingQueryFix };

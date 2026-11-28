@@ -128,6 +128,12 @@ function writesTarget(statement, target, context) {
   return Boolean(mutated && pathPrefixMatches(canonicalPath(mutated, context), target));
 }
 
+function isSuspension(statement) {
+  return (
+    statement.type === "ExpressionStatement" && statement.expression.type === "AwaitExpression"
+  );
+}
+
 function findDefinedThenDeref(statements, context, reportedAssertions) {
   const results = [];
   for (let index = 0; index < statements.length; index++) {
@@ -145,6 +151,7 @@ function findDefinedThenDeref(statements, context, reportedAssertions) {
       const nextCall = unwrapStatementCall(sibling);
       const nextAssertion = nextCall && parseAssertion(nextCall, context);
       if (nextCall && !nextAssertion) break;
+      if (!nextCall && isSuspension(sibling)) break;
       if (!nextAssertion || isDefinedMatcher(nextAssertion)) continue;
       const kind = derefKind(nextAssertion.actual, target, context, call.range[1]);
       if (

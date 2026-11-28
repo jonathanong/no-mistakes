@@ -139,3 +139,9 @@ export function definedThenDerefWithParam(expected: string | undefined) {
   expect(maybe).toBeDefined();
   expect(maybe?.name).toBe(expected);
 }
+
+export async function definedThenAwaitIdentifier(state: { user?: { name: string } }, ready: Promise<void>) {
+  expect(state.user).toBeDefined();
+  await ready;
+  expect(state.user!.name).toBe("Ada");
+}

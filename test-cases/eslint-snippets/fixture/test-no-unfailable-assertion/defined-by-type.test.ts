@@ -63,3 +63,7 @@ expect(handlers[0]?.()).toBeDefined();
 export function unconstrained<T>(value: T) {
   expect(value).toBeDefined();
 }
+
+const emptyList: string[] = [];
+const [firstEmpty] = emptyList;
+expect(firstEmpty).toBeDefined();

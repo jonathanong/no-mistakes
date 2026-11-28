@@ -1,6 +1,7 @@
 "use strict";
 
 const { memberName, unwrap } = require("./test-message-expect");
+const { isArrayElement } = require("./test-no-unfailable-assertion-destructure");
 const { immutableConstDef } = require("./test-no-unfailable-assertion-assertions");
 
 const PLAYWRIGHT_PATH = /(?:^|[\\/])(?:@playwright|playwright(?:-core)?)(?:[\\/]|$)/;
@@ -26,9 +27,8 @@ function getTypeContext(context) {
 
 function getExpressionType(node, typeCtx, awaited) {
   const tsNode = typeCtx.tsNodeMap.get(node);
-  if (!tsNode) return null;
-  const type = typeCtx.checker.getTypeAtLocation(tsNode);
-  return awaited ? typeCtx.checker.getAwaitedType(type) : type;
+  const type = tsNode && typeCtx.checker.getTypeAtLocation(tsNode);
+  return type && awaited ? typeCtx.checker.getAwaitedType(type) : (type ?? null);
 }
 
 function hasIndexSignature(type, checker) {
@@ -60,6 +60,9 @@ function isUncheckedIndexedAccess(node, context, typeCtx) {
   let current = unwrap(node);
   while (current.type === "Identifier") {
     const decl = immutableConstDef(current, context);
+    if (decl?.id.type === "ArrayPattern") {
+      return isArrayElement(decl, current, getExpressionType(decl.init, typeCtx, false));
+    }
     if (decl?.id.type !== "Identifier") return false;
     current = unwrap(decl.init);
   }

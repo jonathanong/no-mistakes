@@ -69,3 +69,7 @@ function shadowedExpect() {
   expect(1).toBe(1);
 }
 void shadowedExpect;
+
+let messageDelta = 1;
+let messageCount = 0;
+expect(messageCount, (messageCount += messageDelta, "message")).toBe(messageCount);

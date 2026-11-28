@@ -40,3 +40,7 @@ export async function withHasAssertions() {
   expect.hasAssertions();
   expect(screen.findByText("Loaded")).toBeDefined();
 }
+
+export async function keepsOuterAwait() {
+  await expect(screen.getByText("Await")).toBeTruthy();
+}
