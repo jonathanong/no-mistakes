@@ -260,4 +260,11 @@ fn lexer_edges_inline_ruby_clean_helpers_and_duplicate_enclosing_scopes() {
     );
     assert_eq!(pending_cancel.len(), 1, "{pending_cancel:#?}");
     assert!(pending_cancel[0].message.contains("load → read_row"));
+
+    let generic_fn = project_ext(
+        "fn load<T>(items: Vec<T>) {\n    for item in items {\n        example::store::read_row(item);\n    }\n}\n",
+        "rs",
+    );
+    assert_eq!(generic_fn.len(), 1, "{generic_fn:#?}");
+    assert!(generic_fn[0].message.contains("load → read_row"), "{generic_fn:#?}");
 }

@@ -22,11 +22,20 @@ pub(super) fn bare_header(line: &str) -> Option<Header> {
         return None;
     }
     let paren = header_paren(line)?;
-    let name = last_ident(&line[..paren]);
+    let name = last_ident(strip_generics(&line[..paren]));
     if name.is_empty() || !function_declarator(line, paren, &name) {
         None
     } else {
         Some(Header::Function(name))
+    }
+}
+
+fn strip_generics(before: &str) -> &str {
+    match before.find('<') {
+        Some(lt) if words(&before[..lt]).iter().any(|w| matches!(*w, "fn" | "func" | "fun")) => {
+            &before[..lt]
+        }
+        _ => before,
     }
 }
 
