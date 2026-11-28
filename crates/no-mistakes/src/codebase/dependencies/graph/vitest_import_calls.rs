@@ -52,8 +52,11 @@ fn vitest_receiver<'a>(call: &FunctionCall, facts: &'a TsFileFacts) -> Option<Vi
     if let Some(binding) = binding {
         if binding.specifier == "vitest" {
             let direct = match member {
-                Some("vi") => binding.kind == ImportedBindingKind::Namespace,
-                None => binding.kind == ImportedBindingKind::Named && binding.imported == "vi",
+                Some("vi" | "vitest") => binding.kind == ImportedBindingKind::Namespace,
+                None => {
+                    binding.kind == ImportedBindingKind::Named
+                        && matches!(binding.imported.as_str(), "vi" | "vitest")
+                }
                 _ => false,
             };
             return direct.then_some(VitestReceiver::Direct);

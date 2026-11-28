@@ -5,7 +5,7 @@ use crate::codebase::check_outcome::CheckInputFailure;
 use crate::codebase::dependencies::extract::ImportKind;
 use crate::codebase::dependencies::graph::{DepGraph, ImportTarget, TsFactLookup};
 use crate::codebase::ts_source::relative_slash_path;
-use crate::codebase::workspaces::IndexedWorkspaceMap;
+use crate::codebase::workspaces::{IndexedWorkspaceMap, WorkspacePackage};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use no_mistakes_rule_kernel::finding::RuleFinding;
@@ -100,12 +100,7 @@ impl Inputs<'_> {
                     else {
                         return None;
                     };
-                    let crosses_boundary = !target.starts_with(&owner.dir)
-                        || self
-                            .workspace
-                            .nearest_package(target)
-                            .is_some_and(|target_owner| target_owner.dir != owner.dir);
-                    crosses_boundary.then(|| RuleFinding {
+                    crosses_boundary(target, owner, self.workspace).then(|| RuleFinding {
                         rule: RULE_ID.to_owned(),
                         file: relative_file.clone(),
                         line: import.line as usize,
@@ -129,6 +124,17 @@ impl Inputs<'_> {
         );
         Ok(diagnostics)
     }
+}
+
+pub(super) fn crosses_boundary(
+    target: &Path,
+    owner: &WorkspacePackage,
+    workspace: &IndexedWorkspaceMap,
+) -> bool {
+    !target.starts_with(&owner.dir)
+        || workspace
+            .nearest_package(target)
+            .is_some_and(|target_owner| target_owner.dir != owner.dir)
 }
 
 fn is_relative(specifier: &str) -> bool {

@@ -90,28 +90,29 @@ impl Inputs<'_> {
             );
             return;
         }
-        if stays_in_owner_package(site.file, specifier, site.owner, self.workspace) {
-            return;
-        }
-        let Some(ImportTarget::File(target)) = self.graph.import_target(site.file, specifier)
-        else {
-            diagnostics.unanalyzable(
-                site.policy,
-                unanalyzable(
-                    site.relative_file,
-                    line,
-                    specifier,
-                    "the relative specifier has no unique file target. Run resolve-check and fix resolution.",
-                ),
-            );
-            return;
-        };
-        let crosses_boundary = !target.starts_with(&site.owner.dir)
-            || self
-                .workspace
-                .nearest_package(target)
-                .is_some_and(|target_owner| target_owner.dir != site.owner.dir);
-        if crosses_boundary {
+        record_direct_vitest_target(
+            self.root,
+            self.workspace,
+            site,
+            line,
+            specifier,
+            self.graph.import_target(site.file, specifier),
+            diagnostics,
+        );
+    }
+}
+
+pub(super) fn record_direct_vitest_target(
+    root: &Path,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    site: &VitestSite<'_>,
+    line: u32,
+    specifier: &str,
+    target: Option<&ImportTarget>,
+    diagnostics: &mut AnalysisDiagnostics,
+) {
+    if let Some(ImportTarget::File(target)) = target {
+        if super::crosses_boundary(target, site.owner, workspace) {
             diagnostics.findings.push(RuleFinding {
                 rule: RULE_ID.to_owned(),
                 file: site.relative_file.to_owned(),
@@ -119,12 +120,25 @@ impl Inputs<'_> {
                 message: site.message.to_owned(),
                 import: Some(specifier.to_owned()),
                 target: Some(crate::codebase::ts_source::relative_slash_path(
-                    self.root, target,
+                    root, target,
                 )),
                 causes: Vec::new(),
             });
         }
+        return;
     }
+    if stays_in_owner_package(site.file, specifier, site.owner, workspace) {
+        return;
+    }
+    diagnostics.unanalyzable(
+        site.policy,
+        unanalyzable(
+            site.relative_file,
+            line,
+            specifier,
+            "the relative specifier has no unique file target. Run resolve-check and fix resolution.",
+        ),
+    );
 }
 
 pub(super) fn stays_in_owner_package(
@@ -134,14 +148,13 @@ pub(super) fn stays_in_owner_package(
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
 ) -> bool {
     let path_part = specifier.split(['?', '#']).next().unwrap_or(specifier);
-    let Some(dir) = file.parent() else {
-        return false;
-    };
-    let candidate = normalize_path(&dir.join(path_part));
-    candidate.starts_with(&owner.dir)
-        && workspace
-            .nearest_package(&candidate)
-            .is_some_and(|pkg| pkg.dir == owner.dir)
+    file.parent().is_some_and(|dir| {
+        let candidate = normalize_path(&dir.join(path_part));
+        candidate.starts_with(&owner.dir)
+            && workspace
+                .nearest_package(&candidate)
+                .is_some_and(|pkg| pkg.dir == owner.dir)
+    })
 }
 
 fn unanalyzable(file: &str, line: u32, specifier: &str, reason: &str) -> RuleFinding {

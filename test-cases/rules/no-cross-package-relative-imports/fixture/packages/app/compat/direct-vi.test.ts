@@ -10,5 +10,6 @@ export async function loadDirect() {
   const cross = await vi.importMock("../../shared/src/status.mts");
   require.resolve("../../shared/src/status.mts"); const resolved = await vi.importActual("../../shared/src/status.mts");
   const packageName = await vi.importActual("@sample/shared");
-  return { computed, samePackage, missing, cross, packageName, resolved, status };
+  const localHelper = await vi.importMock("./vi-helper");
+  return { computed, samePackage, missing, cross, packageName, resolved, localHelper, status };
 }
