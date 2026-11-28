@@ -217,8 +217,9 @@ wholly parsed literal `SELECT`, which is `utility`. A qualified call such as
 `public.execute(...)` is not that slot: the header still fail-closes it as
 `dynamicExecute`, and the argument is not parsed as static DML.
 Unquoted `INTO` ends that command the same way `USING` does, so the occurrence
-follows the literal while the unsupported `INTO` target keeps the enclosing block
-incomplete.
+follows the literal and the statement is kind `other`. The block stays incomplete
+unless a `utility` occurrence has the same span. A literal `SELECT` followed
+by `INTO` can leave the block complete.
 Quoted strings, quoted identifiers, and comments are not keywords, so
 `RAISE NOTICE 'EXECUTE INSERT'` is control flow. `complete` stays false when any
 occurrence is `dynamicExecute`. An IF, ELSIF, or conditional-loop header with no
@@ -842,8 +843,9 @@ ordered `using: PostgresSqlExpression[]`, with enclosing source coordinates.
 The decoded command still contains typed `$1` placeholders: parameter expressions
 are preserved as syntax and never substituted or interpreted at runtime.
 Variables, unknown concatenation operands, and format calls keep the enclosing
-block incomplete. An unsupported modifier keeps a parsed block incomplete in
-statement position. An unquoted `INTO` target ends the command expression
+block incomplete. An unsupported modifier is statement kind `other` in statement position.
+The block stays incomplete unless a `utility` occurrence has the same span,
+so a literal `SELECT` followed by `INTO` can leave the block complete. An unquoted `INTO` target ends the command expression
 the same way `USING` does, and the occurrence is classified from the literal.
 `INTO` adds no diagnostic of its own, so inside a loop or `CASE` arm a decoded
 `controlFlow` command can still leave the block complete. Source facts imply no execution or replay policy.
@@ -862,7 +864,7 @@ kind produces a diagnostic and keeps the block incomplete.
 In statement position:
 
 - A literal command with no unsupported modifier is statement kind `literalExecute` with a `PostgresSqlLiteralExecute` payload.
-- In a parsed block, an unsupported modifier, including unquoted `INTO` and a modifier after a decoded literal, is statement kind `other` and keeps the block incomplete. `INTO` ends the command operand the same way `USING` does and adds no diagnostic of its own.
+- In a parsed block, an unsupported modifier, including unquoted `INTO` and a modifier after a decoded literal, is statement kind `other`. The block stays incomplete unless a `utility` occurrence has the same span, so a literal `SELECT` followed by `INTO` can leave the block complete. `INTO` ends the command operand the same way `USING` does and adds no diagnostic of its own.
 - A Unicode `U&` body and a national `N'` body are statement kind `other`, with no `bodyEncoding`.
 - A non-literal command (`format` or an identifier) is occurrence kind `dynamicExecute` and statement kind `other`.
 

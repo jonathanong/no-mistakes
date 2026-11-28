@@ -78,8 +78,10 @@ See [literal EXECUTE placement](https://github.com/jongleberry/no-mistakes/blob/
 In statement position, a literal command with no unsupported modifier exposes
 statement `kind: "literalExecute"` and a `PostgresSqlLiteralExecute` payload.
 In a parsed block, an unsupported modifier, including unquoted `INTO` and a
-modifier after a decoded literal, is statement kind `other` and keeps the
-block incomplete. When a walker-only block includes no `utility` or `dml`,
+modifier after a decoded literal, is statement kind `other`. That statement
+keeps the block incomplete unless a `utility` occurrence has the same span.
+A literal `SELECT` followed by `INTO` is that case and can leave the block
+complete. When a walker-only block includes no `utility` or `dml`,
 no statement is projected. `INTO` adds no diagnostic, and completeness
 follows occurrence recognition and diagnostics.
 A Unicode `U&` body and a national `N'` body are statement kind `other`, with
