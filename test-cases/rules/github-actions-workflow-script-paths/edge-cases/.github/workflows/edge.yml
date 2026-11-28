@@ -33,3 +33,4 @@ jobs:
       - uses: ./
       - uses: ./.github/actions/outer
       - uses: ./.github/actions/opaque
+      - uses: ./../outside-action

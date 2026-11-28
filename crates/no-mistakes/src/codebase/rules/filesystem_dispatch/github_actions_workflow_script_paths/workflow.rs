@@ -1,6 +1,7 @@
 use super::composites;
 use super::diagnostics::RunCtx;
 use super::emit::{emit_hits, finding, EmitCtx, Origin};
+use super::reusable;
 use super::scripts::{self, WorkingDir};
 use super::triggers;
 use crate::codebase::rules::{
@@ -69,6 +70,7 @@ pub(super) fn check_source(
         let job_id = scalar_name(id);
         let job_dir = defaults_working_dir(job, wf_dir.clone());
         let Some(steps) = mapping_get(job_map, "steps").and_then(Value::as_sequence) else {
+            reusable::report_local_workflow_call(ctx, rel, trimmed, &job_id, job_map, &mut diag);
             continue;
         };
         let job_ctx = JobStepCtx {
@@ -157,6 +159,9 @@ fn check_step(
                 &outcome.hits,
                 diag,
             );
+        } else if uses.trim().starts_with("./") {
+            let (run, rel) = (ctx.run, ctx.emit.rel);
+            reusable::report_local_uses_outside_repo(run, rel, uses_line, &place, uses, diag);
         }
     }
 }

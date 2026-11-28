@@ -189,7 +189,9 @@ steps:
   a `cd` inside `if` / `while` / `for` / `case`, a `run` step whose `shell`
   this check cannot parse, embedded `**` such as `pre**post`, unterminated
   shell syntax, composite or shell nesting past four
-  levels, and unreadable or malformed local composite actions
+  levels, unreadable or malformed local composite actions, jobs that call a
+  local reusable workflow (`jobs.<id>.uses: ./...`), and local `uses: ./...`
+  paths that leave the repository
   never pass silently; they emit a diagnostic governed by `options.unanalyzable`
   (default `advise`).
 

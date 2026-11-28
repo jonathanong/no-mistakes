@@ -3,6 +3,7 @@ mod diagnostics;
 mod emit;
 mod extract;
 pub(in crate::codebase::rules) mod options;
+mod reusable;
 mod scripts;
 mod shell_cmd;
 mod triggers;

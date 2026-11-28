@@ -119,3 +119,33 @@ fn composite_depth_limit_stays_unanalyzable_without_blocking_a_shallower_path() 
         "{findings:?}"
     );
 }
+
+#[test]
+fn local_reusable_workflows_and_outside_repo_actions_are_unanalyzable() {
+    use crate::config::v2::{
+        schema::{RuleDef, RuleScope},
+        NoMistakesConfig,
+    };
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/github-actions-workflow-script-paths/edge-cases"),
+    );
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: super::super::RULE_ID.into(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(
+                "scriptDirs: [scripts]\ninclude: ['.github/workflows/edge.yml']\nunanalyzable: report\n",
+            )
+            .unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let findings = super::super::check(&root, &config).unwrap();
+    let find = |needle: &str| findings.iter().find(|f| f.message.contains(needle));
+    let reusable = find("local reusable workflow `./.github/workflows/other.yml`");
+    assert_eq!(reusable.map(|f| f.line), Some(17), "{findings:?}");
+    let outside = find("uses local action `./../outside-action`");
+    assert_eq!(outside.map(|f| f.line), Some(36), "{findings:?}");
+}
