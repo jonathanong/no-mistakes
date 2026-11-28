@@ -4,7 +4,7 @@ use no_mistakes::codebase::analysis_session::AnalysisSession;
 use no_mistakes::codebase::check_outcome::CheckFailure;
 use std::time::Duration;
 
-pub(crate) fn retain_domain_checks(
+pub fn retain_domain_checks(
     session: &AnalysisSession,
     results: DomainResults,
 ) -> CompletedDomainChecks {

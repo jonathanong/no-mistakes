@@ -43,7 +43,7 @@ impl FrameworkPreparationPlan {
         plan
     }
 
-    pub(crate) fn for_graph(plan: crate::codebase::dependencies::graph::GraphBuildPlan) -> Self {
+    pub fn for_graph(plan: crate::codebase::dependencies::graph::GraphBuildPlan) -> Self {
         let mut demand = Self::default();
         // TestOf classification is defined by the union of every configured
         // suite, so this relationship intentionally prepares every runner.
@@ -58,7 +58,7 @@ impl FrameworkPreparationPlan {
         demand
     }
 
-    pub(crate) fn include_framework_names<'a>(&mut self, names: impl IntoIterator<Item = &'a str>) {
+    pub fn include_framework_names<'a>(&mut self, names: impl IntoIterator<Item = &'a str>) {
         for name in names {
             if let Some(runner) = TestRunner::from_name(name) {
                 self.insert(runner);
@@ -66,7 +66,7 @@ impl FrameworkPreparationPlan {
         }
     }
 
-    pub(crate) fn include(&mut self, other: Self) {
+    pub fn include(&mut self, other: Self) {
         for runner in other.runners {
             self.insert(runner);
         }
@@ -76,7 +76,7 @@ impl FrameworkPreparationPlan {
 
     /// Keep an explicitly requested runner config available to the canonical
     /// graph without preparing that runner's test projects.
-    pub(crate) fn retain_indexable_path(&mut self, path: PathBuf) {
+    pub fn retain_indexable_path(&mut self, path: PathBuf) {
         self.retained_indexable_paths.insert(path);
     }
 
@@ -88,11 +88,11 @@ impl FrameworkPreparationPlan {
         }
     }
 
-    pub(crate) fn runners(&self) -> impl Iterator<Item = TestRunner> + '_ {
+    pub fn runners(&self) -> impl Iterator<Item = TestRunner> + '_ {
         self.runners.iter().copied()
     }
 
-    pub(crate) fn excluded_config_paths(
+    pub fn excluded_config_paths(
         &self,
         root: &Path,
         config: &NoMistakesConfig,
@@ -101,7 +101,7 @@ impl FrameworkPreparationPlan {
         (hooks().excluded_config_paths)(self, root, config, visible_paths)
     }
 
-    pub(crate) fn retains_indexable_path(&self, path: &Path) -> bool {
+    pub fn retains_indexable_path(&self, path: &Path) -> bool {
         self.retained_indexable_paths.contains(path)
     }
 

@@ -9,60 +9,60 @@ use no_mistakes::react_traits;
 use std::time::Duration;
 mod advisories;
 mod partial;
-pub(crate) use partial::retain_domain_checks;
+pub use partial::retain_domain_checks;
 mod empty;
-pub(crate) use empty::{empty_results, CompletedDomainChecks};
+pub use empty::{empty_results, CompletedDomainChecks};
 mod render;
-pub(crate) use render::json_value;
-pub(crate) mod suppression;
+pub use render::json_value;
+pub mod suppression;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 mod suppression_tests;
 mod warnings;
 
-pub(crate) struct FinalizeInput<'a> {
-    pub(crate) root: &'a std::path::Path,
-    pub(crate) facts: &'a no_mistakes::codebase::check_facts::CheckFactMap,
-    pub(crate) runner_config_deadlines:
+pub struct FinalizeInput<'a> {
+    pub root: &'a std::path::Path,
+    pub facts: &'a no_mistakes::codebase::check_facts::CheckFactMap,
+    pub runner_config_deadlines:
         Option<Vec<no_mistakes::integration_tests::RunnerConfigDeadlineEvidence>>,
-    pub(crate) config: &'a no_mistakes::config::v2::NoMistakesConfig,
-    pub(crate) disable_directives:
+    pub config: &'a no_mistakes::config::v2::NoMistakesConfig,
+    pub disable_directives:
         &'a no_mistakes::codebase::rules::disable_directive_audit::PreparedDisableDirectives,
-    pub(crate) filesystem_files: &'a [std::path::PathBuf],
-    pub(crate) sources: &'a no_mistakes::codebase::ts_source::SourceStore,
-    pub(crate) filesystem_rules_enabled: bool,
-    pub(crate) react_warning: Option<String>,
-    pub(crate) discover_duration: Duration,
-    pub(crate) facts_duration: Duration,
-    pub(crate) completed: CompletedDomainChecks,
-    pub(crate) include_suppressed: bool,
-    pub(crate) unproven_member_query_sql: u32,
-    pub(crate) sql_verdicts: Vec<no_mistakes::codebase::postgres::SqlObligationVerdict>,
-    pub(crate) include_sql_verdicts: bool,
+    pub filesystem_files: &'a [std::path::PathBuf],
+    pub sources: &'a no_mistakes::codebase::ts_source::SourceStore,
+    pub filesystem_rules_enabled: bool,
+    pub react_warning: Option<String>,
+    pub discover_duration: Duration,
+    pub facts_duration: Duration,
+    pub completed: CompletedDomainChecks,
+    pub include_suppressed: bool,
+    pub unproven_member_query_sql: u32,
+    pub sql_verdicts: Vec<no_mistakes::codebase::postgres::SqlObligationVerdict>,
+    pub include_sql_verdicts: bool,
 }
 
-pub(crate) struct CheckResults {
-    pub(crate) incomplete: Vec<no_mistakes::codebase::check_outcome::CheckFailure>,
-    pub(crate) react: Vec<react_traits::Violation>,
-    pub(crate) queues: Vec<CheckFinding>,
-    pub(crate) rules: Vec<RuleFinding>,
-    pub(crate) integration: Vec<IntegrationFinding>,
-    pub(crate) runner_config_deadlines:
+pub struct CheckResults {
+    pub incomplete: Vec<no_mistakes::codebase::check_outcome::CheckFailure>,
+    pub react: Vec<react_traits::Violation>,
+    pub queues: Vec<CheckFinding>,
+    pub rules: Vec<RuleFinding>,
+    pub integration: Vec<IntegrationFinding>,
+    pub runner_config_deadlines:
         Option<Vec<no_mistakes::integration_tests::RunnerConfigDeadlineEvidence>>,
-    pub(crate) codebase: Vec<UniqueExportFinding>,
-    pub(crate) warnings: Vec<String>,
-    pub(crate) analysis_warning_count: usize,
-    pub(crate) analysis_fallbacks: Vec<no_mistakes::config::v2::AnalysisFallback>,
-    pub(crate) advisories: Vec<RuleFinding>,
-    pub(crate) sql_verdicts: Vec<no_mistakes::codebase::postgres::SqlObligationVerdict>,
-    pub(crate) include_sql_verdicts: bool,
-    pub(crate) suppressed: Vec<no_mistakes::codebase::rules::SuppressedFinding>,
-    pub(crate) include_suppressed: bool,
-    pub(crate) timings: Vec<(&'static str, Duration)>,
-    pub(crate) unproven_member_query_sql: u32,
-    pub(crate) accepted_bounds: Vec<no_mistakes::codebase::check_facts::AcceptedStatementBound>,
+    pub codebase: Vec<UniqueExportFinding>,
+    pub warnings: Vec<String>,
+    pub analysis_warning_count: usize,
+    pub analysis_fallbacks: Vec<no_mistakes::config::v2::AnalysisFallback>,
+    pub advisories: Vec<RuleFinding>,
+    pub sql_verdicts: Vec<no_mistakes::codebase::postgres::SqlObligationVerdict>,
+    pub include_sql_verdicts: bool,
+    pub suppressed: Vec<no_mistakes::codebase::rules::SuppressedFinding>,
+    pub include_suppressed: bool,
+    pub timings: Vec<(&'static str, Duration)>,
+    pub unproven_member_query_sql: u32,
+    pub accepted_bounds: Vec<no_mistakes::codebase::check_facts::AcceptedStatementBound>,
 }
 
-pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckResults> {
+pub fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckResults> {
     let FinalizeInput {
         root,
         facts,

@@ -1,5 +1,5 @@
 impl GraphBuildPlan {
-    pub(crate) fn include(&mut self, other: Self) {
+    pub fn include(&mut self, other: Self) {
         self.assertion_owners |= other.assertion_owners;
         self.builtin_receivers |= other.builtin_receivers;
         self.calls |= other.calls;

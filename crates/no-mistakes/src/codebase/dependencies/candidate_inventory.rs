@@ -22,7 +22,7 @@ fn canonicalize_globs(globs: &[String]) -> Vec<String> {
     globs
 }
 
-pub(crate) fn validate_candidate_bounds(args: &TraverseArgs, direction: Direction) -> Result<()> {
+pub fn validate_candidate_bounds(args: &TraverseArgs, direction: Direction) -> Result<()> {
     if args.projection.is_paths() && !matches!(direction, Direction::Deps) {
         bail!("projection paths is only valid for dependencies");
     }
@@ -73,13 +73,13 @@ impl CandidateInventory {
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub(crate) struct BoundedImportKey {
+pub struct BoundedImportKey {
     bounds: CandidateBounds,
     relationships: Vec<String>,
 }
 
 impl BoundedImportKey {
-    pub(crate) fn from_args(args: &TraverseArgs) -> Self {
+    pub fn from_args(args: &TraverseArgs) -> Self {
         Self {
             bounds: CandidateBounds::from_args(args),
             relationships: bounded_relationship_key(args),

@@ -4,11 +4,9 @@ fn cov_p2_callback_contracts_keep_exact_companion_executor_verdict_spans() {
         .join("cov-p2-callbacks");
     let source = std::fs::read_to_string(root.join("src/query.mts")).unwrap();
     let report: serde_json::Value = serde_json::from_str(
-        &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
-            serde_json::json!({
-                "root": root, "config": root.join(".no-mistakes.yml"), "includeSqlVerdicts": true
-            }),
-        ))
+        &crate::test_support::check_json(serde_json::json!({
+            "root": root, "config": root.join(".no-mistakes.yml"), "includeSqlVerdicts": true
+        }))
         .unwrap(),
     )
     .unwrap();

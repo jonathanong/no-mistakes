@@ -6,11 +6,11 @@ use crate::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
 #[test]
 fn import_main_timer_uses_lexical_call_and_shadowed_timer_stays_uncertain() {
     let root = crate::test_support::rule_fixture_root("coverage-producer-assertion-owner-builtins");
-    let input = crate::napi_api::options::test_json_arg(serde_json::json!({
+    let input = serde_json::json!({
         "root": root, "config": root.join("review-timer.yml")
-    }));
+    });
     let report: serde_json::Value =
-        serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
+        serde_json::from_str(&crate::test_support::check_json(input).unwrap()).unwrap();
     let findings = report["rules"].as_array().unwrap();
     assert_eq!(findings.len(), 1, "{report}");
     assert_eq!(findings[0]["target"], "shadowedTimer", "{report}");

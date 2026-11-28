@@ -11,11 +11,11 @@ fn callable_factory_executors_retain_values_builder_inputs() {
         .find(|(_, line)| line.trim() == "return query(statement);")
         .map(|(index, _)| index + 1)
         .expect("saved nested factory case has an executor sink");
-    let options = crate::napi_api::options::test_json_arg(serde_json::json!({
+    let options = serde_json::json!({
         "root": root,
-    }));
+    });
     let report: serde_json::Value =
-        serde_json::from_str(&crate::napi_api::check_json_impl(options).unwrap()).unwrap();
+        serde_json::from_str(&crate::test_support::check_json(options).unwrap()).unwrap();
     let rows = report["advisories"].as_array().unwrap();
     for (rule, index) in [
         ("postgres-no-offset", 0),
@@ -92,11 +92,11 @@ fn fixture() -> PathBuf {
 }
 fn advisories(config: &str) -> Vec<serde_json::Value> {
     let root = fixture();
-    let options = crate::napi_api::options::test_json_arg(serde_json::json!({
+    let options = serde_json::json!({
         "root": root, "config": root.join(config)
-    }));
+    });
     let report: serde_json::Value =
-        serde_json::from_str(&crate::napi_api::check_json_impl(options).unwrap()).unwrap();
+        serde_json::from_str(&crate::test_support::check_json(options).unwrap()).unwrap();
     assert!(report["rules"].as_array().unwrap().is_empty(), "{report}");
     report["advisories"].as_array().unwrap().clone()
 }

@@ -134,7 +134,7 @@ impl InvocationObserver {
             .fetch_add(1, Ordering::Relaxed);
     }
 
-    pub(crate) fn source_read_snapshot(&self) -> BTreeMap<PathBuf, u64> {
+    pub fn source_read_snapshot(&self) -> BTreeMap<PathBuf, u64> {
         self.source_reads
             .as_ref()
             .map(|source_reads| {

@@ -11,7 +11,7 @@ const profile = process.env.RUNNER_OS === "macOS" ? [
   "--config", "profile.test.package.no-mistakes.codegen-units=64",
 ] : [];
 if (JSON.stringify(process.argv.slice(2)) !== JSON.stringify([
-  "build", ...profile, "--locked", "-p", "no-mistakes", "--timings", "--verbose", "--message-format=json-render-diagnostics",
+  "build", ...profile, "--locked", "-p", "no-mistakes", "-p", "no-mistakes-napi", "--timings", "--verbose", "--message-format=json-render-diagnostics",
 ])) {
   console.error("unexpected cargo arguments");
   process.exit(99);

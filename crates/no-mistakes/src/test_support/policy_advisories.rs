@@ -1,13 +1,13 @@
 /// Older policy contracts retain every diagnostic except the newly additive
 /// hygiene advisories, which have dedicated aggregate CLI/N-API coverage.
-pub(crate) fn without_hygiene_advisories(
+pub fn without_hygiene_advisories(
     mut report: crate::check_runner::CheckResults,
 ) -> crate::check_runner::CheckResults {
     report.advisories.retain(|row| !is_hygiene(&row.rule));
     report
 }
 
-pub(crate) fn without_hygiene_advisory_json(mut report: serde_json::Value) -> serde_json::Value {
+pub fn without_hygiene_advisory_json(mut report: serde_json::Value) -> serde_json::Value {
     retain(&mut report);
     report
 }
@@ -41,5 +41,6 @@ fn retain(value: &mut serde_json::Value) {
     }
 }
 
+#[cfg(test)]
 #[path = "policy_advisories_tests.rs"]
 mod tests;

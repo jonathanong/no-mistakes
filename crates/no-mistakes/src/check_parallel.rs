@@ -4,9 +4,9 @@ use crate::check_tasks::{
 };
 mod inputs;
 mod react_dispatch;
-pub(crate) use inputs::{DomainCheckInputs, DomainResults};
+pub use inputs::{DomainCheckInputs, DomainResults};
 
-pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults {
+pub fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults {
     let observer = no_mistakes::diagnostics::current();
     let session = inputs.session;
     let root = inputs.root;

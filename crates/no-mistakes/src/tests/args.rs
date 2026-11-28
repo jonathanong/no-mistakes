@@ -4,11 +4,11 @@ use std::path::PathBuf;
 #[derive(Args, Debug)]
 pub struct TestsArgs {
     #[command(subcommand)]
-    pub(crate) command: TestsCommand,
+    pub command: TestsCommand,
 }
 
 #[derive(Subcommand, Debug)]
-pub(crate) enum TestsCommand {
+pub enum TestsCommand {
     /// Plan test targets based on changed files and dependency graph analysis.
     // Boxed: `PlanArgs` is by far the largest variant here (it carries every
     // changed-file/diff/git-ref input `tests plan` accepts), so an unboxed
@@ -29,93 +29,93 @@ pub(crate) enum TestsCommand {
 }
 
 #[derive(Args, Debug, Clone)]
-pub(crate) struct PlanArgs {
+pub struct PlanArgs {
     /// Optional test framework for config-driven planning.
     #[arg(value_enum)]
-    pub(crate) framework: Option<TestFramework>,
+    pub framework: Option<TestFramework>,
 
     /// Project root directory.
     #[arg(long, default_value = ".")]
-    pub(crate) root: PathBuf,
+    pub root: PathBuf,
 
     /// Path to config file.
     #[arg(long)]
-    pub(crate) config: Option<PathBuf>,
+    pub config: Option<PathBuf>,
 
     /// Path to tsconfig.json for alias resolution.
     #[arg(long)]
-    pub(crate) tsconfig: Option<PathBuf>,
+    pub tsconfig: Option<PathBuf>,
 
     /// Git base commit/branch to diff against.
     #[arg(long)]
-    pub(crate) base: Option<String>,
+    pub base: Option<String>,
 
     /// Git head commit/branch to diff against (defaults to HEAD).
     #[arg(long, requires = "base")]
-    pub(crate) head: Option<String>,
+    pub head: Option<String>,
 
     /// Git diff refspec, e.g. origin/main...HEAD. Sugar for --base/--head;
     /// desugars to the same streamed `git diff <base>...<head>` lookup, which
     /// carries full unified-diff hunks (selector/route/queue/HTTP coverage
     /// hints, rename/delete facts) the same as `--diff-stdin`.
     #[arg(long = "from-git-diff", conflicts_with_all = ["base", "head"])]
-    pub(crate) from_git_diff: Option<String>,
+    pub from_git_diff: Option<String>,
 
     /// Specific changed file path. Can be repeated.
     #[arg(long = "changed-file")]
-    pub(crate) changed_file: Vec<PathBuf>,
+    pub changed_file: Vec<PathBuf>,
 
     /// Path to a file containing a list of changed files (one per line).
     #[arg(long = "changed-files")]
-    pub(crate) changed_files: Option<PathBuf>,
+    pub changed_files: Option<PathBuf>,
 
     /// Path to a changes diff JSON report, relative to --root.
     #[arg(long, conflicts_with = "direct_test_owner")]
-    pub(crate) changes: Option<PathBuf>,
+    pub changes: Option<PathBuf>,
 
     /// Path to a unified diff file.
     #[arg(long, conflicts_with_all = ["diff_stdin", "diff_command"])]
-    pub(crate) diff: Option<PathBuf>,
+    pub diff: Option<PathBuf>,
 
     /// Read unified diff from stdin.
     #[arg(long, default_value_t = false, conflicts_with_all = ["diff", "diff_command"])]
-    pub(crate) diff_stdin: bool,
+    pub diff_stdin: bool,
 
     /// Run a command and parse its stdout as a unified diff.
     #[arg(long = "diff-command", conflicts_with_all = ["diff", "diff_stdin"])]
-    pub(crate) diff_command: Option<String>,
+    pub diff_command: Option<String>,
 
     /// file#export entrypoints to trace (union of all). Symbol suffixes require --symbols.
     #[arg(long = "entrypoint")]
-    pub(crate) entrypoints: Vec<String>,
+    pub entrypoints: Vec<String>,
 
     /// Structured entrypoint symbols paired with entrypoints (programmatic API only).
     #[arg(skip)]
-    pub(crate) entrypoint_symbols: Vec<Option<String>>,
+    pub entrypoint_symbols: Vec<Option<String>>,
 
     /// Include exported symbol nodes for entrypoint traversal.
     #[arg(long = "symbols", default_value_t = false)]
-    pub(crate) include_symbols: bool,
+    pub include_symbols: bool,
 
     /// Inline diff content (programmatic API only).
     #[arg(skip)]
-    pub(crate) diff_content: Option<String>,
+    pub diff_content: Option<String>,
 
     /// Test plan environment name from config.
     #[arg(long, default_value = "pre-push")]
-    pub(crate) environment: String,
+    pub environment: String,
 
     /// Override the configured plan limit percentage.
     #[arg(long = "limit-percent")]
-    pub(crate) limit_percent: Option<f64>,
+    pub limit_percent: Option<f64>,
 
     /// Override the configured plan limit file count.
     #[arg(long = "limit-files")]
-    pub(crate) limit_files: Option<usize>,
+    pub limit_files: Option<usize>,
 
     /// Override whether global config changes trigger full-suite fallback.
     #[arg(long = "global-config-fallback")]
-    pub(crate) global_config_fallback: Option<bool>,
+    pub global_config_fallback: Option<bool>,
 
     /// Select changed framework-owned tests plus tests one reverse graph edge away.
     ///
@@ -123,58 +123,58 @@ pub(crate) struct PlanArgs {
     /// fallback policy, and explicit entrypoint traversal. A framework is required
     /// so test ownership is explicit.
     #[arg(long = "direct-test-owner")]
-    pub(crate) direct_test_owner: bool,
+    pub direct_test_owner: bool,
 
     /// Output format.
     #[arg(long, value_enum, conflicts_with = "json")]
-    pub(crate) format: Option<PlanFormat>,
+    pub format: Option<PlanFormat>,
 
     /// Shorthand for --format json.
     #[arg(long, default_value_t = false, conflicts_with = "format")]
-    pub(crate) json: bool,
+    pub json: bool,
 
     /// Include the markdown PR comment on the plan JSON (`comment` field).
     #[arg(long = "include-comment", default_value_t = false)]
-    pub(crate) include_comment: bool,
+    pub include_comment: bool,
 
     /// Keep only selected tests whose relative path matches one of these globs.
     #[arg(long = "include-glob")]
-    pub(crate) include_glob: Vec<String>,
+    pub include_glob: Vec<String>,
 }
 
 #[derive(Args, Debug, Clone)]
-pub(crate) struct ImpactArgs {
+pub struct ImpactArgs {
     /// file#export entrypoints (positional, repeatable). Symbol suffixes require --symbols.
     #[arg(required = true)]
-    pub(crate) entrypoints: Vec<String>,
+    pub entrypoints: Vec<String>,
 
     /// Structured entrypoint symbols paired with entrypoints (programmatic API only).
     #[arg(skip)]
-    pub(crate) entrypoint_symbols: Vec<Option<String>>,
+    pub entrypoint_symbols: Vec<Option<String>>,
 
     /// Include exported symbol nodes for entrypoint traversal.
     #[arg(long = "symbols", default_value_t = false)]
-    pub(crate) include_symbols: bool,
+    pub include_symbols: bool,
 
     /// Project root directory.
     #[arg(long, default_value = ".")]
-    pub(crate) root: PathBuf,
+    pub root: PathBuf,
 
     /// Path to config file.
     #[arg(long)]
-    pub(crate) config: Option<PathBuf>,
+    pub config: Option<PathBuf>,
 
     /// Path to tsconfig.json for alias resolution.
     #[arg(long)]
-    pub(crate) tsconfig: Option<PathBuf>,
+    pub tsconfig: Option<PathBuf>,
 
     /// Output format.
     #[arg(long, value_enum, conflicts_with = "json")]
-    pub(crate) format: Option<ImpactFormat>,
+    pub format: Option<ImpactFormat>,
 
     /// Shorthand for --format json.
     #[arg(long, default_value_t = false, conflicts_with = "format")]
-    pub(crate) json: bool,
+    pub json: bool,
 }
 
 include!("args/other.rs");

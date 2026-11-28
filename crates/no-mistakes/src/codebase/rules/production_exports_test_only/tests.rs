@@ -93,9 +93,9 @@ fn malformed_importer_diagnostics_preserve_known_test_only_exports() {
         .unwrap_err()
         .to_string()
         .contains("tests/broken.mts"));
-    let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+    let report = crate::test_support::check_json(
         serde_json::json!({"root": root}).to_string(),
-    ))
+    )
     .unwrap();
     let report: serde_json::Value = serde_json::from_str(&report).unwrap();
     let found = report["rules"].as_array().unwrap();
@@ -122,12 +122,12 @@ fn unsupported_commonjs_and_import_equals_are_explicit_at_their_own_lines() {
         .any(|row| row.target.as_deref() == Some("value")));
     let root = fixture("unsupported-modules");
     for (policy, advisories) in [("advise", true), ("ignore", false)] {
-        let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        let report = crate::test_support::check_json(
             serde_json::json!({
                 "root": root, "config": root.join(format!("{policy}.yml")),
             })
             .to_string(),
-        ))
+        )
         .unwrap();
         let report: serde_json::Value = serde_json::from_str(&report).unwrap();
         assert_eq!(report["rules"].as_array().unwrap().len(), 1);
@@ -162,12 +162,12 @@ fn rejects_missing_explicit_scopes() {
 fn uncertainty_respects_shared_analysis_policy() {
     let root = fixture("uncertain");
     for (config, channel) in [("advise.yml", "advisories"), ("ignore.yml", "rules")] {
-        let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        let report = crate::test_support::check_json(
             serde_json::json!({
                 "root": root, "config": root.join(config)
             })
             .to_string(),
-        ))
+        )
         .unwrap();
         let report: serde_json::Value = serde_json::from_str(&report).unwrap();
         assert_eq!(report["rules"].as_array().unwrap().len(), 1);
@@ -184,12 +184,12 @@ fn uncertainty_respects_shared_analysis_policy() {
 fn unrelated_uncertainty_never_hides_a_known_violation_under_any_policy() {
     let root = fixture("policy-isolation");
     for policy in ["report", "advise", "ignore"] {
-        let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        let report = crate::test_support::check_json(
             serde_json::json!({
                 "root": root, "config": root.join(format!("{policy}.yml")),
             })
             .to_string(),
-        ))
+        )
         .unwrap();
         let report: serde_json::Value = serde_json::from_str(&report).unwrap();
         let rules = report["rules"].as_array().unwrap();

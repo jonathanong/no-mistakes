@@ -19,7 +19,7 @@ pub fn write_json(
     Ok(())
 }
 
-pub(crate) fn write_json_with_diagnostics(
+pub fn write_json_with_diagnostics(
     roots: &[String],
     entries: &[NodeEntry],
     root_dir: &Path,
@@ -137,7 +137,7 @@ pub fn write_yml(
     Ok(())
 }
 
-pub(crate) fn write_yml_with_diagnostics(
+pub fn write_yml_with_diagnostics(
     roots: &[String],
     entries: &[NodeEntry],
     root_dir: &Path,

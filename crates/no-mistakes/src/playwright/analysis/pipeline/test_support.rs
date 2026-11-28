@@ -8,7 +8,7 @@ use crate::playwright::playwright_tests::TestPolicy;
 use anyhow::Result;
 use std::path::Path;
 
-pub(crate) fn analyze_with_policy(
+pub fn analyze_with_policy(
     root: &Path,
     settings: &Settings,
     test_policy: TestPolicy,
@@ -24,7 +24,7 @@ pub(crate) fn analyze_with_policy(
     )
 }
 
-pub(crate) fn analyze_with_policy_and_optional_facts(
+pub fn analyze_with_policy_and_optional_facts(
     root: &Path,
     settings: &Settings,
     test_policy: TestPolicy,

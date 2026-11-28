@@ -9,7 +9,6 @@ const saved = path.resolve(__dirname, "../../test-cases/native-compile-profile")
 const manifest = "crates/no-mistakes/Cargo.toml";
 const env = {
   RUNNER_OS: "macOS",
-  NO_MISTAKES_BUILD_NAPI: "1",
   CARGO_INCREMENTAL: "0",
   RUSTFLAGS: "fixture",
 };
@@ -36,19 +35,13 @@ function runner(
   const run = (executable, args, options) => {
     assert.equal(executable, process.execPath);
     assert.equal(options.cwd, root);
-    assert.equal(options.env.NO_MISTAKES_BUILD_NAPI, "1");
     assert.equal(options.env.CARGO_INCREMENTAL, "0");
     assert.equal(options.env.RUSTFLAGS, "fixture");
     assert.equal(options.env.CARGO_TARGET_DIR, path.join(root, "target"));
     const script = path.basename(args[0]);
     calls.push({ script, args: args.slice(1), target: options.env.CARGO_TARGET_DIR });
     if (script === "build-native.cjs") {
-      assert.equal(
-        fs.readFileSync(path.join(root, manifest), "utf8"),
-        original
-          .toString("utf8")
-          .replace('crate-type = ["rlib"]', 'crate-type = ["rlib", "cdylib"]'),
-      );
+      assert.deepEqual(fs.readFileSync(path.join(root, manifest)), original);
       if (throwRuntime) throw new Error("fixture runtime spawn failed");
       const destination = path.join(root, "target/native-build-diagnostics");
       fs.cpSync(path.join(saved, "diagnostics/runtime"), destination, { recursive: true });
@@ -233,12 +226,8 @@ test("a successful archive without every target report fails evidence collection
   }
 });
 
-test("profiling guards reject incorrect host, N-API, incremental mode and manifest", () => {
+test("profiling guards reject incorrect host, incremental mode and manifest", () => {
   assert.throws(() => runProfile({ platform: "linux", env }), /requires macOS/);
-  assert.throws(
-    () => runProfile({ platform: "darwin", env: { ...env, NO_MISTAKES_BUILD_NAPI: "0" } }),
-    /NO_MISTAKES_BUILD_NAPI=1/,
-  );
   assert.throws(
     () => runProfile({ platform: "darwin", env: { ...env, CARGO_INCREMENTAL: "1" } }),
     /CARGO_INCREMENTAL=0/,

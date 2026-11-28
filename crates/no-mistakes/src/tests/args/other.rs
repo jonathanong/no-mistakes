@@ -1,62 +1,62 @@
 #[derive(Args, Debug, Clone)]
-pub(crate) struct WhyArgs {
+pub struct WhyArgs {
     /// Project root directory.
     #[arg(long, default_value = ".")]
-    pub(crate) root: PathBuf,
+    pub root: PathBuf,
 
     /// Path to config file.
     #[arg(long)]
-    pub(crate) config: Option<PathBuf>,
+    pub config: Option<PathBuf>,
 
     /// Path to tsconfig.json for alias resolution.
     #[arg(long)]
-    pub(crate) tsconfig: Option<PathBuf>,
+    pub tsconfig: Option<PathBuf>,
 
     /// The selected or skipped test file to explain.
     #[arg(required = true)]
-    pub(crate) test: PathBuf,
+    pub test: PathBuf,
 
     /// Changed file to explain the connection path from.
     #[arg(long)]
-    pub(crate) changed: Option<PathBuf>,
+    pub changed: Option<PathBuf>,
 
     /// Path to a previously generated plan JSON file.
     #[arg(long)]
-    pub(crate) plan: Option<PathBuf>,
+    pub plan: Option<PathBuf>,
 
     /// Output format: text, json.
     #[arg(long, value_enum, default_value = "text")]
-    pub(crate) format: WhyFormat,
+    pub format: WhyFormat,
 }
 
 #[derive(Args, Debug, Clone)]
-pub(crate) struct CommentArgs {
+pub struct CommentArgs {
     /// Path to the plan JSON file.
     #[arg(required = true)]
-    pub(crate) plan: PathBuf,
+    pub plan: PathBuf,
 
     /// Output file path to write the comment to (defaults to stdout).
     #[arg(long)]
-    pub(crate) out: Option<PathBuf>,
+    pub out: Option<PathBuf>,
 }
 
 #[derive(Args, Debug, Clone)]
-pub(crate) struct GraphArgs {
+pub struct GraphArgs {
     /// Path to the plan JSON file.
     #[arg(required = true)]
-    pub(crate) plan: PathBuf,
+    pub plan: PathBuf,
 
     /// Output format: mermaid, json.
     #[arg(long, value_enum, default_value = "mermaid")]
-    pub(crate) format: GraphFormat,
+    pub format: GraphFormat,
 
     /// Output file path (defaults to stdout).
     #[arg(long)]
-    pub(crate) out: Option<PathBuf>,
+    pub out: Option<PathBuf>,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) enum TestFramework {
+pub enum TestFramework {
     Dotnet,
     Playwright,
     Vitest,
@@ -74,7 +74,7 @@ pub(crate) enum TestFramework {
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum PlanFormat {
+pub enum PlanFormat {
     Json,
     Paths,
     Commands,
@@ -84,7 +84,7 @@ pub(crate) enum PlanFormat {
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum ImpactFormat {
+pub enum ImpactFormat {
     Json,
     Paths,
     Commands,
@@ -105,34 +105,34 @@ impl From<ImpactFormat> for PlanFormat {
 }
 
 #[derive(Args, Debug, Clone)]
-pub(crate) struct TargetsArgs {
+pub struct TargetsArgs {
     /// Test framework whose project/config ownership should be resolved.
     #[arg(value_enum)]
-    pub(crate) framework: TestFramework,
+    pub framework: TestFramework,
 
     /// Test files to look up.
     #[arg(required = true)]
-    pub(crate) files: Vec<PathBuf>,
+    pub files: Vec<PathBuf>,
 
     /// Project root directory.
     #[arg(long, default_value = ".")]
-    pub(crate) root: PathBuf,
+    pub root: PathBuf,
 
     /// Path to config file.
     #[arg(long)]
-    pub(crate) config: Option<PathBuf>,
+    pub config: Option<PathBuf>,
 
     /// Output format.
     #[arg(long, value_enum, conflicts_with = "json")]
-    pub(crate) format: Option<TargetsFormat>,
+    pub format: Option<TargetsFormat>,
 
     /// Shorthand for --format json.
     #[arg(long, default_value_t = false, conflicts_with = "format")]
-    pub(crate) json: bool,
+    pub json: bool,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum TargetsFormat {
+pub enum TargetsFormat {
     Json,
     Commands,
     Paths,
@@ -140,32 +140,32 @@ pub(crate) enum TargetsFormat {
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum WhyFormat {
+pub enum WhyFormat {
     Text,
     Json,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum GraphFormat {
+pub enum GraphFormat {
     Mermaid,
     Json,
 }
 
 #[derive(Args, Debug, Clone)]
-pub(crate) struct AuditArgs {
+pub struct AuditArgs {
     /// Versioned plan envelope JSON (including caller-recorded provenance).
     #[arg(long)]
-    pub(crate) plan: PathBuf,
+    pub plan: PathBuf,
     /// Versioned full-suite per-test-file execution observations JSON.
     #[arg(long)]
-    pub(crate) observations: PathBuf,
+    pub observations: PathBuf,
     /// Output format.
     #[arg(long, value_enum, default_value = "json")]
-    pub(crate) format: AuditFormat,
+    pub format: AuditFormat,
 }
 
 #[derive(ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum AuditFormat {
+pub enum AuditFormat {
     Json,
     Text,
 }

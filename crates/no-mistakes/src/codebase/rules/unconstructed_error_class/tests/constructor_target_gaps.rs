@@ -17,9 +17,9 @@ fn package_runtime_files_preserve_constructor_and_unused_error_child_proof() {
             if let Some(effort) = effort {
                 options["effort"] = effort.into();
             }
-            let output = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            let output = crate::test_support::check_json(
                 options.to_string(),
-            ))
+            )
             .unwrap();
             let report: serde_json::Value = serde_json::from_str(&output).unwrap();
             // Each constructed Error facade is used; only its unused child is
@@ -138,9 +138,9 @@ fn conditional_declarations_share_fact_ownership_without_widening_ordinary_relat
 fn require_syntax_in_an_esm_file_does_not_claim_the_import_branch_constructor() {
     let fixture = crate::test_support::materialize_saved_fixture(&saved_root());
     let root = fixture.path();
-    let output = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+    let output = crate::test_support::check_json(
         serde_json::json!({"root": root, "config": root.join("require-only.yml")}).to_string(),
-    ))
+    )
     .unwrap();
     let report: serde_json::Value = serde_json::from_str(&output).unwrap();
     assert!(reported_channel(&report, "rules").is_empty(), "{report}");

@@ -4,7 +4,7 @@ use std::cell::Cell;
 impl AnalysisSession {
     /// Parse strictly through the request OXC gateway and return only callback-
     /// owned data. Failed parses retain the stable `ast::with_program` error.
-    pub(crate) fn with_program<T>(
+    pub fn with_program<T>(
         &self,
         path: &Path,
         source: &Arc<str>,
@@ -28,7 +28,7 @@ impl AnalysisSession {
 
     /// Parse through the thread-local OXC gateway and return only callback-
     /// owned data. The source may be a recovered program with a diagnostic.
-    pub(crate) fn with_recovered_program<T>(
+    pub fn with_recovered_program<T>(
         &self,
         path: &Path,
         source: &Arc<str>,
@@ -41,7 +41,7 @@ impl AnalysisSession {
 
     /// Recovered parser access with an explicit fatal-panic marker for fact
     /// collectors that expose partial AST-derived results to sound queries.
-    pub(crate) fn with_recovered_program_status<T>(
+    pub fn with_recovered_program_status<T>(
         &self,
         path: &Path,
         source: &Arc<str>,
@@ -68,7 +68,7 @@ impl AnalysisSession {
 
     /// Parse unknown extensions as TypeScript while retaining recovered
     /// diagnostics. This preserves the fact collector's direct-file fallback.
-    pub(crate) fn with_recovered_typescript_program<T>(
+    pub fn with_recovered_typescript_program<T>(
         &self,
         path: &Path,
         source: &Arc<str>,
@@ -95,7 +95,7 @@ impl AnalysisSession {
 
     /// Parse with the historical symbols source type while retaining recovered
     /// diagnostics for generic fact consumers. Only parser panics are fatal.
-    pub(crate) fn with_legacy_symbols_program<T>(
+    pub fn with_legacy_symbols_program<T>(
         &self,
         path: &Path,
         source: &Arc<str>,
@@ -131,7 +131,7 @@ impl AnalysisSession {
         }
     }
 
-    pub(crate) fn record_work(&self, metric: &'static str, amount: u64) {
+    pub fn record_work(&self, metric: &'static str, amount: u64) {
         self.increment(metric, amount);
     }
 

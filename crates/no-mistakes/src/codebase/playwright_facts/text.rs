@@ -13,7 +13,7 @@ pub(crate) enum AppTextKind {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub(crate) struct AppTextTarget {
+pub struct AppTextTarget {
     pub(crate) file: PathBuf,
     pub(crate) app_file: Arc<String>,
     pub(crate) kind: AppTextKind,
@@ -63,7 +63,7 @@ pub(crate) fn normalize_locator_text(value: &str) -> Option<String> {
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct SelectorRef {
-    pub(crate) attribute: String,
-    pub(crate) value: String,
+pub struct SelectorRef {
+    pub attribute: String,
+    pub value: String,
 }

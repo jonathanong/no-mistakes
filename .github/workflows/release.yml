@@ -522,8 +522,9 @@ jobs:
 
   build-native-linux-x64:
     name: Build native for x86_64-unknown-linux-gnu
-    # One rustc emits rlib+cdylib, matching native CI. Validate stays a publish
-    # gate, not a compile gate: the release commit is a version bump on main.
+    # One Cargo build compiles no-mistakes rlib once for both the CLI binary and
+    # the no-mistakes-napi cdylib. Validate stays a publish gate, not a compile
+    # gate: the release commit is a version bump on main.
     needs:
       - prepare
     runs-on: ubuntu-22.04
@@ -532,7 +533,7 @@ jobs:
       contents: read
     env:
       NM_TARGET: x86_64-unknown-linux-gnu
-      NM_ADDON: libno_mistakes.so
+      NM_ADDON: libno_mistakes_napi.so
       NM_BUILD_TIMEOUT: "65"
       CARGO_PROFILE_RELEASE_LTO: thin
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
@@ -724,7 +725,7 @@ jobs:
       contents: read
     env:
       NM_TARGET: aarch64-unknown-linux-gnu
-      NM_ADDON: libno_mistakes.so
+      NM_ADDON: libno_mistakes_napi.so
       NM_BUILD_TIMEOUT: "65"
       CARGO_PROFILE_RELEASE_LTO: thin
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
@@ -800,7 +801,7 @@ jobs:
       contents: read
     env:
       NM_TARGET: aarch64-apple-darwin
-      NM_ADDON: libno_mistakes.dylib
+      NM_ADDON: libno_mistakes_napi.dylib
       NM_BUILD_TIMEOUT: "90"
       CARGO_PROFILE_RELEASE_LTO: thin
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
@@ -876,7 +877,7 @@ jobs:
       contents: read
     env:
       NM_TARGET: x86_64-pc-windows-msvc
-      NM_ADDON: no_mistakes.dll
+      NM_ADDON: no_mistakes_napi.dll
       NM_BUILD_TIMEOUT: "90"
       CARGO_PROFILE_RELEASE_LTO: "false"
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"

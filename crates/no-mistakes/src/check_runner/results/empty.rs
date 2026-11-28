@@ -7,13 +7,13 @@ use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
 use std::time::Duration;
 
-pub(crate) struct CompletedDomainChecks {
-    pub(crate) react: CheckTask<Vec<react_traits::Violation>>,
-    pub(crate) queues: CheckTask<Vec<CheckFinding>>,
-    pub(crate) rules: CheckTask<Vec<RuleFinding>>,
-    pub(crate) integration: CheckTask<Vec<IntegrationFinding>>,
-    pub(crate) codebase: CheckTask<Vec<PreparedUniqueExportFinding>>,
-    pub(crate) filesystem_rules: CheckTask<Vec<RuleFinding>>,
+pub struct CompletedDomainChecks {
+    pub react: CheckTask<Vec<react_traits::Violation>>,
+    pub queues: CheckTask<Vec<CheckFinding>>,
+    pub rules: CheckTask<Vec<RuleFinding>>,
+    pub integration: CheckTask<Vec<IntegrationFinding>>,
+    pub codebase: CheckTask<Vec<PreparedUniqueExportFinding>>,
+    pub filesystem_rules: CheckTask<Vec<RuleFinding>>,
 }
 
 pub(super) fn timings(d: [Duration; 8]) -> Vec<(&'static str, Duration)> {
@@ -30,7 +30,7 @@ pub(super) fn timings(d: [Duration; 8]) -> Vec<(&'static str, Duration)> {
     NAMES.into_iter().zip(d).collect()
 }
 
-pub(crate) fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
+pub fn empty_results(warnings: [Option<String>; 1]) -> CheckResults {
     let warnings = warnings.into_iter().flatten().collect();
     CheckResults {
         incomplete: Vec::new(),

@@ -10,7 +10,7 @@ function validateBuild(build, selector) {
     throw new Error("Cargo unit report is empty; no compilation evidence was captured");
   if (selector && units.some((unit) => ["no_mistakes", "no-mistakes"].includes(unit.target.name)))
     throw new Error("platform archive compiled the full CLI");
-  const expected = selector ? ["rlib"] : ["cdylib", "rlib"];
+  const expected = ["rlib"];
   const library = selector ? "no_mistakes_invocation" : "no_mistakes";
   if (
     !units.some(
@@ -47,10 +47,8 @@ function runProfile({
 } = {}) {
   if (platform !== "darwin" || env.RUNNER_OS !== "macOS")
     throw new Error("native compile profiling requires macOS");
-  if (env.NO_MISTAKES_BUILD_NAPI !== "1" || env.CARGO_INCREMENTAL !== "0")
-    throw new Error(
-      "native compile profiling requires NO_MISTAKES_BUILD_NAPI=1 and CARGO_INCREMENTAL=0",
-    );
+  if (env.CARGO_INCREMENTAL !== "0")
+    throw new Error("native compile profiling requires CARGO_INCREMENTAL=0");
   const manifest = path.join(root, "crates/no-mistakes/Cargo.toml");
   const original = fs.readFileSync(manifest);
   const before = 'crate-type = ["rlib"]';
@@ -125,14 +123,8 @@ function runProfile({
     };
   }
   try {
-    let runtimeStatus;
-    try {
-      fs.writeFileSync(manifest, source.replace(before, 'crate-type = ["rlib", "cdylib"]'));
-      runtimeStatus = phase("runtime", "build-native.cjs");
-    } finally {
-      fs.writeFileSync(manifest, original);
-      report.manifestRestored = fs.readFileSync(manifest).equals(original);
-    }
+    const runtimeStatus = phase("runtime", "build-native.cjs");
+    report.manifestRestored = fs.readFileSync(manifest).equals(original);
     if (!report.manifestRestored)
       throw new Error("original manifest was not restored before test archive");
     report.exitCode = runtimeStatus;

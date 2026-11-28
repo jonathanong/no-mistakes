@@ -161,25 +161,6 @@ fn observed_catalog_preserves_postgres_ordering_state() {
     assert_eq!(escaped["schema"], "Catalog\\'Schema");
     assert!(escaped["tables"].get("safe").is_some());
 
-    let napi = crate::napi_api::generate_postgres_catalog_json_impl(
-        serde_json::to_value(&options).unwrap(),
-    )
-    .unwrap();
-    assert_eq!(
-        serde_json::from_str::<serde_json::Value>(&napi).unwrap(),
-        catalog
-    );
-    // The Node API records the requested name, exactly as the CLI's --current-database does.
-    let mut options_json = serde_json::to_value(&options).unwrap();
-    options_json["currentDatabase"] = "app".into();
-    let recorded = crate::napi_api::generate_postgres_catalog_json_impl(options_json).unwrap();
-    let mut expected = catalog.clone();
-    expected["currentDatabase"] = "app".into();
-    assert_eq!(
-        serde_json::from_str::<serde_json::Value>(&recorded).unwrap(),
-        expected
-    );
-
     assert_eq!(
         catalog["tables"]["\"Items\""]["indexes"]["expression_key"]["valid"],
         true

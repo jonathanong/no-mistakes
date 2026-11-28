@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
 mod check_outcomes;
-pub(crate) mod class_ancestry;
+pub mod class_ancestry;
 mod fact_discovery;
 mod intern;
 mod io;

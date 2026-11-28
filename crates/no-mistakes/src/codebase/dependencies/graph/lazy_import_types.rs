@@ -1,5 +1,5 @@
 #[derive(Clone, Copy)]
-pub(crate) struct LazyImportFacts<'a> {
+pub struct LazyImportFacts<'a> {
     prepared: Option<&'a dyn TsFactLookup>,
     live_cache: Option<&'a dashmap::DashMap<PathBuf, std::sync::Arc<TsFileFacts>>>,
     collect_plan: TsFactPlan,
@@ -9,7 +9,7 @@ pub(crate) struct LazyImportFacts<'a> {
 }
 
 impl<'a> LazyImportFacts<'a> {
-    pub(crate) fn new(
+    pub fn new(
         prepared: Option<&'a dyn TsFactLookup>,
         collect_plan: TsFactPlan,
         context: &'a TsFactContext,
@@ -24,7 +24,7 @@ impl<'a> LazyImportFacts<'a> {
         }
     }
 
-    pub(crate) fn with_live_cache(
+    pub fn with_live_cache(
         mut self,
         live_cache: &'a dashmap::DashMap<PathBuf, std::sync::Arc<TsFileFacts>>,
     ) -> Self {
@@ -32,7 +32,7 @@ impl<'a> LazyImportFacts<'a> {
         self
     }
 
-    pub(crate) fn with_source_store(
+    pub fn with_source_store(
         mut self,
         sources: &'a crate::codebase::ts_source::SourceStore,
     ) -> Self {
@@ -40,31 +40,31 @@ impl<'a> LazyImportFacts<'a> {
         self
     }
 
-    pub(crate) fn retain_collected(mut self) -> Self {
+    pub fn retain_collected(mut self) -> Self {
         self.retain_collected = true;
         self
     }
 }
 
-pub(crate) struct LazyImportBuild<'a> {
-    pub(crate) roots: &'a [NodeId],
-    pub(crate) tsconfig: &'a TsConfig,
-    pub(crate) tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
-    pub(crate) max_depth: Option<usize>,
-    pub(crate) graph_files: &'a GraphFiles,
-    pub(crate) resolution_visible: Option<&'a dyn crate::codebase::ts_resolver::VisiblePathLookup>,
-    pub(crate) allowed: Option<&'a HashSet<EdgeKind>>,
-    pub(crate) facts: LazyImportFacts<'a>,
-    pub(crate) workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
-    pub(crate) import_resolution_cache:
+pub struct LazyImportBuild<'a> {
+    pub roots: &'a [NodeId],
+    pub tsconfig: &'a TsConfig,
+    pub tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
+    pub max_depth: Option<usize>,
+    pub graph_files: &'a GraphFiles,
+    pub resolution_visible: Option<&'a dyn crate::codebase::ts_resolver::VisiblePathLookup>,
+    pub allowed: Option<&'a HashSet<EdgeKind>>,
+    pub facts: LazyImportFacts<'a>,
+    pub workspace: &'a crate::codebase::workspace_resolution::IndexedWorkspaceMap,
+    pub import_resolution_cache:
         Option<&'a crate::codebase::ts_resolver::ImportResolutionCache>,
 }
 
-pub(crate) struct LazyImportWalk {
-    pub(crate) entries: Vec<NodeEntry>,
-    pub(crate) facts: Vec<(PathBuf, TsFileFacts)>,
+pub struct LazyImportWalk {
+    pub entries: Vec<NodeEntry>,
+    pub facts: Vec<(PathBuf, TsFileFacts)>,
     pub(crate) edges: Vec<CanonicalEdge<NodeId, EdgeKind>>,
-    pub(crate) nodes: Vec<NodeId>,
+    pub nodes: Vec<NodeId>,
 }
 
 struct ExpandedImportNode {

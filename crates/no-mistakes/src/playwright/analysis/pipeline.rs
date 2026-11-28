@@ -1,10 +1,9 @@
 use crate::playwright::analysis::context::TestAnalysisContext;
-pub(crate) use crate::playwright::analysis::pipeline_entrypoints::{
-    analyze_with_policy_and_facts_from_snapshot, analyze_with_policy_from_snapshot,
-};
+pub use crate::playwright::analysis::pipeline_entrypoints::analyze_with_policy_and_facts_from_snapshot;
+pub(crate) use crate::playwright::analysis::pipeline_entrypoints::analyze_with_policy_from_snapshot;
+pub use crate::playwright::analysis::pipeline_facts::standalone_fact_plan;
 pub(crate) use crate::playwright::analysis::pipeline_facts::{
-    extend_fact_plan_with_config, extend_standalone_fact_plan, standalone_fact_plan,
-    standalone_facts,
+    extend_fact_plan_with_config, extend_standalone_fact_plan, standalone_facts,
 };
 use crate::playwright::analysis::pipeline_occurrences::{
     prepare_test_files, PrepareTestFilesOptions,
@@ -34,7 +33,7 @@ use anyhow::Result;
 use std::path::Path;
 
 #[cfg(test)]
-pub(crate) mod test_support;
+pub mod test_support;
 
 pub(crate) fn analyze_with_policy_and_optional_facts(
     root: &Path,

@@ -7,10 +7,10 @@ impl CheckFactPlan {
             || self.query_annotation
             || (!self.postgres_conflict_locations && (self.postgres_dml || self.postgres_variants))
     }
-    pub(crate) fn record_general_sql_locations(&mut self) {
+    pub fn record_general_sql_locations(&mut self) {
         self.postgres_general_locations |= self.unclassified_sql_consumer();
     }
-    pub(crate) fn wants_full_sql_locations(&self) -> bool {
+    pub fn wants_full_sql_locations(&self) -> bool {
         self.postgres_exact_locations
             || self.postgres_json_writes
             || self.postgres_duplicate_keyed_lookups

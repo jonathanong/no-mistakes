@@ -1,11 +1,11 @@
 use std::path::Path;
 use std::process::Command;
 
-pub(crate) fn git_init(root: &Path) {
+pub fn git_init(root: &Path) {
     run_git(root, &["init", "-q", "--initial-branch=main"]);
 }
 
-pub(crate) fn git_add_all(root: &Path) {
+pub fn git_add_all(root: &Path) {
     run_git(root, &["add", "."]);
 }
 

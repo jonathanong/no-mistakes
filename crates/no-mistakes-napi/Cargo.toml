@@ -1,0 +1,59 @@
+[package]
+name = "no-mistakes-napi"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Node.js N-API bindings for no-mistakes"
+repository.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["mermaid-validation"]
+mermaid-validation = ["no-mistakes/mermaid-validation"]
+test-instrumentation = ["no-mistakes/test-instrumentation"]
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+napi = { version = "3.9.0", features = ["napi8"] }
+napi-derive = { version = "3.5.6", default-features = false, features = ["strict"] }
+no-mistakes = { path = "../no-mistakes", default-features = false }
+rayon = "1.10"
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = { version = "1", features = ["raw_value"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = [
+  "Win32_Foundation",
+  "Win32_Storage_FileSystem",
+  "Win32_System_IO",
+] }
+
+[dev-dependencies]
+criterion = { package = "codspeed-criterion-compat", version = "=5.0.1", default-features = false, features = ["cargo_bench_support", "rayon"] }
+no-mistakes = { path = "../no-mistakes", default-features = false, features = ["test-support"] }
+num_cpus = "1.16"
+oxc_allocator = "0.159.0"
+oxc_parser = "0.159.0"
+oxc_span = "0.159.0"
+serde_yaml = "0.9"
+tempfile = "3"
+wait-timeout = "0.2"
+
+[build-dependencies]
+napi-build = "2.3.2"
+
+[[bench]]
+name = "core_analysis"
+harness = false
+required-features = ["test-instrumentation"]

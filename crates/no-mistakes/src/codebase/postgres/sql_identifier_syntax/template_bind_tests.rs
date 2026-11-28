@@ -109,11 +109,11 @@ fn low_template_binds_do_not_accept_dynamic_tags_shadowing_writes_or_builder_mut
 #[test]
 fn all_three_low_policies_accept_binds_and_keep_actual_dynamic_advice() {
     let root = fixture();
-    let options = crate::napi_api::options::test_json_arg(serde_json::json!({
+    let options = serde_json::json!({
         "root": root, "config": root.join(".no-mistakes-low.yml")
-    }));
+    });
     let report: serde_json::Value =
-        serde_json::from_str(&crate::napi_api::check_json_impl(options).unwrap()).unwrap();
+        serde_json::from_str(&crate::test_support::check_json(options).unwrap()).unwrap();
     let advisories = report["advisories"].as_array().unwrap();
     assert!(
         advisories.iter().all(|row| row["file"] != "src/binds.mts"),

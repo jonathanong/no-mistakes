@@ -1,4 +1,4 @@
-pub(crate) struct GraphFiles {
+pub struct GraphFiles {
     all: std::sync::Arc<Vec<PathBuf>>,
     indexable: std::sync::Arc<Vec<PathBuf>>,
     /// 1 if `all[i]` is visible. Kept parallel to `all` so lookup can binary
@@ -93,11 +93,11 @@ impl GraphFiles {
         self.canonical_visible.universe()
     }
 
-    pub(crate) fn indexable(&self) -> &[PathBuf] {
+    pub fn indexable(&self) -> &[PathBuf] {
         &self.indexable
     }
 
-    pub(crate) fn all(&self) -> &[PathBuf] {
+    pub fn all(&self) -> &[PathBuf] {
         &self.all
     }
 

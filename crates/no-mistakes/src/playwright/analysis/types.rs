@@ -12,69 +12,69 @@ use crate::playwright::selectors;
 
 #[path = "types/summary.rs"]
 mod summary;
-pub(crate) use summary::Summary;
+pub use summary::Summary;
 
 #[path = "types/test_ref.rs"]
 mod test_ref;
-pub(crate) use test_ref::{RouteCoverageAttribution, TestRef};
+pub use test_ref::{RouteCoverageAttribution, TestRef};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct CoverageRoute {
-    pub(crate) route: String,
-    pub(crate) file: String,
-    pub(crate) covered: bool,
-    pub(crate) tests: Vec<String>,
-    pub(crate) tests_detail: Vec<TestRef>,
-    pub(crate) urls: Vec<String>,
+pub struct CoverageRoute {
+    pub route: String,
+    pub file: String,
+    pub covered: bool,
+    pub tests: Vec<String>,
+    pub tests_detail: Vec<TestRef>,
+    pub urls: Vec<String>,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct CoverageSelector {
-    pub(crate) attribute: String,
-    pub(crate) value: String,
-    pub(crate) file: String,
-    pub(crate) covered: bool,
-    pub(crate) unsupported_dynamic: bool,
-    pub(crate) tests: Vec<String>,
-    pub(crate) tests_detail: Vec<TestRef>,
-    pub(crate) selectors: Vec<String>,
+pub struct CoverageSelector {
+    pub attribute: String,
+    pub value: String,
+    pub file: String,
+    pub covered: bool,
+    pub unsupported_dynamic: bool,
+    pub tests: Vec<String>,
+    pub tests_detail: Vec<TestRef>,
+    pub selectors: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub(crate) helper_references: Vec<SelectorHelperReference>,
     #[serde(skip)]
-    pub(crate) line: usize,
+    pub line: usize,
     #[serde(skip)]
-    pub(crate) literal_exact: bool,
+    pub literal_exact: bool,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct CoverageFetch {
-    pub(crate) method: String,
-    pub(crate) path: String,
-    pub(crate) covered: bool,
-    pub(crate) tests: Vec<String>,
-    pub(crate) tests_detail: Vec<TestRef>,
-    pub(crate) route_files: Vec<String>,
+pub struct CoverageFetch {
+    pub method: String,
+    pub path: String,
+    pub covered: bool,
+    pub tests: Vec<String>,
+    pub tests_detail: Vec<TestRef>,
+    pub route_files: Vec<String>,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct DuplicateSelector {
-    pub(crate) attribute: String,
-    pub(crate) value: String,
-    pub(crate) file: String,
-    pub(crate) line: usize,
+pub struct DuplicateSelector {
+    pub attribute: String,
+    pub value: String,
+    pub file: String,
+    pub line: usize,
 }
 
 mod coverage_report;
 use coverage_report::is_arc_empty;
-pub(crate) use coverage_report::CoverageReport;
+pub use coverage_report::CoverageReport;
 
 #[derive(Eq, PartialEq, Ord, PartialOrd, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
-pub(crate) enum Edge {
+pub enum Edge {
     #[serde(rename_all = "camelCase")]
     Fetch {
         test_file: Arc<String>,
@@ -139,54 +139,53 @@ pub(crate) enum Edge {
 }
 
 #[derive(Serialize)]
-pub(crate) struct EdgeReport {
-    pub(crate) edges: Vec<Edge>,
+pub struct EdgeReport {
+    pub edges: Vec<Edge>,
 }
 
 #[derive(Serialize)]
-pub(crate) struct RelatedReport {
-    pub(crate) tests: Vec<String>,
-    pub(crate) fetch_apis: Vec<String>,
+pub struct RelatedReport {
+    pub tests: Vec<String>,
+    pub fetch_apis: Vec<String>,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct Analysis {
-    pub(crate) coverage: CoverageReport,
-    pub(crate) edges: EdgeReport,
+pub struct Analysis {
+    pub coverage: CoverageReport,
+    pub edges: EdgeReport,
     /// Diagnostic-only records have root-relative paths and never enter coverage output.
     #[serde(skip)]
-    pub(crate) unanalyzable_html_ids: Vec<selectors::AppSelector>,
+    pub unanalyzable_html_ids: Vec<selectors::AppSelector>,
 }
 
-pub(crate) struct CoverageInputs<'a> {
-    pub(crate) root: &'a Path,
-    pub(crate) routes: &'a [Route],
-    pub(crate) app_selectors: &'a [selectors::AppSelector],
-    pub(crate) app_selector_occurrences: &'a [selectors::AppSelector],
-    pub(crate) edges: &'a [Edge],
+pub struct CoverageInputs<'a> {
+    pub root: &'a Path,
+    pub routes: &'a [Route],
+    pub app_selectors: &'a [selectors::AppSelector],
+    pub app_selector_occurrences: &'a [selectors::AppSelector],
+    pub edges: &'a [Edge],
     pub(crate) helper_references: &'a [SelectorHelperReferenceWithValue],
-    pub(crate) settings: &'a Settings,
-    pub(crate) unique_selector_policy: UniqueSelectorPolicy,
-    pub(crate) fetch_index: &'a FetchIndex,
+    pub settings: &'a Settings,
+    pub unique_selector_policy: UniqueSelectorPolicy,
+    pub fetch_index: &'a FetchIndex,
 }
 
 #[derive(Clone, Copy, Default)]
-pub(crate) struct UniqueSelectorPolicy {
-    pub(crate) test_ids: bool,
-    pub(crate) html_ids: bool,
-    pub(crate) aggregate: bool,
-    pub(crate) configured_html_id_selector: bool,
+pub struct UniqueSelectorPolicy {
+    pub test_ids: bool,
+    pub html_ids: bool,
+    pub aggregate: bool,
+    pub configured_html_id_selector: bool,
     /// Skip recovered Exact values when judging unique test IDs.
-    pub(crate) literal_test_ids_only: bool,
+    pub literal_test_ids_only: bool,
     /// HTML-ID effort is independent of configured test-ID effort.
-    pub(crate) literal_html_ids_only: bool,
+    pub literal_html_ids_only: bool,
 }
 
-pub(crate) type FetchIndex =
-    std::collections::HashMap<String, Vec<crate::fetch::types::FetchOccurrence>>;
-pub(crate) type SelectorCoverageKey = (Arc<String>, String, String);
-pub(crate) type CoverageLinks = (
+pub type FetchIndex = std::collections::HashMap<String, Vec<crate::fetch::types::FetchOccurrence>>;
+pub type SelectorCoverageKey = (Arc<String>, String, String);
+pub type CoverageLinks = (
     std::collections::BTreeSet<Arc<String>>,
     std::collections::BTreeSet<String>,
 );

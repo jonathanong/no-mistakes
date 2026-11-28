@@ -1,7 +1,7 @@
 use crate::cli::Format;
 use crate::codebase::queries::call_sites::{run_json as call_json, CallSitesArgs};
 use crate::codebase::queries::dead_exports::{run_json as dead_json, DeadExportsArgs};
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::path::PathBuf;
 
 fn root() -> PathBuf {
@@ -15,7 +15,6 @@ fn parse(text: &str) -> Value {
 #[test]
 fn unreadable_configured_caller_makes_language_queries_partial() {
     let root = root();
-    let root_display = root.display().to_string();
     let dead = parse(
         &dead_json(DeadExportsArgs {
             file: PathBuf::from("python/greeter.py"),
@@ -47,15 +46,6 @@ fn unreadable_configured_caller_makes_language_queries_partial() {
     assert_eq!(result(&dead, "Unused")["referenced"], false);
     assert_eq!(calls["callSites"][0]["file"], "python/caller.py");
     assert_eq!(calls["callSites"][0]["referenceOnly"], true);
-    let napi_dead = parse(
-        &crate::napi_api::queries::dead_exports_json_impl(json!({
-            "root": root_display,
-            "file": "python/greeter.py",
-            "names": ["Greeter", "Unused"],
-        }))
-        .unwrap(),
-    );
-    assert_eq!(dead, napi_dead);
 }
 
 #[test]

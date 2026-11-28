@@ -15,7 +15,7 @@ type TestBuckets = (
     BTreeSet<String>,
 );
 
-pub(crate) fn build_tests_report(edges: &[Edge], files: &[PathBuf], root: &Path) -> TestsReport {
+pub fn build_tests_report(edges: &[Edge], files: &[PathBuf], root: &Path) -> TestsReport {
     let filter_files: BTreeSet<String> = files.iter().map(|f| input_file(root, f)).collect();
 
     let mut by_test: BTreeMap<TestKey, TestBuckets> = BTreeMap::new();
@@ -115,7 +115,7 @@ pub(crate) fn build_tests_report(edges: &[Edge], files: &[PathBuf], root: &Path)
     TestsReport { tests }
 }
 
-pub(crate) fn print_tests_text(report: &TestsReport) {
+pub fn print_tests_text(report: &TestsReport) {
     for entry in &report.tests {
         if let Some(name) = &entry.name {
             let path_prefix = if entry.describe_path.is_empty() {

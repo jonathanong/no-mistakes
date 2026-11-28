@@ -5,31 +5,30 @@ use std::path::Path;
 use std::sync::Arc;
 
 mod catalog;
-pub(crate) mod consumers;
+pub mod consumers;
 mod independent;
 mod parallel;
 
-pub(crate) struct PreparedCheckInputs {
-    pub(crate) visible_paths: Arc<VisiblePathSnapshot>,
-    pub(crate) inferred_roots: no_mistakes::codebase::config::InferredRoots,
-    pub(crate) config: NoMistakesConfig,
-    pub(crate) config_path: Option<std::path::PathBuf>,
-    pub(crate) codebase_config: no_mistakes::codebase::config::Config,
-    pub(crate) playwright: Option<no_mistakes::playwright::rules::PreparedPlaywrightRules>,
-    pub(crate) playwright_failure: Option<String>,
-    pub(crate) react: no_mistakes::react_traits::PreparedReactCheck,
-    pub(crate) tsconfig: no_mistakes::codebase::ts_resolver::TsConfig,
-    pub(crate) tsconfig_catalog: Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
-    pub(crate) vitest_projects: Option<no_mistakes::codebase::rules::PreparedVitestProjectCatalog>,
-    pub(crate) playwright_projects:
-        Option<no_mistakes::codebase::rules::PreparedPlaywrightProjectCatalog>,
-    pub(crate) workflow_documents:
+pub struct PreparedCheckInputs {
+    pub visible_paths: Arc<VisiblePathSnapshot>,
+    pub inferred_roots: no_mistakes::codebase::config::InferredRoots,
+    pub config: NoMistakesConfig,
+    pub config_path: Option<std::path::PathBuf>,
+    pub codebase_config: no_mistakes::codebase::config::Config,
+    pub playwright: Option<no_mistakes::playwright::rules::PreparedPlaywrightRules>,
+    pub playwright_failure: Option<String>,
+    pub react: no_mistakes::react_traits::PreparedReactCheck,
+    pub tsconfig: no_mistakes::codebase::ts_resolver::TsConfig,
+    pub tsconfig_catalog: Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
+    pub vitest_projects: Option<no_mistakes::codebase::rules::PreparedVitestProjectCatalog>,
+    pub playwright_projects: Option<no_mistakes::codebase::rules::PreparedPlaywrightProjectCatalog>,
+    pub workflow_documents:
         Option<Arc<no_mistakes::codebase::ci_workflows::PreparedWorkflowTopologyInputs>>,
-    pub(crate) tsconfig_gate_project_inputs:
+    pub tsconfig_gate_project_inputs:
         Option<no_mistakes::codebase::rules::tsconfig_gate_coverage::ProjectSourceInputs>,
 }
 
-pub(crate) fn prepare_from_shared(
+pub fn prepare_from_shared(
     root: &Path,
     config_path: Option<&Path>,
     tsconfig_path: Option<&Path>,
@@ -163,7 +162,7 @@ pub(crate) fn prepare_from_shared(
     })
 }
 
-pub(crate) mod failures;
+pub mod failures;
 
 include!("prepared/workspace.rs");
 

@@ -3,10 +3,6 @@ fn prepared_graph_config_reuses_a_supplied_test_filter() {
     let files_config = include_str!("../../codebase/dependencies/graph/files_config.rs");
     let prepared = include_str!("../../codebase/dependencies/graph/files_config_prepared.rs");
     let graph_plan = include_str!("../graph_plan.rs");
-    let check_prepare = concat!(
-        include_str!("../../napi_api/analyze_project/context/check_prepare.rs"),
-        include_str!("../../napi_api/analyze_project/context/check_prepare_graph.rs"),
-    );
     let standalone = include_str!("../../codebase/rules/run/standalone.rs");
 
     let fallback = files_config
@@ -39,11 +35,6 @@ fn prepared_graph_config_reuses_a_supplied_test_filter() {
     assert!(graph_plan.contains("TestFileFilter::new(root, config)"));
     assert!(graph_plan.contains("let result = prepare("));
     assert!(graph_plan.contains("prepare_graph_config_with_test_filter_partial"));
-    assert!(check_prepare.contains("graph_plan::prepare("));
-    assert!(check_prepare.contains("codebase_config: &prepared.codebase_config"));
-    assert!(check_prepare.contains("visible_paths: prepared.visible_paths.as_ref()"));
-    assert!(!check_prepare.contains("prepare_graph_config("));
-    assert!(!check_prepare.contains("TestFileFilter::new("));
 }
 
 #[test]

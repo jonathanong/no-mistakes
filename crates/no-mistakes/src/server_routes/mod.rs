@@ -1,23 +1,23 @@
 mod contracts;
-pub(crate) use no_mistakes_ts_analysis::server_routes_extract::extract;
+pub use no_mistakes_ts_analysis::server_routes_extract::extract;
 mod graph;
 mod lang;
-pub(crate) mod model;
+pub mod model;
 mod mounts;
-pub(crate) use no_mistakes_ts_analysis::server_routes_extract::normalize;
+pub use no_mistakes_ts_analysis::server_routes_extract::normalize;
 mod related;
 mod remix;
 mod source;
 mod types;
 
 pub use contracts::{analyze_contracts, analyze_contracts_with_prepared, ServerContractsReport};
-pub(crate) use extract::{has_server_route_shape_from_program, is_client_http_module};
+pub use extract::{has_server_route_shape_from_program, is_client_http_module};
 pub use graph::{
     analyze_project, analyze_project_indexed, analyze_project_with_prepared,
     analyze_project_with_prepared_indexed, prepare_analysis, prepare_analysis_with_shared_facts,
     prepare_analysis_with_shared_facts_and_session, PreparedServerAnalysis, RelatedDirection,
 };
-pub(crate) use graph::{configure_fact_context, route_defs_from_prepared_facts_with_catalog};
+pub use graph::{configure_fact_context, route_defs_from_prepared_facts_with_catalog};
 pub use model::{PreparedProjectReport, ProjectReport};
 pub use related::related;
 pub use types::{Diagnostic, Edge, EdgeKind, Framework, ServerRoute, Severity, Summary};

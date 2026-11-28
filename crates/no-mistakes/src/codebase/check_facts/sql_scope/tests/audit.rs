@@ -49,10 +49,7 @@ fn active_sql_audit_keeps_excluded_callers_and_imported_directives_broad() {
         let _restore = Restore;
         let observer = crate::diagnostics::InvocationObserver::new(true);
         let report = crate::diagnostics::with_observer(Some(observer.clone()), || {
-            crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
-                serde_json::json!({"root":root}),
-            ))
-            .unwrap()
+            crate::test_support::check_json(serde_json::json!({"root":root})).unwrap()
         });
         let count = observer
             .snapshot()
@@ -116,9 +113,9 @@ fn non_sql_audit_demand_does_not_widen_unaudited_sql_profiles() {
     }
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let report = crate::diagnostics::with_observer(Some(observer.clone()), || {
-        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        crate::test_support::check_json(
             serde_json::json!({"root":root,"config":root.join("no-sql.yml")}),
-        ))
+        )
         .unwrap()
     });
     let report: serde_json::Value = serde_json::from_str(&report).unwrap();
@@ -131,9 +128,9 @@ fn non_sql_audit_demand_does_not_widen_unaudited_sql_profiles() {
         }
     }
     let _restore = Restore(BROAD.with(|value| value.replace(true)));
-    let full = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+    let full = crate::test_support::check_json(
         serde_json::json!({"root":root,"config":root.join("no-sql.yml")}),
-    ))
+    )
     .unwrap();
     assert_eq!(
         report,

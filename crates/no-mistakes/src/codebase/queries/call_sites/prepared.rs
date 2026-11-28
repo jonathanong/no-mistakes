@@ -95,4 +95,4 @@ fn build_graph(
 }
 
 mod ordinary;
-pub(crate) use ordinary::{OrdinaryCallSites, OrdinaryCallSitesPlan};
+pub use ordinary::{OrdinaryCallSites, OrdinaryCallSitesPlan};

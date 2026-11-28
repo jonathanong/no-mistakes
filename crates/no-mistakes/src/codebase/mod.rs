@@ -8,7 +8,8 @@ pub mod comment_only;
 pub mod config;
 pub mod dependencies;
 pub mod dotnet;
-pub(crate) mod fact_panic;
+#[doc(hidden)]
+pub mod fact_panic;
 pub(crate) mod glob_normalize;
 pub mod import_usages;
 pub mod keyed_diff;
@@ -16,14 +17,16 @@ pub(crate) mod lang_frontends;
 pub mod lockfile;
 pub mod markdown_sections;
 pub mod md_links;
-pub(crate) mod package_analysis;
+#[doc(hidden)]
+pub mod package_analysis;
 pub mod package_deps;
 pub(crate) mod playwright_facts;
 pub(crate) mod playwright_hooks;
 pub mod pnpm_lock;
 pub mod posix_path;
 pub mod postgres;
-pub(crate) mod postgres_analysis;
+#[doc(hidden)]
+pub mod postgres_analysis;
 pub mod queries;
 pub(crate) mod rule_analysis_hooks;
 pub mod rules;
@@ -35,7 +38,8 @@ pub mod symbols;
 pub mod terraform;
 pub mod test_discovery;
 pub mod test_filter;
-pub(crate) mod testing_analysis;
+#[doc(hidden)]
+pub mod testing_analysis;
 pub mod timing;
 pub mod ts_http_calls;
 pub mod ts_process_spawn;
@@ -49,7 +53,8 @@ pub(crate) mod ts_trpc;
 pub mod unique_exports;
 pub(crate) mod workflow_step_lines;
 pub mod workflow_topology;
-pub(crate) mod workspace_resolution;
+#[doc(hidden)]
+pub mod workspace_resolution;
 pub mod workspaces;
 
 pub use dependencies::{Direction, TraverseArgs, TraverseProjection};

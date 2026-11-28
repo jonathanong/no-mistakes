@@ -27,7 +27,7 @@ pub struct GraphEdgeJson {
     pub detail: Option<ImpactEdgeDetail>,
 }
 
-pub(crate) fn run(args: GraphArgs) -> Result<ExitCode> {
+pub fn run(args: GraphArgs) -> Result<ExitCode> {
     let content = fs::read_to_string(&args.plan)
         .with_context(|| format!("Failed to read plan from {}", args.plan.display()))?;
     let plan: TestPlan = serde_json::from_str(&content).context("Failed to parse plan JSON.")?;
@@ -50,7 +50,7 @@ pub(crate) fn run(args: GraphArgs) -> Result<ExitCode> {
 
 const _: fn(GraphArgs) -> Result<ExitCode> = run;
 
-pub(crate) fn graph_json(plan: &TestPlan) -> Result<GraphJson> {
+pub fn graph_json(plan: &TestPlan) -> Result<GraphJson> {
     let parts = graph_parts(plan);
     let mut nodes_json = Vec::new();
     for node in &parts.sorted_nodes {
@@ -83,7 +83,7 @@ pub(crate) fn graph_json(plan: &TestPlan) -> Result<GraphJson> {
     })
 }
 
-pub(crate) fn graph_mermaid(plan: &TestPlan) -> Result<String> {
+pub fn graph_mermaid(plan: &TestPlan) -> Result<String> {
     let parts = graph_parts(plan);
     Ok(render_mermaid(
         &parts.sorted_nodes,

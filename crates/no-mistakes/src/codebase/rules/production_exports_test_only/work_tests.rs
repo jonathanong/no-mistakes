@@ -8,9 +8,9 @@ fn applications_and_barrel_exports_share_inventory_parse_graph_and_incomplete_sc
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let output = {
         let _guard = crate::diagnostics::InvocationGuard::install(Arc::clone(&observer));
-        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        crate::test_support::check_json(
             serde_json::json!({ "root": root }).to_string(),
-        ))
+        )
         .unwrap()
     };
     let report: serde_json::Value = serde_json::from_str(&output).unwrap();

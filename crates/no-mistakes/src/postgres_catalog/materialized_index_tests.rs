@@ -30,20 +30,6 @@ fn generated_catalog_retains_materialized_view_indexes() {
         current_database: None,
     };
     let complete = generate(&options).unwrap();
-    let directory = tempfile::tempdir().unwrap();
-    let output = directory.path().join("catalog.json");
-    let mut input = serde_json::to_value(&options).unwrap();
-    input["output"] = serde_json::to_value(&output).unwrap();
-    let returned = crate::napi_api::generate_postgres_catalog_json_impl(input.clone()).unwrap();
-    assert_eq!(
-        serde_json::from_str::<serde_json::Value>(&returned).unwrap(),
-        complete
-    );
-    let published = std::fs::read_to_string(&output).unwrap();
-    assert_eq!(published, format!("{complete:#}\n"));
-    input["schema"] = "catalog_fixture_missing".into();
-    assert!(crate::napi_api::generate_postgres_catalog_json_impl(input).is_err());
-    assert_eq!(std::fs::read_to_string(&output).unwrap(), published);
     let view = &complete["views"]["recent_events"];
     assert_eq!(view["materialized"], true);
     let indexes = view["indexes"].as_object().unwrap();

@@ -46,7 +46,7 @@ impl GraphFiles {
         changed
     }
 
-    pub(crate) fn contains_visible(&self, path: &Path) -> bool {
+    pub fn contains_visible(&self, path: &Path) -> bool {
         self.visible_index(path).is_some()
     }
 
@@ -74,7 +74,7 @@ impl GraphFiles {
             .map(|index| self.all[index].as_path())
     }
 
-    pub(crate) fn iter_visible(&self) -> impl Iterator<Item = &PathBuf> {
+    pub fn iter_visible(&self) -> impl Iterator<Item = &PathBuf> {
         self.all
             .iter()
             .zip(self.visible.iter())
@@ -82,12 +82,12 @@ impl GraphFiles {
             .map(|(path, _)| path)
     }
 
-    pub(crate) fn visible_len(&self) -> usize {
+    pub fn visible_len(&self) -> usize {
         self.visible.iter().filter(|flag| **flag == 1).count()
     }
 
     /// Already-normalized visible paths as a membership set.
-    pub(crate) fn visible_path_set(&self) -> crate::fx::PathSet {
+    pub fn visible_path_set(&self) -> crate::fx::PathSet {
         self.iter_visible().cloned().collect()
     }
 }

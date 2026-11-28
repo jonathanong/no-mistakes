@@ -48,7 +48,7 @@ pub(crate) fn standalone_facts(
     )
 }
 
-pub(crate) fn standalone_fact_plan(
+pub fn standalone_fact_plan(
     root: &Path,
     settings: &config::Settings,
     unique_selector_policy: UniqueSelectorPolicy,

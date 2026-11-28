@@ -4,10 +4,10 @@ fn produced_receivers_stay_unknown_only_at_actual_consumers() {
         crate::test_support::rule_fixture_root("postgres-no-offset").join("producer-consumers");
     let source = std::fs::read_to_string(root.join("src/query.ts")).unwrap();
     let report: serde_json::Value = serde_json::from_str(
-        &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        &crate::test_support::check_json(
             serde_json::json!({ "root": root, "config": root.join(".no-mistakes-low.yml"),
                 "includeSqlVerdicts": true }),
-        ))
+        )
         .unwrap(),
     )
     .unwrap();
@@ -51,10 +51,10 @@ fn asserted_configured_factories_preserve_actual_statement_proofs() {
         crate::test_support::rule_fixture_root("postgres-no-offset").join("factory-cast-consumers");
     let source = std::fs::read_to_string(root.join("src/query.ts")).unwrap();
     let report: serde_json::Value = serde_json::from_str(
-        &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        &crate::test_support::check_json(
             serde_json::json!({ "root": root, "config": root.join(".no-mistakes-low.yml"),
                 "includeSqlVerdicts": true }),
-        ))
+        )
         .unwrap(),
     )
     .unwrap();

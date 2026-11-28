@@ -14,17 +14,13 @@ macro_rules! record_view_composition {
 mod composition_metrics_tests;
 
 impl CheckFactMap {
-    pub(crate) fn view_with_supplemental(
-        &self,
-        supplemental: &Self,
-        graph_files: Vec<PathBuf>,
-    ) -> Self {
+    pub fn view_with_supplemental(&self, supplemental: &Self, graph_files: Vec<PathBuf>) -> Self {
         self.compose_view(supplemental, graph_files, true)
     }
 
     /// Merge supplemental facts the way the CLI does: fill keys that are
     /// absent, and keep a richer primary entry such as production imports.
-    pub(crate) fn fact_view_filling_missing(&self, supplemental: &Self) -> Self {
+    pub fn fact_view_filling_missing(&self, supplemental: &Self) -> Self {
         self.compose_view(supplemental, self.graph_files.clone(), false)
     }
 

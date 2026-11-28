@@ -429,25 +429,6 @@ fn multi_framework_fanout_matches_direct_framework_plans() {
 }
 
 #[test]
-fn impacted_checks_napi_matches_the_cli_engine_for_multi_framework_fanout() {
-    let fixture = fanout_fixture();
-    let args = fanout_args(fixture.path());
-    let cli_report = generate_impacted_checks(&args).unwrap();
-    let options = serde_json::json!({
-        "root": fixture.path().display().to_string(),
-        "changedFiles": ["src/shared.ts"],
-    });
-
-    let napi_json = crate::napi_api::impacted_checks_json_impl(
-        crate::napi_api::options::test_json_arg(options),
-    )
-    .unwrap();
-    let napi_report: serde_json::Value = serde_json::from_str(&napi_json).unwrap();
-
-    assert_eq!(napi_report, serde_json::to_value(cli_report).unwrap());
-}
-
-#[test]
 fn timing_tracker_emits_progress_without_diagnostics_observer() {
     assert!(crate::diagnostics::current().is_none());
 

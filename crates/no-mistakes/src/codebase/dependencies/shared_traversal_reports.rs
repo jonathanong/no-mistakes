@@ -1,5 +1,5 @@
 impl SharedTraversalContext {
-    pub(crate) fn signature_impact_json(
+    pub fn signature_impact_json(
         &self,
         args: &crate::codebase::symbols::SymbolsArgs,
     ) -> Result<String> {
@@ -21,7 +21,7 @@ impl SharedTraversalContext {
         )
     }
 
-    pub(crate) fn flow_report(
+    pub fn flow_report(
         &self,
         options: &crate::flow_query::FlowOptions,
     ) -> Result<crate::flow_query::FlowReport> {
@@ -34,7 +34,7 @@ impl SharedTraversalContext {
         )
     }
 
-    pub(crate) fn effects_report(
+    pub fn effects_report(
         &self,
         selection: &crate::effects_query::EffectsSelection,
         entry: &Path,
@@ -52,7 +52,7 @@ impl SharedTraversalContext {
         )
     }
 
-    pub(crate) fn rsc_callers_report(
+    pub fn rsc_callers_report(
         &self,
         component: &Path,
         depth: Option<usize>,

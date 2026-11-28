@@ -27,7 +27,7 @@ struct FileHit {
     importer: Option<String>,
 }
 
-pub(crate) fn collect_usage_file_facts(
+pub fn collect_usage_file_facts(
     file: &Path,
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
@@ -45,7 +45,7 @@ pub(crate) fn collect_usage_file_facts(
     UsageFileFacts { imports, callsites }
 }
 
-pub(crate) fn run_usages_with_loaded_config_and_facts(
+pub fn run_usages_with_loaded_config_and_facts(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
     target: &str,

@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 /// Collection gaps in the requested reverse scan, not a soundness guarantee.
 #[derive(Default, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct QueryDiagnostics {
+pub struct QueryDiagnostics {
     partial: bool,
     incomplete_files: Vec<QueryIncompleteFile>,
 }

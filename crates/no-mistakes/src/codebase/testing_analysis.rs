@@ -11,18 +11,18 @@ use std::sync::OnceLock;
 
 mod catalog;
 pub(crate) mod discovered_tests;
-pub(crate) mod dynamic_imports;
-pub(crate) mod matcher_properties;
-pub(crate) mod plan;
+pub mod dynamic_imports;
+pub mod matcher_properties;
+pub mod plan;
 mod prepared_projects;
-pub(crate) mod project_filter;
+pub mod project_filter;
 pub(crate) mod project_patterns;
-pub(crate) mod reliability;
-pub(crate) mod runner;
-pub(crate) mod runner_filter;
-pub(crate) mod test_filter;
-pub(crate) mod vitest_excludes;
-pub(crate) mod vitest_policy;
+pub mod reliability;
+pub mod runner;
+pub mod runner_filter;
+pub mod test_filter;
+pub mod vitest_excludes;
+pub mod vitest_policy;
 
 pub(crate) use catalog::{FrameworkCatalog, FrameworkCatalogPreparation};
 pub(crate) use prepared_projects::PreparedProjects;
@@ -68,35 +68,35 @@ type AssertionOwnershipEdges = fn(
     &dyn TsFactLookup,
 ) -> anyhow::Result<Vec<(NodeId, NodeId, EdgeKind)>>;
 
-pub(crate) struct Hooks {
+pub struct Hooks {
     pub(crate) prepare_framework_catalog:
         fn(FrameworkCatalogPreparation<'_>) -> anyhow::Result<FrameworkCatalog>,
-    pub(crate) excluded_config_paths: ConfigPaths,
+    pub excluded_config_paths: ConfigPaths,
     pub(crate) test_filters_from_prepared: TestGlobs,
-    pub(crate) new_test_filter: fn(&Path, &NoMistakesConfig) -> test_filter::TestFileFilter,
-    pub(crate) test_filter_from_visible: FilterFromVisible,
-    pub(crate) legacy_filter_from_visible: LegacyFilterFromVisible,
-    pub(crate) dynamic_imports_rule_id: &'static str,
-    pub(crate) needs_playwright_configs: fn(&NoMistakesConfig) -> bool,
-    pub(crate) needs_vitest_configs: fn(&NoMistakesConfig) -> bool,
-    pub(crate) vitest_roots_configured: fn(&NoMistakesConfig) -> bool,
+    pub new_test_filter: fn(&Path, &NoMistakesConfig) -> test_filter::TestFileFilter,
+    pub test_filter_from_visible: FilterFromVisible,
+    pub legacy_filter_from_visible: LegacyFilterFromVisible,
+    pub dynamic_imports_rule_id: &'static str,
+    pub needs_playwright_configs: fn(&NoMistakesConfig) -> bool,
+    pub needs_vitest_configs: fn(&NoMistakesConfig) -> bool,
+    pub vitest_roots_configured: fn(&NoMistakesConfig) -> bool,
     pub(crate) collect_reliability: CollectReliability,
     pub(crate) collect_fixture_initializers: CollectFixtureInitializers,
-    pub(crate) has_vitest_candidate_exports: fn(&Program<'_>) -> bool,
+    pub has_vitest_candidate_exports: fn(&Program<'_>) -> bool,
     pub(crate) collect_vitest_excludes: CollectVitestExcludes,
-    pub(crate) vitest_policy_rule_id: &'static str,
-    pub(crate) vitest_policy_diagnostics: VitestPolicyDiagnostics,
-    pub(crate) assertion_owner_rule_id: &'static str,
-    pub(crate) assertion_ownership_edges: AssertionOwnershipEdges,
+    pub vitest_policy_rule_id: &'static str,
+    pub vitest_policy_diagnostics: VitestPolicyDiagnostics,
+    pub assertion_owner_rule_id: &'static str,
+    pub assertion_ownership_edges: AssertionOwnershipEdges,
 }
 
 static HOOKS: OnceLock<&'static Hooks> = OnceLock::new();
 
-pub(crate) fn register(hooks: &'static Hooks) {
+pub fn register(hooks: &'static Hooks) {
     HOOKS.get_or_init(|| hooks);
 }
 
-pub(crate) fn hooks() -> &'static Hooks {
+pub fn hooks() -> &'static Hooks {
     HOOKS
         .get()
         .copied()

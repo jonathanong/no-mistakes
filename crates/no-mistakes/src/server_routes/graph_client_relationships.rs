@@ -1,4 +1,4 @@
-pub(crate) struct PreparedClientRelationships {
+pub struct PreparedClientRelationships {
     graph_files: std::sync::Arc<crate::codebase::dependencies::graph::GraphFiles>,
     resolver: ImportResolver<'static>,
 }
@@ -10,7 +10,7 @@ pub(super) struct ClientRelationshipInputs<'a> {
 }
 
 impl PreparedClientRelationships {
-    pub(crate) fn new(
+    pub fn new(
         source_files: &[PathBuf],
         tsconfig: &TsConfig,
         session: &crate::codebase::analysis_session::AnalysisSession,

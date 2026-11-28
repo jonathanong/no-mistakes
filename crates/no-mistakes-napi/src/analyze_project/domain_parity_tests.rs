@@ -1,0 +1,90 @@
+use super::options_test_support::{parse_options, report_value};
+use super::*;
+use serde_json::{json, Value};
+use std::path::{Path, PathBuf};
+
+fn repo_fixture(parts: &[&str]) -> PathBuf {
+    let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    for part in parts {
+        path.push(part);
+    }
+    no_mistakes::codebase::ts_resolver::normalize_path(&path)
+}
+
+fn parser_fixture(name: &str) -> PathBuf {
+    repo_fixture(&["fixtures", "parser-count", name])
+}
+
+fn analysis_fixture(name: &str) -> PathBuf {
+    repo_fixture(&["test-cases", "codebase-analysis", name, "fixture"])
+}
+
+fn category_fixture(category: &str, name: &str) -> PathBuf {
+    repo_fixture(&["test-cases", category, name, "fixture"])
+}
+
+fn parse_json(output: String) -> Value {
+    serde_json::from_str(&output).unwrap()
+}
+
+fn report_results(output: &str) -> Vec<Value> {
+    serde_json::from_str::<Value>(output).unwrap()["reports"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|report| report["result"].clone())
+        .collect()
+}
+
+fn assert_each_indexable_file_parsed_once(
+    root: &Path,
+    counts: &std::collections::HashMap<PathBuf, usize>,
+) {
+    let expected = no_mistakes::codebase::ts_source::discover_files(root, &[])
+        .into_iter()
+        .filter(|path| no_mistakes::codebase::dependencies::extract::is_indexable(path))
+        .collect::<Vec<_>>();
+    assert_eq!(counts.len(), expected.len(), "{counts:#?}");
+    for path in expected {
+        assert_eq!(counts.get(&path), Some(&1), "{counts:#?}");
+    }
+}
+
+include!("domain_parity_tests/check_effects.rs");
+include!("domain_parity_tests/call_sites_scope.rs");
+include!("domain_parity_tests/query_diagnostics.rs");
+include!("domain_parity_tests/postgres_exact_keys.rs");
+include!("domain_parity_tests/check_per_item.rs");
+include!("domain_parity_tests/queue_transaction.rs");
+include!("domain_parity_tests/forbidden_call_arguments.rs");
+include!("domain_parity_tests/recall_policies.rs");
+include!("domain_parity_tests/production_dependencies.rs");
+include!("domain_parity_tests/companion_imports.rs");
+include!("domain_parity_tests/finite_set_consistency.rs");
+include!("domain_parity_tests/declared_payload.rs");
+include!("domain_parity_tests/check_isolation.rs");
+include!("domain_parity_tests/sql_verdicts.rs");
+include!("domain_parity_tests/repository_inventory.rs");
+include!("domain_parity_tests/playwright_react_server.rs");
+include!("domain_parity_tests/symbols.rs");
+include!("domain_parity_tests/symbol_parse_modes.rs");
+include!("domain_parity_tests/heterogeneous.rs");
+include!("domain_parity_tests/language_rules.rs");
+
+include!("domain_parity_tests/postgres_identifier.rs");
+include!("domain_parity_tests/postgres_explain_write_rollback.rs");
+include!("domain_parity_tests/postgres_lock_reason.rs");
+
+include!("domain_parity_tests/postgres_shapes.rs");
+include!("domain_parity_tests/postgres_writes.rs");
+
+include!("domain_parity_tests/effects_provenance.rs");
+
+include!("domain_parity_tests/lang_frontend_shared_session.rs");
+
+include!("domain_parity_tests/resolver_projection_parity.rs");
+
+include!("domain_parity_tests/resolver_projection_reentry.rs");
+
+include!("domain_parity_tests/constructor_resolution.rs");
+include!("domain_parity_tests/low_helper_recovery.rs");

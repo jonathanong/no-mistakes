@@ -40,8 +40,7 @@ test("the macOS jobs retain the Windows build and test phases on parallel runner
       const runners = [...body.matchAll(/^          (?:- |  )os: (.+)$/gm)];
       assert.ok(runners.length > 0);
       assert.ok(runners.every((row) => row[1] === os));
-      if (run === "native-rust-tests") assert.doesNotMatch(body, /NO_MISTAKES_BUILD_NAPI/);
-      else assert.match(body, /^      NO_MISTAKES_BUILD_NAPI: "1"$/m);
+      assert.doesNotMatch(body, /NO_MISTAKES_BUILD_NAPI/);
       assert.doesNotMatch(body, /^    if: .*docs-only/m);
     }
   }

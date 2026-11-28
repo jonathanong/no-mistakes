@@ -1,0 +1,187 @@
+fn symbol_target_files(options: &AnalyzeProjectOptions, root: &Path) -> Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    for request in &options.reports {
+        if request.report_type != "symbols" {
+            continue;
+        }
+        let raw = super::symbols_options(request, options)?;
+        let parsed: crate::options::SymbolOptions = serde_json::from_str(&raw)?;
+        files.extend(parsed.files.into_iter().map(|file| {
+            let file = PathBuf::from(file);
+            let path = if file.is_absolute() {
+                file
+            } else {
+                root.join(file)
+            };
+            no_mistakes::codebase::ts_resolver::normalize_path(&path)
+        }));
+    }
+    Ok(files)
+}
+
+fn legacy_symbol_target_files(
+    options: &AnalyzeProjectOptions,
+    root: &Path,
+) -> Result<std::collections::HashSet<PathBuf>> {
+    let mut files = std::collections::HashSet::new();
+    for request in options
+        .reports
+        .iter()
+        .filter(|request| matches!(request.report_type.as_str(), "symbols" | "callSites"))
+    {
+        if request.report_type == "callSites" {
+            let raw = super::options::command_options(request, options)?;
+            let parsed: crate::queries::CallSitesOptions = serde_json::from_value(raw)?;
+            files.insert(authoritative_path(root, PathBuf::from(parsed.file)));
+            continue;
+        }
+        let raw = super::symbols_options(request, options)?;
+        let parsed: crate::options::SymbolOptions = serde_json::from_str(&raw)?;
+        let args = crate::codebase::build_symbols_args(parsed)?;
+        if args.mode == no_mistakes::codebase::symbols::SymbolsMode::SignatureImpact {
+            continue;
+        }
+        files.extend(
+            args.files
+                .into_iter()
+                .map(|file| authoritative_path(root, file)),
+        );
+    }
+    Ok(files)
+}
+
+fn prepare_import_usage_views(
+    options: &AnalyzeProjectOptions,
+    root: &Path,
+    session: &no_mistakes::codebase::analysis_session::AnalysisSession,
+) -> Result<(
+    HashMap<String, no_mistakes::codebase::import_usages::PreparedImportUsages>,
+    Vec<PathBuf>,
+)> {
+    let cwd = std::env::current_dir().context("reading current directory")?;
+    let mut views = HashMap::new();
+    let mut files = Vec::new();
+    for request in &options.reports {
+        if request.report_type != "importUsages" {
+            continue;
+        }
+        let key = super::import_usages_options(request, options)?;
+        if views.contains_key(&key) {
+            continue;
+        }
+        let parsed = serde_json::from_str(key.as_str())?;
+        let args = crate::codebase::build_import_usages_args(parsed);
+        let prepared =
+            no_mistakes::codebase::import_usages::prepare_file_universe(&args, root, &cwd, session)?;
+        files.extend(prepared.files().iter().cloned());
+        views.insert(key, prepared);
+    }
+    files.sort();
+    files.dedup();
+    Ok((views, files))
+}
+
+fn authoritative_report_files(
+    options: &AnalyzeProjectOptions,
+    root: &Path,
+) -> Result<Vec<PathBuf>> {
+    let mut files = symbol_target_files(options, root)?;
+    for request in &options.reports {
+        if super::graph_direction(&request.report_type).is_some() {
+            let args = super::traverse_args(request, options)?;
+            files.extend(args.files.into_iter().enumerate().map(|(index, path)| {
+                let structured = args
+                    .file_entrypoints_are_structured
+                    .get(index)
+                    .copied()
+                    .unwrap_or(false);
+                let raw = if structured {
+                    path
+                } else {
+                    no_mistakes::codebase::dependencies::parse_entrypoint(&path.to_string_lossy()).0
+                };
+                authoritative_path(root, raw)
+            }));
+        } else if request.report_type == "callSites" {
+            let raw = super::options::command_options(request, options)?;
+            let parsed: crate::queries::CallSitesOptions = serde_json::from_value(raw)?;
+            files.push(authoritative_path(root, PathBuf::from(parsed.file)));
+        } else if request.report_type == "effects" {
+            if let Some(entry) = super::options::effects_options(request, options)?.entry {
+                files.push(authoritative_path(root, PathBuf::from(entry)));
+            }
+        } else if request.report_type == "rscCallers" {
+            if let Some(component) =
+                super::options::rsc_callers_options(request, options)?.component
+            {
+                files.push(authoritative_path(root, PathBuf::from(component)));
+            }
+        }
+    }
+    files.retain(|path| path.is_file());
+    files.sort();
+    files.dedup();
+    Ok(files)
+}
+
+pub(crate) fn authoritative_path(root: &Path, path: PathBuf) -> PathBuf {
+    let path = if path.is_absolute() {
+        path
+    } else {
+        let from_root = root.join(&path);
+        if from_root.exists() {
+            from_root
+        } else if let Ok(cwd) = std::env::current_dir() {
+            let from_cwd = cwd.join(&path);
+            if from_cwd.exists() {
+                from_cwd
+            } else {
+                from_root
+            }
+        } else {
+            from_root
+        }
+    };
+    no_mistakes::codebase::ts_resolver::normalize_path(&path)
+}
+
+fn has_server_report(options: &AnalyzeProjectOptions) -> bool {
+    options
+        .reports
+        .iter()
+        .any(|request| super::is_server_report(&request.report_type))
+}
+
+fn prepare_ordinary_call_sites(
+    options: &AnalyzeProjectOptions,
+    root: &Path,
+    session: std::sync::Arc<no_mistakes::codebase::analysis_session::AnalysisSession>,
+) -> Result<Option<no_mistakes::codebase::queries::call_sites::prepared::OrdinaryCallSitesPlan>> {
+    let files = options
+        .reports
+        .iter()
+        .filter(|request| request.report_type == "callSites")
+        .map(|request| {
+            let raw = super::options::command_options(request, options)?;
+            let parsed: crate::queries::CallSitesOptions = serde_json::from_value(raw)?;
+            Ok(PathBuf::from(parsed.file))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    if files.is_empty() {
+        return Ok(None);
+    }
+    Ok(Some(
+        no_mistakes::codebase::queries::call_sites::prepared::OrdinaryCallSitesPlan::new(
+            &files,
+            root,
+            options.tsconfig.as_deref().map(Path::new),
+            session,
+        )?,
+    ))
+}
+
+fn ordinary_call_site_files(
+    calls: Option<&no_mistakes::codebase::queries::call_sites::prepared::OrdinaryCallSitesPlan>,
+) -> Vec<PathBuf> {
+    calls.map_or_else(Vec::new, |calls| calls.files())
+}

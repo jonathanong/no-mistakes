@@ -15,10 +15,14 @@ pub mod ast;
 #[doc(hidden)]
 pub mod benchmark_support;
 pub mod changes;
-mod check_discovery;
-mod check_parallel;
-mod check_runner;
-mod check_tasks;
+#[doc(hidden)]
+pub mod check_discovery;
+#[doc(hidden)]
+pub mod check_parallel;
+#[doc(hidden)]
+pub mod check_runner;
+#[doc(hidden)]
+pub mod check_tasks;
 pub mod ci;
 pub mod cli;
 pub mod codebase;
@@ -29,7 +33,8 @@ pub(crate) mod edge_index;
 mod effect_provenance;
 pub mod effects_query;
 pub mod fetch;
-mod fetches;
+#[doc(hidden)]
+pub mod fetches;
 pub mod flow_query;
 #[doc(hidden)]
 pub mod fx;
@@ -39,7 +44,6 @@ pub mod imports;
 pub mod integration_tests;
 pub use no_mistakes_invocation as invocation;
 pub mod mermaid_validation;
-pub mod napi_api;
 pub mod perf_trace;
 pub mod playwright;
 pub mod queue;
@@ -51,10 +55,12 @@ pub mod rsc_callers_query;
 pub mod server_routes;
 pub mod swift_api;
 pub mod terraform_api;
-#[cfg(test)]
-pub(crate) mod test_support;
+#[cfg(any(test, feature = "test-support"))]
+#[doc(hidden)]
+pub mod test_support;
 mod testing_analysis_registration;
-mod tests;
+#[doc(hidden)]
+pub mod tests;
 pub use ci::{run as ci_run, CiArgs};
 pub use impacted_checks::{run as impacted_checks_run, ImpactedChecksArgs};
 pub use tests::audit::{

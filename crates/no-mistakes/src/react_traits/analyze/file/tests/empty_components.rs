@@ -70,10 +70,7 @@ fn default_forbidden_dependency_graph_retains_render_edges_and_skips_empty_react
     assert!(plan.react);
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let result = crate::diagnostics::with_observer(Some(observer.clone()), || {
-        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
-            serde_json::json!({"root":root}),
-        ))
-        .unwrap()
+        crate::test_support::check_json(serde_json::json!({"root":root})).unwrap()
     });
     let result: serde_json::Value = serde_json::from_str(&result).unwrap();
     let findings = result["rules"].as_array().unwrap();
@@ -126,9 +123,9 @@ fn import_only_check_keeps_its_finding_without_collecting_react_details() {
     assert!(!plan.react);
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let report = crate::diagnostics::with_observer(Some(observer.clone()), || {
-        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        crate::test_support::check_json(
             serde_json::json!({"root":root,"config":root.join("import-only.yml")}),
-        ))
+        )
         .unwrap()
     });
     let report: serde_json::Value = serde_json::from_str(&report).unwrap();

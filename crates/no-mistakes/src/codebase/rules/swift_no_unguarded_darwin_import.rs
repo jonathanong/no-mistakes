@@ -62,7 +62,7 @@ pub(super) struct CompiledOptions {
 
 super::diagnostic_source_rule_entrypoints!();
 
-pub(crate) fn diagnostics_with_files_and_sources(
+pub fn diagnostics_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],

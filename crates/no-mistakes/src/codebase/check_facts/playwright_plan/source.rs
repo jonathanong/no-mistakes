@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 impl PlaywrightFactPlan {
-    pub(crate) fn set_source_files(&mut self, files: impl AsRef<Vec<PathBuf>>) {
+    pub fn set_source_files(&mut self, files: impl AsRef<Vec<PathBuf>>) {
         let mut files = files
             .as_ref()
             .iter()
@@ -21,7 +21,7 @@ impl PlaywrightFactPlan {
         self.source_files = Arc::new(files);
     }
 
-    pub(crate) fn add_source_settings(
+    pub fn add_source_settings(
         &mut self,
         root: &Path,
         settings: Settings,
@@ -94,7 +94,7 @@ impl PlaywrightFactPlan {
         Ok(())
     }
 
-    pub(crate) fn require_html_id_scan(&mut self, settings: &Settings) {
+    pub fn require_html_id_scan(&mut self, settings: &Settings) {
         let Some(mut source_plan) = self
             .source_plans
             .iter()
@@ -107,14 +107,14 @@ impl PlaywrightFactPlan {
         self.merge_source_plan(source_plan);
     }
 
-    pub(crate) fn integration_route_settings(&self) -> impl Iterator<Item = &Settings> {
+    pub fn integration_route_settings(&self) -> impl Iterator<Item = &Settings> {
         self.source_plans
             .iter()
             .map(|plan| plan.settings.as_ref())
             .filter(|settings| !settings.route_coverage_sources.is_empty())
     }
 
-    pub(crate) fn integration_route_sources(
+    pub fn integration_route_sources(
         &self,
         root: &Path,
         path: &Path,
@@ -159,11 +159,11 @@ impl PlaywrightFactPlan {
         self.set_test_files_by_project(test_files);
     }
 
-    pub(crate) fn source_files(&self) -> Arc<Vec<PathBuf>> {
+    pub fn source_files(&self) -> Arc<Vec<PathBuf>> {
         Arc::clone(&self.source_files)
     }
 
-    pub(crate) fn files(&self) -> &[PathBuf] {
+    pub fn files(&self) -> &[PathBuf] {
         self.source_files.as_slice()
     }
 
@@ -171,19 +171,19 @@ impl PlaywrightFactPlan {
         Arc::clone(&self.test_files_by_project)
     }
 
-    pub(crate) fn contains_source(&self, path: &Path) -> bool {
+    pub fn contains_source(&self, path: &Path) -> bool {
         self.source_file_set.contains(path)
     }
 
-    pub(crate) fn source_file_set(&self) -> &crate::fx::PathSet {
+    pub fn source_file_set(&self) -> &crate::fx::PathSet {
         &self.source_file_set
     }
 
-    pub(crate) fn config_files(&self) -> &crate::fx::PathSet {
+    pub fn config_files(&self) -> &crate::fx::PathSet {
         &self.config_files
     }
 
-    pub(crate) fn source_plans_for<'a>(
+    pub fn source_plans_for<'a>(
         &'a self,
         path: &'a Path,
     ) -> impl Iterator<Item = &'a PlaywrightSourceFactPlan> + 'a {

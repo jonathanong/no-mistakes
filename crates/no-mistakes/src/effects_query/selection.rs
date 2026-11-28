@@ -1,4 +1,4 @@
-pub(crate) fn selection_from_config(
+pub fn selection_from_config(
     config: &crate::config::v2::NoMistakesConfig,
     kind: &str,
     categories: &[String],
@@ -86,7 +86,7 @@ pub(crate) fn selection_from_config(
     })
 }
 
-pub(crate) fn selection_fact_functions(
+pub fn selection_fact_functions(
     selection: &EffectsSelection,
 ) -> impl Iterator<Item = String> + '_ {
     selection.names.keys().cloned()

@@ -177,12 +177,10 @@ fn co_demand_does_not_repeat_prepared_sql_projections() {
     let count_projections = |config_file: &str| {
         let observer = crate::diagnostics::InvocationObserver::new(true);
         let report = crate::diagnostics::with_observer(Some(Arc::clone(&observer)), || {
-            crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
-                serde_json::json!({
-                    "root": root,
-                    "config": config_file,
-                }),
-            ))
+            crate::test_support::check_json(serde_json::json!({
+                "root": root,
+                "config": config_file,
+            }))
             .unwrap()
         });
         assert!(!report.is_empty());

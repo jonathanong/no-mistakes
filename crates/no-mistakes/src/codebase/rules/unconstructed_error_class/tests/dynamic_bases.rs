@@ -6,13 +6,13 @@ use super::*;
 fn dynamic_bases_audit_preserves_suppressed_channel() {
     let root = fixture().parent().unwrap().join("dynamic-bases/fixture");
     for policy in ["report", "advise", "ignore"] {
-        let json = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        let json = crate::test_support::check_json(
             serde_json::json!({
                 "root": root, "config": root.join(format!("{policy}.yml")),
                 "includeSuppressed": true,
             })
             .to_string(),
-        ))
+        )
         .unwrap();
         let result: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
             serde_json::from_str(&json).unwrap(),

@@ -16,35 +16,32 @@ type LockfileKeys = fn(Option<&[u8]>, Option<&[u8]>) -> Result<(KeyChanges, [Vec
 type ProductionImportFiles =
     fn(&Path, &NoMistakesConfig, &[PathBuf]) -> Result<Arc<BTreeSet<PathBuf>>>;
 
-pub(crate) struct Hooks {
-    pub(crate) load_workspace_from_files: LoadWorkspace,
-    pub(crate) load_workspace_with_sources: LoadWorkspaceWithSources,
-    pub(crate) manifest_edges: ManifestEdges,
-    pub(crate) diff_npm_keys: LockfileKeys,
-    pub(crate) diff_pnpm_keys: LockfileKeys,
-    pub(crate) production_import_files: ProductionImportFiles,
+pub struct Hooks {
+    pub load_workspace_from_files: LoadWorkspace,
+    pub load_workspace_with_sources: LoadWorkspaceWithSources,
+    pub manifest_edges: ManifestEdges,
+    pub diff_npm_keys: LockfileKeys,
+    pub diff_pnpm_keys: LockfileKeys,
+    pub production_import_files: ProductionImportFiles,
 }
 
 static HOOKS: OnceLock<&'static Hooks> = OnceLock::new();
 
-pub(crate) fn register(hooks: &'static Hooks) {
+pub fn register(hooks: &'static Hooks) {
     HOOKS.get_or_init(|| hooks);
 }
 
-pub(crate) fn hooks() -> &'static Hooks {
+pub fn hooks() -> &'static Hooks {
     HOOKS
         .get()
         .expect("package analysis hooks registered by the facade")
 }
 
-pub(crate) fn load_indexed_from_files(
-    root: &Path,
-    files: &[PathBuf],
-) -> Result<IndexedWorkspaceMap> {
+pub fn load_indexed_from_files(root: &Path, files: &[PathBuf]) -> Result<IndexedWorkspaceMap> {
     (hooks().load_workspace_from_files)(root, files)
 }
 
-pub(crate) fn load_indexed_from_source_store(
+pub fn load_indexed_from_source_store(
     root: &Path,
     sources: &SourceStore,
 ) -> Result<IndexedWorkspaceMap> {
@@ -53,11 +50,11 @@ pub(crate) fn load_indexed_from_source_store(
     (hooks().load_workspace_with_sources)(&root, &files, sources)
 }
 
-pub(crate) fn load_from_files(root: &Path, files: &[PathBuf]) -> Result<WorkspaceMap> {
+pub fn load_from_files(root: &Path, files: &[PathBuf]) -> Result<WorkspaceMap> {
     load_indexed_from_files(root, files).map(|indexed| WorkspaceMap::clone(&indexed))
 }
 
-pub(crate) fn load_from_files_with_session(
+pub fn load_from_files_with_session(
     root: &Path,
     files: &[PathBuf],
     session: Option<&AnalysisSession>,

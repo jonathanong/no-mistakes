@@ -177,11 +177,12 @@ fn native_releases_set_target_profiles_before_cache_restore() {
             .join("../../.github/scripts/cargo-release-build.sh"),
     )
     .unwrap();
-    // One cargo invocation emits the rlib and cdylib, then writes timings.
+    // One cargo invocation builds the CLI binary and the N-API cdylib crate, then writes timings.
     assert!(script.contains(
-        "NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked --target \"$target\" -p no-mistakes --timings"
+        "cargo build --release --locked --target \"$target\" -p no-mistakes -p no-mistakes-napi --timings"
     ));
-    assert!(script.contains("crate-type = [\"rlib\", \"cdylib\"]"));
+    assert!(!script.contains("NO_MISTAKES_BUILD_NAPI"));
+    assert!(!script.contains("crate-type = [\"rlib\", \"cdylib\"]"));
     assert!(!script.contains("--crate-type cdylib"));
     for (job, timeout, build_timeout, lto) in [
         ("build-native-linux-x64", 100, "65", "thin"),

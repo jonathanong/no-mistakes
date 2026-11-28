@@ -19,10 +19,10 @@ fn computed_typed_parameters_keep_unknown_calls_without_value_import_fallback() 
     for mode in ["report", "advise", "ignore"] {
         let report: Value = crate::test_support::without_hygiene_advisory_json(
             serde_json::from_str(
-                &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(json!({
+                &crate::test_support::check_json(json!({
                     "root": root, "config": root.join(format!(".no-mistakes-{mode}.yml")),
                     "includeSqlVerdicts": true
-                })))
+                }))
                 .unwrap(),
             )
             .unwrap(),

@@ -196,27 +196,5 @@ pub fn check_json_observed(
     Ok((output, observer.snapshot()))
 }
 
-/// Run the same multi-report engine used by the asynchronous N-API task.
-pub fn analyze_project_json(options_json: String) -> napi::Result<String> {
-    crate::ast::with_request_parse_cache(|| {
-        crate::napi_api::analyze_project_json_impl(crate::napi_api::options::test_json_arg(
-            options_json,
-        ))
-    })
-}
-
-/// Run the multi-report engine with an explicitly scoped observer. The N-API
-/// response remains identical; diagnostics are returned only to the harness.
-pub fn analyze_project_json_observed(
-    options_json: String,
-) -> napi::Result<(String, crate::diagnostics::DiagnosticsSnapshot)> {
-    let observer = crate::diagnostics::InvocationObserver::new(true);
-    let output = {
-        let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
-        analyze_project_json(options_json)?
-    };
-    Ok((output, observer.snapshot()))
-}
-
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;

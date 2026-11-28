@@ -1,19 +1,20 @@
-#[cfg(test)]
+#[cfg(any(test, feature = "test-support"))]
 #[macro_use]
 #[path = "shared_symbol_index_reentry_tests.rs"]
-pub(crate) mod shared_symbol_index_reentry_tests;
+#[doc(hidden)]
+pub mod shared_symbol_index_reentry_tests;
 
-#[cfg(not(test))]
+#[cfg(not(any(test, feature = "test-support")))]
 macro_rules! yield_symbol_index_reentry {
     () => {};
 }
 
 impl SharedTraversalContext {
-    pub(crate) fn prepared_facts(&self) -> &crate::codebase::ts_source::facts::TsFactMap {
+    pub fn prepared_facts(&self) -> &crate::codebase::ts_source::facts::TsFactMap {
         self.facts.as_ref().expect("TS facts are initialized")
     }
 
-    pub(crate) fn graph_shared(&self) -> Result<std::sync::Arc<graph::DepGraph>> {
+    pub fn graph_shared(&self) -> Result<std::sync::Arc<graph::DepGraph>> {
         if let Some(graph) = &self.graph {
             return Ok(std::sync::Arc::clone(graph));
         }
@@ -56,7 +57,7 @@ impl SharedTraversalContext {
         Ok(graph)
     }
 
-    pub(crate) fn request_graph_without_symbols_shared(
+    pub fn request_graph_without_symbols_shared(
         &self,
         allowed: Option<&std::collections::HashSet<EdgeKind>>,
     ) -> Result<std::sync::Arc<graph::DepGraph>> {

@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 /// Adapter shared by the root CLI observer and N-API timing collection.
 /// Planner phases keep their stable labels and exclusive-duration behavior;
 /// only N-API requests populate the structured timing array.
-pub(crate) struct TimingTracker {
+pub struct TimingTracker {
     emit_progress: bool,
     collect: bool,
     observer: Option<std::sync::Arc<crate::diagnostics::InvocationObserver>>,
@@ -18,13 +18,13 @@ pub(crate) struct TimingTracker {
     timings: Vec<ImpactedChecksTiming>,
 }
 
-pub(crate) struct PhaseTimer {
+pub struct PhaseTimer {
     started: Option<Instant>,
     completed_phase_time: Duration,
 }
 
 impl TimingTracker {
-    pub(crate) fn new(emit_progress: bool, collect: bool) -> Self {
+    pub fn new(emit_progress: bool, collect: bool) -> Self {
         let observer = crate::diagnostics::current();
         let enabled = emit_progress || collect || observer.is_some();
         Self {
@@ -38,7 +38,7 @@ impl TimingTracker {
     }
 
     /// Run one phase and record its duration after completion.
-    pub(crate) fn run_phase<T>(
+    pub fn run_phase<T>(
         &mut self,
         phase: &'static str,
         operation: impl FnOnce() -> Result<T>,
@@ -51,7 +51,7 @@ impl TimingTracker {
     /// Finish a phase whose operation had to receive this tracker for nested
     /// phase timing and therefore could not be passed directly to
     /// [`Self::run_phase`].
-    pub(crate) fn finish_phase_result<T>(
+    pub fn finish_phase_result<T>(
         &mut self,
         phase: &'static str,
         started: PhaseTimer,
@@ -69,7 +69,7 @@ impl TimingTracker {
         }
     }
 
-    pub(crate) fn start_phase(&self, phase: &'static str) -> PhaseTimer {
+    pub fn start_phase(&self, phase: &'static str) -> PhaseTimer {
         let _ = phase;
         PhaseTimer {
             started: self.invocation_started.map(|_| Instant::now()),
@@ -77,13 +77,13 @@ impl TimingTracker {
         }
     }
 
-    pub(crate) fn finish_phase(&mut self, phase: &'static str, timer: PhaseTimer) {
+    pub fn finish_phase(&mut self, phase: &'static str, timer: PhaseTimer) {
         let duration = self.exclusive_duration(&timer);
         self.completed_phase_time += duration;
         self.record_success(phase, duration);
     }
 
-    pub(crate) fn fail_phase(&mut self, phase: &'static str, timer: PhaseTimer) {
+    pub fn fail_phase(&mut self, phase: &'static str, timer: PhaseTimer) {
         let duration = self.exclusive_duration(&timer);
         self.completed_phase_time += duration;
         if let Some(observer) = &self.observer {
@@ -93,12 +93,12 @@ impl TimingTracker {
         }
     }
 
-    pub(crate) fn into_timings(self) -> Option<Vec<ImpactedChecksTiming>> {
+    pub fn into_timings(self) -> Option<Vec<ImpactedChecksTiming>> {
         self.collect.then_some(self.timings)
     }
 
     /// Finish the invocation-level timer after all nested phases complete.
-    pub(crate) fn finish_total(&mut self) {
+    pub fn finish_total(&mut self) {
         let duration = self
             .invocation_started
             .map(|started| started.elapsed())
@@ -116,7 +116,7 @@ impl TimingTracker {
 
     /// Report an invocation that failed after its active phase reported the
     /// more specific failure.
-    pub(crate) fn fail_total(&self) {
+    pub fn fail_total(&self) {
         if self.emit_progress && self.observer.is_none() {
             let duration = self
                 .invocation_started

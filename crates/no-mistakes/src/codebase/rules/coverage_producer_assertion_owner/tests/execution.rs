@@ -6,11 +6,11 @@ fn generator_creation_and_unsupported_consumption_abstain_under_every_policy() {
     for (policy, expected_findings, expected_advisories) in
         [("report", 7, 0), ("advise", 0, 7), ("ignore", 0, 0)]
     {
-        let input = crate::napi_api::options::test_json_arg(serde_json::json!({
+        let input = serde_json::json!({
             "root": root, "config": root.join(format!("generators-{policy}.yml"))
-        }));
+        });
         let report: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
-            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap(),
+            serde_json::from_str(&crate::test_support::check_json(input).unwrap()).unwrap(),
         );
         assert_eq!(
             report["rules"].as_array().unwrap().len(),
@@ -39,27 +39,6 @@ fn generator_creation_and_unsupported_consumption_abstain_under_every_policy() {
     }
 }
 
-// The graph JSON test facade is exported only with instrumentation.
-#[cfg(feature = "test-instrumentation")]
-#[test]
-fn generator_contracts_do_not_emit_executable_ownership_edges() {
-    let root = fixture();
-    let input = serde_json::json!({
-        "root": root, "config": root.join("generators-report.yml"),
-        "reports": [{ "type": "dependencies", "includeSymbols": true,
-            "files": ["src/producers.mts#generatorContract", "src/producers.mts#generatorContractOwner"],
-            "relationships": ["assertion-owner"] }]
-    });
-    let report: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
-        serde_json::from_str(&crate::napi_api::analyze_project_json_impl(input).unwrap()).unwrap(),
-    );
-    assert_eq!(
-        report["reports"][0]["result"]["files"],
-        serde_json::json!([]),
-        "{report}"
-    );
-}
-
 #[test]
 fn assert_import_forms_reach_owners_and_unmatched_externals_stay_uncertain() {
     let root = fixture();
@@ -68,11 +47,11 @@ fn assert_import_forms_reach_owners_and_unmatched_externals_stay_uncertain() {
         ("advise", "advisories"),
         ("ignore", "rules"),
     ] {
-        let input = crate::napi_api::options::test_json_arg(serde_json::json!({
+        let input = serde_json::json!({
             "root": root, "config": root.join(format!("import-forms-{policy}.yml"))
-        }));
+        });
         let report: serde_json::Value = crate::test_support::without_hygiene_advisory_json(
-            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap(),
+            serde_json::from_str(&crate::test_support::check_json(input).unwrap()).unwrap(),
         );
         let findings = report[channel].as_array().unwrap();
         let mut targets = findings

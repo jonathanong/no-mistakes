@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 mod facts_only;
 mod prerequisites;
 
-pub(crate) fn run_analyze_with_loaded_config_and_facts(
+pub fn run_analyze_with_loaded_config_and_facts(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
     targets: &[String],
@@ -26,9 +26,9 @@ pub(crate) fn run_analyze_inner_with_facts(
     facts_only::run(root, file_config, targets, shared)
 }
 
-pub(crate) struct PreparedComponentFacts {
-    pub(crate) facts: ComponentFacts,
-    pub(crate) inherited_fetch_locations: Vec<(String, usize)>,
+pub struct PreparedComponentFacts {
+    pub facts: ComponentFacts,
+    pub inherited_fetch_locations: Vec<(String, usize)>,
 }
 
 pub(crate) fn run_with_session(

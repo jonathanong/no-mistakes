@@ -6,9 +6,9 @@ use std::{collections::BTreeMap, path::Path, sync::Arc};
 
 #[derive(Clone)]
 pub struct SqlIdentifierScan {
-    pub(crate) index: usize,
-    pub(crate) rule: String,
-    pub(crate) application_index: Option<usize>,
+    pub index: usize,
+    pub rule: String,
+    pub application_index: Option<usize>,
     paths: Arc<RuleGlobFilter>,
     application: Arc<RulePathFilter>,
     typed_executor_types: Arc<Vec<crate::config::v2::schema::EffectTargetConfig>>,
@@ -16,7 +16,7 @@ pub struct SqlIdentifierScan {
 }
 pub type SqlIdentifierScans = BTreeMap<EmbeddedSqlOptions, Vec<SqlIdentifierScan>>;
 impl SqlIdentifierScan {
-    pub(crate) fn new(
+    pub fn new(
         root: &Path,
         config: &NoMistakesConfig,
         application: &RuleDef,
@@ -37,7 +37,7 @@ impl SqlIdentifierScan {
             declared_factories: Arc::new(Vec::new()),
         })
     }
-    pub(crate) fn with_typed_executor_types(
+    pub fn with_typed_executor_types(
         mut self,
         typed_executor_types: &[crate::config::v2::schema::EffectTargetConfig],
     ) -> Self {
@@ -49,10 +49,10 @@ impl SqlIdentifierScan {
         self.typed_executor_types = Arc::new(types);
         self
     }
-    pub(crate) fn typed_executor_types(&self) -> &[crate::config::v2::schema::EffectTargetConfig] {
+    pub fn typed_executor_types(&self) -> &[crate::config::v2::schema::EffectTargetConfig] {
         &self.typed_executor_types
     }
-    pub(crate) fn with_declared_factories(
+    pub fn with_declared_factories(
         mut self,
         factories: &[crate::config::v2::schema::EffectTargetConfig],
     ) -> Self {
@@ -65,16 +65,16 @@ impl SqlIdentifierScan {
         self.declared_factories = Arc::new(factories);
         self
     }
-    pub(crate) fn declared_factories(&self) -> &[crate::config::v2::schema::EffectTargetConfig] {
+    pub fn declared_factories(&self) -> &[crate::config::v2::schema::EffectTargetConfig] {
         &self.declared_factories
     }
-    pub(crate) fn includes(&self, root: &Path, path: &Path) -> bool {
+    pub fn includes(&self, root: &Path, path: &Path) -> bool {
         self.paths
             .includes(&crate::codebase::ts_source::relative_slash_path(root, path))
             && self.application.is_match(path)
     }
 }
-pub(crate) fn merge(existing: &mut SqlIdentifierScans, additional: SqlIdentifierScans) {
+pub fn merge(existing: &mut SqlIdentifierScans, additional: SqlIdentifierScans) {
     for (profile, scans) in additional {
         let slot = existing.entry(profile).or_default();
         for scan in scans {
@@ -85,7 +85,7 @@ pub(crate) fn merge(existing: &mut SqlIdentifierScans, additional: SqlIdentifier
     }
 }
 
-pub(crate) fn selected(root: &Path, path: &Path, plan: &super::CheckFactPlan) -> bool {
+pub fn selected(root: &Path, path: &Path, plan: &super::CheckFactPlan) -> bool {
     plan.sql_identifier_profiles
         .values()
         .any(|scans| scans.iter().any(|scan| scan.includes(root, path)))

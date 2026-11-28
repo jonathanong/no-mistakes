@@ -15,7 +15,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-pub(crate) fn run(args: ImpactArgs) -> Result<ExitCode> {
+pub fn run(args: ImpactArgs) -> Result<ExitCode> {
     let plan = generate_impact_plan(&args)?;
 
     let format = if args.json {

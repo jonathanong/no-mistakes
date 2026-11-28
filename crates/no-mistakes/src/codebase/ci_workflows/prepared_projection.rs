@@ -1,6 +1,6 @@
 impl PreparedWorkflowTopologyInputs {
     /// Apply the loader's final selection stage to the already-resolved topology.
-    pub(crate) fn project_topology(
+    pub fn project_topology(
         &self,
         filters: &[String],
     ) -> std::borrow::Cow<'_, WorkflowTopology> {

@@ -6,9 +6,9 @@ fn failed_required_sources_stay_incomplete_under_ignore_with_healthy_application
         .join("../../fixtures/check/coverage-owner-partial");
     let fixture = crate::test_support::materialize_saved_fixture(&saved);
     let root = fixture.path();
-    let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+    let report = crate::test_support::check_json(
         serde_json::json!({"root": root}).to_string(),
-    ))
+    )
     .unwrap();
     let report: serde_json::Value = serde_json::from_str(&report).unwrap();
     let failures = report["incomplete"].as_array().unwrap();

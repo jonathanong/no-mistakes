@@ -15,10 +15,8 @@ fn actual_single_sql_checks_bypass_full_scope_and_reuse_strict_subset_classifica
         let _restore = Restore;
         let observer = crate::diagnostics::InvocationObserver::new(true);
         let result = crate::diagnostics::with_observer(Some(observer.clone()), || {
-            crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
-                serde_json::json!({"root":root, "config":config}),
-            ))
-            .unwrap()
+            crate::test_support::check_json(serde_json::json!({"root":root, "config":config}))
+                .unwrap()
         });
         (
             serde_json::from_str::<serde_json::Value>(&result).unwrap(),

@@ -6,26 +6,26 @@ use std::path::{Path, PathBuf};
 
 /// Ordinary query projections owned by an aggregate request. Runner catalogs
 /// and explicitly promoted sibling targets have different public semantics.
-pub(crate) struct OrdinaryCallSitesPlan {
+pub struct OrdinaryCallSitesPlan {
     targets: Vec<Target>,
     catalog: ReversePrepared,
     projections: Vec<(usize, GraphFiles)>,
     projection_by_target: FxHashMap<PathBuf, usize>,
 }
 
-pub(crate) struct OrdinaryCallSites {
+pub struct OrdinaryCallSites {
     projections: Vec<OrdinaryCallSitesProjection>,
     projection_by_target: FxHashMap<PathBuf, usize>,
 }
 
-pub(crate) struct OrdinaryCallSitesProjection {
-    pub(crate) files: GraphFiles,
-    pub(crate) graph: std::sync::Arc<DepGraph>,
-    pub(crate) diagnostics: std::sync::Arc<super::super::QueryDiagnostics>,
+pub struct OrdinaryCallSitesProjection {
+    pub files: GraphFiles,
+    pub graph: std::sync::Arc<DepGraph>,
+    pub diagnostics: std::sync::Arc<super::super::QueryDiagnostics>,
 }
 
 impl OrdinaryCallSitesPlan {
-    pub(crate) fn new(
+    pub fn new(
         files: &[PathBuf],
         root: &Path,
         tsconfig: Option<&Path>,
@@ -65,7 +65,7 @@ impl OrdinaryCallSitesPlan {
         })
     }
 
-    pub(crate) fn files(&self) -> Vec<PathBuf> {
+    pub fn files(&self) -> Vec<PathBuf> {
         let mut files = self
             .projections
             .iter()
@@ -77,7 +77,7 @@ impl OrdinaryCallSitesPlan {
         files
     }
 
-    pub(crate) fn materialize(
+    pub fn materialize(
         self,
         facts: &TsFactMap,
         reuse: Option<(
@@ -129,7 +129,7 @@ impl OrdinaryCallSitesPlan {
 }
 
 impl OrdinaryCallSites {
-    pub(crate) fn projection_for(&self, file: &Path) -> Option<&OrdinaryCallSitesProjection> {
+    pub fn projection_for(&self, file: &Path) -> Option<&OrdinaryCallSitesProjection> {
         let index = self.projection_by_target.get(file)?;
         self.projections.get(*index)
     }

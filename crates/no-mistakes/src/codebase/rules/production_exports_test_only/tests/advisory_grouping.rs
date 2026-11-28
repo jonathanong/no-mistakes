@@ -6,14 +6,12 @@ fn selector_advisories_group_plain_sites_and_bound_shared_site_rows() {
         ("report.yml", "rules", 5),
         ("ignore.yml", "advisories", 0),
     ] {
-        let input = crate::napi_api::options::test_json_arg(
-            serde_json::json!({
-                "root": root, "config": root.join(config)
-            })
-            .to_string(),
-        );
+        let input = serde_json::json!({
+            "root": root, "config": root.join(config)
+        })
+        .to_string();
         let report: serde_json::Value =
-            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
+            serde_json::from_str(&crate::test_support::check_json(input).unwrap()).unwrap();
         let definite: Vec<_> = report["rules"]
             .as_array()
             .unwrap()
@@ -86,11 +84,10 @@ fn selector_advisories_group_plain_sites_and_bound_shared_site_rows() {
 fn selector_advisory_bound_uses_globally_deduplicated_export_groups() {
     let root = super::fixture("selector-advisory-cross-origin");
     for (config, channel) in [(".no-mistakes.yml", "advisories"), ("report.yml", "rules")] {
-        let input = crate::napi_api::options::test_json_arg(
-            serde_json::json!({"root": root, "config": root.join(config)}).to_string(),
-        );
+        let input =
+            serde_json::json!({"root": root, "config": root.join(config)}).to_string();
         let report: serde_json::Value =
-            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
+            serde_json::from_str(&crate::test_support::check_json(input).unwrap()).unwrap();
         let findings: Vec<_> = report["rules"]
             .as_array()
             .unwrap()
@@ -125,14 +122,12 @@ fn selector_advisory_bound_uses_globally_deduplicated_export_groups() {
 fn selector_grouping_cannot_reintroduce_suppressed_export_advisories() {
     let root = super::fixture("selector-advisory-suppression");
     for config in [".no-mistakes.yml", "report.yml"] {
-        let input = crate::napi_api::options::test_json_arg(
-            serde_json::json!({
-                "root": root, "config": root.join(config)
-            })
-            .to_string(),
-        );
+        let input = serde_json::json!({
+            "root": root, "config": root.join(config)
+        })
+        .to_string();
         let report: serde_json::Value =
-            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
+            serde_json::from_str(&crate::test_support::check_json(input).unwrap()).unwrap();
         let findings = report["rules"].as_array().unwrap();
         assert_eq!(findings.len(), 1, "{report}");
         assert_eq!(findings[0]["target"], "onlyTests");
@@ -147,9 +142,9 @@ fn selector_grouping_cannot_reintroduce_suppressed_export_advisories() {
 fn selector_groups_keep_declared_default_export_names() {
     let root = super::fixture("selector-advisory-default");
     let input =
-        crate::napi_api::options::test_json_arg(serde_json::json!({"root": root}).to_string());
+        serde_json::json!({"root": root}).to_string();
     let report: serde_json::Value =
-        serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap();
+        serde_json::from_str(&crate::test_support::check_json(input).unwrap()).unwrap();
     let advisories = report["advisories"].as_array().unwrap();
     assert_eq!(advisories.len(), 1, "{report}");
     assert!(

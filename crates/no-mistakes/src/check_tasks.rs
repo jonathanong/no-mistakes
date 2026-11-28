@@ -6,21 +6,21 @@ use no_mistakes::config::v2::NoMistakesConfig;
 use no_mistakes::integration_tests::{self, IntegrationFinding};
 
 mod configured;
-pub(crate) use configured::{queues_configured, rule_configured, unique_exports_configured};
+pub use configured::{queues_configured, rule_configured, unique_exports_configured};
 mod filesystem;
 mod queues;
 mod react;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod tests;
 
-pub(crate) use filesystem::{filesystem_rules_configured, run_filesystem_rules_check_with_facts};
-pub(crate) use queues::run_queue_check;
-pub(crate) use react::run_react_check_with_session;
+pub use filesystem::{filesystem_rules_configured, run_filesystem_rules_check_with_facts};
+pub use queues::run_queue_check;
+pub use react::run_react_check_with_session;
 
 mod types;
-pub(crate) use types::CheckTask;
+pub use types::CheckTask;
 
-pub(crate) fn run_rules_check(
+pub fn run_rules_check(
     inputs: rules::PreparedRulesCheck<'_>,
     dependency_graph: Option<&no_mistakes::codebase::dependencies::graph::DepGraph>,
     sources: &no_mistakes::codebase::ts_source::SourceStore,
@@ -62,7 +62,7 @@ pub(crate) fn run_rules_check(
     })
 }
 
-pub(crate) fn run_integration_check(
+pub fn run_integration_check(
     session: &no_mistakes::codebase::analysis_session::AnalysisSession,
     root: &std::path::Path,
     enabled: bool,
@@ -102,19 +102,19 @@ pub(crate) fn run_integration_check(
     })
 }
 
-pub(crate) struct CodebaseCheckInputs<'a> {
-    pub(crate) session: &'a no_mistakes::codebase::analysis_session::AnalysisSession,
-    pub(crate) root: &'a std::path::Path,
-    pub(crate) config: &'a no_mistakes::codebase::config::Config,
-    pub(crate) prepared_tsconfig_catalog:
+pub struct CodebaseCheckInputs<'a> {
+    pub session: &'a no_mistakes::codebase::analysis_session::AnalysisSession,
+    pub root: &'a std::path::Path,
+    pub config: &'a no_mistakes::codebase::config::Config,
+    pub prepared_tsconfig_catalog:
         &'a std::sync::Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
-    pub(crate) enabled: bool,
-    pub(crate) facts: &'a CheckFactMap,
-    pub(crate) inferred_roots: &'a no_mistakes::codebase::config::InferredRoots,
-    pub(crate) defer_suppression: bool,
+    pub enabled: bool,
+    pub facts: &'a CheckFactMap,
+    pub inferred_roots: &'a no_mistakes::codebase::config::InferredRoots,
+    pub defer_suppression: bool,
 }
 
-pub(crate) fn run_codebase_check_with_catalog(
+pub fn run_codebase_check_with_catalog(
     inputs: CodebaseCheckInputs<'_>,
 ) -> Result<CheckTask<Vec<PreparedUniqueExportFinding>>> {
     let CodebaseCheckInputs {

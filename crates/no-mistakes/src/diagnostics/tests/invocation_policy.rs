@@ -1,13 +1,8 @@
 #[test]
-fn cli_and_napi_entrypoints_select_distinct_parent_signal_policies() {
+fn cli_entrypoint_selects_cli_parent_signal_policy() {
     let cli = include_str!("../../main/invocation.rs");
-    let tasks = include_str!("../../napi_api/async_task.rs");
-    let napi = include_str!("../../napi_api/async_task/observed.rs");
 
     assert!(cli.contains("ExecutionGuard::acquire_for_cli"));
-    assert_eq!(tasks.matches("observed::execute_json(").count(), 2);
-    assert!(napi.contains("InvocationGuard::acquire(invocation_options)"));
-    assert!(!napi.contains("InvocationGuard::acquire_for_cli"));
 }
 
 #[test]

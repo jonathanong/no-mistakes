@@ -17,7 +17,7 @@ pub(super) fn inject(path: &Path) {
     }
 }
 
-pub(crate) fn with_injected_panic<T>(path: &Path, run: impl FnOnce() -> T) -> T {
+pub fn with_injected_panic<T>(path: &Path, run: impl FnOnce() -> T) -> T {
     struct Reset(PathBuf);
     impl Drop for Reset {
         fn drop(&mut self) {
@@ -29,6 +29,7 @@ pub(crate) fn with_injected_panic<T>(path: &Path, run: impl FnOnce() -> T) -> T 
     run()
 }
 
+#[cfg(test)]
 #[test]
 fn panic_payloads_preserve_strings_and_identify_unknown_payloads() {
     let session = super::super::analysis_session::AnalysisSession::disabled();
@@ -50,4 +51,5 @@ fn panic_payloads_preserve_strings_and_identify_unknown_payloads() {
     assert_eq!(super::isolate(&session, path, || 42).unwrap(), 42);
 }
 
+#[cfg(test)]
 mod collection;

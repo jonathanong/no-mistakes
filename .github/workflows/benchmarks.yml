@@ -156,7 +156,7 @@ jobs:
         run: |
           bash .github/scripts/with-resource-samples.sh \
             cargo codspeed build \
-            -p no-mistakes \
+            -p no-mistakes-napi \
             --no-default-features \
             --features test-instrumentation \
             --bench core_analysis \
@@ -178,7 +178,7 @@ jobs:
           CARGO_ENCODED_RUSTFLAGS: *benchmark-rustflags
         run: |
           cargo codspeed build \
-            -p no-mistakes \
+            -p no-mistakes-napi \
             --no-default-features \
             --features test-instrumentation \
             --bench core_analysis \

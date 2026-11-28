@@ -126,7 +126,7 @@ fn build_report_and_relationships(
 
 include!("graph_client_calls.rs");
 
-pub(crate) fn public_node(root: &Path, node: &RelationshipNode) -> String {
+pub fn public_node(root: &Path, node: &RelationshipNode) -> String {
     match node {
         RelationshipNode::File(file) => relative_string(root, file),
         RelationshipNode::Route(route) => route.clone(),

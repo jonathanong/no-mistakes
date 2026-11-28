@@ -1,14 +1,14 @@
-pub(crate) mod enabled;
+pub mod enabled;
 mod fact_collection;
-pub(crate) mod finite_set_plan;
-pub(crate) mod graph_plan;
-pub(crate) mod prepared;
-pub(crate) mod results;
+pub mod finite_set_plan;
+pub mod graph_plan;
+pub mod prepared;
+pub mod results;
 mod run_all;
 
-pub(crate) use results::{empty_results, json_value, CheckResults};
-pub(crate) use run_all::run_all_with_sql_verdicts;
-pub(crate) use run_all::{run_all_with_evidence, run_all_with_options, AnalysisOptions};
+pub use results::{empty_results, json_value, CheckResults};
+pub use run_all::run_all_with_sql_verdicts;
+pub use run_all::{run_all_with_evidence, run_all_with_options, AnalysisOptions};
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]
 #[path = "check_runner/coverage_effort/tests.rs"]

@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "crates/no-mistakes",
+    "crates/no-mistakes-napi",
     "crates/no-mistakes-invocation",
     "crates/no-mistakes-postgres-sql",
     "crates/no-mistakes-ts-facts",

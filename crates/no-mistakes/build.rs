@@ -6,12 +6,8 @@ fn main() {
     println!("cargo::rustc-check-cfg=cfg(nm_shard_1)");
     println!("cargo::rustc-check-cfg=cfg(nm_shard_2)");
     println!("cargo::rustc-check-cfg=cfg(nm_shard_postgres_source)");
-    println!("cargo:rerun-if-env-changed=NO_MISTAKES_BUILD_NAPI");
     println!("cargo:rerun-if-env-changed=NM_TEST_SHARD");
     println!("cargo::rustc-cfg={}", test_shard_cfg());
-    if std::env::var_os("NO_MISTAKES_BUILD_NAPI").is_some() {
-        napi_build::setup();
-    }
 }
 
 /// Unset `NM_TEST_SHARD` compiles every unit-test module. `0`, `1`, or `2`

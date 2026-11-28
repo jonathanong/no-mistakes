@@ -9,14 +9,14 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 #[derive(Parser, Clone)]
-pub(crate) struct FetchesArgs {
+pub struct FetchesArgs {
     /// Project root directory.
     #[arg(long, default_value = ".", global = true)]
-    pub(crate) root: PathBuf,
+    pub root: PathBuf,
 
     /// Config file path. Relative paths are resolved from --root.
     #[arg(long, global = true)]
-    pub(crate) config: Option<PathBuf>,
+    pub config: Option<PathBuf>,
 
     /// Output format: json, yml, paths, md, human.
     #[arg(
@@ -26,17 +26,17 @@ pub(crate) struct FetchesArgs {
         global = true,
         conflicts_with = "json"
     )]
-    pub(crate) format: Format,
+    pub format: Format,
 
     /// Shorthand for --format json.
     #[arg(long, global = true, conflicts_with = "format")]
-    pub(crate) json: bool,
+    pub json: bool,
 
     #[arg(help = "Specific routes or files to analyze")]
-    pub(crate) targets: Vec<String>,
+    pub targets: Vec<String>,
 }
 
-pub(crate) type Cli = FetchesArgs;
+pub type Cli = FetchesArgs;
 
 fn parse_cli_args() -> FetchesArgs {
     if cfg!(test) {
@@ -47,13 +47,13 @@ fn parse_cli_args() -> FetchesArgs {
     FetchesArgs::parse()
 }
 
-pub(crate) fn run_cli() -> Result<ExitCode> {
+pub fn run_cli() -> Result<ExitCode> {
     run(parse_cli_args())
 }
 
 const _: fn() -> Result<ExitCode> = run_cli;
 
-pub(crate) fn run(cli: FetchesArgs) -> Result<ExitCode> {
+pub fn run(cli: FetchesArgs) -> Result<ExitCode> {
     let base_root = std::env::current_dir().context("reading current directory")?;
     let report = run_with_base_root(&base_root, &cli)?;
     let format = if cli.json { Format::Json } else { cli.format };
@@ -67,7 +67,7 @@ pub(crate) fn run(cli: FetchesArgs) -> Result<ExitCode> {
     .map(|()| ExitCode::SUCCESS)
 }
 
-pub(crate) fn publish_report_with_deadline_check<F, C>(
+pub fn publish_report_with_deadline_check<F, C>(
     report: &crate::fetches::report::types::FinalReport,
     format: Format,
     writer: &mut dyn Write,

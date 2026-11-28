@@ -1,0 +1,195 @@
+// Included into `napi_api::tests`; shares its fixture helpers and imports.
+
+include!("tests_planning/vitest_config_extends.rs");
+include!("tests_planning/changed_files.rs");
+include!("tests_planning/changes_report.rs");
+include!("tests_planning/direct_test_owner.rs");
+include!("tests_planning/direct_import_limit.rs");
+include!("tests_planning/target_scoped_triggers.rs");
+
+#[test]
+fn tests_plan_json_union_applies_vitest_setup_fallback() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/vitest-setup-dependencies");
+    let output = tests_plan_json_impl(
+        crate::options::test_json_arg(json!({
+            "root": root,
+            "changedFiles": ["config/setup-selector.ts"]
+        })
+        .to_string(),)
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], true);
+    assert!(plan["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|warning| { warning["type"] == "vitest-setup-dynamic" }));
+    assert_eq!(
+        plan["selected_tests"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|test| test["test_file"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["inherits/inherited.test.ts"]
+    );
+}
+
+#[test]
+fn tests_plan_json_tracks_commonjs_dynamic_setup_helper() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/vitest-setup-dependencies");
+    let output = tests_plan_json_impl(
+        crate::options::test_json_arg(json!({
+            "framework": "vitest",
+            "root": root,
+            "changedFiles": ["config/dynamic-commonjs-values.cjs"]
+        })
+        .to_string(),)
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], true, "{plan:#}");
+    assert_eq!(
+        plan["selected_tests"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|test| test["test_file"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["commonjs-closure-owner/commonjs-closure.test.ts"]
+    );
+}
+
+#[test]
+fn tests_plan_json_setup_fallback_spends_dependency_group_budget() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/vitest-setup-dependencies");
+    let output = tests_plan_json_impl(
+        crate::options::test_json_arg(json!({
+            "framework": "vitest",
+            "root": root,
+            "config": "dependency-limit.no-mistakes.yml",
+            "changedFiles": ["setup/conditional-a.ts", "config/setup-selector.ts"]
+        })
+        .to_string(),)
+    )
+    .unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], true, "{plan:#}");
+    assert_eq!(plan["groups"].as_array().unwrap().len(), 1, "{plan:#}");
+    assert_eq!(plan["groups"][0]["type"], "dependencies");
+    assert_eq!(plan["groups"][0]["limit"], 1);
+    assert_eq!(plan["groups"][0]["selected"].as_array().unwrap().len(), 1);
+    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
+}
+
+#[test]
+fn tests_plan_why_comment_and_graph_exports_return_reports() {
+    let root = fixture_root("test-plan-config");
+    let plan_options = json!({
+        "framework": "vitest",
+        "root": root,
+        "changedFiles": ["source.ts"],
+        "limitFiles": 1
+    })
+    .to_string();
+    let output = tests_plan_json_impl(crate::options::test_json_arg(plan_options)).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(plan["fallback_triggered"], false);
+    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
+    assert_eq!(plan["selected_tests"][0]["targets"][0]["runner"], "vitest");
+
+    let fallback_limit_options = json!({
+        "framework": "vitest",
+        "root": root,
+        "changedFiles": ["web/app/page.tsx"],
+        "limitFiles": 1
+    })
+    .to_string();
+    let fallback_limit_output = tests_plan_json_impl(crate::options::test_json_arg(fallback_limit_options)).unwrap();
+    let fallback_limit: serde_json::Value = serde_json::from_str(&fallback_limit_output).unwrap();
+
+    assert_eq!(fallback_limit["fallback_triggered"], true);
+    assert_eq!(
+        fallback_limit["selected_tests"].as_array().unwrap().len(),
+        1
+    );
+    assert_eq!(fallback_limit["groups"][0]["limit"], 1);
+
+    let no_global_fallback_options = json!({
+        "framework": "vitest",
+        "root": root,
+        "changedFiles": [".no-mistakes.yml"],
+        "globalConfigFallback": false
+    })
+    .to_string();
+    let no_global_fallback_output = tests_plan_json_impl(crate::options::test_json_arg(no_global_fallback_options)).unwrap();
+    let no_global_fallback: serde_json::Value =
+        serde_json::from_str(&no_global_fallback_output).unwrap();
+
+    assert_eq!(no_global_fallback["fallback_triggered"], false);
+    assert_eq!(
+        no_global_fallback["selected_tests"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+
+    let legacy_plan_options = json!({
+        "root": root,
+        "changedFiles": ["source.ts"],
+    })
+    .to_string();
+    let legacy_output = tests_plan_json_impl(crate::options::test_json_arg(legacy_plan_options)).unwrap();
+    let legacy_plan: serde_json::Value = serde_json::from_str(&legacy_output).unwrap();
+
+    assert_eq!(legacy_plan["fallback_triggered"], false);
+    assert!(legacy_plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|test| test["test_file"] == "source.test.mts"));
+
+    let comment = tests_comment_markdown_impl(crate::options::test_json_arg(
+        json!({ "planJson": plan }).to_string(),
+    ))
+    .unwrap();
+    assert!(comment.contains("Selected Tests"));
+
+    let plan_path = PathBuf::from(&root).join("plan.json");
+    let path_comment =
+        tests_comment_markdown_impl(crate::options::test_json_arg(
+            json!({ "plan": plan_path.display().to_string() }).to_string(),
+        ))
+            .unwrap();
+    assert!(path_comment.contains("source.test.mts"));
+
+    let graph = tests_graph_json_impl(crate::options::test_json_arg(json!({ "planJson": output }).to_string())).unwrap();
+    let graph: serde_json::Value = serde_json::from_str(&graph).unwrap();
+    assert!(!graph["nodes"].as_array().unwrap().is_empty());
+
+    let mermaid = tests_graph_mermaid_impl(crate::options::test_json_arg(
+        json!({ "planJson": serde_json::from_str::<serde_json::Value>(&output).unwrap() })
+            .to_string(),
+    ))
+    .unwrap();
+    assert!(mermaid.starts_with("graph TD"));
+
+    let why_options = json!({
+        "root": fixture_root("test-plan-config"),
+        "test": "source.test.mts",
+        "changed": "source.ts"
+    })
+    .to_string();
+    let why = tests_why_json_impl(crate::options::test_json_arg(why_options)).unwrap();
+    let why: serde_json::Value = serde_json::from_str(&why).unwrap();
+    assert!(!why["source.ts"].as_array().unwrap().is_empty());
+}

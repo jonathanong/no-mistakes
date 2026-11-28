@@ -77,11 +77,11 @@ fn external_namespace_reexports_keep_provenance_and_stored_callbacks_stay_uncert
 fn node_check_preserves_namespace_uncertainty_and_disabled_output() {
     let root = crate::test_support::rule_fixture_root("coverage-producer-assertion-owner-builtins");
     let check = |config: &str| {
-        let input = crate::napi_api::options::test_json_arg(serde_json::json!({
+        let input = serde_json::json!({
             "root": root, "config": root.join(config)
-        }));
+        });
         crate::test_support::without_hygiene_advisory_json(
-            serde_json::from_str(&crate::napi_api::check_json_impl(input).unwrap()).unwrap(),
+            serde_json::from_str(&crate::test_support::check_json(input).unwrap()).unwrap(),
         )
     };
     let report = check("namespace-default.yml");

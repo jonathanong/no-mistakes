@@ -1,27 +1,27 @@
 impl SharedTraversalContext {
-    pub(crate) fn root(&self) -> &Path {
+    pub fn root(&self) -> &Path {
         &self.root
     }
 
-    pub(crate) fn tsconfig(&self) -> &TsConfig {
+    pub fn tsconfig(&self) -> &TsConfig {
         &self.tsconfig
     }
 
-    pub(crate) fn tsconfig_catalog(&self) -> &crate::codebase::ts_resolver::TsConfigCatalog {
+    pub fn tsconfig_catalog(&self) -> &crate::codebase::ts_resolver::TsConfigCatalog {
         &self.tsconfig_catalog
     }
 
-    pub(crate) fn tsconfig_catalog_arc(
+    pub fn tsconfig_catalog_arc(
         &self,
     ) -> std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog> {
         std::sync::Arc::clone(&self.tsconfig_catalog)
     }
 
-    pub(crate) fn graph_files(&self) -> &graph::GraphFiles {
+    pub fn graph_files(&self) -> &graph::GraphFiles {
         &self.graph_files
     }
 
-    pub(crate) fn set_ordinary_excluded_files(
+    pub fn set_ordinary_excluded_files(
         &mut self,
         files: std::collections::HashSet<PathBuf>,
         retained_roots: &[PathBuf],
@@ -30,39 +30,39 @@ impl SharedTraversalContext {
         self.ordinary_retained_roots = retained_roots.iter().cloned().collect();
     }
 
-    pub(crate) fn visible_paths(&self) -> &crate::codebase::ts_source::VisiblePathSnapshot {
+    pub fn visible_paths(&self) -> &crate::codebase::ts_source::VisiblePathSnapshot {
         self.dataset.visible_paths()
     }
 
-    pub(crate) fn source_store(&self) -> std::sync::Arc<crate::codebase::ts_source::SourceStore> {
+    pub fn source_store(&self) -> std::sync::Arc<crate::codebase::ts_source::SourceStore> {
         self.dataset.sources_for(&self.root)
     }
 
-    pub(crate) fn workspace_arc(
+    pub fn workspace_arc(
         &self,
     ) -> std::sync::Arc<crate::codebase::workspace_resolution::IndexedWorkspaceMap> {
         self.dataset.workspace()
     }
 
-    pub(crate) fn visible_paths_arc(
+    pub fn visible_paths_arc(
         &self,
     ) -> std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot> {
         self.dataset.visible_paths_arc()
     }
 
-    pub(crate) fn config_path(&self) -> Option<&Path> {
+    pub fn config_path(&self) -> Option<&Path> {
         self.config_path.as_deref()
     }
 
-    pub(crate) fn config(&self) -> &crate::config::v2::NoMistakesConfig {
+    pub fn config(&self) -> &crate::config::v2::NoMistakesConfig {
         &self.config
     }
 
-    pub(crate) fn build_plan(&self) -> graph::GraphBuildPlan {
+    pub fn build_plan(&self) -> graph::GraphBuildPlan {
         self.build_plan
     }
 
-    pub(crate) fn set_workflow_inputs(
+    pub fn set_workflow_inputs(
         &mut self,
         inputs: Option<
             std::sync::Arc<crate::codebase::ci_workflows::PreparedWorkflowTopologyInputs>,
@@ -71,15 +71,15 @@ impl SharedTraversalContext {
         self.prepared_graph.set_workflow_inputs(inputs);
     }
 
-    pub(crate) fn prepared_graph(&self) -> &graph::PreparedGraphConfig {
+    pub fn prepared_graph(&self) -> &graph::PreparedGraphConfig {
         &self.prepared_graph
     }
 
-    pub(crate) fn candidate_inventory_applied(&self) -> bool {
+    pub fn candidate_inventory_applied(&self) -> bool {
         self.candidate_inventory_applied
     }
 
-    pub(crate) fn resolution_universe(&self) -> &graph::GraphFiles {
+    pub fn resolution_universe(&self) -> &graph::GraphFiles {
         self.escape_universe.as_ref().unwrap_or(&self.graph_files)
     }
 
@@ -95,7 +95,7 @@ impl SharedTraversalContext {
         )
     }
 
-    pub(crate) fn bounded_seed_diagnostics(
+    pub fn bounded_seed_diagnostics(
         &self,
         args: &TraverseArgs,
     ) -> &[crate::codebase::ts_resolver::TsConfigDiagnostic] {

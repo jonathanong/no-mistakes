@@ -74,7 +74,7 @@ warning that names the declaration. This does not require
 need that explicit opt-in. Dotnet and Swift stay inside that framework in
 `tests_plan_json_reports_configured_dotnet_source_impact` and
 `tests_plan_json_reports_configured_swift_source_impact`
-(`crates/no-mistakes/src/napi_api/tests/tests_native_fallback.rs`).
+(`crates/no-mistakes-napi/src/tests/tests_native_fallback.rs`).
 
 ## Recall over precision
 

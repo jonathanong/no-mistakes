@@ -53,7 +53,7 @@ pub struct EffectsReport {
     pub by_category: BTreeMap<String, usize>,
 }
 
-pub(crate) struct EffectsSelection {
+pub struct EffectsSelection {
     kind: String,
     names: HashMap<String, Option<String>>,
     provenance: crate::effect_provenance::EffectProvenance,

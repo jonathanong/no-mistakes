@@ -1,5 +1,5 @@
 impl SharedTraversalContext {
-    pub(crate) fn apply_candidate_inventory(&mut self, args: &TraverseArgs) -> Result<()> {
+    pub fn apply_candidate_inventory(&mut self, args: &TraverseArgs) -> Result<()> {
         if self.candidate_inventory_applied || !args.has_candidate_bounds() {
             return Ok(());
         }
@@ -12,7 +12,7 @@ impl SharedTraversalContext {
         Ok(())
     }
 
-    pub(crate) fn candidate_graph_files(&self, args: &TraverseArgs) -> Result<graph::GraphFiles> {
+    pub fn candidate_graph_files(&self, args: &TraverseArgs) -> Result<graph::GraphFiles> {
         if !args.has_candidate_bounds() {
             return Ok(self
                 .graph_files
@@ -22,7 +22,7 @@ impl SharedTraversalContext {
         Ok(self.graph_files.visible_subset(filtered))
     }
 
-    pub(crate) fn bounded_lazy_import_graph(
+    pub fn bounded_lazy_import_graph(
         &self,
         args: &TraverseArgs,
     ) -> Option<&graph::DepGraph> {
@@ -31,7 +31,7 @@ impl SharedTraversalContext {
             .map(std::sync::Arc::as_ref)
     }
 
-    pub(crate) fn seed_bounded_lazy_import_graph_from_args(
+    pub fn seed_bounded_lazy_import_graph_from_args(
         &mut self,
         args: &TraverseArgs,
         cwd: &Path,

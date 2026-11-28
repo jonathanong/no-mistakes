@@ -63,20 +63,3 @@ fn rejects_an_empty_connection_environment_variable() {
         "{error}"
     );
 }
-
-#[test]
-fn generate_postgres_catalog_json_rejects_invalid_options_without_connecting() {
-    let invalid_json =
-        crate::napi_api::generate_postgres_catalog_json_impl(serde_json::json!("not-an-object"));
-    assert!(invalid_json.is_err(), "{invalid_json:?}");
-
-    let empty_schema = crate::napi_api::generate_postgres_catalog_json_impl(serde_json::json!({
-        "connectionEnv": "NOT_SET_NO_MISTAKES_TEST",
-        "schema": ""
-    }));
-    let message = empty_schema.unwrap_err().to_string();
-    assert!(
-        message.contains("schema must be a non-empty PostgreSQL schema name"),
-        "{message}"
-    );
-}

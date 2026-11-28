@@ -1,4 +1,4 @@
-pub(crate) fn collect_and_filter_entries_shared(
+pub fn collect_and_filter_entries_shared(
     args: &TraverseArgs,
     direction: Direction,
     cwd_early: &Path,
@@ -25,7 +25,7 @@ pub(crate) fn collect_and_filter_entries_shared(
     Ok(result)
 }
 
-pub(crate) fn collect_and_filter_entries_prepared(
+pub fn collect_and_filter_entries_prepared(
     args: &TraverseArgs,
     direction: Direction,
     cwd_early: &Path,

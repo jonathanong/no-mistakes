@@ -5,7 +5,7 @@ use crate::codebase::playwright_facts::test_file_occurrences::{
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-pub(crate) struct PlaywrightTestFacts {
+pub struct PlaywrightTestFacts {
     common: Arc<CommonOccurrences>,
     variants: BTreeMap<PlaywrightOccurrenceKey, Arc<VariantOccurrences>>,
 }

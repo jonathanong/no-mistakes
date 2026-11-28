@@ -18,7 +18,7 @@ impl CheckFactPlan {
         );
     }
 
-    pub(crate) fn requires_call_sites(&self, path: &Path) -> bool {
+    pub fn requires_call_sites(&self, path: &Path) -> bool {
         self.graph.call_sites
             || (!self.call_site_paths.is_empty()
                 && (self.call_site_paths.contains(path)

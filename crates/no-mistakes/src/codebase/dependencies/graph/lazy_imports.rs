@@ -1,4 +1,4 @@
-pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_and_resolution_cache(
+pub fn lazy_import_deps_of_with_files_facts_workspace_and_resolution_cache(
     input: LazyImportBuild<'_>,
 ) -> (Vec<NodeEntry>, Vec<(PathBuf, TsFileFacts)>) {
     let session =
@@ -6,7 +6,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_and_resolution_cach
     lazy_import_deps_of_with_files_facts_workspace_resolution_cache_and_session(input, &session)
 }
 
-pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_and_session(
+pub fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_and_session(
     input: LazyImportBuild<'_>,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> (Vec<NodeEntry>, Vec<(PathBuf, TsFileFacts)>) {
@@ -14,7 +14,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
     (walk.entries, walk.facts)
 }
 
-pub(crate) fn lazy_import_graph_with_session(
+pub fn lazy_import_graph_with_session(
     input: LazyImportBuild<'_>,
     root: &Path,
     session: &crate::codebase::analysis_session::AnalysisSession,

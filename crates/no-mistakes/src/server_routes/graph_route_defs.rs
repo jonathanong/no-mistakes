@@ -1,6 +1,6 @@
 /// Project graph route definitions are projected from the invocation's
 /// prepared server facts. They intentionally never fall back to raw parsing.
-pub(crate) fn route_defs_from_prepared_facts_with_catalog(
+pub fn route_defs_from_prepared_facts_with_catalog(
     root: &Path,
     tsconfig: &TsConfig,
     tsconfig_catalog: Option<&TsConfigCatalog>,

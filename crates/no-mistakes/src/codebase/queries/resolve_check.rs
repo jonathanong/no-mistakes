@@ -10,7 +10,7 @@ use std::process::ExitCode;
 mod batch;
 pub use batch::BatchResolveCheckReport;
 use batch::{batch_report, compute_many};
-pub(crate) use batch::{batch_report_from_prepared_facts, PreparedResolveCheckResolution};
+pub use batch::{batch_report_from_prepared_facts, PreparedResolveCheckResolution};
 
 /// `resolve-check`: do all imports in one or more files resolve?
 #[derive(clap::Parser, Debug)]

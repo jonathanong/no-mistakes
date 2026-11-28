@@ -20,7 +20,7 @@ pub(crate) struct RouteOccurrence {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub(crate) struct RouteLink {
+pub struct RouteLink {
     pub(crate) source: RouteCoverageSource,
     pub(crate) entry_file: PathBuf,
     pub(crate) declaration_file: PathBuf,

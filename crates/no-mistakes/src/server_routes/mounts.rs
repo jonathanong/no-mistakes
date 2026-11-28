@@ -8,14 +8,14 @@ use std::path::{Path, PathBuf};
 pub(super) mod test_support;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub(crate) struct ResolvedMount {
+pub struct ResolvedMount {
     pub parent_file: PathBuf,
     pub parent: String,
     pub child_file: PathBuf,
     pub child: String,
     pub prefix: String,
 }
-pub(crate) fn resolve_mounts_with_resolver(
+pub fn resolve_mounts_with_resolver(
     facts: &HashMap<PathBuf, FileFacts>,
     resolver: &dyn ImportResolution,
 ) -> Vec<ResolvedMount> {
@@ -38,7 +38,7 @@ pub(crate) fn resolve_mounts_with_resolver(
     mounts
 }
 
-pub(crate) fn prefixes_for(
+pub fn prefixes_for(
     site: &RouteSite,
     facts: &HashMap<PathBuf, FileFacts>,
     mounts: &[ResolvedMount],

@@ -6,11 +6,11 @@ use crate::codebase::dependencies::graph::{CallRoot, DepGraph};
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
-pub(crate) struct PreparedCallSitesProjection<'a> {
-    pub(crate) graph: &'a DepGraph,
-    pub(crate) facts: &'a crate::codebase::ts_source::facts::TsFactMap,
-    pub(crate) files: &'a [PathBuf],
-    pub(crate) diagnostics: &'a std::sync::Arc<QueryDiagnostics>,
+pub struct PreparedCallSitesProjection<'a> {
+    pub graph: &'a DepGraph,
+    pub facts: &'a crate::codebase::ts_source::facts::TsFactMap,
+    pub files: &'a [PathBuf],
+    pub diagnostics: &'a std::sync::Arc<QueryDiagnostics>,
 }
 
 pub(super) fn project_sites(

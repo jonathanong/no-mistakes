@@ -17,9 +17,9 @@ mod playwright_provenance;
 mod runner;
 mod sql_scope;
 mod staged_playwright;
-pub(crate) mod workspace_setup;
+pub mod workspace_setup;
 pub(crate) use staged_playwright::{collect_precollected_route_facts, PrecollectedRouteFacts};
-pub(crate) mod sql_source_prerequisites;
+pub mod sql_source_prerequisites;
 mod stats;
 pub(crate) use sql_source_prerequisites::SqlSourcePrerequisites;
 
@@ -83,7 +83,7 @@ pub fn ordered_path_exclusion(
         .collect()
 }
 
-pub(crate) fn into_ordered_path_exclusion(
+pub fn into_ordered_path_exclusion(
     candidates: Vec<PathBuf>,
     primary: &[PathBuf],
     graph: &[PathBuf],
@@ -100,7 +100,7 @@ pub(crate) fn into_ordered_path_exclusion(
 }
 
 pub use super::postgres::check_analysis::{SqlApplicationFacts, SqlFactContext};
-pub(crate) use batch::{collect_check_fact_batch_with_session, BatchCheckFactRequest};
+pub use batch::{collect_check_fact_batch_with_session, BatchCheckFactRequest};
 pub use collect::{
     collect_check_facts, collect_check_facts_with_graph_files_and_playwright,
     collect_check_facts_with_graph_files_playwright_and_session,
@@ -116,8 +116,8 @@ pub use family_scope::{
     configure_nextjs_caching_scope, FamilyPathScope,
 };
 pub(crate) use file::is_mdx_file;
-pub use map::CheckFactMap;
-pub(crate) use map::{CheckFileFacts, PlaywrightTestFilesByProject};
+pub(crate) use map::PlaywrightTestFilesByProject;
+pub use map::{CheckFactMap, CheckFileFacts};
 pub use plan::CheckFactPlan;
 pub(crate) use playwright_facts::PlaywrightTestFacts;
 pub use playwright_plan::PlaywrightFactPlan;
@@ -140,7 +140,7 @@ pub(crate) mod tests;
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod head_calls_only_tests;
 
-pub(crate) use family_scope::applies as discovery_applies;
+pub use family_scope::applies as discovery_applies;
 pub(crate) use file::collect_file_facts_from_program_with_discovery as file_program_with_discovery;
 pub(crate) use file::collect_with_postgres;
 

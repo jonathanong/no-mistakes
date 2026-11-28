@@ -38,7 +38,7 @@ impl PreparedPlaywrightRules {
     }
 
     /// An omitted app filter must reuse the prepared project selection.
-    pub(crate) fn report_view(
+    pub fn report_view(
         &self,
         project: Option<&str>,
         app: Option<&str>,
