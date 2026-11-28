@@ -75,66 +75,34 @@ The current validation graph is organized as follows:
 - Standalone library tests build without the CLI. Each of the three PR shards
   builds and runs its own test slice on one runner. On other events, three
   parallel producers each build one archive for the three test consumers.
-  Each native Rust lane builds only `no-mistakes-invocation`. Windows publishes
-  an archive for one test runner. macOS builds and runs the harness on the same
-  runner. The independent native API lanes build the platform CLI and addon.
-  PRs use `macOS smoke` and `Windows smoke` to check those real binaries and the
-  small platform test harnesses.
-
-  The [macOS scope](../../.github/scripts/macos-pr-scope.cjs) uses the same
-  NUL-delimited merge-base diff as the Rust scope. It runs on an empty or
-  unavailable diff and on changes outside these exclusions. File type changes
-  trigger smoke except for documentation outside the Rust input folders and
-  the documentation-only tool configs.
-
-  | Paths that can skip macOS smoke | Scope |
-  | --- | --- |
-  | `docs/**`, Markdown outside the Rust input folders, and the documentation-only tool configs | Documentation |
-  | `fixtures/**`, `test-cases/**`, `**/*.snap` | Test data. The smoke fixture directories `fixtures/check/aggregate-agents-md-max-size/` and `fixtures/napi/real-addon-dependencies/` always trigger. |
-  | `packages/eslint-plugin-no-mistakes/**`, `plugins/no-mistakes-rules/**`, `packages/no-mistakes/*.d.ts` | Independent lint tooling and declaration-only changes |
-  | `.github/scripts/lychee-gateway.cjs`, `.github/scripts/lychee-gateway.test.cjs`, `.github/scripts/lychee-github-gateway.test.cjs` | Documentation link-check tooling |
-  | `crates/no-mistakes/src/codebase/rules/**/*.rs` | Rule logic without platform, filesystem, path, process, or native API markers in either Git revision |
-  | Other JavaScript and TypeScript files | Standalone scripts outside `.github/`, `scripts/`, and `packages/no-mistakes*/` |
-
-  All remaining paths trigger the job. These include Cargo manifests and lockfiles,
-  the Rust toolchain and build scripts, Rust implementation outside the rule tree,
-  CI workflows and their scripts, and native package code. A rename contributes
-  both old and new paths. The rule scope reads both committed trees so a platform
-  operation added or removed in an otherwise portable rule still triggers smoke.
-  Both smoke jobs restore the platform runtime cache and build the CLI and
-  addon together. Rust smoke targets compile from `no-mistakes-invocation`.
-  The `cli_smoke` harness uses `NO_MISTAKES_CLI_BIN` to run the binary already
-  built by the job. macOS runs the lock handoff through Git’s filesystem monitor, Git timeout
-  JSON, and blocked configuration under the shared millisecond budget.
-  Windows runs a real check with drive-qualified paths and a deadline. Both
-  run the saved CLI fixture to check that it reports `agents-md-max-size` at
-  `AGENTS.md:1`, then load the platform addon through `analyzeProject`.
-  The native API jobs on main and manual dispatch reuse the same CLI cases
-  with their built or downloaded runtime. Linux coverage owns the portable
-  help text, flag placement, invalid timeout inputs, and successful millisecond
-  budget checks.
-  Addon smoke also exercises cross-process lock handoff, lock release after
-  process termination, and rename behavior. macOS retains CLI and addon
-  parity for invocation diagnostics. Windows CRLF and UTF-16 console
-  assertions run in the small Job Object harness.
-
-  The full macOS jobs (`native-rust-tests-macos` and `native-api-tests-macos`)
-  run on `main` and manual dispatch. They build in parallel and each runs its
-  tests on its own build runner. They still publish the runtime and Rust test
-  archives for exact-commit measurement reuse. Only a validated reuse run
-  downloads an archive before testing. The main-push retention job allows a
-  successful build upload to qualify even if macOS tests later fail. The PR smoke tier means that
-  an OS-only regression outside the smoke list surfaces on `main` after merge
-  instead of on the pull request. The release workflow is a manual dispatch
-  and does not read `main` CI results, so the maintainer must confirm `main` is
-  green, including the full macOS and Windows jobs, before dispatching a release. `Tests with coverage` directly aggregates the native, JavaScript, and standalone component jobs (via `.github/scripts/tests-gate.cjs`): it accepts the skipped
-  full macOS jobs on a pull request and requires `macOS smoke` to succeed
-  when the macOS scope requests it, accepts the skipped full Windows jobs
-  and requires `Windows smoke` when the Rust scope requests it on a pull request, and the smoke jobs are not separate required checks. The release
-  workflow does not use these outputs.
-  Windows runs one smoke job on PRs. On main and dispatch, the separate Rust
-  archive producer and consumer run alongside the native runtime and addon
-  jobs. Windows fork PRs skip the Defender exclusion step.
+- Pull requests and main use the same path gate for the full macOS and Windows
+  Rust and API suites. All three outputs (`rust`, `macos`, and `windows`) use
+  the conservative [Rust path selector](../../.github/scripts/rust-pr-scope.cjs).
+  The full native API suites exercise shared Rust rule logic, fixtures, and
+  Node bindings, including the Windows download-integrity parity case. A
+  platform marker in a changed file is unnecessary. Pull requests compare
+  against their merge base. Pushes compare against the last successful CI
+  ancestor, and manual dispatch runs the full suites because it has no diff
+  base. Missing or empty diffs select all three outputs. Renames contribute
+  both old and new paths.
+- Each native Rust lane builds only `no-mistakes-invocation`. Windows publishes
+  an archive for one test runner. macOS builds and runs the harness on the
+  same runner. Both native API lanes run one shard. Each uses the platform CLI
+  and addon to exercise the full compiled API inventory, including addon
+  loading, cross-process locks, rename behavior, and invocation diagnostics.
+  The same jobs run a real CLI fixture and the `cli_smoke` harness with
+  `NO_MISTAKES_CLI_BIN`. macOS retains Git filesystem monitor cleanup, Git timeout JSON,
+  and blocked configuration tests. Windows retains a drive-qualified check
+  with a deadline, and the small Job Object harness exercises CRLF and UTF-16
+  console behavior. Linux coverage retains the portable CLI cases. Windows
+  fork PRs skip the Defender exclusion step.
+- `Tests with coverage` aggregates native, JavaScript, and standalone component
+  jobs. It accepts native skips when their path output is false and rejects
+  failures or unexplained skips. The two macOS jobs retain per-run concurrency
+  slots on PRs and dispatch, and per-job supersession slots on main. The
+  existing main-push allowance for a cancelled macOS job still applies. The
+  native producers publish archives for validated exact-commit reuse. Release
+  uses its own workflow and does not consume these scope outputs.
 
 Native API consumers use the [runtime downloader](../../.github/scripts/download-native-runtime.py)
 instead of a JavaScript artifact action so completed transfers do not depend on
@@ -204,8 +172,8 @@ is shared by the selector and the Rust docs test helper. The [AST rule](../../.a
 checks literal repository Markdown paths in Rust. Use Source policy and tooling
 tests for assertions about other repository Markdown, including the root README.
 
-On a pull request, the [Rust path selector](../../.github/scripts/rust-pr-scope.cjs)
-skips the Rust test and quality jobs for Markdown outside those folders and
+On every CI event, the [Rust path selector](../../.github/scripts/rust-pr-scope.cjs)
+skips Rust test and quality jobs, including the native suites, for Markdown outside those folders and
 for documentation-only tool configs (`cspell.config.yaml` and the
 [Lychee ignore file](../../.lycheeignore)).
 Unknown inputs and unavailable diffs run Rust validation. The `Tests with coverage`
@@ -686,7 +654,8 @@ workspace's library targets. Shards 2 and 3 select only `no-mistakes`.
 | Job | Cargo profile | Reuse |
 | --- | --- | --- |
 | Linux runtime CLI and addon | `dev` | Separate workspace snapshots with verified input timestamps |
-| macOS and Windows smoke | `dev` for the CLI and addon, `test` for the harness | Platform runtime snapshots and a shared target within each smoke job |
+| macOS and Windows native API | `dev` for the CLI and addon, `test` for CLI invocation cases | Platform runtime snapshots and the real built or downloaded CLI |
+| macOS and Windows native Rust | `test` for `no-mistakes-invocation` | Dependency caches and exact-commit test archives |
 | Standalone library shards | `test`, default features | Standalone workspace snapshot with verified input timestamps |
 | Instrumented Rust tests | `test`, all features | Coverage-specific workspace snapshot with verified input timestamps |
 | Documentation tests | `test` | Dependency artifacts in a separate doc-test cache |

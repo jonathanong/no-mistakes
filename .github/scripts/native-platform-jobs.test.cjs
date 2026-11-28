@@ -76,7 +76,7 @@ test("native jobs use one job for each native test suite", () => {
   }
 });
 
-test("Tests with coverage requires the Windows phases and both macOS build-and-test jobs and both smoke jobs", () => {
+test("Tests with coverage requires the Windows phases and both macOS build-and-test jobs", () => {
   const body = job("tests-gate");
   const needs = body
     .match(/needs:\s*\[([^\]]+)\]/)[1]
@@ -85,8 +85,6 @@ test("Tests with coverage requires the Windows phases and both macOS build-and-t
     .filter(Boolean);
   for (const name of [
     "changes",
-    "macos-smoke",
-    "windows-smoke",
     ...families,
     "native-api-tests-macos",
     "native-rust-tests-macos",

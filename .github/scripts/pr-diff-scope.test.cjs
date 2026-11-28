@@ -39,167 +39,82 @@ test("CLI requires a diff-base request and rejects unknown input", () => {
   assert.notEqual(run("R100\0a.rs\0", ["--all"]).status, 0);
 });
 
-test("pull requests run one macOS smoke job and the full macOS suite runs elsewhere", () => {
-  assert.match(source, /macos: \$\{\{ github\.event_name != 'pull_request' \}\}/);
-  assert.match(
-    source,
-    /macos-smoke: \$\{\{ github\.event_name == 'pull_request' && steps\.rust-paths\.outputs\.macos-smoke != 'false' \}\}/,
-  );
+const macosJobs = ["native-api-tests-macos", "native-rust-tests-macos"];
+const windowsJobs = ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"];
+
+test("native suites use only the path scope to decide which jobs run", () => {
+  for (const [platform, jobs] of [["macos", macosJobs], ["windows", windowsJobs]]) {
+    for (const name of jobs) {
+      const body = workflowJob(source, name);
+      assert.equal(
+        body.match(/^    if: (.+)$/m)?.[1],
+        `\${{ needs.changes.outputs.${platform} == 'true' }}`,
+        name,
+      );
+    }
+  }
+  assert.doesNotMatch(source, /^  (?:macos|windows)-smoke:/m);
   assert.match(source, /node --test[^\n]*pr-diff-scope\.test\.cjs/);
-  assert.match(source, /node --test[^\n]*macos-pr-scope\.test\.cjs/);
-  assert.match(source, /docs-only: \$\{\{ github\.event_name == 'pull_request' &&/);
   assert.doesNotMatch(source, /needs\.changes\.outputs\.docs-only/);
   const release = readFileSync(path.join(root, ".github/workflows/release.yml"), "utf8");
   assert.doesNotMatch(release, /pr-diff-scope|outputs\.macos/);
+});
 
-  for (const name of ["native-rust-tests-macos", "native-api-tests-macos"]) {
-    assert.match(
-      workflowJob(source, name),
-      /if: \$\{\{ needs\.changes\.outputs\.macos == 'true'(?: && needs\.changes\.outputs\.rust == 'true')? \}\}/,
-    );
-  }
-  // Windows jobs are not queue-bound and run on every pull request unchanged.
-  for (const name of ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"])
-    assert.doesNotMatch(workflowJob(source, name), /needs\.changes\.outputs\.macos/);
-  assert.doesNotMatch(workflowJob(source, "native-compile-profile"), /outputs\.macos/);
-  assert.doesNotMatch(workflowJob(source, "native-compile-profile"), /ci-macos-main/);
-  assert.match(workflowJob(source, "native-compile-profile"), /cancel-in-progress: false/);
-  assert.match(workflowJob(source, "tests-gate"), /MACOS_REQUIRED/);
-  assert.match(
-    source,
-    /group: \$\{\{ github\.workflow \}\}-\$\{\{ github\.event_name == 'pull_request' && format\('pr-\{0\}', github\.event\.pull_request\.number\) \|\| \(github\.event_name == 'workflow_dispatch' && format\('dispatch-\{0\}', github\.run_id\) \|\| github\.ref\) \}\}\n {2}cancel-in-progress: \$\{\{ github\.event_name == 'pull_request' \}\}/,
-  );
-
+test("main macOS jobs retain their own supersession slots", () => {
   const mainPush = "github.event_name == 'push' && github.ref == 'refs/heads/main'";
-  for (const name of ["native-rust-tests-macos", "native-api-tests-macos"]) {
+  for (const name of macosJobs) {
     const body = workflowJob(source, name);
-    assert.match(
-      body,
-      new RegExp(
-        `group: \\$\\{\\{ ${mainPush} && format\\('ci-macos-main-${name}-\\{0\\}', matrix\\.shard\\) \\|\\| format\\('ci-macos-\\{0\\}-${name}-\\{1\\}', github\\.run_id, matrix\\.shard\\) \\}\\}`,
+    assert.ok(
+      body.includes(
+        `group: \${{ ${mainPush} && format('ci-macos-main-${name}-{0}', matrix.shard) || format('ci-macos-{0}-${name}-{1}', github.run_id, matrix.shard) }}`,
       ),
       name,
     );
     assert.doesNotMatch(body, /github\.job/);
-    assert.match(body, /cancel-in-progress: false/, name);
+    assert.match(body, /cancel-in-progress: false/);
   }
-  for (const name of ["native-build", "native-test-build", "native-rust-tests", "native-api-tests"])
+  for (const name of windowsJobs)
     assert.doesNotMatch(workflowJob(source, name), /concurrency:|ci-macos-main/);
-  assert.doesNotMatch(workflowJob(source, "macos-smoke"), /concurrency:|ci-macos-main/);
+  const profile = workflowJob(source, "native-compile-profile");
+  assert.doesNotMatch(profile, /outputs\.macos|ci-macos-main/);
+  assert.match(profile, /cancel-in-progress: false/);
 });
 
-test("Tests with coverage accepts a skipped full macOS tier only on pull requests", () => {
-  const native = workflowJob(source, "tests-gate");
-  assert.match(native, /MACOS_REQUIRED: \$\{\{ needs\.changes\.outputs\.macos \}\}/);
-  assert.match(native, /MACOS_EVENT: \$\{\{ github\.event_name \}\}/);
-  assert.match(native, /MACOS_REF: \$\{\{ github\.ref \}\}/);
-  const needs = native
-    .match(/needs:\s*\[([^\]]+)\]/)[1]
-    .split(",")
-    .map((name) => name.trim())
-    .filter(Boolean);
-  assert.ok(needs.includes("changes"));
-  assert.ok(needs.includes("macos-smoke"));
-  assert.match(native, /MACOS_SMOKE_REQUIRED: \$\{\{ needs\.changes\.outputs\.macos-smoke \}\}/);
-  assert.match(native, /run: node \.github\/scripts\/tests-gate\.cjs/);
-  const script = path.join(__dirname, "tests-gate.cjs");
-  const macosJobs = needs.filter((name) => name.endsWith("-macos"));
-  assert.deepEqual(macosJobs.sort(), ["native-api-tests-macos", "native-rust-tests-macos"]);
-  const runGate = (
-    results,
-    required,
-    event = "",
-    ref = "",
-    smoke = event === "pull_request" ? "true" : "false",
-    rust = "true",
-  ) =>
-    spawnSync(process.execPath, [script], {
-      encoding: "utf8",
-      env: {
-        ...process.env,
-        MACOS_REQUIRED: required,
-        MACOS_SMOKE_REQUIRED: smoke,
-        WINDOWS_REQUIRED: event === "pull_request" ? "false" : "true",
-        MACOS_EVENT: event,
-        MACOS_REF: ref,
-        RUST_REQUIRED: rust,
-        RESULTS: JSON.stringify(results),
-      },
-    });
-  const success = Object.fromEntries(needs.map((name) => [name, { result: "success" }]));
-  const withResult = (names, result) => ({
-    ...success,
-    ...Object.fromEntries(names.map((name) => [name, { result }])),
-  });
-  const skippedMacos = withResult(macosJobs, "skipped");
+function gate(jobs, result, required, event, ref = "refs/heads/main") {
+  const results = { changes: { result: "success" } };
+  for (const name of jobs) results[name] = { result };
+  return spawnSync(process.execPath, [path.join(__dirname, "tests-gate.cjs")], {
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      MACOS_REQUIRED: required,
+      WINDOWS_REQUIRED: required,
+      MACOS_EVENT: event,
+      MACOS_REF: ref,
+      RUST_REQUIRED: required,
+      RESULTS: JSON.stringify(results),
+    },
+  }).status;
+}
 
-  const skippedSmoke = { ...skippedMacos, "macos-smoke": { result: "skipped" } };
-  assert.equal(runGate(skippedMacos, "false", "pull_request").status, 0);
-  assert.equal(runGate(skippedSmoke, "false", "pull_request", "", "false").status, 0);
-  for (const scope of ["true", ""]) {
-    assert.equal(runGate(skippedSmoke, "false", "pull_request", "", scope).status, 1);
+test("the aggregate accepts path skips and rejects suite failures on every event", () => {
+  for (const event of ["pull_request", "push", "workflow_dispatch"]) {
+    for (const jobs of [macosJobs, windowsJobs]) {
+      assert.equal(gate(jobs, "skipped", "false", event), 0);
+      assert.equal(gate(jobs, "skipped", "true", event), 1);
+      assert.equal(gate(jobs, "skipped", "", event), 1);
+      assert.equal(gate(jobs, "failure", "true", event), 1);
+      assert.equal(gate(jobs, "failure", "false", event), 1);
+    }
   }
-  assert.equal(runGate(skippedSmoke, "false", "pull_request", "", "true", "false").status, 1);
-  for (const result of ["failure", "cancelled"]) {
-    assert.equal(
-      runGate({ ...skippedMacos, "macos-smoke": { result } }, "false", "pull_request", "", "false")
-        .status,
-      1,
-    );
-  }
-  // Full run: the smoke job is skipped and the full macOS jobs must pass.
-  assert.equal(
-    runGate(withResult(["macos-smoke"], "skipped"), "true", "push", "refs/heads/main").status,
-    0,
-  );
-  assert.equal(runGate(skippedMacos, "true").status, 1);
-  assert.equal(runGate(skippedMacos, "").status, 1);
-  assert.equal(
-    runGate({ ...skippedMacos, "native-build": { result: "skipped" } }, "false").status,
-    1,
-  );
-  assert.equal(
-    runGate({ ...skippedMacos, "native-api-tests-macos": { result: "failure" } }, "false").status,
-    1,
-  );
-  assert.equal(runGate({ ...success, changes: { result: "skipped" } }, "false").status, 1);
-  assert.equal(
-    runGate({ ...skippedMacos, "native-api-tests-macos": { result: "cancelled" } }, "false").status,
-    1,
-  );
-  const cancelledMacos = withResult(macosJobs, "cancelled");
-  assert.equal(runGate(cancelledMacos, "true", "push", "refs/heads/main").status, 0);
-  assert.equal(runGate(cancelledMacos, "false", "push", "refs/heads/main").status, 0);
-  assert.equal(runGate(cancelledMacos, "true", "pull_request", "refs/heads/main").status, 1);
-  assert.equal(runGate(cancelledMacos, "true", "push", "refs/heads/ci/cold-build").status, 1);
-  assert.equal(runGate(cancelledMacos, "true", "workflow_dispatch", "refs/heads/main").status, 1);
-  assert.equal(
-    runGate(
-      { ...success, "native-build": { result: "cancelled" } },
-      "true",
-      "push",
-      "refs/heads/main",
-    ).status,
-    1,
-  );
-  assert.equal(
-    runGate(
-      { ...success, "native-api-tests-macos": { result: "failure" } },
-      "true",
-      "push",
-      "refs/heads/main",
-    ).status,
-    1,
-  );
-  assert.equal(
-    runGate(
-      { ...success, "native-api-tests-macos": { result: "skipped" } },
-      "true",
-      "push",
-      "refs/heads/main",
-    ).status,
-    1,
-  );
+});
+
+test("only a superseded main push can tolerate cancellation of a macOS job", () => {
+  assert.equal(gate(macosJobs, "cancelled", "true", "push"), 0);
+  assert.equal(gate(windowsJobs, "cancelled", "true", "push"), 1);
+  assert.equal(gate(macosJobs, "cancelled", "true", "push", "refs/heads/ci/cold-build"), 1);
+  assert.equal(gate(macosJobs, "cancelled", "true", "pull_request"), 1);
+  assert.equal(gate(macosJobs, "cancelled", "true", "workflow_dispatch"), 1);
 });
 
 test("pull requests compare Rust paths from the merge base", () => {
@@ -215,10 +130,8 @@ test("pull requests compare Rust paths from the merge base", () => {
     /pr-diff-scope\.cjs --diff-base "\$GITHUB_EVENT_NAME" "\$BASE_SHA" "\$HEAD_SHA"/,
   );
   assert.match(step, /git diff --no-renames --name-status -z "\$DIFF_BASE" "\$HEAD_SHA"/);
-  assert.match(step, /node \.github\/scripts\/rust-pr-scope\.cjs "\$@" < "\$input"/);
-  assert.match(step, /node \.github\/scripts\/macos-pr-scope\.cjs "\$@" < "\$input"/);
-  assert.match(step, /emit_native_scopes "\$RUNNER_TEMP\/native-changes"/);
-  assert.match(step, /emit_native_scopes \/dev\/null --all/);
+  assert.match(step, /node \.github\/scripts\/rust-pr-scope\.cjs < "\$RUNNER_TEMP\/native-changes"/);
+  assert.match(step, /node \.github\/scripts\/rust-pr-scope\.cjs --all/);
   const docs = source.slice(
     source.indexOf("      - name: Check docs-only paths"),
     source.indexOf("      - name: Check Rust paths"),
@@ -266,65 +179,4 @@ test("pull requests compare Rust paths from the merge base", () => {
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
-});
-
-test("pull requests run one Windows smoke job and the full Windows suite runs elsewhere", () => {
-  assert.match(source, /windows: \$\{\{ github\.event_name != 'pull_request' \}\}/);
-  assert.match(
-    source,
-    /windows-smoke: \$\{\{ github\.event_name == 'pull_request' && steps\.rust-paths\.outputs\.rust != 'false' \}\}/,
-  );
-  const fullWindows = [
-    "native-build",
-    "native-test-build",
-    "native-rust-tests",
-    "native-api-tests",
-  ];
-  for (const name of fullWindows) {
-    const body = workflowJob(source, name);
-    assert.match(body, /needs\.changes\.outputs\.windows == 'true'/, name);
-    assert.match(body, /windows-2025/, name);
-  }
-  assert.doesNotMatch(workflowJob(source, "windows-smoke"), /concurrency:/);
-
-  const native = workflowJob(source, "tests-gate");
-  assert.match(native, /WINDOWS_REQUIRED: \$\{\{ needs\.changes\.outputs\.windows \}\}/);
-  const needs = native
-    .match(/needs:\s*\[([^\]]+)\]/)[1]
-    .split(",")
-    .map((name) => name.trim())
-    .filter(Boolean);
-  assert.ok(needs.includes("windows-smoke"));
-  const script = path.join(__dirname, "tests-gate.cjs");
-  const success = Object.fromEntries(needs.map((name) => [name, { result: "success" }]));
-  const withResult = (names, result) => ({
-    ...success,
-    ...Object.fromEntries(names.map((name) => [name, { result }])),
-  });
-  const gate = (results, windows, rust = "true") =>
-    spawnSync(process.execPath, [script], {
-      encoding: "utf8",
-      env: {
-        ...process.env,
-        MACOS_REQUIRED: "false",
-        MACOS_EVENT: "pull_request",
-        MACOS_REF: "refs/pull/1/merge",
-        WINDOWS_REQUIRED: windows,
-        RUST_REQUIRED: rust,
-        RESULTS: JSON.stringify(results),
-      },
-    }).status;
-  const skipped = withResult(fullWindows, "skipped");
-
-  // Pull request: the full Windows jobs are skipped and the smoke job must pass.
-  assert.equal(gate(skipped, "false"), 0);
-  assert.equal(gate({ ...skipped, "windows-smoke": { result: "failure" } }, "false"), 1);
-  assert.equal(gate({ ...skipped, "windows-smoke": { result: "skipped" } }, "false"), 1);
-  assert.equal(gate({ ...skipped, "windows-smoke": { result: "skipped" } }, "false", "false"), 0);
-  // Full run: the smoke job is skipped and the full Windows jobs must pass.
-  assert.equal(gate(withResult(["windows-smoke"], "skipped"), "true"), 0);
-  assert.equal(gate(withResult([...fullWindows, "windows-smoke"], "skipped"), "true"), 1);
-  assert.equal(gate({ ...success, "native-api-tests": { result: "failure" } }, "true"), 1);
-  assert.equal(gate({ ...skipped, "native-build": { result: "failure" } }, "false"), 1);
-  assert.equal(gate(skipped, ""), 1);
 });

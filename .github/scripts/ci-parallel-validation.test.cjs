@@ -336,7 +336,6 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
         env: {
           ...process.env,
           MACOS_REQUIRED: "",
-          MACOS_SMOKE_REQUIRED: "",
           MACOS_EVENT: event,
           MACOS_REF: "",
           RESULTS: JSON.stringify(results),
@@ -368,8 +367,6 @@ test("every required aggregate rejects failed, cancelled and skipped dependencie
     "native-rust-tests-macos",
     "native-api-tests",
     "native-api-tests-macos",
-    "macos-smoke",
-    "windows-smoke",
     "tests",
     "standalone-build",
     "standalone-shards",
