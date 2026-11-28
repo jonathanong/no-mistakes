@@ -56,6 +56,29 @@ const aliasI = aliasH;
 const aliasJ = aliasI;
 declare const ttlNoInit: number;
 
+const childAlias1 = flowChild;
+const childAlias2 = childAlias1;
+const childAlias3 = childAlias2;
+const childAlias4 = childAlias3;
+const childAlias5 = childAlias4;
+const childAlias6 = childAlias5;
+const childAlias7 = childAlias6;
+const childAlias8 = childAlias7;
+const childAlias9 = childAlias8;
+const childAlias10 = childAlias9;
+const childNotObject = [flowChild];
+const cycDedup: object = { ...cycDedup };
+
+const bulkBracketJobs = [
+  { name: "bulk-bracket", data: {}, opts: { deduplication: { id: "bb", mode: "debounce", ttl: 12 } } },
+];
+bulkBracketJobs["push"]({ name: "later", data: {}, opts: {} });
+const bulkOptionalJobs = [
+  { name: "bulk-optional", data: {}, opts: { deduplication: { id: "bo", mode: "debounce", ttl: 15 } } },
+];
+bulkOptionalJobs?.push({ name: "later", data: {}, opts: {} });
+declare const bulkDeclared: Array<{ name: string; data: object; opts: object }>;
+
 function scopeMarker(): never {
   throw new Error("scope");
 }
@@ -145,4 +168,18 @@ export async function cases(): Promise<void> {
   await flow.add({ name: "flow-opaque", queueName: "events", data: {}, opts: {}, ...flowOpaque, children: [] });
   await flow.add({ name: "flow-loop", queueName: "events", data: {}, opts: {}, ...flowLoopA, ...flowLoopA, children: [] });
   await flow.add({ name: "flow-computed", queueName: "events", data: {}, opts: {}, [selectKey()]: 1, children: [] });
+  await flow.add({ name: "flow-alias-deep", queueName: "events", data: {}, opts: {}, children: [childAlias10, childNotObject, unboundChild] });
+  await queue.add("dedup-cycle", {}, { deduplication: cycDedup });
+  await queue.add("spread-budget", {}, { deduplication: { id: "u11", ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ ...{ mode: "debounce", ttl: 1 } } } } } } } } } } } } } } } } } } } } } } } } } } } } } } } } } } } });
+  await flow.add({ name: "flow-undeclared", queueName: "events", data: {}, opts: {}, ...undeclaredFlow, children: [] });
+  await queue.addBulk(bulkBracketJobs);
+  await queue.addBulk(bulkOptionalJobs);
+  await queue.addBulk(bulkDeclared);
+  await queue.addBulk(lateJobs);
+  await queue.add("ttl-late", {}, { deduplication: { id: "u12", mode: "debounce", ttl: lateTtl } });
 }
+
+const lateJobs = [
+  { name: "bulk-late", data: {}, opts: { deduplication: { id: "bt", mode: "debounce", ttl: 16 } } },
+];
+const lateTtl = 5;

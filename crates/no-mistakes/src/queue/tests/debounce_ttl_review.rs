@@ -90,6 +90,14 @@ fn review_cases_find_known_ttl_and_abstain_when_unknown() {
         "flow-ghost",
         "flow-opaque",
         "flow-computed",
+        "addBulk(bulkBracketJobs)",
+        "addBulk(bulkOptionalJobs)",
+        "addBulk(bulkDeclared)",
+        "addBulk(lateJobs)",
+        "ttl-late",
+        "dedup-cycle",
+        "spread-budget",
+        "flow-undeclared",
     ] {
         assert!(
             abstained.iter().any(|line| line.contains(marker)),
