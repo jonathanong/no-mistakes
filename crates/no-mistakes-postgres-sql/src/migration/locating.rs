@@ -57,7 +57,9 @@ impl<'a> Locations<'a> {
                 .iter()
                 .find(|token| {
                     matches!(&token.token, Token::Word(word)
-                        if word.quote_style.is_none() && word.value.eq_ignore_ascii_case(keyword))
+                        if word.quote_style.is_none()
+                            && (word.value.eq_ignore_ascii_case(keyword)
+                                || keyword == "ROLLBACK" && word.value.eq_ignore_ascii_case("ABORT")))
                 })
                 .map_or(1, |token| token.span.start.line.max(1) as usize);
         }
