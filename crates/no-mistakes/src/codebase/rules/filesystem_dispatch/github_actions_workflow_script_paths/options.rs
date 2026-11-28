@@ -14,13 +14,13 @@ pub(crate) struct Options {
     pub(crate) events: Vec<String>,
 }
 
-pub(super) struct CompiledOptions {
+pub(in crate::codebase::rules) struct CompiledOptions {
     pub(super) script_dirs: Vec<String>,
     pub(super) include: Vec<String>,
     pub(super) events: Vec<String>,
 }
 
-pub(super) fn compile(options: Options) -> Result<CompiledOptions> {
+pub(in crate::codebase::rules) fn compile(options: Options) -> Result<CompiledOptions> {
     let mut script_dirs = Vec::with_capacity(options.script_dirs.len());
     let mut seen_dirs = BTreeSet::new();
     for (index, raw) in options.script_dirs.into_iter().enumerate() {

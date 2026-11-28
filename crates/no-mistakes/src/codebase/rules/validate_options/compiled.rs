@@ -39,6 +39,10 @@ pub(super) const VALIDATORS: &[RuleValidator] = &[
         )
         .map(drop)
     }),
+    (rules::GITHUB_ACTIONS_WORKFLOW_SCRIPT_PATHS, |rule, _| {
+        rules::github_actions_workflow_script_paths::options::compile(rule.strict_rule_options()?)
+            .map(drop)
+    }),
     (
         rules::github_actions_script_expressions::RULE_ID,
         |rule, _| {

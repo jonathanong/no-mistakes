@@ -2,7 +2,7 @@ mod composites;
 mod diagnostics;
 mod emit;
 mod extract;
-mod options;
+pub(in crate::codebase::rules) mod options;
 mod scripts;
 mod triggers;
 mod workflow;
