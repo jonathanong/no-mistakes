@@ -1,33 +1,54 @@
 use super::function_clauses::is_eager;
 use super::select_exprs::target_identity;
+use super::select_item_expr;
 use crate::fx::FxHashSet;
 use crate::idents::unwrap_expr;
-use sqlparser::ast::{Expr, GroupByExpr, Query, Value, VisitMut, VisitorMut};
+use sqlparser::ast::{
+    Expr, GroupByExpr, Query, SelectItem, Value, ValueWithSpan, VisitMut, VisitorMut,
+};
 use std::borrow::Cow;
 use std::mem::{discriminant, Discriminant};
 use std::ops::ControlFlow;
 
-pub(super) fn targets(group_by: &GroupByExpr) -> Vec<&Expr> {
+pub(super) fn targets<'a>(
+    group_by: &'a GroupByExpr,
+    projection: &'a [SelectItem],
+) -> Vec<&'a Expr> {
     let mut targets = Vec::new();
     if let GroupByExpr::Expressions(expressions, _) = group_by {
+        let known_outputs: Vec<_> = projection.iter().map_while(select_item_expr).collect();
         for expr in expressions {
-            collect_targets(expr, &mut targets);
+            collect_targets(expr, &known_outputs, &mut targets);
         }
     }
     targets
 }
 
-fn collect_targets<'a>(expr: &'a Expr, targets: &mut Vec<&'a Expr>) {
+fn collect_targets<'a>(expr: &'a Expr, known_outputs: &[&'a Expr], targets: &mut Vec<&'a Expr>) {
     match unwrap_expr(expr) {
         Expr::GroupingSets(sets) | Expr::Cube(sets) | Expr::Rollup(sets) => {
             for member in sets.iter().flatten() {
-                collect_targets(member, targets);
+                collect_targets(member, known_outputs, targets);
             }
         }
         Expr::Tuple(members) => {
             for member in members {
-                collect_targets(member, targets);
+                collect_targets(member, known_outputs, targets);
             }
+        }
+        Expr::Value(ValueWithSpan {
+            value: Value::Number(number, _),
+            ..
+        }) => {
+            let index = number
+                .parse::<usize>()
+                .ok()
+                .and_then(|ordinal| ordinal.checked_sub(1));
+            targets.push(
+                index
+                    .and_then(|index| known_outputs.get(index).copied())
+                    .unwrap_or(expr),
+            );
         }
         _ => targets.push(expr),
     }

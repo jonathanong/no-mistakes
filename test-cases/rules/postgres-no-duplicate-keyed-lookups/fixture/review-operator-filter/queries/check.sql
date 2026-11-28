@@ -117,3 +117,65 @@ SELECT sum(
     (SELECT b.m FROM accounts b WHERE b.id = o.account_id)
 ) FILTER (WHERE nextval('lookup_seq') % 2 = 0)
 FROM orders o;
+
+SELECT
+    (SELECT substring(a.name, 1, 1) FROM accounts a WHERE a.id = o.account_id),
+    (SELECT substring(b.name, 1, 1) FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT substring('abc' FROM 1 FOR 1) FROM accounts a WHERE a.id = o.account_id),
+    (SELECT substring('xyz' FOR 1) FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT (SELECT a.n FROM accounts a WHERE a.id = o.account_id) AS n
+FROM orders o
+GROUP BY 1
+HAVING (SELECT a.n FROM accounts a WHERE a.id = o.account_id) > 0;
+
+SELECT
+    (SELECT CASE WHEN a.enabled THEN a.raw ELSE a.converted END
+     FROM accounts a WHERE a.id = o.account_id),
+    (SELECT CASE WHEN b.enabled THEN b.raw ELSE b.converted END
+     FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT CASE WHEN a.enabled IS NOT NULL THEN 1 ELSE 0 END
+     FROM accounts a WHERE a.id = o.account_id),
+    (SELECT CASE 1 WHEN 1 THEN 7 END FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT
+    (SELECT CASE WHEN a.enabled IS NOT NULL THEN 1 ELSE 2.0 END
+     FROM accounts a WHERE a.id = o.account_id),
+    (SELECT CASE WHEN b.enabled IS NOT NULL THEN 3 ELSE 4.0 END
+     FROM accounts b WHERE b.id = o.account_id)
+FROM orders o;
+
+SELECT o.id
+FROM orders o
+JOIN accounts a ON a.id = o.account_id
+    AND pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(
+        pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(
+        pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(
+        pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(
+        pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(
+        1
+         + 1) + 1) + 1) + 1) + 1)
+         + 1) + 1) + 1) + 1) + 1)
+         + 1) + 1) + 1) + 1) + 1)
+         + 1) + 1) + 1) + 1) + 1)
+         + 1) + 1) + 1) + 1) + 1) > 0
+JOIN accounts b ON b.id = o.account_id
+    AND pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(
+        pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(
+        pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(
+        pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(
+        pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(pg_catalog.abs(
+        1
+         + 1) + 1) + 1) + 1) + 1)
+         + 1) + 1) + 1) + 1) + 1)
+         + 1) + 1) + 1) + 1) + 1)
+         + 1) + 1) + 1) + 1) + 1)
+         + 1) + 1) + 1) + 1) + 1) > 0;

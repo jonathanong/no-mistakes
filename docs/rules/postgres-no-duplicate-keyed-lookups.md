@@ -74,10 +74,12 @@ The rule stays silent when the lookups are not proven to read the same row:
   when their signatures are unknown, including the comparisons used by
   `IS DISTINCT FROM`, `IN`, `BETWEEN`, and pattern matching. Signature matching
   assumes the standard PostgreSQL operator definitions.
+- Scalar projections with `CASE` branches that require unproven conversions
+  or an unqualified comma-style `SUBSTRING` call.
 - Sampled table scans, `ONLY` table scans, or scalar subqueries that lock rows.
 
 PostgreSQL can reuse a select-list expression in `DISTINCT ON`, `GROUP BY`
-(including grouping sets), `ORDER BY`, and window partition and ordering
+(including positions and grouping sets), `ORDER BY`, and window partition and ordering
 clauses. Identical named and inline window specifications can share their
 frame bounds. An aggregate can also reuse an argument in its ordering clause. The
 rule counts an identical reused expression once. A matching grouping

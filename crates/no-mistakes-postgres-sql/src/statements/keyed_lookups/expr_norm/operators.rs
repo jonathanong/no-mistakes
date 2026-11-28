@@ -1,7 +1,8 @@
-use super::function::{arguments_are_proven, pure_name};
-use crate::idents::{function_arg_expr, unwrap_expr};
+use super::function::{arguments_are_proven, bare_arguments, pure_name};
+use crate::idents::unwrap_expr;
 use sqlparser::ast::{
-    BinaryOperator, DataType, Expr, Function, FunctionArguments, UnaryOperator, Value,
+    BinaryOperator, CaseWhen, DataType, Expr, Function, FunctionArg, FunctionArgExpr,
+    UnaryOperator, Value,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -41,6 +42,35 @@ pub(super) fn pattern_is_proven(expr: &Expr, pattern: &Expr, escape: Option<&Exp
         .into_iter()
         .flatten()
         .all(|expr| operand_type(expr) == Some(BuiltinType::Text))
+}
+
+pub(super) fn substring_is_proven(expr: &Expr, from: Option<&Expr>, length: Option<&Expr>) -> bool {
+    if operand_type(expr) != Some(BuiltinType::Text) {
+        return false;
+    }
+    let length_type = length.and_then(operand_type);
+    match from.and_then(operand_type) {
+        Some(kind @ (BuiltinType::Integer | BuiltinType::Text)) => {
+            length.is_none() || length_type == Some(kind)
+        }
+        _ => from.is_none() && length_type == Some(BuiltinType::Integer),
+    }
+}
+
+pub(super) fn case_is_proven(
+    operand: Option<&Expr>,
+    arms: &[CaseWhen],
+    fallback: Option<&Expr>,
+) -> bool {
+    let condition_type = operand.map_or(Some(BuiltinType::Bool), operand_type);
+    let result_type = arms.first().and_then(|arm| operand_type(&arm.result));
+    condition_type.is_some()
+        && result_type.is_some()
+        && arms.iter().all(|arm| {
+            operand_type(&arm.condition) == condition_type
+                && operand_type(&arm.result) == result_type
+        })
+        && fallback.is_none_or(|expr| operand_type(expr) == result_type)
 }
 
 fn operand_type(expr: &Expr) -> Option<BuiltinType> {
@@ -113,6 +143,13 @@ fn unary_result(op: UnaryOperator, expr: &Expr) -> Option<BuiltinType> {
 
 fn function_result(function: &Function) -> Option<BuiltinType> {
     let name = pure_name(function)?;
+    if name == "abs" {
+        let [FunctionArg::Unnamed(FunctionArgExpr::Expr(argument))] = bare_arguments(function)?
+        else {
+            return None;
+        };
+        return operand_type(argument).filter(|kind| kind.numeric());
+    }
     if !arguments_are_proven(function) {
         return None;
     }
@@ -123,14 +160,6 @@ fn function_result(function: &Function) -> Option<BuiltinType> {
         "length" | "char_length" | "character_length" | "octet_length" => {
             Some(BuiltinType::Integer)
         }
-        "abs" => first_argument_type(&function.args).filter(|kind| kind.numeric()),
         _ => None,
     }
-}
-
-fn first_argument_type(args: &FunctionArguments) -> Option<BuiltinType> {
-    let FunctionArguments::List(list) = args else {
-        return None;
-    };
-    operand_type(function_arg_expr(list.args.first()?)?)
 }

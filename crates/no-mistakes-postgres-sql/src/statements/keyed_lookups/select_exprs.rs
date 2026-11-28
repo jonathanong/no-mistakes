@@ -87,7 +87,7 @@ pub(super) fn walk_select(
         register_table_with_joins(table, scopes, &mut seen, out);
     }
     let outer = scopes.snapshot();
-    let group_by = grouping::targets(&select.group_by);
+    let group_by = grouping::targets(&select.group_by, &select.projection);
     let reuse = grouping::GroupReuse::new(&group_by);
     let targets = SelectTargets::new(&select.projection, &reuse);
     for expr in expressions(select, order_by, &targets, &group_by) {

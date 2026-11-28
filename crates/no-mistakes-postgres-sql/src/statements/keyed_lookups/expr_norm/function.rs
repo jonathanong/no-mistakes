@@ -16,7 +16,7 @@ pub(super) fn normalize(
     Some(format!("fn({base},{})", argument_list(&args)))
 }
 
-fn bare_arguments(function: &Function) -> Option<&[FunctionArg]> {
+pub(super) fn bare_arguments(function: &Function) -> Option<&[FunctionArg]> {
     let FunctionArguments::List(list) = &function.args else {
         return None;
     };
