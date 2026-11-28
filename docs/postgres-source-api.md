@@ -209,16 +209,18 @@ has `kind`, an original-source `span`, and nested `occurrences`:
 - `unknown` fails closed.
 
 Wholly literal `EXECUTE` keeps the existing `literalExecute` statement facts and is
-classified from the decoded command (`dml` or `utility`) instead of `dynamicExecute`.
+classified from the decoded command (`dml`, `utility`, or `controlFlow`) instead of `dynamicExecute`.
+A decoded command that does not classify is `unknown`. A decoded script that executes a non-literal command stays `dynamicExecute`.
 Nested literal `EXECUTE` commands share the walker's 64-level budget. Exhausting
 that budget fails closed instead of recursing without a limit.
 A `FOR ... IN EXECUTE` header uses that classification for the operand, including a
 wholly parsed literal `SELECT`, which is `utility`. A qualified call such as
 `public.execute(...)` is not that slot: the header still fail-closes it as
 `dynamicExecute`, and the argument is not parsed as static DML.
-Unquoted `INTO` ends that command the same way `USING` does, so the occurrence
-follows the literal while the unsupported `INTO` target keeps the enclosing block
-incomplete.
+In a parsed block, unquoted `INTO` ends that command the same way `USING` does, so the occurrence
+follows the literal and the statement is kind `other`. The block stays incomplete
+unless a `utility` occurrence has the same span. A literal `SELECT` followed
+by `INTO` can leave the block complete.
 Quoted strings, quoted identifiers, and comments are not keywords, so
 `RAISE NOTICE 'EXECUTE INSERT'` is control flow. `complete` stays false when any
 occurrence is `dynamicExecute`. An IF, ELSIF, or conditional-loop header with no
@@ -841,13 +843,33 @@ covers the complete command expression. EXECUTE `USING` arguments appear in
 ordered `using: PostgresSqlExpression[]`, with enclosing source coordinates.
 The decoded command still contains typed `$1` placeholders: parameter expressions
 are preserved as syntax and never substituted or interpreted at runtime.
-Variables, unknown concatenation operands, format calls, and unsupported modifiers
-remain incomplete occurrences. An unquoted `INTO` target ends the command expression
-the same way `USING` does: the occurrence is classified from the literal, and the
-block stays incomplete. Source facts imply no execution or replay policy.
+Variables, unknown concatenation operands, and format calls keep the enclosing
+block incomplete. In a parsed block, an unsupported modifier is statement kind `other` in statement position.
+The block stays incomplete unless a `utility` occurrence has the same span,
+so a literal `SELECT` followed by `INTO` can leave the block complete. An unquoted `INTO` target ends the command expression
+the same way `USING` does, and the occurrence is classified from the literal.
+`INTO` adds no diagnostic of its own, so inside a loop or `CASE` arm a decoded
+`controlFlow` command can still leave the block complete. Source facts imply no execution or replay policy.
 Supported IF/ELSIF/ELSE branches, including nested branches, share this literal
 projection. SQL CASE expressions and quoted EXECUTE identifiers retain their
 ordinary SQL meaning.
+
+### Literal EXECUTE placement
+
+Inside `FOR`, `WHILE`, `FOREACH`, a bare `LOOP`, or a `CASE` arm, every
+`EXECUTE` form stays an occurrence with no typed statement. Occurrence
+classification still reads the decoded command. A decoded `controlFlow`
+command adds no diagnostic and can leave the block complete. Any other decoded
+kind produces a diagnostic and keeps the block incomplete.
+
+In statement position:
+
+- A literal command with no unsupported modifier is statement kind `literalExecute` with a `PostgresSqlLiteralExecute` payload.
+- In a parsed block, an unsupported modifier, including unquoted `INTO` and a modifier after a decoded literal, is statement kind `other`. The block stays incomplete unless a `utility` occurrence has the same span, so a literal `SELECT` followed by `INTO` can leave the block complete. `INTO` ends the command operand the same way `USING` does and adds no diagnostic of its own.
+- A Unicode `U&` body and a national `N'` body are statement kind `other`, with no `bodyEncoding`.
+- A non-literal command (`format` or an identifier) is occurrence kind `dynamicExecute` and statement kind `other`.
+
+Those statement kinds are projected only when the block is parsed. `RAISE`, `EXCEPTION`, a loop, or a procedural `CASE` makes the block walker-only. When its occurrences include no `utility` or `dml`, the block is not parsed and an `EXECUTE` has no typed statement, including a non-literal command and a literal `controlFlow` command in statement position.
 
 ### Structured trigger events and cast types
 

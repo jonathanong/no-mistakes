@@ -51,16 +51,53 @@ expose nested source occurrences and original body spans; inspect each block's
 execution. `occurrences` distinguish `utility` (`CREATE TYPE`), `controlFlow`
 (`IF`/`RAISE` with no DML), nested `dml` (`INSERT`/`UPDATE`/`DELETE`/`MERGE`
 inside `IF` or `LOOP`), `dynamicExecute`, and `unknown`. A `dml` entry is
-visible source text, not an executed statement. Dynamic `EXECUTE` fails closed.
+visible source text, not an executed statement. `dynamicExecute` is `EXECUTE`
+of a non-literal command (`format`, an identifier, or concatenation that is
+not wholly literal) and keeps `complete` false. Wholly literal `EXECUTE` is
+classified from the decoded command. A recognized command, including a parsed
+`SELECT`, is `dml`, `utility`, or `controlFlow`. A decoded script that
+executes a non-literal command, such as `EXECUTE 'EXECUTE command'`, stays
+`dynamicExecute`. A decoded
+command that does not classify is `unknown`, including an empty command
+(`EXECUTE ''`) and an invalid `U&` literal. In a `FOR ... IN` query header,
+`public.execute(...)` is `dynamicExecute`. In statement position, such as
+`PERFORM public.execute()`, the statement is `unknown`.
 IF/ELSIF/ELSE branches expose typed conditions and nested statements;
 inspect every branch without assuming its condition is true. PostgreSQL 18 virtual generated columns retain their declared or
 default storage. Unrecognized procedural forms remain explicit. UTF-8 offsets are zero-based; Unicode line/columns are one-based,
 with exclusive span ends. See [the source API](https://github.com/jongleberry/no-mistakes/blob/main/docs/postgres-source-api.md)
 for exported types, structural index identity, and grammar boundaries.
-Literal PL/pgSQL `EXECUTE` source occurrences in supported `DO` bodies expose
-`kind: "literalExecute"` and a `PostgresSqlLiteralExecute` payload. Dollar-quoted,
-standard single-quoted (doubled quotes), and PostgreSQL `E` escape strings are
-decoded by the prepared tokenizer and parsed through the same SQL fact pipeline.
+Literal PL/pgSQL `EXECUTE` in supported `DO` bodies has one placement rule.
+Inside `FOR`, `WHILE`, `FOREACH`, a bare `LOOP`, or a `CASE` arm, every
+`EXECUTE` form stays an occurrence with no typed statement. Occurrence
+classification still reads the decoded command. A decoded `controlFlow`
+command, such as `EXECUTE 'DO $body$ BEGIN NULL; END $body$'`, adds no
+diagnostic and can leave the block complete, including inside those forms.
+Any other decoded kind produces a diagnostic and keeps the block incomplete.
+See [literal EXECUTE placement](https://github.com/jongleberry/no-mistakes/blob/main/docs/postgres-source-api.md#literal-execute-placement).
+In statement position, a literal command with no unsupported modifier exposes
+statement `kind: "literalExecute"` and a `PostgresSqlLiteralExecute` payload.
+In a parsed block, an unsupported modifier, including unquoted `INTO` and a
+modifier after a decoded literal, is statement kind `other`. That statement
+keeps the block incomplete unless a `utility` occurrence has the same span.
+A literal `SELECT` followed by `INTO` is that case and can leave the block
+complete. When a walker-only block includes no `utility` or `dml`,
+no statement is projected. `INTO` adds no diagnostic, and completeness
+follows occurrence recognition and diagnostics.
+A Unicode `U&` body and a national `N'` body are statement kind `other`, with
+no `bodyEncoding`. A non-literal command (`format` or an identifier) is
+occurrence kind `dynamicExecute`; in statement position it is also statement
+kind `other`.
+Those statement kinds are projected only when the block is parsed. `RAISE`,
+`EXCEPTION`, a loop, or a procedural `CASE` makes the block walker-only. When
+its occurrences include no `utility` or `dml`, the block is not parsed, so an
+`EXECUTE` has no typed statement even in statement position. That includes a
+non-literal command and a literal `controlFlow` command.
+Dollar-quoted (`bodyEncoding: "dollarQuoted"`), standard single-quoted
+(`singleQuoted`, doubled quotes), PostgreSQL `E` escape strings
+(`escapedString`), and wholly literal `||` concatenations (`concatenated`)
+are the projected literal forms. The quoted forms are decoded by the
+prepared tokenizer and parsed through the same SQL fact pipeline.
 The enclosing statement and `literalSpan` retain original source coordinates;
 `decodedSql` owns nested command statement, expression, and diagnostic coordinates.
 Children preserve order and typed facts (including INSERT), without exposing an
@@ -69,8 +106,12 @@ SQL remains diagnostic. Wholly literal `||` concatenations use the same nested
 pipeline and expose `bodyEncoding: "concatenated"`; `literalSpan` covers the full
 command expression. `using` retains ordered parameter expressions and their
 original source spans, without resolving runtime values; `$1` and other command
-placeholders remain typed parameters. Dynamic operands, `format` calls, and
-unsupported EXECUTE modifiers remain incomplete `other` occurrences. An unquoted `INTO` target ends the command expression the same way `USING` does: the occurrence is classified from the literal, and the block stays incomplete. This adds no SQL execution or
+placeholders remain typed parameters.
+An unquoted `INTO` ends the command operand the same way `USING` does. The
+occurrence is classified from the decoded command. `INTO` adds no diagnostic
+of its own. Completeness still follows occurrence recognition, diagnostics,
+and statement checks.
+This adds no SQL execution or
 replay policy. `parsePostgresSql` retains its asynchronous single/batch API.
 
 INSERT assignment `complete` describes represented syntax independently of

@@ -102,7 +102,7 @@ SQL-specific `unanalyzableSql` setting remains an alias.
 Use `bash-empty-array-nounset` with `options.files` for scripts targeting Bash
 before 4.4. Use `zsh-readonly-parameter` to catch assignments to `status` in
 zsh scripts, and add `options.files` for sourced files without a zsh shebang or
-`.zsh` extension. Both rules run in `check` without ShellCheck.
+`.zsh` extension. Both rules run in `no-mistakes check` without ShellCheck.
 
 For `shellcheck-runner`, the shared policy handles a missing executable or a
 failed invocation with no recognized diagnostics. If an abnormal exit has
@@ -164,16 +164,16 @@ context, option propagation, and safe command execution.
 
 ## Output and scope contract
 
-- Use `--format json` for parsing when the command accepts it. `playwright`
-  has `--json` only. `tests why` accepts `--format json` and has no `--json`.
-  `config resolve` and `ci topology-impact` always print JSON and have no
+- Use `--format json` for parsing when the command accepts it. `no-mistakes playwright`
+  has `--json` only. `no-mistakes tests why` accepts `--format json` and has no `--json`.
+  `no-mistakes config resolve` and `no-mistakes ci topology-impact` always print JSON and have no
   format switch. CLI JSON is the authoritative structured result. Inspect
   warnings and fallback fields before assuming an empty or narrow plan is
   complete.
 - Use `--format paths` only for reviewing or piping trusted path lists. Prefer
   JSON `command` arrays to execute configured validation commands; do not
   `eval` command text from an untrusted source.
-- `check --timings` includes rule wall times beneath each rule phase, slowest first.
+- `no-mistakes check --timings` includes rule wall times beneath each rule phase, slowest first.
 - `--verbose-timings` adds Unix resource samples for sequential top-level phases
   and bounded expensive-file summaries. RSS is a process-lifetime high-water
   mark; elapsed rankings can vary between runs. See
@@ -191,7 +191,7 @@ context, option propagation, and safe command execution.
   so each importing file uses the config that owns it among the discovered
   configs; otherwise the root tsconfig. Pass a package tsconfig only
   to force one resolver for debugging or a deliberately scoped request.
-- Static literals produce the strongest results. `resolve-check` reports computed
+- Static literals produce the strongest results. `no-mistakes resolve-check` reports computed
   `import()` / `require()` specifiers as unresolved; graph traversal still skips
   them. Route paths, selectors, queue names, fetch URLs, and process commands
   require inspection or `rg`; see [limits and fallbacks](references/limits-and-fallbacks.md).
@@ -225,16 +225,16 @@ almost every CLI command; see
 | Playwright coverage or related tests                   | `no-mistakes playwright check --json`; `no-mistakes playwright related <file> --json`                                                                                                                                                                                         |
 | React callers and component traits                     | `no-mistakes react usages <file>#Component --format json`; `no-mistakes react analyze <glob> --format json`                                                                                                                                                                   |
 | Next.js page-to-API coupling                           | `no-mistakes fetches <route-or-file> --format json`                                                                                                                                                                                                                           |
-| Queue/server graph                                     | `no-mistakes queues related <file> --format json`; `no-mistakes server related <file> --format json`; `no-mistakes server contracts --format json`. `queues check --config <path>` can select queue policy. `queues check` reports `missing-job-option` for configured `queues.requiredJobOptions`; an empty list changes nothing. A known flow-object spread is judged, and an unresolved `.add` receiver abstains ([queues check](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/queues-check.md)). |
+| Queue/server graph                                     | `no-mistakes queues related <file> --format json`; `no-mistakes server related <file> --format json`; `no-mistakes server contracts --format json`. `no-mistakes queues check --config <path>` can select queue policy. `no-mistakes queues check` reports `missing-job-option` for configured `queues.requiredJobOptions`; an empty list changes nothing. A known flow-object spread is judged, and an unresolved `.add` receiver abstains ([queues check](https://github.com/jongleberry/no-mistakes/blob/main/docs/cli/queues-check.md)). |
 | CI or workflow impact                                  | `no-mistakes ci impact <file> --format json`; `no-mistakes ci env <NAME> --format json`; `no-mistakes ci topology --format json`; `no-mistakes ci topology-impact --root . --base "$BASE_SHA" --head "$HEAD_SHA" --entry-workflow ci.yml`                                     |
 | Private CI planning artifacts (npm package)            | `no-mistakes planning-impact --changed-files <manifest> --output-dir <directory>`                                                                                                                                                                                             |
 | Terraform/OpenTofu or Swift                            | `no-mistakes infra resource-refs <type.name> --format json`; `no-mistakes infra outputs <module-dir> --format json`; `no-mistakes infra test-for <file.tf> --format json`; `no-mistakes swift importers <file> --format json`; `no-mistakes swift test-targets <file> --json` |
 | Effective resolved config                              | `no-mistakes config resolve` (expanded report); `no-mistakes config resolve --view declared` (merged declarations)                                                                                                                                                            |
 | Configured language graph                              | `no-mistakes dependents <file> --relationship <lang> --format json`                                                                                                                                                                                                           |
 
-`tests plan` supports `vitest`, `playwright`, `jest`, `dotnet`, `swift`,
+`no-mistakes tests plan` supports `vitest`, `playwright`, `jest`, `dotnet`, `swift`,
 `python`, `go`, `cargo`, `rails`, `php`, `java`, `kotlin`, `elixir`, and `dart`
-when the matching language/test configuration is present. `dependents --test`
+when the matching language/test configuration is present. `no-mistakes dependents --test`
 is a lower-level fallback; prefer the planner because it includes configured
 groups, limits, diffs, and deleted-file behavior.
 
@@ -271,7 +271,7 @@ groups, limits, diffs, and deleted-file behavior.
 - [limits-and-fallbacks.md](references/limits-and-fallbacks.md): unsupported
   forms, confidence limits, and `rg` fallbacks.
 
-For the schema catalog that PostgreSQL rules read through `schemaCatalogPath`, use `postgres catalog --connection-env DATABASE_URL --schema public --output db/schema.json`. This reads PostgreSQL metadata directly and writes a complete catalog that every catalog rule accepts; add `--coverage ordering` for only the facts conflict and lock ordering need. It is the only catalog format no-mistakes reads, and it does not read application snapshots.
+For the schema catalog that PostgreSQL rules read through `schemaCatalogPath`, use `no-mistakes postgres catalog --connection-env DATABASE_URL --schema public --output db/schema.json`. This reads PostgreSQL metadata directly and writes a complete catalog that every catalog rule accepts; add `--coverage ordering` for only the facts conflict and lock ordering need. It is the only catalog format no-mistakes reads, and it does not read application snapshots.
 
 To enforce primary-key and foreign-key column types, configure the
 `postgres-key-column-types` rule with a nonempty `allowedTypes` list and
@@ -405,7 +405,7 @@ expand. Joining `"$"` to a name is not an expansion. A local
 composite `uses: ./...` counts when its declared output reads that proof. See the
 [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-cache-key-policy.md).
 
-Use `test-no-retries` and `playwright-no-serial` through `check --root <root>
+Use `test-no-retries` and `playwright-no-serial` through `no-mistakes check --root <root>
 --format json` to detect flaky-test workarounds. Set `testCommands` to the literal
 command prefixes that identify tests in workflow scripts. Document a deliberate
 exception in `allowlist` with a `path` or `project` and a `reason`. See the
