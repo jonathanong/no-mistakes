@@ -8,6 +8,12 @@ rule uses the same YAML configuration and report fields in CLI `check`,
 Node `check()`, and `analyzeProject()` check reports.
 `PostgresExplainWriteRollbackOptions` names its YAML options.
 
+The opt-in [`postgres-lock-reason`](rules/postgres-lock-reason.md) rule also
+runs through CLI `check`, Node `check()`, and `analyzeProject()` check reports
+with `PostgresLockReasonOptions` describing its YAML options. It defaults to
+`severity: advisory` and shares the prepared lock-site projection with
+`postgres-lock-inventory`.
+
 Configured [`postgres-lock-written-rows-only`](rules/postgres-lock-written-rows-only.md)
 accepts optional `schemaCatalogPath` through `PostgresLockWrittenRowsOnlyOptions`.
 Async `check()` and `analyzeProject()` check reports use the same prepared catalog

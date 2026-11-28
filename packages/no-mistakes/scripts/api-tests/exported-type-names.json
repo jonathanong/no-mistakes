@@ -280,6 +280,7 @@
   "PostgresLegacyUnanalyzableSql",
   "PostgresLockInventoryOptions",
   "PostgresLockInventoryRuleOptions",
+  "PostgresLockReasonOptions",
   "PostgresLockWrittenRowsAllow",
   "PostgresLockWrittenRowsCheck",
   "PostgresLockWrittenRowsChecks",

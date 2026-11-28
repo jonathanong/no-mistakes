@@ -258,6 +258,8 @@ groups, limits, diffs, and deleted-file behavior.
   coverage commands.
 - [postgres-lock-inventory.md](references/postgres-lock-inventory.md): review
   added lock sites and tighten an opt-in baseline.
+- [postgres-lock-reason.md](references/postgres-lock-reason.md): require
+  `lock-reason:` comments (`prevents:` and `writer:`) on production locks.
 - [postgres-source.md](references/postgres-source.md): pure async SQL source
   facts, partial diagnostics, and dependency completeness.
 - [impact-recipes.md](references/impact-recipes.md): selector, API shape,

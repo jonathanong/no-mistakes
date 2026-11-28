@@ -44,6 +44,17 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         )
         .map(|diagnostics| diagnostics.findings);
     }
+    if rule_id == POSTGRES_LOCK_REASON {
+        return postgres_lock_reason::diagnostics_with_files_sources_and_facts(
+            root,
+            config,
+            files,
+            sources,
+            facts,
+            defer_suppression,
+        )
+        .map(|diagnostics| diagnostics.findings);
+    }
     if let Some(out) = postgres::run(rule_id, root, config, files, sources, facts) {
         return out;
     }

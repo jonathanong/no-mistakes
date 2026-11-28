@@ -1,0 +1,424 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advisory": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/locks.sql",
+          "line": 1,
+          "message": "sql/locks.sql:1: PostgreSQL for-update lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT id FROM jobs WHERE id = $1 FOR UPDATE NOWAIT;",
+          "target": "for-update"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 10,
+          "message": "sql/locks.sql:10: PostgreSQL for-update lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT id FROM accounts WHERE id = $1 FOR UPDATE;",
+          "target": "for-update"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 13,
+          "message": "sql/locks.sql:13: PostgreSQL for-update lock has a `lock-reason:` comment missing `prevents:`. Name the outcome the lock prevents alongside `writer:`, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT id FROM refunds WHERE id = $1 FOR UPDATE;",
+          "target": "for-update"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 16,
+          "message": "sql/locks.sql:16: PostgreSQL for-update lock has a `lock-reason:` comment missing `writer:`. Name the competing writer alongside `prevents:`, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT id FROM refunds WHERE id = $1 FOR UPDATE;",
+          "target": "for-update"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 19,
+          "message": "sql/locks.sql:19: PostgreSQL for-update lock has a `lock-reason:` comment missing both `prevents:` and `writer:`. Name the outcome the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT id FROM refunds WHERE id = $1 FOR UPDATE;",
+          "target": "for-update"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 2,
+          "message": "sql/locks.sql:2: PostgreSQL for-no-key-update lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT id FROM jobs WHERE id = $1 FOR NO KEY UPDATE SKIP LOCKED;",
+          "target": "for-no-key-update"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 23,
+          "message": "sql/locks.sql:23: PostgreSQL for-update lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT id FROM orders WHERE id = $1 FOR UPDATE;",
+          "target": "for-update"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 25,
+          "message": "sql/locks.sql:25: PostgreSQL for-update lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT '-- lock-reason: prevents: fake; writer: fake' FROM orders WHERE id = $1 FOR UPDATE;",
+          "target": "for-update"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 27,
+          "message": "sql/locks.sql:27: PostgreSQL for-update lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "/* lock-reason: prevents: a; writer: b */ SELECT id FROM a FOR UPDATE; SELECT id FROM b FOR UPDATE;",
+          "target": "for-update"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 3,
+          "message": "sql/locks.sql:3: PostgreSQL for-share lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT id FROM jobs WHERE id = $1 FOR SHARE;",
+          "target": "for-share"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 4,
+          "message": "sql/locks.sql:4: PostgreSQL for-key-share lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT id FROM jobs WHERE id = $1 FOR KEY SHARE;",
+          "target": "for-key-share"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 5,
+          "message": "sql/locks.sql:5: PostgreSQL lock-table lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "LOCK TABLE jobs IN ACCESS EXCLUSIVE MODE;",
+          "target": "lock-table"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 6,
+          "message": "sql/locks.sql:6: PostgreSQL advisory-lock lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT pg_advisory_lock(42);",
+          "target": "advisory-lock"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 7,
+          "message": "sql/locks.sql:7: PostgreSQL advisory-lock lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT pg_try_advisory_xact_lock(43);",
+          "target": "advisory-lock"
+        },
+        {
+          "file": "src/app.ts",
+          "line": 10,
+          "message": "src/app.ts:10: PostgreSQL for-share lock has a `lock-reason:` comment missing `writer:`. Name the competing writer alongside `prevents:`, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "await query(\"SELECT id FROM invoices WHERE id = $1 FOR SHARE\", [id]);",
+          "target": "for-share"
+        },
+        {
+          "file": "src/app.ts",
+          "line": 13,
+          "message": "src/app.ts:13: PostgreSQL for-update lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "await query(\"SELECT id FROM accounts WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "for-update"
+        },
+        {
+          "file": "src/app.ts",
+          "line": 5,
+          "message": "src/app.ts:5: PostgreSQL helper lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "await reserveJob(id);",
+          "target": "helper"
+        },
+        {
+          "file": "src/app.ts",
+          "line": 6,
+          "message": "src/app.ts:6: PostgreSQL for-update lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "await query(\"SELECT id FROM refunds WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "for-update"
+        },
+        {
+          "file": "src/app.ts",
+          "line": 7,
+          "message": "src/app.ts:7: PostgreSQL advisory-lock lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "await query(\"SELECT pg_advisory_xact_lock($1)\", [id]);",
+          "target": "advisory-lock"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "co-demand": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/locks.sql",
+          "line": 4,
+          "message": "sql/locks.sql:4: PostgreSQL for-share lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT id FROM orders WHERE id = $1 FOR SHARE;",
+          "target": "for-share"
+        },
+        {
+          "file": "src/app.ts",
+          "line": 4,
+          "message": "src/app.ts:4: PostgreSQL for-update lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "await query(\"SELECT id FROM accounts WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "for-update"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/locks.sql",
+          "line": 2,
+          "message": "new PostgreSQL lock site (for-update, 3dfadec0d11e048064ebdc0c13ac41be#1). Remove the lock or record the reviewed site in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM refunds WHERE id = $1 FOR UPDATE;",
+          "target": "for-update"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 4,
+          "message": "new PostgreSQL lock site (for-share, cdb8d7da7aa380706c0e5b24f4e6ae4a#1). Remove the lock or record the reviewed site in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM orders WHERE id = $1 FOR SHARE;",
+          "target": "for-share"
+        },
+        {
+          "file": "src/app.ts",
+          "line": 4,
+          "message": "new PostgreSQL lock site (for-update, fb1151539f87668a2082b07174077e2e#1). Remove the lock or record the reviewed site in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "await query(\"SELECT id FROM accounts WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "for-update"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "co-demand-inventory-only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/locks.sql",
+          "line": 2,
+          "message": "new PostgreSQL lock site (for-update, 3dfadec0d11e048064ebdc0c13ac41be#1). Remove the lock or record the reviewed site in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM refunds WHERE id = $1 FOR UPDATE;",
+          "target": "for-update"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 4,
+          "message": "new PostgreSQL lock site (for-share, cdb8d7da7aa380706c0e5b24f4e6ae4a#1). Remove the lock or record the reviewed site in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "SELECT id FROM orders WHERE id = $1 FOR SHARE;",
+          "target": "for-share"
+        },
+        {
+          "file": "src/app.ts",
+          "line": 4,
+          "message": "new PostgreSQL lock site (for-update, fb1151539f87668a2082b07174077e2e#1). Remove the lock or record the reviewed site in the baseline",
+          "rule": "postgres-lock-inventory",
+          "sourceLine": "await query(\"SELECT id FROM accounts WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "for-update"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "error": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/locks.sql",
+          "line": 2,
+          "message": "sql/locks.sql:2: PostgreSQL for-update lock has a `lock-reason:` comment missing `prevents:`. Name the outcome the lock prevents alongside `writer:`, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT id FROM invoices WHERE id = $1 FOR UPDATE;",
+          "target": "for-update"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 3,
+          "message": "sql/locks.sql:3: PostgreSQL lock-table lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "LOCK TABLE invoices IN SHARE MODE;",
+          "target": "lock-table"
+        },
+        {
+          "file": "sql/locks.sql",
+          "line": 4,
+          "message": "sql/locks.sql:4: PostgreSQL advisory-lock lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT pg_advisory_lock(7);",
+          "target": "advisory-lock"
+        },
+        {
+          "file": "src/app.ts",
+          "line": 5,
+          "message": "src/app.ts:5: PostgreSQL helper lock has no `lock-reason:` comment. Add one in the same statement or on the line directly above naming what the lock prevents and the competing writer, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "await reserveJob(id);",
+          "target": "helper"
+        },
+        {
+          "file": "src/app.ts",
+          "line": 7,
+          "message": "src/app.ts:7: PostgreSQL for-update lock has a `lock-reason:` comment missing `writer:`. Name the competing writer alongside `prevents:`, for example: `lock-reason: prevents: <outcome>; writer: <competing writer>`",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "await query(\"SELECT id FROM refunds WHERE id = $1 FOR UPDATE\", [id]);",
+          "target": "for-update"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "suppressed": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unanalyzable-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "sql/broken.sql",
+          "line": 2,
+          "message": "sql/broken.sql:2: cannot verify postgres-lock-reason (SQL could not be parsed completely). Make the configured SQL or helper call statically analyzable, suppress with `no-mistakes-disable-next-line postgres-lock-reason: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT FROM ???;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "sql/broken.sql",
+          "line": 5,
+          "message": "sql/broken.sql:5: cannot verify postgres-lock-reason (stored routine body could not be resolved). Make the configured SQL or helper call statically analyzable, suppress with `no-mistakes-disable-next-line postgres-lock-reason: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "CREATE FUNCTION reserve_job() RETURNS bigint LANGUAGE sql AS $body$",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/dynamic.ts",
+          "line": 5,
+          "message": "src/dynamic.ts:5: cannot verify postgres-lock-reason (executor SQL could not be resolved). Make the configured SQL or helper call statically analyzable, suppress with `no-mistakes-disable-next-line postgres-lock-reason: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "return query(sql);",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unanalyzable-ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unanalyzable-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "sql/broken.sql",
+          "line": 2,
+          "message": "sql/broken.sql:2: cannot verify postgres-lock-reason (SQL could not be parsed completely). Make the configured SQL or helper call statically analyzable, suppress with `no-mistakes-disable-next-line postgres-lock-reason: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "SELECT FROM ???;",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "sql/broken.sql",
+          "line": 5,
+          "message": "sql/broken.sql:5: cannot verify postgres-lock-reason (stored routine body could not be resolved). Make the configured SQL or helper call statically analyzable, suppress with `no-mistakes-disable-next-line postgres-lock-reason: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "CREATE FUNCTION reserve_job() RETURNS bigint LANGUAGE sql AS $body$",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "src/dynamic.ts",
+          "line": 5,
+          "message": "src/dynamic.ts:5: cannot verify postgres-lock-reason (executor SQL could not be resolved). Make the configured SQL or helper call statically analyzable, suppress with `no-mistakes-disable-next-line postgres-lock-reason: reason`, or set options.unanalyzable to advise or ignore",
+          "rule": "postgres-lock-reason",
+          "sourceLine": "return query(sql);",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

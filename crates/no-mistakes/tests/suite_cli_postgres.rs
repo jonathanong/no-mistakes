@@ -39,3 +39,5 @@ mod cli_postgres_snapshot_lock_written_rows_patterns;
 mod cli_postgres_lock_inventory;
 #[path = "cli_postgres_lock_inventory_lifecycle.rs"]
 mod cli_postgres_lock_inventory_lifecycle;
+#[path = "cli_postgres_lock_reason.rs"]
+mod cli_postgres_lock_reason;

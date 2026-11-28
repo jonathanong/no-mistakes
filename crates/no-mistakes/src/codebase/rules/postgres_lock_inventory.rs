@@ -10,7 +10,7 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 mod baseline;
-mod embedded;
+pub(crate) mod embedded;
 mod findings;
 pub(in crate::codebase::rules) mod options;
 mod report;

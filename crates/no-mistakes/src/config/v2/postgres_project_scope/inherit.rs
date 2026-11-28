@@ -56,6 +56,7 @@ fn plan_rule(config: &NoMistakesConfig, rule: &RuleDef) -> Result<Option<(Scope,
     if postgres_executors::RULE_IDS.contains(&rule.rule.as_str())
         && scope.import_specifier.is_empty()
         && rule.rule != "postgres-lock-inventory"
+        && rule.rule != "postgres-lock-reason"
     {
         bail!(
             "{} references a postgres project without a non-empty executors.importSpecifier; set it on the project (the rule cannot restate executor options)",
@@ -73,8 +74,7 @@ fn referenced<'a>(
     for name in &rule.projects {
         match config.projects.get(name) {
             Some(project) if project.postgres.is_some() => found.push((name.clone(), project)),
-            Some(_) => plain.push(name.clone()),
-            None => plain.push(name.clone()),
+            _ => plain.push(name.clone()),
         }
     }
     if found.is_empty() {

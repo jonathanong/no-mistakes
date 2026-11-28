@@ -39,6 +39,13 @@ pub(super) fn legacy_policy(rule: &RuleDef) -> Result<Option<Unanalyzable>> {
             "ignore" => Some(Unanalyzable::Ignore),
             _ => None,
         }
+    } else if rule.rule == "postgres-lock-reason" {
+        match value {
+            "report" | "fail" => Some(Unanalyzable::Report),
+            "advise" => Some(Unanalyzable::Advise),
+            "ignore" => Some(Unanalyzable::Ignore),
+            _ => None,
+        }
     } else {
         normalized_sql_policy(
             value,
@@ -83,6 +90,7 @@ pub(in super::super) fn sql_policy_rule(rule: &str) -> bool {
             | "postgres-grouping-not-aggregation"
             | "postgres-idempotent-insert"
             | "postgres-lock-ordering"
+            | "postgres-lock-reason"
             | "postgres-lock-written-rows-only"
             | "postgres-no-duplicate-keyed-lookups"
             | "postgres-no-generated-column-writes"

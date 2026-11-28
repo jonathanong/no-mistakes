@@ -113,15 +113,14 @@ pub fn configure_prepared_postgres_plan(
     .iter()
     .any(|id| !config.rule_applications(id).is_empty());
     plan.postgres_dml |= ordering;
-    plan.postgres_exact_locations |= !config
-        .rule_applications("postgres-lock-written-rows-only")
-        .is_empty();
-    plan.postgres_exact_locations |= !config
-        .rule_applications("postgres-lock-ordering")
-        .is_empty();
-    plan.postgres_exact_locations |= !config
-        .rule_applications("postgres-lock-inventory")
-        .is_empty();
+    plan.postgres_exact_locations |= [
+        "postgres-lock-written-rows-only",
+        "postgres-lock-ordering",
+        "postgres-lock-inventory",
+        "postgres-lock-reason",
+    ]
+    .iter()
+    .any(|id| !config.rule_applications(id).is_empty());
     plan.postgres_conflict_locations |= !config
         .rule_applications("postgres-conflict-ordering")
         .is_empty();
@@ -133,6 +132,7 @@ pub fn configure_prepared_postgres_plan(
         "postgres-idempotent-insert",
         "postgres-required-predicates",
         "postgres-lock-inventory",
+        "postgres-lock-reason",
         "postgres-no-offset",
         "postgres-no-transformed-uuid-predicates",
         "postgres-generated-column-predicates",

@@ -4,7 +4,7 @@
 /// the same `rule` can be attached to different projects or test groups with
 /// different names and options.
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", from = "RawRuleDef")]
 pub struct RuleDef {
     #[serde(skip)]
     pub resolved_analysis: Option<super::EffectiveRuleAnalysis>,
@@ -22,10 +22,68 @@ pub struct RuleDef {
     pub exclude: Vec<String>,
     #[serde(default = "empty_options")]
     pub options: serde_yaml::Value,
-    /// `error` (default) fails `check`; `advisory` reports the findings as
-    /// non-failing advisories.
-    #[serde(skip_serializing_if = "RuleSeverity::is_error")]
+    /// `error` (default for most rules) fails `check`; `advisory` reports the
+    /// findings as non-failing advisories.
     pub severity: RuleSeverity,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+struct RawRuleDef {
+    name: Option<String>,
+    rule: String,
+    message: Option<String>,
+    #[serde(default = "default_true")]
+    enabled: bool,
+    projects: Vec<String>,
+    tests: RuleTestTargets,
+    scope: Option<RuleScope>,
+    include: Vec<String>,
+    exclude: Vec<String>,
+    #[serde(default = "empty_options")]
+    options: serde_yaml::Value,
+    severity: Option<RuleSeverity>,
+}
+
+impl Default for RawRuleDef {
+    fn default() -> Self {
+        Self {
+            name: None,
+            rule: String::new(),
+            message: None,
+            enabled: true,
+            projects: Vec::new(),
+            tests: RuleTestTargets::default(),
+            scope: None,
+            include: Vec::new(),
+            exclude: Vec::new(),
+            options: empty_options(),
+            severity: None,
+        }
+    }
+}
+
+impl From<RawRuleDef> for RuleDef {
+    fn from(raw: RawRuleDef) -> Self {
+        let severity = raw
+            .severity
+            .unwrap_or_else(|| RuleSeverity::default_for_rule(&raw.rule));
+        Self {
+            resolved_analysis: None,
+            resolved_application_index: None,
+            name: raw.name,
+            rule: raw.rule,
+            message: raw.message,
+            enabled: raw.enabled,
+            projects: raw.projects,
+            tests: raw.tests,
+            scope: raw.scope,
+            include: raw.include,
+            exclude: raw.exclude,
+            options: raw.options,
+            severity,
+        }
+    }
 }
 
 impl RuleDef {
@@ -48,8 +106,12 @@ pub enum RuleSeverity {
 }
 
 impl RuleSeverity {
-    fn is_error(&self) -> bool {
-        *self == Self::Error
+    pub fn default_for_rule(rule: &str) -> Self {
+        if rule == "postgres-lock-reason" {
+            Self::Advisory
+        } else {
+            Self::Error
+        }
     }
 }
 

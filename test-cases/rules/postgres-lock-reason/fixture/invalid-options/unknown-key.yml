@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-lock-reason
+    scope: repository
+    options:
+      executorNames: [query]
+      unknownKnob: true

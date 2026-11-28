@@ -155,7 +155,13 @@ impl<'a> Segment<'a> {
         let normalized = self
             .fingerprint
             .get_or_init(|| fingerprint::normalize(&self.tokens));
-        record(category, normalized, lexeme.at(), out);
+        record(
+            category,
+            normalized,
+            lexeme.at(),
+            Span::new(self.start(), self.end()),
+            out,
+        );
     }
 }
 

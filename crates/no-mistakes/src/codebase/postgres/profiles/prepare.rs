@@ -23,7 +23,10 @@ pub(crate) fn prepare_rule_sql_facts(
     let low_annotation = rule_ids.contains(&"postgres-require-query-annotation")
         && super::annotation_effort::low_requested(config)?;
     let patterns = sql_patterns(config, rule_ids)?;
-    let lock_inventory_helpers = if rule_ids.contains(&"postgres-lock-inventory") {
+    let lock_inventory_helpers = if rule_ids
+        .iter()
+        .any(|id| matches!(*id, "postgres-lock-inventory" | "postgres-lock-reason"))
+    {
         super::helper_call_site_files(root, config, files)?
     } else {
         Vec::new()
@@ -74,6 +77,7 @@ pub(crate) fn prepare_rule_sql_facts(
                 *id,
                 "postgres-no-test-state-mutation"
                     | "postgres-lock-inventory"
+                    | "postgres-lock-reason"
                     | "postgres-sql-shape-policy"
                     | "postgres-no-duplicate-keyed-lookups"
                     | "postgres-require-query-annotation"
@@ -82,10 +86,9 @@ pub(crate) fn prepare_rule_sql_facts(
                     | "postgres-conflict-ordering"
             )
         }),
-        postgres_dml: (rule_ids.contains(&"postgres-lock-inventory")
-            && !config
-                .rule_applications("postgres-lock-inventory")
-                .is_empty())
+        postgres_dml: ["postgres-lock-inventory", "postgres-lock-reason"]
+            .iter()
+            .any(|id| rule_ids.contains(id) && !config.rule_applications(id).is_empty())
             || (rule_ids.contains(&"postgres-no-duplicate-keyed-lookups") && !patterns.is_empty())
             || low_sql
             || (!profiles.is_empty()
@@ -103,7 +106,8 @@ pub(crate) fn prepare_rule_sql_facts(
             }),
         postgres_exact_locations: rule_ids.contains(&"postgres-lock-ordering")
             || rule_ids.contains(&"postgres-lock-written-rows-only")
-            || rule_ids.contains(&"postgres-lock-inventory"),
+            || rule_ids.contains(&"postgres-lock-inventory")
+            || rule_ids.contains(&"postgres-lock-reason"),
         postgres_conflict_locations: rule_ids.contains(&"postgres-conflict-ordering"),
         postgres_general_locations: rule_ids.iter().any(|id| {
             *id != "postgres-conflict-ordering"
@@ -112,7 +116,8 @@ pub(crate) fn prepare_rule_sql_facts(
         postgres_bounds: rule_ids.contains(&"postgres-bounded-statements"),
         postgres_body_bounds: rule_ids.contains(&"postgres-bounded-statements")
             && super::plan::body_bounds_requested(config),
-        postgres_lock_inventory: rule_ids.contains(&"postgres-lock-inventory"),
+        postgres_lock_inventory: rule_ids.contains(&"postgres-lock-inventory")
+            || rule_ids.contains(&"postgres-lock-reason"),
         postgres_json_writes: rule_ids.contains(&"postgres-json-relation-ids")
             && config
                 .rule_applications("postgres-json-relation-ids")

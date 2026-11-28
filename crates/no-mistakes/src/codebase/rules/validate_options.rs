@@ -131,6 +131,9 @@ fn application_errors(
         super::VITEST_DEFAULT_EXCLUDES => {
             super::vitest_default_excludes::collect_application_errors(root, config, rule)
         }
+        super::POSTGRES_LOCK_REASON => {
+            super::postgres_lock_reason::collect_application_errors(root, config, rule)
+        }
         _ => {
             let validate = VALIDATORS
                 .iter()

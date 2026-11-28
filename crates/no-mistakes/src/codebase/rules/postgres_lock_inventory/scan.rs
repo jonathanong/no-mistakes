@@ -1,9 +1,7 @@
+use super::options::LockScanTarget;
 use super::{CompiledOptions, LockInventoryReport};
 use crate::codebase::check_facts::SqlFactContext;
-use crate::codebase::dependencies::extract::is_indexable;
-use crate::codebase::postgres::{
-    compile_sql_include, matches_sql_include, SqlFunctionCallFact, SqlStatementFileFacts,
-};
+use crate::codebase::postgres::{compile_sql_include, SqlFunctionCallFact, SqlStatementFileFacts};
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
 use rayon::prelude::*;
@@ -37,16 +35,11 @@ pub(super) fn collect(
     let rows = files
         .par_iter()
         .filter_map(|path| {
-            if path.extension().is_some_and(|ext| ext == "sql")
-                && matches_sql_include(root, path, &sql)
-            {
-                Some(native(options, path, facts))
-            } else if is_indexable(path) && (options.has_helpers() || options.scans_executors()) {
-                Some(typescript(options, path, facts))
-            } else {
-                None
-            }
-            .map(|row| row.map(|row| (relative_slash_path(root, path), row)))
+            let row = match options.classify_file(root, path, &sql)? {
+                LockScanTarget::Sql => native(options, path, facts),
+                LockScanTarget::TypeScript => typescript(options, path, facts),
+            };
+            Some(row.map(|row| (relative_slash_path(root, path), row)))
         })
         .collect::<Result<Vec<_>>>()?;
     Ok(super::report::build(options, rows))

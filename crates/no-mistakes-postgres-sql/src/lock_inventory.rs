@@ -15,6 +15,9 @@ pub struct InventoryLockFact {
     pub fingerprint: String,
     pub line: usize,
     pub column: usize,
+    pub statement_start_line: usize,
+    pub statement_start_column: usize,
+    pub statement_end_line: usize,
 }
 
 pub(super) fn unanalyzed_routines(statements: &[Statement]) -> Vec<usize> {
@@ -164,12 +167,21 @@ fn advisory_name(name: &str) -> bool {
     name.starts_with("pg_advisory_") || name.starts_with("pg_try_advisory_")
 }
 
-fn record(category: &str, statement: &str, at: Location, out: &mut Vec<InventoryLockFact>) {
+fn record(
+    category: &str,
+    statement: &str,
+    at: Location,
+    statement_span: Span,
+    out: &mut Vec<InventoryLockFact>,
+) {
     out.push(InventoryLockFact {
         category: category.to_owned(),
         fingerprint: format!("{category}:{statement}"),
         line: at.line as usize,
         column: at.column as usize,
+        statement_start_line: statement_span.start.line as usize,
+        statement_start_column: statement_span.start.column as usize,
+        statement_end_line: statement_span.end.line as usize,
     });
 }
 

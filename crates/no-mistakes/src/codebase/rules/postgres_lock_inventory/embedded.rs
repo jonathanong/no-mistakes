@@ -96,7 +96,7 @@ fn version_sites(
     sites
 }
 
-struct Positions<'a> {
+pub(crate) struct Positions<'a> {
     sql: &'a str,
     ascii: bool,
     line_starts: Vec<usize>,
@@ -107,7 +107,7 @@ struct Positions<'a> {
 }
 
 impl<'a> Positions<'a> {
-    fn new(call: &'a EmbeddedSqlCall, variant_index: usize) -> Self {
+    pub(crate) fn new(call: &'a EmbeddedSqlCall, variant_index: usize) -> Self {
         let variant = call
             .variants
             .get(variant_index)
@@ -145,7 +145,7 @@ impl<'a> Positions<'a> {
         }
     }
 
-    fn source(&self, line: usize, column: usize) -> (Option<PathBuf>, usize, usize) {
+    pub(crate) fn source(&self, line: usize, column: usize) -> (Option<PathBuf>, usize, usize) {
         let start = self.positions.partition_point(|position| {
             (position.sql_line as usize, position.sql_column as usize) <= (line, column)
         });
