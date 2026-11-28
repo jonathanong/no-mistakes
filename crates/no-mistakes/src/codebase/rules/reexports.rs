@@ -43,6 +43,8 @@ pub use super::run::{
 };
 pub(crate) use super::validate_options::validate_rule_options;
 #[doc(hidden)]
+pub use super::validate_options::validate_rule_options_for_session;
+#[doc(hidden)]
 pub use super::vitest_project_catalog::{
     prepare_vitest_project_catalog, PreparedVitestProjectCatalog,
 };

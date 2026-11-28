@@ -1,0 +1,115 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "compat_cross": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/compat/cross-package.test.ts",
+          "import": "../../shared/fixtures/tone.wav",
+          "line": 3,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "import sharedWav from \"../../shared/fixtures/tone.wav\";",
+          "target": "packages/shared/fixtures/tone.wav"
+        },
+        {
+          "file": "packages/app/compat/cross-package.test.ts",
+          "import": "../../shared/src/status.mts",
+          "line": 11,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const status = await vitest.vi.importMock(\"../../shared/src/status.mts\");",
+          "target": "packages/shared/src/status.mts"
+        },
+        {
+          "file": "packages/app/compat/cross-package.test.ts",
+          "import": "../../shared/src/widget",
+          "line": 8,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const widget = await mock.importActual<typeof import(\"../../shared/src/widget\")>(",
+          "target": "packages/shared/src/widget.tsx"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "compat_cross_allow": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "compat_default": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "packages/app/compat/same-package.test.ts",
+          "import": "<computed>",
+          "line": 17,
+          "message": "Unanalyzable import: the specifier is computed. Use a literal import specifier.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const sibling = await import(pathToFileURL(join(dir, file)).href);"
+        },
+        {
+          "file": "packages/app/compat/same-package.test.ts",
+          "import": "specifier",
+          "line": 18,
+          "message": "Unanalyzable import: the specifier is computed. Use a literal import specifier.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const dynamic = await import(specifier);"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "compat_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/compat/same-package.test.ts",
+          "import": "<computed>",
+          "line": 17,
+          "message": "Unanalyzable import: the specifier is computed. Use a literal import specifier.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const sibling = await import(pathToFileURL(join(dir, file)).href);"
+        },
+        {
+          "file": "packages/app/compat/same-package.test.ts",
+          "import": "specifier",
+          "line": 18,
+          "message": "Unanalyzable import: the specifier is computed. Use a literal import specifier.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "const dynamic = await import(specifier);"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

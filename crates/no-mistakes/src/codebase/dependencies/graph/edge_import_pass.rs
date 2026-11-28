@@ -10,11 +10,13 @@ fn import_file_pass(
     let mut edges = Vec::new();
     let mut targets = Vec::new();
     for imp in &facts.imports {
-        let Some(kind) = graph_edge_kind_for_extracted_import(imp, facts, reachable) else {
+        if imp.computed {
             continue;
-        };
+        }
+        let kind = graph_edge_kind_for_extracted_import(imp, facts, reachable);
+        let edge_kind = kind.unwrap_or_else(|| edge_kind_for_import(imp));
         let classification = resolver.classify_import(&imp.specifier, path, workspace, graph_files);
-        let resolved = resolved_import_path(kind, &classification, imp, graph_files);
+        let resolved = resolved_import_path(edge_kind, &classification, imp, graph_files);
         let recorded = import_target_for(
             resolved,
             &classification,
@@ -25,8 +27,10 @@ fn import_file_pass(
             graph_files,
         );
         targets.push((imp.specifier.clone(), recorded));
-        if let Some(edge) = import_edge(interner, path, kind, imp, resolved, &classification) {
-            edges.push(edge);
+        if let Some(kind) = kind {
+            if let Some(edge) = import_edge(interner, path, kind, imp, resolved, &classification) {
+                edges.push(edge);
+            }
         }
     }
     for call in vitest_import_calls(facts) {
@@ -76,11 +80,24 @@ fn import_target_for(
     {
         return ImportTarget::File(target.to_path_buf());
     }
+    if let Some(asset) = existing_relative_asset(importer, specifier) {
+        return ImportTarget::File(asset);
+    }
     if specifier_is_project(resolver, importer, specifier, classification, workspace) {
         ImportTarget::Unresolved
     } else {
         ImportTarget::External
     }
+}
+
+fn existing_relative_asset(importer: &Path, specifier: &str) -> Option<PathBuf> {
+    let path_part = specifier.split(['?', '#']).next().unwrap_or(specifier);
+    if !(path_part.starts_with("./") || path_part.starts_with("../")) {
+        return None;
+    }
+    let candidate =
+        crate::codebase::ts_resolver::normalize_path(&importer.parent()?.join(path_part));
+    (!is_indexable(&candidate) && candidate.is_file()).then_some(candidate)
 }
 
 fn specifier_is_project(

@@ -1,0 +1,9 @@
+rules:
+  - rule: no-cross-package-relative-imports
+    scope: repository
+    include: ["packages/app/computed/locale.mts"]
+    options:
+      unanalyzable: advise
+      allow:
+        - importer: "@sample/app"
+          target: "@sample/shared"

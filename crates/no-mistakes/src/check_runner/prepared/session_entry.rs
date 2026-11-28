@@ -12,6 +12,12 @@ pub(super) fn prepare_with_session(
         || session.visible_paths(root),
     );
     let (config, effective_config_path) = session.config_with_path(root, config_path)?;
+    no_mistakes::codebase::rules::validate_rule_options_for_session(
+        session,
+        root,
+        effective_config_path.as_deref(),
+        &config,
+    )?;
     let tsconfig = session.tsconfig(root, tsconfig_path)?;
     let workspace = SharedWorkspace {
         map: consumers::needs_workspace(&config, tsconfig_path, deadlines)

@@ -19,7 +19,16 @@ impl PreparedScopePlan {
         session.insert_visible_paths(&root, visible_paths.clone());
         let has_non_check_report = options.reports.iter().any(|r| r.report_type != "check");
         let include_check_plan = options.reports.iter().any(|r| r.report_type == "check");
-        let config = session.config(&root, options.config.as_deref().map(Path::new))?;
+        let (config, config_path) =
+            session.config_with_path(&root, options.config.as_deref().map(Path::new))?;
+        if include_check_plan {
+            crate::codebase::rules::validate_rule_options_for_session(
+                &session,
+                &root,
+                config_path.as_deref(),
+                config.as_ref(),
+            )?;
+        }
         let (import_usages, import_usage_files) =
             prepare_import_usage_views(options, &root, &session)?;
         let ordinary_calls = prepare_ordinary_call_sites(options, &root, session.clone())?;

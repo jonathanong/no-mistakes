@@ -12,14 +12,17 @@ test(
     const { check, analyzeProject } = require("../index.js");
     const rule = "no-cross-package-relative-imports";
     const root = join(__dirname, "../../../test-cases/rules", rule, "fixture");
-    const pending = check({ root, includeSuppressed: true });
+    const config = join(root, "allow.yml");
+    const pending = check({ root, config, includeSuppressed: true });
     assert.ok(pending instanceof Promise);
     const report = await pending;
-    assert.equal(report.rules.length, 7);
+    assert.equal(report.rules.length, 3);
     assert.ok(report.rules.every((finding) => finding.rule === rule));
-    assert.equal(report.suppressed.length, 3);
+    assert.equal(report.advisories.length, 2);
+    assert.ok(report.advisories.every((finding) => finding.message.startsWith("Unanalyzable")));
     const batch = await analyzeProject({
       root,
+      config,
       reports: [{ type: "check", includeSuppressed: true }],
     });
     assert.deepEqual(batch.reports[0].result, report);
@@ -29,7 +32,18 @@ test(
       join(dirname(addon), process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes");
     const child = spawnSync(
       cli,
-      ["--lock-timeout", "0", "check", "--root", root, "--include-suppressed", "--format", "json"],
+      [
+        "--lock-timeout",
+        "0",
+        "check",
+        "--root",
+        root,
+        "--config",
+        config,
+        "--include-suppressed",
+        "--format",
+        "json",
+      ],
       { encoding: "utf8" },
     );
     assert.equal(child.error, undefined);
@@ -48,5 +62,30 @@ test(
       reports: [{ type: "check" }],
     });
     assert.deepEqual(helperBatch.reports[0].result, helperReport);
+
+    const invalidConfig = join(root, "allow-unknown-target.yml");
+    await assert.rejects(check({ root, config: invalidConfig }), /allow\[0\]\.target/);
+    await assert.rejects(
+      analyzeProject({ root, config: invalidConfig, reports: [{ type: "check" }] }),
+      /allow\[0\]\.target/,
+    );
+
+    const adviseConfig = join(root, "computed-default.yml");
+    const adviseReport = await check({ root, config: adviseConfig });
+    assert.deepEqual(adviseReport.rules, []);
+    assert.equal(adviseReport.advisories.length, 1);
+    assert.equal(adviseReport.advisories[0].file, "packages/app/computed/locale.mts");
+    const adviseBatch = await analyzeProject({
+      root,
+      config: adviseConfig,
+      reports: [{ type: "check" }],
+    });
+    assert.deepEqual(adviseBatch.reports[0].result, adviseReport);
+
+    const reportConfig = join(root, "computed-rule-report.yml");
+    const strictReport = await check({ root, config: reportConfig });
+    assert.equal(strictReport.rules.length, 1);
+    assert.equal(strictReport.rules[0].file, "packages/app/computed/locale.mts");
+    assert.deepEqual(strictReport.advisories, []);
   },
 );

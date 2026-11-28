@@ -89,11 +89,7 @@ impl NoMistakesConfig {
             legacy_policy(rule)?
                 .or(self.unanalyzable)
                 .or(self.unanalyzable_sql)
-                .unwrap_or(if rule.rule == "no-cross-package-relative-imports" {
-                    Unanalyzable::Advise
-                } else {
-                    Unanalyzable::Report
-                })
+                .unwrap_or_else(|| default_unanalyzable(&rule.rule))
         };
         if rule.rule == "postgres-grouping-not-aggregation" && unanalyzable == Unanalyzable::Report
         {
@@ -163,6 +159,14 @@ pub(super) fn canonical_sql_policy(rule: &str, policy: Unanalyzable) -> &'static
         Unanalyzable::Report => "fail",
         Unanalyzable::Advise => "advise",
         Unanalyzable::Ignore => "ignore",
+    }
+}
+
+fn default_unanalyzable(rule: &str) -> Unanalyzable {
+    if rule == crate::codebase::rules::NO_CROSS_PACKAGE_RELATIVE_IMPORTS {
+        Unanalyzable::Advise
+    } else {
+        Unanalyzable::Report
     }
 }
 

@@ -5,7 +5,24 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
   "configured": {
     "exitCode": 1,
     "report": {
-      "advisories": [],
+      "advisories": [
+        {
+          "file": "packages/app/src/accepted.mts",
+          "import": "../../shared/src/missing.mjs",
+          "line": 4,
+          "message": "Unanalyzable import: the relative specifier has no unique file target. Run resolve-check and fix resolution.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "import { missingReceipt } from \"../../shared/src/missing.mjs\";"
+        },
+        {
+          "file": "packages/app/src/accepted.mts",
+          "import": "key",
+          "line": 7,
+          "message": "Unanalyzable import: the specifier is computed. Use a literal import specifier.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "export const loadReceipt = (key: string) => import(key);"
+        }
+      ],
       "codebase": [],
       "integration": [],
       "queues": [],
@@ -141,7 +158,7 @@ source: crates/no-mistakes/tests/common/check_json_snapshot.rs
         {
           "consumer": "no-cross-package-relative-imports",
           "file": "packages/app/src/gaps/broken.mts",
-          "message": "parsing packages/app/src/gaps/broken.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `}` but found `EOF`\", labels: [LabeledSpan { label: Some(\"`}` expected\"), span: Span { start: 24, end: 24 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
+          "message": "Unanalyzable source: parsing packages/app/src/gaps/broken.mts: OxcDiagnostic { inner: OxcDiagnosticInner { message: \"Expected `}` but found `EOF`\", labels: [LabeledSpan { label: Some(\"`}` expected\"), span: Span { start: 24, end: 24 }, primary: false }], help: None, note: None, severity: Error, code: OxcCode { scope: None, number: None }, url: None } }"
         }
       ],
       "integration": [],

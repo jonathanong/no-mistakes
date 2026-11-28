@@ -5,14 +5,18 @@ impl<'a> ImportResolver<'a> {
             return self.try_path(specifier_path);
         }
         let is_relative = match self.policy {
-            ImportResolutionPolicy::Standard => {
-                specifier.starts_with("./") || specifier.starts_with("../")
-            }
+            ImportResolutionPolicy::Standard => is_relative_specifier(specifier),
             ImportResolutionPolicy::QueueCompatibility { .. } => specifier.starts_with('.'),
         };
         if is_relative {
             let dir = importing_file.parent()?;
-            return self.try_path(&dir.join(specifier));
+            let target = dir.join(specifier);
+            if matches!(self.policy, ImportResolutionPolicy::Standard)
+                && is_directory_relative_specifier(specifier)
+            {
+                return self.try_directory_index(&target);
+            }
+            return self.try_path(&target);
         }
 
         for (capture, replacements) in self.matching_aliases(specifier) {
@@ -77,13 +81,17 @@ impl<'a> ImportResolver<'a> {
             }
         }
 
+        self.try_directory_index(&base)
+    }
+
+    fn try_directory_index(&self, base: &Path) -> Option<PathBuf> {
+        let base = normalize_path(base);
         for extension in EXTENSIONS {
             let candidate = base.join(format!("index{extension}"));
             if self.path_exists(&candidate) {
                 return Some(candidate);
             }
         }
-
         None
     }
 
@@ -159,6 +167,14 @@ impl<'a> ImportResolver<'a> {
             .map(|visible| visible.contains_visible(path))
             .unwrap_or_else(|| path.is_file())
     }
+}
+
+fn is_relative_specifier(specifier: &str) -> bool {
+    matches!(specifier, "." | "..") || specifier.starts_with("./") || specifier.starts_with("../")
+}
+
+fn is_directory_relative_specifier(specifier: &str) -> bool {
+    matches!(specifier, "." | "..") || specifier.ends_with('/')
 }
 
 fn is_queue_source(path: &Path) -> bool {

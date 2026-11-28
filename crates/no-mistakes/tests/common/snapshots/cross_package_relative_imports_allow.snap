@@ -1,0 +1,128 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allow_pairs": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "packages/app/src/accepted.mts",
+          "import": "../../shared/src/missing.mjs",
+          "line": 4,
+          "message": "Unanalyzable import: the relative specifier has no unique file target. Run resolve-check and fix resolution.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "import { missingReceipt } from \"../../shared/src/missing.mjs\";"
+        },
+        {
+          "file": "packages/app/src/accepted.mts",
+          "import": "key",
+          "line": 7,
+          "message": "Unanalyzable import: the specifier is computed. Use a literal import specifier.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "export const loadReceipt = (key: string) => import(key);"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/nested/crossings.mts",
+          "import": "../../shared/src/status.mjs",
+          "line": 1,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "export { receiptStatus } from \"../../shared/src/status.mjs\";",
+          "target": "packages/shared/src/status.mts"
+        },
+        {
+          "file": "packages/app/src/crossings.mts",
+          "import": "../../../loose/value.mjs",
+          "line": 4,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "import { looseReceipt } from \"../../../loose/value.mjs\";",
+          "target": "loose/value.mts"
+        },
+        {
+          "file": "packages/app/src/crossings.mts",
+          "import": "../nested/entry.mjs",
+          "line": 3,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "import { nestedReceipt } from \"../nested/entry.mjs\";",
+          "target": "packages/app/nested/entry.mts"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "allow_target": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "packages/app/src/accepted.mts",
+          "import": "../../shared/src/missing.mjs",
+          "line": 4,
+          "message": "Unanalyzable import: the relative specifier has no unique file target. Run resolve-check and fix resolution.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "import { missingReceipt } from \"../../shared/src/missing.mjs\";"
+        },
+        {
+          "file": "packages/app/src/accepted.mts",
+          "import": "key",
+          "line": 7,
+          "message": "Unanalyzable import: the specifier is computed. Use a literal import specifier.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "export const loadReceipt = (key: string) => import(key);"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "packages/app/nested/crossings.mts",
+          "import": "..",
+          "line": 3,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "export { appRoot } from \"..\";",
+          "target": "packages/app/index.mts"
+        },
+        {
+          "file": "packages/app/nested/crossings.mts",
+          "import": "../src/internal.mjs",
+          "line": 2,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "export { localReceipt } from \"../src/internal.mjs\";",
+          "target": "packages/app/src/internal.mts"
+        },
+        {
+          "file": "packages/app/src/crossings.mts",
+          "import": "../../../loose/value.mjs",
+          "line": 4,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "import { looseReceipt } from \"../../../loose/value.mjs\";",
+          "target": "loose/value.mts"
+        },
+        {
+          "file": "packages/app/src/crossings.mts",
+          "import": "../nested/entry.mjs",
+          "line": 3,
+          "message": "Use a declared package import through the target package's public exports instead of a relative path across the workspace package boundary.",
+          "rule": "no-cross-package-relative-imports",
+          "sourceLine": "import { nestedReceipt } from \"../nested/entry.mjs\";",
+          "target": "packages/app/nested/entry.mts"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}
