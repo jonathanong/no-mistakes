@@ -28,8 +28,7 @@ function unwrapBinding(node) {
 }
 
 function propertyKey(property) {
-  if (property.computed) return null;
-  if (property.key.type === "Identifier") return property.key.name;
+  if (!property.computed && property.key.type === "Identifier") return property.key.name;
   return literalString(property.key);
 }
 

@@ -148,7 +148,11 @@ observer before a later coordination await.
 Nested forwarding uses the function actually passed as the receiver:
 `expect.call.call(expect, null, promise)` observes the promise, while
 `expect.call.call(other, null, promise)` invokes `other` and cannot suppress a
-later delayed `expect(promise).rejects` finding. An extracted intrinsic such as
+later delayed `expect(promise).rejects` finding. The same call does not report
+`unanalyzable` when `expect` comes from a non-static `require`, and neither does
+a spread argument list such as `check.apply.call(other, null, [...items])`.
+`check(promise).rejects` and `check.call(null, promise).rejects` still report
+`unanalyzable`. An extracted intrinsic such as
 `const invoke = expect.call` is not itself an expectation binding.
 
 A computed identifier key is not static. `expect.poll` receives a callback,

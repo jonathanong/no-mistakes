@@ -115,6 +115,7 @@ module.exports = rule(
 
     function excludedExport(expr) {
       if (expr?.type === "MemberExpression" && expr.computed) return true;
+      if (expr?.type === "TSQualifiedName" && expr.left?.type !== "Identifier") return true;
       const name = knownExportName(expr);
       return Boolean(exportMatcher && name && !exportMatcher.test(name));
     }

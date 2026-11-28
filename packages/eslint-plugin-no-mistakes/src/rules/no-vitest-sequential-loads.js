@@ -1,13 +1,15 @@
 "use strict";
 
 const { unwrapExpression, unwrapSequence } = require("./async-ast");
-const { requireResolution, requireSource } = require("./async-target-sources");
+const { requireResolution } = require("./async-target-sources");
 const { literalString, logicalCall } = require("./logical-call");
 const { isUnresolved, moduleLoad } = require("./module-load");
 const {
   constAlias,
+  namespaceVariable,
   reassignedDestructuredRunner,
   reassignedVitestRequire,
+  recordNamespaceAlias,
 } = require("./no-vitest-sequential-require");
 const { resolveVariable } = require("./test-no-shared-state-aliases");
 
@@ -109,6 +111,7 @@ function writtenLater(identifier, context) {
 }
 
 function recordRequire(declaration, state, context) {
+  if (recordNamespaceAlias(declaration, state, context, moduleScope, writtenLater)) return;
   const init = unwrapExpression(declaration?.init);
   const member =
     init?.type === "MemberExpression" ? staticName(init.property, init.computed) : null;
@@ -189,12 +192,7 @@ function isUnshadowedNamespace(identifier, context, namespaces) {
     const kind = def.node?.type;
     return kind !== "ImportSpecifier" || staticName(def.node.imported, false) === "default";
   }
-  return (
-    def.type === "Variable" &&
-    def.node?.id?.type === "Identifier" &&
-    requireSource(def.node.init, context) === "vitest" &&
-    !hasLaterWrite(variable)
-  );
+  return namespaceVariable(def, variable, context, namespaces);
 }
 
 function destructuredFromNamespace(init, context, namespaces) {

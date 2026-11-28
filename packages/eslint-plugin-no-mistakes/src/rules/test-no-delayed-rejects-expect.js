@@ -19,30 +19,35 @@ function forwardedMethod(callee) {
   return method === "call" || method === "apply" ? method : null;
 }
 
-function expectationArguments(call, context) {
+function forwardedInvocation(call) {
   let callee = unwrapSequence(call.callee);
   let args = call.arguments;
   const method = forwardedMethod(callee);
-  if (method) {
-    let receiver = args[0];
-    args = shiftArguments(method, args);
+  if (!method) return { callee, args };
+  let receiver = args[0];
+  args = shiftArguments(method, args);
+  if (!args) return null;
+  callee = unwrapSequence(callee.object);
+  // Invoking Function.prototype.call/apply invokes its this value, not the
+  // function from which that intrinsic was read: expect.call.call(other, ...).
+  let intrinsic;
+  while ((intrinsic = forwardedMethod(callee))) {
+    callee = unwrapSequence(receiver);
+    receiver = args[0];
+    args = shiftArguments(intrinsic, args);
     if (!args) return null;
-    callee = unwrapSequence(callee.object);
-    // Invoking Function.prototype.call/apply invokes its this value, not the
-    // function from which that intrinsic was read: expect.call.call(other, ...).
-    let intrinsic;
-    while ((intrinsic = forwardedMethod(callee))) {
-      callee = unwrapSequence(receiver);
-      receiver = args[0];
-      args = shiftArguments(intrinsic, args);
-      if (!args) return null;
-    }
   }
-  return isExpectCallee(callee, context, new Set(), EXPECT_MODULES, {
+  return { callee, args };
+}
+
+function expectationArguments(call, context) {
+  const forwarded = forwardedInvocation(call);
+  if (!forwarded) return null;
+  return isExpectCallee(forwarded.callee, context, new Set(), EXPECT_MODULES, {
     allowPoll: false,
     allowForwarding: false,
   })
-    ? args
+    ? forwarded.args
     : null;
 }
 
@@ -56,4 +61,4 @@ function expectedIdentifier(rejects, context) {
   return argument.type === "Identifier" ? argument : null;
 }
 
-module.exports = { expectedIdentifier };
+module.exports = { expectedIdentifier, forwardedInvocation };

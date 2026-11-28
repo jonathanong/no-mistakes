@@ -46,6 +46,8 @@ const groups = [
       "namespace-name.test.ts",
       "import-equals.test.ts",
       "import-equals-fixture.test.ts",
+      "namespace-alias.test.ts",
+      "each-wrapper.test.ts",
     ],
     valid: [
       "not-a-runner.test.ts",
@@ -62,6 +64,8 @@ const groups = [
       "import-expect.test.ts",
       "inline-other.js",
       "computed-alias.test.ts",
+      "namespace-local.test.ts",
+      "call-callee.test.ts",
     ],
   },
   {
@@ -77,6 +81,7 @@ const groups = [
       "each-dynamic.test.ts",
       "each-nested.test.ts",
       "inline-dynamic.js",
+      "each-wrapper.test.ts",
     ],
   },
   {
@@ -258,14 +263,14 @@ const groups = [
   {
     rule: "test-no-delayed-rejects",
     dir: "delayed",
-    invalid: ["cjs.test.ts", "cast.test.ts", "dynamic.test.ts"],
-    valid: ["caught.test.ts", "computed-key.test.ts"],
+    invalid: ["cjs.test.ts", "cast.test.ts", "dynamic.test.ts", "forward-call.test.ts"],
+    valid: ["caught.test.ts", "computed-key.test.ts", "forward-other.test.ts"],
   },
   {
     rule: "test-no-delayed-rejects",
     dir: "delayed-ignore",
     options: [{ unanalyzable: "ignore" }],
-    valid: ["dynamic.test.ts"],
+    valid: ["dynamic.test.ts", "forward-call.test.ts"],
   },
   {
     rule: "test-no-typed-enqueue-fake",
@@ -298,6 +303,7 @@ const groups = [
       "computed-enqueue.test.ts",
       "computed-method.test.ts",
       "callback-type.test.ts",
+      "nested-qualified.test.ts",
     ],
   },
   {
@@ -361,13 +367,9 @@ const groups = [
       "dynamic-import.test.ts",
       "wrapped-import.test.ts",
       "namespace-describe.test.ts",
-    ],
-    valid: [
-      "not-a-runner.js",
-      "computed-runner.js",
-      "computed-dynamic.test.ts",
       "computed-destructure.js",
     ],
+    valid: ["not-a-runner.js", "computed-runner.js", "computed-dynamic.test.ts"],
   },
   {
     rule: "test-no-skips",

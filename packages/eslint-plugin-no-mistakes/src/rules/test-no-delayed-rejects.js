@@ -21,7 +21,7 @@ const {
   suspensionOccursBeforeMatcher,
 } = require("./test-no-delayed-rejects-suspensions");
 
-const { expectedIdentifier } = require("./test-no-delayed-rejects-expect");
+const { expectedIdentifier, forwardedInvocation } = require("./test-no-delayed-rejects-expect");
 
 function matcherCall(rejects) {
   let current = rejects;
@@ -160,11 +160,12 @@ module.exports = rule(
         const identifier = expectedIdentifier(node, context);
         if (!identifier) {
           const expectation = unwrapExpression(node.object);
-          const expectCallee = unwrapExpression(expectation?.callee);
+          const forwarded =
+            expectation?.type === "CallExpression" ? forwardedInvocation(expectation) : null;
           if (
             memberPropertyName(node) === "rejects" &&
-            expectation?.type === "CallExpression" &&
-            isUnresolved(moduleLoad(expectCallee, context))
+            forwarded &&
+            isUnresolved(moduleLoad(forwarded.callee, context))
           ) {
             if (!suppressed(node)) {
               reportUnanalyzable(context, node, "this rejection matcher");

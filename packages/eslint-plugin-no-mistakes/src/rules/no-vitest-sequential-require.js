@@ -124,7 +124,7 @@ function forwardedCallee(node) {
       const callee = unwrapSequence(current.callee);
       const built =
         callee?.type === "MemberExpression" ? staticName(callee.property, callee.computed) : null;
-      if (built !== "each") return current;
+      if (built !== "each") return null;
       current = callee;
       continue;
     }
@@ -134,6 +134,36 @@ function forwardedCallee(node) {
     current = unwrapSequence(current.object);
   }
   return current;
+}
+
+function recordNamespaceAlias(declaration, state, context, moduleScope, writtenLater) {
+  const init = unwrapExpression(declaration?.init);
+  const id = declaration?.id;
+  if (
+    declaration?.parent?.kind !== "const" ||
+    init?.type !== "Identifier" ||
+    id?.type !== "Identifier"
+  ) {
+    return false;
+  }
+  if (!state.namespaces.has(init.name) || !moduleScope(id, context) || writtenLater(id, context)) {
+    return false;
+  }
+  state.namespaces.add(id.name);
+  return true;
+}
+
+function namespaceVariable(def, variable, context, namespaces, seen = new Set()) {
+  if (def?.type !== "Variable" || def.node?.id?.type !== "Identifier") return false;
+  if (seen.has(variable) || loads().hasLaterWrite(variable)) return false;
+  seen.add(variable);
+  if (requireSource(def.node.init, context) === "vitest") return true;
+  const init = unwrapExpression(def.node.init);
+  if (def.node.parent?.kind !== "const" || init?.type !== "Identifier") return false;
+  if (!namespaces.has(init.name)) return false;
+  const next = resolveVariable(init, context);
+  const nextDef = next?.defs.length === 1 ? next.defs[0] : null;
+  return Boolean(nextDef && namespaceVariable(nextDef, next, context, namespaces, seen));
 }
 
 function importEqualsNamespace(root, context) {
@@ -173,8 +203,10 @@ function renamedNonRunner(root, context) {
 module.exports = {
   constAlias,
   forwardedCallee,
+  namespaceVariable,
   reassignedDestructuredRunner,
   reassignedVitestRequire,
+  recordNamespaceAlias,
   rejectedRunner,
   renamedNonRunner,
 };

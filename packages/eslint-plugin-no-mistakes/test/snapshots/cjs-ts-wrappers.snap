@@ -630,6 +630,18 @@
       "options": null
     },
     {
+      "file": "namespace-local.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "call-callee.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "helper.js",
       "findings": [
         {
@@ -1433,6 +1445,53 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "namespace-alias.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 17,
+          "endLine": 4,
+          "file": "namespace-alias.test.ts",
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 19,
+          "endLine": 5,
+          "file": "namespace-alias.test.ts",
+          "line": 5,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "each-wrapper.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 20,
+          "endLine": 3,
+          "file": "each-wrapper.test.ts",
+          "line": 3,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "no-vitest-sequential:sequential-ignore": [
@@ -1515,6 +1574,16 @@
           "unanalyzable": "ignore"
         }
       ]
+    },
+    {
+      "file": "each-wrapper.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
     }
   ],
   "test-no-delayed-rejects:delayed": [
@@ -1526,6 +1595,12 @@
     },
     {
       "file": "computed-key.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "forward-other.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -1638,11 +1713,61 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "forward-call.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 31,
+          "endLine": 6,
+          "file": "forward-call.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this rejection matcher observes a rejection. Use a static expect from vitest.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 42,
+          "endLine": 7,
+          "file": "forward-call.test.ts",
+          "line": 7,
+          "message": "Cannot tell whether this rejection matcher observes a rejection. Use a static expect from vitest.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        },
+        {
+          "column": 9,
+          "endColumn": 45,
+          "endLine": 8,
+          "file": "forward-call.test.ts",
+          "line": 8,
+          "message": "Cannot tell whether this rejection matcher observes a rejection. Use a static expect from vitest.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-delayed-rejects",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "test-no-delayed-rejects:delayed-ignore": [
     {
       "file": "dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "forward-call.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -2987,18 +3112,6 @@
       ]
     },
     {
-      "file": "computed-destructure.js",
-      "findings": [],
-      "kind": "valid",
-      "options": [
-        {
-          "testModules": [
-            "./custom-test"
-          ]
-        }
-      ]
-    },
-    {
       "file": "configured.test.ts",
       "findings": [
         {
@@ -3382,6 +3495,30 @@
           ]
         }
       ]
+    },
+    {
+      "file": "computed-destructure.js",
+      "findings": [
+        {
+          "column": 7,
+          "endColumn": 11,
+          "endLine": 2,
+          "file": "computed-destructure.js",
+          "line": 2,
+          "message": "Test modifier 'skip' can remove CI coverage. Run the complete test and provide its required environment, or explicitly allow this modifier.",
+          "messageId": "modifier",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
     }
   ],
   "test-no-skips:skips-ignore": [
@@ -3528,6 +3665,16 @@
     },
     {
       "file": "callback-type.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "nested-qualified.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [
