@@ -59,7 +59,7 @@ pub(super) fn try_shell_c(
     state: &ScanState<'_>,
     hits: &mut Vec<ScriptHit>,
 ) -> bool {
-    if !matches!(name, "bash" | "sh" | "zsh") {
+    if !matches!(name, "bash" | "sh" | "zsh" | "dash" | "ash" | "ksh") {
         return false;
     }
     let Some(operand) = super::super::shell_cmd::shell_c_operand(&command.words, at + 1) else {

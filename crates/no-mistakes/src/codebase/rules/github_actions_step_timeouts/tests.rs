@@ -58,6 +58,58 @@ fn deferred_suppression_retains_findings_for_audit_reports() {
 mod locations;
 
 #[test]
+fn allow_without_override_still_enforces_the_global_cap() {
+    let findings = run_files(
+        "action-caps",
+        r#"
+maxMinutes: 5
+onlyConfiguredActions: true
+actionCaps:
+  - uses: actions/setup-node
+    maxMinutes: 5
+allow:
+  - step: .github/workflows/ci.yml#build#dynamic-slow
+    reason: pinned upstream
+"#,
+        &[".github/workflows/ci.yml"],
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("over the 5-minute cap")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn equal_allow_cap_counts_as_used_when_it_suppresses_a_dynamic_action() {
+    let findings = run_files(
+        "action-caps",
+        r#"
+maxMinutes: 10
+actionCaps:
+  - uses: actions/setup-node
+    maxMinutes: 5
+allow:
+  - step: .github/workflows/ci.yml#build#dynamic-slow
+    reason: pinned upstream
+    maxMinutes: 10
+"#,
+        &[".github/workflows/ci.yml"],
+    );
+    assert!(
+        findings.iter().all(|finding| !finding.message.contains("stale")),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.message.contains("dynamic action")),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn allowances_for_unselected_workflows_are_not_stale() {
     let findings = run_files(
         "fail",

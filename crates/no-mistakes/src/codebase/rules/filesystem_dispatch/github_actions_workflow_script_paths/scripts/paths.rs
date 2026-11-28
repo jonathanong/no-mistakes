@@ -15,6 +15,16 @@ pub(super) fn check_candidate(
     if raw.is_empty() {
         return;
     }
+    if filename_glob_targets(raw, dir, script_dirs) {
+        hits.push(unanalyzable(
+            line,
+            raw.to_string(),
+            format!(
+                "invokes shell filename pattern `{raw}`, which cannot be proven against workflow path filters. Pass a literal repository script path."
+            ),
+        ));
+        return;
+    }
     if is_dynamic_word(word, command_dynamic) {
         if dynamic_may_target_script_dir(raw, dir, script_dirs) {
             hits.push(unanalyzable(
@@ -88,6 +98,30 @@ pub(super) fn unanalyzable(line: usize, token: String, detail: String) -> Script
     ScriptHit {
         line,
         kind: ScriptHitKind::Unanalyzable { token, detail },
+    }
+}
+
+fn filename_glob_targets(raw: &str, dir: &WorkingDir, script_dirs: &[String]) -> bool {
+    let Some(index) = raw.find(['*', '?', '[']) else {
+        return false;
+    };
+    let head = raw[..index].trim_end_matches('/');
+    if head.is_empty() {
+        return false;
+    }
+    if raw.starts_with('/') || raw.starts_with('~') {
+        return false;
+    }
+    match dir {
+        WorkingDir::OutsideRepo => false,
+        WorkingDir::Dynamic(_) => true,
+        WorkingDir::Known(base) => resolve_rel_path(base, head).is_some_and(|resolved| {
+            script_dirs.iter().any(|dir| {
+                dir == &resolved
+                    || dir.starts_with(&format!("{resolved}/"))
+                    || resolved.starts_with(&format!("{dir}/"))
+            })
+        }),
     }
 }
 

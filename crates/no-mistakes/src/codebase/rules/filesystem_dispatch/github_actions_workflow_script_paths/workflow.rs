@@ -110,7 +110,12 @@ fn check_step(
                 .located
                 .iter()
                 .find(|item| item.job == ctx.job_id && item.step == step_no);
-            let hits = scripts::scan_script(script, step_dir, &ctx.run.compiled.script_dirs);
+            let hits = scripts::scan_run(
+                script,
+                mapping_get(step_map, "shell").and_then(Value::as_str),
+                step_dir,
+                &ctx.run.compiled.script_dirs,
+            );
             emit_hits(
                 ctx.emit,
                 Origin::Run {

@@ -44,6 +44,24 @@ struct ScanState<'a> {
     depth: usize,
 }
 
+pub(super) fn scan_run(
+    script: &str,
+    shell: Option<&str>,
+    initial_dir: WorkingDir,
+    script_dirs: &[String],
+) -> Vec<ScriptHit> {
+    if let Some(name) = shell.map(shell_base).filter(|name| !known_shell(name)) {
+        return vec![unanalyzable(
+            1,
+            name.to_string(),
+            format!(
+                "runs with shell `{name}`, which this check cannot parse, so repository scripts in the step were not checked against workflow path filters. Use a shell this check parses."
+            ),
+        )];
+    }
+    scan_script(script, initial_dir, script_dirs)
+}
+
 pub(super) fn scan_script(
     script: &str,
     initial_dir: WorkingDir,
@@ -77,19 +95,36 @@ fn scan_nested(
     }
     let mut previous = None;
     let mut dir_timeline = vec![(0usize, dir.clone())];
+    let mut depth = 0i32;
+    let mut conditional_cd = false;
     for command in &parsed.commands {
+        let (opens, closes) = control_depth(&command.words);
+        depth += opens as i32;
         let Some((name, at)) = words::command_at(&command.words) else {
+            depth = (depth - closes as i32).max(0);
             continue;
         };
         let cmd_word = &command.words[at];
         let cmd_line = cmd_word.line + state.line_offset;
         if name == "cd" {
             let next = apply_cd(&dir, previous.as_ref(), command, at);
-            previous = Some(dir);
-            dir = next;
+            if depth > 0 {
+                conditional_cd = true;
+                dir = WorkingDir::Dynamic("conditional cd".to_string());
+            } else {
+                conditional_cd = false;
+                previous = Some(dir);
+                dir = next;
+            }
             dir_timeline.push((command.anchor, dir.clone()));
+            depth = (depth - closes as i32).max(0);
             continue;
         }
+        if closes > 0 && conditional_cd {
+            dir = WorkingDir::Dynamic("conditional cd".to_string());
+            dir_timeline.push((command.anchor, dir.clone()));
+        }
+        depth = (depth - closes as i32).max(0);
         if is_dynamic_word(cmd_word, command.dynamic) {
             hits.push(unanalyzable(
                 cmd_line,
@@ -112,6 +147,31 @@ fn scan_nested(
         visit::inspect_command(&name, command, at, &dir, state, hits);
     }
     visit::scan_substitutions(&parsed.substitutions, &dir_timeline, state, hits);
+}
+
+fn control_depth(words: &[words::Word]) -> (usize, usize) {
+    let mut opens = 0;
+    let mut closes = 0;
+    for word in words {
+        match word.text.as_str() {
+            "if" | "while" | "until" | "for" | "case" => opens += 1,
+            "fi" | "done" | "esac" => closes += 1,
+            _ => {}
+        }
+    }
+    (opens, closes)
+}
+
+fn shell_base(shell: &str) -> &str {
+    let token = shell.split_whitespace().next().unwrap_or(shell);
+    token.rsplit(['/', '\\']).next().unwrap_or(token)
+}
+
+fn known_shell(name: &str) -> bool {
+    matches!(
+        name,
+        "bash" | "sh" | "zsh" | "dash" | "ash" | "ksh" | "pwsh" | "powershell"
+    )
 }
 
 fn syntax_abstention(parsed: &words::Parse) -> Option<&'static str> {

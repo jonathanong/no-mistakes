@@ -185,7 +185,10 @@ steps:
   under `scriptDirs` (including an expansion in the middle of a path segment),
   dynamic `working-directory`, `cd -` when the previous directory is unknown,
   `cd` options this check cannot model, package-runner directory flags such as
-  `pnpm --dir`, unterminated shell syntax, composite or shell nesting past four
+  `pnpm --dir`, unquoted shell filename patterns such as `scripts/*.sh`,
+  a `cd` inside `if` / `while` / `for` / `case`, a `run` step whose `shell`
+  this check cannot parse, embedded `**` such as `pre**post`, unterminated
+  shell syntax, composite or shell nesting past four
   levels, and unreadable or malformed local composite actions
   never pass silently; they emit a diagnostic governed by `options.unanalyzable`
   (default `advise`).

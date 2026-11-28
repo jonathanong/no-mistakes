@@ -35,19 +35,21 @@ pub(super) fn check_dynamic_only(
             ));
         }
         used.insert(info.key.to_string());
-        if let Some(cap) = entry.max_minutes.map(|max| max.min(GITHUB_MAX_MINUTES)) {
-            if let Some(minutes) = step.get("timeout-minutes").and_then(timeout_minutes) {
-                if minutes > cap {
-                    diag.findings.push(finding(
-                        ctx.rel,
-                        info.line,
-                        format!(
-                            "{}: job \"{}\" step \"{}\" timeout-minutes is {minutes}, over the {cap}-minute cap",
-                            ctx.rel, ctx.job_id, info.label
-                        ),
-                        Some(info.key),
-                    ));
-                }
+        let cap = entry
+            .max_minutes
+            .map(|max| max.min(GITHUB_MAX_MINUTES))
+            .unwrap_or_else(|| ctx.opts.max_minutes.min(GITHUB_MAX_MINUTES));
+        if let Some(minutes) = step.get("timeout-minutes").and_then(timeout_minutes) {
+            if minutes > cap {
+                diag.findings.push(finding(
+                    ctx.rel,
+                    info.line,
+                    format!(
+                        "{}: job \"{}\" step \"{}\" timeout-minutes is {minutes}, over the {cap}-minute cap",
+                        ctx.rel, ctx.job_id, info.label
+                    ),
+                    Some(info.key),
+                ));
             }
         }
         return;

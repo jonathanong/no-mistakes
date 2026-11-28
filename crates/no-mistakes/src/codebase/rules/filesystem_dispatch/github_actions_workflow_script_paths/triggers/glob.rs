@@ -26,6 +26,11 @@ pub(super) fn compile_pattern_sequence(raw: &Value) -> Result<Vec<CompiledGlob>,
                 "uses GitHub `?` or `+` quantifiers in `{pattern}`, which this check does not evaluate."
             ));
         }
+        if has_embedded_globstar(pattern) {
+            return Err(format!(
+                "uses embedded `**` in `{pattern}`, which this check does not evaluate."
+            ));
+        }
         let (negate, body) = match pattern.strip_prefix('!') {
             Some(rest) => (true, rest),
             None => (false, pattern),
@@ -72,6 +77,25 @@ fn has_github_quantifier(pattern: &str) -> bool {
             '?' | '+' if !class => return true,
             _ => {}
         }
+    }
+    false
+}
+
+fn has_embedded_globstar(pattern: &str) -> bool {
+    let bytes = pattern.as_bytes();
+    let mut index = 0;
+    while index + 1 < bytes.len() {
+        if bytes[index] == b'*' && bytes[index + 1] == b'*' {
+            let before_boundary = index == 0 || bytes[index - 1] == b'/';
+            let after = index + 2;
+            let after_boundary = after >= bytes.len() || bytes[after] == b'/';
+            if !before_boundary && !after_boundary {
+                return true;
+            }
+            index += 2;
+            continue;
+        }
+        index += 1;
     }
     false
 }

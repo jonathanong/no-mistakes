@@ -85,6 +85,7 @@ fn triggers_report_unanalyzable_shapes() {
         "on:\n  pull_request:\n    paths: ['scripts/+(a|b).sh']\njobs: {}",
         "on:\n  pull_request:\n    paths: ['scripts/check.jsx?']\njobs: {}",
         "on:\n  pull_request:\n    paths: ['scripts/check.sh+']\njobs: {}",
+        "on:\n  pull_request:\n    paths: ['scripts/pre**post.sh']\njobs: {}",
         "on:\n  pull_request:\n    paths: [42]\njobs: {}",
         "on:\n  pull_request:\n    paths: ['']\njobs: {}",
         "on:\n  pull_request:\n    paths: ['[invalid']\njobs: {}",

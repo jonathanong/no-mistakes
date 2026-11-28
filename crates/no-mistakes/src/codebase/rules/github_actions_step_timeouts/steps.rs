@@ -166,9 +166,13 @@ impl StepScan<'_> {
                         Some(key),
                     ));
                 } else if let Some(raw_uses) = dynamic_uses {
-                    if override_cap.is_none()
-                        && self.opts.min_action_cap.is_some_and(|min_cap| minutes > min_cap)
-                    {
+                    let above_strictest = self
+                        .opts
+                        .min_action_cap
+                        .is_some_and(|min_cap| minutes > min_cap);
+                    if above_strictest && override_cap.is_some() {
+                        self.used.insert(key.to_string());
+                    } else if above_strictest {
                         let ctx = DynamicCtx {
                             rel: self.rel,
                             job_id: self.job_id,

@@ -14,6 +14,78 @@ fn invocation(path: &str) -> impl Fn(&super::scripts::ScriptHit) -> bool + '_ {
 }
 
 #[test]
+fn dash_c_and_filename_globs_do_not_pass_silently() {
+    let dash = scan_script(
+        "dash -c 'bash scripts/check.sh'\n",
+        WorkingDir::Known(String::new()),
+        &dirs(),
+    );
+    assert!(dash.iter().any(invocation("scripts/check.sh")), "{dash:?}");
+    let glob = scan_script(
+        "bash scripts/*.sh\n",
+        WorkingDir::Known(String::new()),
+        &dirs(),
+    );
+    assert!(
+        glob.iter()
+            .any(|hit| matches!(hit.kind, ScriptHitKind::Unanalyzable { .. })),
+        "{glob:?}"
+    );
+    assert!(!glob.iter().any(invocation("scripts/*.sh")), "{glob:?}");
+}
+
+#[test]
+fn conditional_cd_does_not_rewrite_later_scripts() {
+    let hits = scan_script(
+        "if false; then\n  cd scripts\nfi\nbash ./scripts/check.sh\n",
+        WorkingDir::Known(String::new()),
+        &dirs(),
+    );
+    assert!(
+        hits.iter()
+            .any(|hit| matches!(hit.kind, ScriptHitKind::Unanalyzable { .. })),
+        "{hits:?}"
+    );
+    assert!(
+        !hits.iter().any(invocation("scripts/scripts/check.sh")),
+        "{hits:?}"
+    );
+    let straight = scan_script(
+        "cd scripts && bash ./check.sh\n",
+        WorkingDir::Known(String::new()),
+        &dirs(),
+    );
+    assert!(
+        straight.iter().any(invocation("scripts/check.sh")),
+        "{straight:?}"
+    );
+}
+
+#[test]
+fn python_shell_is_unanalyzable() {
+    let hits = super::scripts::scan_run(
+        "runpy.run_path('scripts/check.py')\n",
+        Some("python"),
+        WorkingDir::Known(String::new()),
+        &dirs(),
+    );
+    assert!(
+        matches!(
+            hits.first().map(|hit| &hit.kind),
+            Some(ScriptHitKind::Unanalyzable { .. })
+        ),
+        "{hits:?}"
+    );
+    let bash = super::scripts::scan_run(
+        "bash scripts/check.sh\n",
+        Some("bash"),
+        WorkingDir::Known(String::new()),
+        &dirs(),
+    );
+    assert!(bash.iter().any(invocation("scripts/check.sh")), "{bash:?}");
+}
+
+#[test]
 fn clustered_shell_c_scans_the_next_word() {
     let hits = scan_script(
         "sh -ce 'bash scripts/nested.sh'\n",

@@ -50,7 +50,9 @@ stays quiet.
 job's `steps` array, such as `path#jobId#2`. An allow entry permits an absent or
 expression timeout; malformed literal values still fail. Its optional
 `maxMinutes` overrides the ordinary cap for a literal timeout, but cannot
-exceed 360. Blank reasons and duplicate entries are findings. Stale entries
+exceed 360. An entry that omits `maxMinutes` still enforces the global cap.
+An entry that suppresses a dynamic-action diagnostic is used even when its
+cap equals the ordinary cap. Blank reasons and duplicate entries are findings. Stale entries
 are findings only for files this run scanned. A unique allow entry for a
 deleted or renamed file is not a stale finding; duplicate entries for that
 absent path are still duplicate findings. A raising entry is stale if
