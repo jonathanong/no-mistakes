@@ -138,7 +138,13 @@ module.exports = Object.assign(
     {
       type: "problem",
       docs: { description: "disallow Vitest sequential test modifiers", recommended: false },
-      schema: [{ type: "object", properties: { unanalyzable: UNANALYZABLE_SCHEMA } }],
+      schema: [
+        {
+          type: "object",
+          additionalProperties: false,
+          properties: { unanalyzable: UNANALYZABLE_SCHEMA },
+        },
+      ],
       messages: {
         sequential: "Use parallel tests instead of .sequential.",
         unanalyzable:

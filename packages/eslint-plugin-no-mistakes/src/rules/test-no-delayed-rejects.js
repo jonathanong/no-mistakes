@@ -137,7 +137,13 @@ module.exports = rule(
       description: "require rejection observers before coordination awaits",
       recommended: false,
     },
-    schema: [{ type: "object", properties: { unanalyzable: UNANALYZABLE_SCHEMA } }],
+    schema: [
+      {
+        type: "object",
+        additionalProperties: false,
+        properties: { unanalyzable: UNANALYZABLE_SCHEMA },
+      },
+    ],
     messages: {
       delayedReject:
         "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",

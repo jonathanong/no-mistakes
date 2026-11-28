@@ -115,7 +115,13 @@ module.exports = rule(
   {
     type: "problem",
     docs: { description: "disallow asserting on error message strings", recommended: false },
-    schema: [{ type: "object", properties: { unanalyzable: UNANALYZABLE_SCHEMA } }],
+    schema: [
+      {
+        type: "object",
+        additionalProperties: false,
+        properties: { unanalyzable: UNANALYZABLE_SCHEMA },
+      },
+    ],
     messages: {
       message: "Do not assert on err.message; check the error type or code instead.",
       unanalyzable:

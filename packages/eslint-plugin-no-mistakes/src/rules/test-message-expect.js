@@ -127,6 +127,23 @@ function requireExpectSource(node, context, modules = null) {
   return allowedModule(requireSource(node, context), modules || MESSAGE_MODULES);
 }
 
+function spreadArguments(args) {
+  const expanded = [];
+  for (const arg of args || []) {
+    if (arg?.type !== "SpreadElement") {
+      expanded.push(arg);
+      continue;
+    }
+    const list = unwrap(arg.argument);
+    if (list?.type !== "ArrayExpression") return null;
+    for (const element of list.elements) {
+      if (!element || element.type === "SpreadElement") return null;
+      expanded.push(element);
+    }
+  }
+  return expanded;
+}
+
 function expectArguments(node, context) {
   const current = unwrap(node);
   if (current?.type !== "CallExpression") return null;
@@ -135,8 +152,10 @@ function expectArguments(node, context) {
   if (callee?.type === "MemberExpression") {
     const name = memberName(callee);
     if (name === "call") {
+      const expanded = spreadArguments(args);
+      if (!expanded) return null;
       callee = callee.object;
-      args = args.slice(1);
+      args = expanded.slice(1);
     } else if (name === "apply") {
       const list = unwrap(args[1]);
       if (list?.type !== "ArrayExpression") return null;

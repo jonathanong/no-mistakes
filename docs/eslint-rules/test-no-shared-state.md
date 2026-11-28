@@ -32,7 +32,9 @@ test("user", () => {
   `require` reports `unanalyzable`. `.skip` and `.each` on that call, such as
   `vt.test.skip(...)` and `vt.test.each(rows)(...)`, report `unanalyzable` too. A destructured `test`, `it`, or `describe`
   from that require, such as `const { test: check } = require(specifier)`, reports
-  `unanalyzable`. A destructured `expect` does not. A computed key such as
+  `unanalyzable`. A later write of that destructure, such as
+  `let { test: check } = require(specifier); check = localHelper`, does not.
+  A destructured `expect` does not. A computed key such as
   `const { ["test"]: check } = require("vitest")` is not a test registration.
   `const check = require(spec).test` and `let vt = require(spec); vt.test(...)`
   report `unanalyzable`.
@@ -66,7 +68,7 @@ The same callback-local rewrite applies to direct calls, `.call`, and literal
 
 ## Limits
 
-A namespace `v.test`, a Playwright default import, `test["only"]`, optional chaining, and one top-level `const` alias are the same test callback. A top-level `const suite = v.describe` is still that suite, so a hook inside it does not cover tests outside it. A comma callee such as `(0, v.describe)` is that same suite. `const suite = v.describe.serial` keeps the serial modifier. A nested binding that reuses a namespace import's local name is not that namespace, including a cast such as `(v as any).test`. Namespace setup hooks such as `v.beforeEach` are the same cleanup boundary as a named import. Vitest's default import is not a runner. A computed identifier key is not a static modifier. A top-level `const check = v.test` is recorded, so a nested parameter named `check` is not that test. `v.describe.configure({ mode: "serial" })` marks the file serial.
+A namespace `v.test`, a Playwright default import, `test["only"]`, optional chaining, and one top-level `const` alias are the same test callback. A top-level `const suite = v.describe` is still that suite, so a hook inside it does not cover tests outside it. A comma callee such as `(0, v.describe)` is that same suite. `const suite = v.describe.serial` keeps the serial modifier. A nested binding that reuses a namespace import's local name is not that namespace, including a cast such as `(v as any).test`. Namespace setup hooks such as `v.beforeEach` are the same cleanup boundary as a named import. Vitest's default import is not a runner. A computed identifier key is not a static modifier. A top-level `const check = v.test` is recorded, so a nested parameter named `check` is not that test. `v.describe.configure({ mode: "serial" })` marks the file serial. A nested function that another call invokes, such as `(consume as any)(update())`, is still checked.
 
 Static string and expression-free template `call` / `apply` members register
 that same test, suite, or hook. A literal `.apply` list may contain an inline or

@@ -152,7 +152,13 @@ module.exports = Object.assign(
         description: "require .mock.test filenames for module-mocking tests",
         recommended: false,
       },
-      schema: [{ type: "object", properties: { unanalyzable: UNANALYZABLE_SCHEMA } }],
+      schema: [
+        {
+          type: "object",
+          additionalProperties: false,
+          properties: { unanalyzable: UNANALYZABLE_SCHEMA },
+        },
+      ],
       messages: {
         needsMock:
           "Tests that mock modules (vi.mock/vi.doMock) must use a .mock.test.<ext> filename. vi.fn()/vi.spyOn stubs do not count.",

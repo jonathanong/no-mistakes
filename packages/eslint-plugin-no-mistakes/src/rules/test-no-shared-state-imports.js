@@ -100,6 +100,7 @@ function dynamicDestructuredTest(callee, context) {
   const variable = resolveVariable(callee, context);
   const def = variable?.defs.length === 1 ? variable.defs[0] : null;
   if (def?.type !== "Variable" || def.node?.id?.type !== "ObjectPattern") return false;
+  if (isReassigned(callee, context)) return false;
   const resolution = requireResolution(def.node.init, context);
   if (!resolution || resolution.source !== null) return false;
   return patternNames(def.node.id).some((entry) => entry.local.name === callee.name);

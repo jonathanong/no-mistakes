@@ -93,11 +93,22 @@ function constAlias(node, context, seen = new Set()) {
   return current;
 }
 
+function unknownComputedExport(root, context) {
+  if (root?.type !== "Identifier") return false;
+  const variable = resolveVariable(root, context);
+  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  if (def?.type !== "Variable" || def.node?.id?.type !== "ObjectPattern") return false;
+  const loaded = moduleLoad(def.node.init, context);
+  if (loaded?.source !== "vitest" || loaded.exportName !== "*") return false;
+  return exportKey(def.node.id, root.name) === null;
+}
+
 function rejectedRunner(root, context) {
   return (
     reassignedDestructuredRunner(root, context) ||
     renamedNonRunner(root, context) ||
-    reassignedVitestRequire(root, context)
+    reassignedVitestRequire(root, context) ||
+    unknownComputedExport(root, context)
   );
 }
 

@@ -90,7 +90,7 @@ function containsIdentifierCall(node, name) {
   const current = unwrapExpression(node);
   if (current.type === "CallExpression") {
     const callee = unwrapExpression(current.callee);
-    if (callee.type === "Identifier") return callee.name === name;
+    if (callee.type === "Identifier" && callee.name === name) return true;
   }
   if (isFunctionNode(current)) return false;
   return childNodes(current).some((child) => containsIdentifierCall(child, name));

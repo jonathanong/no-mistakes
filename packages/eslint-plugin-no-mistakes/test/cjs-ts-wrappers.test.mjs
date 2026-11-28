@@ -45,6 +45,7 @@ const groups = [
       "computed-member.test.ts",
       "alias-plain.test.ts",
       "nested-name.js",
+      "computed-destructure.test.ts",
     ],
   },
   {
@@ -137,12 +138,14 @@ const groups = [
       "destructured-dynamic.test.ts",
       "member-dynamic.test.ts",
       "let-dynamic.test.ts",
+      "nested-call.test.ts",
     ],
     valid: [
       "not-a-callee.test.ts",
       "suppressed.test.ts",
       "reassign.test.ts",
       "computed-key.test.ts",
+      "reassigned-dynamic.test.ts",
     ],
   },
   {
@@ -187,7 +190,7 @@ const groups = [
       "spread-apply.test.ts",
       "static-apply.test.ts",
     ],
-    valid: ["default-direct.test.ts"],
+    valid: ["default-direct.test.ts", "spread-call.test.ts"],
   },
   {
     rule: "test-no-error-message-matching",
@@ -222,6 +225,7 @@ const groups = [
       "member-vi.test.ts",
       "member-export.test.ts",
       "opaque-receiver.test.ts",
+      "inline-require.test.ts",
     ],
     valid: [
       "tuple.test.ts",
@@ -230,6 +234,8 @@ const groups = [
       "local-parameters.test.ts",
       "opaque-quiet.test.ts",
       "computed-member.test.ts",
+      "computed-vi.test.ts",
+      "other-require.test.ts",
     ],
   },
   {

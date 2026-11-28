@@ -86,14 +86,18 @@ function patternExportName(pattern, name) {
   return null;
 }
 
-function memberFramework(variable, sourceCode) {
-  const init = unwrapExpression(variable.node.init);
-  if (init?.type !== "MemberExpression") return false;
-  const object = unwrapExpression(init.object);
+function frameworkMember(member, sourceCode) {
+  if (member.computed) return false;
+  const object = unwrapExpression(member.object);
   const source =
     requireSource(object, scopeContext(sourceCode)) ||
     (object?.type === "Identifier" ? namespaceModule(object, sourceCode) : null);
-  return frameworkModules.get(memberPropertyName(init)) === source;
+  return frameworkModules.get(memberPropertyName(member)) === source;
+}
+
+function memberFramework(variable, sourceCode) {
+  const init = unwrapExpression(variable.node.init);
+  return init?.type === "MemberExpression" && frameworkMember(init, sourceCode);
 }
 
 function isFrameworkReceiver(receiver, sourceCode) {
@@ -120,9 +124,7 @@ function isFrameworkReceiver(receiver, sourceCode) {
     return frameworkModules.get(patternExportName(variable.node.id, receiver.name)) === source;
   }
   if (receiver?.type !== "MemberExpression") return false;
-  const object = unwrapExpression(receiver.object);
-  if (object?.type !== "Identifier") return false;
-  return frameworkModules.get(memberPropertyName(receiver)) === namespaceModule(object, sourceCode);
+  return frameworkMember(receiver, sourceCode);
 }
 
 function isFrameworkMockType(typeName, sourceCode) {

@@ -24,7 +24,7 @@ expect(error.code).toBe("USER_NOT_FOUND");
 assertion whose `expect` comes from a non-static `require` reports
 `unanalyzable` when the compared value is an error message.
 `check.call(null, err.message)` and `check.apply(null, [err.message])` report
-that advisory when `check` is that unresolved expect. A `.call` spread that is not a literal array, and an `.apply` list that is not a literal array, are not that comparison. `check.call(null, ...[err.message])` still is. `require("vitest").expect.apply(err.message, values)` is not a message comparison. `require("vitest").expect.apply(null, [err.message])` still is.
+that advisory when `check` is that unresolved expect. A `.call` spread that is not a literal array, and an `.apply` list that is not a literal array, are not that comparison. `check.call(null, ...[err.message])` still is. `require("vitest").expect.call(...[null, 42], err.message)` is not a message comparison. `require("vitest").expect.apply(err.message, values)` is not a message comparison. `require("vitest").expect.apply(null, [err.message])` still is.
 
 `import vt = require("vitest")`, `const { expect } = require("@playwright/test")`,
 `require("vitest").expect`, and a Vitest namespace are expect bindings.

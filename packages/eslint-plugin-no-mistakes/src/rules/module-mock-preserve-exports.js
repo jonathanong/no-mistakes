@@ -22,7 +22,13 @@ module.exports = rule(
       description: "require module mock factories to preserve real exports",
       recommended: false,
     },
-    schema: [{ type: "object", properties: { unanalyzable: UNANALYZABLE_SCHEMA } }],
+    schema: [
+      {
+        type: "object",
+        additionalProperties: false,
+        properties: { unanalyzable: UNANALYZABLE_SCHEMA },
+      },
+    ],
     messages: {
       preserve: "Module mock factory must spread the real module to preserve exports.",
       unanalyzable:

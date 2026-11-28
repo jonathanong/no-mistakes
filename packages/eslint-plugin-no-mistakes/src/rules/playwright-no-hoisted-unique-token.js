@@ -107,6 +107,7 @@ module.exports = rule(
     schema: [
       {
         type: "object",
+        additionalProperties: false,
         properties: {
           tokenFactories: { type: "array", items: { type: "string" } },
           unanalyzable: { enum: ["finding", "ignore"] },

@@ -57,7 +57,13 @@ module.exports = rule(
       description: "require unique temporary paths in tests",
       recommended: false,
     },
-    schema: [{ type: "object", properties: { unanalyzable: UNANALYZABLE_SCHEMA } }],
+    schema: [
+      {
+        type: "object",
+        additionalProperties: false,
+        properties: { unanalyzable: UNANALYZABLE_SCHEMA },
+      },
+    ],
     messages: {
       fixedTempPath:
         "Fixed temporary paths can collide across test workers or runs. Create a unique directory with mkdtemp or mkdtempSync and use paths inside it.",

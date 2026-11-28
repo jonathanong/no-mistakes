@@ -60,7 +60,13 @@ module.exports = rule(
       description: "enforce configured module mock boundaries",
       recommended: false,
     },
-    schema: [{ type: "object", properties: { unanalyzable: UNANALYZABLE_SCHEMA } }],
+    schema: [
+      {
+        type: "object",
+        additionalProperties: false,
+        properties: { unanalyzable: UNANALYZABLE_SCHEMA },
+      },
+    ],
     messages: {
       boundary: "{{message}}",
       stale: "{{message}}",

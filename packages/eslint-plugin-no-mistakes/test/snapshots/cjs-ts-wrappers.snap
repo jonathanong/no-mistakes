@@ -509,6 +509,12 @@
       "options": null
     },
     {
+      "file": "computed-destructure.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "helper.js",
       "findings": [
         {
@@ -1270,6 +1276,12 @@
       "options": null
     },
     {
+      "file": "spread-call.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "cjs.test.ts",
       "findings": [
         {
@@ -1664,6 +1676,12 @@
       "options": null
     },
     {
+      "file": "reassigned-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "cjs.test.ts",
       "findings": [
         {
@@ -2012,6 +2030,24 @@
           "line": 4,
           "message": "Cannot tell whether this test registration is a test registration. Use a static import.",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "nested-call.test.ts",
+      "findings": [
+        {
+          "column": 5,
+          "endColumn": 16,
+          "endLine": 6,
+          "file": "nested-call.test.ts",
+          "line": 6,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
           "ruleId": "no-mistakes/test-no-shared-state",
           "severity": 2
         }
@@ -2432,6 +2468,26 @@
       ]
     },
     {
+      "file": "computed-vi.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "other-require.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
       "file": "cjs.test.ts",
       "findings": [
         {
@@ -2706,6 +2762,28 @@
           "line": 5,
           "message": "Cannot tell whether this enqueue fake is an enqueue export. Use a static import or require.",
           "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "singleExportPattern": "^enqueue$"
+        }
+      ]
+    },
+    {
+      "file": "inline-require.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 37,
+          "endLine": 3,
+          "file": "inline-require.test.ts",
+          "line": 3,
+          "message": "Type the enqueue fake with an explicit argument tuple, or use the real function with a mocked queue.",
+          "messageId": "typedEnqueueFake",
           "ruleId": "no-mistakes/test-no-typed-enqueue-fake",
           "severity": 2
         }
