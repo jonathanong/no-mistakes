@@ -115,7 +115,9 @@ fn strip_label(prefix: &[Token]) -> &[Token] {
         .take(3)
         .collect();
     match code.as_slice() {
-        [(_, Token::ShiftLeft), (_, Token::Word(_)), (end, Token::ShiftRight)] => &prefix[end + 1..],
+        [(_, Token::ShiftLeft), (_, Token::Word(_)), (end, Token::ShiftRight)] => {
+            &prefix[end + 1..]
+        }
         _ => prefix,
     }
 }
