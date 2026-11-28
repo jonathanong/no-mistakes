@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-polymorphic-target
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allow:
+        - column: comments.target_id
+          reason: first
+        - column: comments.target_id
+          reason: second

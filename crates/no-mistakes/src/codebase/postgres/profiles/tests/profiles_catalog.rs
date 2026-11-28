@@ -61,6 +61,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
         [
             "postgres-lock-written-rows-only",
             "postgres-column-check-constraints",
+            "postgres-polymorphic-target",
             "postgres-column-requires-trigger",
             "postgres-conflict-ordering",
             "postgres-lock-ordering",

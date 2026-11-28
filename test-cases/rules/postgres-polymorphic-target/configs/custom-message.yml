@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-polymorphic-target
+    scope: repository
+    message: replace polymorphic target with explicit nullable foreign keys
+    options:
+      schemaCatalogPath: schema.json

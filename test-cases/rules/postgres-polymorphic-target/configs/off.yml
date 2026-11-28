@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-polymorphic-target
+    scope: repository
+    enabled: false
+    options:
+      schemaCatalogPath: schema.json

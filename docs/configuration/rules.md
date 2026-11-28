@@ -986,6 +986,11 @@ integer `types`, and `require: non-negative`, plus reasoned `allow` column
 exceptions. Use application-level `severity: advisory` for adoption; the default
 error severity enforces failures.
 
+[`postgres-polymorphic-target`](../rules/postgres-polymorphic-target.md)
+requires `schemaCatalogPath` (directly or inherited from `projects.<name>.postgres`),
+defaults `typeSuffix` to `"_type"` and `idSuffix` to `"_id"`, and accepts
+reasoned `allow` entries naming exact `table.column` exceptions.
+
 `postgres-bounded-statements.options.materializedBodies` is `ignore` by default.
 `require-bound` / `advise` adds non-failing advisories for unbounded MATERIALIZED
 CTE and pool-building subquery bodies; `report` makes them findings. Existence

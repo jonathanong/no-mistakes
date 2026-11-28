@@ -141,3 +141,32 @@ fn exact_only_catalog_access_does_not_build_fallback_indexes() {
         "public.orders"
     );
 }
+
+#[test]
+fn catalog_locations_counts_column_zero_and_indented_keys() {
+    let source = "{\n\"formatVersion\": 2,\n\"coverage\": \"complete\",\n\"tables\": {\n\"comments\": {\n\"columns\": {\n\"target_id\": { \"dataType\": \"uuid\" },\n  \"target_type\": { \"dataType\": \"text\" }\n}\n},\n  \"bookmarks\": {\n    \"columns\": {}\n  }\n}\n}\n";
+    let parsed = jsonc_parser::parse_to_ast(
+        source,
+        &jsonc_parser::CollectOptions::default(),
+        &jsonc_parser::ParseOptions::default(),
+    )
+    .unwrap();
+    let locations = crate::codebase::postgres::catalog::locations::catalog_locations(
+        parsed.value.as_ref().unwrap(),
+        source,
+    );
+    assert_eq!(locations.tables.get("comments"), Some(&5));
+    assert_eq!(locations.tables.get("bookmarks"), Some(&11));
+    assert_eq!(
+        locations
+            .columns
+            .get(&("comments".to_string(), "target_id".to_string())),
+        Some(&7)
+    );
+    assert_eq!(
+        locations
+            .columns
+            .get(&("comments".to_string(), "target_type".to_string())),
+        Some(&8)
+    );
+}

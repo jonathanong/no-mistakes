@@ -1,0 +1,524 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 13,
+          "message": "schema.json: table:bookmarks: columns item_type and item_id form a polymorphic target without a foreign key on item_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"bookmarks\": {",
+          "target": "table:bookmarks"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: table:notes: columns source_type and source_id form a polymorphic target without a foreign key on source_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"notes\": {",
+          "target": "table:notes"
+        },
+        {
+          "file": "schema.json",
+          "line": 80,
+          "message": "schema.json: table:audit_entries: columns actor_type and actor_id form a polymorphic target without a foreign key on actor_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"audit_entries\": {",
+          "target": "table:audit_entries"
+        },
+        {
+          "file": "schema.json",
+          "line": 90,
+          "message": "schema.json: table:events_parent: columns ref_type and ref_id form a polymorphic target without a foreign key on ref_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"events_parent\": {",
+          "target": "table:events_parent"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "bad_reason": {
+    "exitCode": 2,
+    "stderr": "error: ../../configs/bad-reason.yml:6: postgres-polymorphic-target option allow: entry column:comments.target_id needs a reason\n"
+  },
+  "custom_message": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 13,
+          "message": "schema.json: table:bookmarks: columns item_type and item_id: replace polymorphic target with explicit nullable foreign keys",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"bookmarks\": {",
+          "target": "table:bookmarks"
+        },
+        {
+          "file": "schema.json",
+          "line": 5,
+          "message": "schema.json: table:comments: columns target_type and target_id: replace polymorphic target with explicit nullable foreign keys",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"comments\": {",
+          "target": "table:comments"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: table:notes: columns source_type and source_id: replace polymorphic target with explicit nullable foreign keys",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"notes\": {",
+          "target": "table:notes"
+        },
+        {
+          "file": "schema.json",
+          "line": 80,
+          "message": "schema.json: table:audit_entries: columns actor_type and actor_id: replace polymorphic target with explicit nullable foreign keys",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"audit_entries\": {",
+          "target": "table:audit_entries"
+        },
+        {
+          "file": "schema.json",
+          "line": 80,
+          "message": "schema.json: table:audit_entries: columns subject_type and subject_id: replace polymorphic target with explicit nullable foreign keys",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"audit_entries\": {",
+          "target": "table:audit_entries"
+        },
+        {
+          "file": "schema.json",
+          "line": 90,
+          "message": "schema.json: table:events_parent: columns ref_type and ref_id: replace polymorphic target with explicit nullable foreign keys",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"events_parent\": {",
+          "target": "table:events_parent"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "custom_suffix": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 109,
+          "message": "schema.json: table:custom_links: columns target_kind and target_ref form a polymorphic target without a foreign key on target_ref; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"custom_links\": {",
+          "target": "table:custom_links"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "duplicate_allow": {
+    "exitCode": 2,
+    "stderr": "error: ../../configs/duplicate-allow.yml:6: postgres-polymorphic-target option allow: duplicate entry column:comments.target_id\n"
+  },
+  "empty_id_suffix": {
+    "exitCode": 2,
+    "stderr": "error: ../../configs/empty-id-suffix.yml:6: postgres-polymorphic-target option idSuffix: must not be empty\n"
+  },
+  "empty_type_suffix": {
+    "exitCode": 2,
+    "stderr": "error: ../../configs/empty-type-suffix.yml:6: postgres-polymorphic-target option typeSuffix: must not be empty\n"
+  },
+  "excluded": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "fail": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 13,
+          "message": "schema.json: table:bookmarks: columns item_type and item_id form a polymorphic target without a foreign key on item_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"bookmarks\": {",
+          "target": "table:bookmarks"
+        },
+        {
+          "file": "schema.json",
+          "line": 5,
+          "message": "schema.json: table:comments: columns target_type and target_id form a polymorphic target without a foreign key on target_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"comments\": {",
+          "target": "table:comments"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: table:notes: columns source_type and source_id form a polymorphic target without a foreign key on source_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"notes\": {",
+          "target": "table:notes"
+        },
+        {
+          "file": "schema.json",
+          "line": 80,
+          "message": "schema.json: table:audit_entries: columns actor_type and actor_id form a polymorphic target without a foreign key on actor_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"audit_entries\": {",
+          "target": "table:audit_entries"
+        },
+        {
+          "file": "schema.json",
+          "line": 80,
+          "message": "schema.json: table:audit_entries: columns subject_type and subject_id form a polymorphic target without a foreign key on subject_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"audit_entries\": {",
+          "target": "table:audit_entries"
+        },
+        {
+          "file": "schema.json",
+          "line": 90,
+          "message": "schema.json: table:events_parent: columns ref_type and ref_id form a polymorphic target without a foreign key on ref_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"events_parent\": {",
+          "target": "table:events_parent"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "file_disable": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "invalid_allow": {
+    "exitCode": 2,
+    "stderr": "error: ../../configs/invalid-allow.yml:6: postgres-polymorphic-target options.allow.column: expected table.column, got comments\n"
+  },
+  "line_disable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 13,
+          "message": "schema.json: table:bookmarks: columns item_type and item_id form a polymorphic target without a foreign key on item_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"bookmarks\": {",
+          "target": "table:bookmarks"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "missing_catalog": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "incomplete": [
+        {
+          "consumer": "postgres-polymorphic-target",
+          "message": "failed to read schemaCatalogPath schema.json: <io-error>"
+        }
+      ],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "missing_path": {
+    "exitCode": 2,
+    "stderr": "error: ../../configs/missing-path.yml:2: postgres-polymorphic-target option schemaCatalogPath: required\n"
+  },
+  "next_line_disable": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 14,
+          "message": "schema.json: table:bookmarks: columns item_type and item_id form a polymorphic target without a foreign key on item_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"bookmarks\": {",
+          "target": "table:bookmarks"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "off": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pass": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "project": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 13,
+          "message": "schema.json: table:bookmarks: columns item_type and item_id form a polymorphic target without a foreign key on item_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"bookmarks\": {",
+          "target": "table:bookmarks"
+        },
+        {
+          "file": "schema.json",
+          "line": 5,
+          "message": "schema.json: table:comments: columns target_type and target_id form a polymorphic target without a foreign key on target_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"comments\": {",
+          "target": "table:comments"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: table:notes: columns source_type and source_id form a polymorphic target without a foreign key on source_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"notes\": {",
+          "target": "table:notes"
+        },
+        {
+          "file": "schema.json",
+          "line": 80,
+          "message": "schema.json: table:audit_entries: columns actor_type and actor_id form a polymorphic target without a foreign key on actor_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"audit_entries\": {",
+          "target": "table:audit_entries"
+        },
+        {
+          "file": "schema.json",
+          "line": 80,
+          "message": "schema.json: table:audit_entries: columns subject_type and subject_id form a polymorphic target without a foreign key on subject_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"audit_entries\": {",
+          "target": "table:audit_entries"
+        },
+        {
+          "file": "schema.json",
+          "line": 90,
+          "message": "schema.json: table:events_parent: columns ref_type and ref_id form a polymorphic target without a foreign key on ref_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"events_parent\": {",
+          "target": "table:events_parent"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "same_suffix": {
+    "exitCode": 2,
+    "stderr": "error: ../../configs/same-suffix.yml:4: postgres-polymorphic-target options: typeSuffix and idSuffix must be different\n"
+  },
+  "severity_advisory": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": "schema.json",
+          "line": 13,
+          "message": "schema.json: table:bookmarks: columns item_type and item_id form a polymorphic target without a foreign key on item_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"bookmarks\": {",
+          "target": "table:bookmarks"
+        },
+        {
+          "file": "schema.json",
+          "line": 5,
+          "message": "schema.json: table:comments: columns target_type and target_id form a polymorphic target without a foreign key on target_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"comments\": {",
+          "target": "table:comments"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: table:notes: columns source_type and source_id form a polymorphic target without a foreign key on source_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"notes\": {",
+          "target": "table:notes"
+        },
+        {
+          "file": "schema.json",
+          "line": 80,
+          "message": "schema.json: table:audit_entries: columns actor_type and actor_id form a polymorphic target without a foreign key on actor_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"audit_entries\": {",
+          "target": "table:audit_entries"
+        },
+        {
+          "file": "schema.json",
+          "line": 80,
+          "message": "schema.json: table:audit_entries: columns subject_type and subject_id form a polymorphic target without a foreign key on subject_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"audit_entries\": {",
+          "target": "table:audit_entries"
+        },
+        {
+          "file": "schema.json",
+          "line": 90,
+          "message": "schema.json: table:events_parent: columns ref_type and ref_id form a polymorphic target without a foreign key on ref_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"events_parent\": {",
+          "target": "table:events_parent"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "stale_allow": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "schema.json",
+          "line": 1,
+          "message": "schema.json: stale postgres-polymorphic-target allow entry: column:bookmarks.owner_id",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "{",
+          "target": "column:bookmarks.owner_id"
+        },
+        {
+          "file": "schema.json",
+          "line": 13,
+          "message": "schema.json: table:bookmarks: columns item_type and item_id form a polymorphic target without a foreign key on item_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"bookmarks\": {",
+          "target": "table:bookmarks"
+        },
+        {
+          "file": "schema.json",
+          "line": 5,
+          "message": "schema.json: table:comments: columns target_type and target_id form a polymorphic target without a foreign key on target_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"comments\": {",
+          "target": "table:comments"
+        },
+        {
+          "file": "schema.json",
+          "line": 52,
+          "message": "schema.json: table:notes: columns source_type and source_id form a polymorphic target without a foreign key on source_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"notes\": {",
+          "target": "table:notes"
+        },
+        {
+          "file": "schema.json",
+          "line": 80,
+          "message": "schema.json: table:audit_entries: columns actor_type and actor_id form a polymorphic target without a foreign key on actor_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"audit_entries\": {",
+          "target": "table:audit_entries"
+        },
+        {
+          "file": "schema.json",
+          "line": 80,
+          "message": "schema.json: table:audit_entries: columns subject_type and subject_id form a polymorphic target without a foreign key on subject_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"audit_entries\": {",
+          "target": "table:audit_entries"
+        },
+        {
+          "file": "schema.json",
+          "line": 90,
+          "message": "schema.json: table:events_parent: columns ref_type and ref_id form a polymorphic target without a foreign key on ref_id; use one nullable foreign key per target table plus a CHECK that exactly one is set, or a separate table per target",
+          "rule": "postgres-polymorphic-target",
+          "sourceLine": "\"events_parent\": {",
+          "target": "table:events_parent"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unknown_option": {
+    "exitCode": 2,
+    "stderr": "error: ../../configs/unknown-option.yml:6: invalid options for rule `postgres-polymorphic-target` at options.unknownOption: unknown field `unknownOption`, expected one of `schemaCatalogPath`, `typeSuffix`, `idSuffix`, `allow`\n"
+  }
+}

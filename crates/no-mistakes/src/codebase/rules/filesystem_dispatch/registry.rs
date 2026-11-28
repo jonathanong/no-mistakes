@@ -82,6 +82,7 @@ macro_rules! filesystem_rules {
             TEST_NO_DEPENDENCY_PINS => test_no_dependency_pins::check_with_files => "",
             POSTGRES_CONSTRAINT_VALIDATE => postgres_constraint_validate::check_with_files => "",
             POSTGRES_COLUMN_CHECK_CONSTRAINTS => postgres_column_check_constraints::check_with_files => "",
+            POSTGRES_POLYMORPHIC_TARGET => postgres_polymorphic_target::check_with_files => "",
             POSTGRES_COLUMN_REQUIRES_TRIGGER => postgres_column_requires_trigger::check_with_files => "",
             POSTGRES_REQUIRED_COMMENTS => postgres_required_comments::check_with_files => "",
             POSTGRES_MATERIALIZED_VIEW_SHAPE => postgres_materialized_view_shape::check_with_files => "",

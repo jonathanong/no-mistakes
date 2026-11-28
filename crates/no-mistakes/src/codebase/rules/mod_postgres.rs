@@ -32,6 +32,7 @@ pub mod postgres_no_test_state_mutation;
 pub mod postgres_no_transformed_uuid_predicates;
 pub mod postgres_no_unbounded_sql_identifier;
 pub mod postgres_object_naming;
+pub mod postgres_polymorphic_target;
 pub mod postgres_redundant_index;
 pub mod postgres_require_fk_on_delete;
 pub mod postgres_require_named_constraints;

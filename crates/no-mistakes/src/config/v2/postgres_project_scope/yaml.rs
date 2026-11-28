@@ -40,6 +40,7 @@ pub(super) fn write_catalog_only(rule: &str, options: &mut Mapping, path: &str) 
         "postgres-column-naming"
             | "postgres-key-column-types"
             | "postgres-column-check-constraints"
+            | "postgres-polymorphic-target"
     ) {
         return false;
     }

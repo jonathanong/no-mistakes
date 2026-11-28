@@ -1234,6 +1234,11 @@ catalog rule maps `check` to the existing async `check()` runtime export and
 `analyzeProject()` check reports; it adds no runtime export. Named option types
 are exported from `no-mistakes`; see [catalog checks](node-api/postgres-catalog.md).
 
+The [`postgres-polymorphic-target`](rules/postgres-polymorphic-target.md)
+catalog rule runs through async `check()` and `analyzeProject()` check reports;
+it adds no runtime export. Import `PostgresPolymorphicTargetOptions` and
+`PostgresPolymorphicTargetAllowEntry` from `no-mistakes`.
+
 The always-advisory [`postgres-grouping-not-aggregation`](rules/postgres-grouping-not-aggregation.md)
 rule runs through the existing asynchronous `check()` and `analyzeProject()` check
 report APIs; no additional runtime export is needed. Import

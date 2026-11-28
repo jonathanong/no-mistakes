@@ -1389,6 +1389,12 @@ and the required predicate are explicit. Standard error severity applies;
 `severity: advisory` is recommended for adoption. Unsupported CHECK expressions
 leave the required proof missing.
 
+The opt-in [`postgres-polymorphic-target`](rules/postgres-polymorphic-target.md)
+rule shares schema-catalog polymorphic pair checks across Rust, CLI `check`,
+async Node `check()`, and prepared `analyzeProject()` check reports, flagging
+`<x>_type`/`<x>_id` (or configured suffix) pairs whose identifier column has no
+foreign key.
+
 The opt-in [grouping advice](rules/postgres-grouping-not-aggregation.md) shares
 prepared catalog and statement facts between selected raw PostgreSQL and embedded
 TS/JS SQL, including recovered template and `.append` fragments. All five shape

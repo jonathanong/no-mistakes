@@ -157,3 +157,6 @@ fn default_true() -> bool {
 fn empty_options() -> serde_yaml::Value {
     serde_yaml::Value::Mapping(Default::default())
 }
+
+mod postgres_polymorphic_target;
+pub use postgres_polymorphic_target::*;

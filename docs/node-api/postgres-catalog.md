@@ -19,6 +19,13 @@ for adoption; the default error severity enforces failures.
 No catalog path means no findings. Existing runtime exports and report channels
 are reused.
 
+The [`postgres-polymorphic-target`](../rules/postgres-polymorphic-target.md)
+rule also runs through async `check()` and prepared `analyzeProject()` check
+reports. Import `PostgresPolymorphicTargetOptions` and
+`PostgresPolymorphicTargetAllowEntry` for typed options. Configure
+`schemaCatalogPath`, optional `typeSuffix` / `idSuffix` (default `"_type"` and
+`"_id"`), and reasoned `table.column` `allow` entries.
+
 For SQL text without a database or repository, use async
 [`parsePostgresSql(source)`](../postgres-source-api.md), including typed INSERT/ON CONFLICT
 expression arbiters (including operator classes and typed parameters), mixed array/composite assignment

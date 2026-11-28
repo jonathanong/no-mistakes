@@ -1,0 +1,32 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    "links": {
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "target_type": { "dataType": "text", "ordinalPosition": 2 },
+        "target_id": { "dataType": "uuid", "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "foreignKeys": {
+        "links_target_id_fkey": {
+          "columns": ["target_id"],
+          "referencedTable": "widgets",
+          "referencedColumns": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action",
+          "validated": true
+        }
+      }
+    },
+    "posts": {
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "article_type": { "dataType": "text", "ordinalPosition": 2 },
+        "author_id": { "dataType": "uuid", "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] }
+    }
+  }
+}

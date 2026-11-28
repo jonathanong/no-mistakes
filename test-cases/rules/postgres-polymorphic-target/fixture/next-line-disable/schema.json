@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "coverage": "complete",
+  "tables": {
+    // no-mistakes-disable-next-line postgres-polymorphic-target
+    "comments": {
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "target_type": { "dataType": "text", "ordinalPosition": 2 },
+        "target_id": { "dataType": "uuid", "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] }
+    },
+    "bookmarks": {
+      "columns": {
+        "id": { "dataType": "uuid", "ordinalPosition": 1 },
+        "item_type": { "dataType": "text", "ordinalPosition": 2 },
+        "item_id": { "dataType": "uuid", "ordinalPosition": 3 }
+      },
+      "primaryKey": { "columns": ["id"] }
+    }
+  }
+}
