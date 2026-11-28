@@ -71,7 +71,10 @@ fn collect<'a>(
             }
             _ => {
                 if let Some(resolved) = resolve_target(expr, outputs, aliases) {
-                    if matches!(unwrap_expr(resolved), Expr::Value(_)) {
+                    if matches!(
+                        unwrap_expr(resolved),
+                        Expr::Value(_) | Expr::CompoundIdentifier(_)
+                    ) {
                         targets.required.insert(target_identity(resolved));
                     }
                     targets.all.push(resolved);

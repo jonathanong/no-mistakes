@@ -84,6 +84,11 @@ fn postgres_no_duplicate_keyed_lookups_check_json_snapshot() {
         ("review_soundness", "review-soundness", "enabled-sql.yml"),
         ("review_row_guards", "review-row-guards", "enabled-sql.yml"),
         (
+            "review_output_stages",
+            "review-output-stages",
+            "enabled-sql.yml",
+        ),
+        (
             "review_planner_guards",
             "review-planner-guards",
             "enabled-sql.yml",

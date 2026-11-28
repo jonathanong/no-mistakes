@@ -25,7 +25,7 @@ pub(in crate::statements::keyed_lookups) fn walk_merge(
     if !can_affect_rows(Some(&merge.on)) {
         closed_categories.insert(MergeClauseKind::Matched);
     }
-    let mut returning = None;
+    let mut returning = Vec::new();
     let mut deletes_only = true;
     for clause in &merge.clauses {
         let category = match clause.clause_kind {
@@ -71,11 +71,11 @@ pub(in crate::statements::keyed_lookups) fn walk_merge(
             closed_categories.insert(category);
         }
     }
-    if let (Some(mut seen), Some(OutputClause::Returning { select_items, .. })) =
-        (returning, &merge.output)
-    {
-        scopes.add_returning_aliases(deletes_only.then_some("old"));
-        inspect_exprs(returning_exprs(Some(select_items)), scopes, &mut seen, out);
+    if let Some(OutputClause::Returning { select_items, .. }) = &merge.output {
+        if !returning.is_empty() {
+            scopes.add_returning_aliases(deletes_only.then_some("old"));
+            inspect_returning(select_items, returning, scopes, out);
+        }
     }
     scopes.pop_frame();
 }
@@ -83,21 +83,43 @@ pub(in crate::statements::keyed_lookups) fn walk_merge(
 fn record_returning_context(
     action: &MergeAction,
     action_seen: &LookupHistory,
-    returning: &mut Option<LookupHistory>,
+    returning: &mut Vec<LookupHistory>,
     deletes_only: &mut bool,
 ) {
     match action {
         MergeAction::DoNothing { .. } => {}
         MergeAction::Delete { .. } => {
-            if let Some(seen) = returning {
-                seen.permit_alternative(action_seen);
-            } else {
-                *returning = Some(action_seen.guard_only());
+            if *deletes_only {
+                returning.push(action_seen.guard_only());
             }
         }
         _ => {
-            *returning = Some(LookupHistory::new());
+            returning.clear();
+            returning.push(LookupHistory::new());
             *deletes_only = false;
+        }
+    }
+}
+
+fn inspect_returning(
+    items: &[sqlparser::ast::SelectItem],
+    contexts: Vec<LookupHistory>,
+    scopes: &mut ScopeStack,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
+) {
+    let first_finding = out.len();
+    for mut guards in contexts {
+        let mut findings = Vec::new();
+        inspect_exprs(
+            returning_exprs(Some(items)),
+            scopes,
+            &mut guards,
+            &mut findings,
+        );
+        for finding in findings {
+            if !out[first_finding..].contains(&finding) {
+                out.push(finding);
+            }
         }
     }
 }

@@ -7,11 +7,11 @@ use super::select_exprs::walk_select;
 use super::{scope::ScopeStack, subquery, walk_nested_queries, walk_set_expr, LookupHistory};
 use crate::idents::visit_shallow_exprs;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
-use limits::discard_exists_limit;
 pub(super) use limits::has_zero_limit;
-pub(super) use outputs::plain_output;
-use outputs::select_has_plain_outputs;
-use sqlparser::ast::{Expr, OrderByKind, Query, Select, SetExpr};
+use limits::{discard_exists_limit, literal_limit_value};
+pub(super) use outputs::per_row_output;
+use outputs::{grouping_needs_rows, plain_output, select_has_plain_outputs};
+use sqlparser::ast::{Expr, GroupByExpr, LimitClause, OrderByKind, Query, Select, SetExpr};
 
 pub(super) fn walk_query(
     query: &Query,
@@ -43,11 +43,31 @@ pub(super) fn walk_query_ordered(
     };
     let mut seen = if zero_limit {
         LookupHistory::new()
+    } else if let SetExpr::Values(values) = query.body.as_ref() {
+        let row_limit = direct_values_limit(query, enclosing_order);
+        super::walk_values(values, row_limit, order, scopes, out)
     } else {
         walk_set_expr(&query.body, order, scopes, out)
     };
     inspect_limits(query, scopes, &mut seen, out);
     seen
+}
+
+fn direct_values_limit(query: &Query, enclosing_order: &[&Expr]) -> usize {
+    if query.order_by.is_some() || !enclosing_order.is_empty() {
+        return usize::MAX;
+    }
+    let Some(LimitClause::LimitOffset {
+        limit: Some(limit),
+        offset: None,
+        ..
+    }) = &query.limit_clause
+    else {
+        return usize::MAX;
+    };
+    literal_limit_value(limit)
+        .and_then(|count| usize::try_from(count).ok())
+        .unwrap_or(usize::MAX)
 }
 
 pub(super) fn walk_exists(
@@ -93,7 +113,15 @@ pub(super) fn query_produces_no_rows(query: &Query) -> bool {
 }
 
 pub(super) fn select_produces_no_rows(select: &Select) -> bool {
-    select.selection.as_ref().is_some_and(cannot_match) && select_has_plain_outputs(select)
+    select.selection.as_ref().is_some_and(cannot_match)
+        && (grouping_needs_rows(&select.group_by)
+            || select.having.is_none()
+                && matches!(&select.group_by, GroupByExpr::Expressions(keys, _) if keys.is_empty())
+                && select
+                    .projection
+                    .iter()
+                    .filter_map(super::select_item_expr)
+                    .all(per_row_output))
 }
 
 fn inspect_limits(

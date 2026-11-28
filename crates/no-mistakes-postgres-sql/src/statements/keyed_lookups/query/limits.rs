@@ -34,7 +34,7 @@ pub(in crate::statements::keyed_lookups) fn has_zero_limit(limit: Option<&LimitC
     literal_limit_value(count) == Some(0)
 }
 
-fn literal_limit_value(count: &Expr) -> Option<i64> {
+pub(super) fn literal_limit_value(count: &Expr) -> Option<i64> {
     match limit_literal(count)? {
         Value::Number(number, _) => {
             decimal_integer(number).or_else(|| decimal_rounds_to_zero(number).then_some(0))

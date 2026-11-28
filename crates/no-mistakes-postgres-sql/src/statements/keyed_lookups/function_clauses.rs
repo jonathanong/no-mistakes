@@ -7,7 +7,7 @@ use super::conditions::literal_condition;
 use super::select_exprs::target_identity;
 use crate::fx::FxHashSet;
 use crate::idents::{function_arg_expr, ident_key, unwrap_expr, visit_shallow_exprs};
-pub(super) use eager::visit_eager_functions;
+pub(super) use eager::{visit_eager_functions, visit_ordinary_aggregates};
 pub(super) use frames::{empty_aggregate_frame, visit_function_filter};
 use sqlparser::ast::{
     DuplicateTreatment, Expr, Function, FunctionArg, FunctionArgumentClause, FunctionArguments,

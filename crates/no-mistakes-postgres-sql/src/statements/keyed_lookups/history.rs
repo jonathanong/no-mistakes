@@ -75,12 +75,6 @@ impl LookupHistory {
         Self::default()
     }
 
-    pub(super) fn restrict(&mut self, condition: &Expr, outer: &ScopeSnapshot, taken: bool) {
-        let (operand, test, _) = boolean_test(condition);
-        let allowed = if taken { test } else { ANY ^ test };
-        self.restrict_operand(operand, outer, allowed);
-    }
-
     pub(super) fn restrict_to_null(&mut self, operand: &Expr, outer: &ScopeSnapshot) {
         self.restrict_operand(operand, outer, NULL);
     }

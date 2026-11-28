@@ -2,11 +2,11 @@ mod expressions;
 pub(super) mod identity;
 
 use super::conditions::cannot_match;
-use super::function_clauses::is_eager;
+use super::function_clauses::{is_eager, visit_ordinary_aggregates};
 use super::grouping;
 use super::join::register_table_with_joins;
 use super::nested::walk_nested_with_context;
-use super::query::{plain_output, select_produces_no_rows};
+use super::query::{per_row_output, select_produces_no_rows};
 use super::scope::{ScopeSnapshot, ScopeStack};
 use super::subquery::inspect_expr;
 use super::windows::WindowPlan;
@@ -27,6 +27,7 @@ pub(super) struct SelectTargets<'a> {
     keys: OnceCell<RefCell<FxHashSet<Expr>>>,
     windows: Option<&'a WindowPlan>,
     empty_input: bool,
+    row_guards: Option<&'a LookupHistory>,
 }
 
 impl SelectTargets<'_> {
@@ -42,6 +43,11 @@ impl SelectTargets<'_> {
         self.before_grouping
             .filter(|_| function.over.is_none() && is_eager(function))
             .unwrap_or(outer)
+    }
+
+    pub(super) fn window_row_guards(&self) -> LookupHistory {
+        self.row_guards
+            .map_or_else(LookupHistory::new, LookupHistory::guard_only)
     }
 
     pub(super) fn filter_grouped<'expr>(&self, expr: &'expr Expr) -> Cow<'expr, Expr> {
@@ -82,7 +88,7 @@ pub(super) fn walk_select(
     scopes: &mut ScopeStack,
     out: &mut Vec<SqlDuplicateKeyedLookupFact>,
 ) -> LookupHistory {
-    if select_produces_no_rows(select) && order_by.iter().all(|expr| plain_output(expr)) {
+    if select_produces_no_rows(select) && order_by.iter().all(|expr| per_row_output(expr)) {
         return LookupHistory::new();
     }
     scopes.push_frame();
@@ -104,19 +110,27 @@ pub(super) fn walk_select(
     let group_by = grouping::GroupingTargets::new(select);
     let reuse = grouping::GroupReuse::new(&group_by);
     let windows = WindowPlan::new(select, order_by);
+    let before_filter = seen.guard_only();
+    let mut after_filter = before_filter.guard_only();
+    if let Some(selection) = &select.selection {
+        after_filter.restrict(selection, &before_grouping, true);
+    }
+    let mut grouped_guards = after_filter.guard_only();
+    reuse.preserve_guards(
+        &mut grouped_guards,
+        &before_grouping,
+        after_grouping.as_ref().unwrap_or(&before_grouping),
+    );
     let targets = SelectTargets {
         projection: &select.projection,
         grouping: Some(&reuse),
         before_grouping: after_grouping.as_ref().map(|_| &before_grouping),
         windows: Some(&windows),
         empty_input,
+        row_guards: Some(&grouped_guards),
         ..SelectTargets::default()
     };
-    let before_filter = seen.guard_only();
-    let mut after_filter = before_filter.guard_only();
-    if let Some(selection) = &select.selection {
-        after_filter.restrict(selection, &before_grouping, true);
-    }
+    let rejects_groups = select.having.as_ref().is_some_and(cannot_match);
     for (expr, inspection) in expressions(select, order_by, &targets, &group_by.all, &windows) {
         if empty_input && inspection.before_grouping() {
             continue;
@@ -125,22 +139,31 @@ pub(super) fn walk_select(
             .as_ref()
             .filter(|_| !inspection.before_grouping())
             .unwrap_or(&before_grouping);
-        let guards = if inspection.has_row_filter() {
+        let guards = if !inspection.has_row_filter() {
+            &before_filter
+        } else if inspection.before_grouping() {
             &after_filter
         } else {
-            &before_filter
+            &grouped_guards
         };
-        seen.with_guards(guards, |seen| {
-            inspect_expr(&expr, outer, &targets, seen, out)
-        });
-        walk_nested_with_context(
-            expr.as_ref(),
-            scopes,
-            out,
-            guards.guard_only(),
-            empty_input,
-            Some(&windows),
-        );
+        let mut inspect = |expr: &Expr| {
+            seen.with_guards(guards, |seen| {
+                inspect_expr(expr, outer, &targets, seen, out)
+            });
+            walk_nested_with_context(
+                expr,
+                scopes,
+                out,
+                guards.guard_only(),
+                empty_input,
+                Some(&windows),
+            );
+        };
+        if rejects_groups && inspection.after_having() {
+            visit_ordinary_aggregates(&expr, &mut inspect);
+        } else {
+            inspect(&expr);
+        }
     }
     scopes.pop_frame();
     seen

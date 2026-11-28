@@ -80,9 +80,11 @@ The rule stays silent when the lookups are not proven to read the same row:
 - Unreachable `CASE` results, including simple cases with comparable integer
   or Boolean literals. For searched cases, the rule can keep opposing tests
   of the same qualified Boolean column separate across expressions. The rule
-  also carries direct row guards from `WHERE` and aggregate `FILTER` clauses
-  into the expressions they control, and retains old-row guards for
-  `MERGE RETURNING` when all reachable modifying actions delete rows.
+  also carries row guards from `WHERE` and aggregate `FILTER` into the
+  expressions they control, including retained grouping keys. Lookup histories
+  for a window's selected row retain guards shared by all rows in the window.
+  `MERGE RETURNING` keeps separate old-row guards for each delete action
+  when all reachable modifying actions delete rows.
   `UPDATE RETURNING` retains guards on its unchanged `FROM` inputs.
 - Arguments to `pg_catalog.replace(text, text, text)` eliminated by the
   PostgreSQL planner when a text argument is known null.
@@ -93,10 +95,11 @@ The rule stays silent when the lookups are not proven to read the same row:
   `LIMIT 0` or numeric limits that PostgreSQL rounds to zero. Read-only CTEs
   skipped by zero row demand are also ignored. Data-modifying CTEs and CTEs
   referenced by limit expressions remain eligible. Simple per-row outputs
-  are also skipped under literal
-  `WHERE FALSE` or `WHERE NULL`. Aggregate transition inputs require source
-  rows, and aggregate outputs can still run on empty input. CTEs and limit
-  expressions are still inspected.
+  are also skipped under literal `WHERE FALSE` or `WHERE NULL`. Grouping
+  sets with no key can still produce a row on empty input. A proven false
+  or null `HAVING` suppresses post-grouping projections while preserving
+  inspection of ordinary aggregate inputs. An unsorted `VALUES` query with
+  an explicit row limit contributes only the demanded rows.
 - Unreferenced read-only CTEs when their lack of references can be proven,
   and discarded projections in simple `EXISTS` queries, including those
   with plain ordering or a positive or null literal limit. Data-modifying

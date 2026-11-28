@@ -71,22 +71,7 @@ fn walk_set_expr(
     match body {
         SetExpr::Select(select) => walk_select(select, order_exprs, false, scopes, out),
         SetExpr::Query(query) => query::walk_query_ordered(query, order_exprs, scopes, out),
-        SetExpr::Values(values) => {
-            scopes.push_frame();
-            let mut seen = LookupHistory::new();
-            inspect_exprs(
-                values
-                    .rows
-                    .iter()
-                    .flat_map(|row| row.content.iter())
-                    .chain(order_exprs.iter().copied()),
-                scopes,
-                &mut seen,
-                out,
-            );
-            scopes.pop_frame();
-            seen
-        }
+        SetExpr::Values(values) => walk_values(values, usize::MAX, order_exprs, scopes, out),
         SetExpr::SetOperation { left, right, .. } => {
             walk_set_expr(left, &[], scopes, out);
             walk_set_expr(right, &[], scopes, out);
@@ -101,6 +86,30 @@ fn walk_set_expr(
         }
         _ => LookupHistory::new(),
     }
+}
+
+fn walk_values(
+    values: &sqlparser::ast::Values,
+    row_limit: usize,
+    order_by: &[&Expr],
+    scopes: &mut ScopeStack,
+    out: &mut Vec<SqlDuplicateKeyedLookupFact>,
+) -> LookupHistory {
+    scopes.push_frame();
+    let mut seen = LookupHistory::new();
+    inspect_exprs(
+        values
+            .rows
+            .iter()
+            .take(row_limit)
+            .flat_map(|row| row.content.iter())
+            .chain(order_by.iter().copied()),
+        scopes,
+        &mut seen,
+        out,
+    );
+    scopes.pop_frame();
+    seen
 }
 
 fn returning_exprs(items: Option<&[SelectItem]>) -> impl Iterator<Item = &Expr> {

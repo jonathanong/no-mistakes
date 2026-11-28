@@ -61,6 +61,16 @@ fn normalize(node: &mut impl VisitMut, normalize_targets: bool) {
                 }
             }
             if !self.normalize_targets {
+                if let Expr::TypedString(typed) = expr {
+                    if !typed.uses_odbc_syntax {
+                        *expr = Expr::Cast {
+                            kind: CastKind::Cast,
+                            expr: Box::new(Expr::Value(typed.value.clone())),
+                            data_type: typed.data_type.clone(),
+                            format: None,
+                        };
+                    }
+                }
                 if let Expr::Value(value) = expr {
                     if let Value::EscapedStringLiteral(decoded) = &value.value {
                         value.value = Value::SingleQuotedString(decoded.clone());

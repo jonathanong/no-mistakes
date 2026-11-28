@@ -8,6 +8,7 @@ pub(super) enum Inspection {
     Selection,
     Independent,
     Projection,
+    Having,
     Grouping,
     Reusable,
 }
@@ -15,6 +16,10 @@ pub(super) enum Inspection {
 impl Inspection {
     pub(super) fn before_grouping(self) -> bool {
         matches!(self, Self::Selection | Self::Grouping)
+    }
+
+    pub(super) fn after_having(self) -> bool {
+        matches!(self, Self::Projection | Self::Reusable | Self::Independent)
     }
 
     pub(super) fn has_row_filter(self) -> bool {
@@ -51,12 +56,7 @@ pub(super) fn expressions<'a>(
                 .iter()
                 .map(|&expr| (expr, Inspection::Grouping)),
         )
-        .chain(
-            select
-                .having
-                .iter()
-                .map(|expr| (expr, Inspection::Projection)),
-        )
+        .chain(select.having.iter().map(|expr| (expr, Inspection::Having)))
         .chain(windows.named_expressions(select).map(|(expr, can_reuse)| {
             (
                 expr,
@@ -72,7 +72,9 @@ pub(super) fn expressions<'a>(
             Inspection::Selection | Inspection::Independent => {
                 Some((Cow::Borrowed(expr), inspection))
             }
-            Inspection::Projection => Some((select_targets.filter_grouped(expr), inspection)),
+            Inspection::Projection | Inspection::Having => {
+                Some((select_targets.filter_grouped(expr), inspection))
+            }
             Inspection::Reusable => (!select_targets.reuses(expr))
                 .then(|| (select_targets.filter_grouped(expr), inspection)),
             Inspection::Grouping => {

@@ -102,7 +102,14 @@ fn inspect_function_inputs(
                     inspect(eager, scope, targets, seen, out, false);
                 });
             }
-            inspect(expr, scope, targets, &mut LookupHistory::new(), out, true);
+            inspect(
+                expr,
+                scope,
+                targets,
+                &mut targets.window_row_guards(),
+                out,
+                true,
+            );
         } else {
             inspect(expr, scope, targets, seen, out, skip_eager);
         }

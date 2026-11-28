@@ -1,7 +1,9 @@
 mod targets;
 
 use super::function_clauses::is_eager;
+use super::scope::ScopeSnapshot;
 use super::select_exprs::target_identity;
+use super::LookupHistory;
 use crate::fx::{FxHashMap, FxHashSet};
 use crate::idents::unwrap_expr;
 use sqlparser::ast::{Expr, GroupByExpr, Query, Value, VisitMut, VisitorMut};
@@ -28,6 +30,7 @@ pub(super) fn grouped_position(expr: &Expr) -> Option<usize> {
 pub(super) struct GroupReuse {
     keys: FxHashMap<Expr, usize>,
     kinds: FxHashSet<Discriminant<Expr>>,
+    retained_columns: Vec<(Expr, usize)>,
 }
 
 impl GroupReuse {
@@ -45,7 +48,29 @@ impl GroupReuse {
             })
             .collect();
         let kinds = keys.keys().map(discriminant).collect();
-        Self { keys, kinds }
+        let retained_columns = keys
+            .iter()
+            .filter(|(expr, _)| {
+                matches!(expr, Expr::CompoundIdentifier(_)) && grouping.required.contains(*expr)
+            })
+            .map(|(expr, position)| (expr.clone(), *position))
+            .collect();
+        Self {
+            keys,
+            kinds,
+            retained_columns,
+        }
+    }
+
+    pub(super) fn preserve_guards(
+        &self,
+        guards: &mut LookupHistory,
+        source: &ScopeSnapshot,
+        grouped: &ScopeSnapshot,
+    ) {
+        for (column, position) in &self.retained_columns {
+            guards.preserve_grouped_column(*position, column, source, grouped);
+        }
     }
 
     pub(super) fn filter<'a>(&self, expr: &'a Expr) -> Cow<'a, Expr> {

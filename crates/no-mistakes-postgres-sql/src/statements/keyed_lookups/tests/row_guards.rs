@@ -70,3 +70,32 @@ fn respects_planner_demand_and_equivalent_set_targets() {
         ]
     );
 }
+
+#[test]
+fn respects_output_stages_and_row_demand() {
+    let facts = fixture_facts("review-output-stages");
+    let sites: Vec<_> = facts
+        .duplicate_keyed_lookups
+        .iter()
+        .map(|fact| (fact.first_line, fact.line))
+        .collect();
+
+    assert_eq!(
+        sites,
+        [
+            (7, 8),
+            (18, 19),
+            (24, 25),
+            (40, 41),
+            (50, 52),
+            (61, 62),
+            (66, 67),
+            (77, 78),
+            (83, 84),
+            (92, 93),
+            (97, 98),
+            (106, 107),
+            (111, 112),
+        ]
+    );
+}
