@@ -21,6 +21,8 @@ impl Default for Flow<'_> {
             fn_unsets: FxHashMap::default(),
             fn_dynamic_unsets: FxHashSet::default(),
             restart: None,
+            loop_nest_frame: None,
+            loop_replays_left: 0,
         }
     }
 }

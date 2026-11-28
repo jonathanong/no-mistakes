@@ -1,0 +1,1005 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "advise": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": "deep.sh",
+          "line": 42,
+          "message": "Cannot prove bash array safety: Bash loop nest replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 43,
+          "message": "Cannot prove bash array safety: array `level_7_first` safety could not be proved after loop widening; guard with ${level_7_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_7_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 47,
+          "message": "Cannot prove bash array safety: Bash loop nest replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 48,
+          "message": "Cannot prove bash array safety: array `level_6_first` safety could not be proved after loop widening; guard with ${level_6_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_6_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 52,
+          "message": "Cannot prove bash array safety: Bash loop nest replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 53,
+          "message": "Cannot prove bash array safety: array `level_5_first` safety could not be proved after loop widening; guard with ${level_5_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_5_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 57,
+          "message": "Cannot prove bash array safety: Bash loop nest replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 58,
+          "message": "Cannot prove bash array safety: array `level_4_first` safety could not be proved after loop widening; guard with ${level_4_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_4_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 62,
+          "message": "Cannot prove bash array safety: Bash loop nest replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 63,
+          "message": "Cannot prove bash array safety: array `level_3_first` safety could not be proved after loop widening; guard with ${level_3_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_3_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 67,
+          "message": "Cannot prove bash array safety: Bash loop nest replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 68,
+          "message": "Cannot prove bash array safety: array `level_2_first` safety could not be proved after loop widening; guard with ${level_2_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_2_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 72,
+          "message": "Cannot prove bash array safety: Bash loop nest replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 73,
+          "message": "Cannot prove bash array safety: array `level_1_first` safety could not be proved after loop widening; guard with ${level_1_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_1_first[@]}\"",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "deep.sh",
+          "line": 55,
+          "message": "Array `level_4_third` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${level_4_third[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "level_4_second=(\"${level_4_third[@]}\")",
+          "target": "level_4_third"
+        },
+        {
+          "file": "deep.sh",
+          "line": 76,
+          "message": "Array `final` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${final[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${final[@]}\"",
+          "target": "final"
+        },
+        {
+          "file": "deep.sh",
+          "line": 80,
+          "message": "Array `later` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${later[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${later[@]}\"",
+          "target": "later"
+        },
+        {
+          "file": "deep.sh",
+          "line": 83,
+          "message": "Array `later` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${later[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${later[@]}\"",
+          "target": "later"
+        },
+        {
+          "file": "shallow.sh",
+          "line": 14,
+          "message": "Array `empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${empty[@]}\"",
+          "target": "empty"
+        },
+        {
+          "file": "shallow.sh",
+          "line": 17,
+          "message": "Array `empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${empty[@]}\"",
+          "target": "empty"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "flat": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "flat.sh",
+          "line": 102,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 108,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 114,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 12,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 120,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 126,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 132,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 138,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 144,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 150,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 156,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 162,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 168,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 174,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 18,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 180,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 186,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 192,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 198,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 204,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 210,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 216,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 222,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 228,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 234,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 24,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 240,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 246,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 252,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 258,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 264,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 270,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 276,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 282,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 288,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 294,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 30,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 300,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 306,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 312,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 318,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 324,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 330,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 336,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 342,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 348,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 354,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 36,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 360,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 366,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 372,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 378,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 384,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 390,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 396,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 402,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 408,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 414,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 42,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 420,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 426,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 432,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 438,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 444,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 450,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 456,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 462,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 468,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 474,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 48,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 480,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 54,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 6,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 60,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 66,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 72,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 78,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 84,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 90,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        },
+        {
+          "file": "flat.sh",
+          "line": 96,
+          "message": "Array `items` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${items[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${items[@]}\"",
+          "target": "items"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": "deep.sh",
+          "line": 42,
+          "message": "Cannot prove bash array safety: Bash loop nest replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 43,
+          "message": "Cannot prove bash array safety: array `level_7_first` safety could not be proved after loop widening; guard with ${level_7_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_7_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 47,
+          "message": "Cannot prove bash array safety: Bash loop nest replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 48,
+          "message": "Cannot prove bash array safety: array `level_6_first` safety could not be proved after loop widening; guard with ${level_6_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_6_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 52,
+          "message": "Cannot prove bash array safety: Bash loop nest replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 53,
+          "message": "Cannot prove bash array safety: array `level_5_first` safety could not be proved after loop widening; guard with ${level_5_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_5_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 55,
+          "message": "Array `level_4_third` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${level_4_third[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "level_4_second=(\"${level_4_third[@]}\")",
+          "target": "level_4_third"
+        },
+        {
+          "file": "deep.sh",
+          "line": 57,
+          "message": "Cannot prove bash array safety: Bash loop nest replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 58,
+          "message": "Cannot prove bash array safety: array `level_4_first` safety could not be proved after loop widening; guard with ${level_4_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_4_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 62,
+          "message": "Cannot prove bash array safety: Bash loop nest replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 63,
+          "message": "Cannot prove bash array safety: array `level_3_first` safety could not be proved after loop widening; guard with ${level_3_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_3_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 67,
+          "message": "Cannot prove bash array safety: Bash loop nest replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 68,
+          "message": "Cannot prove bash array safety: array `level_2_first` safety could not be proved after loop widening; guard with ${level_2_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_2_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 72,
+          "message": "Cannot prove bash array safety: Bash loop nest replay budget exhausted; cannot prove array safety on later iterations",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "done",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 73,
+          "message": "Cannot prove bash array safety: array `level_1_first` safety could not be proved after loop widening; guard with ${level_1_first[@]+...}",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${level_1_first[@]}\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": "deep.sh",
+          "line": 76,
+          "message": "Array `final` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${final[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${final[@]}\"",
+          "target": "final"
+        },
+        {
+          "file": "deep.sh",
+          "line": 80,
+          "message": "Array `later` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${later[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${later[@]}\"",
+          "target": "later"
+        },
+        {
+          "file": "deep.sh",
+          "line": 83,
+          "message": "Array `later` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${later[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${later[@]}\"",
+          "target": "later"
+        },
+        {
+          "file": "shallow.sh",
+          "line": 14,
+          "message": "Array `empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${empty[@]}\"",
+          "target": "empty"
+        },
+        {
+          "file": "shallow.sh",
+          "line": 17,
+          "message": "Array `empty` can be empty. Bash before 4.4 treats an empty array as unbound under nounset. Wrap the quoted expansion in ${empty[@]+...} to guard it and keep the original array selector.",
+          "rule": "bash-empty-array-nounset",
+          "sourceLine": "collect \"${empty[@]}\"",
+          "target": "empty"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

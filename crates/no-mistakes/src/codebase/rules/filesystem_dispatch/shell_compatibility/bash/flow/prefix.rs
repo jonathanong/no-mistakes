@@ -1,12 +1,11 @@
 use super::{
     super::{
-        super::lex::{identifier, Boundary, Word},
+        super::lex::{Boundary, Word},
         branch_frame::Branch,
         case_frame::Case,
-        case_unset::{subject_vars_from_header, CaseUnsetCtx},
+        case_unset::subject_vars_from_header,
         frames::Frame,
         guard::{Guard, Leave},
-        loop_frame::{for_has_literal_item, is_infinite_loop, LoopKind, Repeat},
         write_sets::WriteSets,
     },
     Flow,
@@ -133,50 +132,5 @@ impl<'a> Flow<'a> {
                 self.observe_statement(leave);
             }
         }
-    }
-
-    fn enter_loop(
-        &mut self,
-        (index, hits_len): (usize, usize),
-        (keyword, rest): (&str, &[&Word<'a>]),
-        outgoing: Boundary<'a>,
-        redirected: bool,
-        write_sets: &'a WriteSets,
-    ) {
-        if let Some(Frame::Repeat(repeat)) = self.frames.last() {
-            if repeat.header_index == index && repeat.pass > 0 && !repeat.in_body {
-                return;
-            }
-        }
-        self.observe_statement(Leave::None);
-        let loop_var = matches!(keyword, "for" | "select")
-            .then(|| {
-                rest.first()
-                    .filter(|word| identifier(word.raw))
-                    .map(|w| w.raw)
-            })
-            .flatten();
-        if let Some(var) = loop_var {
-            self.state.touch(var);
-            self.frames.invalidate(var);
-        }
-        let infinite = !redirected
-            && outgoing == Boundary::End
-            && is_infinite_loop(keyword, rest, &self.seen_functions);
-        let always_enters = infinite || (keyword == "for" && for_has_literal_item(rest));
-        let kind = LoopKind {
-            always_enters,
-            infinite,
-            restart_at_header: matches!(keyword, "while" | "until"),
-            optional: self.incoming != Boundary::End,
-        };
-        self.frames.push(Frame::Repeat(Box::new(Repeat::new(
-            (index, hits_len, self.unanalyzable.len()),
-            self.state.clone(),
-            kind,
-            loop_var,
-            write_sets.empties(index),
-            write_sets.touches(index),
-        ))));
     }
 }

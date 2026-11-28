@@ -219,6 +219,13 @@ rule's `unanalyzable` policy (`advise` by default, or `report` / `ignore` via
   condition (`if` / `elif` / `else`, `&&` / `||`, or a `case` arm) that may
   exclude the empty paths, the expansion is reported through `unanalyzable`
   rather than as a definite finding.
+- **Loop nest replay budget**: an outermost loop and all its nested loops
+  share a replay budget. A separate outermost loop gets a fresh budget. If a
+  loop still needs another replay when its nest exhausts the budget, the rule
+  reports uncertainty at its `done`, preserves the findings it already saw,
+  and weakens array facts the loop could invalidate. An infinite loop keeps
+  the `break` path it already reached, including `set +u` on that path, instead
+  of folding in the state from before the loop.
 - **Dynamic `unset` operands**: `unset` with a dynamic target (such as
   `unset "$name"`) clears nonempty guarantees on tracked arrays and widens them
   to `unanalyzable` until the array is refilled or guarded. When the `unset`

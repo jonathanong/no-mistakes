@@ -1,7 +1,8 @@
 use super::{super::lex::Word, guard::Leave, state::State};
 use crate::fx::{FxHashMap, FxHashSet};
 
-const MAX_PASSES: u8 = 4;
+mod replay;
+pub(super) use replay::LoopPass;
 
 pub(super) struct LoopKind {
     pub always_enters: bool,
@@ -97,53 +98,27 @@ impl<'a> Repeat<'a> {
         State::merge_into(&mut self.break_exit, state);
     }
 
-    pub fn next_pass(&mut self, state: &mut State) -> Option<(usize, usize, usize)> {
-        let mut back = self.back_edge.clone();
-        if !self.body_leave.is_leaving() {
-            State::merge_into(&mut back, state);
-        }
-        let back = back?;
-        let mut next_entry = self.entry.clone();
-        if self.kind.restart_at_header {
-            next_entry.merge(&self.before);
-        }
-        next_entry.merge(&back);
-        if let Some(var) = self.loop_var {
-            next_entry.invalidate_condition_var(var);
-        }
-        if !self.entry.weakened_by(&next_entry) {
-            return None;
-        }
-        if self.pass >= MAX_PASSES {
-            next_entry.widen_unanalyzable(self.empties, self.touches);
-            if !self.entry.weakened_by(&next_entry) {
-                return None;
+    pub fn finish(mut self, state: &mut State, optional: bool, exhausted: bool) -> Leave {
+        let leave = self.finish_iteration(state, optional);
+        if exhausted && !leave.is_leaving() {
+            let exit = state.clone();
+            if !self.kind.infinite {
+                state.merge(&self.entry);
             }
+            state.keep_exit_findings_under_exhaustion(&exit);
+            state.widen_unanalyzable(self.empties, self.touches);
         }
-        self.entry = next_entry;
-        *state = self.entry.clone();
-        self.back_edge = None;
-        self.break_exit = None;
-        self.continue_exit = None;
-        self.body_leave = Leave::None;
-        self.in_body = false;
-        self.pass = self.pass.saturating_add(1);
-        let restart = if self.kind.restart_at_header {
-            self.header_index
-        } else {
-            self.do_index.unwrap_or(self.header_index)
-        };
-        Some((restart, self.hits_start, self.unanalyzable_start))
+        leave
     }
 
-    pub fn finish(self, state: &mut State, optional: bool) -> Leave {
+    fn finish_iteration(&mut self, state: &mut State, optional: bool) -> Leave {
         let opt = self.kind.optional || optional;
         if self.kind.infinite && !opt {
-            return if let Some(broken) = self.break_exit {
+            return if let Some(broken) = self.break_exit.take() {
                 *state = broken;
                 Leave::None
             } else {
-                *state = self.before;
+                *state = std::mem::take(&mut self.before);
                 Leave::Exit
             };
         }
@@ -175,7 +150,7 @@ impl<'a> Repeat<'a> {
             *state = next;
             Leave::None
         } else {
-            *state = self.before;
+            *state = std::mem::take(&mut self.before);
             self.body_leave
         }
     }

@@ -10,8 +10,8 @@ use crate::fx::{FxHashMap, FxHashSet};
 
 mod boundaries;
 mod default;
-mod finish_loop;
 mod fn_summary;
+mod loops;
 mod observe;
 mod prefix;
 mod unset_fn;
@@ -34,6 +34,8 @@ pub(super) struct Flow<'a> {
     fn_unsets: FxHashMap<&'a str, FxHashMap<String, bool>>,
     fn_dynamic_unsets: FxHashSet<&'a str>,
     restart: Option<(usize, usize, usize)>,
+    loop_nest_frame: Option<usize>,
+    loop_replays_left: u8,
 }
 
 impl<'a> Flow<'a> {
