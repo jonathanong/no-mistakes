@@ -4,27 +4,18 @@ use std::path::{Path, PathBuf};
 #[test]
 fn observed_and_filesystem_reject_malformed_inputs() {
     use napi::bindgen_prelude::Buffer;
+    fn ok_json(_: serde_json::Value) -> napi::Result<String> {
+        Ok("{}".to_string())
+    }
 
     let bad_utf8 = Buffer::from(vec![0xff, 0xfe]);
-    assert!(
-        crate::async_task::observed::execute_json(&bad_utf8, |_| Ok("{}".to_string()), false)
-            .is_err()
-    );
+    assert!(crate::async_task::observed::execute_json(&bad_utf8, ok_json, false).is_err());
     let bad_json = Buffer::from(b"{".to_vec());
-    assert!(
-        crate::async_task::observed::execute_json(&bad_json, |_| Ok("{}".to_string()), false)
-            .is_err()
-    );
+    assert!(crate::async_task::observed::execute_json(&bad_json, ok_json, false).is_err());
     let bad_diag = Buffer::from(br#"{"diagnosticsId":123}"#.to_vec());
-    assert!(
-        crate::async_task::observed::execute_json(&bad_diag, |_| Ok("{}".to_string()), false)
-            .is_err()
-    );
+    assert!(crate::async_task::observed::execute_json(&bad_diag, ok_json, false).is_err());
     let ok_text = Buffer::from(br#"{"diagnosticsId":"obs-text-ok"}"#.to_vec());
-    assert!(
-        crate::async_task::observed::execute_json(&ok_text, |_| Ok("plain".to_string()), true)
-            .is_ok()
-    );
+    assert!(crate::async_task::observed::execute_json(&ok_text, ok_json, true).is_ok());
     let err_diag = Buffer::from(br#"{"diagnosticsId":"obs-err"}"#.to_vec());
     assert!(crate::async_task::observed::execute_json(
         &err_diag,
@@ -33,10 +24,8 @@ fn observed_and_filesystem_reject_malformed_inputs() {
     )
     .is_err());
     assert!(
-        crate::async_task::observed::execute_pure(json!({ "diagnosticsId": 123 }), |_| Ok(
-            "{}".to_string()
-        ))
-        .is_err()
+        crate::async_task::observed::execute_pure(json!({ "diagnosticsId": 123 }), ok_json)
+            .is_err()
     );
 
     assert!(crate::analyze_project::analyze_project_json_impl(json!({
