@@ -1,3 +1,4 @@
+use super::kafka_topic_text::DollarScope;
 use crate::codebase::ts_source::SourceStore;
 use regex::Regex;
 use std::path::Path;
@@ -22,11 +23,6 @@ pub(crate) enum KafkaFile {
 }
 
 impl KafkaFile {
-    #[cfg(test)]
-    pub(crate) fn historical() -> Self {
-        Self::Historical
-    }
-
     pub(crate) fn from_path(path: &Path) -> Self {
         match path.extension().and_then(|ext| ext.to_str()) {
             Some("go") => Self::Go,
@@ -41,8 +37,12 @@ impl KafkaFile {
         }
     }
 
-    pub(super) fn dollar_templates(self) -> bool {
-        matches!(self, Self::Php | Self::Kotlin)
+    pub(super) fn dollar_scope(self) -> DollarScope {
+        match self {
+            Self::Php | Self::Kotlin => DollarScope::DoubleQuote,
+            Self::Dart => DollarScope::AnyQuote,
+            _ => DollarScope::None,
+        }
     }
 
     fn rust_apostrophe(self) -> bool {
@@ -93,7 +93,7 @@ pub(crate) fn extract_kafka_topics_for(
     let source = file.strip(source);
     let mut produces = extract_named(&source, kafka_produce_re());
     produces.extend(super::kafka_literals::extra_produces(&source, file));
-    let mut consumes = extract_kafka_consumes(&source, file.dollar_templates());
+    let mut consumes = extract_kafka_consumes(&source, file.dollar_scope());
     consumes.extend(super::kafka_literals::extra_consumes(&source, file));
     dedup(&mut produces);
     dedup(&mut consumes);
@@ -137,7 +137,7 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     values
 }
 
-fn extract_kafka_consumes(source: &str, dollar_templates: bool) -> Vec<String> {
+fn extract_kafka_consumes(source: &str, dollar_scope: DollarScope) -> Vec<String> {
     let mut values = extract_named(source, kafka_consume_re());
     for cap in kafka_consume_array_re().captures_iter(source) {
         let borrowed = cap.get(1).is_some();
@@ -145,9 +145,9 @@ fn extract_kafka_consumes(source: &str, dollar_templates: bool) -> Vec<String> {
         for element in block.split(',') {
             let element = element.trim();
             let literal = if borrowed {
-                super::kafka_topic_text::bare_subscribe_literal(element, dollar_templates)
+                super::kafka_topic_text::bare_subscribe_literal(element, dollar_scope)
             } else {
-                super::kafka_topic_text::quoted_element(element, dollar_templates)
+                super::kafka_topic_text::quoted_element(element, dollar_scope)
             };
             if let Some(literal) = literal {
                 values.push(literal);

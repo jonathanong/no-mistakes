@@ -538,7 +538,7 @@ and `importers` stay TypeScript.
 
 Swift, .NET, Java, Kotlin, Elixir, Dart, and Rust frontends record no
 language-specific queue jobs. The shared Kafka scanner checks configured
-globs for supported literal shapes regardless of the file extension.
+globs for supported literal shapes; language-specific shapes apply only to files with that language's extension.
 Async `queueEdges()`, `queueRelated()`, and `queueCheck()` use the same
 queue facts as the CLI. See [feature parity](feature-parity.md).
 

@@ -4,7 +4,7 @@ Queue analysis is explicit so agents can reason about producer/worker
 relationships without guessing project conventions.
 Swift, .NET, Java, Kotlin, Elixir, Dart, and Rust frontends record no
 language-specific queue jobs. The shared Kafka scanner checks configured
-globs for supported literal shapes regardless of the file extension. See
+globs for supported literal shapes; language-specific shapes apply only to files with that language's extension. See
 [feature parity](../feature-parity.md). Use the top-level
 `queues.factories` entry for custom TypeScript queue wrappers, and put
 project-specific file scopes under `projects.<name>.queues`.

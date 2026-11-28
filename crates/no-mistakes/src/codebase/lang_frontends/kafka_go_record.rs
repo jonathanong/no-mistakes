@@ -3,21 +3,26 @@ pub(super) fn go_outer_topic_spans(source: &str) -> Vec<(usize, usize)> {
     let mut spans = Vec::new();
     let mut i = 0;
     while i < source.len() {
+        let ch = source[i..].chars().next().unwrap();
+        if ch == '"' || ch == '\'' || ch == '`' {
+            i += ch.len_utf8();
+            skip_go_string(source, &mut i, ch);
+            continue;
+        }
         if let Some(brace) = go_record_brace(source, i) {
             i = brace + 1;
             collect_depth_one_topics(source, &mut i, &mut spans);
             continue;
         }
-        i += utf8_len(source, i);
+        i += ch.len_utf8();
     }
     spans
 }
 
-fn utf8_len(source: &str, i: usize) -> usize {
-    source[i..].chars().next().map(char::len_utf8).unwrap_or(1)
-}
-
 fn go_record_brace(source: &str, i: usize) -> Option<usize> {
+    if !ident_start(source, i) {
+        return None;
+    }
     let rest = &source[i..];
     let name_len = if rest.starts_with("ProducerMessage") {
         "ProducerMessage".len()
@@ -91,17 +96,19 @@ fn topic_literal_span(source: &str, i: usize) -> Option<(usize, usize, usize)> {
     Some((cursor, end, end + quote.len_utf8()))
 }
 
+fn ident_start(source: &str, i: usize) -> bool {
+    source[..i]
+        .chars()
+        .next_back()
+        .is_none_or(|prev| !prev.is_ascii_alphanumeric() && prev != '_')
+}
+
 fn topic_boundary(source: &str, i: usize) -> bool {
-    if i > 0 {
-        let prev = source[..i].chars().next_back().unwrap();
-        if prev.is_ascii_alphanumeric() || prev == '_' {
-            return false;
-        }
-    }
-    !matches!(
-        source[i + "Topic".len()..].chars().next(),
-        Some(ch) if ch.is_ascii_alphanumeric() || ch == '_'
-    )
+    ident_start(source, i)
+        && !matches!(
+            source[i + "Topic".len()..].chars().next(),
+            Some(ch) if ch.is_ascii_alphanumeric() || ch == '_'
+        )
 }
 
 fn skip_ws(source: &str, mut i: usize) -> usize {

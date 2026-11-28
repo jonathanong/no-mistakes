@@ -1,3 +1,10 @@
+#[derive(Clone, Copy)]
+pub(super) enum DollarScope {
+    None,
+    DoubleQuote,
+    AnyQuote,
+}
+
 pub(super) fn complete_topic(source: &str, start: usize, end: usize, text: &str) -> Option<String> {
     let quote = source[..start].chars().next_back()?;
     if (quote != '"' && quote != '\'')
@@ -16,20 +23,20 @@ pub(super) fn closed_literal(
     start: usize,
     end: usize,
     text: &str,
-    reject_dollar: bool,
+    dollar_scope: DollarScope,
 ) -> Option<String> {
     let quote = source[..start].chars().next_back()?;
     let text = complete_topic(source, start, end, text)?;
-    if quote == '"' && text.contains("#{") {
+    if quote == '"' && ruby_interpolation(&text) {
         return None;
     }
-    if reject_dollar && dollar_template(quote, &text) {
+    if rejects_dollar(dollar_scope, quote, &text) {
         return None;
     }
     Some(text)
 }
 
-pub(super) fn quoted_element(element: &str, reject_dollar: bool) -> Option<String> {
+pub(super) fn quoted_element(element: &str, dollar_scope: DollarScope) -> Option<String> {
     let quote = element.chars().next()?;
     if quote != '"' && quote != '\'' {
         return None;
@@ -39,17 +46,17 @@ pub(super) fn quoted_element(element: &str, reject_dollar: bool) -> Option<Strin
         || inner.contains(quote)
         || inner.contains('\n')
         || inner.contains('\r')
-        || (reject_dollar && dollar_template(quote, inner))
+        || rejects_dollar(dollar_scope, quote, inner)
     {
         return None;
     }
     Some(inner.to_string())
 }
 
-pub(super) fn bare_subscribe_literal(element: &str, reject_dollar: bool) -> Option<String> {
+pub(super) fn bare_subscribe_literal(element: &str, dollar_scope: DollarScope) -> Option<String> {
     let quote = element.chars().next()?;
-    let inner = quoted_element(element, reject_dollar)?;
-    if quote == '"' && inner.contains("#{") {
+    let inner = quoted_element(element, dollar_scope)?;
+    if quote == '"' && ruby_interpolation(&inner) {
         return None;
     }
     if inner.starts_with('^') || inner.contains('*') {
@@ -58,10 +65,22 @@ pub(super) fn bare_subscribe_literal(element: &str, reject_dollar: bool) -> Opti
     Some(inner)
 }
 
-fn dollar_template(quote: char, text: &str) -> bool {
-    if quote != '"' {
-        return false;
-    }
+fn ruby_interpolation(text: &str) -> bool {
+    text.as_bytes()
+        .windows(2)
+        .any(|pair| pair[0] == b'#' && matches!(pair[1], b'{' | b'$' | b'@'))
+}
+
+fn rejects_dollar(scope: DollarScope, quote: char, text: &str) -> bool {
+    let active = match scope {
+        DollarScope::None => false,
+        DollarScope::DoubleQuote => quote == '"',
+        DollarScope::AnyQuote => true,
+    };
+    active && dollar_template(text)
+}
+
+fn dollar_template(text: &str) -> bool {
     let mut chars = text.chars().peekable();
     while let Some(ch) = chars.next() {
         if ch == '\\' {
