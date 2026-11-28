@@ -1,7 +1,7 @@
 use super::exprs::{arg_expr, walk_subqueries};
 use super::factors::extend_outer;
 use super::items::collect_returning;
-use super::{collect_query, collect_rels, push_factor, FragmentStar, Rel, Scope};
+use super::{collect_query, collect_rels, FragmentStar, Rel, Scope};
 use no_mistakes_postgres_sql::idents::{ident_key, object_name_identity, object_name_key};
 use sqlparser::ast::{
     Delete, FromTable, FunctionArgExpr, Insert, JoinConstraint, JoinOperator, OnConflictAction,
@@ -53,18 +53,7 @@ pub(super) fn collect_update(update: &Update, scope: Scope<'_>, out: &mut Vec<Fr
         }
         None => &[],
     };
-    let mut peers = collect_rels(from, scope, out);
-    for join in &update.table.joins {
-        push_factor(&join.relation, scope, &mut peers, out);
-        let mut visible = vec![target.clone()];
-        visible.extend_from_slice(&peers);
-        let outer = extend_outer(&visible, scope.outer_rels);
-        let join_scope = Scope {
-            ctes: scope.ctes,
-            outer_rels: &outer,
-        };
-        visit_join_constraint(&join.join_operator, join_scope, out);
-    }
+    let peers = collect_rels(from, scope, out);
     let mut visible = vec![target.clone()];
     visible.extend_from_slice(&peers);
     let outer = extend_outer(&visible, scope.outer_rels);

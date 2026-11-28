@@ -72,6 +72,7 @@ pub(super) struct ClosedValues {
     relation_frames: Vec<FxHashMap<String, Vec<Arm>>>,
     const_literal_arrays: Vec<FxHashMap<String, Vec<String>>>,
     type_frames: Vec<FxHashMap<String, Vec<String>>>,
+    relation_type_frames: Vec<FxHashMap<String, Vec<String>>>,
     namespace_shadows: FxHashMap<u32, std::sync::Arc<crate::fx::FxHashSet<String>>>,
     assertions: FxHashMap<String, crate::codebase::postgres::embedded::SqlIdentifierAssertion>,
 }
@@ -81,12 +82,14 @@ impl ClosedValues {
         self.relation_frames.push(FxHashMap::default());
         self.const_literal_arrays.push(FxHashMap::default());
         self.type_frames.push(FxHashMap::default());
+        self.relation_type_frames.push(FxHashMap::default());
     }
     pub(in crate::codebase::postgres::embedded::walk) fn pop(&mut self) {
         self.frames.pop();
         self.relation_frames.pop();
         self.const_literal_arrays.pop();
         self.type_frames.pop();
+        self.relation_type_frames.pop();
     }
     pub(super) fn remove_at(&mut self, index: usize, name: &str) {
         if let Some(frame) = self.frames.get_mut(index) {

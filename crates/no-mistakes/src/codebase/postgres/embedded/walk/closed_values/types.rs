@@ -4,10 +4,13 @@ pub(super) fn strings(
     visitor: &ScopeVisitor<'_>,
     ty: &TSType<'_>,
     depth: u8,
+    relation_mode: bool,
 ) -> Option<Vec<String>> {
     let depth = depth.checked_sub(1)?;
     match ty {
-        TSType::TSParenthesizedType(inner) => strings(visitor, &inner.type_annotation, depth),
+        TSType::TSParenthesizedType(inner) if relation_mode => {
+            strings(visitor, &inner.type_annotation, depth, relation_mode)
+        }
         TSType::TSLiteralType(literal) => match &literal.literal {
             TSLiteral::StringLiteral(value) => {
                 Some(vec![crate::ast::js_literal(value).into_owned()])
@@ -17,7 +20,7 @@ pub(super) fn strings(
         TSType::TSUnionType(union) => {
             let mut values = Vec::new();
             for ty in &union.types {
-                for value in strings(visitor, ty, depth)? {
+                for value in strings(visitor, ty, depth, relation_mode)? {
                     if !values.contains(&value) {
                         values.push(value);
                     }
@@ -32,10 +35,12 @@ pub(super) fn strings(
             let TSTypeName::IdentifierReference(name) = &reference.type_name else {
                 return None;
             };
-            visitor
-                .literal_objects
-                .closed
-                .type_frames
+            let frames = if relation_mode {
+                &visitor.literal_objects.closed.relation_type_frames
+            } else {
+                &visitor.literal_objects.closed.type_frames
+            };
+            frames
                 .iter()
                 .rev()
                 .find_map(|frame| frame.get(name.name.as_str()))
@@ -43,7 +48,7 @@ pub(super) fn strings(
                 .cloned()
         }
         TSType::TSIndexedAccessType(indexed)
-            if matches!(indexed.index_type, TSType::TSNumberKeyword(_)) =>
+            if relation_mode && matches!(indexed.index_type, TSType::TSNumberKeyword(_)) =>
         {
             super::relation::indexed_array_strings(visitor, &indexed.object_type)
         }
@@ -51,7 +56,7 @@ pub(super) fn strings(
     }
 }
 
-fn inline_strings(ty: &TSType<'_>) -> Option<Vec<String>> {
+pub(super) fn inline_strings(ty: &TSType<'_>) -> Option<Vec<String>> {
     match ty {
         TSType::TSLiteralType(literal) => match &literal.literal {
             TSLiteral::StringLiteral(value) => {
@@ -141,7 +146,7 @@ impl ScopeVisitor<'_> {
         &self,
         ty: &TSType<'_>,
     ) -> bool {
-        strings(self, ty, 8).is_some()
+        strings(self, ty, 8, true).is_some()
     }
 
     pub(in crate::codebase::postgres::embedded::walk) fn note_closed_parameter(
@@ -164,7 +169,7 @@ impl ScopeVisitor<'_> {
         };
         let (values, inline) = if let Some(values) = inline_strings(&annotation.type_annotation) {
             (values, true)
-        } else if let Some(values) = strings(self, &annotation.type_annotation, 8) {
+        } else if let Some(values) = strings(self, &annotation.type_annotation, 8, true) {
             (values, false)
         } else {
             return;

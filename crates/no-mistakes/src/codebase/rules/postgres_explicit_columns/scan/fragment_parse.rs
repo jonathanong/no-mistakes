@@ -7,6 +7,8 @@ use sqlparser::tokenizer::{Token, TokenWithSpan, Tokenizer};
 mod clauses;
 mod context;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
+mod coverage_tests;
+#[cfg(all(test, any(nm_shard_all, nm_shard_2)))]
 mod edge_tests;
 mod readers;
 #[cfg(all(test, any(nm_shard_all, nm_shard_2)))]

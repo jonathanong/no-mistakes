@@ -29,9 +29,6 @@ pub(super) fn walk_expr_stars(
     use sqlparser::ast::Spanned;
     let line = (expr.span().start.line as usize).max(line);
     match expr {
-        Expr::Wildcard(_) if !enclosing_fn.is_some_and(is_count_fn) => {
-            super::items::emit_bare(rels, returning, enclosing_fn.map(str::to_string), line, out);
-        }
         Expr::QualifiedWildcard(q, ..) => {
             let func = enclosing_fn.map(str::to_string);
             super::items::emit_qualified(rels, scope.outer_rels, q, returning, func, line, out);

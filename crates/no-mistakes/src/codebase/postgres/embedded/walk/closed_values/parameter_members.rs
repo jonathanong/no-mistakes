@@ -29,18 +29,30 @@ impl ScopeVisitor<'_> {
             .last_mut()
             .expect("closed type scope")
             .insert(name.to_string(), Vec::new());
+        self.literal_objects
+            .closed
+            .relation_type_frames
+            .last_mut()
+            .expect("closed relation type scope")
+            .insert(name.to_string(), Vec::new());
     }
 
     pub(in crate::codebase::postgres::embedded::walk) fn note_parameter_type_alias(
         &mut self,
         alias: &TSTypeAliasDeclaration<'_>,
     ) {
-        let values = alias
+        let inline = alias
             .type_parameters
             .is_none()
-            .then(|| super::types::strings(self, &alias.type_annotation, 8))
-            .flatten();
-        let values = values.unwrap_or_default();
+            .then(|| super::types::inline_strings(&alias.type_annotation))
+            .flatten()
+            .unwrap_or_default();
+        let relation = alias
+            .type_parameters
+            .is_none()
+            .then(|| super::types::strings(self, &alias.type_annotation, 8, true))
+            .flatten()
+            .unwrap_or_default();
         self.literal_objects
             .closed
             .type_frames
@@ -48,7 +60,15 @@ impl ScopeVisitor<'_> {
             .expect("closed type scope")
             .entry(alias.id.name.to_string())
             .and_modify(Vec::clear)
-            .or_insert(values);
+            .or_insert(inline);
+        self.literal_objects
+            .closed
+            .relation_type_frames
+            .last_mut()
+            .expect("closed relation type scope")
+            .entry(alias.id.name.to_string())
+            .and_modify(Vec::clear)
+            .or_insert(relation);
     }
 
     pub(super) fn note_closed_parameter_members(&mut self, param: &FormalParameter<'_>) {
@@ -83,11 +103,9 @@ impl ScopeVisitor<'_> {
             let Some(identity) = stable.fields.get(key.as_ref()) else {
                 continue;
             };
-            let Some(values) = property
-                .type_annotation
-                .as_ref()
-                .and_then(|annotation| super::types::strings(self, &annotation.type_annotation, 8))
-            else {
+            let Some(values) = property.type_annotation.as_ref().and_then(|annotation| {
+                super::types::strings(self, &annotation.type_annotation, 8, false)
+            }) else {
                 continue;
             };
             fields.push((member_key(*identity), arms(values, *identity)));

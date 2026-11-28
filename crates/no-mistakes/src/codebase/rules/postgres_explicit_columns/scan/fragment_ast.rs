@@ -7,7 +7,7 @@ mod factors;
 mod items;
 use dml::{collect_delete, collect_insert, collect_table_expr, collect_update};
 use exprs::walk_subqueries;
-use factors::{collect_rels, extend_outer, push_factor};
+use factors::{collect_rels, extend_outer};
 use items::collect_items;
 
 pub(super) const SYNTHETIC_TARGET: &str = "__nm_frag_target";
