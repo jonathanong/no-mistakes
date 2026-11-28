@@ -1,10 +1,11 @@
 use super::super::conditions::decimal_integer;
 use super::super::expr_norm::function::is_conditional_keyword;
+use super::super::expr_norm::types::integer_type_alias;
 use crate::idents::{ident_key, unwrap_expr};
 use crate::order::canonical_order_options;
 use sqlparser::ast::{
-    CastKind, DataType, Distinct, Expr, Ident, OrderByExpr, OrderByKind, OrderBySort, Query,
-    SetExpr, TableFactor, TableInheritance, Value, VisitMut, VisitorMut, WindowSpec,
+    CastKind, Distinct, Expr, Ident, OrderByExpr, OrderByKind, OrderBySort, Query, SetExpr,
+    TableFactor, TableInheritance, Value, VisitMut, VisitorMut, WindowSpec,
 };
 use std::ops::ControlFlow;
 mod local_columns;
@@ -65,6 +66,13 @@ fn normalize(node: &mut impl VisitMut, normalize_targets: bool) {
                     }
                 }
             }
+            if !self.normalize_targets {
+                if let Expr::Value(value) = expr {
+                    if let Value::EscapedStringLiteral(decoded) = &value.value {
+                        value.value = Value::SingleQuotedString(decoded.clone());
+                    }
+                }
+            }
             if let Expr::Function(function) = expr {
                 if let [name] = function.name.0.as_slice() {
                     self.quoted_keyword_function = name
@@ -82,8 +90,8 @@ fn normalize(node: &mut impl VisitMut, normalize_targets: bool) {
                 if *kind == CastKind::DoubleColon {
                     *kind = CastKind::Cast;
                 }
-                if matches!(data_type, DataType::Int(None)) {
-                    *data_type = DataType::Integer(None);
+                if let Some(canonical) = integer_type_alias(data_type) {
+                    *data_type = canonical.clone();
                 }
             }
             ControlFlow::Continue(())

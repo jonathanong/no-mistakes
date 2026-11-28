@@ -25,7 +25,8 @@ pub(in crate::statements::keyed_lookups) fn walk_merge(
     if !can_affect_rows(Some(&merge.on)) {
         closed_categories.insert(MergeClauseKind::Matched);
     }
-    let mut modifies_rows = false;
+    let mut returning = None;
+    let mut deletes_only = true;
     for clause in &merge.clauses {
         let category = match clause.clause_kind {
             MergeClauseKind::NotMatchedByTarget => MergeClauseKind::NotMatched,
@@ -54,7 +55,14 @@ pub(in crate::statements::keyed_lookups) fn walk_merge(
             pred_seen.restrict(predicate, &outer, false);
         }
         if action_seen.is_reachable() {
-            modifies_rows |= !matches!(clause.action, MergeAction::DoNothing { .. });
+            if merge.output.is_some() {
+                record_returning_context(
+                    &clause.action,
+                    &action_seen,
+                    &mut returning,
+                    &mut deletes_only,
+                );
+            }
             let mut exprs = Vec::new();
             collect_merge_action_exprs(&clause.action, &mut exprs);
             inspect_exprs(exprs, scopes, &mut action_seen, out);
@@ -63,19 +71,35 @@ pub(in crate::statements::keyed_lookups) fn walk_merge(
             closed_categories.insert(category);
         }
     }
-    if modifies_rows {
-        if let Some(OutputClause::Returning { select_items, .. }) = &merge.output {
-            scopes.add_returning_aliases(None);
-            let mut returning_seen = LookupHistory::new();
-            inspect_exprs(
-                returning_exprs(Some(select_items)),
-                scopes,
-                &mut returning_seen,
-                out,
-            );
-        }
+    if let (Some(mut seen), Some(OutputClause::Returning { select_items, .. })) =
+        (returning, &merge.output)
+    {
+        scopes.add_returning_aliases(deletes_only.then_some("old"));
+        inspect_exprs(returning_exprs(Some(select_items)), scopes, &mut seen, out);
     }
     scopes.pop_frame();
+}
+
+fn record_returning_context(
+    action: &MergeAction,
+    action_seen: &LookupHistory,
+    returning: &mut Option<LookupHistory>,
+    deletes_only: &mut bool,
+) {
+    match action {
+        MergeAction::DoNothing { .. } => {}
+        MergeAction::Delete { .. } => {
+            if let Some(seen) = returning {
+                seen.permit_alternative(action_seen);
+            } else {
+                *returning = Some(action_seen.guard_only());
+            }
+        }
+        _ => {
+            *returning = Some(LookupHistory::new());
+            *deletes_only = false;
+        }
+    }
 }
 
 fn collect_merge_action_exprs<'a>(action: &'a MergeAction, out: &mut Vec<&'a Expr>) {

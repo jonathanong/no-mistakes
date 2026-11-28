@@ -16,8 +16,19 @@ pub(super) fn cast_type(data_type: &DataType) -> Option<String> {
             | ArrayElemTypeDef::Parenthesis(inner)
             | ArrayElemTypeDef::Qualified(inner, _),
         ) => Some(format!("{}[]", cast_type(inner)?)),
-        other => Some(other.to_string().to_ascii_lowercase()),
+        other => Some(
+            integer_type_alias(other)
+                .unwrap_or(other)
+                .to_string()
+                .to_ascii_lowercase(),
+        ),
     }
+}
+
+pub(in crate::statements::keyed_lookups) fn integer_type_alias(
+    data_type: &DataType,
+) -> Option<&'static DataType> {
+    matches!(data_type, DataType::Int(None)).then_some(&DataType::Integer(None))
 }
 
 pub(super) fn has_builtin_type(expr: &Expr) -> bool {

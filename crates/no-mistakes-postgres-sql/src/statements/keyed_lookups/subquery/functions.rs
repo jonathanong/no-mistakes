@@ -1,7 +1,8 @@
 use super::super::expr_norm::ExprNormalizer;
 use super::super::function_clauses::{
-    coalesce_arguments, filter_skips_inputs, row_window_value, split_coalesce_arguments,
-    visit_eager_functions, visit_function_inputs, visit_ordered_set_arguments,
+    coalesce_arguments, empty_aggregate_frame, filter_skips_inputs, row_window_value,
+    split_coalesce_arguments, visit_eager_functions, visit_function_filter, visit_function_inputs,
+    visit_ordered_set_arguments,
 };
 use super::super::scope::ScopeSnapshot;
 use super::super::select_exprs::{target_identity, SelectTargets};
@@ -35,13 +36,13 @@ pub(super) fn inspect_function(
         return;
     }
     let input_scope = targets.function_input_scope(function, outer);
-    if let Some(filter) = &function.filter {
+    visit_function_filter(function, &mut |filter| {
         inspect(filter, input_scope, targets, seen, out, skip_eager);
-    }
+    });
     if let Some(filter) = function
         .filter
         .as_ref()
-        .filter(|_| !filter_skips_inputs(function))
+        .filter(|_| !filter_skips_inputs(function) && !empty_aggregate_frame(function))
     {
         let key = ExprNormalizer::new(None, true, input_scope)
             .normalize(filter)

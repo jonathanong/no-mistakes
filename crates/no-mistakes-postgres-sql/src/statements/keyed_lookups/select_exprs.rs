@@ -112,22 +112,32 @@ pub(super) fn walk_select(
         empty_input,
         ..SelectTargets::default()
     };
-    for (expr, runs_before_grouping) in
-        expressions(select, order_by, &targets, &group_by.all, &windows)
-    {
-        if empty_input && runs_before_grouping {
+    let before_filter = seen.guard_only();
+    let mut after_filter = before_filter.guard_only();
+    if let Some(selection) = &select.selection {
+        after_filter.restrict(selection, &before_grouping, true);
+    }
+    for (expr, inspection) in expressions(select, order_by, &targets, &group_by.all, &windows) {
+        if empty_input && inspection.before_grouping() {
             continue;
         }
         let outer = after_grouping
             .as_ref()
-            .filter(|_| !runs_before_grouping)
+            .filter(|_| !inspection.before_grouping())
             .unwrap_or(&before_grouping);
-        inspect_expr(&expr, outer, &targets, &mut seen, out);
+        let guards = if inspection.has_row_filter() {
+            &after_filter
+        } else {
+            &before_filter
+        };
+        seen.with_guards(guards, |seen| {
+            inspect_expr(&expr, outer, &targets, seen, out)
+        });
         walk_nested_with_context(
             expr.as_ref(),
             scopes,
             out,
-            seen.guard_only(),
+            guards.guard_only(),
             empty_input,
             Some(&windows),
         );

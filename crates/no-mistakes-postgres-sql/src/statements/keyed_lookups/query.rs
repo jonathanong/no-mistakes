@@ -1,14 +1,15 @@
 mod ctes;
+mod outputs;
 
 use super::conditions::{cannot_match, decimal_integer, literal};
 use super::select_exprs::walk_select;
-use super::select_item_expr;
 use super::{scope::ScopeStack, subquery, walk_nested_queries, walk_set_expr, LookupHistory};
 use crate::idents::{unwrap_expr, visit_shallow_exprs};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
+pub(super) use outputs::plain_output;
+use outputs::select_has_plain_outputs;
 use sqlparser::ast::{
-    CastKind, DataType, Distinct, Expr, GroupByExpr, LimitClause, OrderByKind, Query, Select,
-    SetExpr, Value,
+    CastKind, DataType, Expr, LimitClause, OrderByKind, Query, Select, SetExpr, Value,
 };
 
 pub(super) fn walk_query(
@@ -91,28 +92,6 @@ pub(super) fn query_produces_no_rows(query: &Query) -> bool {
 
 pub(super) fn select_produces_no_rows(select: &Select) -> bool {
     select.selection.as_ref().is_some_and(cannot_match) && select_has_plain_outputs(select)
-}
-
-fn select_has_plain_outputs(select: &Select) -> bool {
-    select.having.is_none()
-        && matches!(
-            select.distinct,
-            None | Some(Distinct::All | Distinct::Distinct)
-        )
-        && matches!(&select.group_by, GroupByExpr::Expressions(exprs, modifiers)
-            if exprs.is_empty() && modifiers.is_empty())
-        && select
-            .projection
-            .iter()
-            .filter_map(select_item_expr)
-            .all(plain_output)
-}
-
-pub(super) fn plain_output(expr: &Expr) -> bool {
-    matches!(
-        unwrap_expr(expr),
-        Expr::Identifier(_) | Expr::CompoundIdentifier(_) | Expr::Value(_) | Expr::Subquery(_)
-    )
 }
 
 fn discard_exists_limit(limit: Option<&LimitClause>) -> bool {

@@ -1,4 +1,5 @@
 mod eager;
+mod frames;
 mod window;
 
 use super::conditions::literal_condition;
@@ -6,6 +7,7 @@ use super::select_exprs::target_identity;
 use crate::fx::FxHashSet;
 use crate::idents::{function_arg_expr, ident_key, unwrap_expr, visit_shallow_exprs};
 pub(super) use eager::visit_eager_functions;
+pub(super) use frames::{empty_aggregate_frame, visit_function_filter};
 use sqlparser::ast::{
     DuplicateTreatment, Expr, Function, FunctionArg, FunctionArgumentClause, FunctionArguments,
     Value,
@@ -31,7 +33,7 @@ pub(super) fn coalesce_arguments(function: &Function) -> Option<&[FunctionArg]> 
 
 pub(super) fn visit_function_inputs(function: &Function, visit: &mut impl FnMut(&Expr)) {
     visit_arguments(&function.parameters, usize::MAX, visit);
-    if filter_skips_inputs(function) {
+    if filter_skips_inputs(function) || empty_aggregate_frame(function) {
         if function.over.is_some() {
             visit_arguments(&function.args, usize::MAX, &mut |argument| {
                 visit_eager_functions(argument, visit);
@@ -129,6 +131,10 @@ pub(super) fn is_eager(function: &sqlparser::ast::Function) -> bool {
             return true;
         }
     }
+    is_known_aggregate(function)
+}
+
+fn is_known_aggregate(function: &Function) -> bool {
     let [schema, name] = function.name.0.as_slice() else {
         return false;
     };

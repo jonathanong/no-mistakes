@@ -40,7 +40,7 @@ and subqueries in ordering and row-limit clauses.
 - A `JOIN` combined with a correlated scalar subquery against the same relation
   and key.
 - Equivalent PostgreSQL cast spellings for proven built-in values
-  (`'active'::text` and `CAST('active' AS text)`).
+  (`'active'::text` and `CAST('active' AS text)`, or `int` and `integer`).
 
 The rule stays silent when the lookups are not proven to read the same row:
 
@@ -63,8 +63,9 @@ The rule stays silent when the lookups are not proven to read the same row:
   arguments share lookup history only when their filter expressions match and
   the rule can prove the filter is repeatable. An unfiltered input can
   repeat a filtered input in either order. Transition inputs are skipped
-  when the filter is a literal false or null. A window filter does not
-  suppress earlier ordinary aggregates.
+  when the filter is a literal false or null. Scalar inputs to a known
+  aggregate are also skipped when its inline `ROWS` frame has constant bounds
+  in reverse order. Earlier ordinary aggregates remain eligible in both cases.
 - Optional default expressions in `pg_catalog.lag` and `pg_catalog.lead` window calls. PostgreSQL
   evaluates them only when the requested row falls outside the partition.
   The rule also skips value arguments of `pg_catalog.lag`, `pg_catalog.lead`,
@@ -78,7 +79,12 @@ The rule stays silent when the lookups are not proven to read the same row:
   scalar arguments retain the null requirement from earlier arguments.
 - Unreachable `CASE` results, including simple cases with comparable integer
   or Boolean literals. For searched cases, the rule can keep opposing tests
-  of the same qualified Boolean column separate across expressions.
+  of the same qualified Boolean column separate across expressions. The rule
+  also carries direct row guards from `WHERE` and aggregate `FILTER` clauses
+  into the expressions they control, and retains old-row guards for
+  `MERGE RETURNING` when all reachable modifying actions delete rows.
+- XML table namespaces, paths, and defaults when the document is a known XML
+  null. PostgreSQL checks the document before evaluating those expressions.
 - Window calls eliminated by literal `CASE`, `COALESCE`, or Boolean
   expressions, unreachable DML actions, and query bodies with a literal
   `LIMIT 0`. Simple per-row outputs are also skipped under literal

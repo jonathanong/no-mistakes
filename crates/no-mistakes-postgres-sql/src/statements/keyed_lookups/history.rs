@@ -1,3 +1,5 @@
+mod alternatives;
+
 use super::grouping::grouped_position;
 use super::normalize::LookupKey;
 use super::scope::ScopeSnapshot;

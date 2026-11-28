@@ -1,3 +1,5 @@
+mod row_guards;
+
 use crate::statements::{
     extract_sql_statement_facts_with_policy, SqlLocationDemand, SqlStatementFileFacts,
     StatementPolicySources,
@@ -302,7 +304,7 @@ fn separates_grouped_reuse_from_independent_expressions_and_case_arms() {
             (175, 177),
             (181, 182),
             (186, 187),
-            (192, 193),
+            (193, 192),
             (198, 200),
             (219, 221),
             (233, 234),

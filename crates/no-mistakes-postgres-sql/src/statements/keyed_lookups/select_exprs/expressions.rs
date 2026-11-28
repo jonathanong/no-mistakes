@@ -3,12 +3,23 @@ use crate::fx::FxHashSet;
 use sqlparser::ast::{Distinct, Expr, Select};
 use std::borrow::Cow;
 
-enum Inspection {
-    BeforeGrouping,
+#[derive(Clone, Copy)]
+pub(super) enum Inspection {
+    Selection,
     Independent,
     Projection,
     Grouping,
     Reusable,
+}
+
+impl Inspection {
+    pub(super) fn before_grouping(self) -> bool {
+        matches!(self, Self::Selection | Self::Grouping)
+    }
+
+    pub(super) fn has_row_filter(self) -> bool {
+        !matches!(self, Self::Selection | Self::Independent)
+    }
 }
 
 pub(super) fn expressions<'a>(
@@ -17,7 +28,7 @@ pub(super) fn expressions<'a>(
     select_targets: &'a SelectTargets<'a>,
     grouping_targets: &'a [&'a Expr],
     windows: &'a WindowPlan,
-) -> impl Iterator<Item = (Cow<'a, Expr>, bool)> {
+) -> impl Iterator<Item = (Cow<'a, Expr>, Inspection)> {
     let distinct_on = match &select.distinct {
         Some(Distinct::On(expressions)) => expressions.as_slice(),
         _ => &[],
@@ -33,7 +44,7 @@ pub(super) fn expressions<'a>(
             select
                 .selection
                 .iter()
-                .map(|expr| (expr, Inspection::BeforeGrouping)),
+                .map(|expr| (expr, Inspection::Selection)),
         )
         .chain(
             grouping_targets
@@ -58,18 +69,18 @@ pub(super) fn expressions<'a>(
         }))
         .chain(order_by.iter().copied().map(reusable))
         .filter_map(move |(expr, inspection)| match inspection {
-            Inspection::BeforeGrouping => Some((Cow::Borrowed(expr), true)),
-            Inspection::Independent => Some((Cow::Borrowed(expr), false)),
-            Inspection::Projection => Some((select_targets.filter_grouped(expr), false)),
-            Inspection::Reusable => {
-                (!select_targets.reuses(expr)).then(|| (select_targets.filter_grouped(expr), false))
+            Inspection::Selection | Inspection::Independent => {
+                Some((Cow::Borrowed(expr), inspection))
             }
+            Inspection::Projection => Some((select_targets.filter_grouped(expr), inspection)),
+            Inspection::Reusable => (!select_targets.reuses(expr))
+                .then(|| (select_targets.filter_grouped(expr), inspection)),
             Inspection::Grouping => {
                 if !seen_grouping.insert(target_identity(expr)) {
                     return None;
                 }
                 select_targets.reuses(expr);
-                Some((Cow::Borrowed(expr), true))
+                Some((Cow::Borrowed(expr), inspection))
             }
         })
 }

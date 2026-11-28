@@ -1,14 +1,14 @@
 use super::conditions::boolean_result_is_fixed;
 use super::function_clauses::{
-    coalesce_arguments, filter_skips_inputs, is_eager, split_coalesce_arguments,
-    visit_eager_functions, visit_function_inputs, visit_ordered_set_arguments,
+    coalesce_arguments, is_eager, split_coalesce_arguments, visit_ordered_set_arguments,
 };
-use super::windows::{window_expressions, WindowPlan};
+use super::windows::WindowPlan;
 use super::{query::walk_exists, walk_query, LookupHistory, ScopeStack};
 use crate::idents::function_arg_expr;
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
-use sqlparser::ast::{Expr, Function, Query, Visit, Visitor, WindowType};
+use sqlparser::ast::{Expr, Query, Visit, Visitor};
 mod case;
+mod functions;
 use std::ops::ControlFlow;
 
 pub(super) fn walk_nested_queries(
@@ -27,17 +27,17 @@ pub(super) fn walk_nested_with_context(
     empty_input: bool,
     windows: Option<&WindowPlan>,
 ) {
-    if guards.is_reachable() {
-        let _ = node.visit(&mut Nested {
-            query_depth: 0,
-            blocked_expression_depth: 0,
-            scopes,
-            out,
-            guards,
-            empty_input,
-            windows,
-        });
+    Nested {
+        query_depth: 0,
+        blocked_expression_depth: 0,
+        scopes,
+        out,
+        guards,
+        empty_input,
+        windows,
+        earlier_aggregates_visited: false,
     }
+    .walk(node);
 }
 
 struct Nested<'a> {
@@ -48,9 +48,16 @@ struct Nested<'a> {
     guards: LookupHistory,
     empty_input: bool,
     windows: Option<&'a WindowPlan>,
+    earlier_aggregates_visited: bool,
 }
 
 impl Nested<'_> {
+    fn walk(&mut self, node: &impl Visit) {
+        if self.guards.is_reachable() {
+            let _ = node.visit(self);
+        }
+    }
+
     fn walk_conditional_children(&mut self, expr: &Expr) {
         match expr {
             Expr::BinaryOp { left, op, right } if boolean_result_is_fixed(left, op, right) => {
@@ -61,14 +68,16 @@ impl Nested<'_> {
                 walk_exists(subquery, self.scopes, self.out);
             }
             Expr::Function(function)
-                if self.empty_input && function.over.is_none() && is_eager(function) =>
+                if (self.empty_input || self.earlier_aggregates_visited)
+                    && function.over.is_none()
+                    && is_eager(function) =>
             {
                 self.blocked_expression_depth = 1;
-                visit_ordered_set_arguments(function, &mut |arg| self.walk_child(arg));
+                if !self.earlier_aggregates_visited {
+                    visit_ordered_set_arguments(function, &mut |arg| self.walk_child(arg));
+                }
             }
-            Expr::Function(function)
-                if function.over.is_some() || filter_skips_inputs(function) =>
-            {
+            Expr::Function(function) if function.over.is_some() || function.filter.is_some() => {
                 self.blocked_expression_depth = 1;
                 self.walk_function(expr, function);
             }
@@ -97,41 +106,17 @@ impl Nested<'_> {
     }
 
     fn walk_child(&mut self, node: &impl Visit) {
-        walk_nested_with_context(
-            node,
-            self.scopes,
-            self.out,
-            self.guards.guard_only(),
-            self.empty_input,
-            self.windows,
-        );
-    }
-
-    fn walk_function(&mut self, expr: &Expr, function: &Function) {
-        if self.windows.is_some_and(|windows| windows.skips_call(expr)) {
-            return;
+        Nested {
+            query_depth: 0,
+            blocked_expression_depth: 0,
+            scopes: self.scopes,
+            out: self.out,
+            guards: self.guards.guard_only(),
+            empty_input: self.empty_input,
+            windows: self.windows,
+            earlier_aggregates_visited: self.earlier_aggregates_visited,
         }
-        self.walk_child(&function.filter);
-        visit_ordered_set_arguments(function, &mut |arg| self.walk_child(arg));
-        visit_function_inputs(function, &mut |arg| self.walk_child(arg));
-        if let Some(WindowType::WindowSpec(spec)) = &function.over {
-            if let Some(needs_frame) = self
-                .windows
-                .map_or(Some(true), |windows| windows.take_inline_frame(spec, true))
-            {
-                for (expr, _) in window_expressions(spec, needs_frame) {
-                    self.walk_child(expr);
-                }
-            }
-        }
-    }
-
-    fn walk_eager_children(&mut self, skipped: &Expr) {
-        visit_eager_functions(skipped, &mut |eager| {
-            if !matches!(eager, Expr::Function(function) if function.over.is_some()) {
-                self.walk_child(eager);
-            }
-        });
+        .walk(node);
     }
 }
 

@@ -1,12 +1,13 @@
+use super::super::conditions::literal;
 use super::super::scope::ScopeStack;
 use super::super::table::lookup_table;
 use super::super::LookupHistory;
 use super::super::{inspect_exprs, walk_query};
 use super::register_join_chain;
 use super::using_clause::UsingColumns;
-use crate::idents::{function_arg_expr, ident_key, object_name_identity};
+use crate::idents::{function_arg_expr, ident_key, object_name_identity, unwrap_expr};
 use crate::statement_facts::SqlDuplicateKeyedLookupFact;
-use sqlparser::ast::{TableFactor, XmlTableColumnOption};
+use sqlparser::ast::{CastKind, DataType, Expr, TableFactor, Value, XmlTableColumnOption};
 
 pub(super) fn register_factor(
     factor: &TableFactor,
@@ -96,6 +97,17 @@ fn inspect_factor_inputs(
             columns,
             ..
         } => {
+            inspect_exprs(
+                passing.arguments.iter().map(|arg| &arg.expr),
+                scopes,
+                seen,
+                out,
+            );
+            if let [document] = passing.arguments.as_slice() {
+                if null_xml_document(&document.expr) {
+                    return;
+                }
+            }
             let paths = columns.iter().filter_map(|column| match &column.option {
                 XmlTableColumnOption::NamedInfo { path, .. } => path.as_ref(),
                 XmlTableColumnOption::ForOrdinality => None,
@@ -104,7 +116,6 @@ fn inspect_factor_inputs(
                 .iter()
                 .map(|namespace| &namespace.uri)
                 .chain(std::iter::once(row_expression))
-                .chain(passing.arguments.iter().map(|argument| &argument.expr))
                 .chain(paths);
             inspect_exprs(inputs, scopes, seen, out);
             for default in columns.iter().filter_map(|column| match &column.option {
@@ -127,6 +138,25 @@ fn inspect_factor_inputs(
         }
         _ => {}
     }
+}
+
+fn null_xml_document(document: &Expr) -> bool {
+    let Expr::Cast {
+        kind: CastKind::Cast | CastKind::DoubleColon,
+        expr,
+        data_type: DataType::Custom(name, modifiers),
+        format: None,
+        ..
+    } = unwrap_expr(document)
+    else {
+        return matches!(literal(document), Some(Value::Null));
+    };
+    modifiers.is_empty()
+        && matches!(
+            object_name_identity(name).as_str(),
+            "xml" | "pg_catalog.xml"
+        )
+        && matches!(literal(expr), Some(Value::Null))
 }
 
 fn register_table_function_alias(
