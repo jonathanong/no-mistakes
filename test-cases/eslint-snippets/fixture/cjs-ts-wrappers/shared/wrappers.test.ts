@@ -20,3 +20,7 @@ test("non-null element", () => {
 test("asserted method", () => {
   (bag.push as any)(1);
 });
+const entries = new (Map as typeof Map)();
+test("wrapped map", () => {
+  entries.set("a", 1);
+});

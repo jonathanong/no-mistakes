@@ -17,14 +17,14 @@ const integrationExports = {
   },
 };
 
-function baseline(maxItems) {
+function baseline(types) {
   return {
     type: "array",
     items: {
       type: "array",
-      minItems: maxItems,
-      maxItems,
-      items: { type: ["string", "number"] },
+      minItems: types.length,
+      maxItems: types.length,
+      items: types.map((type) => ({ type })),
     },
   };
 }
@@ -41,7 +41,7 @@ const boundaryOptions = {
   additionalProperties: false,
   properties: {
     ...shared,
-    baseline: baseline(3),
+    baseline: baseline(["string", "string", "number"]),
     integrationExports,
     requireLiteralSpecifiers: { type: "boolean" },
   },
@@ -52,7 +52,7 @@ const preserveOptions = {
   additionalProperties: false,
   properties: {
     ...shared,
-    baseline: baseline(2),
+    baseline: baseline(["string", "string"]),
   },
 };
 

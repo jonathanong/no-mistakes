@@ -1,6 +1,7 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
+const { filesystemPathCount } = require("./test-no-fixed-temp-paths-sinks");
 const { literalString } = require("./logical-call");
 const { isReassigned, memberPropertyName, resolveVariable } = require("./async-target-bindings");
 const { importSpecifierName, requireResolution, requireSource } = require("./async-target-sources");
@@ -47,7 +48,7 @@ function memberBinding(object, member) {
 function unresolvedMember(member) {
   if (member === null || member === "promises") return UNRESOLVED;
   const bare = member.replace(/Sync$/, "");
-  return PATH_METHODS.has(bare) ? UNRESOLVED : null;
+  return PATH_METHODS.has(bare) || filesystemPathCount("fs", member) > 0 ? UNRESOLVED : null;
 }
 
 function importedBinding(definition) {

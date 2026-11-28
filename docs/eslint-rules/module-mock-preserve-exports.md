@@ -42,7 +42,7 @@ The schema accepts an options object.
 ```
 
 `internalSpecifiers`, `includePathPatterns`, and `excludePathPatterns` select
-applicable mocks; `baseline` provides temporary `[file, specifier]` allowances.
+applicable mocks; `baseline` provides temporary `[file, specifier]` allowances, and both values are strings.
 `unanalyzable` is `"finding"` or `"ignore"` and defaults to `"finding"`. A
 mock whose framework binding comes from a non-static `require` reports
 `unanalyzable`, including `.call` and a literal-array `.apply` on that mock.

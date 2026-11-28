@@ -6,4 +6,6 @@ test("reads", () => {
   exact.apply(err.message, values).toBe(42);
   exact.apply(null, [err.message]).toBe(42);
   exact.apply(null, [...[err.message]]).toBe("x");
+  exact.call(null, err.message, ...values).toBe("x");
+  exact.apply(null, [err.message], ...values).toBe("x");
 });

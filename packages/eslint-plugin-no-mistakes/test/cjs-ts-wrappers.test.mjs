@@ -39,6 +39,7 @@ const groups = [
       "reassigned-test-name.test.ts",
       "each-static.test.ts",
       "each-dynamic.test.ts",
+      "each-nested.test.ts",
     ],
     valid: [
       "not-a-runner.test.ts",
@@ -62,6 +63,7 @@ const groups = [
       "alias-reassigned.test.ts",
       "reassigned-test-name.test.ts",
       "each-dynamic.test.ts",
+      "each-nested.test.ts",
     ],
   },
   {
@@ -149,6 +151,7 @@ const groups = [
       "computed-modifier.test.ts",
       "computed-binding.test.ts",
       "wrapped-mock.test.ts",
+      "type-import.test.ts",
       "not-a-callee.test.ts",
       "suppressed.test.ts",
       "reassign.test.ts",

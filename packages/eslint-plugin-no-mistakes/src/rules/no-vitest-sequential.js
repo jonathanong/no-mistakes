@@ -68,6 +68,14 @@ function hasSequentialMember(node) {
   return chainInfo(node, null).names.includes("sequential");
 }
 
+function unresolvedRegistration(node, context) {
+  const sequential =
+    hasSequentialMember(node.callee) ||
+    chainInfo(node.callee, context).names.includes("sequential") ||
+    hasSequentialOption(node);
+  return sequential && unresolvedSequential(forwardedCallee(node.callee), context);
+}
+
 function acceptsRunner(root, context, namespaces) {
   const variable = resolveVariable(root, context);
   if (!variable || variable.defs.length === 0) return true;
@@ -161,13 +169,9 @@ module.exports = Object.assign(
       };
       const visitCall = (node) => {
         if (!isSequentialCall(node, context, state.roots, state.namespaces)) {
-          if (
-            (hasSequentialMember(node.callee) ||
-              chainInfo(node.callee, context).names.includes("sequential") ||
-              hasSequentialOption(node)) &&
-            unresolvedSequential(forwardedCallee(node.callee), context) &&
-            !suppressed(node)
-          ) {
+          const inner = unwrap(node.callee);
+          if (inner?.type === "CallExpression" && unresolvedRegistration(inner, context)) return;
+          if (unresolvedRegistration(node, context) && !suppressed(node)) {
             reportUnanalyzable(context, node.callee, "this call");
           }
           return;

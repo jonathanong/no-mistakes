@@ -135,9 +135,10 @@ function spreadArguments(args) {
       continue;
     }
     const list = unwrap(arg.argument);
-    if (list?.type !== "ArrayExpression") return null;
+    if (list?.type !== "ArrayExpression") return expanded.length > 0 ? expanded : null;
     for (const element of list.elements) {
-      if (!element || element.type === "SpreadElement") return null;
+      if (!element) return null;
+      if (element.type === "SpreadElement") return expanded.length > 0 ? expanded : null;
       expanded.push(element);
     }
   }

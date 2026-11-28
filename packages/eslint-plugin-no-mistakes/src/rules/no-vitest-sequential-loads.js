@@ -71,7 +71,8 @@ function recordVitestImport(node, state) {
     if (specifier.importKind === "type") continue;
     if (
       specifier.type === "ImportNamespaceSpecifier" ||
-      specifier.type === "ImportDefaultSpecifier"
+      specifier.type === "ImportDefaultSpecifier" ||
+      (specifier.type === "ImportSpecifier" && importedName(specifier) === "default")
     ) {
       state.namespaces.add(specifier.local.name);
     }
@@ -185,11 +186,8 @@ function isUnshadowedNamespace(identifier, context, namespaces) {
   if (variable.defs.length !== 1) return false;
   const def = variable.defs[0];
   if (def.type === "ImportBinding") {
-    return [
-      "ImportNamespaceSpecifier",
-      "ImportDefaultSpecifier",
-      "TSImportEqualsDeclaration",
-    ].includes(def.node?.type);
+    const kind = def.node?.type;
+    return kind !== "ImportSpecifier" || staticName(def.node.imported, false) === "default";
   }
   return (
     def.type === "Variable" &&

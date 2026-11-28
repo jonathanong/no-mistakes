@@ -98,13 +98,12 @@ function containsIdentifierCall(node, name) {
 
 function isMutableInitializer(node) {
   node = unwrapExpression(node);
+  const callee = node?.type === "NewExpression" ? unwrapExpression(node.callee) : null;
   return Boolean(
     node &&
     (node.type === "ArrayExpression" ||
       node.type === "ObjectExpression" ||
-      (node.type === "NewExpression" &&
-        node.callee.type === "Identifier" &&
-        MUTABLE_CONSTRUCTORS.has(node.callee.name))),
+      (callee?.type === "Identifier" && MUTABLE_CONSTRUCTORS.has(callee.name))),
   );
 }
 

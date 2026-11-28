@@ -41,7 +41,8 @@ The schema accepts an options object.
 `internalSpecifiers` identifies internal specifier patterns;
 `includePathPatterns` and `excludePathPatterns` scope files;
 `requireLiteralSpecifiers` defaults to `true`; and `baseline` records
-temporary `[file, specifier, count]` allowances. `integrationExports` permits
+temporary `[file, specifier, count]` allowances. The file and specifier are
+strings, and the count is a number. `integrationExports` permits
 tagged integration exports, with its `specifiers`, `specifierPrefix`,
 `extensions`, `sourcePathTemplates`, `reexportExtensions`, and `markerRegex`
 controls.

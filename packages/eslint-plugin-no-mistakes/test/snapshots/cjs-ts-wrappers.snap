@@ -909,9 +909,20 @@
         {
           "column": 1,
           "endColumn": 21,
-          "endLine": 3,
+          "endLine": 4,
           "file": "default-named.test.ts",
-          "line": 3,
+          "line": 4,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 22,
+          "endLine": 5,
+          "file": "default-named.test.ts",
+          "line": 5,
           "message": "Use parallel tests instead of .sequential.",
           "messageId": "sequential",
           "ruleId": "no-mistakes/no-vitest-sequential",
@@ -1166,6 +1177,24 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "each-nested.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 4,
+          "file": "each-nested.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this call runs tests sequentially. Use a static vitest import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "no-vitest-sequential:sequential-ignore": [
@@ -1221,6 +1250,16 @@
     },
     {
       "file": "each-dynamic.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "each-nested.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [
@@ -1589,6 +1628,28 @@
           "messageId": "message",
           "ruleId": "no-mistakes/test-no-error-message-matching",
           "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 53,
+          "endLine": 9,
+          "file": "static-apply.test.ts",
+          "line": 9,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 56,
+          "endLine": 10,
+          "file": "static-apply.test.ts",
+          "line": 10,
+          "message": "Do not assert on err.message; check the error type or code instead.",
+          "messageId": "message",
+          "ruleId": "no-mistakes/test-no-error-message-matching",
+          "severity": 2
         }
       ],
       "kind": "invalid",
@@ -1696,6 +1757,50 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/test-no-fixed-temp-paths",
           "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 38,
+          "endLine": 5,
+          "file": "dynamic.test.ts",
+          "line": 5,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 44,
+          "endLine": 6,
+          "file": "dynamic.test.ts",
+          "line": 6,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 23,
+          "endLine": 7,
+          "file": "dynamic.test.ts",
+          "line": 7,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
+        },
+        {
+          "column": 1,
+          "endColumn": 39,
+          "endLine": 8,
+          "file": "dynamic.test.ts",
+          "line": 8,
+          "message": "Cannot tell whether this call writes a fixed temporary path. Use a static fs or path binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-fixed-temp-paths",
+          "severity": 2
         }
       ],
       "kind": "invalid",
@@ -1769,6 +1874,12 @@
     },
     {
       "file": "wrapped-mock.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
+      "file": "type-import.test.ts",
       "findings": [],
       "kind": "valid",
       "options": null
@@ -1896,6 +2007,17 @@
           "endLine": 21,
           "file": "wrappers.test.ts",
           "line": 21,
+          "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
+          "messageId": "shared",
+          "ruleId": "no-mistakes/test-no-shared-state",
+          "severity": 2
+        },
+        {
+          "column": 3,
+          "endColumn": 22,
+          "endLine": 25,
+          "file": "wrappers.test.ts",
+          "line": 25,
           "message": "Shared mutable module-scope state between tests: use local variables inside each test instead.",
           "messageId": "shared",
           "ruleId": "no-mistakes/test-no-shared-state",

@@ -109,6 +109,7 @@ function isDescribeBinding(
 }
 
 function recordImportedTests(node, testCalleeNames, namespaces, testAliases) {
+  if (node.importKind === "type") return;
   if (node.source.value !== "vitest" && node.source.value !== "@playwright/test") return;
   for (const specifier of node.specifiers) {
     if (specifier.type === "ImportNamespaceSpecifier" && specifier.local?.name) {

@@ -24,7 +24,8 @@ non-empty segment.
 A file that mocks `fs`, `node:fs`, `fs/promises`, or `node:fs/promises` through
 Vitest's `vi.mock` or Jest's `jest.mock` is exempt, even if the mock call follows
 the filesystem use. That exemption also drops an `unanalyzable` report for a
-call whose filesystem binding is not static.
+call whose filesystem binding is not static. That advisory includes `access`,
+`chmod`, `readdir`, and `createWriteStream` on an unresolved `fs` binding.
 
 ## Disallowed
 
