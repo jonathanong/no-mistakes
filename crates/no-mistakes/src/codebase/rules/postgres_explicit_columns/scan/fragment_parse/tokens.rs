@@ -1,8 +1,11 @@
 use super::super::fragment_ast::FragmentStar;
+use super::clauses::OpenClause;
 use super::context::extract_context_from_tokens;
+use super::readers::{
+    is_bare_star_prev, read_qualified_name_backwards, split_top_level_statements,
+};
 use super::token_scopes::{
-    enclosing_function, is_distinct_on_rparen, read_qualified_name_backwards,
-    resolve_qualified_relation, scope_context,
+    enclosing_function, is_known_cte_or_derived, resolve_qualified_relation, scope_context,
 };
 use super::{is_kw, FragmentContext};
 use sqlparser::keywords::Keyword;
@@ -10,16 +13,25 @@ use sqlparser::tokenizer::{Token, TokenWithSpan};
 
 pub(super) fn extract_stars(
     tokens: &[TokenWithSpan],
-    initial_select: bool,
-    initial_returning: bool,
-    initial_exists: bool,
+    initial: OpenClause,
+    out: &mut Vec<FragmentStar>,
+) {
+    for (idx, stmt) in split_top_level_statements(tokens).into_iter().enumerate() {
+        let open = if idx == 0 { initial } else { OpenClause::default() };
+        extract_statement_stars(stmt, open, out);
+    }
+}
+
+fn extract_statement_stars(
+    tokens: &[TokenWithSpan],
+    initial: OpenClause,
     out: &mut Vec<FragmentStar>,
 ) {
     let mut ctx = FragmentContext::default();
     extract_context_from_tokens(tokens, &mut ctx);
-    let mut clause_returning = initial_returning;
-    let mut clause_select = initial_select;
-    let mut in_exists = initial_exists;
+    let mut clause_returning = initial.returning;
+    let mut clause_select = initial.select;
+    let mut in_exists = initial.in_exists;
     let mut clause_stack: Vec<(bool, bool, bool)> = Vec::new();
     let mut prev_code: Option<(usize, &TokenWithSpan)> = None;
     let mut prev_prev_idx: Option<usize> = None;
@@ -53,16 +65,8 @@ pub(super) fn extract_stars(
                         line,
                         out,
                     );
-                } else if prev_code.is_none()
-                    || prev_code.is_some_and(|(pi, t)| {
-                        matches!(t.token, Token::Comma | Token::LParen)
-                            || is_kw(t, Keyword::SELECT)
-                            || is_kw(t, Keyword::DISTINCT)
-                            || is_kw(t, Keyword::ALL)
-                            || is_kw(t, Keyword::RETURNING)
-                            || (matches!(t.token, Token::RParen)
-                                && is_distinct_on_rparen(tokens, pi))
-                    })
+                } else if (prev_code.is_none() && initial.expects_expr)
+                    || prev_code.is_some_and(|(pi, t)| is_bare_star_prev(tokens, pi, t))
                 {
                     push_bare(tokens, i, active, clause_returning, line, out);
                 }
@@ -122,23 +126,23 @@ fn push_qualified(
             return;
         }
     }
-    let relation = qualifier
+    let resolved = qualifier
         .as_deref()
-        .and_then(|q| resolve_qualified_relation(ctx, q));
-    if let Some(rel) = &relation {
-        if !rel.contains('.') && ctx.ctes.iter().any(|c| c == rel) {
+        .and_then(|q| resolve_qualified_relation(ctx, q, returning));
+    if let Some((rel, is_physical_target)) = &resolved {
+        if !is_physical_target && !rel.contains('.') && ctx.ctes.iter().any(|c| c == rel) {
             return;
         }
     } else if qualifier
         .as_deref()
-        .is_some_and(|q| ctx.ctes.iter().any(|c| c == q) || ctx.derived_aliases.iter().any(|a| a == q))
+        .is_some_and(|q| is_known_cte_or_derived(ctx, q))
     {
         return;
     }
     out.push(FragmentStar {
         returning,
         qualifier,
-        relation,
+        relation: resolved.map(|(rel, _)| rel),
         within_function: func,
         line,
     });

@@ -1,8 +1,7 @@
 use super::context::extract_context_from_tokens;
-use super::{is_kw, word_value, FragmentContext};
-use no_mistakes_postgres_sql::idents::{
-    relation_part_key, relation_suffix_key, relation_suffix_name,
-};
+use super::readers::{prev_code_index, read_qualified_name_backwards};
+use super::{is_kw, FragmentContext, OuterScope};
+use no_mistakes_postgres_sql::idents::{relation_suffix_key, relation_suffix_name};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
@@ -45,10 +44,16 @@ fn collect_ancestors(
         inner.ctes.extend(parent_ctes.ctes);
         let mut parent_full = FragmentContext::default();
         extract_context_from_tokens(&tokens[open + 1..close], &mut parent_full);
-        inner.outer_relations.extend(parent_full.from_relations);
+        inner.outer_scopes.push(OuterScope {
+            relations: parent_full.from_relations,
+            derived_aliases: parent_full.derived_aliases,
+        });
         cursor = open;
     }
-    inner.outer_relations.extend(outer.from_relations.iter().cloned());
+    inner.outer_scopes.push(OuterScope {
+        relations: outer.from_relations.clone(),
+        derived_aliases: outer.derived_aliases.clone(),
+    });
 }
 
 pub(super) fn is_distinct_on_rparen(tokens: &[TokenWithSpan], rparen_index: usize) -> bool {
@@ -62,12 +67,6 @@ pub(super) fn is_distinct_on_rparen(tokens: &[TokenWithSpan], rparen_index: usiz
         return false;
     }
     prev_code_index(tokens, on_idx).is_some_and(|idx| is_kw(&tokens[idx], Keyword::DISTINCT))
-}
-
-fn prev_code_index(tokens: &[TokenWithSpan], before: usize) -> Option<usize> {
-    (0..before)
-        .rev()
-        .find(|&j| !matches!(tokens[j].token, Token::Whitespace(_)))
 }
 
 fn enclosing_open_paren(tokens: &[TokenWithSpan], star_index: usize) -> Option<usize> {
@@ -133,40 +132,11 @@ pub(super) fn enclosing_function(tokens: &[TokenWithSpan], star_index: usize) ->
     None
 }
 
-pub(super) fn read_qualified_name_backwards(
-    tokens: &[TokenWithSpan],
-    end_idx: usize,
-) -> Option<String> {
-    let mut parts = vec![word_value(&tokens[end_idx])?];
-    let mut cursor = end_idx;
-    while let Some(dot_idx) = prev_code_index(tokens, cursor) {
-        if !matches!(tokens[dot_idx].token, Token::Period) {
-            break;
-        }
-        let Some(prev_idx) = prev_code_index(tokens, dot_idx) else {
-            break;
-        };
-        let Some(part) = word_value(&tokens[prev_idx]) else {
-            break;
-        };
-        parts.push(part);
-        cursor = prev_idx;
-    }
-    parts.reverse();
-    if parts.len() == 1 {
-        Some(parts.pop().unwrap())
-    } else {
-        Some(
-            parts
-                .iter()
-                .map(|p| relation_part_key(p))
-                .collect::<Vec<_>>()
-                .join("."),
-        )
-    }
-}
-
-pub(super) fn resolve_qualified_relation(ctx: &FragmentContext, q: &str) -> Option<String> {
+pub(super) fn resolve_qualified_relation(
+    ctx: &FragmentContext,
+    q: &str,
+    returning: bool,
+) -> Option<(String, bool)> {
     let find_in = |rels: &[(String, Option<String>)]| {
         rels.iter()
             .find(|(_, a)| a.as_deref() == Some(q))
@@ -178,17 +148,42 @@ pub(super) fn resolve_qualified_relation(ctx: &FragmentContext, q: &str) -> Opti
             })
             .map(|(t, _)| t.clone())
     };
-    let local: Vec<_> = ctx
-        .from_relations
-        .iter()
-        .chain(ctx.mutation_target.iter())
-        .cloned()
-        .collect();
-    if let Some(found) = find_in(&local) {
-        return Some(found);
+    if returning {
+        if let Some(target) = &ctx.mutation_target {
+            if let Some(found) = find_in(std::slice::from_ref(target)) {
+                return Some((found, true));
+            }
+        }
+    }
+    if let Some(found) = find_in(&ctx.from_relations) {
+        return Some((found, false));
+    }
+    if !returning {
+        if let Some(target) = &ctx.mutation_target {
+            if let Some(found) = find_in(std::slice::from_ref(target)) {
+                return Some((found, false));
+            }
+        }
     }
     if ctx.derived_aliases.iter().any(|a| a == q) {
         return None;
     }
-    find_in(&ctx.outer_relations)
+    for level in &ctx.outer_scopes {
+        if let Some(found) = find_in(&level.relations) {
+            return Some((found, false));
+        }
+        if level.derived_aliases.iter().any(|a| a == q) {
+            return None;
+        }
+    }
+    None
+}
+
+pub(super) fn is_known_cte_or_derived(ctx: &FragmentContext, q: &str) -> bool {
+    ctx.ctes.iter().any(|c| c == q)
+        || ctx.derived_aliases.iter().any(|a| a == q)
+        || ctx
+            .outer_scopes
+            .iter()
+            .any(|s| s.derived_aliases.iter().any(|a| a == q))
 }

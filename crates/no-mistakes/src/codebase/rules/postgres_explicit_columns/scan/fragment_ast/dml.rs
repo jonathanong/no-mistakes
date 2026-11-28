@@ -16,6 +16,7 @@ pub(super) fn collect_insert(insert: &Insert, scope: Scope<'_>, out: &mut Vec<Fr
             alias: insert.table_alias.as_ref().map(|a| ident_key(&a.alias)),
             join_aliases: Vec::new(),
             is_local_derived: false,
+            hidden_by_join_alias: false,
             depth: 0,
         };
         collect_returning(&target, &[], scope, insert.returning.as_deref(), out);
@@ -137,6 +138,7 @@ pub(super) fn target_rel(factor: &TableFactor) -> Option<Rel> {
         alias: alias.as_ref().map(|a| ident_key(&a.name)),
         join_aliases: Vec::new(),
         is_local_derived: false,
+        hidden_by_join_alias: false,
         depth: 0,
     })
 }

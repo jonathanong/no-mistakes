@@ -2,13 +2,22 @@ use super::{is_kw, next_code, read_optional_alias, skip_paren_group, word_value,
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, TokenWithSpan};
 
-pub(super) fn open_clause_at_end(tokens: &[TokenWithSpan]) -> (bool, bool, bool) {
+#[derive(Clone, Copy, Default)]
+pub(super) struct OpenClause {
+    pub(super) select: bool,
+    pub(super) returning: bool,
+    pub(super) in_exists: bool,
+    pub(super) expects_expr: bool,
+}
+
+pub(super) fn open_clause_at_end(tokens: &[TokenWithSpan]) -> OpenClause {
     let mut stack: Vec<(bool, bool, bool)> = Vec::new();
     let mut select = false;
     let mut returning = false;
     let mut in_exists = false;
     let mut prev_exists = false;
-    for token in tokens {
+    let mut last_code: Option<(usize, &TokenWithSpan)> = None;
+    for (i, token) in tokens.iter().enumerate() {
         if matches!(token.token, Token::Whitespace(_)) {
             continue;
         }
@@ -57,8 +66,16 @@ pub(super) fn open_clause_at_end(tokens: &[TokenWithSpan]) -> (bool, bool, bool)
             _ => {}
         }
         prev_exists = is_kw(token, Keyword::EXISTS);
+        last_code = Some((i, token));
     }
-    (select, returning, in_exists)
+    let expects_expr =
+        last_code.is_some_and(|(idx, tok)| super::readers::is_bare_star_prev(tokens, idx, tok));
+    OpenClause {
+        select,
+        returning,
+        in_exists,
+        expects_expr,
+    }
 }
 
 pub(super) fn update_paren_depth(token: &TokenWithSpan, depth: &mut usize) -> bool {
@@ -144,6 +161,9 @@ pub(super) fn consume_table_function(
     ctx: &mut FragmentContext,
 ) -> Option<usize> {
     let (i, tok) = next_code(tokens, index)?;
+    if is_kw(tok, Keyword::ONLY) {
+        return None;
+    }
     word_value(tok)?;
     let mut next_i = i + 1;
     if let Some((dot_i, dot)) = next_code(tokens, next_i) {

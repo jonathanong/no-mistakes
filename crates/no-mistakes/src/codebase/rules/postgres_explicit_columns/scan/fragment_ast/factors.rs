@@ -55,6 +55,7 @@ pub(super) fn push_factor(
                         alias: Some(ident_key(&alias.name)),
                         join_aliases: Vec::new(),
                         is_local_derived: true,
+                        hidden_by_join_alias: false,
                         depth: 0,
                     });
                 }
@@ -67,6 +68,7 @@ pub(super) fn push_factor(
                 alias: alias.as_ref().map(|a| ident_key(&a.name)),
                 join_aliases: Vec::new(),
                 is_local_derived: is_cte,
+                hidden_by_join_alias: false,
                 depth: 0,
             });
         }
@@ -79,6 +81,7 @@ pub(super) fn push_factor(
                 alias: alias.as_ref().map(|a| ident_key(&a.name)),
                 join_aliases: Vec::new(),
                 is_local_derived: true,
+                hidden_by_join_alias: false,
                 depth: 0,
             });
         }
@@ -89,9 +92,10 @@ pub(super) fn push_factor(
             let mut inner = collect_rels(std::slice::from_ref(table_with_joins), scope, out);
             if let Some(alias) = alias {
                 let name = ident_key(&alias.name);
-                inner
-                    .iter_mut()
-                    .for_each(|r| r.join_aliases.push(name.clone()));
+                for r in &mut inner {
+                    r.join_aliases.push(name.clone());
+                    r.hidden_by_join_alias = true;
+                }
             }
             rels.extend(inner);
         }

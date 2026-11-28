@@ -47,6 +47,38 @@ fn dml_correlated_case_window_distinct_join_on_quoted_and_token_edges() {
             "SELECT g.* FROM pg_catalog.generate_series(1, 3) g(n) WHERE",
             vec![],
         ),
+        (
+            "SELECT (SELECT (SELECT count(wide.*)) FROM wide LIMIT 1) FROM narrow AS wide WHERE",
+            vec![(Some("wide"), Some("count"))],
+        ),
+        (
+            "WITH wide AS (SELECT 1) UPDATE wide SET id = 1 RETURNING wide.* WHERE",
+            vec![(Some("wide"), None)],
+        ),
+        (
+            "SELECT w.id FROM wide w ORDER BY (SELECT row_to_json(w.*))",
+            vec![(Some("wide"), Some("row_to_json"))],
+        ),
+        (
+            "SELECT (SELECT row_to_json(w.*) FROM (narrow w CROSS JOIN narrow n) j LIMIT 1) FROM wide w",
+            vec![(Some("wide"), Some("row_to_json"))],
+        ),
+        (
+            "SELECT * FROM ONLY (wide) WHERE",
+            vec![(Some("wide"), None)],
+        ),
+        (
+            "SELECT q.* FROM LATERAL (SELECT id FROM wide) q WHERE",
+            vec![],
+        ),
+        (
+            "SELECT (SELECT (SELECT q.*) FROM (SELECT 1 AS id) q) FROM wide q WHERE",
+            vec![],
+        ),
+        (
+            "SELECT * FROM narrow; SELECT id FROM wide WHERE",
+            vec![(Some("narrow"), None)],
+        ),
     ];
     for (sql, expected) in cases {
         let stars = extract_fragment_stars(sql, None);
@@ -58,4 +90,5 @@ fn dml_correlated_case_window_distinct_join_on_quoted_and_token_edges() {
     }
 
     assert!(extract_fragment_stars("SELECT * FROM wide", Some("SELECT EXISTS (")).is_empty());
+    assert!(extract_fragment_stars("* 2 FROM wide", Some("SELECT quantity ")).is_empty());
 }

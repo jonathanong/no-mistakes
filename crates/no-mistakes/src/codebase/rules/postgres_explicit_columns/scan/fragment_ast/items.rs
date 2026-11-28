@@ -104,13 +104,14 @@ fn resolve_in(
 ) -> bool {
     let found = if multi_part {
         rels.iter()
-            .find(|rel| rel.alias.is_none() && rel.table == ident)
+            .find(|rel| !rel.hidden_by_join_alias && rel.alias.is_none() && rel.table == ident)
     } else {
         rels.iter()
-            .find(|rel| rel.alias.as_deref() == Some(ident))
+            .find(|rel| !rel.hidden_by_join_alias && rel.alias.as_deref() == Some(ident))
             .or_else(|| {
                 rels.iter().find(|rel| {
-                    rel.alias.is_none()
+                    !rel.hidden_by_join_alias
+                        && rel.alias.is_none()
                         && (rel.table == ident
                             || relation_suffix_key(&rel.table) == ident
                             || relation_suffix_name(&rel.table) == ident)

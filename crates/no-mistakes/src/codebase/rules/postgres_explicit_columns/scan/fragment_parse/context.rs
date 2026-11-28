@@ -1,3 +1,4 @@
+use super::readers::consume_with_head;
 use super::{
     is_kw, next_code, read_cte_name, read_optional_alias, read_table_and_alias, skip_paren_group,
     FragmentContext,
@@ -56,12 +57,17 @@ fn step_top_level(
 
 fn consume_from_factor(
     tokens: &[TokenWithSpan],
-    index: usize,
+    mut index: usize,
     is_into: bool,
     kw_i: usize,
     ctx: &mut FragmentContext,
 ) -> Option<usize> {
     if !is_into {
+        if let Some((lat_i, lat_tok)) = next_code(tokens, index) {
+            if is_kw(lat_tok, Keyword::LATERAL) {
+                index = lat_i + 1;
+            }
+        }
         if let Some((paren_i, tok)) = next_code(tokens, index) {
             if matches!(tok.token, Token::LParen) {
                 let after = skip_paren_group(tokens, paren_i);
@@ -112,19 +118,6 @@ fn extract_parenthesized_join(
     ctx.join_aliases.extend(sub.join_aliases);
     ctx.derived_aliases.extend(sub.derived_aliases);
     ctx.has_derived_from |= sub.has_derived_from;
-}
-
-fn consume_with_head(tokens: &[TokenWithSpan], mut index: usize, ctx: &mut FragmentContext) -> usize {
-    if let Some((next_i, next_tok)) = next_code(tokens, index) {
-        if is_kw(next_tok, Keyword::RECURSIVE) {
-            index = next_i + 1;
-        }
-    }
-    if let Some((next_i, name)) = read_cte_name(tokens, index) {
-        ctx.ctes.push(name);
-        return next_i;
-    }
-    index
 }
 
 fn consume_clause_relation(

@@ -27,6 +27,7 @@ pub(super) struct Rel {
     pub(super) alias: Option<String>,
     pub(super) join_aliases: Vec<String>,
     pub(super) is_local_derived: bool,
+    pub(super) hidden_by_join_alias: bool,
     pub(super) depth: usize,
 }
 
@@ -94,19 +95,33 @@ pub(super) fn collect_query(
         ctes: &ctes,
         outer_rels: scope.outer_rels,
     };
-    collect_set(&query.body, body_scope, in_exists, out);
+    let simple_rels = collect_set(&query.body, body_scope, in_exists, out);
     if let Some(order_by) = &query.order_by {
         if let sqlparser::ast::OrderByKind::Expressions(exprs) = &order_by.kind {
+            let order_outer = extend_outer(&simple_rels, body_scope.outer_rels);
+            let order_scope = Scope {
+                ctes: body_scope.ctes,
+                outer_rels: if simple_rels.is_empty() {
+                    body_scope.outer_rels
+                } else {
+                    &order_outer
+                },
+            };
             for expr in exprs {
-                walk_subqueries(&expr.expr, body_scope, out);
+                walk_subqueries(&expr.expr, order_scope, out);
             }
         }
     }
 }
 
-fn collect_set(expr: &SetExpr, scope: Scope<'_>, in_exists: bool, out: &mut Vec<FragmentStar>) {
+fn collect_set(
+    expr: &SetExpr,
+    scope: Scope<'_>,
+    in_exists: bool,
+    out: &mut Vec<FragmentStar>,
+) -> Vec<Rel> {
     match expr {
-        SetExpr::Select(select) => collect_select(select, scope, in_exists, out),
+        SetExpr::Select(select) => return collect_select(select, scope, in_exists, out),
         SetExpr::Query(query) => collect_query(query, scope, in_exists, out),
         SetExpr::Insert(stmt) | SetExpr::Update(stmt) | SetExpr::Delete(stmt) => {
             collect_statement(stmt, scope, false, out);
@@ -132,9 +147,15 @@ fn collect_set(expr: &SetExpr, scope: Scope<'_>, in_exists: bool, out: &mut Vec<
         }
         _ => {}
     }
+    Vec::new()
 }
 
-fn collect_select(select: &Select, scope: Scope<'_>, in_exists: bool, out: &mut Vec<FragmentStar>) {
+fn collect_select(
+    select: &Select,
+    scope: Scope<'_>,
+    in_exists: bool,
+    out: &mut Vec<FragmentStar>,
+) -> Vec<Rel> {
     let rels = collect_rels(&select.from, scope, out);
     if !in_exists {
         collect_items(&select.projection, &rels, scope, false, out);
@@ -153,4 +174,5 @@ fn collect_select(select: &Select, scope: Scope<'_>, in_exists: bool, out: &mut 
     {
         walk_subqueries(expr, child_scope, out);
     }
+    rels
 }
