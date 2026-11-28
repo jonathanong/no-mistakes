@@ -7,7 +7,7 @@ pub mod facts;
 pub use no_mistakes_ts_facts::jsx;
 pub mod module_facts;
 
-pub(crate) mod bound_comments;
+pub(crate) use no_mistakes_ts_analysis::bound_comments;
 pub(crate) mod builtin_receivers;
 
 mod file_id_map;
@@ -49,13 +49,17 @@ pub(crate) fn deduplicate_analysis_paths<'a>(
     unique.into_values().collect()
 }
 
+use no_mistakes_ts_analysis::comment_parser::{
+    comment_body, is_word_char, leading_comment_text, line_comment_start, CommentKind,
+    LineCommentScanState,
+};
+#[cfg(test)]
+use no_mistakes_ts_analysis::comment_parser::{html_directive_comment, html_leading_comment_body};
+
 include!("discovery.rs");
 include!("discovery_preserve.rs");
 include!("visible_snapshot.rs");
 include!("disable_comments.rs");
-include!("comment_parser.rs");
-include!("comment_parser_html.rs");
-include!("comment_parser_modes.rs");
 
 #[cfg(all(test, any(nm_shard_all, nm_shard_0)))]
 mod comment_parser_markdown_tests;

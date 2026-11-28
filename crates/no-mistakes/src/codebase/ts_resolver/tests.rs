@@ -1,48 +1,5 @@
 use super::*;
-use std::sync::Arc;
 use tempfile::TempDir;
-
-impl ImportResolutionCache {
-    pub(crate) fn classification_count(&self) -> usize {
-        self.classifications
-            .load(std::sync::atomic::Ordering::Relaxed)
-    }
-
-    pub(crate) fn request_count(&self) -> usize {
-        self.requests.load(std::sync::atomic::Ordering::Relaxed)
-    }
-}
-
-#[test]
-fn import_resolution_cache_clear_removes_raw_and_classified_entries() {
-    let root = workspace_tsconfig_fixture();
-    let importer = root.join("apps/web/src/entry.ts");
-    let target = root.join("apps/web/src/runtime/value.ts");
-    let cache = ImportResolutionCache::default();
-    let key = ResolveKey {
-        importing_file: Arc::from(importer),
-        specifier: Arc::from("@runtime/value"),
-    };
-    cache.raw_entries.insert(key.clone(), Some(target.clone()));
-    let classification_key = ClassificationKey {
-        importing_file: Arc::clone(&key.importing_file),
-        specifier: Arc::clone(&key.specifier),
-        policy: ClassificationPolicy::Standard,
-    };
-    cache.final_entries.insert(
-        classification_key.clone(),
-        ImportClassification {
-            resolver_target: Some(target),
-            workspace_target: None,
-            workspace_recognized: false,
-        },
-    );
-
-    cache.clear();
-
-    assert!(cache.raw_entries.get(&key).is_none());
-    assert!(cache.final_entries.get(&classification_key).is_none());
-}
 
 #[test]
 fn normalized_visible_tsconfig_lookup_matches_visible_path_scan() {
@@ -83,25 +40,6 @@ fn normalized_visible_tsconfig_lookup_matches_visible_path_scan() {
 }
 
 #[test]
-fn interned_resolve_keys_hit_shared_cache() {
-    let interner = crate::codebase::analysis_session::PathInterner::new();
-    let first = ResolveKey {
-        importing_file: interner.intern_path("src/a.ts"),
-        specifier: interner.intern_str("./b"),
-    };
-    let second = ResolveKey {
-        importing_file: interner.intern_path("src/./a.ts"),
-        specifier: interner.intern_str("./b"),
-    };
-    assert!(Arc::ptr_eq(&first.importing_file, &second.importing_file));
-    assert_eq!(first, second);
-
-    let cache = ImportResolutionCache::default();
-    cache.raw_entries.insert(first.clone(), None);
-    assert!(cache.raw_entries.get(&second).is_some());
-}
-
-#[test]
 fn scoped_shared_cache_attaches_session_interner() {
     let root = workspace_tsconfig_fixture();
     let web = root.join("apps/web");
@@ -126,28 +64,6 @@ fn scoped_shared_cache_attaches_session_interner() {
         session.interner().interned_str_count() > 0,
         "shared-cache scoped resolvers must intern specifiers through the session"
     );
-}
-
-#[test]
-fn local_arc_resolve_keys_match_interned_keys_by_path_bytes() {
-    let interner = crate::codebase::analysis_session::PathInterner::new();
-    let interned = ResolveKey {
-        importing_file: interner.intern_path("src/./a.ts"),
-        specifier: interner.intern_str("./b"),
-    };
-    let local = ResolveKey {
-        importing_file: Arc::from(normalize_path(Path::new("src/a.ts"))),
-        specifier: Arc::from("./b"),
-    };
-    assert!(!Arc::ptr_eq(
-        &interned.importing_file,
-        &local.importing_file
-    ));
-    assert_eq!(interned, local);
-
-    let cache = ImportResolutionCache::default();
-    cache.raw_entries.insert(interned, None);
-    assert!(cache.raw_entries.get(&local).is_some());
 }
 
 fn saved_resolver_fixture(name: &str) -> TempDir {
@@ -182,27 +98,6 @@ fn fixed_root_tsconfig_fixture() -> PathBuf {
     )
 }
 
-fn absolute_glob_rules_fixture() -> PathBuf {
-    normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/tsconfig/absolute-glob-rules"),
-    )
-}
-
-fn exact_include_files_fixture() -> PathBuf {
-    normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/tsconfig/exact-include-files"),
-    )
-}
-
-fn include_config_directory_fixture() -> PathBuf {
-    normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/tsconfig/include-config-directory"),
-    )
-}
-
 fn symlinked_root_tsconfig_fixture() -> PathBuf {
     normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -221,13 +116,6 @@ fn broken_child_boundary_tsconfig_fixture() -> PathBuf {
     normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/tsconfig/broken-child-boundary"),
-    )
-}
-
-fn trailing_directory_include_tsconfig_fixture() -> PathBuf {
-    normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/tsconfig/trailing-directory-include"),
     )
 }
 
@@ -258,18 +146,24 @@ fn auxiliary_ownership_tsconfig_fixture() -> PathBuf {
     )
 }
 
-fn paths_precedence_tsconfig_fixture() -> PathBuf {
-    crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/tsconfig/paths-precedence"),
-    )
-}
-
-mod aliases;
-mod catalog_config;
 mod catalog_ownership;
-mod config_loading_and_relative;
 mod resolver_cache;
 mod scoped_resolution;
-
-mod extends;
 mod workspace_fallback;
+
+#[test]
+fn prepared_symbol_flows_keep_session_scoped_resolution() {
+    for (name, source) in [
+        ("pipeline", include_str!("../symbols/pipeline.rs")),
+        (
+            "impact_collect",
+            include_str!("../symbols/impact_collect.rs"),
+        ),
+    ] {
+        assert!(
+            source.contains("ScopedImportResolver::from_lookup")
+                || source.contains("ScopedImportResolver::new_in_session"),
+            "{name} must resolve through a scoped session constructor"
+        );
+    }
+}

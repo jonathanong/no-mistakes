@@ -8,6 +8,9 @@ fn production_oxc_parses_use_the_observable_chokepoint() {
         crate::codebase::ts_resolver::normalize_path(
             &manifest_dir.join("../no-mistakes-ts-facts/src"),
         ),
+        crate::codebase::ts_resolver::normalize_path(
+            &manifest_dir.join("../no-mistakes-ts-analysis/src"),
+        ),
     ];
     let mut offenders = Vec::new();
     for src in &roots {

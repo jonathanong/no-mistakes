@@ -1,0 +1,11 @@
+use crate::text::byte_offset_to_line;
+use crate::ts_resolver;
+use oxc_allocator::Allocator;
+use oxc_ast::ast::{Expression, ImportDeclarationSpecifier, ModuleExportName, Program, Statement};
+use oxc_span::SourceType;
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::path::{Path, PathBuf};
+include!("reachability.rs");
+include!("facts.rs");
+include!("create_queue.rs");
+include!("queue_name.rs");

@@ -61,7 +61,13 @@ pub(super) fn resolve_modules(
         .iter()
         .map(|path| normalize_path(path))
         .collect::<crate::fx::PathSet>();
-    let resolver = ScopedImportResolver::from_lookup(catalog.catalog, &visible, catalog.session);
+    let resolver = ScopedImportResolver::from_lookup(
+        catalog.catalog,
+        &visible,
+        catalog
+            .session
+            .map(|session| session as &dyn crate::codebase::ts_resolver::ResolverSession),
+    );
     let workspace = match catalog.sources {
         Some(sources) => {
             crate::codebase::workspaces::load_indexed_from_source_store(root, sources)?

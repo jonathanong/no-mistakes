@@ -25,8 +25,8 @@ fn session_scopes_share_visibility_and_successful_and_failed_imports() {
     let second = ScopedImportResolver::new_in_session(&catalog, &copied, &session);
     // Equal contents from separate domains must keep one prepared identity.
     assert!(std::ptr::eq(
-        first.visible.as_ref().unwrap().lookup(),
-        second.visible.as_ref().unwrap().lookup()
+        first.visible_lookup().unwrap(),
+        second.visible_lookup().unwrap()
     ));
     for resolver in [&first, &second] {
         assert_eq!(

@@ -1,20 +1,7 @@
 pub use no_mistakes_rule_kernel::paths::relative_slash_path;
 pub(crate) use no_mistakes_rule_kernel::paths::{is_portably_absolute_path, normalize_discovery_path};
 pub const TS_JS_EXTENSIONS: &[&str] = &["js", "jsx", "mjs", "mts", "cjs", "cts", "ts", "tsx"];
-pub const SKIP_DIRS: &[&str] = &[
-    "node_modules",
-    "dist",
-    ".git",
-    ".next",
-    "coverage",
-    "fixtures",
-    "target",
-    "build",
-];
-
-pub fn is_skipped_dir(name: &str) -> bool {
-    SKIP_DIRS.contains(&name)
-}
+pub use no_mistakes_ts_analysis::text::{is_skipped_dir, SKIP_DIRS};
 
 /// Walk all non-ignored files under `root`.
 ///

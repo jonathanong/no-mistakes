@@ -5,6 +5,7 @@
 - `crates/no-mistakes-postgres-sql` — pure PostgreSQL SQL parsing, statement/DML/lock/bound facts, identifiers (no `no-mistakes` dep; `CatalogLifecycleLookup` + `source::record_global_rayon_threads`).
 - `crates/no-mistakes-rule-kernel` — shared rule findings, contexts, suppression, source access, diagnostics, path matching, and validator types. The facade owns family registration and prepared inputs.
 - `crates/no-mistakes-ts-facts` — pure OXC TS parsing, module facts, and value-flow extraction (must not depend on `no-mistakes`; diagnostics via `hooks`).
+- `crates/no-mistakes-ts-analysis` — TypeScript/JS module resolution (`ts_resolver`, `workspace_resolution`), routes/resources/queues/symbols/HTTP/process-spawn/tRPC/fetch/server-route extraction, comment/bound-comment scanning, and `PathInterner` (sits above `no-mistakes-ts-facts`; borrows request-scoped sources/sessions via `SourceAccess`, `ResolverSession`, and `hooks`).
 ## Performance Guidelines
 Core check/evaluator optimizations must also follow [the crate rules](no-mistakes/AGENTS.md).
 ### Core architecture invariants

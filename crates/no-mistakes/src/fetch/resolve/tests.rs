@@ -61,7 +61,7 @@ fn is_client_route_file_with_sources_reuses_the_prepared_store() {
 
 #[test]
 fn fetch_resolve_source_does_not_read_the_filesystem_directly() {
-    let source = include_str!("../resolve.rs");
+    let source = include_str!("../../../../no-mistakes-ts-analysis/src/fetch/resolve.rs");
     assert!(!source.contains("std::fs::read_to_string"));
     assert!(source.contains("read_prepared_or_open"));
 }

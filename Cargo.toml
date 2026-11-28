@@ -4,6 +4,7 @@ members = [
     "crates/no-mistakes-invocation",
     "crates/no-mistakes-postgres-sql",
     "crates/no-mistakes-ts-facts",
+    "crates/no-mistakes-ts-analysis",
     "crates/no-mistakes-rule-kernel",
 ]
 resolver = "2"
@@ -20,6 +21,7 @@ no-mistakes-rule-kernel = { version = "=0.109.124", path = "crates/no-mistakes-r
 no-mistakes-invocation = { version = "=0.109.124", path = "crates/no-mistakes-invocation" }
 no-mistakes-postgres-sql = { version = "=0.109.124", path = "crates/no-mistakes-postgres-sql" }
 no-mistakes-ts-facts = { version = "=0.109.124", path = "crates/no-mistakes-ts-facts" }
+no-mistakes-ts-analysis = { version = "=0.109.124", path = "crates/no-mistakes-ts-analysis" }
 
 [workspace.lints.cargo]
 unused_dependencies = "warn"

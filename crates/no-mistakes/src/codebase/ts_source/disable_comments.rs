@@ -2,11 +2,7 @@ const DISABLE_FILE: &str = "no-mistakes-disable-file ";
 const DISABLE_LINE: &str = "no-mistakes-disable-line ";
 const DISABLE_NEXT_LINE: &str = "no-mistakes-disable-next-line ";
 
-pub fn byte_offset_to_line(source: &str, byte_offset: usize) -> u32 {
-    let end = byte_offset.min(source.len());
-    let line = source[..end].bytes().filter(|&b| b == b'\n').count();
-    (line + 1) as u32
-}
+pub use no_mistakes_ts_analysis::text::byte_offset_to_line;
 
 /// Returns `true` if the line immediately before `stmt_line` (1-based) contains
 /// a `no-mistakes-disable-next-line <rule_id>` directive comment.

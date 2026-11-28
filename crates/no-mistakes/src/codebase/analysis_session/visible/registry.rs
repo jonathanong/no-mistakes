@@ -52,17 +52,17 @@ fn collect(visible: &dyn VisiblePathLookup) -> Arc<PreparedVisible> {
 fn same_projection(visible: &dyn VisiblePathLookup, scope: &PreparedVisible) -> bool {
     if visible
         .scope_identity()
-        .is_some_and(|id| id == scope.identity)
+        .is_some_and(|id| id == *scope.identity())
     {
         return true;
     }
-    if visible.visible_len() != scope.paths.len() {
+    if visible.visible_len() != scope.paths_arc().len() {
         return false;
     }
     // A fingerprint only selects a bucket. Full membership prevents a collision
     // from changing an unresolved import into a wrong known target.
     let mut equal = true;
-    visible.visit_visible(&mut |path| equal &= scope.paths.contains(path));
+    visible.visit_visible(&mut |path| equal &= scope.paths_arc().contains(path));
     equal
 }
 

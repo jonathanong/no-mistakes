@@ -1,0 +1,40 @@
+[package]
+name = "no-mistakes-ts-analysis"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "TypeScript/JavaScript resolution, route, resource, queue, and fetch analysis for no-mistakes"
+repository.workspace = true
+documentation = "https://github.com/jongleberry/no-mistakes"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+
+[features]
+default = []
+test-instrumentation = ["no-mistakes-ts-facts/test-instrumentation"]
+
+[dependencies]
+anyhow = "1"
+dashmap = "6.2.1"
+globset = "0.4"
+jsonc-parser = { version = "0.34", features = ["serde", "serde_json"] }
+no-mistakes-ts-facts.workspace = true
+oxc_allocator = "0.159.0"
+oxc_ast = "0.159.0"
+oxc_ast_visit = "0.159.0"
+oxc_parser = "0.159.0"
+oxc_span = "0.159.0"
+oxc_syntax = { version = "0.159.0", features = ["to_js_string"] }
+rayon = "1.10"
+rustc-hash = "2.1.3"
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = { version = "1", features = ["raw_value"] }
+
+[dev-dependencies]
+ignore = "0.4"
+tempfile = "3"

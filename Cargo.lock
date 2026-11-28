@@ -1314,6 +1314,7 @@ dependencies = [
  "no-mistakes-invocation",
  "no-mistakes-postgres-sql",
  "no-mistakes-rule-kernel",
+ "no-mistakes-ts-analysis",
  "no-mistakes-ts-facts",
  "num_cpus",
  "oxc_allocator",
@@ -1390,6 +1391,29 @@ dependencies = [
  "globset",
  "no-mistakes-ts-facts",
  "serde",
+]
+
+[[package]]
+name = "no-mistakes-ts-analysis"
+version = "0.109.124"
+dependencies = [
+ "anyhow",
+ "dashmap",
+ "globset",
+ "ignore",
+ "jsonc-parser",
+ "no-mistakes-ts-facts",
+ "oxc_allocator",
+ "oxc_ast",
+ "oxc_ast_visit",
+ "oxc_parser",
+ "oxc_span",
+ "oxc_syntax",
+ "rayon",
+ "rustc-hash",
+ "serde",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]

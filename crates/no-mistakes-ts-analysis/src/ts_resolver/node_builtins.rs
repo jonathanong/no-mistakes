@@ -1,0 +1,51 @@
+/// Node's built-in module names, both bare (`"fs"`) and `node:`-prefixed
+/// (`"node:fs"`) forms. Neither form requires a `package.json` declaration.
+const NODE_BUILTIN_MODULES: &[&str] = &[
+    "assert",
+    "async_hooks",
+    "buffer",
+    "child_process",
+    "cluster",
+    "console",
+    "constants",
+    "crypto",
+    "dgram",
+    "diagnostics_channel",
+    "dns",
+    "domain",
+    "events",
+    "fs",
+    "http",
+    "http2",
+    "https",
+    "inspector",
+    "module",
+    "net",
+    "os",
+    "path",
+    "perf_hooks",
+    "process",
+    "punycode",
+    "querystring",
+    "readline",
+    "repl",
+    "stream",
+    "string_decoder",
+    "sys",
+    "timers",
+    "tls",
+    "trace_events",
+    "tty",
+    "url",
+    "util",
+    "v8",
+    "vm",
+    "wasi",
+    "worker_threads",
+    "zlib",
+];
+
+pub fn is_bare_node_builtin(name: &str) -> bool {
+    let module = name.split('/').next().unwrap_or(name);
+    NODE_BUILTIN_MODULES.contains(&module)
+}

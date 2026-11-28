@@ -265,7 +265,7 @@ fn collect_imports_with_sources_reuses_the_prepared_store() {
 
 #[test]
 fn fetch_imports_source_does_not_read_the_filesystem_directly() {
-    let source = include_str!("../imports.rs");
+    let source = include_str!("../../../../no-mistakes-ts-analysis/src/fetch/imports.rs");
     assert!(!source.contains("std::fs::read_to_string"));
     assert!(source.contains("read_prepared_or_open"));
 }

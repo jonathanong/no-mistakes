@@ -22,6 +22,7 @@ test-instrumentation = [
   "no-mistakes-invocation/test-instrumentation",
   "no-mistakes-postgres-sql/test-instrumentation",
   "no-mistakes-ts-facts/test-instrumentation",
+  "no-mistakes-ts-analysis/test-instrumentation",
 ]
 
 [dependencies]
@@ -47,6 +48,7 @@ merman-analysis = { version = "=0.10.0", optional = true, features = ["all-diagr
 napi = { version = "3.9.0", features = ["napi8"] }
 napi-derive = { version = "3.5.6", default-features = false, features = ["strict"] }
 no-mistakes-ts-facts = { workspace = true }
+no-mistakes-ts-analysis = { workspace = true }
 num_cpus = "1.16"
 # Keep OXC crates aligned; the oxc-dependencies Dependabot group updates them together.
 oxc_allocator = "0.159.0"
@@ -101,6 +103,7 @@ criterion = { package = "codspeed-criterion-compat", version = "=5.0.1", default
 insta = "1.49.0"
 no-mistakes-postgres-sql = { workspace = true, features = ["test-instrumentation"] }
 no-mistakes-ts-facts = { workspace = true, features = ["parse-count"] }
+no-mistakes-ts-analysis = { workspace = true, features = ["test-instrumentation"] }
 predicates = { version = "3", default-features = false }
 
 [build-dependencies]

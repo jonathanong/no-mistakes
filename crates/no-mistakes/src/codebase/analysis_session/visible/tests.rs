@@ -41,8 +41,8 @@ fn canonical_aliases_and_read_failures_are_shared_without_widening_raw_scopes() 
     let raw = session.prepared_visible(&visible);
     let normalized = session.normalized_visible(&visible);
     assert!(Arc::ptr_eq(
-        raw.normalized.get().unwrap(),
-        &normalized.paths
+        raw.normalized_cell().get().unwrap(),
+        normalized.paths_arc()
     ));
     assert!(raw.contains_visible(&lexical));
     assert!(!raw.contains_visible(&real));
@@ -140,14 +140,14 @@ fn prepared_owner_retains_the_existing_path_storage() {
     let retained = session.prepared_visible(&borrowed);
     // Runner preparation already owns this immutable set; copying it would
     // retain a second repository-sized allocation for the rest of the request.
-    assert!(Arc::ptr_eq(&owner.paths, &retained.paths));
+    assert!(Arc::ptr_eq(owner.paths_arc(), retained.paths_arc()));
     let normalized = session.normalized_visible(&owner);
-    assert!(Arc::ptr_eq(&owner.paths, &normalized.paths));
+    assert!(Arc::ptr_eq(owner.paths_arc(), normalized.paths_arc()));
 }
 
 #[test]
 fn standalone_prepared_normalization_reuses_unchanged_path_storage() {
     let root = fixture_root();
     let owner = PreparedVisible::new(crate::fx::PathSet::from_iter([root.join("utils.mts")]));
-    assert!(Arc::ptr_eq(&owner.paths, &owner.normalized_visible()));
+    assert!(Arc::ptr_eq(owner.paths_arc(), &owner.normalized_visible()));
 }
