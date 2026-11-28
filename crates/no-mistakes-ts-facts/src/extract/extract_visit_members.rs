@@ -111,6 +111,8 @@ fn visit_receiver_field_initializer<'a>(
     } else {
         // Deferred fields remain repeated for ordinary calls/imports too.
         collector.repeat_depth += 1;
+        let owner = collector.current_function_id();
+        let previous = collector.deferred_field_owner.replace(owner);
         if collector.collect_value_flow {
             #[cfg(feature = "test-instrumentation")]
             extract_value_flow::ordinary_demand_metrics::site(4);
@@ -130,6 +132,7 @@ fn visit_receiver_field_initializer<'a>(
         } else {
             collector.visit_expression(value);
         }
+        collector.deferred_field_owner = previous;
         collector.repeat_depth -= 1;
     }
 }

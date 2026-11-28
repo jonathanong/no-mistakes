@@ -119,6 +119,13 @@ the runtime entrypoints and report fields are unchanged. See the
 its YAML rule options; the runtime entrypoints and report fields are unchanged.
 See the [rule contract](rules/queue-rate-limit-error-delay.md#options-and-defaults).
 
+Configured [`queue-no-enqueue-in-transaction`](rules/queue-no-enqueue-in-transaction.md)
+runs through asynchronous `check({ root, config })` and `analyzeProject()` check
+reports using the same `RuleFinding` as CLI `check`.
+`QueueNoEnqueueInTransactionOptions`, `QueueNoEnqueueInTransactionBoundary`, and
+`QueueNoEnqueueInTransactionPublisher` describe the YAML rule options, including
+optional `unanalyzable` (`report`, `advise`, or `ignore`).
+
 `query-reached-per-item` accepts `exemptCappedCursorPageReads` in the rule's
 YAML `options`, selected by `check({ root, config })` or an `analyzeProject()`
 check report. It defaults to `false` and shares CLI behavior. The exported
@@ -621,7 +628,7 @@ See the [migration guide](migrations/deprecated-surfaces.md).
 | `analyzeProject` | `analyzeProject(options)`; import `AnalyzeProjectReportType` for report `type` instead of indexing `AnalyzeProjectReportRequest['type']` |
 | `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
 | `callSites` | `callSites(options)` |
-| `check` | `check(options)` uses `checkJson` for configured rules, including `playwright-no-serial` and `test-no-retries`. Reports may include `CheckReport.incomplete` (`CheckFailure[]`) and `CheckReport.acceptedBounds` (`AcceptedStatementBound[]`). |
+| `check` | `check(options)` uses `checkJson` for configured rules, including `queue-no-enqueue-in-transaction`, `playwright-no-serial` and `test-no-retries`. Reports may include `CheckReport.incomplete` (`CheckFailure[]`) and `CheckReport.acceptedBounds` (`AcceptedStatementBound[]`). |
 | `ciEnv` | `ciEnv(options)` |
 | `ciImpact` | `ciImpact(options)` |
 | `ciTopology` | `ciTopology(options)` |

@@ -102,9 +102,14 @@ impl ImportCollector {
                 .iter()
                 .map(|value| self.value_expression(value)),
         );
+        let context = self.current_function_id();
+        let offset = tag_offset(tagged);
+        if self.deferred_field_owner == Some(context) {
+            self.value_flow.deferred_calls.insert(offset);
+        }
         self.value_flow.calls.push(ValueCall {
-            context: self.current_function_id(),
-            offset: tag_offset(tagged),
+            context,
+            offset,
             end: tagged.span.end,
             source_callee: simple_callee_name(&tagged.tag)
                 .unwrap_or_else(|| "<unknown>".to_string()),

@@ -9,7 +9,7 @@ impl ImportCollector {
         &self,
         expression: &Expression<'_>,
     ) -> ValueExpression {
-        match expression {
+        match unwrap_value_wrappers(expression) {
             Expression::Identifier(identifier)
                 if identifier.name == "undefined"
                     && self.callee_binding_scope("undefined").is_none()
@@ -72,16 +72,6 @@ impl ImportCollector {
             Expression::AwaitExpression(awaited) => ValueExpression::Awaited(std::sync::Arc::new(
                 self.value_expression(&awaited.argument),
             )),
-            Expression::ParenthesizedExpression(parenthesized) => {
-                self.value_expression(&parenthesized.expression)
-            }
-            Expression::TSAsExpression(assertion) => self.value_expression(&assertion.expression),
-            Expression::TSSatisfiesExpression(assertion) => {
-                self.value_expression(&assertion.expression)
-            }
-            Expression::TSNonNullExpression(assertion) => {
-                self.value_expression(&assertion.expression)
-            }
             Expression::CallExpression(call) => self
                 .object_assign_result(call)
                 .unwrap_or(ValueExpression::Call(call.span.start, call.span.end)),
@@ -91,24 +81,7 @@ impl ImportCollector {
             Expression::FunctionExpression(function) => {
                 ValueExpression::Callable(CallableId(function.span.start))
             }
-            Expression::ArrayExpression(array) => {
-                let mut fields = fx_map();
-                for (index, element) in array.elements.iter().enumerate() {
-                    if matches!(
-                        element,
-                        oxc_ast::ast::ArrayExpressionElement::SpreadElement(_)
-                    ) {
-                        return ValueExpression::Unknown;
-                    }
-                    let value = element
-                        .as_expression()
-                        .map_or(ValueExpression::Undefined, |expression| {
-                            super::receiver_escapes::array_element_value(self, expression)
-                        });
-                    fields.insert(index.to_string(), value);
-                }
-                ValueExpression::Array(std::sync::Arc::new(fields))
-            }
+            Expression::ArrayExpression(array) => self.array_value_expression(array),
             Expression::LogicalExpression(logical)
                 if logical.operator == oxc_syntax::operator::LogicalOperator::Coalesce =>
             {
@@ -119,15 +92,34 @@ impl ImportCollector {
             }
             Expression::NullLiteral(_) => ValueExpression::Null,
             Expression::ObjectExpression(object) => self.object_value(object),
-            _ => simple_callee_name(expression).map_or(ValueExpression::Unknown, |name| {
+            other => simple_callee_name(other).map_or(ValueExpression::Unknown, |name| {
                 ValueExpression::Named {
                     scope: self.callee_binding_scope(&name),
                     name,
-                    offset: expression.span().start,
+                    offset: other.span().start,
                     context: self.current_function_id(),
                 }
             }),
         }
+    }
+
+    fn array_value_expression(&self, array: &oxc_ast::ast::ArrayExpression<'_>) -> ValueExpression {
+        let mut fields = fx_map();
+        for (index, element) in array.elements.iter().enumerate() {
+            if matches!(
+                element,
+                oxc_ast::ast::ArrayExpressionElement::SpreadElement(_)
+            ) {
+                return ValueExpression::Unknown;
+            }
+            let value = element
+                .as_expression()
+                .map_or(ValueExpression::Undefined, |expression| {
+                    super::receiver_escapes::array_element_value(self, expression)
+                });
+            fields.insert(index.to_string(), value);
+        }
+        ValueExpression::Array(std::sync::Arc::new(fields))
     }
 
     fn conditional_value_expression(&self, value: &ConditionalExpression<'_>) -> ValueExpression {
@@ -142,6 +134,19 @@ impl ImportCollector {
         } else {
             ValueExpression::Derived(vec![consequent, alternate].into())
         }
+    }
+}
+
+fn unwrap_value_wrappers<'a>(mut expr: &'a Expression<'a>) -> &'a Expression<'a> {
+    loop {
+        expr = match expr {
+            Expression::ParenthesizedExpression(parenthesized) => &parenthesized.expression,
+            Expression::TSAsExpression(assertion) => &assertion.expression,
+            Expression::TSSatisfiesExpression(assertion) => &assertion.expression,
+            Expression::TSNonNullExpression(assertion) => &assertion.expression,
+            Expression::TSInstantiationExpression(instantiation) => &instantiation.expression,
+            _ => return expr,
+        };
     }
 }
 

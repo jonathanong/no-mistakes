@@ -29,8 +29,10 @@ impl GraphBuildPlan {
                 || self.assets
                 || self.symbol_import_selectors
                 || self.symbols
-                || self.resources,
+                || self.resources
+                || self.builtin_receivers,
             call_eligibility: self.assertion_owners,
+            builtin_receivers: self.builtin_receivers,
             value_flow: self.calls,
             identifier_provenance: self.identifier_provenance,
             resources: self.resources,

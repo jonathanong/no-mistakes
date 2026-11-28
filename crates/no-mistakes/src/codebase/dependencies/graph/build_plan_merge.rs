@@ -1,6 +1,7 @@
 impl GraphBuildPlan {
     pub(crate) fn include(&mut self, other: Self) {
         self.assertion_owners |= other.assertion_owners;
+        self.builtin_receivers |= other.builtin_receivers;
         self.calls |= other.calls;
         self.mock_boundaries |= other.mock_boundaries;
         self.effect_selectors |= other.effect_selectors;

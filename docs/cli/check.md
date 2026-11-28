@@ -34,6 +34,10 @@ from reaching tests transitively. Per-root `exceptions` allow specified file
 targets without pruning other reachable dependencies. The CLI uses the shared
 canonical graph and resolver for these checks.
 
+Configure [`queue-no-enqueue-in-transaction`](../rules/queue-no-enqueue-in-transaction.md)
+to report an independently durable queue publish in a configured transaction
+callback. `check --format json` reports the publish location under `rules`.
+
 Configure [`postgres-explain-write-rollback`](../rules/postgres-explain-write-rollback.md)
 to flag write plans that can persist in explicitly selected standalone SQL scripts.
 Configure [`postgres-lock-reason`](../rules/postgres-lock-reason.md) to require

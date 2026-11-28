@@ -13,13 +13,14 @@ pub(super) fn expression_is_literal(expression: Option<&Expression<'_>>) -> bool
 }
 #[path = "binding_patterns.rs"]
 mod binding_patterns;
+#[path = "builtin_const_bindings.rs"]
+mod builtin_const_bindings;
 #[path = "contextual_callbacks.rs"]
 mod contextual_callbacks;
 #[path = "for_of_value_binding.rs"]
 mod for_of_value_binding;
 #[path = "literal_arguments.rs"]
 mod literal_arguments;
-
 impl ImportCollector {
     fn record_value_binding(&mut self, declarator: &VariableDeclarator<'_>, immutable: bool) {
         if !self.collect_value_flow {
@@ -64,7 +65,10 @@ impl ImportCollector {
                 self.note_closed_identifier(declarator, init);
                 self.note_literal_catalog_binding(&declarator.id, init, declarator.span.start);
                 self.note_sql_placeholder_binding(&declarator.id, init, declarator.span.start);
+                self.note_builtin_const_binding(&declarator.id, init);
             }
+        } else if immutable {
+            self.note_ambient_builtin_const_binding(declarator);
         }
     }
     pub(in super::super) fn record_value_parameters(&mut self, params: &FormalParameters<'_>) {
@@ -151,11 +155,11 @@ impl ImportCollector {
         self.note_array_push(&value_call, true);
         self.note_closed_registry_call(call);
         self.record_finite_guard_call(call, self.value_flow.calls.len());
+        if self.deferred_field_owner == Some(value_call.context) {
+            self.value_flow.deferred_calls.insert(value_call.offset);
+        }
         self.value_flow.calls.push(value_call);
     }
-}
-
-impl ImportCollector {
     pub(in super::super) fn visit_value_return(
         &mut self,
         statement: &oxc_ast::ast::ReturnStatement<'_>,
@@ -172,9 +176,6 @@ impl ImportCollector {
         }
         walk::walk_return_statement(self, statement);
     }
-}
-
-impl ImportCollector {
     pub(in super::super) fn record_value_declaration(
         &mut self,
         declaration: &VariableDeclaration<'_>,
@@ -192,6 +193,5 @@ impl ImportCollector {
 }
 
 include!("callable_assignment_initializers.rs");
-
 #[path = "for_of_calls.rs"]
 mod for_of_calls;

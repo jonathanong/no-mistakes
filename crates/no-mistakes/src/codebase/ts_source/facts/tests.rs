@@ -412,6 +412,10 @@ fn plan_empty_detection_tracks_all_flags() {
             trpc_calls: true,
             ..TsFactPlan::default()
         },
+        TsFactPlan {
+            builtin_receivers: true,
+            ..TsFactPlan::default()
+        },
     ] {
         assert!(!plan.is_empty());
     }
@@ -441,6 +445,12 @@ fn plan_coverage_tracks_effect_and_rsc_facts() {
         rsc_environment: true,
         ..TsFactPlan::default()
     }));
+    let receivers = TsFactPlan {
+        builtin_receivers: true,
+        ..TsFactPlan::default()
+    };
+    assert!(receivers.covers(receivers));
+    assert!(!TsFactPlan::default().covers(receivers));
 }
 
 #[test]

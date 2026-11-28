@@ -16,6 +16,7 @@ pub(super) const GRAPH_CONSUMERS: &[&str] = &[
     "query-reached-per-item",
     "no-single-enqueue-in-loop",
     "queue-rate-limit-error-delay",
+    queue_no_enqueue_in_transaction::RULE_ID,
     "postgres-no-mutable-sql-registry",
     "postgres-no-unbounded-sql-identifier",
     postgres_sql_fragment_escape::RULE_ID,
@@ -84,6 +85,27 @@ pub(super) fn register_demands(
                     .filter(|file| inputs.contains(file))
                     .cloned(),
             );
+        }
+    }
+    let consumer = queue_no_enqueue_in_transaction::RULE_ID;
+    for rule in config.rule_applications(consumer) {
+        let selected = crate::codebase::rules::selected_rule_files(
+            root,
+            config,
+            rule,
+            shared.graph_file_universe(),
+        );
+        if let Some(files) = session.capture_check_result(consumer, selected)? {
+            session.register_check_demand(consumer, files.iter().cloned());
+            for file in files {
+                if let Some(error) = shared
+                    .ts
+                    .get(&file)
+                    .and_then(|facts| facts.parse_error.as_deref())
+                {
+                    session.record_check_source_failure(&file, error);
+                }
+            }
         }
     }
     for file in shared.files() {

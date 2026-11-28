@@ -9,6 +9,8 @@ pub struct GraphBuildPlan {
     pub mock_boundaries: bool,
     /// Explicit assertion ownership contracts, excluded from default graphs.
     pub assertion_owners: bool,
+    /// Built-in receiver proofs. Excluded from `all()` and from assertion ownership.
+    pub builtin_receivers: bool,
     /// Retain import-selector mappings for effects consumers of call records.
     pub effect_selectors: bool,
     /// Retain exact runtime value-import selectors during call graph builds.
@@ -56,6 +58,7 @@ impl GraphBuildPlan {
     pub fn all() -> Self {
         Self {
             assertion_owners: false,
+            builtin_receivers: false,
             calls: false,
             mock_boundaries: false,
             effect_selectors: false,
@@ -119,6 +122,7 @@ impl GraphBuildPlan {
         };
         Self {
             assertion_owners: allowed.contains(&EdgeKind::AssertionOwner),
+            builtin_receivers: false,
             calls: allowed.contains(&EdgeKind::Call) || allowed.contains(&EdgeKind::AssertionOwner),
             mock_boundaries: false,
             effect_selectors: false,

@@ -1,0 +1,12 @@
+rules:
+  - rule: queue-no-enqueue-in-transaction
+    scope: repository
+    include: ["src/flows/**/*.ts"]
+    options:
+      transactions:
+        - module: "@sample/database"
+          export: transaction
+          callbackArgument: 1
+      publishers:
+        - module: "@sample/jobs"
+          export: enqueue

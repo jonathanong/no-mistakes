@@ -79,6 +79,67 @@ fn async_hooks_storage_import_is_built_in() {
 }
 
 #[test]
+fn annotated_instance_fields_prove_this_receivers() {
+    let source = concat!(
+        "class Runner {\n",
+        "  items: string[] = []\n",
+        "  text: string = ''\n",
+        "  pending: Promise<string>\n",
+        "  queue: { push(job: string): void } = { push(_job: string) {} }\n",
+        "  loose = []\n",
+        "  dyn: string\n",
+        "  static hidden: string[] = [];\n",
+        "  [computedKey]: string = '';\n",
+        "  dup: string = ''\n",
+        "  dup: string = ''\n",
+        "  conflict: string = ''\n",
+        "  conflict: number = 0\n",
+        "  read = () => this.items.map((item: string) => item)\n",
+        "  run() {\n",
+        "    this.items.map((item: string) => item)\n",
+        "    this.text.replace('a', 'b')\n",
+        "    this.dyn.trim()\n",
+        "    this.dyn.map((item: string) => item)\n",
+        "    this.pending.then(() => 1)\n",
+        "    this.queue.push('job')\n",
+        "    this.loose.push(1)\n",
+        "    this.hidden.push(1)\n",
+        "    this.dup.trim()\n",
+        "    this.conflict.trim()\n",
+        "    function nested() { this.items.map((item: string) => item) }\n",
+        "    class Inner extends this.items.slice() {\n",
+        "      [this.text.trim()] = 1\n",
+        "      static items = { map: enqueue }\n",
+        "      static result = this.items.map(job)\n",
+        "      static { this.items.map(job) }\n",
+        "    }\n",
+        "  }\n",
+        "  wrapped() {\n",
+        "    return withTx(async (query: string) => {\n",
+        "      this.items.map((item: string) => item)\n",
+        "    })\n",
+        "  }\n",
+        "  static stat() { this.items.map((item: string) => item) }\n",
+        "}\n",
+        "class Child { run() { this.items.map((item: string) => item) } }",
+    );
+    let found = proven(source);
+    assert_eq!(
+        found,
+        [
+            "this.items.map",
+            "this.items.map",
+            "this.text.replace",
+            "this.dyn.trim",
+            "this.dup.trim",
+            "this.items.slice",
+            "this.text.trim",
+            "this.items.map"
+        ]
+    );
+}
+
+#[test]
 fn deeply_chained_initializers_stop_at_the_depth_bound() {
     let mut source = String::from("const v0 = [];\n");
     for n in 1..12 {

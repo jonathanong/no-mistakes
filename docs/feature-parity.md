@@ -98,6 +98,11 @@ query and `query-reached-per-item` rule support opt-in module/export selectors w
 resolver while retaining spelling-based string configuration. CLI, async Node,
 and batched `analyzeProject` queries share this behavior.
 
+TS/JS [`queue-no-enqueue-in-transaction`](rules/queue-no-enqueue-in-transaction.md)
+reports direct calls to configured queue publishers in inline transaction
+callbacks. Rust, CLI `check`, async Node `check()`, and `analyzeProject()`
+check reports share the same call identity, callback scope, and suppression.
+
 Statically named top-level `const` CommonJS namespace, destructured, and member
 bindings use the same canonical imported-call projection. Shadowed bindings stay
 separate, and unsupported loads retain the

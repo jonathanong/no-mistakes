@@ -1,6 +1,6 @@
 use super::super::{
     no_single_enqueue_in_loop, postgres_sql_cross_file, query_reached_per_item,
-    queue_rate_limit_error_delay,
+    queue_no_enqueue_in_transaction, queue_rate_limit_error_delay,
 };
 use super::{
     any_codebase_rule_enabled, forbidden_calls, forbidden_dependencies, nextjs_no_api_routes,
@@ -71,6 +71,12 @@ fn graph_plan_with_forbidden(
         plan.include(export_plan);
         needed = true;
     }
+    if config.rule_configured(queue_no_enqueue_in_transaction::RULE_ID) {
+        plan.calls = true;
+        plan.imports = true;
+        plan.builtin_receivers = true;
+        needed = true;
+    }
     if config.rule_configured(super::super::coverage_producer_assertion_owner::RULE_ID) {
         plan.calls = true;
         plan.assertion_owners = true;
@@ -130,6 +136,7 @@ pub fn canonical_graph_requires_full_file_universe(
 ) -> bool {
     config.rule_configured(super::super::coverage_producer_assertion_owner::RULE_ID)
         || config.rule_configured(query_reached_per_item::RULE_ID)
+        || config.rule_configured(queue_no_enqueue_in_transaction::RULE_ID)
         || postgres_sql_cross_file::needs_deep_analysis(config)
         || required_entrypoint_reachability::graph_plan(config).is_some()
         || config.rule_configured(FORBIDDEN_DEPENDENCIES)

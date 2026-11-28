@@ -35,6 +35,7 @@ struct ImportCollector {
     repeat_depth: usize,
     /// Repetition inherited from callable creation does not execute its body.
     call_repeat_base: usize,
+    deferred_field_owner: Option<Option<CallableId>>,
     /// Synthetic ownership of a default value evaluated by the module itself.
     module_evaluation_owner: Option<CallableId>,
     sloppy_script: bool,
@@ -182,7 +183,6 @@ struct ImportCollector {
     runtime_reachable_base_depth: Option<usize>,
     later_exported_type_names: FxHashSet<String>,
 }
-
 include!("extract_collector_maps.rs");
 
 #[derive(Default)]

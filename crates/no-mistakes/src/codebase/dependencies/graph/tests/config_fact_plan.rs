@@ -72,3 +72,19 @@ fn effective_fact_plan_skips_config_dependent_domains_without_required_config() 
     assert!(queue_only.queue_factory);
     assert!(queue_only.queue_project);
 }
+
+#[test]
+fn builtin_receiver_demand_does_not_enable_assertion_ownership() {
+    assert!(!GraphBuildPlan::all().builtin_receivers);
+    let mut merged = GraphBuildPlan::default();
+    merged.include(GraphBuildPlan {
+        calls: true,
+        builtin_receivers: true,
+        ..GraphBuildPlan::default()
+    });
+    assert!(merged.calls && merged.builtin_receivers);
+    assert!(!merged.assertion_owners);
+    let facts = merged.ts_fact_plan();
+    assert!(facts.function_calls && facts.builtin_receivers);
+    assert!(!facts.call_eligibility);
+}

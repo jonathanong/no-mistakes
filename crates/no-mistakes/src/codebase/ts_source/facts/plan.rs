@@ -5,6 +5,7 @@ impl TsFactPlan {
         self.module_bindings |= other.module_bindings;
         self.call_arguments |= other.call_arguments;
         self.call_eligibility |= other.call_eligibility;
+        self.builtin_receivers |= other.builtin_receivers;
         self.imports |= other.imports;
         self.function_calls |= other.function_calls;
         self.value_flow |= other.value_flow;
@@ -59,6 +60,7 @@ impl TsFactPlan {
         !self.module_bindings
             && !self.call_arguments
             && !self.call_eligibility
+            && !self.builtin_receivers
             && !self.imports
             && !self.function_calls
             && !self.value_flow
@@ -107,6 +109,7 @@ impl TsFactPlan {
         (!required.module_bindings || self.module_bindings || self.call_arguments)
             && (!required.call_arguments || self.call_arguments)
             && (!required.call_eligibility || self.call_eligibility)
+            && (!required.builtin_receivers || self.builtin_receivers)
             && (!required.imports || self.imports)
             && (!required.function_calls || self.function_calls)
             && (!required.value_flow || self.needs_value_flow())
