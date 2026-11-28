@@ -41,26 +41,29 @@ fn parse_entry(name: &str, entry: &serde_json::Value) -> Result<ResolvedPackage,
         .map(|value| value.as_str().ok_or(PipfileError))
         .transpose()?
         .map(|raw| raw.strip_prefix("==").unwrap_or(raw).to_string());
-    let (kind, fingerprint, version_optional) = if let Some(git) = text(obj, "git") {
-        let fingerprint = super::source_fingerprint(
-            text(obj, "ref").unwrap_or(git),
-            "subdirectory",
-            text(obj, "subdirectory"),
-        );
-        (ResolutionKind::Git, fingerprint, true)
-    } else if let Some(path) = text(obj, "path") {
-        (ResolutionKind::Directory, path.to_string(), true)
-    } else if let Some(url) = ["hg", "svn", "bzr"]
-        .into_iter()
-        .find_map(|key| text(obj, key))
-    {
-        let fingerprint = text(obj, "ref")
-            .map_or_else(|| url.to_string(), |reference| format!("{url}#{reference}"));
+    let git = text(obj, "git")?;
+    let path = text(obj, "path")?;
+    let reference = text(obj, "ref")?;
+    let subdirectory = text(obj, "subdirectory")?;
+    let file = text(obj, "file")?;
+    let url = text(obj, "url")?;
+    let hg = text(obj, "hg")?;
+    let svn = text(obj, "svn")?;
+    let bzr = text(obj, "bzr")?;
+    let vcs = hg.or(svn).or(bzr);
+    let (kind, fingerprint, version_optional) = if let Some(git) = git {
         let fingerprint =
-            super::source_fingerprint(&fingerprint, "subdirectory", text(obj, "subdirectory"));
+            super::source_fingerprint(reference.unwrap_or(git), "subdirectory", subdirectory);
+        (ResolutionKind::Git, fingerprint, true)
+    } else if let Some(path) = path {
+        (ResolutionKind::Directory, path.to_string(), true)
+    } else if let Some(url) = vcs {
+        let fingerprint =
+            reference.map_or_else(|| url.to_string(), |reference| format!("{url}#{reference}"));
+        let fingerprint = super::source_fingerprint(&fingerprint, "subdirectory", subdirectory);
         (ResolutionKind::Other, fingerprint, true)
-    } else if let Some(url) = text(obj, "file").or_else(|| text(obj, "url")) {
-        let fingerprint = super::source_fingerprint(url, "subdirectory", text(obj, "subdirectory"));
+    } else if let Some(url) = file.or(url) {
+        let fingerprint = super::source_fingerprint(url, "subdirectory", subdirectory);
         (ResolutionKind::Tarball, fingerprint, true)
     } else if editable {
         (ResolutionKind::Directory, String::new(), true)
@@ -98,6 +101,12 @@ fn locked_hashes(value: Option<&serde_json::Value>) -> Result<Vec<&str>, Pipfile
         .collect()
 }
 
-fn text<'a>(obj: &'a serde_json::Map<String, serde_json::Value>, key: &str) -> Option<&'a str> {
-    obj.get(key).and_then(|value| value.as_str())
+fn text<'a>(
+    obj: &'a serde_json::Map<String, serde_json::Value>,
+    key: &str,
+) -> Result<Option<&'a str>, PipfileError> {
+    match obj.get(key) {
+        None => Ok(None),
+        Some(value) => value.as_str().map(Some).ok_or(PipfileError),
+    }
 }

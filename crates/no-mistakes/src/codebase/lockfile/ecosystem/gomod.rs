@@ -159,5 +159,28 @@ fn token(raw: &str) -> Result<String, GoModError> {
 }
 
 fn strip_comment(line: &str) -> &str {
-    line.split_once("//").map_or(line, |(code, _)| code)
+    let bytes = line.as_bytes();
+    let mut index = 0;
+    let mut quoted = None;
+    while index < bytes.len() {
+        let byte = bytes[index];
+        if let Some(ender) = quoted {
+            if ender == b'"' && byte == b'\\' {
+                index = (index + 2).min(bytes.len());
+                continue;
+            }
+            if byte == ender {
+                quoted = None;
+            }
+            index += 1;
+            continue;
+        }
+        if matches!(byte, b'"' | b'`') {
+            quoted = Some(byte);
+        } else if byte == b'/' && bytes.get(index + 1) == Some(&b'/') {
+            return &line[..index];
+        }
+        index += 1;
+    }
+    line
 }

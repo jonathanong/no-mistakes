@@ -8,6 +8,19 @@ fn checked_gemfile_rejects_conflict_markers() {
 }
 
 #[test]
+fn go_replace_keeps_a_double_slash_inside_a_quoted_path() {
+    let packages =
+        packages_for_diff(PackageManager::Go, &fixture("gomod", "quoted-slash.mod")).unwrap();
+    expect(
+        &packages,
+        "example.invalid/lib",
+        "v1.2.3",
+        "",
+        ResolutionKind::Registry,
+    );
+}
+
+#[test]
 fn go_requirements_allow_tabs_and_quoted_tokens_but_reject_extra_tokens() {
     let packages = packages_for_diff(PackageManager::Go, &fixture("gomod", "quoted.mod")).unwrap();
     expect(

@@ -128,11 +128,9 @@ fn json_lockfiles_reject_invalid_optional_fields() {
         "abc123",
         ResolutionKind::Git,
     );
-    assert!(packages_for_diff(
-        PackageManager::Pipfile,
-        &fixture("pipfile", "invalid-version.lock")
-    )
-    .is_err());
+    for name in ["invalid-version.lock", "invalid-git-type.lock"] {
+        assert!(packages_for_diff(PackageManager::Pipfile, &fixture("pipfile", name)).is_err());
+    }
 }
 
 #[test]
