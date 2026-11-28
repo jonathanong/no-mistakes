@@ -23,17 +23,60 @@ pub(super) fn extra_consumes(source: &str) -> Vec<String> {
 }
 
 fn push_group(values: &mut Vec<String>, source: &str, re: &Regex) {
-    values.extend(
-        re.captures_iter(source)
-            .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string())),
-    );
+    for cap in re.captures_iter(source) {
+        let Some(topic) = cap.get(1) else {
+            continue;
+        };
+        if let Some(literal) = closed_literal(source, topic.start(), topic.end(), topic.as_str()) {
+            values.push(literal);
+        }
+    }
 }
 
 fn push_quoted_block(values: &mut Vec<String>, source: &str, re: &Regex) {
     for cap in re.captures_iter(source) {
         let block = cap.get(1).map(|m| m.as_str()).unwrap_or("");
-        push_group(values, block, quoted_re());
+        for element in block.split(',') {
+            if let Some(literal) = bare_subscribe_literal(element.trim()) {
+                values.push(literal);
+            }
+        }
     }
+}
+
+fn closed_literal(source: &str, start: usize, end: usize, text: &str) -> Option<String> {
+    let quote = source[..start].chars().next_back()?;
+    if (quote != '"' && quote != '\'') || concatenated(source, end) {
+        return None;
+    }
+    if quote == '"' && text.contains("#{") {
+        return None;
+    }
+    let closing = source[end..].chars().next()?;
+    (closing == quote).then(|| text.to_string())
+}
+
+fn concatenated(source: &str, end: usize) -> bool {
+    let rest = source[end..].trim_start();
+    let Some(quote) = rest.chars().next() else {
+        return false;
+    };
+    rest[quote.len_utf8()..].trim_start().starts_with('+')
+}
+
+fn bare_subscribe_literal(element: &str) -> Option<String> {
+    let quote = element.chars().next()?;
+    if quote != '"' && quote != '\'' {
+        return None;
+    }
+    let inner = element.strip_prefix(quote)?.strip_suffix(quote)?;
+    if inner.is_empty() || inner.contains(quote) || (quote == '"' && inner.contains("#{")) {
+        return None;
+    }
+    if inner.starts_with('^') || inner.contains('*') {
+        return None;
+    }
+    Some(inner.to_string())
 }
 
 fn go_record_re() -> &'static Regex {
@@ -108,9 +151,4 @@ fn elixir_subscribe_re() -> &'static Regex {
         Regex::new(r#":brod\.subscribe\(\s*[^,\n]+,\s*[^,\n]+,\s*["']([^"']+)["']"#)
             .expect("elixir subscribe")
     })
-}
-
-fn quoted_re() -> &'static Regex {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r#"["']([^"']+)["']"#).expect("quoted topic"))
 }

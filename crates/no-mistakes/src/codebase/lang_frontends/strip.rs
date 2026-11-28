@@ -19,7 +19,7 @@ pub(crate) fn strip_comments_keep_strings(source: &str) -> String {
             skip_block(&mut chars, &mut out);
             continue;
         }
-        if ch == '"' || ch == '\'' {
+        if ch == '"' || (ch == '\'' && single_quote_closes_on_line(&chars)) {
             out.push(ch);
             copy_quoted(&mut chars, &mut out, ch);
             continue;
@@ -27,6 +27,28 @@ pub(crate) fn strip_comments_keep_strings(source: &str) -> String {
         out.push(ch);
     }
     out
+}
+
+// A lifetime or other unclosed apostrophe is not a string.
+fn single_quote_closes_on_line(chars: &std::iter::Peekable<std::str::Chars<'_>>) -> bool {
+    let mut escaped = false;
+    for ch in chars.clone() {
+        if ch == '\n' {
+            return false;
+        }
+        if escaped {
+            escaped = false;
+            continue;
+        }
+        if ch == '\\' {
+            escaped = true;
+            continue;
+        }
+        if ch == '\'' {
+            return true;
+        }
+    }
+    false
 }
 
 fn skip_line(chars: &mut std::iter::Peekable<std::str::Chars<'_>>) {

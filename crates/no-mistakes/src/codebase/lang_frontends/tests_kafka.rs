@@ -83,3 +83,21 @@ fn elixir_kafka_literals_skip_runtime_topics_and_regex_subscriptions() {
 fn dart_kafka_literals_skip_runtime_topics_and_regex_subscriptions() {
     assert_static_pair("dart/produce.dart", "dart/consume.dart");
 }
+
+#[test]
+fn dynamic_kafka_shapes_stay_unmatched() {
+    let source = r#"
+        fn publish<'a>(topic: &str) {
+            // FutureRecord::to("ghost")
+            let _ = FutureRecord::to("mail.welcome");
+            let _ = FutureRecord::to("mail." + topic);
+        }
+        consumer.subscribe('mail.#{tenant}')
+        consumer.subscribe("mail.#{tenant}")
+        consumer.SubscribeTopics([]string{"^mail.*"}, nil)
+        consumer.subscribe(List.of(resolveTopic("tenant")))
+    "#;
+    let (produces, consumes) = extract_kafka_topics(source);
+    assert_eq!(produces, welcome());
+    assert_eq!(consumes, vec!["mail.#{tenant}".to_string()]);
+}

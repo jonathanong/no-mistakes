@@ -6,6 +6,8 @@ class Listen {
     consumer.subscribe(Arrays.asList("mail.welcome"));
     consumer.subscribe(Collections.singletonList("mail.welcome"));
     consumer.subscribe(List.of(topic));
+    consumer.subscribe(List.of(resolveTopic("tenant")));
+    consumer.subscribe(List.of("^mail.*"));
     consumer.subscribe(Pattern.compile("mail\\..*"));
   }
 }

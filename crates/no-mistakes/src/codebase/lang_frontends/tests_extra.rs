@@ -100,6 +100,11 @@ fn strip_and_kafka_identity_cover_comment_and_empty_cluster_paths() {
         super::strip::strip_comments_keep_strings("#[Route('/health')]\n# real\n")
             .contains("#[Route('/health')]")
     );
+    let lifetime = super::strip::strip_comments_keep_strings(
+        "fn publish<'a>() {\n// FutureRecord::to(\"ghost\")\nlet _ = FutureRecord::to(\"mail.welcome\");\n",
+    );
+    assert!(lifetime.contains("mail.welcome"));
+    assert!(!lifetime.contains("ghost"));
     assert!(!super::strip::mask_strings("const doc = `LegacyUser`").contains("LegacyUser"));
     let escaped = super::strip::mask_strings("const s = \"a\\\\nb\\nz\"");
     assert!(escaped.contains("\""));
