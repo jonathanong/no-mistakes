@@ -758,6 +758,28 @@
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/react-no-nullish-react-node",
           "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 23,
+          "endLine": 61,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-shadow-edges.tsx",
+          "line": 61,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 22,
+          "endColumn": 34,
+          "endLine": 72,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-shadow-edges.tsx",
+          "line": 72,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
         }
       ],
       "name": "getters, nearer classes, and intersections stay on their own path",
@@ -5422,6 +5444,27 @@
             "file": "react-nullish-shadow-edges.tsx",
             "line": 56,
             "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-shadow-edges.tsx",
+            "line": 61,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 22,
+            "file": "react-nullish-shadow-edges.tsx",
+            "line": 72,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "eslint(no-unassigned-vars)",
+            "column": 7,
+            "file": "react-nullish-shadow-edges.tsx",
+            "line": 73,
+            "message": "'slot' is always 'undefined' because it's never assigned."
           }
         ],
         "name": "react-nullish-shadow-edges.tsx",

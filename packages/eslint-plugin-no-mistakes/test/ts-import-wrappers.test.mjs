@@ -1021,6 +1021,8 @@ describe("typescript import wrappers", () => {
       [44, "unanalyzable"],
       [50, "nullish"],
       [56, "unanalyzable"],
+      [61, "nullish"],
+      [72, "nullish"],
     ]);
     expect(
       cases

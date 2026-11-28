@@ -55,3 +55,21 @@ export function intersectionLabel(value: { label: string }) {
 export function intersectionClash(value: { label: string }) {
   return (value as { child: ReactNode } & { child: string }).child ?? null;
 }
+
+type DefaultIgnored<T = string> = import("react").ReactNode;
+export function defaultIgnored(value: DefaultIgnored) {
+  return value ?? null;
+}
+
+export function forwardOpaqueNonReact(key: string) {
+  const read = () => value ?? 0;
+  const { [key]: value } = { a: 1 };
+  return read();
+}
+
+export function bareVarRedeclaration(node: ReactNode) {
+  var slot = node;
+  const read = () => slot ?? null;
+  var slot;
+  return read();
+}

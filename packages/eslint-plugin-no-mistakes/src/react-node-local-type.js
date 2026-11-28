@@ -35,9 +35,10 @@ function defaultedAliasStatus(declaration, facts, seen, reactTypeStatus) {
       ? body.typeName.name
       : null;
   const param = params.find((item) => item.name?.name === bodyName);
+  if (!param) return null;
   const next = new Set(seen);
   next.add(declaration);
-  return param?.default ? reactTypeStatus(param.default, facts, next) : "unresolved";
+  return param.default ? reactTypeStatus(param.default, facts, next) : "unresolved";
 }
 
 function localTypeStatus(node, name, facts, seen, reactTypeStatus) {

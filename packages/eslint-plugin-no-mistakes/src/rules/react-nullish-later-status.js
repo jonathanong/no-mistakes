@@ -67,7 +67,7 @@ function forwardPatternStatus(pattern, name, init, context, facts, annotation, l
     return "no";
   }
   if (type && reactTypeStatus(type, facts) === "unresolved") return "unresolved";
-  return recordedKeyStatus(init, key, lookup) ?? (key === undefined ? "unresolved" : "no");
+  return recordedKeyStatus(init, key, lookup) ?? "no";
 }
 
 function hasOwnAnnotation(def) {
@@ -90,7 +90,9 @@ function laterBindingStatus(
     (def) => def.type !== "Type" && def.type !== "TypeParameter",
   );
   const laterDefs = defs.filter((def) => def.node?.range?.[0] > identifier.range[0]);
-  const forwardValue = laterDefs.some((def) => def.type === "Variable");
+  const forwardValue = laterDefs.some(
+    (def) => def.type === "Variable" && (Boolean(def.node?.init) || hasOwnAnnotation(def)),
+  );
   const active = forwardValue ? laterDefs : defs;
   const annotationDefs =
     forwardValue && !laterDefs.some(hasOwnAnnotation)
@@ -156,12 +158,7 @@ function laterBindingStatus(
         continue;
       }
       if (def.node?.id?.type !== "Identifier") continue;
-      const type = typeAnnotation(def.node.id);
-      const status = type
-        ? reactTypeStatus(type, facts)
-        : def.node.init
-          ? expressionStatus(def.node.init, seen)
-          : "no";
+      const status = def.node.init ? expressionStatus(def.node.init, seen) : "no";
       if (status === "yes") return written ? "unresolved" : "yes";
       if (status === "unresolved") unresolved = true;
     }
