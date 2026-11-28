@@ -1397,6 +1397,42 @@
       ],
       "kind": "invalid",
       "options": null
+    },
+    {
+      "file": "import-equals.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 21,
+          "endLine": 3,
+          "file": "import-equals.test.ts",
+          "line": 3,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
+    },
+    {
+      "file": "import-equals-fixture.test.ts",
+      "findings": [
+        {
+          "column": 1,
+          "endColumn": 16,
+          "endLine": 2,
+          "file": "import-equals-fixture.test.ts",
+          "line": 2,
+          "message": "Use parallel tests instead of .sequential.",
+          "messageId": "sequential",
+          "ruleId": "no-mistakes/no-vitest-sequential",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": null
     }
   ],
   "no-vitest-sequential:sequential-ignore": [
@@ -2281,6 +2317,12 @@
       "options": null
     },
     {
+      "file": "shadow-call.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": null
+    },
+    {
       "file": "alias-let.test.ts",
       "findings": [],
       "kind": "valid",
@@ -3135,6 +3177,30 @@
       ]
     },
     {
+      "file": "awaited-dynamic.test.ts",
+      "findings": [
+        {
+          "column": 9,
+          "endColumn": 13,
+          "endLine": 4,
+          "file": "awaited-dynamic.test.ts",
+          "line": 4,
+          "message": "Cannot tell whether this modifier skips a test. Use a static test, it, or describe binding.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/test-no-skips",
+          "severity": 2
+        }
+      ],
+      "kind": "invalid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ]
+        }
+      ]
+    },
+    {
       "file": "member-require.js",
       "findings": [
         {
@@ -3280,6 +3346,19 @@
     },
     {
       "file": "dynamic-import.test.ts",
+      "findings": [],
+      "kind": "valid",
+      "options": [
+        {
+          "testModules": [
+            "./custom-test"
+          ],
+          "unanalyzable": "ignore"
+        }
+      ]
+    },
+    {
+      "file": "awaited-dynamic.test.ts",
       "findings": [],
       "kind": "valid",
       "options": [

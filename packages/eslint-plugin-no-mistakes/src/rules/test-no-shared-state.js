@@ -92,6 +92,8 @@ module.exports = rule(
       suppressed,
       viMockTracker,
     });
+    const nested = (node) =>
+      isInsideUncalledNestedFunction(node, depth.test, depth.setup, isInlineCallback, context);
 
     function visitTopLevelVariableDeclaration(node) {
       recordTopLevelRequires(node, testCalleeNames, namespaces, testAliases, context);
@@ -171,12 +173,12 @@ module.exports = rule(
         }
       },
       AssignmentExpression(node) {
-        if (isInsideUncalledNestedFunction(node, depth.test, depth.setup, isInlineCallback)) return;
+        if (nested(node)) return;
         mutationHandlers.rememberAssignmentCleanup(node);
         mutationHandlers.reportAssignment(node);
       },
       UpdateExpression(node) {
-        if (isInsideUncalledNestedFunction(node, depth.test, depth.setup, isInlineCallback)) return;
+        if (nested(node)) return;
         mutationHandlers.reportIfShared(node, mutationRootName(node.argument));
       },
       "CallExpression:exit"(node) {
@@ -188,12 +190,7 @@ module.exports = rule(
           depth.setup -= 1;
           cleanupTracker.endSetup();
         }
-        const isInsideNested = isInsideUncalledNestedFunction(
-          original,
-          depth.test,
-          depth.setup,
-          isInlineCallback,
-        );
+        const isInsideNested = nested(original);
         if (!isInsideNested) mutationHandlers.rememberCall(original);
         if (!isShadowed && (isDescribeCall(node) || testAliases.isDescribeAliasCall(node.callee))) {
           cleanupTracker.exitSuite();

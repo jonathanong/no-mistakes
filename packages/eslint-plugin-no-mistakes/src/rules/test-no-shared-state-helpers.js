@@ -1,6 +1,7 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
+const { resolveVariable } = require("./test-no-shared-state-aliases");
 const { collectPatternNames } = require("./ast-pattern-names");
 const { createCleanupTracker } = require("./test-no-shared-state-cleanup");
 const {
@@ -79,27 +80,34 @@ function isInlineSetupCallback(node) {
   return Boolean(call && SETUP_CALLEES.has(calleeName(call.callee)));
 }
 
-function isCalledFunction(node) {
+function isCalledFunction(node, context) {
   if (node.parent?.type === "CallExpression" && node.parent.callee === node) return true;
   const declarator = node.parent?.type === "VariableDeclarator" ? node.parent : null;
-  const name =
+  const id =
     node.type === "FunctionDeclaration"
-      ? node.id?.name
+      ? node.id
       : declarator?.id?.type === "Identifier"
-        ? declarator.id.name
+        ? declarator.id
         : null;
   const container = node.type === "FunctionDeclaration" ? node.parent : node.parent?.parent?.parent;
-  return Boolean(name && container && containsIdentifierCall(container, name));
+  if (!id?.name || !container) return false;
+  return containsIdentifierCall(container, id.name, resolveVariable(id, context), context);
 }
 
-function containsIdentifierCall(node, name) {
+function containsIdentifierCall(node, name, target, context) {
   const current = unwrapExpression(node);
   if (current.type === "CallExpression") {
     const callee = unwrapExpression(current.callee);
-    if (callee.type === "Identifier" && callee.name === name) return true;
+    if (
+      callee.type === "Identifier" &&
+      callee.name === name &&
+      resolveVariable(callee, context) === target
+    ) {
+      return true;
+    }
   }
   if (isFunctionNode(current)) return false;
-  return childNodes(current).some((child) => containsIdentifierCall(child, name));
+  return childNodes(current).some((child) => containsIdentifierCall(child, name, target, context));
 }
 
 function isMutableInitializer(node) {

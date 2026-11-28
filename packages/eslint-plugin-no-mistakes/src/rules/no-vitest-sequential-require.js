@@ -136,8 +136,22 @@ function forwardedCallee(node) {
   return current;
 }
 
+function importEqualsNamespace(root, context) {
+  if (root?.type !== "Identifier") return false;
+  const variable = resolveVariable(root, context);
+  const def = variable?.defs.length === 1 ? variable.defs[0] : null;
+  const node = def?.node;
+  if (node?.type !== "TSImportEqualsDeclaration" || node.importKind === "type") return false;
+  const reference = node.moduleReference;
+  return (
+    reference?.type === "TSExternalModuleReference" &&
+    literalString(reference.expression) === "vitest"
+  );
+}
+
 function rejectedRunner(root, context) {
   return (
+    importEqualsNamespace(root, context) ||
     reassignedDestructuredRunner(root, context) ||
     renamedNonRunner(root, context) ||
     reassignedVitestRequire(root, context) ||

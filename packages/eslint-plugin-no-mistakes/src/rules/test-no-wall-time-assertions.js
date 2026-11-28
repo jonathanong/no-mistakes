@@ -110,7 +110,7 @@ function opaqueWallClock(node, context) {
 }
 
 function isWallTimeAssertion(callee, context) {
-  if (callee?.computed || !MATCHERS.has(memberName(callee))) return false;
+  if (!MATCHERS.has(memberName(callee))) return false;
   let assertion = unwrap(callee.object);
   while (memberName(assertion) === "not") assertion = unwrap(assertion.object);
   return (

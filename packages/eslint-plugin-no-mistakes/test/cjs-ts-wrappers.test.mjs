@@ -44,6 +44,8 @@ const groups = [
       "inline-dynamic.js",
       "import-static.test.ts",
       "namespace-name.test.ts",
+      "import-equals.test.ts",
+      "import-equals-fixture.test.ts",
     ],
     valid: [
       "not-a-runner.test.ts",
@@ -182,6 +184,7 @@ const groups = [
       "let-namespace-quiet.test.ts",
       "member-receiver.test.ts",
       "playwright-default.test.ts",
+      "shadow-call.test.ts",
       "alias-let.test.ts",
       "computed-method.test.ts",
       "let-member-quiet.test.ts",
@@ -345,6 +348,7 @@ const groups = [
       "wrappers.test.ts",
       "dynamic.test.ts",
       "awaited.test.ts",
+      "awaited-dynamic.test.ts",
       "member-require.js",
       "dynamic-import.test.ts",
       "wrapped-import.test.ts",
@@ -356,7 +360,7 @@ const groups = [
     rule: "test-no-skips",
     dir: "skips-ignore",
     options: [{ testModules: ["./custom-test"], unanalyzable: "ignore" }],
-    valid: ["dynamic.test.ts", "dynamic-import.test.ts"],
+    valid: ["dynamic.test.ts", "dynamic-import.test.ts", "awaited-dynamic.test.ts"],
   },
   {
     rule: "test-no-fixed-temp-paths",

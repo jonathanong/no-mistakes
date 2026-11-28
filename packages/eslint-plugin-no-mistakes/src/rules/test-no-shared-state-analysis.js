@@ -12,7 +12,7 @@ const {
   isInlineTestCallback,
 } = require("./test-no-shared-state-helpers");
 
-function isInsideUncalledNestedFunction(node, testDepth, setupDepth, isInlineCallback) {
+function isInsideUncalledNestedFunction(node, testDepth, setupDepth, isInlineCallback, context) {
   if (testDepth === 0 && setupDepth === 0) return false;
   let current = node.parent;
   while (current) {
@@ -20,7 +20,7 @@ function isInsideUncalledNestedFunction(node, testDepth, setupDepth, isInlineCal
       isFunctionNode(current) &&
       !isInlineSetupCallback(current) &&
       !(isInlineCallback ? isInlineCallback(current) : isInlineTestCallback(current)) &&
-      !isCalledFunction(current);
+      !isCalledFunction(current, context);
     if (isUncalledFunction) return true;
     current = current.parent;
   }
@@ -62,7 +62,7 @@ function isResetAssignment(node, isMutableInitializer) {
 }
 
 function walkSharedMutations(node, handlers) {
-  if (isFunctionNode(node) && !isCalledFunction(node)) return;
+  if (isFunctionNode(node) && !isCalledFunction(node, handlers.context)) return;
   if (node.type === "AssignmentExpression") {
     handlers.onAssignment(node);
   } else if (node.type === "UpdateExpression") {

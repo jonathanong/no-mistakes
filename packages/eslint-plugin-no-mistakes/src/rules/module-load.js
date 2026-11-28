@@ -52,7 +52,7 @@ function moduleLoad(node, context, seen = new Set()) {
   if (!node) return null;
   if (node.type === "AwaitExpression") {
     const awaited = unwrapExpression(node.argument);
-    if (awaited?.type === "ImportExpression") node = awaited;
+    if (awaited?.type === "ImportExpression" || requireResolution(awaited, context)) node = awaited;
   }
   if (node.type === "ImportExpression") {
     const source = literalString(unwrapExpression(node.source));

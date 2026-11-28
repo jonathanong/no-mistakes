@@ -70,6 +70,7 @@ function createMutationHandlers({
 
   return {
     mutationWalk: {
+      context,
       onAssignment: (assignment) => {
         rememberAssignmentCleanup(assignment);
         reportAssignment(assignment);
