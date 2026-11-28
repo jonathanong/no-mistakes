@@ -67,19 +67,22 @@ inspect every branch without assuming its condition is true. PostgreSQL 18 virtu
 default storage. Unrecognized procedural forms remain explicit. UTF-8 offsets are zero-based; Unicode line/columns are one-based,
 with exclusive span ends. See [the source API](https://github.com/jongleberry/no-mistakes/blob/main/docs/postgres-source-api.md)
 for exported types, structural index identity, and grammar boundaries.
-Literal PL/pgSQL `EXECUTE` source occurrences in supported `DO` bodies expose
-statement `kind: "literalExecute"` and a `PostgresSqlLiteralExecute` payload
-when no unsupported modifier remains, except inside `FOR`, `WHILE`,
-`FOREACH`, a bare `LOOP`, or a `CASE` arm. There the command stays a visible
-occurrence with no typed statement projection. A decoded `controlFlow`
+Literal PL/pgSQL `EXECUTE` in supported `DO` bodies has one placement rule.
+Inside `FOR`, `WHILE`, `FOREACH`, a bare `LOOP`, or a `CASE` arm, every
+`EXECUTE` form stays an occurrence with no typed statement. Occurrence
+classification still reads the decoded command. A decoded `controlFlow`
 command, such as `EXECUTE 'DO $body$ BEGIN NULL; END $body$'`, adds no
-diagnostic and can leave the block complete. Any other decoded kind produces
-a diagnostic and keeps the block incomplete. Outside a loop or `CASE` arm,
-an unsupported modifier, including unquoted `INTO`, is statement kind
-`other`. A Unicode `U&` body and a national `N'` body are also statement kind
-`other`, with no `bodyEncoding`. Inside `FOR`, `WHILE`, `FOREACH`, a bare
-`LOOP`, or a `CASE` arm, those commands stay occurrences and have no typed
-statement. Occurrence classification still reads the decoded command.
+diagnostic and can leave the block complete, including inside those forms.
+Any other decoded kind produces a diagnostic and keeps the block incomplete.
+See [literal EXECUTE placement](https://github.com/jongleberry/no-mistakes/blob/main/docs/postgres-source-api.md#literal-execute-placement).
+In statement position, a literal command with no unsupported modifier exposes
+statement `kind: "literalExecute"` and a `PostgresSqlLiteralExecute` payload.
+An unsupported modifier, including unquoted `INTO` and a modifier after a
+decoded literal, is statement kind `other` and keeps the block incomplete.
+A Unicode `U&` body and a national `N'` body are statement kind `other`, with
+no `bodyEncoding`. A non-literal command (`format` or an identifier) is
+occurrence kind `dynamicExecute`; in statement position it is also statement
+kind `other`.
 Dollar-quoted (`bodyEncoding: "dollarQuoted"`), standard single-quoted
 (`singleQuoted`, doubled quotes), and PostgreSQL `E` escape strings
 (`escapedString`) are the projected literal forms. They are decoded by the
@@ -92,19 +95,11 @@ SQL remains diagnostic. Wholly literal `||` concatenations use the same nested
 pipeline and expose `bodyEncoding: "concatenated"`; `literalSpan` covers the full
 command expression. `using` retains ordered parameter expressions and their
 original source spans, without resolving runtime values; `$1` and other command
-placeholders remain typed parameters. Outside a loop or `CASE` arm, a non-literal command
-(`format` or an identifier) is statement kind `other` and occurrence kind
-`dynamicExecute`. Inside `FOR`, `WHILE`, `FOREACH`, a bare `LOOP`, or a
-`CASE` arm, it is occurrence kind `dynamicExecute` and has no typed
-statement. Outside a loop or `CASE` arm, an unsupported modifier after a
-decoded literal is also statement kind `other`. Inside those forms it has
-no typed statement.
+placeholders remain typed parameters.
 An unquoted `INTO` ends the command operand the same way `USING` does. The
 occurrence is classified from the decoded command. `INTO` adds no diagnostic
 of its own. Completeness still follows occurrence recognition, diagnostics,
-and statement checks. Outside a loop or `CASE` arm, the leftover modifier is
-statement kind `other`, which keeps that block incomplete. Inside a loop or
-`CASE` arm, a decoded `controlFlow` command can leave the block complete.
+and statement checks.
 This adds no SQL execution or
 replay policy. `parsePostgresSql` retains its asynchronous single/batch API.
 

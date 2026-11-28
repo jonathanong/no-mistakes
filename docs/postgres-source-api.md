@@ -849,6 +849,21 @@ Supported IF/ELSIF/ELSE branches, including nested branches, share this literal
 projection. SQL CASE expressions and quoted EXECUTE identifiers retain their
 ordinary SQL meaning.
 
+### Literal EXECUTE placement
+
+Inside `FOR`, `WHILE`, `FOREACH`, a bare `LOOP`, or a `CASE` arm, every
+`EXECUTE` form stays an occurrence with no typed statement. Occurrence
+classification still reads the decoded command. A decoded `controlFlow`
+command adds no diagnostic and can leave the block complete. Any other decoded
+kind produces a diagnostic and keeps the block incomplete.
+
+In statement position:
+
+- A literal command with no unsupported modifier is statement kind `literalExecute` with a `PostgresSqlLiteralExecute` payload.
+- An unsupported modifier, including unquoted `INTO` and a modifier after a decoded literal, is statement kind `other` and keeps the block incomplete. `INTO` ends the command operand the same way `USING` does and adds no diagnostic of its own.
+- A Unicode `U&` body and a national `N'` body are statement kind `other`, with no `bodyEncoding`.
+- A non-literal command (`format` or an identifier) is occurrence kind `dynamicExecute` and statement kind `other`.
+
 ### Structured trigger events and cast types
 
 Trigger `events` retain their display strings. Additive `eventFacts` expose
