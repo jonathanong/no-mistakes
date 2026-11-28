@@ -273,6 +273,8 @@ test("check rule options compile from the package root", () => {
       join(repositoryRoot, "fixtures/node-api/github-actions-env-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/github-actions-no-poll-wait-job/public.mts"),
       join(repositoryRoot, "fixtures/node-api/github-actions-run-command-policy/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/github-actions-step-timeouts/public.mts"),
+      join(repositoryRoot, "fixtures/node-api/github-actions-workflow-script-paths/public.mts"),
       join(repositoryRoot, "fixtures/node-api/postgres-lock-inventory/public.mts"),
       join(repositoryRoot, "fixtures/node-api/postgres-sql-statement-policy/public.mts"),
       join(repositoryRoot, "fixtures/node-api/pnpm-release-age-policy/public.mts"),
@@ -741,6 +743,47 @@ test("GitHub Actions run command policy exports named option types", () => {
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export type \* from "\.\/github-actions-run-command-policy-types";/,
   );
+});
+
+test("GitHub Actions workflow script paths and step timeout caps export named option types", () => {
+  const scriptPaths = readFileSync(
+    join(packageRoot, "github-actions-workflow-script-paths-types.d.ts"),
+    "utf8",
+  );
+  for (const name of ["GithubActionsPathFilterEvent", "GithubActionsWorkflowScriptPathsOptions"]) {
+    assert.match(scriptPaths, new RegExp(`export (?:type|interface) ${name}\\b`));
+  }
+  for (const field of [
+    "scriptDirs?: string[];",
+    "include?: string[];",
+    "events?: GithubActionsPathFilterEvent[];",
+    "unanalyzable?: Unanalyzable;",
+  ]) {
+    assert.ok(scriptPaths.includes(field), `missing ${field}`);
+  }
+  assert.match(scriptPaths, /import type \{ Unanalyzable \} from "\.\/traversal-types";/);
+  const stepTimeouts = readFileSync(
+    join(packageRoot, "github-actions-step-timeouts-types.d.ts"),
+    "utf8",
+  );
+  for (const name of [
+    "GithubActionsStepTimeoutsAllowEntry",
+    "GithubActionsStepTimeoutsActionCap",
+    "GithubActionsStepTimeoutsOptions",
+  ]) {
+    assert.match(stepTimeouts, new RegExp(`export interface ${name}\\b`));
+  }
+  for (const field of [
+    "actionCaps?: GithubActionsStepTimeoutsActionCap[];",
+    "onlyConfiguredActions?: boolean;",
+    "unanalyzable?: Unanalyzable;",
+  ]) {
+    assert.ok(stepTimeouts.includes(field), `missing ${field}`);
+  }
+  assert.match(stepTimeouts, /import type \{ Unanalyzable \} from "\.\/traversal-types";/);
+  const typesIndex = readFileSync(join(packageRoot, "types.d.ts"), "utf8");
+  assert.match(typesIndex, /export type \* from "\.\/github-actions-workflow-script-paths-types";/);
+  assert.match(typesIndex, /export type \* from "\.\/github-actions-step-timeouts-types";/);
 });
 
 test("changes diff and planner changes have exported public contracts", () => {

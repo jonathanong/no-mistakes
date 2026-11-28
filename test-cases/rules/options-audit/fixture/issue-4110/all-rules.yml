@@ -43,6 +43,7 @@ rules:
   - {rule: github-actions-step-timeouts, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-test-timeout-literals, scope: repository, options: {bogusOption: true}}
   - {rule: github-actions-vitest-project-selection, scope: repository, options: {bogusOption: true}}
+  - {rule: github-actions-workflow-script-paths, scope: repository, options: {bogusOption: true}}
   - {rule: http-call-static-paths, scope: repository, options: {bogusOption: true}}
   - {rule: http-route-static-paths, scope: repository, options: {bogusOption: true}}
   - {rule: integration-test-no-mocks, scope: repository, options: {bogusOption: true}}

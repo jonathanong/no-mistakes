@@ -1,0 +1,9 @@
+name: Unfiltered
+on:
+  - push
+  - pull_request
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ./scripts/other.sh

@@ -41,6 +41,13 @@ fn github_actions_step_timeouts_json_matches_snapshot() {
         case("no_jobs_allow", "no-jobs", "no-jobs-allow.yml"),
         // ci.yml is bounded; allow findings are for the absent deleted.yml.
         case("deleted_allow", "deleted-workflow", "deleted-allow.yml"),
+        case("action_caps", "action-caps", "action-caps.yml"),
+        case("action_caps_only", "action-caps", "action-caps-only.yml"),
+        case(
+            "action_caps_only_report",
+            "action-caps",
+            "action-caps-only-report.yml",
+        ),
     ]);
     assert_saved_fixture("github_actions_step_timeouts", &cases);
 }

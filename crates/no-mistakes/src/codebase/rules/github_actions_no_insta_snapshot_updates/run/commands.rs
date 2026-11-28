@@ -89,7 +89,7 @@ fn inspect_script(script: &str, depth: usize, checks: &mut Vec<Check>) {
             checks.push(result);
         }
     }
-    for (_, script) in parsed.substitutions {
+    for (_, _, script) in parsed.substitutions {
         inspect_script(&script, depth + 1, checks);
     }
 }

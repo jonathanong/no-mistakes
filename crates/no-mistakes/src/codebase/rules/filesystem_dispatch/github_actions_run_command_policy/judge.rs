@@ -107,7 +107,7 @@ fn scan_nested(
             hits,
         );
     }
-    for (sub_line, body) in &parsed.substitutions {
+    for (sub_line, _, body) in &parsed.substitutions {
         scan_nested_body(
             body,
             line_offset + sub_line,

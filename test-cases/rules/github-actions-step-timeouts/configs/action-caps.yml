@@ -1,0 +1,14 @@
+rules:
+  - rule: github-actions-step-timeouts
+    scope: repository
+    options:
+      maxMinutes: 30
+      actionCaps:
+        - uses: actions/checkout
+          maxMinutes: 2
+        - uses: actions/setup-node
+          maxMinutes: 5
+        - uses: pnpm/action-setup
+          maxMinutes: 5
+        - uses: ./.github/actions/setup-pnpm
+          maxMinutes: 5

@@ -206,6 +206,35 @@ pub(super) fn assert_run_command_policy_docs(root: &std::path::Path, rule: &str)
 }
 
 #[test]
+fn github_actions_workflow_script_paths_is_in_the_public_rule_inventory() {
+    let rule = no_mistakes::codebase::rules::GITHUB_ACTIONS_WORKFLOW_SCRIPT_PATHS;
+    assert_eq!(rule, "github-actions-workflow-script-paths");
+    let root = repo_root();
+    assert!(rule_ids_from_source(&root).contains(rule));
+    let page = read(&root.join(format!("docs/rules/{rule}.md")));
+    for needle in [
+        "scriptDirs:",
+        "paths-ignore",
+        "unanalyzable",
+        "no-mistakes-disable-next-line",
+        "no-mistakes-disable-line",
+        "no-mistakes-disable-file",
+    ] {
+        assert!(page.contains(needle), "missing {needle}");
+    }
+    for path in [
+        "docs/rules/README.md",
+        "docs/configuration/rules.md",
+        "docs/cli/check.md",
+        "docs/node-api.md",
+        "docs/feature-parity.md",
+        "plugins/no-mistakes/skills/no-mistakes/references/limits-and-fallbacks.md",
+    ] {
+        assert!(read(&root.join(path)).contains(rule), "{path}");
+    }
+}
+
+#[test]
 fn postgres_explain_write_rollback_docs_are_reachable_from_check_surfaces() {
     let root = repo_root();
     for (page, link) in [

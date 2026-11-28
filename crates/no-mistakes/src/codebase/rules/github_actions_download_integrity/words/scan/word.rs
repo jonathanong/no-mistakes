@@ -66,7 +66,7 @@ impl Scan<'_> {
             self.current.dynamic = true;
             if let Some((start, start_line)) = self.backtick_start.take() {
                 let body: String = self.chars[start..self.index].iter().collect();
-                self.substitutions.push((start_line, body));
+                self.substitutions.push((start_line, start, body));
             } else {
                 self.backtick_start = Some((self.index + 1, self.line));
             }
@@ -93,7 +93,7 @@ impl Scan<'_> {
             self.unterminated_substitution = true;
         } else if open == '(' && self.chars.get(body_start) != Some(&'(') {
             let body: String = self.chars[body_start..next - 1].iter().collect();
-            self.substitutions.push((body_line, body));
+            self.substitutions.push((body_line, body_start, body));
         }
         self.index = next;
         true

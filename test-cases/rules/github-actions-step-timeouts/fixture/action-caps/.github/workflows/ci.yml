@@ -1,0 +1,27 @@
+name: Setup Caps
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        uses: actions/checkout@v4
+        timeout-minutes: 2
+      - id: node
+        uses: actions/setup-node@v4
+        timeout-minutes: 10
+      - id: pnpm
+        uses: ./.github/actions/setup-pnpm
+      # no-mistakes-disable-next-line github-actions-step-timeouts
+      - id: suppressed
+        uses: pnpm/action-setup@v4
+        timeout-minutes: 8
+      - id: dynamic-slow
+        uses: ${{ inputs.setup_action }}
+        timeout-minutes: 10
+      - id: dynamic-fast
+        uses: ${{ inputs.fast_action }}
+        timeout-minutes: 2
+      - id: test
+        run: pnpm test
+        timeout-minutes: 20

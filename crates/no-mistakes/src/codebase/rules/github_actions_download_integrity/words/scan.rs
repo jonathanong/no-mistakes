@@ -30,7 +30,7 @@ struct Scan<'a> {
     in_backticks: bool,
     backtick_start: Option<(usize, usize)>,
     unterminated_substitution: bool,
-    substitutions: Vec<(usize, String)>,
+    substitutions: Vec<(usize, usize, String)>,
 }
 
 pub(super) fn run(script: &str, strict: bool, collect_skips: bool) -> Parse {

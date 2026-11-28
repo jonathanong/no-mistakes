@@ -233,6 +233,13 @@ unanalyzable policy handles unreadable selected workflow files and invalid YAML.
 The default is `advise`. Set `options.unanalyzable: report` for findings or
 `ignore` to omit these diagnostics. See the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-run-command-policy.md).
 
+For `github-actions-workflow-script-paths`, declare `options.scriptDirs` with
+the literal repository-relative script directories to require inside each
+path-filtered workflow's `paths` / `paths-ignore` filters. Unprovable triggers,
+dynamic commands or script paths, and unreadable local composite actions abstain
+with an advisory diagnostic unless `options.unanalyzable: report` is set. See
+the [rule reference](https://github.com/jongleberry/no-mistakes/blob/main/docs/rules/github-actions-workflow-script-paths.md).
+
 For `dependabot-cooldown-policy`, set `options.minimumDays` and run
 `check --root <root> --format json`. Add `cooldown.default-days` and raise
 any explicit SemVer cooldown below the floor in `.github/dependabot.yml`.

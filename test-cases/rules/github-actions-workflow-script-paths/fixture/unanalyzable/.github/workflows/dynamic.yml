@@ -1,0 +1,13 @@
+name: Dynamic
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          node "scripts/${TARGET}.mjs"
+          eval "./scripts/run.sh"
+          bash -c "$DYNAMIC_CMD"

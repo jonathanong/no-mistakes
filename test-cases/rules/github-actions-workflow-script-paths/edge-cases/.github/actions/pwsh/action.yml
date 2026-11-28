@@ -1,0 +1,6 @@
+name: Python shell
+runs:
+  using: composite
+  steps:
+    - shell: python
+      run: ./scripts/leaf.py

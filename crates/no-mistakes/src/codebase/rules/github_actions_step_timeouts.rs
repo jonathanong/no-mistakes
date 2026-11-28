@@ -1,39 +1,16 @@
-use no_mistakes_rule_kernel::finding::RuleFinding;
-use crate::config::v2::NoMistakesConfig;
+use super::analysis_policy::AnalysisDiagnostics;
+use crate::config::v2::{NoMistakesConfig, Unanalyzable};
 use anyhow::Result;
+use no_mistakes_rule_kernel::finding::RuleFinding;
+use options::{compile_options, CompiledOptions};
+pub(in crate::codebase::rules) use options::Options;
 use rayon::prelude::*;
-use serde::Deserialize;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "github-actions-step-timeouts";
 const DEFAULT_INCLUDE: &[&str] = &[".github/workflows/**/*.yml", ".github/workflows/**/*.yaml"];
 const GITHUB_MAX_MINUTES: u64 = 360;
-
-#[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
-pub(in crate::codebase::rules) struct Options {
-    include: Vec<String>,
-    max_minutes: Option<u64>,
-    allow: Vec<AllowEntry>,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct AllowEntry {
-    step: String,
-    reason: String,
-    max_minutes: Option<u64>,
-}
-
-struct CompiledOptions {
-    max_minutes: u64,
-    allow: BTreeMap<String, AllowEntry>,
-    allow_by_file: BTreeMap<String, Vec<String>>,
-    duplicate_allow: BTreeSet<String>,
-    duplicate_by_file: BTreeMap<String, Vec<String>>,
-    defer_suppression: bool,
-}
 
 pub(crate) fn check_with_files(
     root: &Path,
@@ -51,7 +28,19 @@ pub(crate) fn check_with_files_and_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
-    super::run_rule_applications(config, RULE_ID, |rule| {
+    diagnostics_with_files_and_sources(root, config, all_files, sources, defer_suppression)
+        .map(|output| output.findings)
+}
+
+pub fn diagnostics_with_files_and_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> Result<AnalysisDiagnostics> {
+    let mut output = AnalysisDiagnostics::default();
+    for rule in config.rule_applications(RULE_ID) {
         let raw: Options = rule.try_rule_options()?;
         let (selected, roots) = super::selected_rule_files_with_roots_and_sources(
             root, config, rule, all_files, sources,
@@ -83,53 +72,16 @@ pub(crate) fn check_with_files_and_sources(
                 (file, entry.step.clone())
             }),
         );
-        let mut compiled = compile_options(raw);
-        compiled.defer_suppression = defer_suppression;
+        let unanalyzable = resolve_unanalyzable(config, rule)?;
+        let compiled = compile_options(raw, unanalyzable, defer_suppression)?;
         let files = matcher.select(&selected);
-        let mut findings = scan_files(root, &compiled, &files, sources);
-        findings.extend(missing);
-        Ok(findings)
-    })
-}
-
-fn compile_options(opts: Options) -> CompiledOptions {
-    let mut allow = BTreeMap::new();
-    let mut duplicate_allow = BTreeSet::new();
-    for entry in opts.allow {
-        let key = entry.step.clone();
-        if allow.insert(key.clone(), entry).is_some() {
-            duplicate_allow.insert(key);
-        }
+        let mut chunk = scan_files(root, &compiled, &files, sources);
+        chunk.findings.extend(missing);
+        output.append(chunk);
     }
-    let mut allow_by_file: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for key in allow.keys() {
-        if let Some(file) = selector_file(key) {
-            allow_by_file
-                .entry(file.to_string())
-                .or_default()
-                .push(key.clone());
-        }
-    }
-    let mut duplicate_by_file: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for key in &duplicate_allow {
-        if let Some(file) = selector_file(key) {
-            duplicate_by_file
-                .entry(file.to_string())
-                .or_default()
-                .push(key.clone());
-        }
-    }
-    CompiledOptions {
-        max_minutes: opts
-            .max_minutes
-            .unwrap_or(GITHUB_MAX_MINUTES)
-            .min(GITHUB_MAX_MINUTES),
-        allow,
-        allow_by_file,
-        duplicate_allow,
-        duplicate_by_file,
-        defer_suppression: false,
-    }
+    super::sort_findings(&mut output.findings);
+    super::sort_findings(&mut output.advisories);
+    Ok(output)
 }
 
 fn scan_files(
@@ -137,18 +89,22 @@ fn scan_files(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-) -> Vec<RuleFinding> {
-    let mut findings: Vec<_> = files
+) -> AnalysisDiagnostics {
+    let chunks: Vec<_> = files
         .par_iter()
-        .flat_map(|path| scan::check_file(root, path, opts, sources))
+        .map(|path| scan::check_file(root, path, opts, sources))
         .collect();
+    let mut output = AnalysisDiagnostics::default();
+    for chunk in chunks {
+        output.append(chunk);
+    }
     let present: BTreeSet<_> = files
         .iter()
         .map(|path| crate::codebase::ts_source::relative_slash_path(root, path))
         .collect();
     for key in opts.allow.keys() {
         if selector_file(key).is_none() {
-            findings.push(yaml::finding(
+            output.findings.push(yaml::finding(
                 key,
                 1,
                 format!("{key}: malformed {RULE_ID} allow selector; expected file#job#step"),
@@ -161,7 +117,7 @@ fn scan_files(
             continue;
         };
         if !present.contains(path) {
-            findings.push(yaml::finding(
+            output.findings.push(yaml::finding(
                 path,
                 1,
                 format!("{path}: duplicate {RULE_ID} allow entry `{key}`"),
@@ -169,7 +125,18 @@ fn scan_files(
             ));
         }
     }
-    findings
+    output
+}
+
+fn resolve_unanalyzable(
+    config: &NoMistakesConfig,
+    rule: &crate::config::v2::schema::RuleDef,
+) -> Result<Unanalyzable> {
+    if rule.options.get("unanalyzable").is_some() || config.unanalyzable.is_some() {
+        Ok(config.effective_rule_analysis(rule)?.unanalyzable)
+    } else {
+        Ok(Unanalyzable::Advise)
+    }
 }
 
 fn selector_file(key: &str) -> Option<&str> {
@@ -182,6 +149,8 @@ fn selector_file(key: &str) -> Option<&str> {
         .map(|(file, _)| file)
 }
 
+mod dynamic;
+mod options;
 mod scan;
 mod steps;
 #[cfg(all(test, any(nm_shard_all, nm_shard_1)))]

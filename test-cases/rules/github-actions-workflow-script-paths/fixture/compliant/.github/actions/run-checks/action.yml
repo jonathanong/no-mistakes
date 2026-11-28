@@ -1,0 +1,6 @@
+name: Run Checks
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: bash scripts/helper.sh

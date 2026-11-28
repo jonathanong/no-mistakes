@@ -1,0 +1,9 @@
+name: Inner Composite
+runs:
+  using: composite
+  steps:
+    - "not-a-step"
+    - uses: actions/checkout@v4
+    - run: ./scripts/deep.sh
+      shell: bash
+    - uses: ./.github/actions/outer

@@ -1,0 +1,254 @@
+---
+source: crates/no-mistakes/tests/common/check_json_snapshot.rs
+---
+{
+  "compliant": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "empty-opt-in": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 19,
+          "message": "directive for `github-actions-workflow-script-paths` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line github-actions-workflow-script-paths",
+          "target": "github-actions-workflow-script-paths"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 21,
+          "message": "directive for `github-actions-workflow-script-paths` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "bash scripts/suppressed-line.sh # no-mistakes-disable-line github-actions-workflow-script-paths",
+          "target": "github-actions-workflow-script-paths"
+        },
+        {
+          "file": ".github/workflows/suppressed-file.yml",
+          "line": 1,
+          "message": "directive for `github-actions-workflow-script-paths` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-file github-actions-workflow-script-paths",
+          "target": "github-actions-workflow-script-paths"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "pr-only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 16,
+          "message": ".github/workflows/ci.yml:16: job `verify` step 2 runs repository script `scripts/covered.sh`, which is not covered by on.pull_request.paths. Add `scripts/covered.sh` (or its script directory) to on.pull_request.paths so edits to this script trigger the workflow.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "./scripts/covered.sh",
+          "target": "scripts/covered.sh"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 17,
+          "message": ".github/workflows/ci.yml:17: job `verify` step 2 runs repository script `scripts/missing.mjs`, which is not covered by on.pull_request.paths. Add `scripts/missing.mjs` (or its script directory) to on.pull_request.paths so edits to this script trigger the workflow.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "node scripts/missing.mjs --strict",
+          "target": "scripts/missing.mjs"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 22,
+          "message": ".github/workflows/ci.yml:22: job `verify` step 3 (via `.github/actions/run-checks/action.yml`) runs repository script `scripts/from-composite.sh`, which is not covered by on.pull_request.paths. Add `scripts/from-composite.sh` (or its script directory) to on.pull_request.paths so edits to this script trigger the workflow.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "- uses: ./.github/actions/run-checks",
+          "target": "scripts/from-composite.sh"
+        },
+        {
+          "file": ".github/workflows/ignored.yml",
+          "line": 10,
+          "message": ".github/workflows/ignored.yml:10: job `verify` step 1 runs repository script `scripts/ignored.sh`, which is not covered by on.pull_request.paths-ignore. Remove `scripts/ignored.sh` from on.pull_request.paths-ignore, or narrow that ignore pattern. Use `paths` when the workflow should include this script and exclude others.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "- run: bash scripts/ignored.sh",
+          "target": "scripts/ignored.sh"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "reported": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 16,
+          "message": ".github/workflows/ci.yml:16: job `verify` step 2 runs repository script `scripts/covered.sh`, which is not covered by on.pull_request.paths. Add `scripts/covered.sh` (or its script directory) to on.pull_request.paths so edits to this script trigger the workflow.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "./scripts/covered.sh",
+          "target": "scripts/covered.sh"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 17,
+          "message": ".github/workflows/ci.yml:17: job `verify` step 2 runs repository script `scripts/missing.mjs`, which is not covered by on.pull_request.paths, on.push.paths. Add `scripts/missing.mjs` (or its script directory) to on.pull_request.paths, on.push.paths so edits to this script trigger the workflow.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "node scripts/missing.mjs --strict",
+          "target": "scripts/missing.mjs"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 18,
+          "message": ".github/workflows/ci.yml:18: job `verify` step 2 runs repository script `tools/ci/audit.ts`, which is not covered by on.pull_request.paths, on.push.paths. Add `tools/ci/audit.ts` (or its script directory) to on.pull_request.paths, on.push.paths so edits to this script trigger the workflow.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "pnpm exec tsx tools/ci/audit.ts",
+          "target": "tools/ci/audit.ts"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 22,
+          "message": ".github/workflows/ci.yml:22: job `verify` step 3 (via `.github/actions/run-checks/action.yml`) runs repository script `scripts/from-composite.sh`, which is not covered by on.pull_request.paths, on.push.paths. Add `scripts/from-composite.sh` (or its script directory) to on.pull_request.paths, on.push.paths so edits to this script trigger the workflow.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "- uses: ./.github/actions/run-checks",
+          "target": "scripts/from-composite.sh"
+        },
+        {
+          "file": ".github/workflows/ignored.yml",
+          "line": 10,
+          "message": ".github/workflows/ignored.yml:10: job `verify` step 1 runs repository script `scripts/ignored.sh`, which is not covered by on.pull_request.paths-ignore. Remove `scripts/ignored.sh` from on.pull_request.paths-ignore, or narrow that ignore pattern. Use `paths` when the workflow should include this script and exclude others.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "- run: bash scripts/ignored.sh",
+          "target": "scripts/ignored.sh"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "unanalyzable-advise": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/bad-trigger.yml",
+          "line": 4,
+          "message": ".github/workflows/bad-trigger.yml:4: `on.pull_request.paths` contains dynamic expression `${{ inputs.glob }}`.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "paths:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 11,
+          "message": ".github/workflows/dynamic.yml:11: job `verify` step 1 invokes dynamic script path `scripts/${TARGET}.mjs`, which cannot be proven against workflow path filters. Pass a literal repository script path.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "node \"scripts/${TARGET}.mjs\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 12,
+          "message": ".github/workflows/dynamic.yml:12: job `verify` step 1 invokes `eval`, which cannot be statically checked against workflow path filters. Replace `eval` with a direct script invocation.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "eval \"./scripts/run.sh\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 13,
+          "message": ".github/workflows/dynamic.yml:13: job `verify` step 1 passes a dynamic script to `bash -c`, which cannot be statically checked against workflow path filters. Run the script directly with a literal path.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "bash -c \"$DYNAMIC_CMD\"",
+          "target": "unanalyzable"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unanalyzable-ignore": {
+    "exitCode": 0,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [],
+      "warnings": []
+    }
+  },
+  "unanalyzable-report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/bad-trigger.yml",
+          "line": 4,
+          "message": ".github/workflows/bad-trigger.yml:4: `on.pull_request.paths` contains dynamic expression `${{ inputs.glob }}`.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "paths:",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 11,
+          "message": ".github/workflows/dynamic.yml:11: job `verify` step 1 invokes dynamic script path `scripts/${TARGET}.mjs`, which cannot be proven against workflow path filters. Pass a literal repository script path.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "node \"scripts/${TARGET}.mjs\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 12,
+          "message": ".github/workflows/dynamic.yml:12: job `verify` step 1 invokes `eval`, which cannot be statically checked against workflow path filters. Replace `eval` with a direct script invocation.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "eval \"./scripts/run.sh\"",
+          "target": "unanalyzable"
+        },
+        {
+          "file": ".github/workflows/dynamic.yml",
+          "line": 13,
+          "message": ".github/workflows/dynamic.yml:13: job `verify` step 1 passes a dynamic script to `bash -c`, which cannot be statically checked against workflow path filters. Run the script directly with a literal path.",
+          "rule": "github-actions-workflow-script-paths",
+          "sourceLine": "bash -c \"$DYNAMIC_CMD\"",
+          "target": "unanalyzable"
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

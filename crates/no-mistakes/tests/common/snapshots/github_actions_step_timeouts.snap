@@ -2,6 +2,136 @@
 source: crates/no-mistakes/tests/common/check_json_snapshot.rs
 ---
 {
+  "action_caps": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 19,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"dynamic-slow\" uses dynamic action `${{ inputs.setup_action }}`, which cannot be statically matched against configured actionCaps; use a concrete action reference or set timeout-minutes within the strictest action cap",
+          "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: dynamic-slow",
+          "target": ".github/workflows/ci.yml#build#dynamic-slow"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"node\" timeout-minutes is 10, over the 5-minute cap for `actions/setup-node`",
+          "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: node",
+          "target": ".github/workflows/ci.yml#build#node"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 13,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"pnpm\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: pnpm",
+          "target": ".github/workflows/ci.yml#build#pnpm"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "action_caps_only": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 15,
+          "message": "directive for `github-actions-step-timeouts` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line github-actions-step-timeouts",
+          "target": "github-actions-step-timeouts"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 19,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"dynamic-slow\" uses dynamic action `${{ inputs.setup_action }}`, which cannot be statically matched against configured actionCaps; use a concrete action reference or set timeout-minutes within the strictest action cap",
+          "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: dynamic-slow",
+          "target": ".github/workflows/ci.yml#build#dynamic-slow"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"node\" timeout-minutes is 10, over the 5-minute cap for `actions/setup-node`",
+          "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: node",
+          "target": ".github/workflows/ci.yml#build#node"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 13,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"pnpm\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: pnpm",
+          "target": ".github/workflows/ci.yml#build#pnpm"
+        }
+      ],
+      "warnings": []
+    }
+  },
+  "action_caps_only_report": {
+    "exitCode": 1,
+    "report": {
+      "advisories": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 15,
+          "message": "directive for `github-actions-step-timeouts` suppressed no findings in this invocation; remove or correct the comment so suppressions cannot hide stale rule intent",
+          "rule": "unused-disable-directive",
+          "sourceLine": "# no-mistakes-disable-next-line github-actions-step-timeouts",
+          "target": "github-actions-step-timeouts"
+        }
+      ],
+      "codebase": [],
+      "integration": [],
+      "queues": [],
+      "react": [],
+      "rules": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 10,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"node\" timeout-minutes is 10, over the 5-minute cap for `actions/setup-node`",
+          "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: node",
+          "target": ".github/workflows/ci.yml#build#node"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 13,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"pnpm\" has no timeout-minutes and can stall until its job deadline; add a positive literal number",
+          "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: pnpm",
+          "target": ".github/workflows/ci.yml#build#pnpm"
+        },
+        {
+          "file": ".github/workflows/ci.yml",
+          "line": 19,
+          "message": ".github/workflows/ci.yml: job \"build\" step \"dynamic-slow\" uses dynamic action `${{ inputs.setup_action }}`, which cannot be statically matched against configured actionCaps; use a concrete action reference or set timeout-minutes within the strictest action cap",
+          "rule": "github-actions-step-timeouts",
+          "sourceLine": "- id: dynamic-slow",
+          "target": ".github/workflows/ci.yml#build#dynamic-slow"
+        }
+      ],
+      "warnings": []
+    }
+  },
   "alias-name-parallel": {
     "exitCode": 1,
     "report": {
