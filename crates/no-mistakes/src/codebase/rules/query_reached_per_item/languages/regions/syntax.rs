@@ -9,7 +9,7 @@ pub(super) fn brace_header(line: &str) -> Option<Header> {
     if matches!(word, "for" | "foreach" | "while") || each_line(trimmed) {
         return Some(Header::Loop(construct_label(trimmed)));
     }
-    let paren = line.find('(')?;
+    let paren = header_paren(line)?;
     let name = last_ident(&line[..paren]);
     if name.is_empty()
         || matches!(
@@ -56,8 +56,8 @@ pub(super) fn opener_count(line: &str) -> usize {
     for word in words(line) {
         match word {
             "do" => dos += 1,
-            "defmodule" | "if" | "class" | "module" | "case" | "cond" | "fn" | "unless"
-            | "else" | "elsif" | "elseif" | "elif" | "def" | "fun" | "for" | "while" | "each" => {
+            "defmodule" | "if" | "class" | "module" | "case" | "cond" | "fn" | "unless" | "def"
+            | "fun" | "for" | "while" | "each" => {
                 primary += 1
             }
             _ => {}
@@ -120,7 +120,19 @@ fn construct_label(trimmed: &str) -> &'static str {
 }
 
 fn each_line(trimmed: &str) -> bool {
-    words(trimmed).contains(&"each") && (trimmed.contains(" do") || trimmed.contains('{'))
+    words(trimmed)
+        .iter()
+        .any(|word| *word == "each" || word.eq_ignore_ascii_case("foreach"))
+        && (trimmed.contains(" do") || trimmed.contains('{'))
+}
+
+fn header_paren(line: &str) -> Option<usize> {
+    let paren = line.find('(')?;
+    if last_ident(&line[..paren]) != "func" {
+        return Some(paren);
+    }
+    let close = paren + line[paren..].find(')')?;
+    Some(close + 1 + line[close + 1..].find('(')?)
 }
 
 fn callee_before(line: &str, paren: usize) -> String {

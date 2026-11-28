@@ -113,7 +113,7 @@ fn kind_of<'a>(callee: &'a str, sinks: &'a [Sink]) -> Kind<'a> {
             export: &sink.export,
         };
     }
-    if head.contains('.') || sinks.iter().any(|sink| sink.module == head) {
+    if sinks.iter().any(|sink| sink.module == head) {
         Kind::Clean
     } else {
         Kind::Receiver

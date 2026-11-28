@@ -421,18 +421,22 @@ qualified call whose head, after normalizing `::`, `\`, and `/` to `.`, equals
 the target `module`, and whose tail after the last `.`, `::`, or `->` equals
 the target `export`. The finding names the callsite callee, the effect family,
 and the path `enclosing → export`. One bare local call is also proven when that
-function reaches a sink and every other call in its body is a qualified call
-that names a module and is not another hop. The path is then
-`enclosing → local → export`.
-The enclosing name is the nearest function, or `<module>` at file scope. The
-`{` of a brace header must be on the header line. Python uses indentation.
-Ruby and Elixir use `def`/`fun`/`end` and `for`/`while`/`do`/`end`; a nested
-`if`/`end` stays inside the loop. `each` is a loop when the line also has
-` do`, ends with `do`, or contains `{`. A member call on a receiver that is
-not a configured module (`item.fetch`, `$item->fetch`), a second hop, a
-duplicate function name, or a file that cannot be read is unproven. A resolved
-call that does not reach a sink is silent. The `call-sites` query stays
-TypeScript-only. No shipped language frontend is declined.
+function reaches a sink and every other call in its body is a different export
+of a configured sink module. A qualified head that is not that module
+(`other.module.lookup`, `self.db.query`, `crate::db::query`) is unproven. The
+path is then `enclosing → local → export`.
+The enclosing name is the nearest function, or `<module>` at file scope. A Go
+method `func (s *Server) load` uses `load`. The `{` of a brace header must be
+on the header line. Python uses indentation. Ruby and Elixir use
+`def`/`fun`/`end` and `for`/`while`/`do`/`end`. `else`, `elsif`, `elseif`, and
+`elif` do not open a block, so a nested `if`/`else`/`end` stays inside the loop
+and the loop closes on its own `end`. `each` is a loop when the line also has
+` do`, ends with `do`, or contains `{`. `forEach` and `ForEach` are loops when
+the header line contains `{`. A member call on a receiver that is not a
+configured module (`item.fetch`, `$item->fetch`), a second hop, a duplicate
+function name, or a file that cannot be read is unproven. A call on a
+configured module whose export does not match is silent. The `call-sites`
+query stays TypeScript-only. No shipped language frontend is declined.
 
 ### Unanalyzable inputs
 

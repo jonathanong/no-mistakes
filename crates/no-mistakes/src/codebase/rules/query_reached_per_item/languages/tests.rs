@@ -88,13 +88,23 @@ fn direct_sink_clean_call_unresolved_body_and_duplicate_name() {
         &ctx(&sinks, Unanalyzable::Advise),
     );
     assert!(direct[0].message.contains("load → read_row"));
-    let clean = project(
+    let foreign = project(
         "worker",
         Some("fn load(items: &[&str]) {\n    for item in items {\n        other.module.lookup(item);\n    }\n}\n"),
         "rs",
         &ctx(&sinks, Unanalyzable::Advise),
     );
-    assert!(clean.is_empty());
+    assert!(foreign.iter().any(|finding| {
+        finding.causes.first().is_some_and(|cause| cause.kind == "unresolved-dispatch")
+            && finding.message.contains("other.module.lookup")
+    }));
+    let same_module = project(
+        "worker",
+        Some("fn load(items: &[&str]) {\n    for item in items {\n        example.store.write_row(item);\n    }\n}\n"),
+        "rs",
+        &ctx(&sinks, Unanalyzable::Advise),
+    );
+    assert!(same_module.is_empty());
     let unresolved = project_ext(
         "fn fetch(item: &str) {\n    example.store.read_row(item);\n    item.other();\n}\nfn load(items: &[&str]) {\n    for item in items {\n        fetch(item);\n    }\n}\n",
         "rs",
@@ -254,23 +264,53 @@ fn module_loops_clean_helpers_and_bare_receivers_stay_distinct() {
         "rs",
     );
     assert!(tail.iter().any(|finding| finding.message.contains("`item.`")));
-    assert!(project_ext(
+    let foreign_helper = project_ext(
         "fn fetch(item: &str) {\n    other.module.lookup(item);\n}\nfn load(items: &[&str]) {\n    for item in items {\n        fetch(item);\n    }\n}\n",
         "rs",
-    )
-    .is_empty());
+    );
+    assert!(foreign_helper.iter().any(|finding| {
+        finding.causes.first().is_some_and(|cause| cause.kind == "unresolved-dispatch")
+            && finding.message.contains("fetch")
+    }));
     let doubled = project_ext(
-        "fn fetch(item: &str) {\n    example.store.read_row(item);\n    example.store.read_row(item);\n    other.module.lookup(item);\n}\nfn load(items: &[&str]) {\n    for item in items {\n        fetch(item);\n    }\n}\n",
+        "fn fetch(item: &str) {\n    example.store.read_row(item);\n    example.store.read_row(item);\n    example.store.write_row(item);\n}\nfn load(items: &[&str]) {\n    for item in items {\n        fetch(item);\n    }\n}\n",
         "rs",
     );
     assert_eq!(doubled.len(), 1);
     assert!(doubled[0].message.contains("load → fetch → read_row"));
+    let mixed = project_ext(
+        "fn fetch(item: &str) {\n    example.store.read_row(item);\n    self.db.query(item);\n}\nfn load(items: &[&str]) {\n    for item in items {\n        fetch(item);\n    }\n}\n",
+        "rs",
+    );
+    assert!(mixed.iter().any(|finding| !finding.causes.is_empty()));
     let ruby = project_ext(
         "def load(items)\n  for item in items do\n    example.store.read_row(item)\n  end\n  def (\n  items.each {\n    item.fetch()\n  }\nend\n",
         "rb",
     );
     assert!(ruby.iter().any(|finding| finding.message.contains("for `example.store.read_row`")));
     assert!(ruby.iter().any(|finding| finding.message.contains("each `item.fetch`")));
+}
+
+#[test]
+fn else_branches_method_names_and_foreach_keep_their_frames() {
+    let ruby = "def load(items)\n  for item in items do\n    if item\n      example.store.read_row(item)\n    elsif item\n      example.store.read_row(item)\n    else\n      example.store.read_row(item)\n    end\n  end\n  example.store.read_row(item)\nend\n";
+    let ruby_findings = project_ext(ruby, "rb");
+    assert_eq!(ruby_findings.len(), 3);
+    assert!(ruby_findings.iter().all(|finding| finding.message.contains("for `example.store.read_row`")));
+    let elixir = "defmodule Worker do\n  def load(items) do\n    for item <- items do\n      if item do\n        example.store.read_row(item)\n      else\n        example.store.read_row(item)\n      end\n    end\n    example.store.read_row(item)\n  end\nend\n";
+    assert_eq!(project_ext(elixir, "ex").len(), 2);
+    let method = "func (s *Server) load(items []string) {\n    for _, item := range items {\n        example.store.read_row(item)\n    }\n}\n";
+    let go = project_ext(method, "go");
+    assert!(go.iter().any(|finding| finding.message.contains("load → read_row")));
+    assert!(go.iter().all(|finding| !finding.message.contains("func →")));
+    let each = "func load(items []string) {\n    items.forEach(func(item string) {\n        example.store.read_row(item)\n    })\n}\n";
+    assert!(project_ext(each, "go").iter().any(|finding| finding.message.contains("each `example.store.read_row`")));
+    let receiver = project_ext(
+        "fn load(items: &[&str]) {\n    for item in items {\n        self.db.query(item);\n        crate::db::query(item);\n    }\n}\n",
+        "rs",
+    );
+    assert_eq!(receiver.len(), 2);
+    assert!(receiver.iter().all(|finding| !finding.causes.is_empty()));
 }
 
 #[test]
