@@ -205,3 +205,15 @@ export function spreadBeforeApply(head: [null]) {
   const P = Promise;
   return use.apply(...head, [P.resolve(1)]);
 }
+const forwardCall = "call";
+const forwardApply = "apply";
+export function constForwardCall() {
+  const { use } = require("react");
+  const P = Promise;
+  return use[forwardCall](null, P.resolve(1));
+}
+export function constForwardApply() {
+  const { use } = require("react");
+  const P = Promise;
+  return use[forwardApply](null, [P.resolve(1)]);
+}

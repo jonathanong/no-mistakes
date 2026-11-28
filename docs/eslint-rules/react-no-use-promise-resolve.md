@@ -67,7 +67,8 @@ This path handles an ordinary `React.use(P.resolve(value))` call and the same
 alias passed through `use.call` or a one-element `use.apply`. Optional calls,
 spreads, extra arguments, and a non-literal `.apply` list do not gain new
 findings. A spread before the forwarded argument of `call` or `apply` does not
-select a later argument. `require("react").Children.use` is not `use`. The original
+select a later argument. A `const` bound to `call` or `apply` selects that
+forwarded argument. A parameter named `Promise` is not the global `Promise`. `require("react").Children.use` is not `use`. The original
 direct-`Promise` syntax remains on its released path.
 
 `use` brought in through another file is not visible here.

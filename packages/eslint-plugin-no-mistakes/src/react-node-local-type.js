@@ -57,6 +57,8 @@ function localTypeStatus(node, name, facts, seen, reactTypeStatus) {
       if (!containsNode(scope, node)) continue;
       if (declaration.type === "TSInterfaceDeclaration") return "no";
       if (seen.has(declaration)) return "unresolved";
+      const supplied = node.typeArguments?.params || node.typeParameters?.params;
+      if (declaration.typeParameters?.params?.length && supplied?.length) return "unresolved";
       const next = new Set(seen);
       next.add(declaration);
       return reactTypeStatus(declaration.typeAnnotation, facts, next);

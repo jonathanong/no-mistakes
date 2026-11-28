@@ -23,7 +23,11 @@ function nearestDeclarations(type, name) {
   let current = type?.parent;
   while (current && current.type !== "Program") {
     const found = [];
-    for (const statement of bodyStatements(current, type) ?? []) {
+    const statements =
+      current.body?.body && !containsNode(current.body, type)
+        ? null
+        : bodyStatements(current, type);
+    for (const statement of statements ?? []) {
       const declaration = statement.declaration ?? statement;
       const typed =
         declaration.type === "TSTypeAliasDeclaration" ||

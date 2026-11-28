@@ -1395,6 +1395,61 @@
           "messageId": "nullish",
           "ruleId": "no-mistakes/react-no-nullish-react-node",
           "severity": 2
+        },
+        {
+          "column": 35,
+          "endColumn": 51,
+          "endLine": 323,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 323,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 21,
+          "endLine": 329,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 329,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 21,
+          "endLine": 332,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 332,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 338,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 338,
+          "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 343,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-nullish-scope-edges.tsx",
+          "line": 343,
+          "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks.",
+          "messageId": "nullish",
+          "ruleId": "no-mistakes/react-no-nullish-react-node",
+          "severity": 2
         }
       ],
       "name": "scope edges keep each ReactNode binding",
@@ -1978,17 +2033,6 @@
         {
           "column": 10,
           "endColumn": 33,
-          "endLine": 155,
-          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
-          "line": 155,
-          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
-          "messageId": "resolve",
-          "ruleId": "no-mistakes/react-no-use-promise-resolve",
-          "severity": 2
-        },
-        {
-          "column": 10,
-          "endColumn": 33,
           "endLine": 166,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
           "line": 166,
@@ -2025,6 +2069,28 @@
           "endLine": 184,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
           "line": 184,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 46,
+          "endLine": 213,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 213,
+          "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
+          "messageId": "resolve",
+          "ruleId": "no-mistakes/react-no-use-promise-resolve",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 49,
+          "endLine": 218,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/react-use-bindings.tsx",
+          "line": 218,
           "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await.",
           "messageId": "resolve",
           "ruleId": "no-mistakes/react-no-use-promise-resolve",
@@ -2552,6 +2618,28 @@
           "endLine": 94,
           "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-assigned-require.ts",
           "line": 94,
+          "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
+          "messageId": "unanalyzable",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 22,
+          "endLine": 107,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-assigned-require.ts",
+          "line": 107,
+          "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently.",
+          "messageId": "wrapper",
+          "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
+          "severity": 2
+        },
+        {
+          "column": 10,
+          "endColumn": 23,
+          "endLine": 112,
+          "file": "test-cases/eslint-snippets/fixture/ts-import-wrappers/nullable-assigned-require.ts",
+          "line": 112,
           "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import.",
           "messageId": "unanalyzable",
           "ruleId": "no-mistakes/server-require-nullable-fetch-wrapper",
@@ -3853,6 +3941,20 @@
             "file": "nullable-assigned-require.ts",
             "line": 94,
             "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-assigned-require.ts",
+            "line": 107,
+            "message": "Wrap nullable entity fetch 'getWidget' in wrapNullable so missing entities map to null consistently."
+          },
+          {
+            "code": "no-mistakes(server-require-nullable-fetch-wrapper)",
+            "column": 10,
+            "file": "nullable-assigned-require.ts",
+            "line": 112,
+            "message": "Could not resolve whether 'this call' is the configured getter or wrapper. Use a static import."
           }
         ],
         "name": "nullable-assigned-require.ts",
@@ -4818,6 +4920,41 @@
             "file": "react-nullish-scope-edges.tsx",
             "line": 310,
             "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 35,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 323,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 329,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 332,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 338,
+            "message": "Could not resolve whether this value is a ReactNode. Use a static ReactNode import."
+          },
+          {
+            "code": "no-mistakes(react-no-nullish-react-node)",
+            "column": 10,
+            "file": "react-nullish-scope-edges.tsx",
+            "line": 343,
+            "message": "Do not use ?? with ReactNode values. React renders null, false, and empty values differently; use an explicit undefined check for fallbacks."
           }
         ],
         "name": "react-nullish-scope-edges.tsx",
@@ -5182,13 +5319,6 @@
             "code": "no-mistakes(react-no-use-promise-resolve)",
             "column": 10,
             "file": "react-use-bindings.tsx",
-            "line": 155,
-            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
-          },
-          {
-            "code": "no-mistakes(react-no-use-promise-resolve)",
-            "column": 10,
-            "file": "react-use-bindings.tsx",
             "line": 166,
             "message": "Could not resolve whether this call is React.use. Use a static import from \"react\"."
           },
@@ -5211,6 +5341,20 @@
             "column": 10,
             "file": "react-use-bindings.tsx",
             "line": 184,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 213,
+            "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
+          },
+          {
+            "code": "no-mistakes(react-no-use-promise-resolve)",
+            "column": 10,
+            "file": "react-use-bindings.tsx",
+            "line": 218,
             "message": "Avoid React.use(Promise.resolve(...)); pass the promise directly or use await."
           }
         ],

@@ -131,7 +131,7 @@ function isReactUse(node, context, useNames, seen = new Set()) {
   return reactUseStatus(node, context, useNames, seen) === "yes";
 }
 
-function isPromiseResolve(node) {
+function isPromiseResolve(node, context) {
   const current = unwrapSequence(node);
   if (current?.type !== "CallExpression") return false;
   let callee = unwrapSequence(current.callee);
@@ -142,11 +142,13 @@ function isPromiseResolve(node) {
     callee = unwrapSequence(callee.object);
   }
   const object = unwrapSequence(callee?.object);
+  const bound = context && object?.type === "Identifier" ? resolveVariable(object, context) : null;
   return (
     callee?.type === "MemberExpression" &&
     object?.type === "Identifier" &&
     object.name === "Promise" &&
-    staticName(callee.property, callee.computed) === "resolve"
+    staticName(callee.property, callee.computed) === "resolve" &&
+    (!bound || (bound.defs.length === 0 && bound.scope?.type === "global"))
   );
 }
 

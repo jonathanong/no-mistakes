@@ -135,10 +135,6 @@ function createNullishState(context) {
     }
   }
 
-  function finishLoop() {
-    scopes.pop();
-  }
-
   function noteObjectAlias(node) {
     const alias = objectAliasProps(node, facts, context, objectBindings, unresolvedBindings);
     const binding = resolveVariable(node.id, context);
@@ -174,6 +170,7 @@ function createNullishState(context) {
       members.unresolved,
       (name) => defineUnresolved(name, scope),
       context,
+      !type,
     );
     if (members.allUnresolved) bindPatternNames(node.id, (name) => defineUnresolved(name, scope));
   }
@@ -208,7 +205,7 @@ function createNullishState(context) {
     defineVariable,
     enterFunction,
     expressionStatus,
-    finishLoop,
+    finishLoop: () => scopes.pop(),
     popScope: () => scopes.pop(),
     pushScope,
     setFacts(next) {

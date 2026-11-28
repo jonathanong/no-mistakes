@@ -314,3 +314,31 @@ export function missingArgument() {
   type Box<T extends { child: ReactNode }> = T;
   return (item: Box) => item.child ?? "";
 }
+
+interface Caption {
+  child: string;
+}
+export function bodyAlias(p: Caption) {
+  type Caption = { child: ReactNode };
+  const read = (item: Caption) => item.child ?? "";
+  return (p.child ?? "") ? read : p;
+}
+
+type BoxedNode<T extends ReactNode> = T;
+export function genericSlot(value: BoxedNode<string>) {
+  return value ?? "";
+}
+export function genericSlotBare(value: BoxedNode) {
+  return value ?? "";
+}
+
+export function reassignedSlot(props: { children: ReactNode }) {
+  let { children: slot } = props;
+  slot = "ready";
+  return slot ?? null;
+}
+export function reassignedAnnotated(props: { children: ReactNode }) {
+  let { children: slot }: { children: ReactNode } = props;
+  slot = "ready";
+  return slot ?? null;
+}

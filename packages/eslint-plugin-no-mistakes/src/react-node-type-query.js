@@ -4,6 +4,7 @@ const { localTypeStatus } = require("./react-node-local-type");
 const { literalString } = require("./rules/module-mock-helpers");
 const { constStringKey } = require("./rules/react-use-callee");
 const { resolveVariable } = require("./rules/async-target-bindings");
+const { reassignedBinding } = require("./rules/react-nullish-binding-status");
 
 const TYPE_SHADOW = new Set(["ClassName", "FunctionName", "TSModuleName", "Type", "TypeParameter"]);
 
@@ -167,6 +168,7 @@ function definePattern(
   unresolved,
   defineUnresolved,
   context,
+  flagReassigned,
 ) {
   if (!pattern || pattern.type !== "ObjectPattern") return;
   bindPatternNames(pattern, defineBinding);
@@ -178,6 +180,10 @@ function definePattern(
     const value =
       property.value?.type === "AssignmentPattern" ? property.value.left : property.value;
     if (value?.type !== "Identifier") continue;
+    if (name != null && props?.has(name) && flagReassigned && reassignedBinding(value, context)) {
+      defineUnresolved?.(value.name);
+      continue;
+    }
     if (name != null && props?.has(name)) defineReactNode(value.name);
     else if (name != null && unresolved?.has(name)) defineUnresolved?.(value.name);
     else if (name == null && property.computed && (props?.size || unresolved?.size))

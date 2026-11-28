@@ -100,3 +100,21 @@ export async function patternLocal(): Promise<Widget | null> {
   ({ getWidget: read } = local);
   return read();
 }
+
+let settled;
+settled = require("./data").getWidget;
+export async function afterSettled(): Promise<Widget | null> {
+  return settled("1");
+}
+
+let deferred;
+export async function deferredRead(): Promise<Widget | null> {
+  return deferred("1");
+}
+deferred = require("./data").getWidget;
+
+let plain;
+export async function plainLater(): Promise<Widget | null> {
+  return plain("1");
+}
+plain = () => Promise.resolve(null);

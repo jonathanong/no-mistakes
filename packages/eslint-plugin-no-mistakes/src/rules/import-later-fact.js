@@ -52,6 +52,19 @@ function hasImportWrite(variable, context, seen, memo, importFact) {
   });
 }
 
+function readCanRunAfter(use, write) {
+  for (let current = use?.parent; current; current = current.parent) {
+    if (
+      current.type !== "FunctionDeclaration" &&
+      current.type !== "FunctionExpression" &&
+      current.type !== "ArrowFunctionExpression"
+    )
+      continue;
+    if (!contains(current, write)) return true;
+  }
+  return false;
+}
+
 function laterFact(def, variable, context, seen, memo, importFact, use) {
   const idType = def?.node?.id?.type;
   if (
@@ -61,9 +74,18 @@ function laterFact(def, variable, context, seen, memo, importFact, use) {
     return null;
   let matched = null;
   let noise = 0;
+  let laterImport = false;
   for (const reference of variable.references ?? []) {
     if (!reference.isWrite() || reference.init) continue;
-    if (use?.range && reference.identifier?.range?.[0] >= use.range[0]) continue;
+    if (use?.range && reference.identifier?.range?.[0] >= use.range[0]) {
+      if (
+        !laterImport &&
+        readCanRunAfter(use, reference.identifier) &&
+        writeFact(reference, context, seen, memo, importFact)
+      )
+        laterImport = true;
+      continue;
+    }
     const fact = writeFact(reference, context, seen, memo, importFact);
     if (!fact) {
       noise += 1;
@@ -72,7 +94,7 @@ function laterFact(def, variable, context, seen, memo, importFact, use) {
     if (matched) noise += 1;
     else matched = fact;
   }
-  if (!matched) return null;
+  if (!matched) return laterImport ? { unresolved: true } : null;
   return noise || matched.unresolved ? { unresolved: true } : matched;
 }
 

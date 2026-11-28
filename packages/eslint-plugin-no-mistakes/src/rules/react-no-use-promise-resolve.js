@@ -18,12 +18,13 @@ const {
   reactUseStatus,
 } = callee;
 
-function forwardedAliasCall(node) {
+function forwardedAliasCall(node, context) {
   const current = unwrapSequence(node);
   if (!current || current.optional || current.arguments.length !== 2) return false;
   const target = unwrapSequence(current.callee);
   if (target?.type !== "MemberExpression" || target.optional) return false;
-  const name = staticName(target.property, target.computed);
+  const name =
+    staticName(target.property, target.computed) || callee.constStringKey(target.property, context);
   if (name === "call") return current.arguments[1]?.type !== "SpreadElement";
   const list = unwrapSequence(current.arguments[1]);
   return (
@@ -70,10 +71,10 @@ module.exports = Object.assign(
           if (status === "no") return;
           const argument = forwardedArgument(node, context);
           const resolved =
-            isPromiseResolve(argument) ||
+            isPromiseResolve(argument, context) ||
             (ordinaryUseCall(node, context) &&
               isAliasedPromiseResolve(node.arguments[0], context)) ||
-            (forwardedAliasCall(node) && isAliasedPromiseResolve(argument, context));
+            (forwardedAliasCall(node, context) && isAliasedPromiseResolve(argument, context));
           if (status === "yes" && resolved) {
             context.report({ node, messageId: "resolve" });
             return;
